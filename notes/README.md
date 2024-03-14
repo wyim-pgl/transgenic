@@ -1,0 +1,135 @@
+# Transgenic
+
+Initial development work for a generative sequence to isoform generative model. 
+The idea is to use a pretrained transformer encoder to create embeddings for
+DNA sequences and fine-tune a small (relatively speaking) pretrained decoder 
+to output predicted isoforms. 
+
+## Outline
+- From genomic sequence of a gene model, generate all the isoforms. 
+- Input data: "ATGATAACATACATAAATCGCGC..." Output data:  1,100,200,500;1,200,500
+- Then stitch together all the isofroms.
+- How to handle genes longer than 6kb?
+	- Encode overlapping gene segments separately, concatenate and pool and/or FC layer, feed whole thing to decoder
+
+## Hurdles and open questions
+- Best way to convert embeddings from the encoder into a format that can be 
+used by the decoder? (Fully connected layer, convolution, reshaping, etc)
+- How resource intensive will fine-tuning be?
+- Define a training, validation, and test set of genomes (how much data will I need?)
+- Can I make the sequence length arbitrary?
+
+## Environment
+```
+conda create -y -n transgenic
+conda activate transgenic
+conda install pytorch pytorch-cuda=11.8 duckdb -c pytorch -c nvidia -c conda-forge
+pip install --upgrade git+https://github.com/huggingface/transformers.git peft sentencepiece
+```
+
+## TODO List
+- Write routine for complete mRNA sequence (minus UTR)
+- Test isoformData.__getitem__() with all three routines 
+- Try plant nucleotide encoder (does it fit in memory?)
+- Explore options for modifying embeddings to decoder input size?
+- Choose sequence shortening routine with 10-fold cross validation (Arabidopsis)
+- Define a training, validation, and test set of genomes (how much data will I need?)
+- Write backmapping function to move output isoform lists to genemodel coordinates, and then augment the original gff
+- Save the model as transfomers 'PreTrainedModel'
+
+## Implementation Notes
+
+Spin up a slurm node to play inside of:
+```
+srun -A $agJL -p $pgJL -c 1 --mem=4g --gres=gpu:1 --pty /bin/bash
+ssh gpu-?
+conda activate transgenic
+```
+Run a job with gpu..
+```
+sbatch -A $agJL -p $pgJL -c 16 --mem=64g --gres=gpu:1 --time=1-00:00:00 -J transgenic -o transgenic.out --wrap="time python testing.py"
+```
+
+**Parameters to keep track of**
+- Type of sequence truncation method
+- Length of junction incursion (likelihood of including a neighbor element splice signal)
+- Method of embedding transformation for input to T5
+- Fine-tune entire decoder or use adaptors?
+
+The the nucleotide transformer can be directly fine-tuned for calssification and regression tasks. This works by replacing the final language model head with a classification or regression head.
+
+The max length of an input sequence is 6000 or 1000 tokens (token = 6-mer)
+Due to sequence length contraints, reading an entire gene region will require some tricky pre- and post- processing. The dynamic range of gene length (transcript prior to splicing) is massive... from 1kb to 1,000 kb (human: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4158763/). This poses a problem for the model because all genes must be handled by a fixed maximum size that is acheived by padding. I will likely need to slim down my gene regions to scale genes into a more similar range...
+If gene length is defined as the aggregate length of UTRs and all exons, then the vast majority of human genes are under 25kb...(https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2021.559998/full). Must remove UTR and some intronic sequence to provide reasonable input sequence lengths...
+- Only use exon/intron junctions? (I think this is too redundant with exons + intronic overlap... reconsider if my sequences are still unwieldy)
+- Only use exons?
+- Only use exons plus some amount of intronic overlap?
+- Only use introns plus some amount of exonic overlap (Intronic splice signals found in human genome: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0001246)
+- Train all three models with subsets of the Arabidopsis/human genome and determine the best by 10-fold cross validation?
+
+**Context-dependent control of alternative splicing by RNA-binding proteins**
+
+Alternative splicing is dependent on cell type and genomic context. Cell-type influences splicing based on the expression level of various RNA Binding Proteins (RBPs). Could pass predicted RBP gene expression into the decoder's encoder to predict cell-type specific alternative slpicing? This may not impact the current use-case because I want to identify all possible splice variants of a gene model.
+
+Deep intronic elements have been implicated as important for determining the "splice-code"
+
+Constitutive splice sites - recognized efficiently and always spliced in the same way
+Alternative splice sites - sites that compete with one or more sites for incorporation
+
+Both exonic and intronic splice enhancers and silencers exist and are likely important for the code...How long to make junction overlaps then?
+200-300 base-pairs from observed splice sites contain most identifiable features (Dichotomous splicing signals in exon flanks). But more distant relationships also are in play (Rbfox proteins regulate alternative mRNA splicing through evolutionarily conserved RNA bridges). These distant relations may be contained deep inside introns.
+
+Initially, I wanted to pre-compute embeddings for an entire gff and use this dataset to train the decoder. However, the encoded set of 4,127 genes from AthChr4 was 33G (15 mins on 4 gpu). This is an intractable file size to load and store, so I will have to encode on-the-fly for both training and inference.
+
+Flagship phytozome genomes to train/validate on:
+- Chlamydomonas reinhardtii: An algal model
+- Physcomitrella patens: A moss model
+- Arabidopsis thaliana: A model for plant genetics and biology
+- Glycine max Wm82.a2.v1: A soybean
+- Sorghum bicolor: A biofuel crop and potential cellulosic feedstock
+
+The 1B parameter agro encoder does not fit on a single gpu. I will cross validate and check performance with the smaller 500M paramter multispecies 
+
+Won wants to test performance by blasting against IsoSeq data (longread)
+
+Three sequence truncation methods to try:
+1. Whole sequence
+2. CDS + intron overlap
+3. Intron + CDS overlap
+Actually, I now agree with won that its needs to be trained on whole gene model sequences. This will prohibit significant complications arising from variations in exon sizes between isoforms and remove the need for a complete primary annotation as input for inference. I can simply make as many segments for encoding as I need and T5 can accept any sequence length that can fit in memory...(https://github.com/huggingface/transformers/issues/5204). Look at reformer and longformer for more memory efficient models?
+T5Config().max_postion_embeddings
+
+First training trial run on AthChr4 (10 epochs, 3 hours):
+real	180m13.728s
+user	495m54.844s
+sys	234m5.651s
+Epoch 0: train_ppl train_ppl=tensor(14.0664, device='cuda:2'), train_epoch_loss train_epoch_loss=tensor(2.6438, device='cuda:2'), eval_ppl eval_ppl=tensor(7.8520, device='cuda:2'), eval_epoch_loss eval_epoch_loss=tensor(2.0608, device='cuda:2')
+Epoch 0: train_ppl train_ppl=tensor(13.7738, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(2.6228, device='cuda:1'), eval_ppl eval_ppl=tensor(7.3367, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.9929, device='cuda:1')
+Epoch 0: train_ppl train_ppl=tensor(13.6777, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(2.6158, device='cuda:3'), eval_ppl eval_ppl=tensor(7.6131, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(2.0299, device='cuda:3')
+Epoch 1: train_ppl train_ppl=tensor(9.2781, device='cuda:0'), train_epoch_loss train_epoch_loss=tensor(2.2277, device='cuda:0'), eval_ppl eval_ppl=tensor(7.4686, device='cuda:0'), eval_epoch_loss eval_epoch_loss=tensor(2.0107, device='cuda:0')
+Epoch 1: train_ppl train_ppl=tensor(9.4857, device='cuda:2'), train_epoch_loss train_epoch_loss=tensor(2.2498, device='cuda:2'), eval_ppl eval_ppl=tensor(7.2109, device='cuda:2'), eval_epoch_loss eval_epoch_loss=tensor(1.9756, device='cuda:2')
+Epoch 1: train_ppl train_ppl=tensor(9.3534, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(2.2357, device='cuda:1'), eval_ppl eval_ppl=tensor(6.7407, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.9082, device='cuda:1')
+Epoch 1: train_ppl train_ppl=tensor(9.0926, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(2.2075, device='cuda:3'), eval_ppl eval_ppl=tensor(6.9917, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(1.9447, device='cuda:3')
+Epoch 2: train_ppl train_ppl=tensor(8.5659, device='cuda:0'), train_epoch_loss train_epoch_loss=tensor(2.1478, device='cuda:0'), eval_ppl eval_ppl=tensor(7.0289, device='cuda:0'), eval_epoch_loss eval_epoch_loss=tensor(1.9500, device='cuda:0')
+Epoch 2: train_ppl train_ppl=tensor(8.4159, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(2.1301, device='cuda:1'), eval_ppl eval_ppl=tensor(6.3798, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.8531, device='cuda:1')
+Epoch 2: train_ppl train_ppl=tensor(8.3564, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(2.1230, device='cuda:3'), eval_ppl eval_ppl=tensor(6.5332, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(1.8769, device='cuda:3')
+Epoch 3: train_ppl train_ppl=tensor(8.1174, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(2.0940, device='cuda:1'), eval_ppl eval_ppl=tensor(6.3535, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.8490, device='cuda:1')
+Epoch 3: train_ppl train_ppl=tensor(7.8887, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(2.0654, device='cuda:3'), eval_ppl eval_ppl=tensor(6.5910, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(1.8857, device='cuda:3')
+Epoch 4: train_ppl train_ppl=tensor(7.9356, device='cuda:2'), train_epoch_loss train_epoch_loss=tensor(2.0714, device='cuda:2'), eval_ppl eval_ppl=tensor(6.6076, device='cuda:2'), eval_epoch_loss eval_epoch_loss=tensor(1.8882, device='cuda:2')
+Epoch 4: train_ppl train_ppl=tensor(7.7684, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(2.0501, device='cuda:1'), eval_ppl eval_ppl=tensor(6.2512, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.8328, device='cuda:1')
+Epoch 4: train_ppl train_ppl=tensor(7.6789, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(2.0385, device='cuda:3'), eval_ppl eval_ppl=tensor(6.4440, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(1.8632, device='cuda:3')
+Epoch 5: train_ppl train_ppl=tensor(7.7628, device='cuda:2'), train_epoch_loss train_epoch_loss=tensor(2.0493, device='cuda:2'), eval_ppl eval_ppl=tensor(6.4868, device='cuda:2'), eval_epoch_loss eval_epoch_loss=tensor(1.8698, device='cuda:2')
+Epoch 5: train_ppl train_ppl=tensor(7.6891, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(2.0398, device='cuda:1'), eval_ppl eval_ppl=tensor(6.1653, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.8189, device='cuda:1')
+Epoch 5: train_ppl train_ppl=tensor(7.5936, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(2.0273, device='cuda:3'), eval_ppl eval_ppl=tensor(6.3193, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(1.8436, device='cuda:3')
+Epoch 6: train_ppl train_ppl=tensor(7.6219, device='cuda:2'), train_epoch_loss train_epoch_loss=tensor(2.0310, device='cuda:2'), eval_ppl eval_ppl=tensor(6.4555, device='cuda:2'), eval_epoch_loss eval_epoch_loss=tensor(1.8649, device='cuda:2')
+Epoch 6: train_ppl train_ppl=tensor(7.5502, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(2.0216, device='cuda:1'), eval_ppl eval_ppl=tensor(6.1459, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.8158, device='cuda:1')
+Epoch 6: train_ppl train_ppl=tensor(7.4048, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(2.0021, device='cuda:3'), eval_ppl eval_ppl=tensor(6.2588, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(1.8340, device='cuda:3')
+Epoch 7: train_ppl train_ppl=tensor(7.4702, device='cuda:2'), train_epoch_loss train_epoch_loss=tensor(2.0109, device='cuda:2'), eval_ppl eval_ppl=tensor(6.3682, device='cuda:2'), eval_epoch_loss eval_epoch_loss=tensor(1.8513, device='cuda:2')
+Epoch 7: train_ppl train_ppl=tensor(7.3349, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(1.9926, device='cuda:1'), eval_ppl eval_ppl=tensor(6.0614, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.8019, device='cuda:1')
+Epoch 7: train_ppl train_ppl=tensor(7.2639, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(1.9829, device='cuda:3'), eval_ppl eval_ppl=tensor(6.1050, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(1.8091, device='cuda:3')
+Epoch 8: train_ppl train_ppl=tensor(7.2958, device='cuda:2'), train_epoch_loss train_epoch_loss=tensor(1.9873, device='cuda:2'), eval_ppl eval_ppl=tensor(6.3903, device='cuda:2'), eval_epoch_loss eval_epoch_loss=tensor(1.8548, device='cuda:2')
+Epoch 8: train_ppl train_ppl=tensor(7.2416, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(1.9798, device='cuda:1'), eval_ppl eval_ppl=tensor(6.0489, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.7999, device='cuda:1')
+Epoch 8: train_ppl train_ppl=tensor(7.1637, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(1.9690, device='cuda:3'), eval_ppl eval_ppl=tensor(6.0824, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(1.8054, device='cuda:3')
+Epoch 9: train_ppl train_ppl=tensor(7.1495, device='cuda:0'), train_epoch_loss train_epoch_loss=tensor(1.9670, device='cuda:0'), eval_ppl eval_ppl=tensor(6.5171, device='cuda:0'), eval_epoch_loss eval_epoch_loss=tensor(1.8744, device='cuda:0')
+Epoch 9: train_ppl train_ppl=tensor(7.1654, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(1.9693, device='cuda:1'), eval_ppl eval_ppl=tensor(6.0290, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.7966, device='cuda:1')
+Epoch 9: train_ppl train_ppl=tensor(7.0264, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(1.9497, device='cuda:3'), eval_ppl eval_ppl=tensor(6.0680, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(1.8030, device='cuda:3')
