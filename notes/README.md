@@ -18,13 +18,20 @@ used by the decoder? (Fully connected layer, convolution, reshaping, etc)
 - How resource intensive will fine-tuning be?
 - Define a training, validation, and test set of genomes (how much data will I need?)
 - Can I make the sequence length arbitrary?
+- Do we want to handle complete splicing with UTRs?
+- Fine tune existing model head? Train new custom head tailored to gff output?
 
 ## Environment
 ```
-conda create -y -n transgenic
-conda activate transgenic
-conda install pytorch pytorch-cuda=11.8 duckdb -c pytorch -c nvidia -c conda-forge
-pip install --upgrade git+https://github.com/huggingface/transformers.git peft sentencepiece
+mamba create -y -n transgenic
+mamba activate transgenic
+
+# Cloud (nvidia/cuda)
+mamba install pytorch-nightly::pytorch pytorch-cuda=11.8 python-duckdb -c pytorch-nightly -c nvidia -c conda-forge
+# Local (OSx/MPS)
+mamba install pytorch-nightly::pytorch torchvision torchaudio python-duckdb -c pytorch-nightly -c conda-forge
+
+pip install --upgrade git+https://github.com/huggingface/transformers.git peft
 ```
 
 ## TODO List
@@ -133,3 +140,30 @@ Epoch 8: train_ppl train_ppl=tensor(7.1637, device='cuda:3'), train_epoch_loss t
 Epoch 9: train_ppl train_ppl=tensor(7.1495, device='cuda:0'), train_epoch_loss train_epoch_loss=tensor(1.9670, device='cuda:0'), eval_ppl eval_ppl=tensor(6.5171, device='cuda:0'), eval_epoch_loss eval_epoch_loss=tensor(1.8744, device='cuda:0')
 Epoch 9: train_ppl train_ppl=tensor(7.1654, device='cuda:1'), train_epoch_loss train_epoch_loss=tensor(1.9693, device='cuda:1'), eval_ppl eval_ppl=tensor(6.0290, device='cuda:1'), eval_epoch_loss eval_epoch_loss=tensor(1.7966, device='cuda:1')
 Epoch 9: train_ppl train_ppl=tensor(7.0264, device='cuda:3'), train_epoch_loss train_epoch_loss=tensor(1.9497, device='cuda:3'), eval_ppl eval_ppl=tensor(6.0680, device='cuda:3'), eval_epoch_loss eval_epoch_loss=tensor(1.8030, device='cuda:3')
+
+Strange gene model with missplaced UTR3?
+    4 Chr4    phytozome9_0    gene    2895    10455   .       -       .       ID=AT4G00020;Name=AT4G00020
+    5 Chr4    phytozome9_0    mRNA    2895    10364   .       -       .       ID=PAC:19647157;Name=AT4G00020.2;pacid=19647157;longest=1;Parent=AT4G00020
+    6 Chr4    phytozome9_0    CDS     10211   10364   .       -       0       ID=PAC:19647157.CDS.1;Parent=PAC:19647157;pacid=19647157
+   ...
+   25 Chr4    phytozome9_0    CDS     4227    4438    .       -       0       ID=PAC:19647157.CDS.20;Parent=PAC:19647157;pacid=19647157
+   26 Chr4    phytozome9_0    CDS     4127    4149    .       -       1       ID=PAC:19647157.CDS.21;Parent=PAC:19647157;pacid=19647157
+   27 Chr4    phytozome9_0    CDS     2895    3022    .       -       2       ID=PAC:19647157.CDS.22;Parent=PAC:19647157;pacid=19647157
+   28 Chr4    phytozome9_0    mRNA    3895    10455   .       -       .       ID=PAC:19647158;Name=AT4G00020.1;pacid=19647158;longest=0;Parent=AT4G00020
+   29 Chr4    phytozome9_0    CDS     10211   10364   .       -       0       ID=PAC:19647158.CDS.1;Parent=PAC:19647158;pacid=19647158
+   30 Chr4    phytozome9_0    five_prime_UTR  10365   10455   .       -       .       ID=PAC:19647158.five_prime_UTR.1;Parent=PAC:19647158;pacid=19647158
+   31 Chr4    phytozome9_0    CDS     9982    10125   .       -       2       ID=PAC:19647158.CDS.2;Parent=PAC:19647158;pacid=19647158
+   32 Chr4    phytozome9_0    CDS     9686    9847    .       -       2       ID=PAC:19647158.CDS.3;Parent=PAC:19647158;pacid=19647158
+   ...
+   47 Chr4    phytozome9_0    CDS     4545    4749    .       -       1       ID=PAC:19647158.CDS.18;Parent=PAC:19647158;pacid=19647158
+   48 Chr4    phytozome9_0    CDS     4265    4438    .       -       0       ID=PAC:19647158.CDS.19;Parent=PAC:19647158;pacid=19647158
+   49 Chr4    phytozome9_0    three_prime_UTR 3895    4106    .       -       .       ID=PAC:19647158.three_prime_UTR.1;Parent=PAC:19647158;pacid=19647158
+   50 Chr4    phytozome9_0    CDS     4107    4172    .       -       0       ID=PAC:19647158.CDS.20;Parent=PAC:19647158;pacid=19647158
+
+Now, a whole new direction. Since I decided to work with entire gene sequences, I can return to the idea of direct GFF output. This way I will capture all gene features (UTRs, CDS of varying size, isoform structure). The memory requirements of this paradigm will be much larger and I'll need to look into model parallelism of fully sharded data parallel. Maybe I can also use the torch/slurm integration to distribute data to whole other compute nodes?
+
+I'm going to switch from T5 to Longformer Encoder Decoder(LED) which is potentially more memory efficient on long sequences (upt to 4096 tokens or 24,576 bp).
+There is also LongT5 available, maybe cross validate on those two models?
+
+Starting with fine tuning the existing LM head on LED... if the performance is poor I could consider making a custom head.
+I think I'll need to make a custom head with custom vocabulary and tokenizer

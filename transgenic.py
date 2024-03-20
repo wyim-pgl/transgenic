@@ -1,4 +1,4 @@
-import duckdb, sys, os, subprocess
+import duckdb, sys, os, subprocess, re
 from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split, Subset
@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from transformers import AutoTokenizer, AutoModelForMaskedLM, AutoConfig
-from transformers import T5ForConditionalGeneration, T5Tokenizer, T5Config
+from transformers import LEDForConditionalGeneration, LEDTokenizer, LEDConfig
 from transformers import get_linear_schedule_with_warmup
 from peft import IA3Config, get_peft_model
 import torch.multiprocessing as mp
@@ -55,7 +55,7 @@ def reverseComplement(sequence):
 	return sequence
 	# Prepare raw genomic data for data loading 
 
-def genome2Isoformlist(genome, gff3, db, split=False):
+def genome2GeneList(genome, gff3, db):
 	# read in the genome and gff3 file
 	# parse the gff3 file to get the gene models
 	# for each gene model, create a list of isoforms and extract the gene region sequence (sense strand)
@@ -65,255 +65,77 @@ def genome2Isoformlist(genome, gff3, db, split=False):
 	# Load genome into a dictionary
 	genome_dict = loadGenome(genome)
 
-	# Connect to isoform database and create isoformList table
+	# Connect to isoform database and create geneList table
 	con = duckdb.connect(db)
 	con.sql(
-		"CREATE TABLE IF NOT EXISTS isoformList ("
+		"CREATE TABLE IF NOT EXISTS geneList ("
 			"geneModel VARCHAR, "
-			"isoforms VARCHAR, "
-			"cds VARCHAR, "
 			"start INT, "
 			"fin INT, "
 			"strand VARCHAR, "
 			"chromosome VARCHAR, "
 			"sequence VARCHAR, "
-			"split INT)")
+			"gff VARCHAR)")
 
 	
 	print(f"\nProcessing {gff3}...")
 	num_lines = sum(1 for line in open(gff3, "r"))
 	with open(gff3, 'r') as gff3file:
-		region_start = 0
-		isoforms = ''
-		cds = ''
-		cds_list = []
+		region_start = None
+		gff = ''
+		skipGene = False
 		
 		for line in tqdm(gff3file, total=num_lines):
 			if line.startswith('#') | (line == '\n'):
 				continue
 			else:
 				line = line.strip().split('\t')
-				if line[2] == 'gene':
-					if region_start != 0:
+				chr, _, typ, start, fin, _, strand, phase, attributes = line
+				if typ == 'gene':
+					if (region_start != None) & (not skipGene):
 						# Add previous gene model to the database
-						isoforms = ";".join(set(isoforms.split(";"))) # Locations exist where the isoform only differs in UTR sequence (ignoring UTR isoforms for now)
-						con.sql(f"INSERT INTO isoformList (geneModel, isoforms, cds, start, fin, strand, chromosome, sequence) VALUES ('{geneModel}', '{isoforms}', '{cds}', {region_start}, {region_end}, '{strand}', '{chromosome}', '{sequence}')")
+						con.sql(f"INSERT INTO geneList (geneModel, start, fin, strand, chromosome, sequence, gff) VALUES ('{geneModel}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence}', '{gff[:-1]}')")
 						geneModel = None
 						region_start = 0
 						region_end = 0
-						strand = None
-						chromosome = None
-						isoforms = ''
-						cds = ''
-						cds_list = []
+						gff = ''
 					
 					# Construct current gene model
-					geneModel = line[8].split(';')[0].split('=')[1]
-					strand = line[6]
-					chromosome = line[0]
-					region_start = int(line[3])-1 # Gffs are 1-indexed
-					region_end = int(line[4])     # End not subtracted because python slicing is exclusive
+					skipGene = False
+					geneModel = attributes.split(';')[0].split('=')[1]
+					region_start = int(start)-1 # Gffs are 1-indexed
+					region_end = int(fin)       # End not subtracted because python slicing is exclusive
 					
+					if region_end - region_start > 24552:
+						print(f"Skipping {geneModel} because gene length > 24,552bp", file=sys.stderr)
+						region_start = None
+						region_end = None
+						geneModel = None
+						skipGene = True
+						continue
+
 					# Get sense strand sequence
-					sequence = genome_dict[chromosome][region_start:region_end]
+					sequence = genome_dict[chr][region_start:region_end]
 					if strand == '-':
 						sequence = reverseComplement(sequence)
+				
+				elif skipGene:
+					continue
+				
+				# Build gff string - start and end coordinates are relative to the gene model sense strand
+				else: 
+					start = (int(start) - 1) - region_start 
+					end = int(fin) - region_start
+					gff += f"{typ}|{start}|{end}|{strand}|{phase};"
 
-					
-					
-				# Build isoform string - start and end coordinates are relative to the gene model sense strand
-				elif line[2] == 'mRNA' and isoforms != "":
-					isoforms += ";"
-				elif line[2] == 'CDS':
-					if strand == '+':
-						start = (int(line[3]) - 1) - region_start 
-						end = int(line[4]) - region_start
-					else:
-						start = region_end - int(line[4])
-						end = region_end - (int(line[3]) - 1)
-					
-					if (isoforms != "") and not isoforms.endswith(';'):
-						isoforms += f"|"
-					isoforms += f"{start},{end}"
-
-					#TODO need to expand overlapping CDS regions
-					if f"{start}_{end}" not in cds_list:
-						cds_list.append(f"{start}_{end}")
-						if cds != "":
-							cds += "|"
-						cds += f"{start},{end}"
-	if split:
-		# Randomly assign a number 1-10 to the split column for cross validation  
-		con.sql("UPDATE isoformList SET split = floor(random() * 10_ + 1)")
 	con.close()
 
-def setIsoformAccess(db, mode:str):
-	# mode: AUTOMATIC, READ_ONLY, READ_WRITE
-	with duckdb.connect(db) as con: 
-		con.sql(f"SET access_mode='{mode}'")
 
-def reMapIsoforms(isoforms, coords, keepIntrons=False):
-	isoforms = isoforms.split(';')
-	isoforms = [x.split('|') for x in isoforms]
-	isoforms = [[list(map(int, y.split(','))) for y in x] for x in isoforms]
-
-	# Remove the length corresponding to the 5' or 3' UTR
-	removed_seq_length = min([min(x) for x in coords])
-
-	out = ''
-	for iso in isoforms:
-		if out != "": out += ";"
-		for exon in iso:
-			# Find the start, end, and index of the CDS corresponding to the exon
-			i = 0
-			for cds_start, _ in coords:
-				i += 1
-				if cds_start >= exon[0]:
-					break
-			
-			if not keepIntrons:
-				# Remove the length of the cumulative introduced gaps
-				removed_seq_length = sum([coords[j+1][0] - coords[j][1] for j in range(0, i-1)])
-
-			if out != "" or not out.endswith(';'):
-				out += "|"
-			
-			out += f"{exon[0]-removed_seq_length},"
-			out += f"{exon[1]-removed_seq_length}"
-	return out
-
-def segmentSequence(seq):
-	# Segment the sequence into 6 evenly sized chunks smaller than 4086bp
-	# This allows a max sequence length of 24kb (24,516bp) and a encoder max length of 681 tokens
-	# Longer sequences are truncated
-	if len(seq) > (4086*6):
-		print(f"WARNING: Sequence ({len(seq)}bp) was longer than 24,516bp  and was truncated")
-		seq = seq[0:(4086*6)]
-	
-	piece_size = len(seq)//6 + len(seq)%6
+def segmentSequence(seq, piece_size = 4092):
+	# Segment the sequence into evenly sized chunks smaller than 6000bp (encoder max length of 1000 tokens)
 	seqs = [seq[i:min(i+piece_size, len(seq))] for i in range(0, len(seq), piece_size)]
-	
-	# Split the sequence into 6 roughly equal segments
-	base_size = len(seq) // 6 
-	extras = len(seq) % 6 
-	seqs = []
-	for i in range(6):
-		if i < extras:
-			slice_ = seq[i*(base_size+1):(i+1)*(base_size+1)]
-		else:
-			slice_ = seq[extras*(base_size+1) + (i-extras)*base_size : extras*(base_size+1) + (i-extras+1)*base_size]
-		seqs.append(slice_)
-
 	return seqs
 
-def encodeSeqs(seqs, out, models:list, mode='inference', device="cpu"):
-	encoder_tokenizer, encoder, decoder_tokenizer = models
-	
-	# Tokenize output targets
-	if mode == 'inference':
-		out = decoder_tokenizer.pad_token_id # Start-of-sequence token for prediction
-	elif mode == "training":
-		out = decoder_tokenizer.batch_encode_plus(
-			[out],
-			return_tensors="pt",
-			padding=True,
-			truncation=True)["input_ids"]
-
-	# Tokenize the sequences
-	seqs = encoder_tokenizer.batch_encode_plus(
-		seqs,
-		return_tensors="pt",
-		padding="max_length",
-		truncation=True,
-		max_length = 681)["input_ids"].to(device)
-
-	# Compute the embeddings with nucleotide transformer encoder
-	# Last hidden state: (batch_size, sequence_length, hidden_size) -> (1, 681, x)
-	encoder_attention_mask = (seqs != encoder_tokenizer.pad_token_id).to(device)
-	with torch.no_grad():
-		embeddings = encoder(
-				seqs,
-				attention_mask=encoder_attention_mask,
-				encoder_attention_mask=encoder_attention_mask,
-				output_hidden_states=True
-			)['hidden_states'][-1].detach().cpu()
-	
-	encoder_attention_mask.detach().cpu()
-
-	# Combine last hidden state embeddings from multiple segments into a single sequence
-	embeddings = embeddings.reshape(1, 6*681, -1)
-	encoder_attention_mask = encoder_attention_mask.reshape(1, 6*681)
-	
-	# Clean up memory
-	torch.cuda.empty_cache()
-
-	return embeddings, encoder_attention_mask, out
-
-# TODO - function to map predicted isoform coords back to the original gene model
-def backMapIsoforms():
-	# Need to retain idx somehow?
-	pass
-
-#def generateDatasetWorker(ds, method, encoder_tokenizer, encoder, decoder_tokenizer, mode, device):
-#	# Move the model to a specific GPU
-#	encoder = encoder.to(device)
-#	
-#	# Generate embeddings and isoform targets over the whole dataset
-#	print(f"\n[{device}] - Generating encoded dataset...method: {method}, mode: {mode}", file=sys.stderr)
-#	for idx, geneModel in enumerate(ds):
-#		if method == "CDSOnly":
-#			ds[idx] = getCDSOnly(geneModel, [encoder_tokenizer, encoder, decoder_tokenizer], mode=mode, device=device)
-#		elif method == "CDSWithJunctions":
-#			ds[idx] = getCDSWithJunction(geneModel, [encoder_tokenizer, encoder, decoder_tokenizer], mode=mode, device=device)
-#		elif method == "IntronWithJunctions":
-#			ds[idx] = getIntronWithJunction(geneModel, [encoder_tokenizer, encoder, decoder_tokenizer], mode=mode, device=device)
-
-#	return ds
-
-# Generate a dataset of embedded sequences and target isoforms from an isoformList database
-def generateDataset(db, method="CDSOnly", outfile="CDSOnlyDataset.pt", mode="inference"):
-	# Fix isoform database for parallel reading
-	setIsoformAccess(db, "READ_ONLY")
-	
-	# Load models
-	print("Loading models...", file=sys.stderr)
-	encoder_tokenizer = AutoTokenizer.from_pretrained("InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", cache_dir="./HFmodels",trust_remote_code=True)
-	encoder = AutoModelForMaskedLM.from_pretrained("InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", cache_dir="./HFmodels",trust_remote_code=True)
-	decoder_tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-small", cache_dir="./HFmodels")
-	encoder.eval()
-	encoder.half()
-	
-	# Load the isoforms from the pre-processed database
-	print("Loading database...", file=sys.stderr)
-	with duckdb.connect(db) as con:
-		ds = con.sql("SELECT * FROM isoformList").fetchall()
-
-	# Enable encoding on GPU if available
-	if torch.cuda.is_available():
-		device = torch.device('cuda')
-		world_size = torch.cuda.device_count()
-		print(f"Using device: {device} (world_size={world_size})", file=sys.stderr)
-		
-		# Split ds into 'world_size' number of chunks for parallel processing
-		chunk_size = len(ds)//world_size
-		ds = [ds[i:i + chunk_size] for i in range(0, len(ds), chunk_size)]
-		if len(ds) > world_size:
-			ds[-2].extend(ds[-1])
-			ds = ds[:-1]
-
-		# use multiprocessing to parallelize the encoding
-		gpu_ids = [f"cuda:{i}" for i in list(range(world_size))]
-		args = [(data_chunk, method, encoder_tokenizer, encoder, decoder_tokenizer, mode, gpu_id) for data_chunk, gpu_id in zip(ds, gpu_ids)]
-		# Create a multiprocessing Pool with the number of available GPUs
-		with mp.get_context('spawn').Pool(processes=len(gpu_ids)) as pool:
-			# Map each data chunk, args, and GPU ID to the worker function
-			#results = pool.starmap(generateDatasetWorker, args)
-			pass
-	else:
-		sys.exit("No GPU available for parallel processing! Exiting...")
-
-	results  = [gene for chunk in results for gene in chunk]
-	torch.save(results, outfile)
 
 def setup(rank, world_size):
 	os.environ['MASTER_ADDR'] = 'localhost'
@@ -351,195 +173,85 @@ def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=Non
 		pin_memory=pin_memory,
 		sampler=sampler)
 
-# IsoformList custom dataset class for use with DataLoader
+# geneList custom dataset class for use with DataLoader
 class isoformData(Dataset):
-	def __init__(self, db, method="CDSOnly", mode="inference"):
+	def __init__(self, db, mode="inference"):
 		self.db = db
-		self.method = method
 		self.mode = mode
-		self.decoder_tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-small", cache_dir="./HFmodels")
+		self.decoder_tokenizer = LEDTokenizer.from_pretrained("allenai/led-base-16384", cache_dir="./HFmodels")
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained("InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", cache_dir="./HFmodels", trust_remote_code=True)
-
-	# Get whole sequence without UTR and isoform coordinates for a gene model
-	def getTranscript(self, geneModel):
-		# Get gene model data
-		geneModel, isoforms, cds,start,fin ,strand, chromosome ,region_seq, split = geneModel
-
-		# Extract whole transcript  only sequence
-		cds = cds.split('|')
-		cds = [list(map(int, x.split(','))) for x in cds]
-		seq = region_seq[min(cds):max(cds)]
-		
-		# Map isoform coordinates to transcript sequence coordinates
-		out = reMapIsoforms(isoforms, cds, keepIntrons = True)
-		
-		# Segment new sequences
-		seqs = segmentSequence(seq)
-
-		return [seqs, out]
-	# Get CDS only sequence and isoform coordinates for a gene model
-	def getCDSOnly(self, geneModel):
-		# Get gene model data
-		geneModel, isoforms, cds,start,fin ,strand, chromosome ,region_seq, split = geneModel
-
-		# Extract CDS only sequence
-		cds = cds.split('|')
-		cds = [list(map(int, x.split(','))) for x in cds]
-		seq = ''
-		for s, e in cds:
-			seq += region_seq[s:e]
-		
-		# Map isoform coordinates to CDS only sequence coordinates
-		out = reMapIsoforms(isoforms, cds)
-		
-		# Segment new sequences
-		seqs = segmentSequence(seq)
-
-		return [seqs, out]
-
-	# Get CDS sequence including intron junctions. Map isoform to this sequence
-	def getCDSWithJunction(self, geneModel):
-		# Get gene model data
-		geneModel, isoforms, cds,start,fin ,strand, chromosome ,region_seq, split = geneModel
-		
-		# Extract CDS with intron junctions (60 bp = 10 tokens)
-		cds = cds.split('|')
-		cds = [list(map(int, x.split(','))) for x in cds]
-		seq = ''
-		prev_intron_length = 0
-		new_coords = []
-		for i, coords in enumerate(cds):
-			intron_length = cds[i+1][0] - coords[1]
-			
-			if prev_intron_length > 0:
-				if prev_intron_length >= 120:
-					start = coords[0] - 60
-				else:
-					start = coords[0] - prev_intron_length//2
-			else:
-				start = coords[0]
-			
-			if intron_length >= 120:
-				end = coords[1] + 60
-			else:
-				end = coords[1] + intron_length//2
-			
-			new_coords.append((start, end))
-			seq += region_seq[start:end]
-			prev_intron_length = intron_length
-		
-		# Map isoform coordinates to CDS with intron junctions sequence coordinates
-		out = reMapIsoforms(isoforms, new_coords)
-
-		# Segment new sequences
-		seqs = segmentSequence(seq)
-
-		return [seqs, out]
-
-	# Get intron sequences with CDS junctions and remap isoform coordinates
-	# These sequences inclue the complete first and last CDS, complete introns and truncated internal CDS
-	def getIntronWithJunction(self, geneModel):
-		# Get gene model data
-		geneModel, isoforms, cds,start,fin ,strand, chromosome ,region_seq, split = geneModel
-		
-		# Extract Introns with cds junctions (60 bp = 10 tokens)
-		cds = cds.split('|')
-		cds = [list(map(int, x.split(','))) for x in cds]
-		seq = ''
-		prev_cds_length = 0
-		new_coords = []
-		for i, coords in enumerate(cds):
-			cds_length = coords[1]-coords[0]
-			# Preserve the complete sequence of the first and last CDS
-			if seq == "":
-				start = coords[0]
-				end = coords[1]
-			elif i == len(cds)-1:
-				if prev_cds_length >= 120:
-					start = cds[i-1][1] - 60
-				else:
-					start = cds[i-1][1] - prev_cds_length//2
-				end = coords[1]
-			elif i == 1:
-				start = cds[i-1][1]
-				if cds_length >= 120:
-					end = cds[i][0] + 60
-				else:
-					end = cds[i][0] + cds_length//2 # TODO: a base pair could be omitted for an odd sequence?
-			else:
-				if prev_cds_length >= 120:
-					start = cds[i-1][1] - 60
-				else:
-					start = cds[i-1][1] - prev_cds_length//2
-				if cds_length >= 120:
-					end = cds[i][0] + 60
-				else:
-					end = cds[i][0] + cds_length//2
-			
-			new_coords.append((start, end))
-			seq += region_seq[start:end]
-			prev_cds_length = cds_length
-		
-			# Map isoform coordinates to CDS with intron junctions sequence coordinates
-			out = reMapIsoforms(isoforms, new_coords)
-
-			# Segment new sequences
-			seqs = segmentSequence(seq)
-
-			return [seqs, out]
 
 	def __len__(self):
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			return con.sql("SELECT COUNT(*) FROM isoformList").fetchall()[0][0]
+			return con.sql("SELECT COUNT(*) FROM geneList").fetchall()[0][0]
 	
 	def __getitem__(self, idx):
 		idx += 1
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			con.sql(f"SET access_mode='READ_ONLY'")
-			geneModel = con.sql("WITH rn (geneModel, isoforms, cds, start, fin, strand, chromosome, sequence, split, rnum) AS ("
-								"SELECT *, row_number() OVER() FROM isoformList) "
+			_,_,_,_,_,region_seq, gff = con.sql("WITH rn (geneModel,start, fin, strand, chromosome, sequence, gff, rnum) AS ("
+								"SELECT *, row_number() OVER() FROM geneList) "
 								f"SELECT * from rn where rnum={idx}").fetchall()[0][:-1]
-		print(geneModel[2])
-		if self.method == "CDSOnly":
-			seqs, out = self.getCDSOnly(geneModel)
-		elif self.method == "CDSWithJunctions":
-			seqs, out = self.getCDSWithJunction(geneModel)
-		elif self.method == "IntronWithJunctions":
-			seqs, out = self.getIntronWithJunction(geneModel)
-		else:
-			sys.exit("Invalid sequence chunking method! Exiting... (CDSOnly|CDSWithJunctions|IntronWithJunctions)")
-
-		print(out)
+		
 		# Tokenize output targets
 		if self.mode == 'inference':
-			labels = None
+			labels = self.decoder_tokenizer.batch_encode_plus( #TODO: will this work?
+				"",
+				return_tensors="pt",
+				padding=True,
+				truncation=True)["input_ids"]
 		elif self.mode == "training":
 			# Tokenize the labels
 			labels = self.decoder_tokenizer.batch_encode_plus(
-				[out],
+				[gff],
 				return_tensors="pt",
 				padding=True,
 				truncation=True)["input_ids"]
 
-		# Tokenize the sequences
+		# Segment and tokenize the sequences
+		seqs = segmentSequence(region_seq, piece_size=6000)
 		seqs = self.encoder_tokenizer.batch_encode_plus(
 			seqs,
 			return_tensors="pt",
 			padding="max_length",
 			truncation=True,
-			max_length = 681)["input_ids"]
+			max_length = 682)["input_ids"]
 
 		encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
 	
 		return (seqs, encoder_attention_mask, labels)
 
+class gffTokenizer:
+	def __init__(self):
+		self.vocab = {"[PAD]": 0, "[UNK]": 1, "mRNA":2, "exon":3, "CDS":4, "five_prime_UTR":5, "three_prime_UTR":6,
+				"1":7, "2":8, "3":9, "4":10, "5":11, "6":12, "7":13, "8":14, "9":15, "0":16, ".":17, "+":18, "-":19, 
+				"|":20, ";":21}
+		
+	def encode(self, gff:str):
+		tokens = []
+		for model in gff.split(";"):
+			for column in gff.split("|"):
+				if re.search(r'^\d+$', column):
+					for digit in column:
+						tokens.append(self.vocab[digit])
+				else:
+					tokens.append(self.vocab[column])
+		return torch.FloatTensor(tokens)
+	
+	def decode(self, tokens):
+		gff = ""
+		for token in tokens:
+			for key, value in self.vocab.items():
+				if token == value:
+					gff += key
+					break
+		return gff
+	
 # Full generative model definition
-class transgenic(T5ForConditionalGeneration):
+class transgenic(LEDForConditionalGeneration):
 	def __init__(self):
 		self.cache_dir = "./HFmodels"
-		self.decoder_model = "google/flan-t5-small"
+		self.decoder_model = "allenai/led-base-16384"
 		self.encoder_model = "InstaDeepAI/nucleotide-transformer-v2-500m-multi-species"
-		self.peft_config = IA3Config(task_type="SEQ_2_SEQ_LM")
 		super().__init__(AutoConfig.from_pretrained(self.decoder_model))
 		
 
@@ -549,17 +261,30 @@ class transgenic(T5ForConditionalGeneration):
 			param.requires_grad = False
 
 		# Load the pre-trained decoder and freeze the parameters
-		self.decoder = T5ForConditionalGeneration.from_pretrained(self.decoder_model, cache_dir=self.cache_dir)
+		self.decoder = LEDForConditionalGeneration.from_pretrained(self.decoder_model, cache_dir=self.cache_dir)
 		for param in self.decoder.parameters():
 			param.requires_grad = False
 
 		# Load the IA3 adaptor
+		self.peft_config = IA3Config(
+			task_type="SEQ_2_SEQ_LM", 
+			target_modules = [
+				"decoder.layers.*.self_attn.*",  # Targets all self-attention components
+				"decoder.layers.*.fc1",  # Targets the first feedforward linear layer
+				"decoder.layers.*.fc2",  # Targets the second feedforward linear layer
+				],
+
+			feedforward_modules = [
+				"decoder.layers.*.fc1",  # Recompute activations for the first feedforward layer
+				"decoder.layers.*.fc2",  # Recompute activations for the second feedforward layer
+				])
 		self.decoder = get_peft_model(self.decoder, self.peft_config)
-		#self.trainable_parameters = self.decoder.print_trainable_parameters()
+		self.trainable_parameters = self.decoder.print_trainable_parameters()
 
 		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
 		#plants -> 1500, multispecies -> 1024
-		self.hidden_mapping = nn.Linear(1024, 512)
+		#T5 -> 512, longformer -> 768
+		self.hidden_mapping = nn.Linear(1024, 768)
 
 	def forward(self, seqs, encoder_attention_mask, labels, batch_size): # target_ids,
 		# Compute the embeddings with nucleotide transformer encoder
@@ -792,22 +517,18 @@ if __name__ == '__main__':
 	gff = "Athaliana_167_gene_Chr4.gff3"
 	db = "AthChr4.db"
 	
-	#genome2Isoformlist(fasta, gff, db="AthChr4.db")
-	#with duckdb.connect("AthChr4.db") as con:
-	#	gm = con.sql("SELECT * FROM isoformList where strand='-'").fetchall()[0]
-	#	getCDSOnly(gm, [])
-	#generateDataset("AthChr4.db", method="CDSOnly", outfile="CDSOnlyDataset.pt", mode="training")
+	#genome2GeneList(fasta, gff, db="AthChr4.db")
 	
-	#model = transgenic()
-	#checkpoint = {'model_state_dict': model.state_dict()}
-	#torch.save(checkpoint, "transgenic.pt")
-	#model.load_state_dict(torch.load("transgenic.pt")['model_state_dict'])
 	# Create a training and evaluation DataLoaders
-	ds = isoformData(db, method="CDSOnly", mode="training")
-	one = ds.__getitem__(1)
+	ds = isoformData(db, mode="inference")
+	#one = ds.__getitem__(0)
+	
 	batch_size = 1
 	train_data, eval_data = random_split(ds, [4087, 40])
 
+	model = transgenic()
+	checkpoint = {'model_state_dict': model.state_dict()}
+	torch.save(checkpoint, "transgenic.pt")
 	#train_dataloader = makeDataLoader(train_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 	#eval_dataloader = makeDataLoader(eval_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 
