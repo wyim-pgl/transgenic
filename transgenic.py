@@ -354,11 +354,12 @@ class transgenic(LEDForConditionalGeneration):
 		decoder_outputs = self.decoder(inputs_embeds=decoder_inputs_embeds, 
 								 #decoder_input_ids=target_ids, 
 								 attention_mask=batch_mask,
-								 labels=labels
+								 labels=labels,
+								 output_hidden_states=True
 								 )
 		
 		# Gff prediction head
-		gff_logits = self.gff_head(decoder_outputs.hidden_states[-1])
+		gff_logits = self.gff_head(decoder_outputs.decoder_hidden_states[-1])
 		
 		return gff_logits
 
@@ -493,13 +494,14 @@ def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, spl
 	
 	# Prediction loop
 	predictions = []
+	loss_fn = nn.CrossEntropyLoss(ignore_index=0)
 	for step, batch in enumerate(tqdm(loader)):
 		batch = [item.to(device) for item in batch]
 		with torch.no_grad():
 			outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-			ppl = torch.exp(outputs.loss).cpu().numpy()
-			loss = outputs.loss.cpu().numpy()
-			pred = dataset.dataset.decoder_tokenizer.batch_decode(torch.argmax(outputs.logits, -1).detach().cpu().numpy(), skip_special_tokens=True)
+			loss = loss_fn(outputs[0].view(-1, 22), batch[2].view(-1)).cpu().numpy()
+			ppl = torch.exp(loss).cpu().numpy()
+			pred = dataset.dataset.decoder_tokenizer.batch_decode(torch.argmax(outputs, -1).detach().cpu().numpy(), skip_special_tokens=True)
 			true = dataset.dataset.decoder_tokenizer.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
 		
 		predictions.append([str(true[0]), str(pred[0]), str(ppl), str(loss)])
@@ -564,25 +566,25 @@ if __name__ == '__main__':
 
 	# Create a training and evaluation DataLoaders
 	ds = isoformData(db, mode="training")
-	one = ds.__getitem__(0)
-	ds.decoder_tokenizer.batch_decode(one[2])
+	#one = ds.__getitem__(0)
 
 	batch_size = 1
-	train_data, eval_data = random_split(ds, [4087, 40])
+	train_data, eval_data = random_split(ds, [4000, 127])
 
-	model = transgenic()
-	checkpoint = {'model_state_dict': model.state_dict()}
-	torch.save(checkpoint, "transgenic.pt")
+	#model = transgenic()
+	#model(one[0].unsqueeze(0), one[1].unsqueeze(0), one[2].unsqueeze(0), batch_size)
+	#checkpoint = {'model_state_dict': model.state_dict()}
+	#torch.save(checkpoint, "transgenic.pt")
 	#train_dataloader = makeDataLoader(train_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 	#eval_dataloader = makeDataLoader(eval_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 
-	#run_trainTransgenicDDP( 
-	#	train_data, 
-	#	eval_ds=eval_data, 
-	#	lr=8e-3, 
-	#	num_epochs=1, 
-	#	batch_size=batch_size, 
-	#	schedule_lr=True, 
-	#	eval=True
-	#)
-	run_predictTransgenicDDP("transgenic.pt", eval_data, "predictions.txt", 0, batch_size)
+	run_trainTransgenicDDP( 
+		train_data, 
+		eval_ds=eval_data, 
+		lr=8e-2, 
+		num_epochs=10, 
+		batch_size=batch_size, 
+		schedule_lr=True, 
+		eval=True
+	)
+	#run_predictTransgenicDDP("transgenic.pt", eval_data, "predictions.txt", 0, batch_size)
