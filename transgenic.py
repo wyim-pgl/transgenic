@@ -195,17 +195,17 @@ class isoformData(Dataset):
 		# Tokenize output targets
 		if self.mode == 'inference':
 			labels = self.decoder_tokenizer.batch_encode_plus( #TODO: will this work?
-				"",
+				[""],
 				return_tensors="pt",
 				padding=True,
-				truncation=True)["input_ids"]
+				truncation=False)["input_ids"]
 		elif self.mode == "training":
 			# Tokenize the labels
 			labels = self.decoder_tokenizer.batch_encode_plus(
 				[gff],
 				return_tensors="pt",
 				padding=True,
-				truncation=True)["input_ids"]
+				truncation=False)["input_ids"]
 
 		# Segment and tokenize the sequences
 		seqs = segmentSequence(region_seq, piece_size=6000)
@@ -235,9 +235,9 @@ class GFFTokenizer(PreTrainedTokenizer):
 			self.vocab = vocab
 
 		self.ids_to_tokens = {id: token for token, id in self.vocab.items()}
+		super().__init__(**kwargs)
 		self.pad_token = "[PAD]"
 		self.unk_token = "[UNK]"
-		super().__init__(**kwargs)
 
 	@property
 	def vocab_size(self):
@@ -251,10 +251,13 @@ class GFFTokenizer(PreTrainedTokenizer):
 		for line in text.split(";"):
 			for column in line.split("|"):
 				if re.search(r'^\d+$', column):
-					tokens.extend([self.vocab.get(digit, self.vocab["[UNK]"]) for digit in column])
+					tokens.extend([digit for digit in column])
 				else:
-					tokens.append(self.vocab.get(column, self.vocab["[UNK]"]))
-		return torch.FloatTensor(tokens)
+					tokens.append(column)
+				tokens.append("|")
+			tokens = tokens[:-1]
+			tokens.append(";")
+		return tokens[:-1]
 
 	def _convert_token_to_id(self, token):
 		return self.vocab.get(token, self.vocab.get(self.unk_token))
@@ -264,7 +267,6 @@ class GFFTokenizer(PreTrainedTokenizer):
 
 	def convert_tokens_to_string(self, tokens):
 		return ''.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in tokens])
-
 
 
 # Full generative model definition
@@ -562,8 +564,9 @@ if __name__ == '__main__':
 	#genome2GeneList(fasta, gff, db="AthChr4.db")
 
 	# Create a training and evaluation DataLoaders
-	ds = isoformData(db, mode="inference")
-	#one = ds.__getitem__(0)
+	ds = isoformData(db, mode="training")
+	one = ds.__getitem__(0)
+	ds.decoder_tokenizer.batch_decode(one[2])
 
 	batch_size = 1
 	train_data, eval_data = random_split(ds, [4087, 40])
