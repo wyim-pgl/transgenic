@@ -132,7 +132,7 @@ def genome2GeneList(genome, gff3, db):
 
 
 def segmentSequence(seq, piece_size = 4092):
-	# Segment the sequence into evenly sized chunks smaller than 6000bp (encoder max length of 1000 tokens)
+	# Segment the sequence into evenly sized chunks smaller than 4092bp (encoder max length of 682 tokens)
 	seqs = [seq[i:min(i+piece_size, len(seq))] for i in range(0, len(seq), piece_size)]
 	return seqs
 
@@ -316,7 +316,7 @@ class transgenic(LEDForConditionalGeneration):
 			target_modules = peft_targets,
 			feedforward_modules = peft_feedforward)
 		self.decoder = get_peft_model(self.decoder, self.peft_config)
-		self.trainable_parameters = self.decoder.print_trainable_parameters()
+		#self.trainable_parameters = self.decoder.print_trainable_parameters()
 
 		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
 		#plants -> 1500, multispecies -> 1024
@@ -336,16 +336,15 @@ class transgenic(LEDForConditionalGeneration):
 					encoder_attention_mask=encoder_attention_mask[i,:,:],
 					output_hidden_states=True
 				)['hidden_states'][-1]
+			
+			num_segs = embeddings.shape[0]
+			
 			if i == 0:
-				batch_embeds = embeddings
-			elif i == 1:
-				batch_embeds = torch.stack((batch_embeds, embeddings), dim=0)
+				batch_embeds = embeddings.reshape(1, num_segs*682, -1)
+				batch_mask = encoder_attention_mask[i,:,:].reshape(1, num_segs*682)
 			else:
-				batch_embeds = torch.cat((batch_embeds, embeddings.unsqueeze(0)), dim=0)
-		
-		# Combine last hidden state embeddings from multiple segments into a single sequence
-		embeddings = batch_embeds.reshape(batch_size, 6*681, -1)					# Shape: (batch_size, seq_length, hidden_size)
-		encoder_attention_mask = encoder_attention_mask.reshape(batch_size, 6*681)	# Shape: (batch_size, seq_length)
+				batch_embeds = torch.cat((batch_embeds, embeddings.reshape(1, num_segs*682, -1)), dim=0)
+				batch_mask = torch.cat((batch_mask, encoder_attention_mask[i,:,:].reshape(1, num_segs*682)), dim=0)
 		
 		# Use the last hidden state from the nucleotide encoder as input to the decoder
 		# Transform the encoder hidden states to match the decoder input size
@@ -354,7 +353,7 @@ class transgenic(LEDForConditionalGeneration):
 		# Process the transformed encoder outputs through the decoder
 		decoder_outputs = self.decoder(inputs_embeds=decoder_inputs_embeds, 
 								 #decoder_input_ids=target_ids, 
-								 attention_mask=encoder_attention_mask,
+								 attention_mask=batch_mask,
 								 labels=labels
 								 )
 		
