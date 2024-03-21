@@ -221,21 +221,30 @@ class isoformData(Dataset):
 		return (seqs, encoder_attention_mask, labels)
 	
 class GFFTokenizer(PreTrainedTokenizer):
+	model_input_names = ["input_ids", "attention_mask"]
+
 	def __init__(self, vocab=None, **kwargs):
-		# Initializes the parent class
-		super().__init__(**kwargs)
-
 		if vocab is None:
-			vocab = {"[PAD]": 0, "[UNK]": 1, "mRNA":2, "exon":3, "CDS":4, "five_prime_UTR":5, "three_prime_UTR":6,
-				"1":7, "2":8, "3":9, "4":10, "5":11, "6":12, "7":13, "8":14, "9":15, "0":16, ".":17, "+":18, "-":19, 
-				"|":20, ";":21}
+			self.vocab = {
+				"[PAD]": 0, "[UNK]": 1, "mRNA": 2, "exon": 3, "CDS": 4,
+				"five_prime_UTR": 5, "three_prime_UTR": 6, "1": 7, "2": 8, 
+				"3": 9, "4": 10, "5": 11, "6": 12, "7": 13, "8": 14, "9": 15,
+				"0": 16, ".": 17, "+": 18, "-": 19, "|": 20, ";": 21
+			}
+		else:
+			self.vocab = vocab
 
-		self.vocab = vocab
-		self.inv_vocab = {v: k for k, v in self.vocab.items()}
+		self.ids_to_tokens = {id: token for token, id in self.vocab.items()}
+		self.pad_token = "[PAD]"
+		self.unk_token = "[UNK]"
+		super().__init__(**kwargs)
 
 	@property
 	def vocab_size(self):
 		return len(self.vocab)
+
+	def get_vocab(self):
+		return dict(self.vocab, **self.added_tokens_encoder)
 
 	def _tokenize(self, text):
 		tokens = []
@@ -245,20 +254,17 @@ class GFFTokenizer(PreTrainedTokenizer):
 					tokens.extend([self.vocab.get(digit, self.vocab["[UNK]"]) for digit in column])
 				else:
 					tokens.append(self.vocab.get(column, self.vocab["[UNK]"]))
-		return tokens
+		return torch.FloatTensor(tokens)
 
 	def _convert_token_to_id(self, token):
-		return self.vocab.get(token, self.vocab["[UNK]"])
+		return self.vocab.get(token, self.vocab.get(self.unk_token))
 
 	def _convert_id_to_token(self, index):
-		return self.inv_vocab.get(index, "[UNK]")
+		return self.ids_to_tokens.get(index, self.unk_token)
 
 	def convert_tokens_to_string(self, tokens):
 		return ''.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in tokens])
 
-	def save_vocabulary(self, dir, prefix=None):
-		# This method can be implemented to save your tokenizer vocabulary to a directory
-		pass
 
 
 # Full generative model definition
@@ -558,9 +564,6 @@ if __name__ == '__main__':
 	# Create a training and evaluation DataLoaders
 	ds = isoformData(db, mode="inference")
 	#one = ds.__getitem__(0)
-	
-	if torch.backends.mps.is_available():
-		device = torch.device("mps")
 
 	batch_size = 1
 	train_data, eval_data = random_split(ds, [4087, 40])
