@@ -6,8 +6,8 @@ from torch.utils.data.distributed import DistributedSampler
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from transformers import AutoTokenizer, AutoModelForMaskedLM, AutoConfig
-from transformers import LEDForConditionalGeneration, LEDTokenizer, LEDConfig
+from transformers import AutoTokenizer, AutoModelForMaskedLM, AutoConfig, PreTrainedTokenizer
+from transformers import LEDForConditionalGeneration, LEDTokenizer
 from transformers import get_linear_schedule_with_warmup
 from peft import IA3Config, get_peft_model
 import torch.multiprocessing as mp
@@ -178,7 +178,7 @@ class isoformData(Dataset):
 	def __init__(self, db, mode="inference"):
 		self.db = db
 		self.mode = mode
-		self.decoder_tokenizer = LEDTokenizer.from_pretrained("allenai/led-base-16384", cache_dir="./HFmodels")
+		self.decoder_tokenizer = GFFTokenizer()
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained("InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", cache_dir="./HFmodels", trust_remote_code=True)
 
 	def __len__(self):
@@ -219,33 +219,48 @@ class isoformData(Dataset):
 		encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
 	
 		return (seqs, encoder_attention_mask, labels)
+	
+class GFFTokenizer(PreTrainedTokenizer):
+	def __init__(self, vocab=None, **kwargs):
+		# Initializes the parent class
+		super().__init__(**kwargs)
 
-class gffTokenizer:
-	def __init__(self):
-		self.vocab = {"[PAD]": 0, "[UNK]": 1, "mRNA":2, "exon":3, "CDS":4, "five_prime_UTR":5, "three_prime_UTR":6,
+		if vocab is None:
+			vocab = {"[PAD]": 0, "[UNK]": 1, "mRNA":2, "exon":3, "CDS":4, "five_prime_UTR":5, "three_prime_UTR":6,
 				"1":7, "2":8, "3":9, "4":10, "5":11, "6":12, "7":13, "8":14, "9":15, "0":16, ".":17, "+":18, "-":19, 
 				"|":20, ";":21}
-		
-	def encode(self, gff:str):
+
+		self.vocab = vocab
+		self.inv_vocab = {v: k for k, v in self.vocab.items()}
+
+	@property
+	def vocab_size(self):
+		return len(self.vocab)
+
+	def _tokenize(self, text):
 		tokens = []
-		for model in gff.split(";"):
-			for column in gff.split("|"):
+		for line in text.split(";"):
+			for column in line.split("|"):
 				if re.search(r'^\d+$', column):
-					for digit in column:
-						tokens.append(self.vocab[digit])
+					tokens.extend([self.vocab.get(digit, self.vocab["[UNK]"]) for digit in column])
 				else:
-					tokens.append(self.vocab[column])
-		return torch.FloatTensor(tokens)
-	
-	def decode(self, tokens):
-		gff = ""
-		for token in tokens:
-			for key, value in self.vocab.items():
-				if token == value:
-					gff += key
-					break
-		return gff
-	
+					tokens.append(self.vocab.get(column, self.vocab["[UNK]"]))
+		return tokens
+
+	def _convert_token_to_id(self, token):
+		return self.vocab.get(token, self.vocab["[UNK]"])
+
+	def _convert_id_to_token(self, index):
+		return self.inv_vocab.get(index, "[UNK]")
+
+	def convert_tokens_to_string(self, tokens):
+		return ''.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in tokens])
+
+	def save_vocabulary(self, dir, prefix=None):
+		# This method can be implemented to save your tokenizer vocabulary to a directory
+		pass
+
+
 # Full generative model definition
 class transgenic(LEDForConditionalGeneration):
 	def __init__(self):
@@ -265,19 +280,33 @@ class transgenic(LEDForConditionalGeneration):
 		for param in self.decoder.parameters():
 			param.requires_grad = False
 
+		target_modules = [
+			r"led.decoder.layers.*.self_attn.k_proj",  # Targets all self-attention components
+			r"led.decoder.layers.*.self_attn.v_proj",
+			r"led.decoder.layers.*.self_attn.q_proj",
+			r"led.decoder.layers.*.self_attn.kout_proj",
+			r"led.decoder.layers.*.fc1",  # Targets the first feedforward linear layer
+			r"led.decoder.layers.*.fc2",  # Targets the second feedforward linear layer
+			]
+		feedforward_modules = [
+			r"led.decoder.layers.\*.fc1",  # Recompute activations for the first feedforward layer
+			r"led.decoder.layers.\*.fc2",  # Recompute activations for the second feedforward layer
+			]
+		peft_targets = []
+		peft_feedforward = []
+		for module in self.decoder.named_modules():
+			for pattern in target_modules:
+				if re.match(pattern, module[0]):
+					peft_targets.append(module[0])
+			for pattern in feedforward_modules:
+				if re.match(pattern, module[0]):
+					peft_feedforward.append(module[0])
+
 		# Load the IA3 adaptor
 		self.peft_config = IA3Config(
-			task_type="SEQ_2_SEQ_LM", 
-			target_modules = [
-				"decoder.layers.*.self_attn.*",  # Targets all self-attention components
-				"decoder.layers.*.fc1",  # Targets the first feedforward linear layer
-				"decoder.layers.*.fc2",  # Targets the second feedforward linear layer
-				],
-
-			feedforward_modules = [
-				"decoder.layers.*.fc1",  # Recompute activations for the first feedforward layer
-				"decoder.layers.*.fc2",  # Recompute activations for the second feedforward layer
-				])
+			task_type="SEQ_2_SEQ_LM",
+			target_modules = peft_targets,
+			feedforward_modules = peft_feedforward)
 		self.decoder = get_peft_model(self.decoder, self.peft_config)
 		self.trainable_parameters = self.decoder.print_trainable_parameters()
 
@@ -285,6 +314,9 @@ class transgenic(LEDForConditionalGeneration):
 		#plants -> 1500, multispecies -> 1024
 		#T5 -> 512, longformer -> 768
 		self.hidden_mapping = nn.Linear(1024, 768)
+
+		# Custom head for GFF prediction
+		self.gff_head = nn.Linear(768, 22)
 
 	def forward(self, seqs, encoder_attention_mask, labels, batch_size): # target_ids,
 		# Compute the embeddings with nucleotide transformer encoder
@@ -318,7 +350,10 @@ class transgenic(LEDForConditionalGeneration):
 								 labels=labels
 								 )
 		
-		return decoder_outputs
+		# Gff prediction head
+		gff_logits = self.gff_head(decoder_outputs.hidden_states[-1])
+		
+		return gff_logits
 
 # Training loop
 def trainTransgenicDDP(rank, 
@@ -349,6 +384,7 @@ def trainTransgenicDDP(rank,
 	ddp_model = DDP(model, device_ids=[rank])
 	
 	# Define the loss function and optimizer
+	loss_fn = nn.CrossEntropyLoss(ignore_index=0)
 	optimizer = optim.AdamW(model.parameters(), lr=lr)
 	optimizer.zero_grad()
 	
@@ -368,7 +404,7 @@ def trainTransgenicDDP(rank,
 		for step, batch in enumerate(tqdm(train_ds)):
 			batch = [item.to(device) for item in batch]
 			outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-			loss = outputs.loss
+			loss = loss_fn(outputs[0].view(-1, 22), batch[2].view(-1))
 			total_loss += loss.detach().float()
 			loss.backward()
 			optimizer.step()
@@ -518,11 +554,14 @@ if __name__ == '__main__':
 	db = "AthChr4.db"
 	
 	#genome2GeneList(fasta, gff, db="AthChr4.db")
-	
+
 	# Create a training and evaluation DataLoaders
 	ds = isoformData(db, mode="inference")
 	#one = ds.__getitem__(0)
 	
+	if torch.backends.mps.is_available():
+		device = torch.device("mps")
+
 	batch_size = 1
 	train_data, eval_data = random_split(ds, [4087, 40])
 
