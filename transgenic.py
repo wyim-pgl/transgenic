@@ -132,7 +132,7 @@ def genome2GeneList(genome, gff3, db):
 
 
 def segmentSequence(seq, piece_size = 4092):
-	# Segment the sequence into evenly sized chunks smaller than 4092bp (encoder max length of 682 tokens)
+	# Segment the sequence into evenly sized chunks smaller than 4092bp (encoder max length of 1024 tokens)
 	seqs = [seq[i:min(i+piece_size, len(seq))] for i in range(0, len(seq), piece_size)]
 	return seqs
 
@@ -214,7 +214,7 @@ class isoformData(Dataset):
 			return_tensors="pt",
 			padding="max_length",
 			truncation=True,
-			max_length = 682)["input_ids"]
+			max_length = 1024)["input_ids"]
 
 		encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
 	
@@ -340,15 +340,15 @@ class transgenic(LEDForConditionalGeneration):
 			num_segs = embeddings.shape[0]
 			
 			if i == 0:
-				batch_embeds = embeddings.reshape(1, num_segs*682, -1)
-				batch_mask = encoder_attention_mask[i,:,:].reshape(1, num_segs*682)
+				batch_embeds = embeddings.reshape(1, num_segs*1024, -1)
+				batch_mask = encoder_attention_mask[i,:,:].reshape(1, num_segs*1024)
 			else:
-				batch_embeds = torch.cat((batch_embeds, embeddings.reshape(1, num_segs*682, -1)), dim=0)
-				batch_mask = torch.cat((batch_mask, encoder_attention_mask[i,:,:].reshape(1, num_segs*682)), dim=0)
+				batch_embeds = torch.cat((batch_embeds, embeddings.reshape(1, num_segs*1024, -1)), dim=0)
+				batch_mask = torch.cat((batch_mask, encoder_attention_mask[i,:,:].reshape(1, num_segs*1024)), dim=0)
 		
 		# Use the last hidden state from the nucleotide encoder as input to the decoder
 		# Transform the encoder hidden states to match the decoder input size
-		decoder_inputs_embeds = self.hidden_mapping(embeddings)
+		decoder_inputs_embeds = self.hidden_mapping(batch_embeds)
 		
 		# Process the transformed encoder outputs through the decoder
 		decoder_outputs = self.decoder(inputs_embeds=decoder_inputs_embeds, 
@@ -389,7 +389,7 @@ def trainTransgenicDDP(rank,
 
 	# Load the model and wrap in DDP
 	model = transgenic().to(device)
-	ddp_model = DDP(model, device_ids=[rank])
+	ddp_model = DDP(model, device_ids=[rank], find_unused_parameters=True)
 	
 	# Define the loss function and optimizer
 	loss_fn = nn.CrossEntropyLoss(ignore_index=0)
@@ -429,7 +429,7 @@ def trainTransgenicDDP(rank,
 				batch = [item.to(device) for item in batch]
 				with torch.no_grad():
 					outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-				loss = outputs.loss
+				loss = loss_fn(outputs[0].view(-1, 22), batch[2].view(-1))
 				eval_loss += loss.detach().float()
 
 			eval_epoch_loss = eval_loss / len(eval_ds)
@@ -484,7 +484,7 @@ def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, spl
 	
 	model = transgenic().to(device)
 	model.load_state_dict(torch.load(checkpoint, map_location=map_location)['model_state_dict'])
-	ddp_model = DDP(model, device_ids=[rank])
+	ddp_model = DDP(model, device_ids=[rank], find_unused_parameters=True)
 	ddp_model.eval()
 	
 	# Create a DataLoader
@@ -499,8 +499,9 @@ def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, spl
 		batch = [item.to(device) for item in batch]
 		with torch.no_grad():
 			outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-			loss = loss_fn(outputs[0].view(-1, 22), batch[2].view(-1)).cpu().numpy()
+			loss = loss_fn(outputs[0].view(-1, 22), batch[2].view(-1))
 			ppl = torch.exp(loss).cpu().numpy()
+			loss = loss.cpu().numpy()
 			pred = dataset.dataset.decoder_tokenizer.batch_decode(torch.argmax(outputs, -1).detach().cpu().numpy(), skip_special_tokens=True)
 			true = dataset.dataset.decoder_tokenizer.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
 		
@@ -578,13 +579,13 @@ if __name__ == '__main__':
 	#train_dataloader = makeDataLoader(train_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 	#eval_dataloader = makeDataLoader(eval_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 
-	run_trainTransgenicDDP( 
-		train_data, 
-		eval_ds=eval_data, 
-		lr=8e-2, 
-		num_epochs=10, 
-		batch_size=batch_size, 
-		schedule_lr=True, 
-		eval=True
-	)
-	#run_predictTransgenicDDP("transgenic.pt", eval_data, "predictions.txt", 0, batch_size)
+	#run_trainTransgenicDDP( 
+	#	train_data, 
+	#	eval_ds=eval_data, 
+	#	lr=8e-2, 
+	#	num_epochs=10, 
+	#	batch_size=batch_size, 
+	#	schedule_lr=True, 
+	#	eval=True
+	#)
+	run_predictTransgenicDDP("checkpoints/transgenic_checkpoint.pt", eval_data, "predictions.txt", 0, batch_size)
