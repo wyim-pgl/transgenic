@@ -379,8 +379,6 @@ def trainTransgenicDDP(rank,
 	print(f"Training transgenic on {device}, (world_size={world_size})", file=sys.stderr)
 	setup(rank, world_size)
 
-	# decoder_tokenizer = train_ds.decoder_tokenizer
-
 	# Distribute data
 	train_sampler = DistributedSampler(train_ds, num_replicas=world_size, rank=rank)
 	train_ds = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, sampler=train_sampler)
@@ -407,12 +405,13 @@ def trainTransgenicDDP(rank,
 	# Training loop
 	best_eval_score = None
 	for epoch in range(num_epochs):
+		train_sampler.set_epoch(epoch)
 		model.train()
 		total_loss = 0
 		for step, batch in enumerate(tqdm(train_ds)):
 			batch = [item.to(device) for item in batch]
 			outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-			loss = loss_fn(outputs[0].view(-1, 22), batch[2].view(-1))
+			loss = loss_fn(outputs.view(-1, 22), batch[2].view(-1))
 			total_loss += loss.detach().float()
 			loss.backward()
 			optimizer.step()
@@ -429,7 +428,7 @@ def trainTransgenicDDP(rank,
 				batch = [item.to(device) for item in batch]
 				with torch.no_grad():
 					outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-				loss = loss_fn(outputs[0].view(-1, 22), batch[2].view(-1))
+				loss = loss_fn(outputs.view(-1, 22), batch[2].view(-1))
 				eval_loss += loss.detach().float()
 
 			eval_epoch_loss = eval_loss / len(eval_ds)
@@ -481,7 +480,6 @@ def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, spl
 	map_location = {'cuda:%d' % 0: 'cuda:%d' % rank}
 	
 	# Load the model and wrap in DDP
-	
 	model = transgenic().to(device)
 	model.load_state_dict(torch.load(checkpoint, map_location=map_location)['model_state_dict'])
 	ddp_model = DDP(model, device_ids=[rank], find_unused_parameters=True)
@@ -499,7 +497,7 @@ def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, spl
 		batch = [item.to(device) for item in batch]
 		with torch.no_grad():
 			outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-			loss = loss_fn(outputs[0].view(-1, 22), batch[2].view(-1))
+			loss = loss_fn(outputs.view(-1, 22), batch[2].view(-1))
 			ppl = torch.exp(loss).cpu().numpy()
 			loss = loss.cpu().numpy()
 			pred = dataset.dataset.decoder_tokenizer.batch_decode(torch.argmax(outputs, -1).detach().cpu().numpy(), skip_special_tokens=True)
@@ -507,11 +505,12 @@ def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, spl
 		
 		predictions.append([str(true[0]), str(pred[0]), str(ppl), str(loss)])
 	
-	for prediction in predictions:
-		with open("predictions.pkl", 'wb') as out:
-			pickle.dump(prediction, out)
-		with open(outfile, 'a') as out:
+	with open(outfile, 'a') as out:
+		for prediction in predictions:
 			out.write("\t".join(prediction) + f"\t{split}\n")
+
+	with open("predictions.pkl", 'wb') as out:
+			pickle.dump(predictions, out)
 	
 
 def run_predictTransgenicDDP(checkpoint:str, dataset:isoformData, outfile, split, batch_size):
@@ -571,6 +570,8 @@ if __name__ == '__main__':
 
 	batch_size = 1
 	train_data, eval_data = random_split(ds, [4000, 127])
+	train_data, eval_data = random_split(eval_data.dataset, [100, 27])
+
 
 	#model = transgenic()
 	#model(one[0].unsqueeze(0), one[1].unsqueeze(0), one[2].unsqueeze(0), batch_size)
@@ -579,13 +580,13 @@ if __name__ == '__main__':
 	#train_dataloader = makeDataLoader(train_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 	#eval_dataloader = makeDataLoader(eval_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 
-	#run_trainTransgenicDDP( 
-	#	train_data, 
-	#	eval_ds=eval_data, 
-	#	lr=8e-2, 
-	#	num_epochs=10, 
-	#	batch_size=batch_size, 
-	#	schedule_lr=True, 
-	#	eval=True
-	#)
-	run_predictTransgenicDDP("checkpoints/transgenic_checkpoint.pt", eval_data, "predictions.txt", 0, batch_size)
+	run_trainTransgenicDDP( 
+		train_data, 
+		eval_ds=eval_data, 
+		lr=8e-2, 
+		num_epochs=10, 
+		batch_size=batch_size, 
+		schedule_lr=True, 
+		eval=True
+	)
+	#run_predictTransgenicDDP("checkpoints/transgenic_checkpoint.pt", eval_data, "predictions.txt", 0, batch_size)

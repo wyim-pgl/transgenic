@@ -43,6 +43,7 @@ pip install --upgrade git+https://github.com/huggingface/transformers.git peft
 - Define a training, validation, and test set of genomes (how much data will I need?)
 - Write backmapping function to move output isoform lists to genemodel coordinates, and then augment the original gff
 - Save the model as transfomers 'PreTrainedModel'
+- Define a global attention mask for DNA seq tokens representing splice junctions or other important elements
 
 ## Implementation Notes
 
