@@ -16,6 +16,8 @@ import torch.distributed as dist
 from torch.nn.utils.rnn import pad_sequence
 import pickle
 
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+
 def print_gpu_allocation(s:str):
 	#print(f"Allocated: {torch.cuda.memory_allocated()}, Cached: {torch.cuda.memory_reserved()}...{s}", file=sys.stderr)
 	print(s, file=sys.stderr)
@@ -227,9 +229,22 @@ class GFFTokenizer(PreTrainedTokenizer):
 		if vocab is None:
 			self.vocab = {
 				"[PAD]": 0, "[UNK]": 1, "mRNA": 2, "exon": 3, "CDS": 4,
-				"five_prime_UTR": 5, "three_prime_UTR": 6, "1": 7, "2": 8, 
-				"3": 9, "4": 10, "5": 11, "6": 12, "7": 13, "8": 14, "9": 15,
-				"0": 16, ".": 17, "+": 18, "-": 19, "|": 20, ";": 21
+				"five_prime_UTR": 5, "three_prime_UTR": 6, ".": 7, "+": 8, "-": 9,
+				"1": 10, "2": 11, "3": 12, "4": 13, "5": 14, "6": 15, "7": 16, 
+				"8": 17, "9": 18, "0": 19, '10': 20, '11': 21, '12': 22, '13': 23, 
+				'14': 24, '15': 25, '16': 26, '17': 27, '18': 28, '19': 29, '20': 30, 
+				'21': 31, '22': 32, '23': 33, '24': 34, '25': 35, '26': 36, '27': 37, 
+				'28': 38, '29': 39, '30': 40, '31': 41, '32': 42, '33': 43, '34': 44, 
+				'35': 45, '36': 46, '37': 47, '38': 48, '39': 49, '40': 50, '41': 51, 
+				'42': 52, '43': 53, '44': 54, '45': 55, '46': 56, '47': 57, '48': 58, 
+				'49': 59, '50': 60, '51': 61, '52': 62, '53': 63, '54': 64, '55': 65, 
+				'56': 66, '57': 67, '58': 68, '59': 69, '60': 70, '61': 71, '62': 72, 
+				'63': 73, '64': 74, '65': 75, '66': 76, '67': 77, '68': 78, '69': 79, 
+				'70': 80, '71': 81, '72': 82, '73': 83, '74': 84, '75': 85, '76': 86, 
+				'77': 87, '78': 88, '79': 89, '80': 90, '81': 91, '82': 92, '83': 93, 
+				'84': 94, '85': 95, '86': 96, '87': 97, '88': 98, '89': 99, '90': 100, 
+				'91': 101, '92': 102, '93': 103, '94': 104, '95': 105, '96': 106, 
+				'97': 107, '98': 108, '99': 109
 			}
 		else:
 			self.vocab = vocab
@@ -251,13 +266,11 @@ class GFFTokenizer(PreTrainedTokenizer):
 		for line in text.split(";"):
 			for column in line.split("|"):
 				if re.search(r'^\d+$', column):
-					tokens.extend([digit for digit in column])
+					pairs = [column[i:min(i+2, len(column))] for i in range(0, len(column), 2)]
+					tokens.extend([pair for pair in pairs])
 				else:
 					tokens.append(column)
-				tokens.append("|")
-			tokens = tokens[:-1]
-			tokens.append(";")
-		return tokens[:-1]
+		return tokens
 
 	def _convert_token_to_id(self, token):
 		return self.vocab.get(token, self.vocab.get(self.unk_token))
@@ -266,7 +279,12 @@ class GFFTokenizer(PreTrainedTokenizer):
 		return self.ids_to_tokens.get(index, self.unk_token)
 
 	def convert_tokens_to_string(self, tokens):
-		return ''.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in tokens])
+		for i, token in enumerate(tokens):
+			if token in ["mRNA","exon","CDS","five_prime_UTR","three_prime_UTR"]:
+				tokens.insert(i,';')
+		tokens = '|'.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in tokens])
+		tokens = re.gsub(r'\|;', ';', tokens)
+		return 
 
 
 # Full generative model definition
@@ -275,7 +293,7 @@ class transgenic(LEDForConditionalGeneration):
 		self.cache_dir = "./HFmodels"
 		self.decoder_model = "allenai/led-base-16384"
 		self.encoder_model = "InstaDeepAI/nucleotide-transformer-v2-500m-multi-species"
-		super().__init__(AutoConfig.from_pretrained(self.decoder_model))
+		super().__init__(AutoConfig.from_pretrained(self.decoder_model, vocab_size = 22))
 		
 
 		# Load the pre-trained encoder
@@ -288,17 +306,30 @@ class transgenic(LEDForConditionalGeneration):
 		for param in self.decoder.parameters():
 			param.requires_grad = False
 
+		# Targets all self-attention components and feedforward linear layers for adaptors
 		target_modules = [
-			r"led.decoder.layers.*.self_attn.k_proj",  # Targets all self-attention components
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.query",
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.key",
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.value",
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.query_global",
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.key_global",
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.value_global",
+			r"led.encoder.layers.*.self_attn.output",
+			r"led.encoder.layers.*.fc1",
+			r"led.encoder.layers.*.fc2",
+			r"led.decoder.layers.*.self_attn.k_proj",
 			r"led.decoder.layers.*.self_attn.v_proj",
 			r"led.decoder.layers.*.self_attn.q_proj",
 			r"led.decoder.layers.*.self_attn.kout_proj",
-			r"led.decoder.layers.*.fc1",  # Targets the first feedforward linear layer
-			r"led.decoder.layers.*.fc2",  # Targets the second feedforward linear layer
+			r"led.decoder.layers.*.fc1",
+			r"led.decoder.layers.*.fc2",
 			]
+		# Recompute activations for the first and second feedforward layers
 		feedforward_modules = [
-			r"led.decoder.layers.\*.fc1",  # Recompute activations for the first feedforward layer
-			r"led.decoder.layers.\*.fc2",  # Recompute activations for the second feedforward layer
+			r"led.encoder.layers.*.fc1", 
+			r"led.encoder.layers.*.fc2",
+			r"led.decoder.layers.*.fc1",
+			r"led.decoder.layers.*.fc2",
 			]
 		peft_targets = []
 		peft_feedforward = []
@@ -398,9 +429,11 @@ def trainTransgenicDDP(rank,
 	if schedule_lr:
 		lr_scheduler = get_linear_schedule_with_warmup(
 		optimizer=optimizer,
-		num_warmup_steps=0,
+		num_warmup_steps=2,
 		num_training_steps=(len(train_ds) * num_epochs),
 		)
+
+	dt = GFFTokenizer()
 
 	# Training loop
 	best_eval_score = None
@@ -558,6 +591,7 @@ def crossValidateTransgenic(dataset:isoformData, checkpoint_path, outfile, lr=8e
 
 
 if __name__ == '__main__':
+	torch.manual_seed(0)
 	fasta = "ATH_Chr4.fas"
 	gff = "Athaliana_167_gene_Chr4.gff3"
 	db = "AthChr4.db"
@@ -570,7 +604,20 @@ if __name__ == '__main__':
 
 	batch_size = 1
 	train_data, eval_data = random_split(ds, [4000, 127])
-	train_data, eval_data = random_split(eval_data.dataset, [100, 27])
+
+	batch_size = 1
+	train_data, eval_data = random_split(ds, [4000, 127])
+	train_ds = makeDataLoader(train_data, shuffle=False, batch_size=batch_size)
+	
+	#for step, batch in enumerate(tqdm(train_ds)):
+	with open("bad_item.pkl", 'rb') as f: batch = pickle.load(f)
+	
+	model = transgenic()
+	model.eval()
+
+	
+	with torch.no_grad():
+		outputs = model(batch[0], batch[1], batch[2], batch_size)
 
 
 	#model = transgenic()
