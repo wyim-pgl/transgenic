@@ -84,8 +84,12 @@ def genome2GeneList(genome, gff3, db):
 	num_lines = sum(1 for line in open(gff3, "r"))
 	with open(gff3, 'r') as gff3file:
 		region_start = None
-		gff = ''
+		feature_list = ''
+		mRNA_list = ''
 		skipGene = False
+		five_ps = {}
+		three_ps = {}
+		cds_num = {}
 		
 		for line in tqdm(gff3file, total=num_lines):
 			if line.startswith('#') | (line == '\n'):
@@ -96,11 +100,17 @@ def genome2GeneList(genome, gff3, db):
 				if typ == 'gene':
 					if (region_start != None) & (not skipGene):
 						# Add previous gene model to the database
-						con.sql(f"INSERT INTO geneList (geneModel, start, fin, strand, chromosome, sequence, gff) VALUES ('{geneModel}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence}', '{gff[:-1]}')")
+						mRNA_list = mRNA_list[1:-1]
+						gff = f"{feature_list[:-1]}>{mRNA_list}"
+						con.sql(f"INSERT INTO geneList (geneModel, start, fin, strand, chromosome, sequence, gff) VALUES ('{geneModel}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence}', '{gff}')")
 						geneModel = None
 						region_start = 0
 						region_end = 0
-						gff = ''
+						feature_list = ''
+						mRNA_list = ''
+						five_ps = {}
+						three_ps = {}
+						cds_num = {}
 					
 					# Construct current gene model
 					skipGene = False
@@ -124,11 +134,54 @@ def genome2GeneList(genome, gff3, db):
 				elif skipGene:
 					continue
 				
+				elif typ == 'mRNA':
+					mRNA_list = mRNA_list[:-1] + ";"
+
 				# Build gff string - start and end coordinates are relative to the gene model sense strand
-				else: 
+				elif typ == 'CDS': 
 					start = (int(start) - 1) - region_start 
 					end = int(fin) - region_start
-					gff += f"{typ}|{start}|{end}|{strand}|{phase};"
+					if phase == '0':
+						phase = 'A'
+					elif phase == '1':
+						phase = 'B'
+					elif phase == '2':
+						phase = 'C'
+					else:
+						phase = '.'
+
+					try:
+						num = cds_num[f"{start}-{end}-{strand}-{phase}"]
+					except:
+						num = str(len(cds_num) + 1)
+						cds_num[f"{start}-{end}-{strand}-{phase}"] = num
+						feature_list += f"{start}|{typ+num}|{end}|{strand}|{phase};"
+					
+					mRNA_list += f"{typ+num}|"
+				
+				elif typ == 'five_prime_UTR':
+					start = (int(start) - 1) - region_start
+					end = int(fin) - region_start
+					try:
+						num = five_ps[f"{start}-{end}-{strand}-{phase}"]
+					except:
+						num = str(len(five_ps) + 1)
+						five_ps[f"{start}-{end}-{strand}-{phase}"] = num
+						feature_list += f"{start}|{typ+num}|{end}|{strand}|{phase};"
+					
+					mRNA_list += f"{typ+num}|"
+					
+				elif typ == 'three_prime_UTR':
+					start = (int(start) - 1) - region_start
+					end = int(fin) - region_start
+					try:
+						num = three_ps[f"{start}-{end}-{strand}-{phase}"]
+					except:
+						num = str(len(three_ps) + 1)
+						three_ps[f"{start}-{end}-{strand}-{phase}"] = num
+						feature_list += f"{start}|{typ+num}|{end}|{strand}|{phase};"
+					
+					mRNA_list += f"{typ+num}|"
 
 	con.close()
 
@@ -190,10 +243,11 @@ class isoformData(Dataset):
 	def __getitem__(self, idx):
 		idx += 1
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			_,_,_,_,_,region_seq, gff = con.sql("WITH rn (geneModel,start, fin, strand, chromosome, sequence, gff, rnum) AS ("
+			gm,_,_,_,_,region_seq, gff = con.sql("WITH rn (geneModel,start, fin, strand, chromosome, sequence, gff, rnum) AS ("
 								"SELECT *, row_number() OVER() FROM geneList) "
 								f"SELECT * from rn where rnum={idx}").fetchall()[0][:-1]
-		
+		print(gm)
+		print(gff)
 		# Tokenize output targets
 		if self.mode == 'inference':
 			labels = self.decoder_tokenizer.batch_encode_plus( #TODO: will this work?
@@ -228,24 +282,18 @@ class GFFTokenizer(PreTrainedTokenizer):
 	def __init__(self, vocab=None, **kwargs):
 		if vocab is None:
 			self.vocab = {
-				"[PAD]": 0, "[UNK]": 1, "mRNA": 2, "exon": 3, "CDS": 4,
-				"five_prime_UTR": 5, "three_prime_UTR": 6, ".": 7, "+": 8, "-": 9,
-				"1": 10, "2": 11, "3": 12, "4": 13, "5": 14, "6": 15, "7": 16, 
-				"8": 17, "9": 18, "0": 19, '10': 20, '11': 21, '12': 22, '13': 23, 
-				'14': 24, '15': 25, '16': 26, '17': 27, '18': 28, '19': 29, '20': 30, 
-				'21': 31, '22': 32, '23': 33, '24': 34, '25': 35, '26': 36, '27': 37, 
-				'28': 38, '29': 39, '30': 40, '31': 41, '32': 42, '33': 43, '34': 44, 
-				'35': 45, '36': 46, '37': 47, '38': 48, '39': 49, '40': 50, '41': 51, 
-				'42': 52, '43': 53, '44': 54, '45': 55, '46': 56, '47': 57, '48': 58, 
-				'49': 59, '50': 60, '51': 61, '52': 62, '53': 63, '54': 64, '55': 65, 
-				'56': 66, '57': 67, '58': 68, '59': 69, '60': 70, '61': 71, '62': 72, 
-				'63': 73, '64': 74, '65': 75, '66': 76, '67': 77, '68': 78, '69': 79, 
-				'70': 80, '71': 81, '72': 82, '73': 83, '74': 84, '75': 85, '76': 86, 
-				'77': 87, '78': 88, '79': 89, '80': 90, '81': 91, '82': 92, '83': 93, 
-				'84': 94, '85': 95, '86': 96, '87': 97, '88': 98, '89': 99, '90': 100, 
-				'91': 101, '92': 102, '93': 103, '94': 104, '95': 105, '96': 106, 
-				'97': 107, '98': 108, '99': 109
+				"[PAD]": 0, "[UNK]": 1, "mRNA": 2, "exon": 3, "CDS": 4,"five_prime_UTR": 5, 
+				"three_prime_UTR": 6, ".": 7, "+": 8, "-": 9,'00': 10, '01': 11, '02': 12, 
+				'03': 13,'04': 14, '05': 15, '06': 16, '07': 17, '08': 18, '09': 19, 'A': 20, 
+				'B': 21, 'C': 22, ">":23
 			}
+			for i in range(0, 100):
+				self.vocab[str(i)] =	i + 24
+			for i in range(1, 151):
+				self.vocab[f"CDS{i}"] = i + 123
+			for i in range(1, 51):
+				self.vocab[f"five_prime_UTR{i}"] = i + 273
+				self.vocab[f"three_prime_UTR{i}"] = i + 323
 		else:
 			self.vocab = vocab
 
@@ -263,14 +311,17 @@ class GFFTokenizer(PreTrainedTokenizer):
 
 	def _tokenize(self, text):
 		tokens = []
-		for line in text.split(";"):
-			for column in line.split("|"):
-				if re.search(r'^\d+$', column):
-					pairs = [column[i:min(i+2, len(column))] for i in range(0, len(column), 2)]
-					tokens.extend([pair for pair in pairs])
-				else:
-					tokens.append(column)
-		return tokens
+
+		for features in text.split(">"):
+			for feature in features.split(";"):
+				for column in feature.split("|"):
+					if re.search(r'^\d+$', column):
+						pairs = [column[i:min(i+2, len(column))] for i in range(0, len(column), 2)]
+						tokens.extend([pair for pair in pairs])
+					else:
+						tokens.append(column)
+			tokens.append(">")
+		return tokens[:-1]
 
 	def _convert_token_to_id(self, token):
 		return self.vocab.get(token, self.vocab.get(self.unk_token))
@@ -279,12 +330,26 @@ class GFFTokenizer(PreTrainedTokenizer):
 		return self.ids_to_tokens.get(index, self.unk_token)
 
 	def convert_tokens_to_string(self, tokens):
-		for i, token in enumerate(tokens):
-			if token in ["mRNA","exon","CDS","five_prime_UTR","three_prime_UTR"]:
-				tokens.insert(i,';')
-		tokens = '|'.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in tokens])
-		tokens = re.gsub(r'\|;', ';', tokens)
-		return 
+		toks = []
+		for i,token in enumerate(tokens):
+			if token in [".", "A", "B", "C"] and i != 0:
+				token += ";"
+			if token.isnumeric() and i != 0:
+				if tokens[i-1].isnumeric():
+					toks[-1] = toks[-1] + token
+					continue
+			toks.append(token)
+			
+		toks = '|'.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in toks])
+		toks = re.sub(r'\|>\|', '>', toks)
+		toks = re.sub(r';>', '>', toks)
+		toks = re.sub(r'>\|', '>', toks)
+		toks = re.sub(r';\|', ';', toks)
+		#toks = re.sub(r"(CDS\|\d+)", self.replace_pipe, toks)				# Condense CDS ids
+		#toks = re.sub(r"(five_prime_UTR\|\d+)", self.replace_pipe, toks)	# Condense 5' UTR ids
+		#toks = re.sub(r"(three_prime_UTR\|\d+)", self.replace_pipe, toks)	# Condense 3' UTR ids
+		#toks = re.sub(r'\|(\d+\|)+', self.replace_pipe_in_digits, toks)		# Condense start and end numbers
+		return toks
 
 
 # Full generative model definition
@@ -293,7 +358,7 @@ class transgenic(LEDForConditionalGeneration):
 		self.cache_dir = "./HFmodels"
 		self.decoder_model = "allenai/led-base-16384"
 		self.encoder_model = "InstaDeepAI/nucleotide-transformer-v2-500m-multi-species"
-		super().__init__(AutoConfig.from_pretrained(self.decoder_model, vocab_size = 22))
+		super().__init__(AutoConfig.from_pretrained(self.decoder_model, vocab_size = 119))
 		
 
 		# Load the pre-trained encoder
@@ -600,25 +665,9 @@ if __name__ == '__main__':
 
 	# Create a training and evaluation DataLoaders
 	ds = isoformData(db, mode="training")
-	#one = ds.__getitem__(0)
 
 	batch_size = 1
 	train_data, eval_data = random_split(ds, [4000, 127])
-
-	batch_size = 1
-	train_data, eval_data = random_split(ds, [4000, 127])
-	train_ds = makeDataLoader(train_data, shuffle=False, batch_size=batch_size)
-	
-	#for step, batch in enumerate(tqdm(train_ds)):
-	with open("bad_item.pkl", 'rb') as f: batch = pickle.load(f)
-	
-	model = transgenic()
-	model.eval()
-
-	
-	with torch.no_grad():
-		outputs = model(batch[0], batch[1], batch[2], batch_size)
-
 
 	#model = transgenic()
 	#model(one[0].unsqueeze(0), one[1].unsqueeze(0), one[2].unsqueeze(0), batch_size)

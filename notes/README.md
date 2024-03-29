@@ -165,6 +165,7 @@ Now, a whole new direction. Since I decided to work with entire gene sequences, 
 
 I'm going to switch from T5 to Longformer Encoder Decoder(LED) which is potentially more memory efficient on long sequences (upt to 4096 tokens or 24,576 bp).
 There is also LongT5 available, maybe cross validate on those two models?
+LED has a max label embedding of 1024... reduce redundancy in the gff, increase the vocab to reduce 4-digit numbers to one token, see if T5 long has a larger constraint...
 
 Starting with fine tuning the existing LM head on LED... if the performance is poor I could consider making a custom head.
 I think I'll need to make a custom head with custom vocabulary and tokenizer
