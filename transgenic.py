@@ -246,22 +246,26 @@ class isoformData(Dataset):
 			gm,_,_,_,_,region_seq, gff = con.sql("WITH rn (geneModel,start, fin, strand, chromosome, sequence, gff, rnum) AS ("
 								"SELECT *, row_number() OVER() FROM geneList) "
 								f"SELECT * from rn where rnum={idx}").fetchall()[0][:-1]
-		print(gm)
-		print(gff)
+		
 		# Tokenize output targets
 		if self.mode == 'inference':
 			labels = self.decoder_tokenizer.batch_encode_plus( #TODO: will this work?
 				[""],
 				return_tensors="pt",
 				padding=True,
-				truncation=False)["input_ids"]
+				truncation=True,
+				max_length=1024)["input_ids"]
 		elif self.mode == "training":
 			# Tokenize the labels
 			labels = self.decoder_tokenizer.batch_encode_plus(
 				[gff],
 				return_tensors="pt",
 				padding=True,
-				truncation=False)["input_ids"]
+				truncation=True,
+				max_length=1024)["input_ids"]
+		
+		if labels.shape[1] >= 1024:
+			print(f"Warning {gm} label truncated to 1024 tokens", file=sys.stderr)
 
 		# Segment and tokenize the sequences
 		seqs = segmentSequence(region_seq, piece_size=6000)
@@ -420,7 +424,7 @@ class transgenic(LEDForConditionalGeneration):
 		self.hidden_mapping = nn.Linear(1024, 768)
 
 		# Custom head for GFF prediction
-		self.gff_head = nn.Linear(768, 22)
+		self.gff_head = nn.Linear(768, 374)
 
 	def forward(self, seqs, encoder_attention_mask, labels, batch_size): # target_ids,
 		# Compute the embeddings with nucleotide transformer encoder
@@ -509,7 +513,7 @@ def trainTransgenicDDP(rank,
 		for step, batch in enumerate(tqdm(train_ds)):
 			batch = [item.to(device) for item in batch]
 			outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-			loss = loss_fn(outputs.view(-1, 22), batch[2].view(-1))
+			loss = loss_fn(outputs.view(-1, 374), batch[2].view(-1))
 			total_loss += loss.detach().float()
 			loss.backward()
 			optimizer.step()
@@ -526,7 +530,7 @@ def trainTransgenicDDP(rank,
 				batch = [item.to(device) for item in batch]
 				with torch.no_grad():
 					outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-				loss = loss_fn(outputs.view(-1, 22), batch[2].view(-1))
+				loss = loss_fn(outputs.view(-1, 374), batch[2].view(-1))
 				eval_loss += loss.detach().float()
 
 			eval_epoch_loss = eval_loss / len(eval_ds)
@@ -595,7 +599,7 @@ def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, spl
 		batch = [item.to(device) for item in batch]
 		with torch.no_grad():
 			outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-			loss = loss_fn(outputs.view(-1, 22), batch[2].view(-1))
+			loss = loss_fn(outputs.view(-1, 374), batch[2].view(-1))
 			ppl = torch.exp(loss).cpu().numpy()
 			loss = loss.cpu().numpy()
 			pred = dataset.dataset.decoder_tokenizer.batch_decode(torch.argmax(outputs, -1).detach().cpu().numpy(), skip_special_tokens=True)
