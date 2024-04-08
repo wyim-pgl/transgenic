@@ -1,4 +1,6 @@
 import duckdb, sys, os, subprocess, re
+from typing import List, Optional, Tuple, Union
+
 from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split, Subset
@@ -7,7 +9,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from transformers import AutoTokenizer, AutoModelForMaskedLM, AutoConfig, PreTrainedTokenizer
-from transformers import LEDForConditionalGeneration, LEDTokenizer
+from transformers import LEDForConditionalGeneration, EsmForMaskedLM
+from transformers.modeling_outputs import ModelOutput
 from transformers import get_linear_schedule_with_warmup
 from peft import IA3Config, get_peft_model
 import torch.multiprocessing as mp
@@ -15,6 +18,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
 from torch.nn.utils.rnn import pad_sequence
 import pickle
+from dataclasses import dataclass
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
@@ -250,7 +254,7 @@ class isoformData(Dataset):
 		# Tokenize output targets
 		if self.mode == 'inference':
 			labels = self.decoder_tokenizer.batch_encode_plus( #TODO: will this work?
-				[""],
+				["[PAD]"],
 				return_tensors="pt",
 				padding=True,
 				truncation=True,
@@ -355,24 +359,154 @@ class GFFTokenizer(PreTrainedTokenizer):
 		#toks = re.sub(r'\|(\d+\|)+', self.replace_pipe_in_digits, toks)		# Condense start and end numbers
 		return toks
 
+#Copied from transformers.models.led.modeling_led.py
+class LEDLearnedPositionalEmbedding(nn.Embedding):
+	"""
+	This module learns positional embeddings up to a fixed maximum size.
+	"""
+
+	def __init__(self, num_embeddings: int, embedding_dim: int):
+		super().__init__(num_embeddings, embedding_dim)
+
+	def forward(self, input_ids_shape: torch.Size, past_key_values_length: int = 0):
+		"""`input_ids_shape` is expected to be [bsz x seqlen]."""
+		bsz, seq_len = input_ids_shape[:2]
+		positions = torch.arange(
+			past_key_values_length, past_key_values_length + seq_len, dtype=torch.long, device=self.weight.device
+		)
+		return super().forward(positions)
+
+#Copied from transformers.models.led.modeling_led.py
+@dataclass
+class LEDSeq2SeqLMOutput(ModelOutput):
+	"""
+	Base class for sequence-to-sequence language models outputs.
+
+	Args:
+		loss (`torch.FloatTensor` of shape `(1,)`, *optional*, returned when `labels` is provided):
+			Language modeling loss.
+		logits (`torch.FloatTensor` of shape `(batch_size, sequence_length, config.vocab_size)`):
+			Prediction scores of the language modeling head (scores for each vocabulary token before SoftMax).
+		past_key_values (`List[torch.FloatTensor]`, *optional*, returned when `use_cache=True` is passed or when `config.use_cache=True`):
+			List of `torch.FloatTensor` of length `config.n_layers`, with each tensor of shape `(2, batch_size,
+			num_heads, sequence_length, embed_size_per_head)`).
+
+			Contains pre-computed hidden-states (key and values in the attention blocks) of the decoder that can be
+			used (see `past_key_values` input) to speed up sequential decoding.
+		decoder_hidden_states (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
+			Tuple of `torch.FloatTensor` (one for the output of the embeddings + one for the output of each layer) of
+			shape `(batch_size, sequence_length, hidden_size)`.
+
+			Hidden-states of the decoder at the output of each layer plus the initial embedding outputs.
+		decoder_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+			sequence_length)`.
+
+			Attentions weights of the decoder, after the attention softmax, used to compute the weighted average in the
+			self-attention heads.
+		cross_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+			sequence_length)`.
+
+			Attentions weights of the decoder's cross-attention layer, after the attention softmax, used to compute the
+			weighted average in the cross-attention heads.
+		encoder_last_hidden_state (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`, *optional*):
+			Sequence of hidden-states at the output of the last layer of the encoder of the model.
+		encoder_hidden_states (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
+			Tuple of `torch.FloatTensor` (one for the output of the embeddings + one for the output of each layer) of
+			shape `(batch_size, sequence_length, hidden_size)`.
+
+			Hidden-states of the encoder at the output of each layer plus the initial embedding outputs.
+		encoder_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+			sequence_length)`.
+
+			Attentions weights of the encoder, after the attention softmax, used to compute the weighted average in the
+			self-attention heads.
+		encoder_global_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length, x)`,
+			where `x` is the number of tokens with global attention mask.
+
+			Global attentions weights after the attention softmax, used to compute the weighted average in the
+			self-attention heads. Those are the attention weights from every token with global attention to every token
+			in the sequence.
+	"""
+
+	loss: Optional[torch.FloatTensor] = None
+	logits: torch.FloatTensor = None
+	past_key_values: Optional[List[torch.FloatTensor]] = None
+	decoder_hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+	decoder_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	cross_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	encoder_last_hidden_state: Optional[torch.FloatTensor] = None
+	encoder_hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+	encoder_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	encoder_global_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+
+class segmented_sequence_embeddings(EsmForMaskedLM):
+	def __init__(self):
+		self.cache_dir = "./HFmodels"
+		self.encoder_model = "InstaDeepAI/nucleotide-transformer-v2-500m-multi-species"
+		super().__init__(AutoConfig.from_pretrained(self.encoder_model, is_decoder=False, trust_remote_code=True))
+		
+		self.esm = AutoModelForMaskedLM.from_pretrained(self.encoder_model, cache_dir=self.cache_dir, trust_remote_code=True)
+		for param in self.esm.parameters():
+			param.requires_grad = False
+		
+
+		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
+		#plants -> 1500, multispecies -> 1024
+		#T5 -> 512, longformer -> 768
+		self.hidden_mapping = nn.Linear(1024, 768)
+	
+	def forward(self, input_ids, attention_mask=None, **kwargs):
+		batch_size = input_ids.shape[0]
+		num_segs = input_ids.shape[1]
+		for i in range(batch_size):
+			with torch.no_grad():
+				embeddings = self.esm(
+					input_ids[i, :, :],
+					attention_mask=attention_mask[i,:,:],
+					encoder_attention_mask=attention_mask[i,:,:],
+					output_hidden_states=True
+				)['hidden_states'][-1]
+			
+			if i == 0:
+				batch_embeds = embeddings.reshape(1, num_segs*1024, -1)
+				batch_mask = attention_mask[i,:,:].reshape(1, num_segs*1024)
+			else:
+				batch_embeds = torch.cat((batch_embeds, embeddings.reshape(1, num_segs*1024, -1)), dim=0)
+				batch_mask = torch.cat((batch_mask, attention_mask[i,:,:].reshape(1, num_segs*1024)), dim=0)
+		
+		# Use the last hidden state from the nucleotide encoder as input to the decoder
+		# Transform the encoder hidden states to match the decoder input size
+		decoder_inputs_embeds = self.hidden_mapping(batch_embeds)
+
+		return ModelOutput(inputs_embeds=decoder_inputs_embeds, attention_mask=batch_mask)
 
 # Full generative model definition
 class transgenic(LEDForConditionalGeneration):
 	def __init__(self):
 		self.cache_dir = "./HFmodels"
 		self.decoder_model = "allenai/led-base-16384"
-		self.encoder_model = "InstaDeepAI/nucleotide-transformer-v2-500m-multi-species"
-		super().__init__(AutoConfig.from_pretrained(self.decoder_model, vocab_size = 119))
+		self.vocab_size = 374
+		self.max_target_positions = 1024
+		super().__init__(AutoConfig.from_pretrained(self.decoder_model, 
+													vocab_size = self.vocab_size))
 		
-
-		# Load the pre-trained encoder
-		self.encoder = AutoModelForMaskedLM.from_pretrained(self.encoder_model, cache_dir=self.cache_dir, trust_remote_code=True)
-		for param in self.encoder.parameters():
-			param.requires_grad = False
-
+		# Add the pre-trained encoder
+		self.encoder = segmented_sequence_embeddings()
 		# Load the pre-trained decoder and freeze the parameters
-		self.decoder = LEDForConditionalGeneration.from_pretrained(self.decoder_model, cache_dir=self.cache_dir)
-		for param in self.decoder.parameters():
+		self.led = LEDForConditionalGeneration.from_pretrained(self.decoder_model, cache_dir=self.cache_dir)
+		
+		# Swap out the decoder embedding layers for the GffTokenizer vocabulary
+		self.led.led.decoder.embed_tokens = nn.Embedding(self.vocab_size, 768, self.led.led.decoder.padding_idx)
+		self.led.led.decoder.embed_positions = LEDLearnedPositionalEmbedding(self.max_target_positions, 768)
+		
+		# Freeze all LEDDecoder attention layers (Not embedding layers)
+		for param in self.led.led.encoder.layers.parameters():
+			param.requires_grad = False
+		for param in self.led.led.decoder.layers.parameters():
 			param.requires_grad = False
 
 		# Targets all self-attention components and feedforward linear layers for adaptors
@@ -402,7 +536,7 @@ class transgenic(LEDForConditionalGeneration):
 			]
 		peft_targets = []
 		peft_feedforward = []
-		for module in self.decoder.named_modules():
+		for module in self.led.named_modules():
 			for pattern in target_modules:
 				if re.match(pattern, module[0]):
 					peft_targets.append(module[0])
@@ -415,61 +549,116 @@ class transgenic(LEDForConditionalGeneration):
 			task_type="SEQ_2_SEQ_LM",
 			target_modules = peft_targets,
 			feedforward_modules = peft_feedforward)
-		self.decoder = get_peft_model(self.decoder, self.peft_config)
-		#self.trainable_parameters = self.decoder.print_trainable_parameters()
-
-		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
-		#plants -> 1500, multispecies -> 1024
-		#T5 -> 512, longformer -> 768
-		self.hidden_mapping = nn.Linear(1024, 768)
+		self.led = get_peft_model(self.led, self.peft_config)
+		print(self.led.print_trainable_parameters(), file=sys.stderr)
 
 		# Custom head for GFF prediction
-		self.gff_head = nn.Linear(768, 374)
+		self.lm_head = nn.Linear(768, 374)
 
-	def forward(self, seqs, encoder_attention_mask, labels, batch_size): # target_ids,
+	def shift_tokens_right(self, input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
+		"""
+		Shift input ids one token to the right.
+		"""
+		shifted_input_ids = input_ids.new_zeros(input_ids.shape)
+		shifted_input_ids[:, 1:] = input_ids[:, :-1].clone()
+		shifted_input_ids[:, 0] = decoder_start_token_id
+
+		if pad_token_id is None:
+			raise ValueError("config.pad_token_id has to be defined.")
+		# replace possible -100 values in labels by `pad_token_id`
+		shifted_input_ids.masked_fill_(shifted_input_ids == -100, pad_token_id)
+
+		return shifted_input_ids
+
+	def forward(
+		self,
+		input_ids: Optional[torch.LongTensor] = None,
+		encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		attention_mask: Optional[torch.Tensor] = None,
+		decoder_input_ids: Optional[torch.LongTensor] = None,
+		decoder_inputs_embeds: Optional[torch.FloatTensor] = None,
+		labels: Optional[torch.LongTensor] = None,
+		use_cache: Optional[bool] = None,
+		decoder_attention_mask = None,
+		decoder_head_mask = None,
+		cross_attn_head_mask = None,
+		past_key_values = None,
+		output_attentions= None,
+		output_hidden_states = None,
+		return_dict = None,
+		**kwargs
+		) -> Tuple[torch.Tensor]:
+
 		# Compute the embeddings with nucleotide transformer encoder
-		for i in range(batch_size):
-			with torch.no_grad():
-				embeddings = self.encoder(
-					seqs[i, :, :],
-					attention_mask=encoder_attention_mask[i,:,:],
-					encoder_attention_mask=encoder_attention_mask[i,:,:],
-					output_hidden_states=True
-				)['hidden_states'][-1]
-			
-			num_segs = embeddings.shape[0]
-			
-			if i == 0:
-				batch_embeds = embeddings.reshape(1, num_segs*1024, -1)
-				batch_mask = encoder_attention_mask[i,:,:].reshape(1, num_segs*1024)
-			else:
-				batch_embeds = torch.cat((batch_embeds, embeddings.reshape(1, num_segs*1024, -1)), dim=0)
-				batch_mask = torch.cat((batch_mask, encoder_attention_mask[i,:,:].reshape(1, num_segs*1024)), dim=0)
+		if encoder_outputs is None:
+			encoder_outputs = self.encoder(input_ids, 
+										attention_mask=attention_mask, 
+										return_dict=return_dict
+										).to_tuple()
+		else:
+			encoder_outputs = (encoder_outputs["inputs_embeds"], encoder_outputs["attention_mask"])
 		
-		# Use the last hidden state from the nucleotide encoder as input to the decoder
-		# Transform the encoder hidden states to match the decoder input size
-		decoder_inputs_embeds = self.hidden_mapping(batch_embeds)
-		
-		# Process the transformed encoder outputs through the decoder
-		decoder_outputs = self.decoder(inputs_embeds=decoder_inputs_embeds, 
-								 #decoder_input_ids=target_ids, 
-								 attention_mask=batch_mask,
-								 labels=labels,
-								 output_hidden_states=True
-								 )
-		
-		# Gff prediction head
-		gff_logits = self.gff_head(decoder_outputs.decoder_hidden_states[-1])
-		
-		return gff_logits
+		if labels is not None:
+			if use_cache:
+				print("The `use_cache` argument is changed to `False` since `labels` is provided.", file=sys.stderr)
+			use_cache = False
+			if decoder_input_ids is None and decoder_inputs_embeds is None:
+				decoder_input_ids = self.shift_tokens_right(
+					labels, self.config.pad_token_id, self.config.decoder_start_token_id
+				)
 
+		# Process the transformed encoder outputs through the decoder
+		decoder_outputs = self.led(
+			inputs_embeds=encoder_outputs[0],
+			attention_mask=encoder_outputs[1],
+			decoder_input_ids=decoder_input_ids,
+			decoder_attention_mask=decoder_attention_mask,
+			head_mask=decoder_head_mask,
+			cross_attn_head_mask=cross_attn_head_mask,
+			past_key_values=past_key_values,
+			use_cache=use_cache,
+			output_attentions=output_attentions,
+			output_hidden_states=True,
+			return_dict=return_dict
+		)
+	
+		# Gff prediction head
+		gff_logits = self.lm_head(decoder_outputs.decoder_hidden_states[-1])
+
+		masked_lm_loss = None
+		if labels is not None:
+			loss_fct = nn.CrossEntropyLoss()
+			masked_lm_loss = loss_fct(gff_logits.view(-1, self.vocab_size), labels.view(-1))
+		
+		if not return_dict:
+			output = (gff_logits,) + outputs[1:]
+			return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+		
+		return LEDSeq2SeqLMOutput(
+			loss=masked_lm_loss,
+			logits=gff_logits,
+			past_key_values=decoder_outputs.past_key_values,
+			decoder_hidden_states=decoder_outputs.decoder_hidden_states,
+			decoder_attentions=decoder_outputs.decoder_attentions,
+			cross_attentions=decoder_outputs.cross_attentions,
+			encoder_last_hidden_state=decoder_outputs.encoder_last_hidden_state,
+			encoder_hidden_states=decoder_outputs.encoder_hidden_states,
+			encoder_attentions=decoder_outputs.encoder_attentions,
+			encoder_global_attentions=decoder_outputs.encoder_global_attentions,
+		)
+	
+	def get_encoder(self):
+		return self.encoder
+	
+	def get_decoder(self):
+		return self.led
+	
 # Training loop
 def trainTransgenicDDP(rank, 
 		train_ds:isoformData, 
 		eval_ds:isoformData, 
 		lr, 
-		num_epochs, 
-		batch_size, 
+		num_epochs,  
 		schedule_lr, 
 		eval, 
 		world_size,
@@ -490,7 +679,6 @@ def trainTransgenicDDP(rank,
 	ddp_model = DDP(model, device_ids=[rank], find_unused_parameters=True)
 	
 	# Define the loss function and optimizer
-	loss_fn = nn.CrossEntropyLoss(ignore_index=0)
 	optimizer = optim.AdamW(model.parameters(), lr=lr)
 	optimizer.zero_grad()
 	
@@ -512,8 +700,8 @@ def trainTransgenicDDP(rank,
 		total_loss = 0
 		for step, batch in enumerate(tqdm(train_ds)):
 			batch = [item.to(device) for item in batch]
-			outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-			loss = loss_fn(outputs.view(-1, 374), batch[2].view(-1))
+			outputs = ddp_model(batch[0], encoder_attention_mask=batch[1], labels=batch[2])
+			loss = outputs.loss
 			total_loss += loss.detach().float()
 			loss.backward()
 			optimizer.step()
@@ -529,8 +717,8 @@ def trainTransgenicDDP(rank,
 			for step, batch in enumerate(tqdm(eval_ds)):
 				batch = [item.to(device) for item in batch]
 				with torch.no_grad():
-					outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
-				loss = loss_fn(outputs.view(-1, 374), batch[2].view(-1))
+					outputs = ddp_model(batch[0], encoder_attention_mask=batch[1], labels=batch[2])
+				loss = outputs.loss
 				eval_loss += loss.detach().float()
 
 			eval_epoch_loss = eval_loss / len(eval_ds)
@@ -598,7 +786,7 @@ def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, spl
 	for step, batch in enumerate(tqdm(loader)):
 		batch = [item.to(device) for item in batch]
 		with torch.no_grad():
-			outputs = ddp_model(batch[0], batch[1], batch[2], batch_size)
+			outputs = ddp_model(batch[0], encoder_attention_mask=batch[1], labels=batch[2], batch_size=batch_size)
 			loss = loss_fn(outputs.view(-1, 374), batch[2].view(-1))
 			ppl = torch.exp(loss).cpu().numpy()
 			loss = loss.cpu().numpy()
@@ -669,14 +857,30 @@ if __name__ == '__main__':
 
 	# Create a training and evaluation DataLoaders
 	ds = isoformData(db, mode="training")
-
+	#dl = makeDataLoader(ds, shuffle=False, batch_size=1, pin_memory=True)
 	batch_size = 1
 	train_data, eval_data = random_split(ds, [4000, 127])
 
-	#model = transgenic()
-	#model(one[0].unsqueeze(0), one[1].unsqueeze(0), one[2].unsqueeze(0), batch_size)
-	#checkpoint = {'model_state_dict': model.state_dict()}
-	#torch.save(checkpoint, "transgenic.pt")
+	#checkpoint = torch.load("checkpoints/transgenic_checkpoint.pt", map_location="cpu")
+	model = transgenic()
+	#model.load_state_dict(checkpoint["model_state_dict"])
+	#model.eval()
+	
+	#dt = GFFTokenizer()
+	#for step, batch in enumerate(dl):
+	#		with torch.no_grad():
+	#		outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=1024
+	#								#temperature=0.1,  # Increase predictability of outputs by decreasing this
+	#								#top_k=10,         # Limit next word sampling group to top-k groups
+	#								#top_p=0.95,       # Top-p (nucleus) sampling
+	#								#do_sample=True
+	#								)
+	#	pred = dt.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)
+	#	true = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
+	#	print(true)
+	#	print("\n")
+	#	print(pred)
+	
 	#train_dataloader = makeDataLoader(train_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 	#eval_dataloader = makeDataLoader(eval_data, shuffle=True, batch_size=batch_size, pin_memory=True)
 
@@ -684,8 +888,7 @@ if __name__ == '__main__':
 		train_data, 
 		eval_ds=eval_data, 
 		lr=8e-2, 
-		num_epochs=10, 
-		batch_size=batch_size, 
+		num_epochs=10,  
 		schedule_lr=True, 
 		eval=True
 	)
