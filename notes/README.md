@@ -63,6 +63,7 @@ sbatch -A $agJL -p $pgJL -c 16 --mem=64g --gres=gpu:1 --time=1-00:00:00 -J trans
 - Length of junction incursion (likelihood of including a neighbor element splice signal)
 - Method of embedding transformation for input to T5
 - Fine-tune entire decoder or use adaptors?
+- Generation parameters (temperature, top_k, top_p)
 
 The the nucleotide transformer can be directly fine-tuned for calssification and regression tasks. This works by replacing the final language model head with a classification or regression head.
 
