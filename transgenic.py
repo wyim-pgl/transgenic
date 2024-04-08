@@ -751,10 +751,10 @@ def trainTransgenicDDP(rank,
 					torch.save(checkpoint, f"checkpoints/{checkpoint_path}")
 					print(f"New best model saved with {train_epoch_loss=}", file=sys.stderr)
 
-def run_trainTransgenicDDP(train_ds, eval_ds=None, lr=8e-3, num_epochs=10, batch_size=8, schedule_lr=True, eval=False, checkpoint_path="transgenic_checkpoint.pt"):
+def run_trainTransgenicDDP(train_ds, eval_ds=None, lr=8e-3, num_epochs=10, schedule_lr=True, eval=False, checkpoint_path="transgenic_checkpoint.pt"):
 	world_size = torch.cuda.device_count()
 	mp.spawn(trainTransgenicDDP, 
-		args=(train_ds, eval_ds, lr, num_epochs, batch_size, schedule_lr, eval, world_size), 
+		args=(train_ds, eval_ds, lr, num_epochs, schedule_lr, eval, world_size), 
 		nprocs=world_size, 
 		join=True)
 	cleanup()
