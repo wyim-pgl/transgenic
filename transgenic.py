@@ -21,6 +21,7 @@ import pickle
 from dataclasses import dataclass
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+os.environ['HF_HOME'] = './HFmodels'
 
 def print_gpu_allocation(s:str):
 	#print(f"Allocated: {torch.cuda.memory_allocated()}, Cached: {torch.cuda.memory_reserved()}...{s}", file=sys.stderr)
@@ -81,7 +82,9 @@ def genome2GeneList(genome, gff3, db):
 			"strand VARCHAR, "
 			"chromosome VARCHAR, "
 			"sequence VARCHAR, "
-			"gff VARCHAR)")
+			"gff VARCHAR, "
+			"rn INT PRIMARY KEY)")
+	con.sql("CREATE SEQUENCE IF NOT EXISTS row_id START 1;")
 
 	
 	print(f"\nProcessing {gff3}...")
@@ -106,7 +109,7 @@ def genome2GeneList(genome, gff3, db):
 						# Add previous gene model to the database
 						mRNA_list = mRNA_list[1:-1]
 						gff = f"{feature_list[:-1]}>{mRNA_list}"
-						con.sql(f"INSERT INTO geneList (geneModel, start, fin, strand, chromosome, sequence, gff) VALUES ('{geneModel}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence}', '{gff}')")
+						con.sql(f"INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff) VALUES ((nextval('row_id'), '{geneModel}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence}', '{gff}')")
 						geneModel = None
 						region_start = 0
 						region_end = 0
@@ -122,8 +125,9 @@ def genome2GeneList(genome, gff3, db):
 					region_start = int(start)-1 # Gffs are 1-indexed
 					region_end = int(fin)       # End not subtracted because python slicing is exclusive
 					
-					if region_end - region_start > 24552:
-						print(f"Skipping {geneModel} because gene length > 24,552bp", file=sys.stderr)
+					# 49,104bp corresponds to 8,184 6-mer tokens (Max input)
+					if region_end - region_start > 49104:
+						print(f"Skipping {geneModel} because gene length > 49,104bp", file=sys.stderr)
 						region_start = None
 						region_end = None
 						geneModel = None
@@ -239,6 +243,8 @@ class isoformData(Dataset):
 		self.mode = mode
 		self.decoder_tokenizer = GFFTokenizer()
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained("InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", cache_dir="./HFmodels", trust_remote_code=True)
+		with duckdb.connect(self.db) as con:
+			con.sql("SET enable_progress_bar = false;")
 
 	def __len__(self):
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
@@ -247,29 +253,24 @@ class isoformData(Dataset):
 	def __getitem__(self, idx):
 		idx += 1
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			gm,_,_,_,_,region_seq, gff = con.sql("WITH rn (geneModel,start, fin, strand, chromosome, sequence, gff, rnum) AS ("
-								"SELECT *, row_number() OVER() FROM geneList) "
-								f"SELECT * from rn where rnum={idx}").fetchall()[0][:-1]
+			gm,_,_,_,_,region_seq, gff,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
 		
 		# Tokenize output targets
-		if self.mode == 'inference':
-			labels = self.decoder_tokenizer.batch_encode_plus( #TODO: will this work?
-				["[PAD]"],
-				return_tensors="pt",
-				padding=True,
-				truncation=True,
-				max_length=1024)["input_ids"]
-		elif self.mode == "training":
+		if self.mode == "training":
 			# Tokenize the labels
 			labels = self.decoder_tokenizer.batch_encode_plus(
 				[gff],
 				return_tensors="pt",
 				padding=True,
 				truncation=True,
-				max_length=1024)["input_ids"]
+				add_special_tokens=True,
+				max_length=1536)["input_ids"]
 		
-		if labels.shape[1] >= 1024:
-			print(f"Warning {gm} label truncated to 1024 tokens", file=sys.stderr)
+		if labels.shape[1] >= 1536:
+			labels = torch.cat((labels[0:1535], torch.tensor([[self.decoder_tokenizer.vocab["[EOS]"]]])), dim=1)
+			print(f"Warning {gm} label truncated to 1536 tokens", file=sys.stderr)
+		else:
+			labels = torch.cat((labels, torch.tensor([[self.decoder_tokenizer.vocab["[EOS]"]]])), dim=1)
 
 		# Segment and tokenize the sequences
 		seqs = segmentSequence(region_seq, piece_size=6000)
@@ -281,8 +282,10 @@ class isoformData(Dataset):
 			max_length = 1024)["input_ids"]
 
 		encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
-	
-		return (seqs, encoder_attention_mask, labels)
+		if self.mode == "training":
+			return (seqs, encoder_attention_mask, labels)
+		else:
+			return (seqs, encoder_attention_mask)
 	
 class GFFTokenizer(PreTrainedTokenizer):
 	model_input_names = ["input_ids", "attention_mask"]
@@ -290,18 +293,18 @@ class GFFTokenizer(PreTrainedTokenizer):
 	def __init__(self, vocab=None, **kwargs):
 		if vocab is None:
 			self.vocab = {
-				"[PAD]": 0, "[UNK]": 1, "mRNA": 2, "exon": 3, "CDS": 4,"five_prime_UTR": 5, 
-				"three_prime_UTR": 6, ".": 7, "+": 8, "-": 9,'00': 10, '01': 11, '02': 12, 
-				'03': 13,'04': 14, '05': 15, '06': 16, '07': 17, '08': 18, '09': 19, 'A': 20, 
-				'B': 21, 'C': 22, ">":23
+				"[UNK]": 0, "[PAD]": 1,"[EOS]":2, '00': 3, '01': 4, '02': 5, 
+				'03': 6,'04': 7, '05': 8, '06': 9, '07': 10, '08': 11, 
+				'09': 12, 'A': 13, 'B': 14, 'C': 15, ">":16, ".": 17, 
+				"+": 18, "-": 19, ";":20
 			}
 			for i in range(0, 100):
-				self.vocab[str(i)] =	i + 24
+				self.vocab[str(i)] =	i + 21
 			for i in range(1, 151):
-				self.vocab[f"CDS{i}"] = i + 123
+				self.vocab[f"CDS{i}"] = i + 120
 			for i in range(1, 51):
-				self.vocab[f"five_prime_UTR{i}"] = i + 273
-				self.vocab[f"three_prime_UTR{i}"] = i + 323
+				self.vocab[f"five_prime_UTR{i}"] = i + 270
+				self.vocab[f"three_prime_UTR{i}"] = i + 320
 		else:
 			self.vocab = vocab
 
@@ -328,8 +331,9 @@ class GFFTokenizer(PreTrainedTokenizer):
 						tokens.extend([pair for pair in pairs])
 					else:
 						tokens.append(column)
+				tokens.append(";")
 			tokens.append(">")
-		return tokens[:-1]
+		return tokens[:-2]
 
 	def _convert_token_to_id(self, token):
 		return self.vocab.get(token, self.vocab.get(self.unk_token))
@@ -340,8 +344,6 @@ class GFFTokenizer(PreTrainedTokenizer):
 	def convert_tokens_to_string(self, tokens):
 		toks = []
 		for i,token in enumerate(tokens):
-			if token in [".", "A", "B", "C"] and i != 0:
-				token += ";"
 			if token.isnumeric() and i != 0:
 				if tokens[i-1].isnumeric():
 					toks[-1] = toks[-1] + token
@@ -349,10 +351,10 @@ class GFFTokenizer(PreTrainedTokenizer):
 			toks.append(token)
 			
 		toks = '|'.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in toks])
-		toks = re.sub(r'\|>\|', '>', toks)
+		toks = re.sub(r'\|;\|>\|', '>', toks)
 		toks = re.sub(r';>', '>', toks)
 		toks = re.sub(r'>\|', '>', toks)
-		toks = re.sub(r';\|', ';', toks)
+		toks = re.sub(r'\|;\|', ';', toks)
 		#toks = re.sub(r"(CDS\|\d+)", self.replace_pipe, toks)				# Condense CDS ids
 		#toks = re.sub(r"(five_prime_UTR\|\d+)", self.replace_pipe, toks)	# Condense 5' UTR ids
 		#toks = re.sub(r"(three_prime_UTR\|\d+)", self.replace_pipe, toks)	# Condense 3' UTR ids
@@ -489,8 +491,8 @@ class transgenic(LEDForConditionalGeneration):
 	def __init__(self):
 		self.cache_dir = "./HFmodels"
 		self.decoder_model = "allenai/led-base-16384"
-		self.vocab_size = 374
-		self.max_target_positions = 1024
+		self.vocab_size = 371
+		self.max_target_positions = 1536
 		super().__init__(AutoConfig.from_pretrained(self.decoder_model, 
 													vocab_size = self.vocab_size))
 		
@@ -550,10 +552,10 @@ class transgenic(LEDForConditionalGeneration):
 			target_modules = peft_targets,
 			feedforward_modules = peft_feedforward)
 		self.led = get_peft_model(self.led, self.peft_config)
-		print(self.led.print_trainable_parameters(), file=sys.stderr)
+		#print(self.led.print_trainable_parameters(), file=sys.stderr)
 
 		# Custom head for GFF prediction
-		self.lm_head = nn.Linear(768, 374)
+		self.lm_head = nn.Linear(768, 371)
 
 	def shift_tokens_right(self, input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
 		"""
@@ -631,7 +633,7 @@ class transgenic(LEDForConditionalGeneration):
 			masked_lm_loss = loss_fct(gff_logits.view(-1, self.vocab_size), labels.view(-1))
 		
 		if not return_dict:
-			output = (gff_logits,) + outputs[1:]
+			output = (gff_logits,) + decoder_outputs[1:]
 			return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
 		
 		return LEDSeq2SeqLMOutput(
@@ -662,23 +664,25 @@ def trainTransgenicDDP(rank,
 		schedule_lr, 
 		eval, 
 		world_size,
+		batch_size,
 		checkpoint_path="transgenic_checkpoint.pt"):
 	# Set up GPU process group
 	device = torch.device(f"cuda:{rank}" if torch.cuda.is_available() else "cpu")
 	print(f"Training transgenic on {device}, (world_size={world_size})", file=sys.stderr)
 	setup(rank, world_size)
-
+	
 	# Distribute data
 	train_sampler = DistributedSampler(train_ds, num_replicas=world_size, rank=rank)
 	train_ds = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, sampler=train_sampler)
 	eval_sampler = DistributedSampler(eval_ds, num_replicas=world_size, rank=rank)
 	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, sampler=eval_sampler)
-
+	
 	# Load the model and wrap in DDP
 	model = transgenic().to(device)
 	ddp_model = DDP(model, device_ids=[rank], find_unused_parameters=True)
+	ddp_model.train()
 	
-	# Define the loss function and optimizer
+	# Setup the optimizer
 	optimizer = optim.AdamW(model.parameters(), lr=lr)
 	optimizer.zero_grad()
 	
@@ -686,21 +690,20 @@ def trainTransgenicDDP(rank,
 	if schedule_lr:
 		lr_scheduler = get_linear_schedule_with_warmup(
 		optimizer=optimizer,
-		num_warmup_steps=2,
+		num_warmup_steps=0,
 		num_training_steps=(len(train_ds) * num_epochs),
 		)
 
 	dt = GFFTokenizer()
-
 	# Training loop
+	disable_tqdm = not sys.stdout.isatty()
 	best_eval_score = None
 	for epoch in range(num_epochs):
 		train_sampler.set_epoch(epoch)
-		model.train()
 		total_loss = 0
-		for step, batch in enumerate(tqdm(train_ds)):
+		for batch in tqdm(train_ds, miniters=10, disable=False):
 			batch = [item.to(device) for item in batch]
-			outputs = ddp_model(batch[0], encoder_attention_mask=batch[1], labels=batch[2])
+			outputs = ddp_model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
 			loss = outputs.loss
 			total_loss += loss.detach().float()
 			loss.backward()
@@ -714,10 +717,10 @@ def trainTransgenicDDP(rank,
 		if eval:
 			model.eval()
 			eval_loss = 0
-			for step, batch in enumerate(tqdm(eval_ds)):
+			for batch in tqdm(eval_ds, miniters=10, disable=False):
 				batch = [item.to(device) for item in batch]
 				with torch.no_grad():
-					outputs = ddp_model(batch[0], encoder_attention_mask=batch[1], labels=batch[2])
+					outputs = ddp_model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
 				loss = outputs.loss
 				eval_loss += loss.detach().float()
 
@@ -751,16 +754,16 @@ def trainTransgenicDDP(rank,
 					torch.save(checkpoint, f"checkpoints/{checkpoint_path}")
 					print(f"New best model saved with {train_epoch_loss=}", file=sys.stderr)
 
-def run_trainTransgenicDDP(train_ds, eval_ds=None, lr=8e-3, num_epochs=10, schedule_lr=True, eval=False, checkpoint_path="transgenic_checkpoint.pt"):
+def run_trainTransgenicDDP(train_ds, eval_ds=None, lr=8e-3, num_epochs=10, schedule_lr=True, eval=False, batch_size=1,checkpoint_path="transgenic_checkpoint.pt"):
 	world_size = torch.cuda.device_count()
 	mp.spawn(trainTransgenicDDP, 
-		args=(train_ds, eval_ds, lr, num_epochs, schedule_lr, eval, world_size), 
+		args=(train_ds, eval_ds, lr, num_epochs, schedule_lr, eval, world_size, batch_size), 
 		nprocs=world_size, 
 		join=True)
 	cleanup()
 
 # Prediction loop
-def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, split, batch_size, world_size):
+def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, batch_size, world_size):
 	# Set up GPU process group
 	device = torch.device(f"cuda:{rank}" if torch.cuda.is_available() else "cpu")
 	print(f"Running transgenic in prediction mode on {device}, (world_size={world_size})", file=sys.stderr)
@@ -781,32 +784,33 @@ def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, spl
 	loader = makeDataLoader(dataset, shuffle=False, batch_size=batch_size, pin_memory=True, sampler=sampler)
 	
 	# Prediction loop
+	dt = GFFTokenizer()
 	predictions = []
-	loss_fn = nn.CrossEntropyLoss(ignore_index=0)
 	for step, batch in enumerate(tqdm(loader)):
 		batch = [item.to(device) for item in batch]
 		with torch.no_grad():
-			outputs = ddp_model(batch[0], encoder_attention_mask=batch[1], labels=batch[2], batch_size=batch_size)
-			loss = loss_fn(outputs.view(-1, 374), batch[2].view(-1))
-			ppl = torch.exp(loss).cpu().numpy()
-			loss = loss.cpu().numpy()
-			pred = dataset.dataset.decoder_tokenizer.batch_decode(torch.argmax(outputs, -1).detach().cpu().numpy(), skip_special_tokens=True)
-			true = dataset.dataset.decoder_tokenizer.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
-		
-		predictions.append([str(true[0]), str(pred[0]), str(ppl), str(loss)])
+			outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=1536
+									#temperature=0.1,  # Increase predictability of outputs by decreasing this
+									#top_k=10,         # Limit next word sampling group to top-k groups
+									#top_p=0.95,       # Top-p (nucleus) sampling
+									#do_sample=True
+									)
+		pred = dt.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)
+		true = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
+		predictions.append([str(true[0]), str(pred[0])])
 	
-	with open(outfile, 'a') as out:
+	with open(outfile, 'w') as out:
 		for prediction in predictions:
-			out.write("\t".join(prediction) + f"\t{split}\n")
+			out.write("\t".join(prediction)+"\n")
 
 	with open("predictions.pkl", 'wb') as out:
 			pickle.dump(predictions, out)
 	
 
-def run_predictTransgenicDDP(checkpoint:str, dataset:isoformData, outfile, split, batch_size):
+def run_predictTransgenicDDP(checkpoint:str, dataset:isoformData, outfile, batch_size):
 	world_size = torch.cuda.device_count()
 	mp.spawn(predictTransgenicDDP, 
-		args=(checkpoint, dataset, outfile, split, batch_size, world_size), 
+		args=(checkpoint, dataset, outfile, batch_size, world_size), 
 		nprocs=world_size, 
 		join=True)
 	cleanup()
@@ -848,18 +852,45 @@ def crossValidateTransgenic(dataset:isoformData, checkpoint_path, outfile, lr=8e
 
 
 if __name__ == '__main__':
-	torch.manual_seed(0)
-	fasta = "ATH_Chr4.fas"
-	gff = "Athaliana_167_gene_Chr4.gff3"
-	db = "AthChr4.db"
+	torch.manual_seed(123)
+	#fasta = "ATH_Chr4.fas"
+	#gff = "Athaliana_167_gene_Chr4.gff3"
+	#db = "AthChr4.db"
 	
-	#genome2GeneList(fasta, gff, db="AthChr4.db")
-
+	db = "Flagship_Genomes.db"
+	#files = {
+	#	"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
+	#	"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
+	#	"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
+	#	"Ptrichocarpa_533_v4.0.fa":"Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
+	#	"Sbicolor_730_v5.0.fa":"Sbicolor_730_v5.1.gene_exons.clean.gff3"
+	#}
+	#for fasta, gff in files.items():
+	#	name = fasta.split("_")[0]
+	#	print(f"Processing {name}...")
+	#	genome2GeneList("training_data/"+fasta, "training_data/"+gff, db=db)
+	#	ds = isoformData(db, mode="training")
+	#	length = len(ds)
+	#	print(f"{name} {length=}")
+	
 	# Create a training and evaluation DataLoaders
+	#dt = GFFTokenizer()
 	ds = isoformData(db, mode="training")
-	#dl = makeDataLoader(ds, shuffle=False, batch_size=1, pin_memory=True)
+
+	# Dataset length: 175498
 	batch_size = 1
-	train_data, eval_data = random_split(ds, [4000, 127])
+	train_data, eval_data, test_data = random_split(ds, [131624, 17549, 26325])
+	#dl = makeDataLoader(train_data, shuffle=False, batch_size=1, pin_memory=True)
+	#for step, batch in enumerate(dl):
+		#gemo = batch[3]
+		#true = batch[4]
+		#trdc = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
+		#print(f"{gemo=}")
+		#print(f"{true=}")
+		#print(f"{trdc=}")
+		#print("\n")
+		#if step == 30:
+		#	print("hi")
 
 	#checkpoint = torch.load("checkpoints/transgenic_checkpoint.pt", map_location="cpu")
 	model = transgenic()
@@ -890,6 +921,8 @@ if __name__ == '__main__':
 		lr=8e-2, 
 		num_epochs=10,  
 		schedule_lr=True, 
-		eval=True
+		eval=True,
+		batch_size=1
 	)
-	#run_predictTransgenicDDP("checkpoints/transgenic_checkpoint.pt", eval_data, "predictions.txt", 0, batch_size)
+	#print("\n\nBegin generation loop\n\n")
+	#run_predictTransgenicDDP("checkpoints/transgenic_checkpoint.pt", eval_data, "predictions.txt", batch_size)
