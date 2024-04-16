@@ -59,11 +59,9 @@ sbatch -A $agJL -p $pgJL -c 16 --mem=64g --gres=gpu:1 --time=1-00:00:00 -J trans
 ```
 
 **Parameters to keep track of**
-- Type of sequence truncation method
-- Length of junction incursion (likelihood of including a neighbor element splice signal)
-- Method of embedding transformation for input to T5
+- Method of embedding transformation for input to LEDEncoder
 - Fine-tune entire decoder or use adaptors?
-- Generation parameters (temperature, top_k, top_p)
+- Generation method (Greedy, Beam, Sampling)
 
 The the nucleotide transformer can be directly fine-tuned for calssification and regression tasks. This works by replacing the final language model head with a classification or regression head.
 
@@ -169,4 +167,52 @@ There is also LongT5 available, maybe cross validate on those two models?
 LED has a max label embedding of 1024... reduce redundancy in the gff, increase the vocab to reduce 4-digit numbers to one token, see if T5 long has a larger constraint...
 
 Starting with fine tuning the existing LM head on LED... if the performance is poor I could consider making a custom head.
-I think I'll need to make a custom head with custom vocabulary and tokenizer
+
+I think I'll need to make a custom head with custom vocabulary and tokenizer.
+Yes, fully custom LM head with unique vocabulary optimized to reduce redundancy. 
+This also required me to provide new embedding layers to the decoder which need to be changed from scratch.
+
+It seems that the PEFT default configurations are desinged to work with specific model types. Thus, trying to use only the decoder from LED threw errors. It works with the full LED model only... so my architecture is encoder -> encoder -> decoder (A bit strange...)
+
+Adding EOS to the end of the labels improved training and generation significantly!
+Training on just AthChr4 for 10 epochs provided coherently structured text with incorrect numbers.
+
+I doubled the max decoder length to allow for very long gene models. And will now try a full training run...
+If the model is not accurate enough after this run, I will need to think about sharding the model and using the larger nucleotide encoders...
+
+## Full Training Run
+
+Download complete fasta and gff from Phytozome. Flagship phytozome genomes to train/validate on:
+- Ptrichocarpa_533_v4.1
+- Physcomitrella patens v3.3
+- Arabidopsis thaliana TAIR10
+- Glycine max Wm82.a6.v1
+- Sorghum bicolor v5.1
+
+Ensure proper sort order with ```agat_convert_sp_gxf2gxf.pl```:
+```
+singularity exec /data/gpfs/assoc/pgl/johnny/GA_helixer_fix.sif agat_convert_sp_gxf2gxf.pl -gff Athaliana_167_TAIR10.gene.gff3 -o Athaliana_167_TAIR10.gene.clean.gff3
+singularity exec /data/gpfs/assoc/pgl/johnny/GA_helixer_fix.sif agat_convert_sp_gxf2gxf.pl -gff Gmax_880_Wm82.a6.v1.gene_exons.gff3 -o Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3
+singularity exec /data/gpfs/assoc/pgl/johnny/GA_helixer_fix.sif agat_convert_sp_gxf2gxf.pl -gff Ppatens_318_v3.3.gene_exons.gff3 -o Ppatens_318_v3.3.gene_exons.clean.gff3
+singularity exec /data/gpfs/assoc/pgl/johnny/GA_helixer_fix.sif agat_convert_sp_gxf2gxf.pl -gff Ptrichocarpa_533_v4.1.gene_exons.gff3 -o Ptrichocarpa_533_v4.1.gene_exons.clean.gff3
+singularity exec /data/gpfs/assoc/pgl/johnny/GA_helixer_fix.sif agat_convert_sp_gxf2gxf.pl -gff Sbicolor_730_v5.1.gene_exons.gff3 -o Sbicolor_730_v5.1.gene_exons.clean.gff3
+```
+
+Create database: ```Flagship_Genomes.db```:
+```{python}
+db = "Flagship_Genomes.db"
+files = {
+    "Athaliana_167_TAIR10.fa":" Athaliana_167_TAIR10.gene.clean.gff3",
+    "Gmax_880_v6.0.fa":" Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
+    "Ppatens_318_v3.fa":" Ppatens_318_v3.3.gene_exons.clean.gff3",
+    "Ptrichocarpa_533_v4.0.fa":" Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
+    "Sbicolor_730_v5.0.fa":" Sbicolor_730_v5.1.gene_exons.clean.gff3"
+}
+for fasta, gff in files.items():
+    genome2GeneList(fasta, gff, db=db)
+    ds = isoformData(db, mode="training")
+    length = len(ds)
+    print(f"{length=}")
+```
+
+Run 10 epochs of training with train: 75%, validation: 10%, test: 15%
