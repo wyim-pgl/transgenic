@@ -26,12 +26,22 @@ used by the decoder? (Fully connected layer, convolution, reshaping, etc)
 mamba create -y -n transgenic
 mamba activate transgenic
 
-# Cloud (nvidia/cuda)
-mamba install pytorch-nightly::pytorch pytorch-cuda=11.8 python-duckdb -c pytorch-nightly -c nvidia -c conda-forge
-# Local (OSx/MPS)
-mamba install pytorch-nightly::pytorch torchvision torchaudio python-duckdb -c pytorch-nightly -c conda-forge
+# Cloud (nvidia/cuda) 
+mamba install pytorch-nightly::pytorch pytorch-cuda=11.8 python-duckdb libaio  -c pytorch-nightly -c nvidia -c conda-forge
 
-pip install --upgrade git+https://github.com/huggingface/transformers.git peft
+# Local (OSx/MPS)
+#mamba install pytorch-nightly::pytorch torchvision torchaudio python-duckdb libaio -c pytorch-nightly -c conda-forge
+
+pip install --upgrade git+https://github.com/huggingface/transformers.git peft deepspeed
+git clone https://github.com/NVIDIA/cutlass.git
+export CUTLASS_PATH=/path/to/cutlass
+
+# mamba install -c conda-forge gxx_linux-64
+#export CC=$(conda info --base)/envs/transgenic/bin/x86_64-conda-linux-gnu-gcc
+#export CXX=$(conda info --base)/envs/transgenic/bin/x86_64-conda-linux-gnu-g++
+
+module load gcc/9.2.0
+
 ```
 
 ## TODO List
