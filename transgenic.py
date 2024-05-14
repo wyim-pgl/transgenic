@@ -16,14 +16,15 @@ from peft import IA3Config, get_peft_model
 import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
-from torch.nn.utils.rnn import pad_sequence
 import pickle
 from dataclasses import dataclass
 from torch.cuda.amp import autocast, GradScaler
 from accelerate import Accelerator
+from safetensors import safe_open
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 os.environ['HF_HOME'] = './HFmodels'
+os.environ["NCCL_DEBUG"] = "INFO"
 
 def print_gpu_allocation(s:str):
 	#print(f"Allocated: {torch.cuda.memory_allocated()}, Cached: {torch.cuda.memory_reserved()}...{s}", file=sys.stderr)
@@ -838,7 +839,7 @@ def trainTransgenicAccelerate(
 	best_eval_score = None
 	for epoch in range(num_epochs):
 		total_loss = 0
-		for batch in tqdm(train_ds, miniters=10, disable=False):
+		for step, batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
 			with accelerator.accumulate(model):
 				optimizer.zero_grad()
 				#with autocast():
@@ -848,6 +849,10 @@ def trainTransgenicAccelerate(
 				accelerator.backward(loss)
 				if schedule_lr: lr_scheduler.step()
 				optimizer.step()
+			
+			if step % 5000 == 0:
+				print(f"Epoch {epoch=}, Step {step=}, Loss {loss=}", file=sys.stderr)
+				accelerator.save_state(output_dir=checkpoint_path)
 
 		train_epoch_loss = total_loss / len(train_ds)
 		train_ppl = torch.exp(train_epoch_loss)
@@ -938,6 +943,88 @@ def run_predictTransgenicDDP(checkpoint:str, dataset:isoformData, outfile, batch
 		join=True)
 	cleanup()
 
+def predictTransgenic(model_path:str, dataset:isoformData, outfile="transgenic.out", batch_size=1):
+	
+	# Set up DataLoader
+	dataset = makeDataLoader(dataset, shuffle=False, batch_size=batch_size, pin_memory=True, num_workers=4)
+	
+	# Load the model
+	model = transgenic()
+	tensors = {}
+	with safe_open("saved_transgenic_models_accu32/model.safetensors", framework="pt", device="cpu") as f:
+		for k in f.keys():
+			tensors[k] = f.get_tensor(k)
+	model.load_state_dict(tensors)
+	model.eval()
+
+	# Prediction loop
+	dt = GFFTokenizer()
+	predictions = []
+	for step, batch in enumerate(tqdm(dataset)):
+		with torch.no_grad():
+			outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=2048
+									#temperature=0.1,  # Increase predictability of outputs by decreasing this
+									#top_k=10,         # Limit next word sampling group to top-k groups
+									#top_p=0.95,       # Top-p (nucleus) sampling
+									#do_sample=True
+									)
+		pred = dt.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)
+		true = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
+		predictions.append([str(batch[3]), str(true[0]), str(pred[0])])
+	
+	with open(outfile, 'w') as out:
+		for prediction in predictions:
+			out.write("\t".join(prediction)+"\n")
+
+	with open("predictions.pkl", 'wb') as out:
+			pickle.dump(predictions, out)
+
+def predictTransgenicAccelerate(model_path:str, dataset:isoformData, outfile="transgenic.out", batch_size=1):
+	# Set up accelerator
+	accelerator = Accelerator()
+	device = accelerator.device
+	print(f"Running transgenic in prediction mode on {device}", file=sys.stderr)
+	
+	# Set up DataLoader
+	dataset = makeDataLoader(dataset, shuffle=False, batch_size=batch_size, pin_memory=True, num_workers=4)
+	
+	# Load the model
+	model = transgenic()
+	model.to(device)
+	tensors = {}
+	with safe_open("saved_transgenic_models_accu32/model.safetensors", framework="pt", device="cpu") as f:
+		for k in f.keys():
+			tensors[k] = f.get_tensor(k)
+	model.load_state_dict(tensors)
+	model.eval()
+	
+	# Prep objects for use with accelerator
+	model, dataset = accelerator.prepare(
+		model, dataset
+	)
+
+	# Prediction loop
+	dt = GFFTokenizer()
+	predictions = []
+	for step, batch in enumerate(tqdm(dataset)):
+		with torch.no_grad():
+			outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=2048
+									#temperature=0.1,  # Increase predictability of outputs by decreasing this
+									#top_k=10,         # Limit next word sampling group to top-k groups
+									#top_p=0.95,       # Top-p (nucleus) sampling
+									#do_sample=True
+									)
+		pred = dt.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)
+		true = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
+		predictions.append([str(batch[3]), str(true[0]), str(pred[0])])
+	
+	with open(f"{device}_{outfile}", 'w') as out:
+		for prediction in predictions:
+			out.write("\t".join(prediction)+"\n")
+
+	with open(f"{device}_predictions.pkl", 'wb') as out:
+			pickle.dump(predictions, out)
+
 def k_fold_split(dataset:isoformData, k=10):
 	fold_size = len(dataset) // k
 	indices = torch.randperm(len(dataset)).tolist()
@@ -981,83 +1068,60 @@ if __name__ == '__main__':
 	#db = "AthChr4.db"
 	
 	db = "Flagship_Genomes_25k.db"
-	files = {
-		"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
-		"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
-		"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
-		"Ptrichocarpa_533_v4.0.fa":"Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
-		"Sbicolor_730_v5.0.fa":"Sbicolor_730_v5.1.gene_exons.clean.gff3"
-	}
-	for fasta, gff in files.items():
-		name = fasta.split("_")[0]
-		print(f"Processing {name}...")
-		genome2GeneList("training_data/"+fasta, "training_data/"+gff, db=db)
-		ds = isoformData(db, mode="training")
-		length = len(ds)
-		print(f"{name} {length=}")
-	sys.exit()
-	# Create a training and evaluation DataLoaders
-	#dt = GFFTokenizer()
-	ds = isoformData(db, mode="training")
-
-	# Dataset length: 175498
-	batch_size = 1
-	train_data, eval_data, test_data = random_split(ds, [131624, 17549, 26325])
-	#dl = makeDataLoader(train_data, shuffle=False, batch_size=1, pin_memory=True)
-	#for step, batch in enumerate(dl):
-		#gemo = batch[3]
-		#true = batch[4]
-		#trdc = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
-		#print(f"{gemo=}")
-		#print(f"{true=}")
-		#print(f"{trdc=}")
-		#print("\n")
-		#if step == 30:
-		#	print("hi")
-
-	#checkpoint = torch.load("checkpoints/transgenic_checkpoint.pt", map_location="cpu")
+	#files = {
+	#	"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
+	#	"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
+	#	"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
+	#	"Ptrichocarpa_533_v4.0.fa":"Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
+	#	"Sbicolor_730_v5.0.fa":"Sbicolor_730_v5.1.gene_exons.clean.gff3"
+	#}
+	#for fasta, gff in files.items():
+	#	name = fasta.split("_")[0]
+	#	print(f"Processing {name}...")
+	#	genome2GeneList("training_data/"+fasta, "training_data/"+gff, db=db)
+	#	ds = isoformData(db, mode="training")
+	#	length = len(ds)
+	#	print(f"{name} {length=}")
+	
 	#model = transgenic()
-	#model.load_state_dict(checkpoint["model_state_dict"])
-	#model.eval()
-	
-	#dt = GFFTokenizer()
-	#for step, batch in enumerate(dl):
-	#		with torch.no_grad():
-	#		outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=2048
-	#								#temperature=0.1,  # Increase predictability of outputs by decreasing this
-	#								#top_k=10,         # Limit next word sampling group to top-k groups
-	#								#top_p=0.95,       # Top-p (nucleus) sampling
-	#								#do_sample=True
-	#								)
-	#	pred = dt.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)
-	#	true = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
-	#	print(true)
-	#	print("\n")
-	#	print(pred)
-	
-	#train_dataloader = makeDataLoader(train_data, shuffle=True, batch_size=batch_size, pin_memory=True)
-	#eval_dataloader = makeDataLoader(eval_data, shuffle=True, batch_size=batch_size, pin_memory=True)
+	#tensors = {}
+	#with safe_open("saved_transgenic_models_accu32/model.safetensors", framework="pt", device="cpu") as f:
+	#	for k in f.keys():
+	#		tensors[k] = f.get_tensor(k)
 
-	#run_trainTransgenicDDP( 
-	#	train_data, 
-	#	eval_ds=eval_data, 
-	#	lr=8e-2, 
-	#	num_epochs=10,  
-	#	schedule_lr=True, 
-	#	eval=True,
-	#	batch_size=1
-	#)
-	#print("\n\nBegin generation loop\n\n")
-	#run_predictTransgenicDDP("checkpoints/transgenic_checkpoint.pt", eval_data, "predictions.txt", batch_size)
+	#model.load_state_dict(tensors)
+	#model.eval()
+	#sys.exit()
+
+	# Create a training, evaluation, and testing DataLoaders (Dataset length: 175498)
+	ds = isoformData(db, mode="training")
+	train_data, eval_data, test_data = random_split(ds, [131470, 17399, 26171])
+	batch_size = 1
+	mode = "predict"
  
-	trainTransgenicAccelerate(
-		train_data, 
-		eval_data, 
-		lr=8e-2, 
-		num_epochs=10, 
-		schedule_lr=True, 
-		eval=True, 
-		batch_size=1, 
-		checkpoint_path="checkpoints/", 
-		output_dir="saved_transgenic_models/"
-	)
+	if mode == "train":
+		trainTransgenicAccelerate(
+			train_data, 
+			eval_data, 
+			lr=8e-2, 
+			num_epochs=10, 
+			schedule_lr=True, 
+			eval=True, 
+			batch_size=1, 
+			checkpoint_path="checkpoints_accu32/", 
+			output_dir="saved_transgenic_models_accu32/"
+		)
+	if mode == "predictAccelerate":
+		predictTransgenicAccelerate(
+			"saved_transgenic_models_accu32/model.safetensors", 
+			test_data, 
+			outfile="transgenic.out", 
+			batch_size=1
+		)
+	if mode == "predict":
+		predictTransgenic(
+			"saved_transgenic_models_accu32/model.safetensors", 
+			test_data, 
+			outfile="transgenic.out", 
+			batch_size=1
+			)
