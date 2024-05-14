@@ -226,3 +226,10 @@ for fasta, gff in files.items():
 ```
 
 Run 10 epochs of training with train: 75%, validation: 10%, test: 15%
+
+Problem: token 20 has the highest probability everywhere regardless of token. All logits are the same regardless of token.
+1. Check that the custom head was actually updated by the training...
+2. Where do the outputs become uniform?
+
+The last decoder hidden layer was uniform so the problem was likely deeper in the model.
+I found that my new embedding and positional embedding layers didn't have gradients... restored their reguires_grad to True and re-training

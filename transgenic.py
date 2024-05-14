@@ -528,15 +528,15 @@ class transgenic(LEDForConditionalGeneration):
 		# Load the pre-trained decoder and freeze the parameters
 		self.led = LEDForConditionalGeneration.from_pretrained(self.decoder_model, cache_dir=self.cache_dir)
 		
-		# Swap out the decoder embedding layers for the GffTokenizer vocabulary
-		self.led.led.decoder.embed_tokens = nn.Embedding(self.vocab_size, 768, self.led.led.decoder.padding_idx)
-		self.led.led.decoder.embed_positions = LEDLearnedPositionalEmbedding(self.max_target_positions, 768)
-		
 		# Freeze all LEDDecoder attention layers (Not embedding layers)
 		for param in self.led.led.encoder.layers.parameters():
 			param.requires_grad = False
 		for param in self.led.led.decoder.layers.parameters():
 			param.requires_grad = False
+
+		# Swap out the decoder embedding layers for the GffTokenizer vocabulary
+		self.led.led.decoder.embed_tokens = nn.Embedding(self.vocab_size, 768, self.led.led.decoder.padding_idx)
+		self.led.led.decoder.embed_positions = LEDLearnedPositionalEmbedding(self.max_target_positions, 768)
 
 		# Targets all self-attention components and feedforward linear layers for adaptors
 		target_modules = [
@@ -951,7 +951,7 @@ def predictTransgenic(model_path:str, dataset:isoformData, outfile="transgenic.o
 	# Load the model
 	model = transgenic()
 	tensors = {}
-	with safe_open("saved_transgenic_models_accu32/model.safetensors", framework="pt", device="cpu") as f:
+	with safe_open("model.safetensors", framework="pt", device="cpu") as f:
 		for k in f.keys():
 			tensors[k] = f.get_tensor(k)
 	model.load_state_dict(tensors)
@@ -1097,8 +1097,19 @@ if __name__ == '__main__':
 	ds = isoformData(db, mode="training")
 	train_data, eval_data, test_data = random_split(ds, [131470, 17399, 26171])
 	batch_size = 1
-	mode = "predict"
- 
+	mode = "train"
+
+	#model = transgenic()
+	#model.load_state_dict(torch.load("mp_rank_00_model_states.pt", map_location=torch.device('cpu'))['module'])
+	#model.eval()
+
+	#for step, batch in enumerate(tqdm(test_data)):
+	#	with torch.no_grad():
+	#		out = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
+	#		prediction = out.logits.argmax(dim=-1)
+	#		print(batch[3])
+	#sys.exit()
+
 	if mode == "train":
 		trainTransgenicAccelerate(
 			train_data, 
