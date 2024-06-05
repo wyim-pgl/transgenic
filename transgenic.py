@@ -265,11 +265,17 @@ def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=Non
 
 # geneList custom dataset class for use with DataLoader
 class isoformData(Dataset):
-	def __init__(self, db, mode="inference"):
+	def __init__(self, db, dt="gff", mode="inference"):
 		self.db = db
 		self.mode = mode
-		self.decoder_tokenizer = GFFTokenizer()
+		self.dt = dt
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained("InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", cache_dir="./HFmodels", trust_remote_code=True)
+		if dt == "gff":
+			self.decoder_tokenizer = GFFTokenizer()
+			self.maxlength = 2048
+		else:
+			self.decoder_tokenizer = AutoTokenizer.from_pretrained("allenai/led-base-16384", cache_dir="./HFmodels", trust_remote_code=True)
+			self.maxlength = 1024
 
 	def __len__(self):
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
@@ -289,13 +295,14 @@ class isoformData(Dataset):
 				padding=True,
 				truncation=True,
 				add_special_tokens=True,
-				max_length=2048)["input_ids"]
+				max_length=self.maxlength)["input_ids"]
 		
-		if labels.shape[1] >= 2048:
-			labels = torch.cat((labels[:, 0:2047], torch.tensor([[self.decoder_tokenizer.vocab["[EOS]"]]])), dim=1)
-			print(f"Warning {gm} label truncated to 2048 tokens", file=sys.stderr)
-		else:
-			labels = torch.cat((labels, torch.tensor([[self.decoder_tokenizer.vocab["[EOS]"]]])), dim=1)
+		if labels.shape[1] >= self.maxlength:
+			labels = torch.cat((labels[:, 0:(self.maxlength-1)], torch.tensor([[self.decoder_tokenizer.vocab["</s>"]]])), dim=1)
+			print(f"Warning {gm} label truncated to {self.maxlength} tokens", file=sys.stderr)
+		#else:
+		#	if self.dt == "gff":
+		#		labels = torch.cat((labels, torch.tensor([[self.decoder_tokenizer.vocab["</s>"]]])), dim=1)
 
 		# Segment and tokenize the sequences
 		seqs = segmentSequence(region_seq, piece_size=6000)
@@ -318,25 +325,25 @@ class GFFTokenizer(PreTrainedTokenizer):
 	def __init__(self, vocab=None, **kwargs):
 		if vocab is None:
 			self.vocab = {
-				"[UNK]": 0, "[PAD]": 1,"[EOS]":2, '00': 3, '01': 4, '02': 5, 
-				'03': 6,'04': 7, '05': 8, '06': 9, '07': 10, '08': 11, 
-				'09': 12, 'A': 13, 'B': 14, 'C': 15, ">":16, ".": 17, 
-				"+": 18, "-": 19, ";":20
+				"<s>": 0, "<pad>": 1,"</s>":2, "<unk>":3, '00': 4, '01': 5, '02': 6, 
+				'03': 7,'04': 8, '05': 9, '06': 10, '07': 11, '08': 12, 
+				'09': 13, 'A': 14, 'B': 15, 'C': 16, ">":17, ".": 18, 
+				"+": 19, "-": 20, ";":21
 			}
 			for i in range(0, 100):
-				self.vocab[str(i)] =	i + 21
+				self.vocab[str(i)] =	i + 22
 			for i in range(1, 151):
-				self.vocab[f"CDS{i}"] = i + 120
+				self.vocab[f"CDS{i}"] = i + 121
 			for i in range(1, 51):
-				self.vocab[f"five_prime_UTR{i}"] = i + 270
-				self.vocab[f"three_prime_UTR{i}"] = i + 320
+				self.vocab[f"five_prime_UTR{i}"] = i + 271
+				self.vocab[f"three_prime_UTR{i}"] = i + 321
 		else:
 			self.vocab = vocab
 
 		self.ids_to_tokens = {id: token for token, id in self.vocab.items()}
 		super().__init__(**kwargs)
-		self.pad_token = "[PAD]"
-		self.unk_token = "[UNK]"
+		self.pad_token = "<pad>"
+		self.unk_token = "<unk>"
 
 	@property
 	def vocab_size(self):
@@ -346,7 +353,7 @@ class GFFTokenizer(PreTrainedTokenizer):
 		return dict(self.vocab, **self.added_tokens_encoder)
 
 	def _tokenize(self, text):
-		tokens = []
+		tokens = ["<s>"]
 
 		for features in text.split(">"):
 			for feature in features.split(";"):
@@ -358,7 +365,7 @@ class GFFTokenizer(PreTrainedTokenizer):
 						tokens.append(column)
 				tokens.append(";")
 			tokens.append(">")
-		return tokens[:-2]
+		return tokens[:-2] + ["</s>"]
 
 	def _convert_token_to_id(self, token):
 		return self.vocab.get(token, self.vocab.get(self.unk_token))
@@ -479,12 +486,14 @@ class segmented_sequence_embeddings(EsmForMaskedLM):
 		self.esm = AutoModelForMaskedLM.from_pretrained(self.encoder_model, cache_dir=self.cache_dir, trust_remote_code=True)
 		for param in self.esm.parameters():
 			param.requires_grad = False
-		
+		for param in self.esm.lm_head.parameters():
+			param.requires_grad = False
 
 		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
 		#plants -> 1500, multispecies -> 1024
 		#T5 -> 512, longformer -> 768
 		self.hidden_mapping = nn.Linear(1024, 768)
+		self.hidden_mapping_layernorm = nn.LayerNorm(768)
 	
 	def forward(self, input_ids, attention_mask=None, **kwargs):
 		batch_size = input_ids.shape[0]
@@ -510,6 +519,7 @@ class segmented_sequence_embeddings(EsmForMaskedLM):
 		# Use the last hidden state from the nucleotide encoder as input to the decoder
 		# Transform the encoder hidden states to match the decoder input size
 		decoder_inputs_embeds = self.hidden_mapping(batch_embeds)
+		decoder_inputs_embeds = self.hidden_mapping_layernorm(decoder_inputs_embeds)
 
 		return ModelOutput(inputs_embeds=decoder_inputs_embeds, attention_mask=batch_mask)
 
@@ -518,7 +528,7 @@ class transgenic(LEDForConditionalGeneration):
 	def __init__(self):
 		self.cache_dir = "./HFmodels"
 		self.decoder_model = "allenai/led-base-16384"
-		self.vocab_size = 371
+		self.vocab_size = 372
 		self.max_target_positions = 2048
 		super().__init__(AutoConfig.from_pretrained(self.decoder_model, 
 													vocab_size = self.vocab_size))
@@ -527,16 +537,11 @@ class transgenic(LEDForConditionalGeneration):
 		self.encoder = segmented_sequence_embeddings()
 		# Load the pre-trained decoder and freeze the parameters
 		self.led = LEDForConditionalGeneration.from_pretrained(self.decoder_model, cache_dir=self.cache_dir)
-		
-		# Freeze all LEDDecoder attention layers (Not embedding layers)
-		for param in self.led.led.encoder.layers.parameters():
-			param.requires_grad = False
-		for param in self.led.led.decoder.layers.parameters():
-			param.requires_grad = False
 
 		# Swap out the decoder embedding layers for the GffTokenizer vocabulary
 		self.led.led.decoder.embed_tokens = nn.Embedding(self.vocab_size, 768, self.led.led.decoder.padding_idx)
 		self.led.led.decoder.embed_positions = LEDLearnedPositionalEmbedding(self.max_target_positions, 768)
+		self.led.led.decoder.layernorm_embedding = nn.LayerNorm(768)
 
 		# Targets all self-attention components and feedforward linear layers for adaptors
 		target_modules = [
@@ -574,16 +579,16 @@ class transgenic(LEDForConditionalGeneration):
 					peft_feedforward.append(module[0])
 
 		# Load the IA3 adaptor
-		self.peft_config = IA3Config(
-			task_type="SEQ_2_SEQ_LM",
-			target_modules = peft_targets,
-			feedforward_modules = peft_feedforward)
-		self.led = get_peft_model(self.led, self.peft_config)
+		#self.peft_config = IA3Config(
+		#	task_type="SEQ_2_SEQ_LM",
+		#	target_modules = peft_targets,
+		#	feedforward_modules = peft_feedforward)
+		#self.led = get_peft_model(self.led, self.peft_config)
 		#print(self.led.print_trainable_parameters(), file=sys.stderr)
-
+		
 		# Custom head for GFF prediction
-		self.lm_head = nn.Linear(768, 371)
-
+		self.lm_head = nn.Linear(768, 372)
+	
 	def shift_tokens_right(self, input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
 		"""
 		Shift input ids one token to the right.
@@ -675,6 +680,168 @@ class transgenic(LEDForConditionalGeneration):
 			encoder_attentions=decoder_outputs.encoder_attentions,
 			encoder_global_attentions=decoder_outputs.encoder_global_attentions,
 		)
+	
+	def get_encoder(self):
+		return self.encoder
+	
+	def get_decoder(self):
+		return self.led
+
+class transgenicOriginalEmbed(LEDForConditionalGeneration):
+	def __init__(self):
+		self.cache_dir = "./HFmodels"
+		self.decoder_model = "allenai/led-base-16384"
+		self.max_target_positions = 1024
+		super().__init__(AutoConfig.from_pretrained(self.decoder_model))
+		
+		# Add the pre-trained encoder
+		self.encoder = segmented_sequence_embeddings()
+		# Load the pre-trained decoder and freeze the parameters
+		self.led = LEDForConditionalGeneration.from_pretrained(self.decoder_model, cache_dir=self.cache_dir)
+
+		# Swap out the decoder embedding layers for the GffTokenizer vocabulary
+		#self.led.led.decoder.embed_tokens = nn.Embedding(self.vocab_size, 768, self.led.led.decoder.padding_idx)
+		#self.led.led.decoder.embed_positions = LEDLearnedPositionalEmbedding(self.max_target_positions, 768)
+		#self.led.led.decoder.layernorm_embedding = nn.LayerNorm(768)
+
+		# Targets all self-attention components and feedforward linear layers for adaptors
+		target_modules = [
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.query",
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.key",
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.value",
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.query_global",
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.key_global",
+			r"led.encoder.layers.*.self_attn.longformer_self_attn.value_global",
+			r"led.encoder.layers.*.self_attn.output",
+			r"led.encoder.layers.*.fc1",
+			r"led.encoder.layers.*.fc2",
+			r"led.decoder.layers.*.self_attn.k_proj",
+			r"led.decoder.layers.*.self_attn.v_proj",
+			r"led.decoder.layers.*.self_attn.q_proj",
+			r"led.decoder.layers.*.self_attn.kout_proj",
+			r"led.decoder.layers.*.fc1",
+			r"led.decoder.layers.*.fc2",
+			]
+		# Recompute activations for the first and second feedforward layers
+		feedforward_modules = [
+			r"led.encoder.layers.*.fc1", 
+			r"led.encoder.layers.*.fc2",
+			r"led.decoder.layers.*.fc1",
+			r"led.decoder.layers.*.fc2",
+			]
+		peft_targets = []
+		peft_feedforward = []
+		for module in self.led.named_modules():
+			for pattern in target_modules:
+				if re.match(pattern, module[0]):
+					peft_targets.append(module[0])
+			for pattern in feedforward_modules:
+				if re.match(pattern, module[0]):
+					peft_feedforward.append(module[0])
+
+		# Load the IA3 adaptor
+		self.peft_config = IA3Config(
+			task_type="SEQ_2_SEQ_LM",
+			target_modules = peft_targets,
+			feedforward_modules = peft_feedforward)
+		self.led = get_peft_model(self.led, self.peft_config)
+		#print(self.led.print_trainable_parameters(), file=sys.stderr)
+		
+		# Custom head for GFF prediction
+		#self.lm_head = nn.Linear(768, )
+
+	def shift_tokens_right(self, input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
+		"""
+		Shift input ids one token to the right.
+		"""
+		shifted_input_ids = input_ids.new_zeros(input_ids.shape)
+		shifted_input_ids[:, 1:] = input_ids[:, :-1].clone()
+		shifted_input_ids[:, 0] = decoder_start_token_id
+
+		if pad_token_id is None:
+			raise ValueError("config.pad_token_id has to be defined.")
+		# replace possible -100 values in labels by `pad_token_id`
+		shifted_input_ids.masked_fill_(shifted_input_ids == -100, pad_token_id)
+
+		return shifted_input_ids
+
+	def forward(
+		self,
+		input_ids: Optional[torch.LongTensor] = None,
+		encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		attention_mask: Optional[torch.Tensor] = None,
+		decoder_input_ids: Optional[torch.LongTensor] = None,
+		decoder_inputs_embeds: Optional[torch.FloatTensor] = None,
+		labels: Optional[torch.LongTensor] = None,
+		use_cache: Optional[bool] = None,
+		decoder_attention_mask = None,
+		decoder_head_mask = None,
+		cross_attn_head_mask = None,
+		past_key_values = None,
+		output_attentions= None,
+		output_hidden_states = None,
+		return_dict = None,
+		**kwargs
+		) -> Tuple[torch.Tensor]:
+
+		# Compute the embeddings with nucleotide transformer encoder
+		if encoder_outputs is None:
+			encoder_outputs = self.encoder(input_ids, 
+										attention_mask=attention_mask, 
+										return_dict=return_dict
+										).to_tuple()
+		else:
+			encoder_outputs = (encoder_outputs["inputs_embeds"], encoder_outputs["attention_mask"])
+		
+		if labels is not None:
+			if use_cache:
+				print("The `use_cache` argument is changed to `False` since `labels` is provided.", file=sys.stderr)
+			use_cache = False
+			if decoder_input_ids is None and decoder_inputs_embeds is None:
+				decoder_input_ids = self.shift_tokens_right(
+					labels, self.config.pad_token_id, self.config.decoder_start_token_id
+				)
+
+		# Process the transformed encoder outputs through the decoder
+		decoder_outputs = self.led(
+			inputs_embeds=encoder_outputs[0],
+			attention_mask=encoder_outputs[1],
+			decoder_input_ids=decoder_input_ids,
+			decoder_attention_mask=decoder_attention_mask,
+			head_mask=decoder_head_mask,
+			cross_attn_head_mask=cross_attn_head_mask,
+			past_key_values=past_key_values,
+			use_cache=use_cache,
+			output_attentions=output_attentions,
+			output_hidden_states=True,
+			return_dict=return_dict
+		)
+	
+		# Gff prediction head
+		#gff_logits = self.lm_head(decoder_outputs.decoder_hidden_states[-1])
+
+		#masked_lm_loss = None
+		#if labels is not None:
+		#	loss_fct = nn.CrossEntropyLoss()
+		#	masked_lm_loss = loss_fct(gff_logits.view(-1, self.vocab_size), labels.view(-1)).float()
+		
+		#if not return_dict:
+		#	output = (gff_logits,) + decoder_outputs[1:]
+		#	return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+		
+		#return LEDSeq2SeqLMOutput(
+		#	loss=masked_lm_loss,
+		#	logits=gff_logits,
+		#	past_key_values=decoder_outputs.past_key_values,
+		#	decoder_hidden_states=decoder_outputs.decoder_hidden_states,
+		#	decoder_attentions=decoder_outputs.decoder_attentions,
+		#	cross_attentions=decoder_outputs.cross_attentions,
+		#	encoder_last_hidden_state=decoder_outputs.encoder_last_hidden_state,
+		#	encoder_hidden_states=decoder_outputs.encoder_hidden_states,
+		#	encoder_attentions=decoder_outputs.encoder_attentions,
+		#	encoder_global_attentions=decoder_outputs.encoder_global_attentions,
+		#)
+		return decoder_outputs
 	
 	def get_encoder(self):
 		return self.encoder
@@ -803,7 +970,10 @@ def trainTransgenicAccelerate(
 	eval, 
 	batch_size,
 	checkpoint_path="checkpoints/",
+	safetensors_model=None,
 	output_dir="saved_transgenic_models/"):
+
+	print(f"Training transgenic with custom embeddings. {checkpoint_path=} {output_dir=} {safetensors_model=}", file=sys.stderr)
 	
 	# Set up accelerator
 	accelerator = Accelerator(mixed_precision="fp16")
@@ -814,9 +984,165 @@ def trainTransgenicAccelerate(
 	train_ds = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4)
 	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4)
 	
-	# Load the model and 
+	# Load the model and add to device
 	model = transgenic()
+	if safetensors_model:
+		tensors = {}
+		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
+			for k in f.keys():
+				tensors[k] = f.get_tensor(k)
+		model.load_state_dict(tensors)
 	model.to(device)
+
+	for param in model.led.parameters():
+		param.requires_grad = False
+	for param in model.encoder.esm.parameters():
+		param.requires_grad = False
+	for param in model.encoder.hidden_mapping.parameters():
+		param.requires_grad = True
+	for param in model.encoder.hidden_mapping_layernorm.parameters():
+		param.requires_grad = True
+	for param in model.led.led.decoder.embed_tokens.parameters():
+		param.requires_grad = True
+	for param in model.led.led.decoder.embed_positions.parameters():
+		param.requires_grad = True
+	for param in model.led.led.decoder.layernorm_embedding.parameters():
+		param.requires_grad = True
+	for param in model.lm_head.parameters():
+		param.requires_grad = True
+	
+	# Setup the optimizer
+	optimizer = optim.AdamW(
+		[{"params": model.encoder.hidden_mapping.parameters(), "lr": lr},
+		{"params": model.led.led.decoder.embed_tokens.parameters(), "lr": lr},
+		{"params": model.led.led.decoder.embed_positions.parameters(), "lr": lr},
+		{"params": model.led.led.decoder.layernorm_embedding.parameters(), "lr": lr},
+		#{"params": model.led.parameters(), "lr": lr},
+		{"params": model.lm_head.parameters(), "lr": lr},
+		{"params": model.encoder.hidden_mapping_layernorm.parameters(), "lr": lr}]
+	)
+	optimizer.zero_grad()
+	
+	# Create the learning rate scheduler
+	if schedule_lr:
+		lr_scheduler = get_linear_schedule_with_warmup(
+		optimizer=optimizer,
+		num_warmup_steps=0,
+		num_training_steps=(len(train_ds) * num_epochs),
+		)
+	
+	# Prep objects for use with accelerator
+	model, optimizer, train_ds, eval_ds, lr_scheduler = accelerator.prepare(
+		model, optimizer, train_ds, eval_ds, lr_scheduler
+	)
+	
+	# Training loop
+	best_eval_score = None
+	for epoch in range(num_epochs):
+		total_loss = 0
+		for step, batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
+			with accelerator.accumulate(model):
+				#with autocast():
+				outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
+				loss = outputs.loss
+				total_loss += loss.detach().float()
+				accelerator.backward(loss)
+				if schedule_lr: lr_scheduler.step()
+				optimizer.step()
+				optimizer.zero_grad()
+				#for name, param in model.led.led.decoder.embed_tokens.named_parameters():
+				#	print(f"{name=}, {param.grad=}", file=sys.stderr)
+				#for name, param in model.led.led.decoder.embed_positions.named_parameters():
+				#	print(f"{name=}, {param.grad=}", file=sys.stderr)
+					
+			
+			if (step % 5000 == 0) & (step != 0):
+				print(f"Epoch {epoch=}, Step {step=}, Loss {loss=}", file=sys.stderr)
+				accelerator.save_state(output_dir=checkpoint_path)
+
+		train_epoch_loss = total_loss / len(train_ds)
+		train_ppl = torch.exp(train_epoch_loss)
+
+		if eval:
+			model.eval()
+			eval_loss = 0
+			for batch in tqdm(eval_ds, miniters=10, disable=False):
+				with torch.no_grad():
+					outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
+				loss = outputs.loss
+				eval_loss += loss.detach().float()
+
+			eval_epoch_loss = eval_loss / len(eval_ds)
+			eval_ppl = torch.exp(eval_epoch_loss)
+			print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}, {eval_ppl=}, {eval_epoch_loss=}", file=sys.stderr)
+		else:
+			print(f"Epoch {epoch=}: {train_ppl=}, {train_epoch_loss=}", file=sys.stderr)
+		
+		if eval:
+			if best_eval_score is None or eval_epoch_loss < best_eval_score:
+				best_eval_score = eval_ppl
+				if not os.path.exists("checkpoints"):
+					os.makedirs("checkpoints", exist_ok=True)
+				accelerator.save_state(output_dir=checkpoint_path)
+				print(f"New best model saved with {eval_epoch_loss=}", file=sys.stderr)
+		else:
+			if best_eval_score is None or train_epoch_loss < best_eval_score:
+				best_eval_score = train_ppl
+				if not os.path.exists("checkpoints"):
+					os.makedirs("checkpoints", exist_ok=True)
+				accelerator.save_state(output_dir=checkpoint_path)
+				print(f"New best model saved with {train_epoch_loss=}", file=sys.stderr)
+	
+	accelerator.wait_for_everyone()
+	accelerator.save_model(model, output_dir)
+
+def trainTransgenicOriginalEmbedAccelerate(
+	train_ds:isoformData, 
+	eval_ds:isoformData, 
+	lr, 
+	num_epochs,  
+	schedule_lr, 
+	eval, 
+	batch_size,
+	checkpoint_path="checkpoints/",
+	safetensors_model=None,
+	output_dir="saved_transgenic_models/"):
+
+	print(f"Training transgenic with original embeddings. {checkpoint_path=} {output_dir=} {safetensors_model=}", file=sys.stderr)
+	
+	# Set up accelerator
+	accelerator = Accelerator(mixed_precision="fp16")
+	device = accelerator.device
+	print(f"Training transgenic with Accelerate on {device}", file=sys.stderr)
+	
+	# Set up DataLoaders
+	train_ds = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4)
+	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4)
+	
+	# Load the model and add to device
+	model = transgenicOriginalEmbed()
+	if safetensors_model:
+		tensors = {}
+		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
+			for k in f.keys():
+				tensors[k] = f.get_tensor(k)
+		model.load_state_dict(tensors)
+	model.to(device)
+
+	for param in model.encoder.esm.parameters():
+		param.requires_grad = False
+	for param in model.encoder.hidden_mapping.parameters():
+		param.requires_grad = True
+	for param in model.encoder.hidden_mapping_layernorm.parameters():
+		param.requires_grad = True
+	for param in model.led.led.decoder.embed_tokens.parameters():
+		param.requires_grad = True
+	for param in model.led.led.decoder.embed_positions.parameters():
+		param.requires_grad = True
+	for param in model.led.led.decoder.layernorm_embedding.parameters():
+		param.requires_grad = True
+	for param in model.led.lm_head.parameters():
+		param.requires_grad = True
 	
 	# Setup the optimizer
 	optimizer = optim.AdamW(model.parameters(), lr=lr)
@@ -841,7 +1167,6 @@ def trainTransgenicAccelerate(
 		total_loss = 0
 		for step, batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
 			with accelerator.accumulate(model):
-				optimizer.zero_grad()
 				#with autocast():
 				outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
 				loss = outputs.loss
@@ -849,8 +1174,14 @@ def trainTransgenicAccelerate(
 				accelerator.backward(loss)
 				if schedule_lr: lr_scheduler.step()
 				optimizer.step()
+				optimizer.zero_grad()
+				#for name, param in model.led.led.decoder.embed_tokens.named_parameters():
+				#	print(f"{name=}, {param.grad=}", file=sys.stderr)
+				#for name, param in model.led.led.decoder.embed_positions.named_parameters():
+				#	print(f"{name=}, {param.grad=}", file=sys.stderr)
+					
 			
-			if step % 5000 == 0:
+			if (step % 5000 == 0) & (step != 0):
 				print(f"Epoch {epoch=}, Step {step=}, Loss {loss=}", file=sys.stderr)
 				accelerator.save_state(output_dir=checkpoint_path)
 
@@ -917,7 +1248,7 @@ def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, bat
 	for step, batch in enumerate(tqdm(loader)):
 		batch = [item.to(device) for item in batch]
 		with torch.no_grad():
-			outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=2048
+			outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=1024
 									#temperature=0.1,  # Increase predictability of outputs by decreasing this
 									#top_k=10,         # Limit next word sampling group to top-k groups
 									#top_p=0.95,       # Top-p (nucleus) sampling
@@ -962,7 +1293,7 @@ def predictTransgenic(model_path:str, dataset:isoformData, outfile="transgenic.o
 	predictions = []
 	for step, batch in enumerate(tqdm(dataset)):
 		with torch.no_grad():
-			outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=2048
+			outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=1024
 									#temperature=0.1,  # Increase predictability of outputs by decreasing this
 									#top_k=10,         # Limit next word sampling group to top-k groups
 									#top_p=0.95,       # Top-p (nucleus) sampling
@@ -1008,14 +1339,14 @@ def predictTransgenicAccelerate(model_path:str, dataset:isoformData, outfile="tr
 	predictions = []
 	for step, batch in enumerate(tqdm(dataset)):
 		with torch.no_grad():
-			outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=2048
+			outputs = model.generate(inputs=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=1024
 									#temperature=0.1,  # Increase predictability of outputs by decreasing this
 									#top_k=10,         # Limit next word sampling group to top-k groups
 									#top_p=0.95,       # Top-p (nucleus) sampling
 									#do_sample=True
 									)
 		pred = dt.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)
-		true = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)
+		true = dt.batch_decode(batch[2].reshape(batch_size,batch[2].size()[-1]).detach().cpu().numpy(), skip_special_tokens=True)
 		predictions.append([str(batch[3]), str(true[0]), str(pred[0])])
 	
 	with open(f"{device}_{outfile}", 'w') as out:
@@ -1093,24 +1424,31 @@ if __name__ == '__main__':
 	#model.eval()
 	#sys.exit()
 
-	# Create a training, evaluation, and testing DataLoaders (Dataset length: 175498)
-	ds = isoformData(db, mode="training")
-	train_data, eval_data, test_data = random_split(ds, [131470, 17399, 26171])
-	batch_size = 1
-	mode = "train"
-
 	#model = transgenic()
-	#model.load_state_dict(torch.load("mp_rank_00_model_states.pt", map_location=torch.device('cpu'))['module'])
+	#model.load_state_dict(torch.load("checkpoints_accu32/pytorch_model/mp_rank_00_model_states.pt")['module'])#, map_location=torch.device('cpu'))['module'])
+	#model.to(torch.device('cuda:0'))
 	#model.eval()
 
-	#for step, batch in enumerate(tqdm(test_data)):
+	#for step, batch in enumerate(tqdm(t_data)):
 	#	with torch.no_grad():
-	#		out = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
+	#		out = model(input_ids=batch[0].to(torch.device('cuda:0')), attention_mask=batch[1].to(torch.device('cuda:0')), labels=batch[2].to(torch.device('cuda:0')), return_dict=True)
 	#		prediction = out.logits.argmax(dim=-1)
-	#		print(batch[3])
+	#		print(batch[3], file=sys.stderr)
+	#		print(batch[2].to(torch.device('cpu')), file=sys.stderr)
+	#		print(prediction.to(torch.device('cpu')), file=sys.stderr)
+	#		print(out.loss, file=sys.stderr)
 	#sys.exit()
 
+	# Create a training, evaluation, and testing DataLoaders (Dataset length: 175498)
+	ds = isoformData(db, dt="gff", mode="training")
+	train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
+	batch_size = 1
+
+	mode = sys.argv[1]
+	print(f"Running in {mode} mode", file=sys.stderr)
 	if mode == "train":
+		ds = isoformData(db, dt="gff", mode="training")
+		train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
 		trainTransgenicAccelerate(
 			train_data, 
 			eval_data, 
@@ -1120,16 +1458,32 @@ if __name__ == '__main__':
 			eval=True, 
 			batch_size=1, 
 			checkpoint_path="checkpoints_accu32/", 
+			safetensors_model=None, #"saved_transgenic_models_accu32/model.safetensors",
 			output_dir="saved_transgenic_models_accu32/"
 		)
-	if mode == "predictAccelerate":
+	elif mode == "trainOriginalEmbed":
+		ds = isoformData(db, dt="led", mode="training")
+		train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
+		trainTransgenicOriginalEmbedAccelerate(
+			train_data, 
+			eval_data, 
+			lr=8e-2, 
+			num_epochs=10, 
+			schedule_lr=True, 
+			eval=True, 
+			batch_size=1, 
+			checkpoint_path="checkpoints_OriginalEmbed/", 
+			safetensors_model=None, #"saved_transgenic_models_accu32/model.safetensors",
+			output_dir="saved_transgenic_models_OriginalEmbed/"
+		)
+	elif mode == "predictAccelerate":
 		predictTransgenicAccelerate(
 			"saved_transgenic_models_accu32/model.safetensors", 
 			test_data, 
 			outfile="transgenic.out", 
 			batch_size=1
 		)
-	if mode == "predict":
+	elif mode == "predict":
 		predictTransgenic(
 			"saved_transgenic_models_accu32/model.safetensors", 
 			test_data, 
