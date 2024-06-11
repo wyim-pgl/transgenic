@@ -217,6 +217,9 @@ files = {
     "Ppatens_318_v3.fa":" Ppatens_318_v3.3.gene_exons.clean.gff3",
     "Ptrichocarpa_533_v4.0.fa":" Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
     "Sbicolor_730_v5.0.fa":" Sbicolor_730_v5.1.gene_exons.clean.gff3"
+    rice
+    maize
+    brachypodium
 }
 for fasta, gff in files.items():
     genome2GeneList(fasta, gff, db=db)
