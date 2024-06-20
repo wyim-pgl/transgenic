@@ -1,6 +1,9 @@
 import duckdb, sys, os, subprocess, re
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import numpy as np
 from typing import List, Optional, Tuple, Union
-
+import wandb
 from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split, Subset
@@ -8,6 +11,7 @@ from torch.utils.data.distributed import DistributedSampler
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.nn.utils import clip_grad_norm_
 from transformers import AutoTokenizer, AutoModelForMaskedLM, AutoConfig, PreTrainedTokenizer
 from transformers import LEDForConditionalGeneration, EsmForMaskedLM, LEDPreTrainedModel, LEDConfig
 from transformers.modeling_outputs import ModelOutput
@@ -20,6 +24,7 @@ import pickle
 from dataclasses import dataclass
 from torch.cuda.amp import autocast, GradScaler
 from accelerate import Accelerator
+from accelerate import DistributedDataParallelKwargs
 from safetensors import safe_open
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -150,8 +155,8 @@ def genome2GeneList(genome, gff3, db):
 
 					# Get sense strand sequence
 					sequence = genome_dict[chr][region_start:region_end]
-					if strand == '-':
-						sequence = reverseComplement(sequence)
+					#if strand == '-':
+					#	sequence = reverseComplement(sequence)
 				
 				elif skipGene:
 					continue
@@ -561,10 +566,13 @@ class LEDSeq2SeqModelOutput(ModelOutput):
 	encoder_global_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
 
 class segmented_sequence_embeddings(EsmForMaskedLM):
-	def __init__(self):
+	def __init__(self, model):
 		self.cache_dir = "./HFmodels"
-		self.encoder_model = "InstaDeepAI/nucleotide-transformer-v2-500m-multi-species"
-		super().__init__(AutoConfig.from_pretrained(self.encoder_model, is_decoder=False, trust_remote_code=True))
+		#InstaDeepAI/nucleotide-transformer-v2-500m-multi-species
+		#InstaDeepAI/agro-nucleotide-transformer-1b
+		self.encoder_model = model
+		config = AutoConfig.from_pretrained(self.encoder_model, is_decoder=False, trust_remote_code=True)
+		super().__init__(config)
 		
 		self.esm = AutoModelForMaskedLM.from_pretrained(self.encoder_model, cache_dir=self.cache_dir, trust_remote_code=True)
 		for param in self.esm.parameters():
@@ -575,7 +583,7 @@ class segmented_sequence_embeddings(EsmForMaskedLM):
 		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
 		#plants -> 1500, multispecies -> 1024
 		#T5 -> 512, longformer -> 768
-		self.hidden_mapping = nn.Linear(1024, 768)
+		self.hidden_mapping = nn.Linear(config.hidden_size, 768)
 		self.hidden_mapping_layernorm = nn.LayerNorm(768)
 	
 	def forward(self, input_ids, attention_mask=None, **kwargs):
@@ -934,15 +942,15 @@ class transgenicOriginalEmbed(LEDForConditionalGeneration):
 		return self.led
 	
 class transgenicModel(LEDPreTrainedModel):
-	_tied_weights_keys = ["decoder.embed_tokens.weight", "encoder.embed_tokens.weight"]
+	#_tied_weights_keys = ["decoder.embed_tokens.weight", "encoder.embed_tokens.weight"]
 
-	def __init__(self, config: LEDConfig):
+	def __init__(self, config: LEDConfig, encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species"):
 		super().__init__(config)
 
 		padding_idx, vocab_size = config.pad_token_id, config.vocab_size
 		self.decoder_embed_tokens = nn.Embedding(vocab_size, config.d_model, padding_idx)
 
-		self.encoder = segmented_sequence_embeddings()
+		self.encoder = segmented_sequence_embeddings(encoder_model)
 		self.decoder = LEDForConditionalGeneration(config).led.decoder
 
 		# Initialize weights and apply final processing
@@ -1063,16 +1071,19 @@ class transgenicModel(LEDPreTrainedModel):
 class transgenicForConditionalGeneration(LEDPreTrainedModel):
 	base_model_prefix = "transgenic"
 	_keys_to_ignore_on_load_missing = ["final_logits_bias"]
-	_tied_weights_keys = ["decoder.embed_tokens.weight", "encoder.embed_tokens.weight", "lm_head.weight"]
+	_tied_weights_keys = ["transgenic.decoder.embed_tokens.weight", "lm_head.weight"]
 
-	def __init__(self, config: LEDConfig):
+	def __init__(self, config: LEDConfig, encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", unlink=False):
+		if not unlink:
+			_tied_weights_keys = []
 		super().__init__(config)
-		self.transgenic = transgenicModel(config)
+		self.transgenic = transgenicModel(config, encoder_model=encoder_model)
 		self.register_buffer("final_logits_bias", torch.zeros((1, self.transgenic.decoder_embed_tokens.num_embeddings)))
 		self.lm_head = nn.Linear(config.d_model, self.transgenic.decoder_embed_tokens.num_embeddings, bias=False)
 
 		# Initialize weights and apply final processing
 		self.post_init()
+		self.initialize_weights()
 
 	def get_encoder(self):
 		return self.transgenic.get_encoder()
@@ -1099,6 +1110,15 @@ class transgenicForConditionalGeneration(LEDPreTrainedModel):
 
 	def set_output_embeddings(self, new_embeddings):
 		self.lm_head = new_embeddings
+	
+	def initialize_weights(self):
+		for m in self.transgenic.decoder.modules():
+			if isinstance(m, nn.Linear):
+				nn.init.xavier_uniform_(m.weight)
+				if m.bias is not None:
+					nn.init.constant_(m.bias, 0)
+		nn.init.xavier_uniform_(self.transgenic.encoder.hidden_mapping.weight)
+		nn.init.constant_(self.transgenic.encoder.hidden_mapping.bias, 0)
 
 	#@add_start_docstrings_to_model_forward(LED_INPUTS_DOCSTRING)
 	#@replace_return_docstrings(output_type=Seq2SeqLMOutput, config_class=_CONFIG_FOR_DOC)
@@ -1241,6 +1261,48 @@ class transgenicForConditionalGeneration(LEDPreTrainedModel):
 				+ layer_past[2:],
 			)
 		return reordered_past
+
+def plot_grad_flow(model, outprefix="gradient_flow"):
+	'''Plots the gradients flowing through different layers in the net during training.
+	Can be used for checking for possible gradient vanishing / exploding problems.
+
+	Usage: Plug this function in Trainer class after loss.backwards() as 
+	"plot_grad_flow(self.model.named_parameters())" to visualize the gradient flow'''
+	ave_grads = []
+	max_grads= []
+	layers = []
+	for n, p in model.named_parameters():
+		if(p.requires_grad) and ("bias" not in n):
+			if p.grad != None:
+				#print(f"{n=}, {p.grad=}")
+				layers.append(n)
+				ave_grads.append(p.grad.abs().mean().cpu())
+				max_grads.append(p.grad.abs().max().cpu())
+	#for n,p in model.lm_head.named_parameters():
+	#	if p.grad != None:
+	#		print(f"{n=}, {p.grad=}")
+	#		layers.append("lm_head."+n)
+	#		ave_grads.append(p.grad.abs().mean())
+	#		max_grads.append(p.grad.abs().max())
+	
+	if len(ave_grads) == 0:
+		print("No gradients to plot.", file=sys.stderr)
+		return
+	plt.bar(np.arange(len(max_grads)), max_grads, alpha=0.6, lw=1, color="c")
+	plt.bar(np.arange(len(max_grads)), ave_grads, alpha=0.8, lw=1, color="b")
+	plt.hlines(0, 0, len(ave_grads)+1, lw=2, color="k" )
+	plt.xticks(range(0,len(ave_grads), 1), layers, rotation="vertical")
+	plt.xlim(left=0, right=len(ave_grads))
+	plt.ylim(bottom = -0.001, top=0.02) # zoom in on the lower gradient regions
+	plt.xlabel("Layers")
+	plt.ylabel("average gradient")
+	plt.title("Gradient flow")
+	plt.grid(True)
+	plt.legend([Line2D([0], [0], color="c", lw=4),
+				Line2D([0], [0], color="b", lw=4),
+				Line2D([0], [0], color="k", lw=4)], ['max-gradient', 'mean-gradient', 'zero-gradient'])
+	# save as pdf
+	plt.savefig(f"{outprefix}.pdf")
 
 # Training loop
 def trainTransgenicDDP(rank, 
@@ -1622,14 +1684,42 @@ def trainTransgenicFCGAccelerate(
 	schedule_lr, 
 	eval, 
 	batch_size,
+	max_grad_norm=1.0,
 	checkpoint_path="checkpoints_FCG/",
 	safetensors_model=None,
-	output_dir="saved_models_FCG/"):
+	output_dir="saved_models_FCG/",
+	accumulation_steps=32,
+	notes="",
+	encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species",
+	unlink=False):
+
+	# start a new wandb run to track this script
+	wandb.init(
+		# set the wandb project where this run will be logged
+		project="transgenic",
+
+		# track hyperparameters and run metadata
+		config={
+		"learning_rate": lr,
+		"schedule_lr": schedule_lr,
+		"architecture": "FCG",
+		"dataset": "25kb-5genomes",
+		"epochs": num_epochs,
+		"max_grad_norm": max_grad_norm,
+		"accumulation_steps": accumulation_steps,
+		"Optimizer": "AdamW",
+		"Checkpoints":checkpoint_path,
+		"Outputs":output_dir,
+		"Notes":notes
+		}
+	)
 
 	print(f"Training transgenic with reinitialized decoder. {checkpoint_path=} {output_dir=} {safetensors_model=}", file=sys.stderr)
 	
 	# Set up accelerator
-	accelerator = Accelerator(mixed_precision="fp16")
+	ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
+	#ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=args.gradient_accumulation_steps > 1)
+	accelerator = Accelerator(kwargs_handlers=[ddp_kwargs]) # gradient_accumulation_steps=32
 	device = accelerator.device
 	print(f"Training transgenic with Accelerate on {device}", file=sys.stderr)
 	
@@ -1638,17 +1728,23 @@ def trainTransgenicFCGAccelerate(
 	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4)
 	
 	# Load the model and add to device
-	config = LEDConfig.from_pretrained("allenai/led-base-16384", vocab_size=372, max_decoder_position_embeddings=2048)
-	model = transgenicForConditionalGeneration(config)
+	config = LEDConfig.from_pretrained("allenai/led-base-16384", 
+									vocab_size=372, 
+									max_decoder_position_embeddings=2048,
+									decoder_layerdrop=0.2,
+									dropout= 0.2)
+	model = transgenicForConditionalGeneration(config, encoder_model=encoder_model, unlink=unlink)
 	if safetensors_model:
 		tensors = {}
 		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
 			for k in f.keys():
 				tensors[k] = f.get_tensor(k)
+		tensors["lm_head.weight"] = tensors["transgenic.decoder.embed_tokens.weight"]
 		model.load_state_dict(tensors)
 	model.to(device)
+	model.train()
 
-	for param in model.transgenic.esm.parameters():
+	for param in model.transgenic.encoder.esm.parameters():
 		param.requires_grad = False
 	
 	# Setup the optimizer
@@ -1673,19 +1769,31 @@ def trainTransgenicFCGAccelerate(
 	for epoch in range(num_epochs):
 		total_loss = 0
 		for step, batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
-			with accelerator.accumulate(model):
-				#with autocast():
-				outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
-				loss = outputs.loss
-				total_loss += loss.detach().float()
-				accelerator.backward(loss)
-				if schedule_lr: lr_scheduler.step()
+			#with accelerator.accumulate(model):
+			outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
+			loss = outputs.loss / accumulation_steps
+			#loss.backward()
+			accelerator.backward(loss)
+			total_loss += outputs.loss.detach().float()
+			if (step+1) % accumulation_steps == 0:
+				clip_grad_norm_(model.parameters(), max_grad_norm)
 				optimizer.step()
+				if schedule_lr: lr_scheduler.step()
+				# log metrics to wandb
+				wandb_log = {"epoch":epoch, "step":step, "loss": outputs.loss.detach().float(), "mean_loss": total_loss / (step+1), "lr": lr_scheduler.get_last_lr()[0]}
+				for name, param in model.named_parameters():
+					if (param.grad != None) & (param.requires_grad):
+						grad_norm = param.grad.norm().item()
+						wandb_log[f"{name}_grad_norm"] = grad_norm
+				wandb.log(wandb_log)
+				#if accelerator.is_main_process: plot_grad_flow(model, outprefix=f"{checkpoint_path}/grad_flow")
 				optimizer.zero_grad()
-				#for name, param in model.led.led.decoder.embed_tokens.named_parameters():
-				#	print(f"{name=}, {param.grad=}", file=sys.stderr)
-				#for name, param in model.led.led.decoder.embed_positions.named_parameters():
-				#	print(f"{name=}, {param.grad=}", file=sys.stderr)
+			
+			
+				
+			#if schedule_lr: lr_scheduler.step()
+			#optimizer.step()
+			#optimizer.zero_grad()
 					
 			
 			if (step % 5000 == 0) & (step != 0):
@@ -1727,6 +1835,7 @@ def trainTransgenicFCGAccelerate(
 	
 	accelerator.wait_for_everyone()
 	accelerator.save_model(model, output_dir)
+	wandb.finish()
 
 # Prediction loop
 def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, batch_size, world_size):
@@ -1905,7 +2014,7 @@ if __name__ == '__main__':
 	#gff = "Athaliana_167_gene_Chr4.gff3"
 	#db = "AthChr4.db"
 	
-	db = "Flagship_Genomes_25k.db"
+	db = "Flagship_Genomes_25k_stranded.db"
 	#files = {
 	#	"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
 	#	"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
@@ -1915,7 +2024,7 @@ if __name__ == '__main__':
 	#}
 	#for fasta, gff in files.items():
 	#	name = fasta.split("_")[0]
-	#	print(f"Processing {name}...")
+	#	print(f"Processing {name}...", file=sys.stderr)
 	#	genome2GeneList("training_data/"+fasta, "training_data/"+gff, db=db)
 	#	ds = isoformData(db, mode="training")
 	#	length = len(ds)
@@ -1934,13 +2043,13 @@ if __name__ == '__main__':
 	#config = AutoConfig.from_pretrained("allenai/led-base-16384", vocab_size=372, max_decoder_position_embeddings=2048)
 	#model = transgenicForConditionalGeneration(config)
 	#model = transgenicOriginalEmbed()
-	#model.load_state_dict(torch.load("checkpoints_accu32/pytorch_model/mp_rank_00_model_states.pt")['module'])#, map_location=torch.device('cpu'))['module'])
+	#model.load_state_dict(torch.load("checkpoints_FCG/pytorch_model/mp_rank_00_model_states.pt")['module'])#, map_location=torch.device('cpu'))['module'])
 	#model.to(torch.device('cuda:0'))
 	#model.eval()
 	# Create a training, evaluation, and testing DataLoaders (Dataset length: 175498)
-	ds = isoformData(db, dt="gff", mode="training")
-	train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
-	batch_size = 1
+	#ds = isoformData(db, dt="gff", mode="training")
+	#train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
+	#batch_size = 1
 	#for step, batch in enumerate(tqdm(t_data)):
 	#	with torch.no_grad():
 	#		out = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
@@ -1952,8 +2061,41 @@ if __name__ == '__main__':
 	#sys.exit()
 
 	mode = sys.argv[1]
+	encoder_model = sys.argv[2]
+	unlink = bool(sys.argv[3])
+	notes = sys.argv[4]
 	print(f"Running in {mode} mode", file=sys.stderr)
-	if mode == "train":
+
+	if mode == "test":
+		config = AutoConfig.from_pretrained("allenai/led-base-16384", vocab_size=372, max_decoder_position_embeddings=2048)
+		model = transgenicForConditionalGeneration(config)
+		
+		#model = transgenicOriginalEmbed()
+		#model.load_state_dict(torch.load("checkpoints_FCG_accu32/pytorch_model/mp_rank_00_model_states.pt")['module'])#, map_location=torch.device('cpu'))['module'])
+		
+		tensors = {}
+		with safe_open("checkpoints_FCG_accu32/model.safetensors", framework="pt", device="cpu") as f:
+			for k in f.keys():
+				tensors[k] = f.get_tensor(k)
+		tensors["lm_head.weight"] = tensors["transgenic.decoder.embed_tokens.weight"]
+		model.load_state_dict(tensors)
+		
+		model.to(torch.device('cuda:0'))
+		model.eval()
+		# Create a training, evaluation, and testing DataLoaders (Dataset length: 175498)
+		ds = isoformData(db, dt="gff", mode="training")
+		train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
+		batch_size = 1
+		for step, batch in enumerate(tqdm(t_data)):
+			with torch.no_grad():
+				out = model(input_ids=batch[0].to(torch.device('cuda:0')), attention_mask=batch[1].to(torch.device('cuda:0')), labels=batch[2].to(torch.device('cuda:0')), return_dict=True)
+				prediction = out.logits.argmax(dim=-1)
+				print(batch[3], file=sys.stderr)
+				print(batch[2].to(torch.device('cpu')), file=sys.stderr)
+				print(prediction.to(torch.device('cpu')), file=sys.stderr)
+				print(out.loss, file=sys.stderr)
+		sys.exit()
+	elif mode == "train":
 		ds = isoformData(db, dt="gff", mode="training")
 		train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
 		trainTransgenicAccelerate(
@@ -1971,17 +2113,20 @@ if __name__ == '__main__':
 	if mode == "FCG":
 		ds = isoformData(db, dt="gff", mode="training")
 		train_data, eval_data, test_data = random_split(ds, [131470, 17399, 26171])
-		trainTransgenicAccelerate(
+		trainTransgenicFCGAccelerate(
 			train_data, 
 			eval_data, 
-			lr=8e-2, 
+			lr=8e-3, 
 			num_epochs=10, 
 			schedule_lr=True, 
 			eval=True, 
 			batch_size=1, 
 			checkpoint_path="checkpoints_FCG/", 
 			safetensors_model=None, #"saved_transgenic_models_accu32/model.safetensors",
-			output_dir="saved_models_FCG/"
+			output_dir="saved_models_FCG/",
+			notes=notes,
+			encoder_model=encoder_model,
+			unlink = unlink
 		)
 	elif mode == "trainOriginalEmbed":
 		ds = isoformData(db, dt="led", mode="training")
