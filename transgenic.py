@@ -1837,6 +1837,160 @@ def trainTransgenicFCGAccelerate(
 	accelerator.save_model(model, output_dir)
 	wandb.finish()
 
+def trainTransgenicFCGCPU(
+	train_ds:isoformData, 
+	eval_ds:isoformData, 
+	lr, 
+	num_epochs,  
+	schedule_lr, 
+	eval, 
+	batch_size,
+	max_grad_norm=1.0,
+	checkpoint_path="checkpoints_CPU/",
+	safetensors_model=None,
+	output_dir="saved_models_CPU/",
+	accumulation_steps=32,
+	notes="",
+	encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species",
+	unlink=False):
+
+	# start a new wandb run to track this script
+	wandb.init(
+		# set the wandb project where this run will be logged
+		project="transgenic",
+
+		# track hyperparameters and run metadata
+		config={
+		"learning_rate": lr,
+		"schedule_lr": schedule_lr,
+		"architecture": "FCG",
+		"dataset": "25kb-5genomes",
+		"epochs": num_epochs,
+		"max_grad_norm": max_grad_norm,
+		"accumulation_steps": accumulation_steps,
+		"Optimizer": "AdamW",
+		"Checkpoints":checkpoint_path,
+		"Outputs":output_dir,
+		"Notes":notes
+		}
+	)
+
+	print(f"Training transgenic with reinitialized decoder. {checkpoint_path=} {output_dir=} {safetensors_model=}", file=sys.stderr)
+	
+
+	print(f"Training transgenic on cpu", file=sys.stderr)
+	
+	# Set up DataLoaders
+	train_ds = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4)
+	if eval_ds:
+		eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4)
+	
+	# Load the model and add to device
+	config = LEDConfig.from_pretrained("allenai/led-base-16384", 
+									vocab_size=372, 
+									max_decoder_position_embeddings=2048,
+									decoder_layerdrop=0.2,
+									dropout= 0.2)
+	model = transgenicForConditionalGeneration(config, encoder_model=encoder_model, unlink=unlink)
+	if safetensors_model:
+		tensors = {}
+		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
+			for k in f.keys():
+				tensors[k] = f.get_tensor(k)
+		tensors["lm_head.weight"] = tensors["transgenic.decoder.embed_tokens.weight"]
+		model.load_state_dict(tensors)
+	#model.to(device)
+	model.train()
+
+	for param in model.transgenic.encoder.esm.parameters():
+		param.requires_grad = False
+	
+	# Setup the optimizer
+	optimizer = optim.AdamW(model.parameters(), lr=lr)
+	optimizer.zero_grad()
+	
+	# Create the learning rate scheduler
+	if schedule_lr:
+		lr_scheduler = get_linear_schedule_with_warmup(
+		optimizer=optimizer,
+		num_warmup_steps=0,
+		num_training_steps=(len(train_ds) * num_epochs),
+		)
+	
+	# Training loop
+	best_eval_score = None
+	for epoch in range(num_epochs):
+		total_loss = 0
+		for step, batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
+			#with accelerator.accumulate(model):
+			outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
+			loss = outputs.loss / accumulation_steps
+			loss.backward()
+			#accelerator.backward(loss)
+			total_loss += outputs.loss.detach().float()
+			if (step+1) % accumulation_steps == 0:
+				clip_grad_norm_(model.parameters(), max_grad_norm)
+				optimizer.step()
+				if schedule_lr: lr_scheduler.step()
+				# log metrics to wandb
+				wandb_log = {"epoch":epoch, "step":step, "loss": outputs.loss.detach().float(), "mean_loss": total_loss / (step+1)}#, "lr": lr_scheduler.get_last_lr()[0]}
+				for name, param in model.named_parameters():
+					if (param.grad != None) & (param.requires_grad):
+						grad_norm = param.grad.norm().item()
+						wandb_log[f"{name}_grad_norm"] = grad_norm
+				wandb.log(wandb_log)
+				#if accelerator.is_main_process: plot_grad_flow(model, outprefix=f"{checkpoint_path}/grad_flow")
+				optimizer.zero_grad()
+			
+			
+				
+			#if schedule_lr: lr_scheduler.step()
+			#optimizer.step()
+			#optimizer.zero_grad()
+					
+			
+			if (step % 5000 == 0) & (step != 0):
+				print(f"Epoch {epoch=}, Step {step=}, Loss {loss=}", file=sys.stderr)
+				#accelerator.save_state(output_dir=checkpoint_path)
+
+		train_epoch_loss = total_loss / len(train_ds)
+		train_ppl = torch.exp(train_epoch_loss)
+
+		if eval:
+			model.eval()
+			eval_loss = 0
+			for batch in tqdm(eval_ds, miniters=10, disable=False):
+				with torch.no_grad():
+					outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
+				loss = outputs.loss
+				eval_loss += loss.detach().float()
+
+			eval_epoch_loss = eval_loss / len(eval_ds)
+			eval_ppl = torch.exp(eval_epoch_loss)
+			print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}, {eval_ppl=}, {eval_epoch_loss=}", file=sys.stderr)
+		else:
+			print(f"Epoch {epoch=}: {train_ppl=}, {train_epoch_loss=}", file=sys.stderr)
+		
+		if eval:
+			if best_eval_score is None or eval_epoch_loss < best_eval_score:
+				best_eval_score = eval_ppl
+				if not os.path.exists("checkpoints"):
+					os.makedirs("checkpoints", exist_ok=True)
+				#accelerator.save_state(output_dir=checkpoint_path)
+				print(f"New best model saved with {eval_epoch_loss=}", file=sys.stderr)
+		else:
+			if best_eval_score is None or train_epoch_loss < best_eval_score:
+				best_eval_score = train_ppl
+				if not os.path.exists("checkpoints"):
+					os.makedirs("checkpoints", exist_ok=True)
+				#accelerator.save_state(output_dir=checkpoint_path)
+				print(f"New best model saved with {train_epoch_loss=}", file=sys.stderr)
+	
+	#accelerator.wait_for_everyone()
+	#accelerator.save_model(model, output_dir)
+	wandb.finish()
+	return model
+
 # Prediction loop
 def predictTransgenicDDP(rank, checkpoint:str, dataset:isoformData, outfile, batch_size, world_size):
 	# Set up GPU process group
@@ -2014,7 +2168,7 @@ if __name__ == '__main__':
 	#gff = "Athaliana_167_gene_Chr4.gff3"
 	#db = "AthChr4.db"
 	
-	db = "Flagship_Genomes_25k_stranded.db"
+	db = "Flagship_Genomes_25k.db"
 	#files = {
 	#	"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
 	#	"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
@@ -2128,6 +2282,26 @@ if __name__ == '__main__':
 			encoder_model=encoder_model,
 			unlink = unlink
 		)
+	elif mode == "CPU":
+		ds = isoformData(db, dt="gff", mode="training")
+		train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26170,1 ])
+		outmod = trainTransgenicFCGCPU(
+			t_data, 
+			eval_data, 
+			lr=8e-3, 
+			num_epochs=10, 
+			schedule_lr=False, 
+			eval=False, 
+			batch_size=1, 
+			accumulation_steps=1,
+			checkpoint_path="checkpoints_CPU/", 
+			safetensors_model=None, #"saved_transgenic_models_accu32/model.safetensors",
+			output_dir="saved_models_CPU/",
+			notes=notes,
+			encoder_model=encoder_model,
+			unlink = unlink
+		)
+		print("Done")
 	elif mode == "trainOriginalEmbed":
 		ds = isoformData(db, dt="led", mode="training")
 		train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
