@@ -70,12 +70,25 @@ def reverseComplement(sequence):
 	return sequence
 	# Prepare raw genomic data for data loading 
 
-def genome2GeneList(genome, gff3, db):
-	# read in the genome and gff3 file
-	# parse the gff3 file to get the gene models
-	# for each gene model, create a list of isoforms and extract the gene region sequence (sense strand)
-	# Store everything in a database
-	# Call the function multiple times to append a new genome to the database
+def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0):
+	# Purpose: 
+	#   Read a genome assembly and gff3 annotation file into a 
+	#   duckdb database for training or inference. For each gene 
+	#   model, the corresponding nucleotide sequence is extracted
+	#   from the genome and the target annotation string is created.
+	#   The function may be called multiple times to append add 
+	#   multiple genomes to the database
+	# Inputs:
+	#   genome: path to a fasta file containing the genome assembly
+	#   gff3: path to a gff3 file containing gene annotations
+	#   db: path to a duckdb database file (will be created if it does not exist)
+	#   maxLen: Maximum size of gene model sequence to include in the database (larger gene models are skipped)
+	#   addExtra: Max size of random buffer to add to the gene model sequence (used to capture UTR start and end during training)
+	# Outputs:
+	#   A duckdb database used to load data into the model
+	# TODO:
+	#   - Add support for bed files
+	#   - Add inference mode with just target sequences for prediction
 
 	# Load genome into a dictionary
 	genome_dict = loadGenome(genome)
@@ -114,8 +127,8 @@ def genome2GeneList(genome, gff3, db):
 				line = line.strip().split('\t')
 				chr, _, typ, start, fin, _, strand, phase, attributes = line
 				if typ == 'gene':
+					# Add previous gene model to the database
 					if (region_start != None) & (not skipGene):
-						# Add previous gene model to the database
 						mRNA_list = mRNA_list[1:-1]
 						gff = f"{feature_list[:-1]}>{mRNA_list}"
 						try:
@@ -138,22 +151,25 @@ def genome2GeneList(genome, gff3, db):
 						cds_num = {}
 					
 					# Construct current gene model
+					five_prime_buffer = int(torch.randint(addExtra, (1,)))
+					three_prime_buffer = int(torch.randint(addExtra, (1,)))
 					skipGene = False
 					geneModel = attributes.split(';')[0].split('=')[1]
-					region_start = int(start)-1 # Gffs are 1-indexed
-					region_end = int(fin)       # End not subtracted because python slicing is exclusive
+					region_start = int(start) - five_prime_buffer - 1 # Gffs are 1-indexed
+					if region_start < 0: region_start = 0
+					region_end = int(fin) + three_prime_buffer        # End not subtracted because python slicing is exclusive
 					
-					# 49,104bp corresponds to 8,184 6-mer tokens (Max input)
+					# 49,152bp corresponds to 8,192 6-mer tokens (Max input)
 	 				# 25,002 -> 4,167 6-mer tokens (Max output)
-					if region_end - region_start > 25002:
-						print(f"Skipping {geneModel} because gene length > 25,002bp", file=sys.stderr)
+					if region_end - region_start > maxLen:
+						print(f"Skipping {geneModel} because gene length > {maxLen}", file=sys.stderr)
 						region_start = None
 						region_end = None
 						geneModel = None
 						skipGene = True
 						continue
 
-					# Get sense strand sequence
+					# Get forward strand sequence
 					sequence = genome_dict[chr][region_start:region_end]
 					#if strand == '-':
 					#	sequence = reverseComplement(sequence)
@@ -212,17 +228,72 @@ def genome2GeneList(genome, gff3, db):
 
 	con.close()
 
+def gffString2GFF3(gff:str, chr:str, region_start:int, region_end:int) -> List[str]:
+	# Purpose: 
+	#      Convert a GFF string (decoded model output) to GFF3 fromat.
+	# Inputs:
+	#      gff: str, the GFF string
+	#      chr: str, the chromosome name
+	#      region_start: int, start coords of sequence region in the chromosome
+	#      region_end: int, end coords of sequence region in the chromosome
+	# Outputs:
+	#      An array of strings for each GFF3 lines
+	# TODO: Error handling for strange model outputs
+	
+	# Break out the gene features
+	phaseLookup = {"A":0,"B":1,"C":2,".":"."}
+
+	gff = gff.replace ("<s>", "").replace("</s>", "")
+	features = gff.split(">")[0].split(";")
+	features = [feature.split("|") for feature in features]
+	features = {feat[1]:feat for feat in features}
+	
+	# Get the gene start, end, and strand
+	geneStart = None
+	geneEnd = None
+	for feat in features:
+		if geneStart is None:
+			geneStart = int(features[feat][0])
+			geneStrand  = features[feat][3]
+		elif int(features[feat][0]) < geneStart:
+			geneStart = int(features[feat][0])
+		
+		if geneEnd is None:
+			geneEnd = int(features[feat][2])
+		elif int(features[feat][2]) > geneEnd:
+			geneEnd = int(features[feat][2])
+	geneStart = geneStart + region_start
+	geneEnd = geneEnd + region_start
+	
+	# Construct the GFF3 string
+	import uuid
+	id = str(uuid.uuid4())
+	geneModel = [f"{chr}\ttransgenic\tgene\t{geneStart}\t{geneEnd}\t.\t{geneStrand}\t.\tID={id}"]
+	
+	# Add mRNA models
+	transcripts = gff.split(">")[1].split(";")
+	for i,transcript in enumerate(transcripts):
+		geneModel.append(f"{chr}\ttransgenic\tmRNA\t{geneStart}\t{geneEnd}\t.\t{geneStrand}\t.\tID={id}.t{i+1};Parent={id}")
+		transcript = transcript.split("|")
+		for featureID in transcript:
+			if featureID == "":
+				continue
+			featureModel = features[featureID]
+			featureType = re.sub(r'\d+', '', featureID)
+			featureNum = re.sub(r'\D+', '', featureID)
+			geneModel.append(f"{chr}\ttransgenic\t{featureType}\t{int(featureModel[0])}\t{int(featureModel[2])}\t.\t{geneStrand}\t{phaseLookup[featureModel[4]]}\tID={id}.t{i+1}.{featureType}{featureNum};Parent={id}.t{i+1}")
+	
+	return geneModel
 
 def segmentSequence(seq, piece_size = 4092):
 	# Segment the sequence into evenly sized chunks smaller than 4092bp (encoder max length of 1024 tokens)
 	seqs = [seq[i:min(i+piece_size, len(seq))] for i in range(0, len(seq), piece_size)]
 	return seqs
 
-
-def setup(rank, world_size):
+def setup(rank, world_size, pg="gloo"):
 	os.environ['MASTER_ADDR'] = 'localhost'
 	os.environ['MASTER_PORT'] = '12355'
-	dist.init_process_group("nccl", rank=rank, world_size=world_size) # initialize the process group
+	dist.init_process_group(pg, rank=rank, world_size=world_size) # initialize the process group
 
 def cleanup():
 	if dist.is_initialized():
@@ -230,7 +301,7 @@ def cleanup():
 
 def target_collate_fn(batch):
 	# Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
-	sequences, attention_masks, labels, gm = zip(*batch)
+	sequences, attention_masks, global_attention_masks, labels, gm, chr, region_start, region_end= zip(*batch)
 
 	# Pad and stack the sequences
 	max_segs = max([seq.shape[0] for seq in sequences])
@@ -244,16 +315,22 @@ def target_collate_fn(batch):
 	attention_masks = [F.pad(mask, (0, max_segs*1024 - mask.shape[0]), value=False) for mask in attention_masks]
 	attention_masks = torch.stack(attention_masks)
 
+	if global_attention_masks[0] is not None:
+		#Pad and stack the global attention masks
+		global_attention_masks = [mask.flatten() for mask in global_attention_masks]
+		global_attention_masks = [F.pad(mask, (0, max_segs*1024 - mask.shape[0]), value=False) for mask in global_attention_masks]
+		global_attention_masks = torch.stack(global_attention_masks)
+
 	# Pad and stack the labels
 	if labels:
 		max_len = max([label.shape[1] for label in labels])
 		labels_padded = [F.pad(label, (0, max_len - label.shape[1])) for label in labels]
-		labels_padded = torch.stack(labels_padded)
+		labels_padded = torch.cat(labels_padded)
 
 	if labels:
-		return sequences, attention_masks, labels_padded, gm
+		return sequences, attention_masks, global_attention_masks, labels_padded, gm, chr, region_start, region_end
 	else:
-		return sequences, attention_masks, gm
+		return sequences, attention_masks, global_attention_masks, None, gm, chr, region_start, region_end
 
 def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=None, num_workers=0):
 	if sampler != None:
@@ -269,29 +346,145 @@ def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=Non
 		num_workers=num_workers)
 
 def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
-    """
-    Shift input ids one token to the right.
-    """
-    shifted_input_ids = input_ids.new_zeros(input_ids.shape)
-    shifted_input_ids[:, 1:] = input_ids[:, :-1].clone()
-    shifted_input_ids[:, 0] = decoder_start_token_id
+	"""
+	Shift input ids one token to the right.
+	"""
+	shifted_input_ids = input_ids.new_zeros(input_ids.shape)
+	shifted_input_ids[:, 1:] = input_ids[:, :-1].clone()
+	shifted_input_ids[:, 0] = decoder_start_token_id
 
-    if pad_token_id is None:
-        raise ValueError("config.pad_token_id has to be defined.")
-    # replace possible -100 values in labels by `pad_token_id`
-    shifted_input_ids.masked_fill_(shifted_input_ids == -100, pad_token_id)
+	if pad_token_id is None:
+		raise ValueError("config.pad_token_id has to be defined.")
+	# replace possible -100 values in labels by `pad_token_id`
+	shifted_input_ids.masked_fill_(shifted_input_ids == -100, pad_token_id)
 
-    return shifted_input_ids
+	return shifted_input_ids
+
+def getSpliceBranchSeqs() -> List[str]:
+	# Purpose:
+	#      Generate a list of splice branch sequences for use in the model
+	# Outputs:
+	#      List[str], the splice branch sequences
+	
+	from itertools import product
+
+	# Define the possible nucleotides for each position in the motif
+	motif_positions = {
+		'Y': ['C', 'T'],
+		'N': ['A', 'C', 'G', 'T'],
+		'R': ['A', 'G'],
+		'A': ['A'],
+		'U': ['T']}
+
+	# Generate all possible motif sequences by creating a list of possible nucleotides for each position
+	motif = 'YNYURAY'
+	possible_nucleotides = [motif_positions[char] for char in motif]
+	all_possible_sequences = [''.join(seq) for seq in product(*possible_nucleotides)]
+
+	seqs = []
+	for sequence in all_possible_sequences:
+		seqs.append(sequence)
+	rc = [reverseComplement(seq) for seq in seqs]
+	return {"forward":seqs, "reverse":rc}
+
+def scanGlobalAttentionTokens(vocab:dict, tokenized_sequence:List[int], seqlen:int) -> List[int]:
+	# Purpose:
+	#      Scan a tokenized sequence for sequence feartures which can be used for setting
+	#      transient global attention in the model. Features include canonical and non-canonical 
+	#      splice donor sites and spliceosome branch sequences. Splice donor sites are allowed to span two 
+	#      tokens to account for split tokens and branch points must span two tokens. Both forward and 
+	#      reverse strands are scanned and one direction is chosen based on the orientation with the most
+	#      identified tokens.
+	# Inputs:
+	#      vocab: dict, the token to id dictionary
+	#      tokenized_sequence: List[int], the tokenized sequence
+	# Outputs:
+	#      List[int], the positions of the global attention tokens
+
+	# Donor splice sites in both directions
+	spliceSites_fwd = ["AGGT", "AGGC","AGAT"]
+	spliceSites_rev = 	["ACCT","GCCT","ATCT"]
+	
+	# Branch sequences in both directions
+	spliceBranchSites = getSpliceBranchSeqs()
+	spliceBranchSites_fwd = spliceBranchSites["forward"]
+	spliceBranchSites_rev = spliceBranchSites["reverse"]
+
+	# Swap vocab dictionary to id to allow for fast lookup
+	id2vocab = {v:k for k,v in vocab.items()}
+
+	# Initialize global attention masks
+	global_attention_mask_fwd = [0 for i in range(len(tokenized_sequence))]
+	global_attention_mask_rev = [0 for i in range(len(tokenized_sequence))]
+	
+	fwd_splice_count = 0
+	rev_splice_count = 0
+	fwd_branch_count = 0
+	rev_branch_count = 0
+	for i,token in enumerate(tokenized_sequence):
+		if i == 0:
+			continue
+		
+		double_token = f"{id2vocab[token]}{id2vocab[tokenized_sequence[i-1]]}"
+		
+		# Scan for forward donor splice sites
+		for site in spliceSites_fwd:
+			if site in id2vocab[token]:
+				global_attention_mask_fwd[i] = 1 
+				fwd_splice_count += 1
+				break
+			elif (site in double_token) and (site not in id2vocab[tokenized_sequence[i-1]]):
+				global_attention_mask_fwd[i] = 1
+				global_attention_mask_fwd[i-1] = 1
+				fwd_splice_count += 1
+				break
+		# Scan for reverse donor splice sites
+		for site in spliceSites_rev:
+			if site in id2vocab[token]:
+				global_attention_mask_rev[i] = 1 
+				rev_splice_count += 1
+				break
+			elif (site in double_token) and (site not in id2vocab[tokenized_sequence[i-1]]):
+				global_attention_mask_rev[i] = 1
+				global_attention_mask_rev[i-1] = 1
+				rev_splice_count += 1
+				break
+
+		# Scan for forward splice branch sequences
+		for site in spliceBranchSites_fwd:
+			if site in double_token:
+				global_attention_mask_fwd[i] = 1
+				global_attention_mask_fwd[i-1] = 1
+				fwd_branch_count += 1
+				break
+		# Scan for reverse splice branch sequences
+		for site in spliceBranchSites_rev:
+			if site in double_token:
+				global_attention_mask_rev[i] = 1
+				global_attention_mask_rev[i-1] = 1
+				rev_branch_count += 1
+				break
+	
+	# TODO: is there a heurisitic we can use to determine the correct direction?
+	picked = []
+	for x in zip(global_attention_mask_fwd, global_attention_mask_rev):
+		if sum(x) >= 1:
+			picked.append(1)
+		else:
+			picked.append(0)
+
+	return segmentSequence(picked, piece_size=1024)
 
 # geneList custom dataset class for use with DataLoader
 class isoformData(Dataset):
-	def __init__(self, db, dt="gff", mode="inference"):
+	def __init__(self, db, dt, mode="inference", encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", global_attention=False):
 		self.db = db
 		self.mode = mode
 		self.dt = dt
-		self.encoder_tokenizer = AutoTokenizer.from_pretrained("InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", cache_dir="./HFmodels", trust_remote_code=True)
-		if dt == "gff":
-			self.decoder_tokenizer = GFFTokenizer()
+		self.global_attention = global_attention
+		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
+		if dt != None:
+			self.decoder_tokenizer = dt
 			self.maxlength = 2048
 		else:
 			self.decoder_tokenizer = AutoTokenizer.from_pretrained("allenai/led-base-16384", cache_dir="./HFmodels", trust_remote_code=True)
@@ -304,7 +497,7 @@ class isoformData(Dataset):
 	def __getitem__(self, idx):
 		idx += 1
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			gm,_,_,_,_,region_seq, gff,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
+			gm,region_start,region_end,strand,chr,region_seq, gff,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
 		
 		# Tokenize output targets
 		if self.mode == "training":
@@ -325,19 +518,26 @@ class isoformData(Dataset):
 		#		labels = torch.cat((labels, torch.tensor([[self.decoder_tokenizer.vocab["</s>"]]])), dim=1)
 
 		# Segment and tokenize the sequences
-		seqs = segmentSequence(region_seq, piece_size=6000)
+		seqs = segmentSequence(region_seq, piece_size=4002)
 		seqs = self.encoder_tokenizer.batch_encode_plus(
 			seqs,
 			return_tensors="pt",
 			padding="max_length",
 			truncation=True,
 			max_length = 1024)["input_ids"]
-
 		encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
-		if self.mode == "training":
-			return (seqs, encoder_attention_mask, labels, gm)
+
+		# Scan for global attention tokens
+		if self.global_attention:
+			global_attention_mask = scanGlobalAttentionTokens(self.encoder_tokenizer.get_vocab(), seqs.flatten().tolist(), int(region_end)-int(region_start))
+			global_attention_mask = torch.LongTensor(global_attention_mask)
 		else:
-			return (seqs, encoder_attention_mask)
+			global_attention_mask = None
+
+		if self.mode == "training":
+			return (seqs, encoder_attention_mask, global_attention_mask, labels, gm, chr, region_start, region_end)
+		else:
+			return (seqs, encoder_attention_mask, global_attention_mask, None, gm, chr, region_start, region_end)
 	
 class GFFTokenizer(PreTrainedTokenizer):
 	model_input_names = ["input_ids", "attention_mask"]
@@ -412,6 +612,78 @@ class GFFTokenizer(PreTrainedTokenizer):
 		#toks = re.sub(r"(three_prime_UTR\|\d+)", self.replace_pipe, toks)	# Condense 3' UTR ids
 		#toks = re.sub(r'\|(\d+\|)+', self.replace_pipe_in_digits, toks)		# Condense start and end numbers
 		return toks
+
+class GFFTokenizer09(PreTrainedTokenizer):
+	model_input_names = ["input_ids", "attention_mask"]
+
+	def __init__(self, vocab=None, **kwargs):
+		if vocab is None:
+			self.vocab = {
+				"<s>": 0, "<pad>": 1,"</s>":2, "<unk>":3, '0': 4, '1': 5, '2': 6, 
+				'3': 7,'4': 8, '5': 9, '6': 10, '7': 11, '8': 12, 
+				'9': 13, 'A': 14, 'B': 15, 'C': 16, ">":17, ".": 18, 
+				"+": 19, "-": 20, ";":21
+			}
+			for i in range(1, 151):
+				self.vocab[f"CDS{i}"] = i + 21
+			for i in range(1, 51):
+				self.vocab[f"five_prime_UTR{i}"] = i + 171
+				self.vocab[f"three_prime_UTR{i}"] = i + 221
+		else:
+			self.vocab = vocab
+
+		self.ids_to_tokens = {id: token for token, id in self.vocab.items()}
+		super().__init__(**kwargs)
+		self.pad_token = "<pad>"
+		self.unk_token = "<unk>"
+
+	@property
+	def vocab_size(self):
+		return len(self.vocab)
+
+	def get_vocab(self):
+		return dict(self.vocab, **self.added_tokens_encoder)
+
+	def _tokenize(self, text):
+		tokens = ["<s>"]
+
+		for features in text.split(">"):
+			for feature in features.split(";"):
+				for column in feature.split("|"):
+					if re.search(r'^\d+$', column):
+						tokens.extend([digit for digit in column])
+					else:
+						tokens.append(column)
+				tokens.append(";")
+			tokens.append(">")
+		return tokens[:-2] + ["</s>"]
+
+	def _convert_token_to_id(self, token):
+		return self.vocab.get(token, self.vocab.get(self.unk_token))
+
+	def _convert_id_to_token(self, index):
+		return self.ids_to_tokens.get(index, self.unk_token)
+
+	def convert_tokens_to_string(self, tokens):
+		toks = []
+		for i,token in enumerate(tokens):
+			if token.isnumeric() and i != 0:
+				if tokens[i-1].isnumeric():
+					toks[-1] = toks[-1] + token
+					continue
+			toks.append(token)
+			
+		toks = '|'.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in toks])
+		toks = re.sub(r'\|;\|>\|', '>', toks)
+		toks = re.sub(r';>', '>', toks)
+		toks = re.sub(r'>\|', '>', toks)
+		toks = re.sub(r'\|;\|', ';', toks)
+		#toks = re.sub(r"(CDS\|\d+)", self.replace_pipe, toks)				# Condense CDS ids
+		#toks = re.sub(r"(five_prime_UTR\|\d+)", self.replace_pipe, toks)	# Condense 5' UTR ids
+		#toks = re.sub(r"(three_prime_UTR\|\d+)", self.replace_pipe, toks)	# Condense 3' UTR ids
+		#toks = re.sub(r'\|(\d+\|)+', self.replace_pipe_in_digits, toks)		# Condense start and end numbers
+		return toks
+
 
 #Copied from transformers.models.led.modeling_led.py
 class LEDLearnedPositionalEmbedding(nn.Embedding):
@@ -568,23 +840,23 @@ class LEDSeq2SeqModelOutput(ModelOutput):
 class segmented_sequence_embeddings(EsmForMaskedLM):
 	def __init__(self, model):
 		self.cache_dir = "./HFmodels"
-		#InstaDeepAI/nucleotide-transformer-v2-500m-multi-species
-		#InstaDeepAI/agro-nucleotide-transformer-1b
 		self.encoder_model = model
 		config = AutoConfig.from_pretrained(self.encoder_model, is_decoder=False, trust_remote_code=True)
 		super().__init__(config)
 		
 		self.esm = AutoModelForMaskedLM.from_pretrained(self.encoder_model, cache_dir=self.cache_dir, trust_remote_code=True)
-		for param in self.esm.parameters():
-			param.requires_grad = False
-		for param in self.esm.lm_head.parameters():
-			param.requires_grad = False
+		
+		#print(self.led.print_trainable_parameters(), file=sys.stderr)
+		#for param in self.esm.parameters():
+		#	param.requires_grad = False
+		#for param in self.esm.lm_head.parameters():
+		#	param.requires_grad = False
 
 		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
 		#plants -> 1500, multispecies -> 1024
 		#T5 -> 512, longformer -> 768
 		self.hidden_mapping = nn.Linear(config.hidden_size, 768)
-		self.hidden_mapping_layernorm = nn.LayerNorm(768)
+		self.hidden_mapping_layernorm = nn.LayerNorm(768, eps=1e-5)
 	
 	def forward(self, input_ids, attention_mask=None, **kwargs):
 		batch_size = input_ids.shape[0]
@@ -592,13 +864,13 @@ class segmented_sequence_embeddings(EsmForMaskedLM):
 		input_ids = input_ids.reshape(batch_size, int(num_segs), 1024)
 		attention_mask = attention_mask.reshape(batch_size, int(num_segs), 1024)
 		for i in range(batch_size):
-			with torch.no_grad():
-				embeddings = self.esm(
-					input_ids[i, :, :],
-					attention_mask=attention_mask[i,:,:],
-					encoder_attention_mask=attention_mask[i,:,:],
-					output_hidden_states=True
-				)['hidden_states'][-1]
+			#with torch.no_grad():
+			embeddings = self.esm(
+				input_ids[i, :, :],
+				attention_mask=attention_mask[i,:,:],
+				encoder_attention_mask=attention_mask[i,:,:],
+				output_hidden_states=True
+			)['hidden_states'][-1]
 			
 			if i == 0:
 				batch_embeds = embeddings.reshape(1, num_segs*1024, -1)
@@ -942,7 +1214,7 @@ class transgenicOriginalEmbed(LEDForConditionalGeneration):
 		return self.led
 	
 class transgenicModel(LEDPreTrainedModel):
-	#_tied_weights_keys = ["decoder.embed_tokens.weight", "encoder.embed_tokens.weight"]
+	_tied_weights_keys = ["decoder_embed_tokens.weight", "decoder.embed_tokens.weight"]
 
 	def __init__(self, config: LEDConfig, encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species"):
 		super().__init__(config)
@@ -952,6 +1224,7 @@ class transgenicModel(LEDPreTrainedModel):
 
 		self.encoder = segmented_sequence_embeddings(encoder_model)
 		self.decoder = LEDForConditionalGeneration(config).led.decoder
+		self.decoder.embed_tokens = self.decoder_embed_tokens
 
 		# Initialize weights and apply final processing
 		self.post_init()
@@ -1043,6 +1316,7 @@ class transgenicModel(LEDPreTrainedModel):
 			attention_mask=decoder_attention_mask,
 			encoder_hidden_states=encoder_outputs[0],
 			encoder_attention_mask=encoder_outputs[1].long(), #attention_mask,
+			global_attention_mask=global_attention_mask,
 			head_mask=decoder_head_mask,
 			cross_attn_head_mask=cross_attn_head_mask,
 			past_key_values=past_key_values,
@@ -1071,7 +1345,7 @@ class transgenicModel(LEDPreTrainedModel):
 class transgenicForConditionalGeneration(LEDPreTrainedModel):
 	base_model_prefix = "transgenic"
 	_keys_to_ignore_on_load_missing = ["final_logits_bias"]
-	_tied_weights_keys = ["transgenic.decoder.embed_tokens.weight", "lm_head.weight"]
+	_tied_weights_keys = ["transgenic.decoder_embed_tokens.weight", "lm_head.weight"]
 
 	def __init__(self, config: LEDConfig, encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", unlink=False):
 		if not unlink:
@@ -1175,7 +1449,7 @@ class transgenicForConditionalGeneration(LEDPreTrainedModel):
 				decoder_input_ids = shift_tokens_right(
 					labels, self.config.pad_token_id, self.config.decoder_start_token_id
 				)
-
+		
 		outputs = self.transgenic(
 			input_ids,
 			attention_mask=attention_mask,
@@ -1314,7 +1588,12 @@ def trainTransgenicDDP(rank,
 		eval, 
 		world_size,
 		batch_size,
-		checkpoint_path="transgenic_checkpoint.pt"):
+		checkpoint_path,
+		safetensors_model,
+		encoder_model,
+		unlink,
+		accumulation_steps,
+		max_grad_norm):
 	# Set up GPU process group
 	device = torch.device(f"cuda:{rank}" if torch.cuda.is_available() else "cpu")
 	print(f"Training transgenic on {device}, (world_size={world_size})", file=sys.stderr)
@@ -1327,8 +1606,63 @@ def trainTransgenicDDP(rank,
 	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, sampler=eval_sampler)
 	
 	# Load the model and wrap in DDP
-	model = transgenic().to(device)
-	ddp_model = DDP(model, device_ids=[rank], find_unused_parameters=True)
+	config = LEDConfig.from_pretrained("allenai/led-base-16384", 
+									vocab_size=272, 
+									max_decoder_position_embeddings=2048,
+									decoder_layerdrop=0.1,
+									dropout= 0.1)
+	model = transgenicForConditionalGeneration(config, encoder_model=encoder_model, unlink=unlink)
+
+	# Targets all self-attention components and dense linear layers for peft adaptors in the ESM encoder
+	target_modules = [
+		r".*esm.encoder.layer.*.attention.self.query",
+		r".*esm.encoder.layer.*.attention.self.key",
+		r".*esm.encoder.layer.*.attention.self.value",
+		r".*esm.encoder.layer.*.attention.output.dense",
+		r".*esm.encoder.layer.*.intermediate.dense",
+		r".*esm.encoder.layer.*.output.dense"]
+
+	# Recompute activations for the dense layers
+	feedforward_modules = [
+		r".*esm.encoder.layer.*.attention.output.dense",
+		r".*esm.encoder.layer.*.intermediate.dense",
+		r".*esm.encoder.layer.*.output.dense"]
+
+	# Find the target and feedforward modules
+	peft_targets = []
+	peft_feedforward = []
+	for module in model.named_modules():
+		for pattern in target_modules:
+			if re.match(pattern, module[0]):
+				peft_targets.append(module[0])
+		for pattern in feedforward_modules:
+			if re.match(pattern, module[0]):
+				peft_feedforward.append(module[0])
+
+	# Load the IA3 adaptor
+	peft_config = IA3Config(task_type="SEQ_2_SEQ_LM", target_modules = peft_targets, feedforward_modules = peft_feedforward, init_ia3_weights = True)
+	model = get_peft_model(model, peft_config)
+
+	# Add gradients back for the entire decoder and the hidden mapping layers
+	for param in model.transgenic.decoder.parameters():
+		param.requires_grad = True
+	for param in model.transgenic.encoder.hidden_mapping.parameters():
+		param.requires_grad = True
+	for param in model.transgenic.encoder.hidden_mapping_layernorm.parameters():
+		param.requires_grad = True
+	model.print_trainable_parameters()
+
+	# Load checkpoint if provided
+	if safetensors_model:
+		tensors = {}
+		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
+			for k in f.keys():
+				tensors[k] = f.get_tensor(k)
+		tensors["base_model.model.lm_head.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
+		tensors["base_model.model.transgenic.decoder.embed_tokens.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
+		model.load_state_dict(tensors)
+	model.to(device)
+	ddp_model = DDP(model, find_unused_parameters=True)
 	ddp_model.train()
 	
 	# Setup the optimizer
@@ -1343,27 +1677,32 @@ def trainTransgenicDDP(rank,
 		num_training_steps=(len(train_ds) * num_epochs),
 		)
 
-	dt = GFFTokenizer()
 	# Training loop
 	best_eval_score = None
-	scaler = GradScaler()
-	accumulation_steps = 4
 	for epoch in range(num_epochs):
-		train_sampler.set_epoch(epoch)
 		total_loss = 0
-		for step,batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
-			batch = [item.to(device) for item in batch[:-1]]
-			with autocast(): # Mixed precision training to save memory
-				outputs = ddp_model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
-				loss = outputs.loss / accumulation_steps
-			total_loss += loss.detach().float()
-			scaler.scale(loss).backward()
-			if (step + 1) % accumulation_steps == 0:
-				scaler.step(optimizer)
-				scaler.update()
+		for step, batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
+			outputs = ddp_model(input_ids=batch[0], attention_mask=batch[1], global_attention_mask=batch[2], labels=batch[3], return_dict=True)
+			loss = outputs.loss / accumulation_steps
+			loss.backward()
+			total_loss += outputs.loss.detach().float()
+			if (step+1) % accumulation_steps == 0:
+				clip_grad_norm_(ddp_model.model.parameters(), max_grad_norm)
+				optimizer.step()
+				if schedule_lr: lr_scheduler.step()
+				# log metrics to wandb
+				wandb_log = {"epoch":epoch, "step":step, "loss": outputs.loss.detach().float(), "mean_loss": total_loss / (step+1), "lr": lr_scheduler.get_last_lr()[0]}
+				for name, param in ddp_model.model.named_parameters():
+					if (param.grad != None) & (param.requires_grad):
+						grad_norm = param.grad.norm().item()
+						wandb_log[f"{name}_grad_norm"] = grad_norm
+				wandb.log(wandb_log)
 				optimizer.zero_grad()
-			if schedule_lr: lr_scheduler.step()
 			
+			if (step % 5000 == 0) & (step != 0):
+				print(f"Epoch {epoch=}, Step {step=}, Loss {loss=}", file=sys.stderr)
+				if torch.distributed.get_rank() == 0:
+					torch.save({'state_dict': ddp_model.state_dict()}, checkpoint_path)
 
 		train_epoch_loss = total_loss / len(train_ds)
 		train_ppl = torch.exp(train_epoch_loss)
@@ -1372,47 +1711,72 @@ def trainTransgenicDDP(rank,
 			model.eval()
 			eval_loss = 0
 			for batch in tqdm(eval_ds, miniters=10, disable=False):
-				batch = [item.to(device) for item in batch]
 				with torch.no_grad():
-					outputs = ddp_model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
+					outputs = model(input_ids=batch[0], attention_mask=batch[1], global_attention_mask=batch[2], labels=batch[3], return_dict=True)
 				loss = outputs.loss
 				eval_loss += loss.detach().float()
 
 			eval_epoch_loss = eval_loss / len(eval_ds)
 			eval_ppl = torch.exp(eval_epoch_loss)
 			print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}, {eval_ppl=}, {eval_epoch_loss=}", file=sys.stderr)
+			wandb_log = {"epoch_train_ppl":train_ppl, "epoch_train_loss":train_epoch_loss, "epoch_eval_ppl":eval_ppl, "epoch_eval_loss":eval_epoch_loss}
+			wandb.log(wandb_log)
 		else:
 			print(f"Epoch {epoch=}: {train_ppl=}, {train_epoch_loss=}", file=sys.stderr)
 		
-		if rank == 0:
-			checkpoint = {
-						'epoch': epoch,
-						'model_state_dict': model.state_dict(),
-						'optimizer_state_dict': optimizer.state_dict(),
-						'lr_scheduler_state_dict': lr_scheduler.state_dict() if schedule_lr else None,
-						'train_loss': train_epoch_loss,
-						'eval_loss': eval_epoch_loss
-					}
-			if eval:
-				if best_eval_score is None or eval_epoch_loss < best_eval_score:
-					best_eval_score = eval_ppl
-					if not os.path.exists("checkpoints"):
-						os.makedirs("checkpoints", exist_ok=True)
-					torch.save(checkpoint, f"checkpoints/{checkpoint_path}")
-					print(f"New best model saved with {eval_epoch_loss=}", file=sys.stderr)
-			else:
-				if best_eval_score is None or train_epoch_loss < best_eval_score:
-					best_eval_score = train_ppl
-					if not os.path.exists("checkpoints"):
-						os.makedirs("checkpoints", exist_ok=True)
-					torch.save(checkpoint, f"checkpoints/{checkpoint_path}")
-					print(f"New best model saved with {train_epoch_loss=}", file=sys.stderr)
+		if eval:
+			if best_eval_score is None or eval_epoch_loss < best_eval_score:
+				best_eval_score = eval_ppl
+				if torch.distributed.get_rank() == 0:
+					torch.save({'state_dict': ddp_model.state_dict()}, checkpoint_path)
+				print(f"New best model saved with {eval_epoch_loss=}", file=sys.stderr)
+		else:
+			if best_eval_score is None or train_epoch_loss < best_eval_score:
+				best_eval_score = train_ppl
+				if not os.path.exists("checkpoints"):
+					os.makedirs("checkpoints", exist_ok=True)
+				if torch.distributed.get_rank() == 0:
+					torch.save({'state_dict': ddp_model.state_dict()}, checkpoint_path)
+				print(f"New best model saved with {train_epoch_loss=}", file=sys.stderr)
+	
+	if torch.distributed.get_rank() == 0:
+		torch.save({'state_dict': ddp_model.state_dict()}, checkpoint_path)
+	wandb.finish()
 
-def run_trainTransgenicDDP(train_ds, eval_ds=None, lr=8e-3, num_epochs=10, schedule_lr=True, eval=False, batch_size=1,checkpoint_path="transgenic_checkpoint.pt"):
-	world_size = torch.cuda.device_count()
+def run_trainTransgenicDDP(
+		train_ds:isoformData, 
+		eval_ds:isoformData, 
+		lr=1e-4, 
+		num_epochs=10,  
+		schedule_lr=True, 
+		eval=True, 
+		world_size=1,
+		batch_size=1,
+		checkpoint_path="checkpoints/transgenic_checkpoint.pt",
+		safetensors_model=None,
+		encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species",
+		unlink=False,
+		accumulation_steps=16,
+		max_grad_norm=1.0):
+	ws = torch.cuda.device_count()
+	if ws == 0:
+		ws = world_size
 	mp.spawn(trainTransgenicDDP, 
-		args=(train_ds, eval_ds, lr, num_epochs, schedule_lr, eval, world_size, batch_size), 
-		nprocs=world_size, 
+		args=(train_ds, 
+		eval_ds, 
+		lr, 
+		num_epochs,  
+		schedule_lr, 
+		eval, 
+		ws,
+		batch_size,
+		checkpoint_path,
+		safetensors_model,
+		encoder_model,
+		unlink,
+		accumulation_steps,
+		max_grad_norm), 
+		nprocs=ws, 
 		join=True)
 	cleanup()
 
@@ -1703,7 +2067,7 @@ def trainTransgenicFCGAccelerate(
 		"learning_rate": lr,
 		"schedule_lr": schedule_lr,
 		"architecture": "FCG",
-		"dataset": "25kb-5genomes",
+		"dataset": "49kb_7genomes_200addExtra",
 		"epochs": num_epochs,
 		"max_grad_norm": max_grad_norm,
 		"accumulation_steps": accumulation_steps,
@@ -1729,23 +2093,67 @@ def trainTransgenicFCGAccelerate(
 	
 	# Load the model and add to device
 	config = LEDConfig.from_pretrained("allenai/led-base-16384", 
-									vocab_size=372, 
+									vocab_size=272, 
 									max_decoder_position_embeddings=2048,
-									decoder_layerdrop=0.2,
-									dropout= 0.2)
+									decoder_layerdrop=0.1,
+									dropout= 0.1)
 	model = transgenicForConditionalGeneration(config, encoder_model=encoder_model, unlink=unlink)
+	
+	# Targets all self-attention components and dense linear layers for peft adaptors in the ESM encoder
+	target_modules = [
+		r".*esm.encoder.layer.*.attention.self.query",
+		r".*esm.encoder.layer.*.attention.self.key",
+		r".*esm.encoder.layer.*.attention.self.value",
+		r".*esm.encoder.layer.*.attention.output.dense",
+		r".*esm.encoder.layer.*.intermediate.dense",
+		r".*esm.encoder.layer.*.output.dense"]
+
+	# Recompute activations for the dense layers
+	feedforward_modules = [
+		r".*esm.encoder.layer.*.attention.output.dense",
+		r".*esm.encoder.layer.*.intermediate.dense",
+		r".*esm.encoder.layer.*.output.dense"]
+
+	# Find the target and feedforward modules
+	peft_targets = []
+	peft_feedforward = []
+	for module in model.named_modules():
+		for pattern in target_modules:
+			if re.match(pattern, module[0]):
+				peft_targets.append(module[0])
+		for pattern in feedforward_modules:
+			if re.match(pattern, module[0]):
+				peft_feedforward.append(module[0])
+
+	# Load the IA3 adaptor
+	peft_config = IA3Config(task_type="SEQ_2_SEQ_LM", target_modules = peft_targets, feedforward_modules = peft_feedforward, init_ia3_weights = True)
+	model = get_peft_model(model, peft_config)
+
+	# Add gradients back for the entire decoder and the hidden mapping layers
+	for param in model.transgenic.decoder.parameters():
+		param.requires_grad = True
+	for param in model.transgenic.encoder.hidden_mapping.parameters():
+		param.requires_grad = True
+	for param in model.transgenic.encoder.hidden_mapping_layernorm.parameters():
+		param.requires_grad = True
+	model.print_trainable_parameters()
+	if f"{device}" != "cpu":
+		try:
+			model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+		except:
+			print("\nNo gradient checkpointing available\n", file=sys.stderr)
+
+	# Load checkpoint if provided
 	if safetensors_model:
 		tensors = {}
 		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
 			for k in f.keys():
 				tensors[k] = f.get_tensor(k)
-		tensors["lm_head.weight"] = tensors["transgenic.decoder.embed_tokens.weight"]
+		tensors["base_model.model.lm_head.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
+		tensors["base_model.model.transgenic.decoder.embed_tokens.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
 		model.load_state_dict(tensors)
 	model.to(device)
 	model.train()
-
-	for param in model.transgenic.encoder.esm.parameters():
-		param.requires_grad = False
 	
 	# Setup the optimizer
 	optimizer = optim.AdamW(model.parameters(), lr=lr)
@@ -1770,7 +2178,7 @@ def trainTransgenicFCGAccelerate(
 		total_loss = 0
 		for step, batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
 			#with accelerator.accumulate(model):
-			outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
+			outputs = model(input_ids=batch[0], attention_mask=batch[1], global_attention_mask=batch[2], labels=batch[3], return_dict=True)
 			loss = outputs.loss / accumulation_steps
 			#loss.backward()
 			accelerator.backward(loss)
@@ -1789,13 +2197,6 @@ def trainTransgenicFCGAccelerate(
 				#if accelerator.is_main_process: plot_grad_flow(model, outprefix=f"{checkpoint_path}/grad_flow")
 				optimizer.zero_grad()
 			
-			
-				
-			#if schedule_lr: lr_scheduler.step()
-			#optimizer.step()
-			#optimizer.zero_grad()
-					
-			
 			if (step % 5000 == 0) & (step != 0):
 				print(f"Epoch {epoch=}, Step {step=}, Loss {loss=}", file=sys.stderr)
 				accelerator.save_state(output_dir=checkpoint_path)
@@ -1808,13 +2209,15 @@ def trainTransgenicFCGAccelerate(
 			eval_loss = 0
 			for batch in tqdm(eval_ds, miniters=10, disable=False):
 				with torch.no_grad():
-					outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
+					outputs = model(input_ids=batch[0], attention_mask=batch[1], global_attention_mask=batch[2], labels=batch[3], return_dict=True)
 				loss = outputs.loss
 				eval_loss += loss.detach().float()
 
 			eval_epoch_loss = eval_loss / len(eval_ds)
 			eval_ppl = torch.exp(eval_epoch_loss)
 			print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}, {eval_ppl=}, {eval_epoch_loss=}", file=sys.stderr)
+			wandb_log = {"epoch_train_ppl":train_ppl, "epoch_train_loss":train_epoch_loss, "epoch_eval_ppl":eval_ppl, "epoch_eval_loss":eval_epoch_loss}
+			wandb.log(wandb_log)
 		else:
 			print(f"Epoch {epoch=}: {train_ppl=}, {train_epoch_loss=}", file=sys.stderr)
 		
@@ -1836,6 +2239,7 @@ def trainTransgenicFCGAccelerate(
 	accelerator.wait_for_everyone()
 	accelerator.save_model(model, output_dir)
 	wandb.finish()
+
 
 def trainTransgenicFCGCPU(
 	train_ds:isoformData, 
@@ -1887,23 +2291,61 @@ def trainTransgenicFCGCPU(
 	
 	# Load the model and add to device
 	config = LEDConfig.from_pretrained("allenai/led-base-16384", 
-									vocab_size=372, 
+									vocab_size=272, 
 									max_decoder_position_embeddings=2048,
-									decoder_layerdrop=0.2,
-									dropout= 0.2)
+									decoder_layerdrop=0.1,
+									dropout= 0.1)
 	model = transgenicForConditionalGeneration(config, encoder_model=encoder_model, unlink=unlink)
+	
+	# Targets all self-attention components and dense linear layers for peft adaptors in the ESM encoder
+	target_modules = [
+		r".*esm.encoder.layer.*.attention.self.query",
+		r".*esm.encoder.layer.*.attention.self.key",
+		r".*esm.encoder.layer.*.attention.self.value",
+		r".*esm.encoder.layer.*.attention.output.dense",
+		r".*esm.encoder.layer.*.intermediate.dense",
+		r".*esm.encoder.layer.*.output.dense"]
+
+	# Recompute activations for the dense layers
+	feedforward_modules = [
+		r".*esm.encoder.layer.*.attention.output.dense",
+		r".*esm.encoder.layer.*.intermediate.dense",
+		r".*esm.encoder.layer.*.output.dense"]
+
+	# Find the target and feedforward modules
+	peft_targets = []
+	peft_feedforward = []
+	for module in model.named_modules():
+		for pattern in target_modules:
+			if re.match(pattern, module[0]):
+				peft_targets.append(module[0])
+		for pattern in feedforward_modules:
+			if re.match(pattern, module[0]):
+				peft_feedforward.append(module[0])
+	
+	# Load the IA3 adaptor
+	peft_config = IA3Config(task_type="SEQ_2_SEQ_LM", target_modules = peft_targets, feedforward_modules = peft_feedforward, init_ia3_weights = True)
+	model = get_peft_model(model, peft_config)
+
+	# Add gradients back for the entire decoder and the hidden mapping layers
+	for param in model.transgenic.decoder.parameters():
+		param.requires_grad = True
+	for param in model.transgenic.encoder.hidden_mapping.parameters():
+		param.requires_grad = True
+	for param in model.transgenic.encoder.hidden_mapping_layernorm.parameters():
+		param.requires_grad = True
+	model.print_trainable_parameters()
+
 	if safetensors_model:
 		tensors = {}
 		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
 			for k in f.keys():
 				tensors[k] = f.get_tensor(k)
-		tensors["lm_head.weight"] = tensors["transgenic.decoder.embed_tokens.weight"]
+		tensors["base_model.model.lm_head.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
+		tensors["base_model.model.transgenic.decoder.embed_tokens.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
 		model.load_state_dict(tensors)
 	#model.to(device)
 	model.train()
-
-	for param in model.transgenic.encoder.esm.parameters():
-		param.requires_grad = False
 	
 	# Setup the optimizer
 	optimizer = optim.AdamW(model.parameters(), lr=lr)
@@ -1916,38 +2358,40 @@ def trainTransgenicFCGCPU(
 		num_warmup_steps=0,
 		num_training_steps=(len(train_ds) * num_epochs),
 		)
-	
+	from torch.profiler import profile, record_function, ProfilerActivity
 	# Training loop
 	best_eval_score = None
 	for epoch in range(num_epochs):
 		total_loss = 0
 		for step, batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
-			#with accelerator.accumulate(model):
-			outputs = model(input_ids=batch[0], attention_mask=batch[1], labels=batch[2], return_dict=True)
-			loss = outputs.loss / accumulation_steps
-			loss.backward()
-			#accelerator.backward(loss)
-			total_loss += outputs.loss.detach().float()
-			if (step+1) % accumulation_steps == 0:
-				clip_grad_norm_(model.parameters(), max_grad_norm)
-				optimizer.step()
-				if schedule_lr: lr_scheduler.step()
-				# log metrics to wandb
-				wandb_log = {"epoch":epoch, "step":step, "loss": outputs.loss.detach().float(), "mean_loss": total_loss / (step+1)}#, "lr": lr_scheduler.get_last_lr()[0]}
-				for name, param in model.named_parameters():
-					if (param.grad != None) & (param.requires_grad):
-						grad_norm = param.grad.norm().item()
-						wandb_log[f"{name}_grad_norm"] = grad_norm
-				wandb.log(wandb_log)
-				#if accelerator.is_main_process: plot_grad_flow(model, outprefix=f"{checkpoint_path}/grad_flow")
-				optimizer.zero_grad()
+			with profile(activities=[ProfilerActivity.CPU], record_shapes=True, profile_memory=True) as prof:
+				with record_function("model_training"):
+					outputs = model(input_ids=batch[0], attention_mask=batch[1], global_attention_mask=batch[2], labels=batch[3], return_dict=True)
+					loss = outputs.loss / accumulation_steps
+					loss.backward()
 			
+					total_loss += outputs.loss.detach().float()
+					if (step+1) % accumulation_steps == 0:
+						clip_grad_norm_(model.parameters(), max_grad_norm)
+						optimizer.step()
+						if schedule_lr: lr_scheduler.step()
+						# log metrics to wandb
+						wandb_log = {"epoch":epoch, "step":step, "loss": outputs.loss.detach().float(), "mean_loss": total_loss / (step+1)}#, "lr": lr_scheduler.get_last_lr()[0]}
+						for name, param in model.named_parameters():
+							if (param.grad != None) & (param.requires_grad):
+								grad_norm = param.grad.norm().item()
+								wandb_log[f"{name}_grad_norm"] = grad_norm
+						for name, param in model.lm_head.named_parameters():
+							if (param.grad != None) & (param.requires_grad):
+								grad_norm = param.grad.norm().item()
+								wandb_log[f"{name}_grad_norm"] = grad_norm
+						wandb.log(wandb_log)
+						#if accelerator.is_main_process: plot_grad_flow(model, outprefix=f"{checkpoint_path}/grad_flow")
+						optimizer.zero_grad()
+			print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
+			print(prof.key_averages().table(sort_by="self_cpu_memory_usage", row_limit=10))
+			break
 			
-				
-			#if schedule_lr: lr_scheduler.step()
-			#optimizer.step()
-			#optimizer.zero_grad()
-					
 			
 			if (step % 5000 == 0) & (step != 0):
 				print(f"Epoch {epoch=}, Step {step=}, Loss {loss=}", file=sys.stderr)
@@ -2126,63 +2570,142 @@ def predictTransgenicAccelerate(model_path:str, dataset:isoformData, outfile="tr
 	with open(f"{device}_predictions.pkl", 'wb') as out:
 			pickle.dump(predictions, out)
 
-def k_fold_split(dataset:isoformData, k=10):
-	fold_size = len(dataset) // k
-	indices = torch.randperm(len(dataset)).tolist()
+def testTransgenicAccelerate(
+		safetensors_model:str, 
+		test_ds:isoformData, 
+		encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", 
+		unlink=False, 
+		batch_size=1,
+		outfile="test_results.pkl"):
+	print(f"Testing transgenic using {safetensors_model=}", file=sys.stderr)
+	
+	# Set up accelerator
+	ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
+	#ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=args.gradient_accumulation_steps > 1)
+	accelerator = Accelerator(kwargs_handlers=[ddp_kwargs]) # gradient_accumulation_steps=32
+	device = accelerator.device
+	print(f"Accelerate active on {device}", file=sys.stderr)
+	outfile = outfile.split(".")[0]+"_"+str(device)+".pkl"
+	
+	# Set up DataLoader
+	test_ds = makeDataLoader(test_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4)
+	
+	# Load the model and add to device
+	config = LEDConfig.from_pretrained("allenai/led-base-16384", 
+									vocab_size=372, 
+									max_decoder_position_embeddings=2048,
+									decoder_layerdrop=0.1,
+									dropout= 0.1)
+	model = transgenicForConditionalGeneration(config, encoder_model=encoder_model, unlink=unlink)
+	# Load checkpoint
+	if safetensors_model:
+		tensors = {}
+		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
+			for k in f.keys():
+				tensors[k] = f.get_tensor(k)
+		tensors["lm_head.weight"] = tensors["transgenic.decoder_embed_tokens.weight"]
+		tensors["transgenic.decoder.embed_tokens.weight"] = tensors["transgenic.decoder_embed_tokens.weight"]
+		model.load_state_dict(tensors)
+	model.to(device)
+	
+	# Targets all self-attention components and dense linear layers for peft adaptors in the ESM encoder
+	target_modules = [
+		r".*esm.encoder.layer.*.attention.self.query",
+		r".*esm.encoder.layer.*.attention.self.key",
+		r".*esm.encoder.layer.*.attention.self.value",
+		r".*esm.encoder.layer.*.attention.output.dense",
+		r".*esm.encoder.layer.*.intermediate.dense",
+		r".*esm.encoder.layer.*.output.dense"]
 
-	for i in range(k):
-		val_indices = indices[i*fold_size : (i+1)*fold_size]
-		train_indices = indices[:i*fold_size] + indices[(i+1)*fold_size:]
-		train_subset = Subset(dataset, train_indices)
-		val_subset = Subset(dataset, val_indices)
-		yield train_subset, val_subset
+	# Recompute activations for the dense layers
+	feedforward_modules = [
+		r".*esm.encoder.layer.*.attention.output.dense",
+		r".*esm.encoder.layer.*.intermediate.dense",
+		r".*esm.encoder.layer.*.output.dense"]
 
-# 10-fold cross validation
-def crossValidateTransgenic(dataset:isoformData, checkpoint_path, outfile, lr=8e-3, num_epochs=10, batch_size=1, schedule_lr=True):
-	# Need to measure final loss, perplexity, and output the generated sequences for each of the 10 splits
-	for fold, (train_subset, val_subset) in enumerate(k_fold_split(dataset, k=10)):
-		train_subset.dataset.mode = 'training'
-		run_trainTransgenicDDP(
-			train_subset, 
-			val_subset, 
-			lr = 8e-3, 
-			num_epochs=10, 
-			batch_size=1, 
-			schedule_lr=False,
-			eval=False,
-			checkpoint_path=checkpoint_path)
+	# Find the target and feedforward modules
+	peft_targets = []
+	peft_feedforward = []
+	for module in model.named_modules():
+		for pattern in target_modules:
+			if re.match(pattern, module[0]):
+				peft_targets.append(module[0])
+		for pattern in feedforward_modules:
+			if re.match(pattern, module[0]):
+				peft_feedforward.append(module[0])
 
-		# Generate predictions to evaluate trained model
-		val_subset.dataset.mode = 'inference'
-		run_predictTransgenicDDP(
-			checkpoint_path, 
-			val_subset, 
-			outfile=outfile, 
-			split=fold, 
-			batch_size=1)
+	# Load the IA3 adaptor
+	peft_config = IA3Config(task_type="SEQ_2_SEQ_LM", target_modules = peft_targets, feedforward_modules = peft_feedforward)
+	#model = get_peft_model(model, peft_config)
+	model.eval()
 
+	# Prep objects for use with accelerator
+	model, test_ds = accelerator.prepare(
+		model, test_ds
+	)
+
+	tokenizer = GFFTokenizer()
+	import pandas as pd
+	output_list = []
+	
+	# generation loop
+	try:
+		total_loss = 0
+		for step, batch in enumerate(tqdm(test_ds, miniters=10, disable=False)):
+			outputs = model(input_ids=batch[0], attention_mask=batch[1], global_attention_mask=batch[2], labels=batch[3], return_dict=True)
+			loss = outputs.loss.detach().cpu().float()
+			total_loss += loss
+			generated_tokens = model.module.generate(input_ids=batch[0], attention_mask=batch[1], num_return_sequences=1, max_length=2048).cpu()
+			generated = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+			output = outputs.logits.argmax(dim=-1).cpu()
+			lab = tokenizer.batch_decode(batch[3].cpu(), skip_special_tokens=True)
+			outp = tokenizer.batch_decode(output, skip_special_tokens=True)
+			output_list.append({"loss":loss, "chromosome":batch[5], "region_start":batch[6], "region_end":batch[7], "geneModel":batch[4], "label_tokens":batch[3].cpu(), "output_tokens":output, "generated_tokens":generated_tokens,"label":lab, "output":outp, "generated":generated})
+		avg_loss = total_loss / len(test_ds)
+		print(f"Average loss: {avg_loss}", file=sys.stderr)
+		with open(outfile, 'wb') as out:
+			pickle.dump(output_list, out)
+	except Exception as e:
+		print(f"Error at step {step}", file=sys.stderr)
+		print(e, file=sys.stderr)
+		with open(outfile, 'wb') as out:
+			pickle.dump(output_list, out)
+
+def createDatabase(db="transgenic.db", mode="train", maxLen=49152, addExtra=0):
+	# Purpose: 
+	#      Create or append to transgenic database. The database is a duckdb database 
+	#      used for both either training or infrence. In 'train' mode, fasta sequences and 
+	#      full GFF3 annotations are required. In 'infer' mode, fasta sequences
+	#      and BED formatted annotations are required. 
+	# Inputs:
+	#      db: str, the name of the database. If exists, will append to it.
+	#      mode: str, the mode of the database. Either "train" or "infer".
+	#      maxLen: int, the maximum length of the input sequence.
+	#	   addExtra: int, the number of extra bases to add to the ends of the input sequence.
+	# TODO: 
+	#      - Decide how to input filenames (add input argument)
+	#      - Make BED-parsing DB creation function
+
+	files = {
+		"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
+		"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
+		"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
+		"Ptrichocarpa_533_v4.0.fa":"Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
+		"Sbicolor_730_v5.0.fa":"Sbicolor_730_v5.1.gene_exons.clean.gff3",
+		"Bdistachyon_314_v3.0.fa": "Bdistachyon_314_v3.1.gene_exons.clean.gff3",  
+		"Sitalica_312_v2.fa": "Sitalica_312_v2.2.gene_exons.clean.gff3"
+	}
+	for fasta, gff in files.items():
+		name = fasta.split("_")[0]
+		print(f"Processing {name}...", file=sys.stderr)
+		genome2GeneList("training_data/"+fasta, "training_data/"+gff, db=db, maxLen=49152, addExtra=200)
+		ds = isoformData(db, dt=GFFTokenizer09(), mode="training")
+		length = len(ds)
+		print(f"{name} {length=}")
+	
 
 if __name__ == '__main__':
 	torch.manual_seed(123)
-	#fasta = "ATH_Chr4.fas"
-	#gff = "Athaliana_167_gene_Chr4.gff3"
-	#db = "AthChr4.db"
-	
-	db = "Flagship_Genomes_25k.db"
-	#files = {
-	#	"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
-	#	"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
-	#	"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
-	#	"Ptrichocarpa_533_v4.0.fa":"Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
-	#	"Sbicolor_730_v5.0.fa":"Sbicolor_730_v5.1.gene_exons.clean.gff3"
-	#}
-	#for fasta, gff in files.items():
-	#	name = fasta.split("_")[0]
-	#	print(f"Processing {name}...", file=sys.stderr)
-	#	genome2GeneList("training_data/"+fasta, "training_data/"+gff, db=db)
-	#	ds = isoformData(db, mode="training")
-	#	length = len(ds)
-	#	print(f"{name} {length=}")
 	
 	#model = transgenic()
 	#tensors = {}
@@ -2192,6 +2715,7 @@ if __name__ == '__main__':
 
 	#model.load_state_dict(tensors)
 	#model.eval()
+	#createDatabase(db="7Genomes_25k_extra200.db", mode="train", maxLen=25002, addExtra=200)
 	#sys.exit()
 
 	#config = AutoConfig.from_pretrained("allenai/led-base-16384", vocab_size=372, max_decoder_position_embeddings=2048)
@@ -2203,6 +2727,16 @@ if __name__ == '__main__':
 	# Create a training, evaluation, and testing DataLoaders (Dataset length: 175498)
 	#ds = isoformData(db, dt="gff", mode="training")
 	#train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
+	#ds = isoformData("Flagship_Genomes_49k_extra200.db", dt="gff", mode="training", encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b")
+	#train_data, eval_data, test_data = random_split(ds, [171071, 24438, 48879])
+	#train_data = makeDataLoader(train_data, shuffle=True, batch_size=1, pin_memory=True, num_workers=1)
+	#train_data.dataset.__getitem__(train_data.dataset.indices.index(108613))
+	#for step, batch in enumerate(tqdm(train_data)):
+	#	print(batch[3], file=sys.stderr)
+		#print(batch[2], file=sys.stderr)
+		#print(batch[0], file=sys.stderr)
+		#print(batch[1], file=sys.stderr)
+	#sys.exit()
 	#batch_size = 1
 	#for step, batch in enumerate(tqdm(t_data)):
 	#	with torch.no_grad():
@@ -2214,41 +2748,30 @@ if __name__ == '__main__':
 	#		print(out.loss, file=sys.stderr)
 	#sys.exit()
 
+
+	
+	db = "Flagship_Genomes_49k_extra200_clean.db"
+	#db = "7Genomes_25k_extra200.db"
 	mode = sys.argv[1]
+	#InstaDeepAI/nucleotide-transformer-v2-500m-multi-species
+	#InstaDeepAI/agro-nucleotide-transformer-1b
 	encoder_model = sys.argv[2]
 	unlink = bool(sys.argv[3])
 	notes = sys.argv[4]
 	print(f"Running in {mode} mode", file=sys.stderr)
 
 	if mode == "test":
-		config = AutoConfig.from_pretrained("allenai/led-base-16384", vocab_size=372, max_decoder_position_embeddings=2048)
-		model = transgenicForConditionalGeneration(config)
-		
-		#model = transgenicOriginalEmbed()
-		#model.load_state_dict(torch.load("checkpoints_FCG_accu32/pytorch_model/mp_rank_00_model_states.pt")['module'])#, map_location=torch.device('cpu'))['module'])
-		
-		tensors = {}
-		with safe_open("checkpoints_FCG_accu32/model.safetensors", framework="pt", device="cpu") as f:
-			for k in f.keys():
-				tensors[k] = f.get_tensor(k)
-		tensors["lm_head.weight"] = tensors["transgenic.decoder.embed_tokens.weight"]
-		model.load_state_dict(tensors)
-		
-		model.to(torch.device('cuda:0'))
-		model.eval()
 		# Create a training, evaluation, and testing DataLoaders (Dataset length: 175498)
-		ds = isoformData(db, dt="gff", mode="training")
-		train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
-		batch_size = 1
-		for step, batch in enumerate(tqdm(t_data)):
-			with torch.no_grad():
-				out = model(input_ids=batch[0].to(torch.device('cuda:0')), attention_mask=batch[1].to(torch.device('cuda:0')), labels=batch[2].to(torch.device('cuda:0')), return_dict=True)
-				prediction = out.logits.argmax(dim=-1)
-				print(batch[3], file=sys.stderr)
-				print(batch[2].to(torch.device('cpu')), file=sys.stderr)
-				print(prediction.to(torch.device('cpu')), file=sys.stderr)
-				print(out.loss, file=sys.stderr)
-		sys.exit()
+		ds = isoformData("Flagship_Genomes_25k_stranded.db", dt="gff", mode="training", encoder_model = encoder_model)
+		train_data, eval_data, test_data = random_split(ds, [131470, 17399, 26171])
+		testTransgenicAccelerate(
+			"saved_models_FCG/model.safetensors",
+			test_data,
+			encoder_model=encoder_model,
+			unlink=unlink,
+			batch_size=1,
+			outfile="25kb_5genomes_test.pkl"
+		)
 	elif mode == "train":
 		ds = isoformData(db, dt="gff", mode="training")
 		train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
@@ -2265,45 +2788,48 @@ if __name__ == '__main__':
 			output_dir="saved_transgenic_models_accu32/"
 		)
 	if mode == "FCG":
-		ds = isoformData(db, dt="gff", mode="training")
-		train_data, eval_data, test_data = random_split(ds, [131470, 17399, 26171])
+		ds = isoformData(db, dt=GFFTokenizer09(), mode="training", encoder_model=encoder_model, global_attention=False)
+		train_data, eval_data, test_data = random_split(ds, [171071, 24438, 48879]) #244388
 		trainTransgenicFCGAccelerate(
 			train_data, 
 			eval_data, 
-			lr=8e-3, 
+			lr=1e-4, 
 			num_epochs=10, 
 			schedule_lr=True, 
 			eval=True, 
 			batch_size=1, 
-			checkpoint_path="checkpoints_FCG/", 
-			safetensors_model=None, #"saved_transgenic_models_accu32/model.safetensors",
-			output_dir="saved_models_FCG/",
+			accumulation_steps=16,
+			checkpoint_path="checkpoints_ESMpeftReal_local09/", 
+			safetensors_model="checkpoints_ESMpeft_local09/model.safetensors", #"saved_models_FCG/model.safetensors",
+			output_dir="saved_models_ESMpeftReal_local09/",
+			max_grad_norm=1,
 			notes=notes,
 			encoder_model=encoder_model,
 			unlink = unlink
 		)
 	elif mode == "CPU":
-		ds = isoformData(db, dt="gff", mode="training")
-		train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26170,1 ])
+		ds = isoformData(db, dt=GFFTokenizer09(), mode="training", encoder_model=encoder_model)
+		train_data, eval_data, test_data, t_data = random_split(ds, [171071, 24438, 48878, 1])
 		outmod = trainTransgenicFCGCPU(
 			t_data, 
 			eval_data, 
-			lr=8e-3, 
-			num_epochs=10, 
+			lr=1e-4, 
+			num_epochs=40, 
 			schedule_lr=False, 
 			eval=False, 
 			batch_size=1, 
 			accumulation_steps=1,
 			checkpoint_path="checkpoints_CPU/", 
-			safetensors_model=None, #"saved_transgenic_models_accu32/model.safetensors",
+			safetensors_model="checkpoints_ESMpeft_local09/model.safetensors", #"saved_models_FCG/model.safetensors",
 			output_dir="saved_models_CPU/",
+			max_grad_norm=1,
 			notes=notes,
 			encoder_model=encoder_model,
 			unlink = unlink
 		)
 		print("Done")
 	elif mode == "trainOriginalEmbed":
-		ds = isoformData(db, dt="led", mode="training")
+		ds = isoformData(db, dt="led", mode="training", encoder_model=encoder_model)
 		train_data, eval_data, test_data, t_data = random_split(ds, [131470, 17399, 26167, 4])
 		trainTransgenicOriginalEmbedAccelerate(
 			train_data, 
@@ -2331,3 +2857,22 @@ if __name__ == '__main__':
 			outfile="transgenic.out", 
 			batch_size=1
 			)
+	elif mode == "DDP":
+		ds = isoformData(db, dt=GFFTokenizer09(), mode="training", encoder_model=encoder_model)
+		train_data, eval_data, test_data = random_split(ds, [171071, 24438, 48879])
+		run_trainTransgenicDDP(
+			train_data, 
+			eval_data, 
+			lr=1e-4, 
+			num_epochs=10,  
+			schedule_lr=True, 
+			eval=True, 
+			world_size=12,
+			batch_size=1,
+			checkpoint_path="checkpoints/transgenic_ddp_checkpoint.pt",
+			safetensors_model="checkpoints_ESMpeft_local09/model.safetensors",
+			encoder_model=encoder_model,
+			unlink=False,
+			accumulation_steps=16,
+			max_grad_norm=1.0
+		)
