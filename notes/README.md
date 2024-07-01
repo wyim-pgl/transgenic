@@ -27,7 +27,8 @@ mamba create -y -n transgenic
 mamba activate transgenic
 
 # Cloud (nvidia/cuda) 
-mamba install pytorch-nightly::pytorch pytorch-cuda=11.8 python-duckdb libaio  -c pytorch-nightly -c nvidia -c conda-forge
+mamba install pytorch pytorch-cuda=11.8 transformers peft deepspeed python-duckdb libaio libcurand cutlass matplotlib -c pytorch -c nvidia -c conda-forge
+pip install ninja
 
 # Local (OSx/MPS)
 #mamba install pytorch-nightly::pytorch torchvision torchaudio python-duckdb libaio -c pytorch-nightly -c conda-forge
@@ -236,3 +237,48 @@ Problem: token 20 has the highest probability everywhere regardless of token. Al
 
 The last decoder hidden layer was uniform so the problem was likely deeper in the model.
 I found that my new embedding and positional embedding layers didn't have gradients... restored their reguires_grad to True and re-training
+
+Fixed a primary bug. The tokens were not being properly right shifted for the decoder. Now it is training properly!
+
+Implementing upgrades for a final training run:
+- Use 1b parameter plant encoder model
+- Added peft adaptors to the encoder
+- Added buffer sequence to each gene region so the model learns to find the start and end coords of the UTRs
+- Increased the max sequence length to 49kb (batch size of 8 for segmented encoder)
+- Added Bdistachyon and setaria viridis to the dataset to round out the representation form monocots
+
+I finished a complete training run of the decoder/hidden_mapping with the 25kb 5 genomes dataset.
+I acheived an average training set loss of 0.65 and an average validation set loss of 0.83. While training set loss improved over the final few epochs, the validation loss stopped improving around epoch 6 or 7. So far the model at least mimicks the output format...
+
+A loss of 0.7 corresponds to an example where the large-scale gene model structure is generally correct (correct # of CDS/UTR, correct strand, correct number of alternative transcripts). However, the base-level coordinates of each feature are relatively close but don't match. I also noticed that the start coordinate is always larger than the end coordinate - that the model is learning something about the quantitatve nature of the numbers? I completed a complete test-set run with the 25kb_5genomes trained model and got an average loss of about 0.84.
+
+For the next round of training, I am starting from the 25kb_5genomes checkpoint and adding PEFT adaptors to the encoder. Now working with 60M trainable parameters including encoder PEFT adaptors, hidden_mapping, and the entire LEDDecoder. The dataset is the updated set with maxLen ~ 49kb, two additional monocot genomes, and randomly buffered sequences (for UTR start/end learning).
+
+Ideas:
+- Try LongT5 decoder (about twice as large as LED)
+- Train only to predict genic structure, then write grant to predict isoforms (problems from sparsity of alternatively spliced examples?)
+- By not specifing a global_attention_mask I am using only local attention
+    - Try adjusting the local attention window size (currently 1024)
+    - Try providing a global_attention_mask using canonical splice junctions, start codons, stop codons, etc. (any heuristics other than dinucleotides?)
+    - Train with global_attention_derived from gff, predict with global attention derived from RNAseq
+    - Or, train a model to identify splice junctions and use it to build the global attention masks
+
+likely splice site sequences (both strands ~ 25% of sixmer tokens):
+"AGGT","AGG","AGGC","AGAT","ACG","ACCT","CCT","GCCT","ATCT","CGT"
+
+branch point motif
+YNYTRAY` (where Y = pyrimidine (CT), N = any nucleotide, and R = purine(AG)) located 20-50 nucleotides upstream of the 3' splice site.
+motif represents 128 sequences with reverse complements
+
+I implemented global attention by scanning for possible donor splice sites and branch sequences. I could not figure out a good heuristic for dertermining which strand the global tokens come from. Started another training run with 49kb/7genomes/200addextra dataset, peft in the ESM, global attention in the decoder. Started from the 25kb_5genomes checkpoint. I am not very hopeful that this will help because it did not significantly help in small 1-data-point testing on CPU.
+
+Another strategy is to change the number tokenization to only 0-9. Maybe it will learn the quantitative relationships better than using two digit tokens? The new tokenizer performed signficantly better on a singly example. Will start a new local training run from scratch with this tokenizer... main thing to be worried about is the 2048 token output limit.
+
+The gradients through the hidden mapping seem to be exploding, because they are getting clipped at 1. Potentially I could remove the hidden mapping entirely if I changed the d_model of LED to 1500 instead of 768... I would need to save memory in other places to do this, perhaps by changing the local self_attn window size to 512? (Add to config: d_model=1500, attention_window=512, decoder_ffn_dim=6000, encoder_attention_heads=15, decoder_attention_heads=15) This strategy did not reduce the loss on a single training example... The decoder was 4 times larger and the whole model took 8G as opposed to 6G. Changing the attention window to 1024 did not help either.
+
+Other parameters to tweak:
+- Batch size
+- Learning rate
+- Gradient clipping
+
+PEFT was not active in the encoder because I still had with torch.no_grad in the forward call. I'm going to begin training from the 5th epoch of the most recent training run with PEFT enabled. Getting PEFT enabled cause OOM errors, I enbaled gradient checkpointing and now I have tons of space on each gpu (still just running DDP through accelerate because I had trouble with ZERO and gradient checkpointing). The iterations are a bit slower (by about 2x) but the gradients of the ia3 layers are visibly training in WandB.
