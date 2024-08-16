@@ -4,10 +4,13 @@ from typing import List, Tuple
 import torch.distributed as dist
 from torch.utils.data import  Dataset, DataLoader
 import torch.nn.functional as F
-from transformers import AutoTokenizer, LEDConfig
+from transformers import AutoTokenizer
 from peft import IA3Config, get_peft_model
 from safetensors import safe_open
-from modeling_transgenic import GFFTokenizer, transgenicForConditionalGeneration
+
+from modeling_transgenic import transgenicForConditionalGeneration
+from tokenization_transgenic import GFFTokenizer
+from configuration_transgenic import TransgenicConfig
 
 def print_gpu_allocation(s:str):
 	#print(f"Allocated: {torch.cuda.memory_allocated()}, Cached: {torch.cuda.memory_reserved()}...{s}", file=sys.stderr)
@@ -1144,14 +1147,52 @@ def processPredictions(files:list, db:str, buffer=50, outPrefix="transgenic_pred
 						true = [line+";geneModel="+df.loc[0, "geneModel"] for line in true]
 						out_true.write('\n'.join(true)+'\n')
 
+def getModel(config, safetensors_model=None, device="cpu", mode="predict"):
+	if not config:
+		# Load the model and add to device
+		config = TransgenicConfig()
+
+	model = transgenicForConditionalGeneration(config)
+
+	if mode == "train":
+		# Add gradients back for the entire decoder and the hidden mapping layers
+		for param in model.transgenic.decoder.parameters():
+			param.requires_grad = True
+		for param in model.transgenic.encoder.hidden_mapping.parameters():
+			param.requires_grad = True
+		for param in model.transgenic.encoder.hidden_mapping_layernorm.parameters():
+			param.requires_grad = True
+		model.print_trainable_parameters()
+		if f"{device}" != "cpu":
+			try:
+				model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+			except:
+				print("\nNo gradient checkpointing available\n", file=sys.stderr)
+
+	# Load checkpoint if provided
+	if safetensors_model:
+		tensors = {}
+		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
+			for k in f.keys():
+				tensors[k] = f.get_tensor(k)
+		tensors["base_model.model.lm_head.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
+		tensors["base_model.model.transgenic.decoder.embed_tokens.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
+		if "base_model.model.transgenic.decoder_embed_tokens.num_feature_embed.weight" in tensors.keys():
+			del tensors["base_model.model.transgenic.decoder_embed_tokens.num_feature_embed.weight"]
+		
+		newtensors = {k.replace("base_model.model.", "").replace(".base_layer", ""):tensors[k] for k in tensors}
+		newnewtensors = {}
+		for k in newtensors:
+			if "ia3" not in k:
+				newnewtensors[k] = newtensors[k]
+		model.load_state_dict(newnewtensors)
+	
+	return model
+
 def getPeftModel(encoder_model, config=None, unlink=False, safetensors_model=None, device="cpu", mode="predict"):
 	if not config:
 		# Load the model and add to device
-		config = LEDConfig.from_pretrained("allenai/led-base-16384", 
-									vocab_size=272, 
-									max_decoder_position_embeddings=2048,
-									decoder_layerdrop=0.1,
-									dropout= 0.1)
+		config = TransgenicConfig()
 
 	model = transgenicForConditionalGeneration(config, 
 											encoder_model=encoder_model, 
@@ -1215,3 +1256,18 @@ def getPeftModel(encoder_model, config=None, unlink=False, safetensors_model=Non
 		model.load_state_dict(tensors)
 	
 	return model
+
+def registerModel():
+	from modeling_transgenic import transgenicForConditionalGeneration, transgenicModel
+	from configuration_transgenic import TransgenicConfig
+
+	TransgenicConfig.register_for_auto_class()
+	transgenicModel.register_for_auto_class("AutoModel")
+	transgenicForConditionalGeneration.register_for_auto_class("AutoModel")
+
+	model = getModel(TransgenicConfig(), safetensors_model="checkpoints_ESMpeftReal_local09/model.safetensors", device="cpu", mode="predict")
+	model.push_to_hub("jlomas/transgenic-agro-E9")
+
+if __name__ == '__main__':
+	registerModel()
+	print("Done")

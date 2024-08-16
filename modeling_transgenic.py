@@ -1,11 +1,12 @@
-import sys, re
+import sys, re, os, json
 from typing import List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
-from transformers import AutoModelForMaskedLM, AutoConfig, PreTrainedTokenizer
-from transformers import LEDForConditionalGeneration, EsmForMaskedLM, LEDPreTrainedModel, LEDConfig
+from transformers import AutoModelForMaskedLM, AutoConfig, PreTrainedTokenizer, PreTrainedModel
+from transformers import LEDForConditionalGeneration, EsmForMaskedLM
 from transformers.modeling_outputs import ModelOutput
 from dataclasses import dataclass
+from configuration_transgenic import TransgenicConfig
 
 def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
 	"""
@@ -21,77 +22,6 @@ def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start
 	shifted_input_ids.masked_fill_(shifted_input_ids == -100, pad_token_id)
 
 	return shifted_input_ids
-
-class GFFTokenizer(PreTrainedTokenizer):
-	model_input_names = ["input_ids", "attention_mask"]
-
-	def __init__(self, vocab=None, **kwargs):
-		if vocab is None:
-			self.vocab = {
-				"<s>": 0, "<pad>": 1,"</s>":2, "<unk>":3, '0': 4, '1': 5, '2': 6, 
-				'3': 7,'4': 8, '5': 9, '6': 10, '7': 11, '8': 12, 
-				'9': 13, 'A': 14, 'B': 15, 'C': 16, ">":17, ".": 18, 
-				"+": 19, "-": 20, ";":21
-			}
-			for i in range(1, 151):
-				self.vocab[f"CDS{i}"] = i + 21
-			for i in range(1, 51):
-				self.vocab[f"five_prime_UTR{i}"] = i + 171
-				self.vocab[f"three_prime_UTR{i}"] = i + 221
-		else:
-			self.vocab = vocab
-
-		self.ids_to_tokens = {id: token for token, id in self.vocab.items()}
-		super().__init__(**kwargs)
-		self.pad_token = "<pad>"
-		self.unk_token = "<unk>"
-
-	@property
-	def vocab_size(self):
-		return len(self.vocab)
-
-	def get_vocab(self):
-		return dict(self.vocab, **self.added_tokens_encoder)
-
-	def _tokenize(self, text):
-		tokens = ["<s>"]
-
-		for features in text.split(">"):
-			for feature in features.split(";"):
-				for column in feature.split("|"):
-					if re.search(r'^\d+$', column):
-						tokens.extend([digit for digit in column])
-					else:
-						tokens.append(column)
-				tokens.append(";")
-			tokens.append(">")
-		return tokens[:-2] + ["</s>"]
-
-	def _convert_token_to_id(self, token):
-		return self.vocab.get(token, self.vocab.get(self.unk_token))
-
-	def _convert_id_to_token(self, index):
-		return self.ids_to_tokens.get(index, self.unk_token)
-
-	def convert_tokens_to_string(self, tokens):
-		toks = []
-		for i,token in enumerate(tokens):
-			if token.isnumeric() and i != 0:
-				if tokens[i-1].isnumeric():
-					toks[-1] = toks[-1] + token
-					continue
-			toks.append(token)
-			
-		toks = '|'.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in toks])
-		toks = re.sub(r'\|;\|>\|', '>', toks)
-		toks = re.sub(r';>', '>', toks)
-		toks = re.sub(r'>\|', '>', toks)
-		toks = re.sub(r'\|;\|', ';', toks)
-		#toks = re.sub(r"(CDS\|\d+)", self.replace_pipe, toks)				# Condense CDS ids
-		#toks = re.sub(r"(five_prime_UTR\|\d+)", self.replace_pipe, toks)	# Condense 5' UTR ids
-		#toks = re.sub(r"(three_prime_UTR\|\d+)", self.replace_pipe, toks)	# Condense 3' UTR ids
-		#toks = re.sub(r'\|(\d+\|)+', self.replace_pipe_in_digits, toks)		# Condense start and end numbers
-		return toks
 
 #Copied from transformers.models.led.modeling_led.py
 class LEDLearnedPositionalEmbedding(nn.Embedding):
@@ -321,17 +251,43 @@ class segmented_sequence_embeddings(EsmForMaskedLM):
 
 		return ModelOutput(inputs_embeds=decoder_inputs_embeds, attention_mask=batch_mask)
 
-class transgenicModel(LEDPreTrainedModel):
+class TransgenicPreTrainedModel(PreTrainedModel):
+	config_class = TransgenicConfig
+	base_model_prefix = "led"
+	supports_gradient_checkpointing = True
+
+	def _init_weights(self, module):
+		std = self.config.init_std
+		if isinstance(module, nn.Linear):
+			module.weight.data.normal_(mean=0.0, std=std)
+			if module.bias is not None:
+				module.bias.data.zero_()
+		elif isinstance(module, nn.Embedding):
+			module.weight.data.normal_(mean=0.0, std=std)
+			if module.padding_idx is not None:
+				module.weight.data[module.padding_idx].zero_()
+
+	@property
+	def dummy_inputs(self):
+		pad_token = self.config.pad_token_id
+		input_ids = torch.tensor([[0, 6, 10, 4, 2], [0, 8, 12, 2, pad_token]], device=self.device)
+		dummy_inputs = {
+			"attention_mask": input_ids.ne(pad_token),
+			"input_ids": input_ids,
+		}
+		return dummy_inputs
+
+class transgenicModel(TransgenicPreTrainedModel):
 	_tied_weights_keys = ["decoder_embed_tokens.weight", "decoder.embed_tokens.weight"]
 
-	def __init__(self, config: LEDConfig, encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species"):
+	def __init__(self, config):
 		super().__init__(config)
 
 		padding_idx, vocab_size = config.pad_token_id, config.vocab_size
 		#self.decoder_embed_tokens = NumberMaskEmbedTokens(vocab_size, config.d_model, padding_idx)
 		self.decoder_embed_tokens = nn.Embedding(vocab_size, config.d_model, padding_idx)
 		
-		self.encoder = segmented_sequence_embeddings(encoder_model)
+		self.encoder = segmented_sequence_embeddings(config.encoder_model)
 		self.decoder = LEDForConditionalGeneration(config).led.decoder
 		self.decoder.embed_tokens = self.decoder_embed_tokens
 
@@ -451,16 +407,16 @@ class transgenicModel(LEDPreTrainedModel):
 			encoder_global_attentions=None,
 		)
 
-class transgenicForConditionalGeneration(LEDPreTrainedModel):
+class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 	base_model_prefix = "transgenic"
 	_keys_to_ignore_on_load_missing = ["final_logits_bias"]
 	_tied_weights_keys = ["transgenic.decoder_embed_tokens.weight", "lm_head.weight"]
 
-	def __init__(self, config: LEDConfig, encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", unlink=False):
+	def __init__(self, config, unlink=False):
 		if not unlink:
 			_tied_weights_keys = []
 		super().__init__(config)
-		self.transgenic = transgenicModel(config, encoder_model=encoder_model)
+		self.transgenic = transgenicModel(config)
 		self.register_buffer("final_logits_bias", torch.zeros((1, self.transgenic.decoder_embed_tokens.num_embeddings)))
 		self.lm_head = nn.Linear(config.d_model, self.transgenic.decoder_embed_tokens.num_embeddings, bias=False)
 
