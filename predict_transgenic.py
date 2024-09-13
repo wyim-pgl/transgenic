@@ -70,23 +70,6 @@ def predictTransgenicAccelerate(encoder_model:str, safetensors_model:str, datase
 			pickle.dump(predictions, out)
 
 if __name__ == '__main__':
-	
-	#files = [
-	#	"cpu:0_ContrastiveSearch.out.pkl",
-	#	"cpu:1_ContrastiveSearch.out.pkl",
-	#	"cpu:2_ContrastiveSearch.out.pkl",
-	#	"cpu:3_ContrastiveSearch.out.pkl",
-	#	"cpu:8_ContrastiveSearch.out.pkl",
-	#	"cpu:10_ContrastiveSearch.out.pkl",
-	#	"cpu:6_ContrastiveSearch.out.pkl",
-	#	"cpu:9_ContrastiveSearch.out.pkl",
-	#	"cpu:7_ContrastiveSearch.out.pkl",
-	#	"cpu:4_ContrastiveSearch.out.pkl",
-	#	"cpu:5_ContrastiveSearch.out.pkl",
-	#	"cpu:11_ContrastiveSearch.out.pkl"
-	#]
-	#processPredictions(files, "Flagship_Genomes_49k_extra200_clean.db", outPrefix="contrast_predictions", buffer=75)
-	#sys.exit()
 
 	torch.manual_seed(123)
 

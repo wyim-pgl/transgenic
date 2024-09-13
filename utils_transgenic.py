@@ -1,5 +1,7 @@
-import subprocess, sys, os, duckdb, torch, re, tqdm, pickle
+import subprocess, sys, os, duckdb, torch, re, pickle
+from tqdm import tqdm
 import numpy as np
+import pandas as pd
 from typing import List, Tuple
 import torch.distributed as dist
 from torch.utils.data import  Dataset, DataLoader
@@ -8,7 +10,7 @@ from transformers import AutoTokenizer
 from peft import IA3Config, get_peft_model
 from safetensors import safe_open
 
-from modeling_transgenic import transgenicForConditionalGeneration
+from modeling_transgenic import transgenicForConditionalGeneration, segmented_sequence_embeddings
 from tokenization_transgenic import GFFTokenizer
 from configuration_transgenic import TransgenicConfig
 
@@ -363,7 +365,7 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, addRC=False, add
 
 # geneList custom dataset class for use with DataLoader
 class isoformData(Dataset):
-	def __init__(self, db, dt, mode="inference", encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species", global_attention=False):
+	def __init__(self, db, dt, mode="inference", encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", global_attention=False):
 		self.db = db
 		self.mode = mode
 		self.dt = dt
@@ -424,6 +426,159 @@ class isoformData(Dataset):
 			return (seqs, encoder_attention_mask, global_attention_mask, labels, gm, chr, region_start, region_end)
 		else:
 			return (seqs, encoder_attention_mask, global_attention_mask, None, gm, chr, region_start, region_end)
+
+# Create a database for loading genomic data to SegmentNT
+def genome2SegmentationSet(genome_file, gff_file, organism, db):
+
+	# load gff into database with organism name
+	gff3 = pd.read_csv(gff_file, sep='\t', header=None, comment='#')
+	gff3.columns = ['chromosome', 'source', 'feature', 'start', 'fin', 'score', 'strand', 'frame', 'attribute']
+	gff3['organism'] = organism
+	with duckdb.connect(db) as con:
+		con.sql(
+			'CREATE TABLE IF NOT EXISTS gff ('
+			'chromosome VARCHAR, '
+			'source VARCHAR, '
+			'feature VARCHAR, '
+			'start INT, '
+			'fin INT, '
+			'score VARCHAR, '
+			'strand VARCHAR, '
+			'frame VARCHAR, '
+			'attribute VARCHAR, '
+			'organism VARCHAR)')
+
+		con.sql(
+			'INSERT INTO gff '
+			'SELECT * '
+			'FROM gff3; '
+		)
+
+	# load chromosome sequences into database with organism name
+	genome_dict = loadGenome(genome_file)
+	genome_df = pd.DataFrame(genome_dict.items(), columns=['chromosome', 'sequence'])
+	genome_df['organism'] = organism
+	genome_df['length'] = genome_df['sequence'].apply(len)
+	with duckdb.connect(db) as con:
+		con.sql(
+			"CREATE TABLE IF NOT EXISTS genome ("
+			'chromosome VARCHAR, '
+			'sequence VARCHAR, '
+			'organism VARCHAR, '
+			'length INT)')
+
+		con.sql(
+			'INSERT INTO genome '
+			'SELECT * '
+			'FROM genome_df; '
+		)
+
+class segmentationDataset(Dataset):
+	def __init__(self, window_size, step_size, db, encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b"):
+		self.window_size = window_size
+		self.step_size = step_size
+		self.db = db
+		self.encoder_model =  encoder_model
+		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
+
+
+		self.classes = ['protein_coding_gene', 
+				'lncRNA', 
+				'exon', 
+				'intron', 
+				'splice_donor', 
+				'splice_acceptor', 
+				'5UTR', 
+				'3UTR', 
+				'CTCF-bound', 
+				'polyA_signal', 
+				'enhancer_Tissue_specific', 
+				'enhancer_Tissue_invariant', 
+				'promoter_Tissue_specific', 
+				'promoter_Tissue_invariant']
+
+		self.gffClassMap = {'gene': 'protein_coding_gene',  
+					'exon': 'exon', 
+					'intron': 'intron',
+					'five_prime_cis_splice_site': 'splice_donor', 
+					'three_prime_cis_splice_site': 'splice_acceptor', 
+					'five_prime_UTR': '5UTR', 
+					'three_prime_UTR': '3UTR'}
+
+		# Partition the genomes into windows based on step_size and window_size
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			seqLengths = con.sql("SELECT organism, chromosome, length FROM genome").df()	
+		
+		window_list = []
+		for i in range(len(seqLengths)):
+			organism = seqLengths.loc[i, 'organism']
+			chromosome = seqLengths.loc[i, 'chromosome']
+			length = seqLengths.loc[i, 'length']
+			windows = (length - self.window_size) // self.step_size + 1
+			
+			for j in range(windows):
+				start = j * self.step_size
+				end = start + self.window_size
+				window_list.append([organism, chromosome, start, end])
+		
+		self.windows = pd.DataFrame(window_list, columns=['organism', 'chromosome', 'start', 'end'])
+
+	
+	def __len__(self):
+		return len(self.windows)
+
+	def __getitem__(self, idx):
+		# Get the windowed sequence from the database
+		window = self.windows.loc[idx]
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			sequence = con.sql(
+				"SELECT sequence "
+				"FROM genome "
+				f"WHERE chromosome = '{window['chromosome']}' "
+				f"AND organism = '{window['organism']}'").fetchall()[0][0]
+		sequence = sequence[window['start']:window['end']]
+
+		if "N" in sequence:
+			return self.__getitem__(torch.randint(0, len(self.windows), (1,)).item())
+
+		# Get the gff for the window
+		# Use any feature that overlaps the window
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			annotations = con.sql(
+				"SELECT feature, start, fin "
+				"FROM gff "
+				f"WHERE chromosome = '{window['chromosome']}' "
+				f"AND organism = '{window['organism']}' "
+				f"AND (start <= {window['end']} AND fin >= {window['start']})").df()
+
+		# Adjust the start and end coordinates for the window
+		annotations['start'] = annotations['start'].apply(lambda x: x - window['start'] -1)
+		annotations['fin'] = annotations['fin'].apply(lambda x: x - window['start'])
+		annotations['start'] = annotations['start'].apply(lambda x: max(x, 0))
+		annotations['fin'] = annotations['fin'].apply(lambda x: min(x, self.window_size))
+
+		# Create the class tensor and populate with the annotations
+		class_tensor = torch.zeros((self.window_size, len(self.classes)), dtype=torch.float32)
+		
+		for i in range(len(annotations)):
+			start = annotations.loc[i, 'start']
+			end = annotations.loc[i, 'fin']
+			feature = annotations.loc[i, 'feature']
+			if feature in self.gffClassMap:
+				class_idx = self.classes.index(self.gffClassMap[feature])
+				class_tensor[start:end, class_idx] = 1
+		
+		# Segment and tokenize the sequences (piece size is 6144 nucleotides)
+		seqs = segmentSequence(sequence, piece_size=6144)
+		seqs = self.encoder_tokenizer.batch_encode_plus(
+			seqs,
+			return_tensors="pt",
+			padding="max_length",
+			truncation=True,
+			max_length = 1024)["input_ids"]
+		encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
+
+		return (seqs, encoder_attention_mask, class_tensor, window['organism'], window['chromosome'], window['start'], window['end'])
 
 def gffString2GFF3(gff:str, chr:str, region_start:int) -> List[str]:
 	# Purpose: 
@@ -492,7 +647,7 @@ def gffString2GFF3(gff:str, chr:str, region_start:int) -> List[str]:
 	
 	return geneModel
 
-def segmentSequence(seq, piece_size = 4092):
+def segmentSequence(seq, piece_size = 6144):
 	# Segment the sequence into evenly sized chunks smaller than 4092bp (encoder max length of 1024 tokens)
 	seqs = [seq[i:min(i+piece_size, len(seq))] for i in range(0, len(seq), piece_size)]
 	return seqs
@@ -539,14 +694,49 @@ def target_collate_fn(batch):
 	else:
 		return sequences, attention_masks, global_attention_masks, None, gm, chr, region_start, region_end
 
-def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=None, num_workers=0):
+def segment_collate_fn(batch):
+	# Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
+	sequences, attention_masks, labels, organism, chromosome, start, end = zip(*batch)
+
+	# Remove invalid sequences from the batch
+	#sequences = [item for item, keep in zip(sequences, valid) if keep]
+	#attention_masks = [item for item, keep in zip(attention_masks, valid) if keep]
+	#labels = [item for item, keep in zip(labels, valid) if keep]
+
+	#if len(sequences) == 0:
+	#	return None, None, None
+
+	# Pad and stack the sequences
+	max_segs = max([seq.shape[0] for seq in sequences])
+	sequences = [seq.flatten() for seq in sequences]
+	sequences = [F.pad(seq, (0, max_segs*1024 - seq.shape[0]), value=1) for seq in sequences]
+	sequences = torch.stack(sequences)
+	
+	
+	#Pad and stack the attention masks
+	attention_masks = [mask.flatten() for mask in attention_masks]
+	attention_masks = [F.pad(mask, (0, max_segs*1024 - mask.shape[0]), value=False) for mask in attention_masks]
+	attention_masks = torch.stack(attention_masks)
+
+	# Pad and stack the labels
+	if labels:
+		max_len = max([label.shape[1] for label in labels])
+		labels_padded = [F.pad(label, (0, max_len - label.shape[1])) for label in labels]
+		labels_padded = torch.cat(labels_padded)
+
+	if labels:
+		return sequences, attention_masks, labels_padded, organism, chromosome, start, end
+	else:
+		return sequences, attention_masks, None, organism, chromosome, start, end
+
+def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=None, num_workers=0, collate_fn=target_collate_fn):
 	if sampler != None:
 		shuffle = False
 	
 	return DataLoader(
 		dat, 
 		shuffle=shuffle, 
-		collate_fn=target_collate_fn, 
+		collate_fn=collate_fn, 
 		batch_size=batch_size, 
 		pin_memory=pin_memory,
 		sampler=sampler,
@@ -785,7 +975,7 @@ class PredictionProcessor():
 			for i, typ in enumerate(transcript):
 				if i == 0:
 					continue
-				if 'CDS' in typ and (transcript[i-1], typ) not in self.cds_pairs:
+				if 'CDS' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'CD' in transcript[i-1]:
 					self.cds_pairs.append((transcript[i-1], typ))
 
 	def tidyPrediction(self):
@@ -859,7 +1049,9 @@ class PredictionProcessor():
 			if len(transcript) == 0:
 				transcripts[i] = [feature[1] for feature in features]
 
-		
+		# Uniqueify the  transcripts
+		transcripts = [list(x) for x in set(tuple(x) for x in transcripts)]
+
 		return f"{';'.join(['|'.join(feature) for feature in features])}>{';'.join(['|'.join(transcript) for transcript in transcripts])}"
 
 	def reverseComplement(self):
@@ -1127,8 +1319,12 @@ def processPredictions(files:list, db:str, buffer=50, outPrefix="transgenic_pred
 		with open(outPrefix+".pred.gff3", 'w') as out_gff:
 			with open(outPrefix+".true.gff3", 'w') as out_true:
 				for file in files:
-					with open(file, 'rb') as f:
-						predictions = pickle.load(f)
+					try:
+						with open(file, 'rb') as f:
+							predictions = pickle.load(f)
+					except:
+						print(f"Error: could not load predictions from {file}.", file=sys.stderr)
+						continue
 					
 					for prediction in predictions:
 						with duckdb.connect(db, config={"access_mode": "READ_ONLY"}) as con:
@@ -1268,6 +1464,47 @@ def registerModel():
 	model = getModel(TransgenicConfig(), safetensors_model="checkpoints_ESMpeftReal_local09/model.safetensors", device="cpu", mode="predict")
 	model.push_to_hub("jlomas/transgenic-agro-E9")
 
+def mergeAndProcessPredictions(device, searchType, world_size, db, outprefix, buffer):
+	files = [f"{device}:{i}_{searchType}Search.out.pkl" for i in range(world_size)]
+	processPredictions(files, db, outPrefix=outprefix, buffer=buffer)
+	#sys.exit()
+
+def analyzePerGeneTranscriptPerformance(label_tokens, prediction_tokens):
+	# Purpose: 
+	#      Analyze the transcript performance of a prediction on a per-gene basis. 
+	# Inputs:
+	#      label_tokens: tensor containing tokenized labels
+	#      prediction_tokens: tensor containeing tokenized predictions
+	# Outputs:
+	#      performance: dictionary of gene-level performance metrics
+
+	performance = {
+		"label_transcript_count": None,
+		"pred_transcript_count": None
+	}
+
+	label_tokens = label_tokens.tolist()
+	prediction_tokens = prediction_tokens.tolist()
+
+	label_transcripts = label_tokens.split(17)[1].split(21)
+	prediction_transcripts = prediction_tokens.split(17)[1].split(21)
+
+	# Transcript count
+	performance["label_transcript_count"] = len(label_transcripts)
+	performance["pred_transcript_count"] = len(prediction_transcripts)
+
+	# Double loop through label transcripts and prediction transcripts
+	# Use pairs with highest F1 or MCC as matching then remove from consideration
+	# record metrics (sensitivity, specificity, F1, MCC) for matching pairs
+	for i, transcript in enumerate(label_transcripts):
+		prev_MCC = 0
+		for j, prediction in enumerate(prediction_transcripts):
+			#TODO
+			pass
+
+
 if __name__ == '__main__':
-	registerModel()
-	print("Done")
+	
+	ds  = segmentationDataset(30000, 10000, "Segmentation_7Genomes.db")
+
+	print(len(ds))

@@ -2,7 +2,7 @@ import sys, re, os, json
 from typing import List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
-from transformers import AutoModelForMaskedLM, AutoConfig, PreTrainedTokenizer, PreTrainedModel
+from transformers import AutoModelForMaskedLM, AutoConfig, PreTrainedTokenizer, PreTrainedModel, AutoModel
 from transformers import LEDForConditionalGeneration, EsmForMaskedLM
 from transformers.modeling_outputs import ModelOutput
 from dataclasses import dataclass
@@ -39,6 +39,23 @@ class LEDLearnedPositionalEmbedding(nn.Embedding):
 			past_key_values_length, past_key_values_length + seq_len, dtype=torch.long, device=self.weight.device
 		)
 		return super().forward(positions)
+
+class FiLMLayer(nn.Module):
+	def __init__(self, embedding_dim, num_classes):
+		super(FiLMLayer, self).__init__()
+		# Linear layers to generate gamma and beta
+		self.gamma_layer = nn.Linear(num_classes, embedding_dim)
+		self.beta_layer = nn.Linear(num_classes, embedding_dim)
+
+	def forward(self, embedding, class_probs):
+		# Compute gamma and beta from conditioning information
+		gamma = self.gamma_layer(class_probs)
+		beta = self.beta_layer(class_probs)
+		
+		# Modulate the embedding with gamma and beta
+		modulated_embedding = gamma * embedding + beta
+		
+		return modulated_embedding
 
 #Copied from transformers.models.led.modeling_led.py
 @dataclass
@@ -203,27 +220,29 @@ class NumberMaskEmbedTokens(nn.Embedding):
 		return num_mask
 
 class segmented_sequence_embeddings(EsmForMaskedLM):
-	def __init__(self, model):
+	def __init__(self, e_model, s_model, numSegClasses, outputSize = 768):
 		self.cache_dir = "./HFmodels"
-		self.encoder_model = model
+		self.encoder_model = e_model
+		self.segmentation_model = s_model
+		self.numSegClasses = numSegClasses
 		config = AutoConfig.from_pretrained(self.encoder_model, is_decoder=False, trust_remote_code=True)
 		super().__init__(config)
 		
 		self.esm = AutoModelForMaskedLM.from_pretrained(self.encoder_model, cache_dir=self.cache_dir, trust_remote_code=True)
-		
-		#print(self.led.print_trainable_parameters(), file=sys.stderr)
-		#for param in self.esm.parameters():
-		#	param.requires_grad = False
-		#for param in self.esm.lm_head.parameters():
-		#	param.requires_grad = False
+		SegmentNT = AutoModel.from_pretrained(self.segmentation_model, trust_remote_code=True)
+		self.unet = SegmentNT.unet
+		self.uFC = SegmentNT.fc
+		self.uActivation = SegmentNT.activation_fn
+		self.film = FiLMLayer(outputSize, self.numSegClasses)
 
 		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
-		#plants -> 1500, multispecies -> 1024
-		#T5 -> 512, longformer -> 768
+		#TODO: Put into config - plants -> 1500, multispecies -> 1024, longformer -> 768
 		self.hidden_mapping = nn.Linear(config.hidden_size, 768)
 		self.hidden_mapping_layernorm = nn.LayerNorm(768, eps=1e-5)
+		self.unet_mapping = nn.Linear(config.hidden_size, 1024)
+		self.unet_mapping_layernorm = nn.LayerNorm(1024, eps=1e-5)
 	
-	def forward(self, input_ids, attention_mask=None, **kwargs):
+	def forward(self, input_ids, attention_mask=None, segLabels=None, **kwargs):
 		batch_size = input_ids.shape[0]
 		num_segs = input_ids.shape[1] // 1024
 		input_ids = input_ids.reshape(batch_size, int(num_segs), 1024)
@@ -249,7 +268,58 @@ class segmented_sequence_embeddings(EsmForMaskedLM):
 		decoder_inputs_embeds = self.hidden_mapping(batch_embeds)
 		decoder_inputs_embeds = self.hidden_mapping_layernorm(decoder_inputs_embeds)
 
-		return ModelOutput(inputs_embeds=decoder_inputs_embeds, attention_mask=batch_mask)
+		# Use the last hidden state from the nucleotide encoder as input to the segmentation model
+		# Transform the encoder hidden states to match the decoder input size
+		seg_inputs = self.unet_mapping(batch_embeds)
+		seg_inputs = self.unet_mapping_layernorm(seg_inputs)
+		
+		
+		# Invert the channels and sequence length channel
+		#seg_inputs = seg_inputs[:,1:,:] # Remove CLS token
+		seg_inputs = torch.transpose(seg_inputs, 2,1)
+
+		# Pass through UNET
+		x = self.uActivation(self.unet(seg_inputs))
+
+		# Invert the channels and sequence length channel
+		x = torch.transpose(x, 2,1)
+
+		# Compute logits for the segmentation model
+		seg_logits = self.uFC(x)
+
+		# Final reshape to have logits per nucleotides, per feature
+		seg_logits = torch.reshape(seg_logits, (seg_logits.shape[0], seg_logits.shape[1] * 6, self.numSegClasses, 2))
+
+		# Compute segmentation loss if called for
+		if segLabels != None:
+
+			# Define weight of positive splice junction classes to counteract class imbalance
+			pos_weight = torch.ones(self.numSegClasses)
+			pos_weight[[4, 5]] = 7.0
+			pos_weight = pos_weight.to(segLabels.device)
+
+			# Define per-nucleotide weights to focus on basic genic features
+			weight = torch.Tensor((5.0, 0.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+			weight = weight.to(segLabels.device)
+
+			# Define the loss function with pos_weight
+			segLossFn = nn.BCEWithLogitsLoss(pos_weight=pos_weight, weight=weight)
+			seg_loss = segLossFn(torch.squeeze(seg_logits[:,0:segLabels.shape[0]][...,0]), segLabels)
+		else:
+			seg_loss = None
+
+
+		# Aggregate U-Net output and apply FiLM to the encoder hidden states
+		# TODO: portion embeddings into a batch for the film layer
+		#sl_aggregated = seg_logits[...,0].view(-1, 6, 1024, self.numSegClasses)  
+		#sl_aggregated = sl_aggregated.mean(dim=1)
+		#decoder_inputs_embeds = self.film(decoder_inputs_embeds, sl_aggregated)
+
+		return ModelOutput(
+			inputs_embeds=decoder_inputs_embeds, 
+			attention_mask=batch_mask, 
+			seg_logits=seg_logits, 
+			seg_loss=seg_loss)
 
 class TransgenicPreTrainedModel(PreTrainedModel):
 	config_class = TransgenicConfig

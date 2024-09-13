@@ -137,6 +137,7 @@ class TransgenicConfig(PretrainedConfig):
 		],
 		encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b",
 		unlink=False,
+		numSegClasses=8,
 		**kwargs,
 	):
 		self.vocab_size = vocab_size
