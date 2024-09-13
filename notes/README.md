@@ -1304,3 +1304,514 @@ Intron chain level:     0.7     |     1.0    |
          Novel introns:     172/2244	(  7.7%)
            Missed loci:      48/535	(  9.0%)
             Novel loci:      48/535	(  9.0%)
+
+Epoch9
+Contrastive Search:
+#= Summary for dataset: contrast_predictions.pred.artha.gff3
+#     Query mRNAs :    2022 in    1770 loci  (1532 multi-exon transcripts)
+#            (180 multi-transcript loci, ~1.1 transcripts per locus)
+# Reference mRNAs :    2282 in    1775 loci  (1858 multi-exon)
+# Super-loci w/ reference transcripts:     1740
+#-----------------| Sensitivity | Precision  |
+        Base level:    87.4     |    87.8    |
+        Exon level:    29.3     |    32.4    |
+      Intron level:    21.3     |    24.0    |
+Intron chain level:     7.8     |     9.5    |
+  Transcript level:    21.6     |    24.4    |
+       Locus level:    27.8     |    27.9    |
+
+     Matching intron chains:     145
+       Matching transcripts:     494
+              Matching loci:     494
+
+          Missed exons:     755/10018	(  7.5%)
+           Novel exons:     556/8863	(  6.3%)
+        Missed introns:     873/7753	( 11.3%)
+         Novel introns:     166/6885	(  2.4%)
+           Missed loci:      33/1775	(  1.9%)
+            Novel loci:      30/1770	(  1.7%)
+#= Summary for dataset: contrast_predictions.pred.glyma.gff3
+#     Query mRNAs :    3988 in    3038 loci  (3235 multi-exon transcripts)
+#            (478 multi-transcript loci, ~1.3 transcripts per locus)
+# Reference mRNAs :    4935 in    3050 loci  (4232 multi-exon)
+# Super-loci w/ reference transcripts:     3000
+#-----------------| Sensitivity | Precision  |
+        Base level:    82.4     |    58.7    |
+        Exon level:    24.6     |    28.1    |
+      Intron level:    18.9     |    21.4    |
+Intron chain level:     5.6     |     7.3    |
+  Transcript level:    16.4     |    20.3    |
+       Locus level:    26.5     |    26.5    |
+
+     Matching intron chains:     237
+       Matching transcripts:     808
+              Matching loci:     808
+
+          Missed exons:    2663/20273	( 13.1%)
+           Novel exons:    2029/16940	( 12.0%)
+        Missed introns:    2030/14718	( 13.8%)
+         Novel introns:     531/13030	(  4.1%)
+           Missed loci:      42/3050	(  1.4%)
+            Novel loci:      38/3038	(  1.3%)
+#= Summary for dataset: contrast_predictions.pred.sobic.gff3
+#     Query mRNAs :    2400 in    2047 loci  (1855 multi-exon transcripts)
+#            (235 multi-transcript loci, ~1.2 transcripts per locus)
+# Reference mRNAs :    2778 in    2051 loci  (2295 multi-exon)
+# Super-loci w/ reference transcripts:     1979
+#-----------------| Sensitivity | Precision  |
+        Base level:    82.9     |    77.5    |
+        Exon level:    26.0     |    29.3    |
+      Intron level:    19.3     |    21.7    |
+Intron chain level:     7.0     |     8.6    |
+  Transcript level:    19.3     |    22.3    |
+       Locus level:    26.1     |    26.1    |
+
+     Matching intron chains:     160
+       Matching transcripts:     535
+              Matching loci:     535
+
+          Missed exons:    1526/11791	( 12.9%)
+           Novel exons:    1217/10139	( 12.0%)
+        Missed introns:    1348/8743	( 15.4%)
+         Novel introns:     470/7771	(  6.0%)
+           Missed loci:      69/2051	(  3.4%)
+            Novel loci:      67/2047	(  3.3%)
+#= Summary for dataset: contrast_predictions.pred.potri.gff3
+#     Query mRNAs :    2695 in    2171 loci  (2125 multi-exon transcripts)
+#            (313 multi-transcript loci, ~1.2 transcripts per locus)
+# Reference mRNAs :    3332 in    2183 loci  (2811 multi-exon)
+# Super-loci w/ reference transcripts:     2131
+#-----------------| Sensitivity | Precision  |
+        Base level:    82.8     |    44.4    |
+        Exon level:    25.4     |    29.0    |
+      Intron level:    19.2     |    21.9    |
+Intron chain level:     5.3     |     7.0    |
+  Transcript level:    16.1     |    20.0    |
+       Locus level:    24.6     |    24.6    |
+
+     Matching intron chains:     149
+       Matching transcripts:     538
+              Matching loci:     537
+
+          Missed exons:    1595/13726	( 11.6%)
+           Novel exons:    1151/11524	( 10.0%)
+        Missed introns:    1444/10003	( 14.4%)
+         Novel introns:     298/8791	(  3.4%)
+           Missed loci:      43/2183	(  2.0%)
+            Novel loci:      40/2171	(  1.8%)
+#= Summary for dataset: contrast_predictions.pred.seita.gff3
+#     Query mRNAs :    2519 in    2185 loci  (1918 multi-exon transcripts)
+#            (192 multi-transcript loci, ~1.2 transcripts per locus)
+# Reference mRNAs :    2734 in    2190 loci  (2345 multi-exon)
+# Super-loci w/ reference transcripts:     2094
+#-----------------| Sensitivity | Precision  |
+        Base level:    81.9     |    79.6    |
+        Exon level:    25.0     |    27.8    |
+      Intron level:    18.5     |    21.1    |
+Intron chain level:     6.8     |     8.3    |
+  Transcript level:    18.3     |    19.9    |
+       Locus level:    22.9     |    22.9    |
+
+     Matching intron chains:     160
+       Matching transcripts:     501
+              Matching loci:     501
+
+          Missed exons:    1506/11278	( 13.4%)
+           Novel exons:    1131/10156	( 11.1%)
+        Missed introns:    1432/8771	( 16.3%)
+         Novel introns:     438/7699	(  5.7%)
+           Missed loci:      93/2190	(  4.2%)
+            Novel loci:      91/2185	(  4.2%)
+#= Summary for dataset: contrast_predictions.pred.bradi.gff3
+#     Query mRNAs :    2564 in    2167 loci  (1927 multi-exon transcripts)
+#            (219 multi-transcript loci, ~1.2 transcripts per locus)
+# Reference mRNAs :    3343 in    2177 loci  (2916 multi-exon)
+# Super-loci w/ reference transcripts:     2028
+#-----------------| Sensitivity | Precision  |
+        Base level:    80.2     |    70.8    |
+        Exon level:    23.3     |    27.6    |
+      Intron level:    17.8     |    21.7    |
+Intron chain level:     5.1     |     7.7    |
+  Transcript level:    13.7     |    17.9    |
+       Locus level:    21.1     |    21.2    |
+
+     Matching intron chains:     149
+       Matching transcripts:     459
+              Matching loci:     459
+
+          Missed exons:    1743/11848	( 14.7%)
+           Novel exons:    1250/9911	( 12.6%)
+        Missed introns:    1708/9001	( 19.0%)
+         Novel introns:     496/7394	(  6.7%)
+           Missed loci:     142/2177	(  6.5%)
+            Novel loci:     136/2167	(  6.3%)
+#= Summary for dataset: contrast_predictions.pred.pp3c.gff3
+#     Query mRNAs :    4012 in    2016 loci  (3233 multi-exon transcripts)
+#            (922 multi-transcript loci, ~2.0 transcripts per locus)
+# Reference mRNAs :    4833 in    2021 loci  (4227 multi-exon)
+# Super-loci w/ reference transcripts:     1828
+#-----------------| Sensitivity | Precision  |
+        Base level:    78.9     |    75.3    |
+        Exon level:    13.9     |    16.7    |
+      Intron level:    10.3     |    12.6    |
+Intron chain level:     1.7     |     2.2    |
+  Transcript level:     6.4     |     7.7    |
+       Locus level:    14.1     |    14.1    |
+
+     Matching intron chains:      70
+       Matching transcripts:     310
+              Matching loci:     285
+
+          Missed exons:    1912/15351	( 12.5%)
+           Novel exons:    1317/12741	( 10.3%)
+        Missed introns:    2349/10526	( 22.3%)
+         Novel introns:     761/8599	(  8.8%)
+           Missed loci:     190/2021	(  9.4%)
+            Novel loci:     187/2016	(  9.3%)
+
+BEAM search
+#= Summary for dataset: beam_predictions.pred.artha.gff3
+#     Query mRNAs :    1517 in    1499 loci  (1098 multi-exon transcripts)
+#            (16 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    1935 in    1501 loci  (1565 multi-exon)
+# Super-loci w/ reference transcripts:     1477
+#-----------------| Sensitivity | Precision  |
+        Base level:    89.0     |    90.1    |
+        Exon level:    36.1     |    41.0    |
+      Intron level:    28.0     |    32.1    |
+Intron chain level:    11.1     |    15.8    |
+  Transcript level:    25.1     |    32.0    |
+       Locus level:    32.3     |    32.4    |
+
+     Matching intron chains:     173
+       Matching transcripts:     485
+              Matching loci:     485
+
+          Missed exons:     566/8352	(  6.8%)
+           Novel exons:     354/7117	(  5.0%)
+        Missed introns:     624/6423	(  9.7%)
+         Novel introns:      65/5602	(  1.2%)
+           Missed loci:      24/1501	(  1.6%)
+            Novel loci:      22/1499	(  1.5%)
+#= Summary for dataset: beam_predictions.pred.glyma.gff3
+#     Query mRNAs :    2746 in    2597 loci  (2120 multi-exon transcripts)
+#            (91 multi-transcript loci, ~1.1 transcripts per locus)
+# Reference mRNAs :    4169 in    2598 loci  (3562 multi-exon)
+# Super-loci w/ reference transcripts:     2570
+#-----------------| Sensitivity | Precision  |
+        Base level:    83.9     |    85.0    |
+        Exon level:    30.0     |    35.8    |
+      Intron level:    23.8     |    27.6    |
+Intron chain level:     7.1     |    12.0    |
+  Transcript level:    18.3     |    27.7    |
+       Locus level:    29.3     |    29.3    |
+
+     Matching intron chains:     254
+       Matching transcripts:     762
+              Matching loci:     762
+
+          Missed exons:    1943/17005	( 11.4%)
+           Novel exons:    1412/13302	( 10.6%)
+        Missed introns:    1678/12299	( 13.6%)
+         Novel introns:     286/10585	(  2.7%)
+           Missed loci:      28/2598	(  1.1%)
+            Novel loci:      27/2597	(  1.0%)
+#= Summary for dataset: beam_predictions.pred.sobic.gff3
+#     Query mRNAs :    1775 in    1742 loci  (1322 multi-exon transcripts)
+#            (24 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    2369 in    1742 loci  (1981 multi-exon)
+# Super-loci w/ reference transcripts:     1698
+#-----------------| Sensitivity | Precision  |
+        Base level:    84.6     |    83.7    |
+        Exon level:    31.0     |    35.7    |
+      Intron level:    23.7     |    27.0    |
+Intron chain level:     9.3     |    14.0    |
+  Transcript level:    21.2     |    28.3    |
+       Locus level:    28.8     |    28.8    |
+
+     Matching intron chains:     185
+       Matching transcripts:     502
+              Matching loci:     502
+
+          Missed exons:    1229/10067	( 12.2%)
+           Novel exons:     955/8327	( 11.5%)
+        Missed introns:    1185/7466	( 15.9%)
+         Novel introns:     223/6551	(  3.4%)
+           Missed loci:      43/1742	(  2.5%)
+            Novel loci:      43/1742	(  2.5%)
+#= Summary for dataset: beam_predictions.pred.potri.gff3
+#     Query mRNAs :    1927 in    1854 loci  (1458 multi-exon transcripts)
+#            (54 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    2857 in    1855 loci  (2419 multi-exon)
+# Super-loci w/ reference transcripts:     1830
+#-----------------| Sensitivity | Precision  |
+        Base level:    84.1     |    85.3    |
+        Exon level:    30.1     |    35.2    |
+      Intron level:    23.7     |    27.0    |
+Intron chain level:     7.4     |    12.3    |
+  Transcript level:    18.1     |    26.8    |
+       Locus level:    27.8     |    27.8    |
+
+     Matching intron chains:     180
+       Matching transcripts:     516
+              Matching loci:     516
+
+          Missed exons:    1199/11748	( 10.2%)
+           Novel exons:     906/9421	(  9.6%)
+        Missed introns:    1105/8571	( 12.9%)
+         Novel introns:     191/7505	(  2.5%)
+           Missed loci:      25/1855	(  1.3%)
+            Novel loci:      24/1854	(  1.3%)
+#= Summary for dataset: beam_predictions.pred.seita.gff3
+#     Query mRNAs :    1903 in    1870 loci  (1365 multi-exon transcripts)
+#            (23 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    2332 in    1870 loci  (1998 multi-exon)
+# Super-loci w/ reference transcripts:     1805
+#-----------------| Sensitivity | Precision  |
+        Base level:    83.9     |    78.5    |
+        Exon level:    29.7     |    33.9    |
+      Intron level:    22.2     |    26.0    |
+Intron chain level:     8.2     |    11.9    |
+  Transcript level:    19.9     |    24.3    |
+       Locus level:    24.8     |    24.8    |
+
+     Matching intron chains:     163
+       Matching transcripts:     463
+              Matching loci:     463
+
+          Missed exons:    1133/9560	( 11.9%)
+           Novel exons:     813/8234	(  9.9%)
+        Missed introns:    1222/7430	( 16.4%)
+         Novel introns:     268/6351	(  4.2%)
+           Missed loci:      64/1870	(  3.4%)
+            Novel loci:      64/1870	(  3.4%)
+#= Summary for dataset: beam_predictions.pred.bradi.gff3
+#     Query mRNAs :    1942 in    1878 loci  (1390 multi-exon transcripts)
+#            (29 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    2864 in    1884 loci  (2493 multi-exon)
+# Super-loci w/ reference transcripts:     1777
+#-----------------| Sensitivity | Precision  |
+        Base level:    82.3     |    54.7    |
+        Exon level:    28.7     |    35.1    |
+      Intron level:    22.9     |    28.4    |
+Intron chain level:     6.2     |    11.2    |
+  Transcript level:    15.3     |    22.6    |
+       Locus level:    23.2     |    23.3    |
+
+     Matching intron chains:     155
+       Matching transcripts:     438
+              Matching loci:     438
+
+          Missed exons:    1296/10175	( 12.7%)
+           Novel exons:     823/8128	( 10.1%)
+        Missed introns:    1363/7717	( 17.7%)
+         Novel introns:     239/6210	(  3.8%)
+           Missed loci:     100/1884	(  5.3%)
+            Novel loci:      99/1878	(  5.3%)
+#= Summary for dataset: beam_predictions.pred.pp3c.gff3
+#     Query mRNAs :    2574 in    1709 loci  (1905 multi-exon transcripts)
+#            (660 multi-transcript loci, ~1.5 transcripts per locus)
+# Reference mRNAs :    4112 in    1714 loci  (3586 multi-exon)
+# Super-loci w/ reference transcripts:     1579
+#-----------------| Sensitivity | Precision  |
+        Base level:    81.9     |    82.2    |
+        Exon level:    17.9     |    24.2    |
+      Intron level:    14.0     |    18.9    |
+Intron chain level:     2.3     |     4.4    |
+  Transcript level:     7.9     |    12.6    |
+       Locus level:    17.7     |    17.8    |
+
+     Matching intron chains:      84
+       Matching transcripts:     325
+              Matching loci:     304
+
+          Missed exons:    1468/13105	( 11.2%)
+           Novel exons:     866/9322	(  9.3%)
+        Missed introns:    2313/8986	( 25.7%)
+         Novel introns:     405/6687	(  6.1%)
+           Missed loci:     134/1714	(  7.8%)
+            Novel loci:     129/1709	(  7.5%)
+
+GREEDY search:
+#= Summary for dataset: greedy_predictions.pred.artha.gff3
+#     Query mRNAs :    1751 in    1738 loci  (1279 multi-exon transcripts)
+#            (8 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    2237 in    1740 loci  (1819 multi-exon)
+# Super-loci w/ reference transcripts:     1711
+#-----------------| Sensitivity | Precision  |
+        Base level:    88.7     |    89.9    |
+        Exon level:    35.8     |    40.6    |
+      Intron level:    27.2     |    31.1    |
+Intron chain level:    10.4     |    14.8    |
+  Transcript level:    24.2     |    31.0    |
+       Locus level:    31.1     |    31.2    |
+
+     Matching intron chains:     189
+       Matching transcripts:     542
+              Matching loci:     542
+
+          Missed exons:     687/9791	(  7.0%)
+           Novel exons:     445/8374	(  5.3%)
+        Missed introns:     727/7572	(  9.6%)
+         Novel introns:      88/6631	(  1.3%)
+           Missed loci:      29/1740	(  1.7%)
+            Novel loci:      27/1738	(  1.6%)
+#= Summary for dataset: greedy_predictions.pred.glyma.gff3
+#     Query mRNAs :    3069 in    2961 loci  (2369 multi-exon transcripts)
+#            (78 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    4826 in    2993 loci  (4134 multi-exon)
+# Super-loci w/ reference transcripts:     2937
+#-----------------| Sensitivity | Precision  |
+        Base level:    82.2     |    85.5    |
+        Exon level:    29.5     |    36.0    |
+      Intron level:    23.6     |    27.8    |
+Intron chain level:     7.1     |    12.5    |
+  Transcript level:    18.2     |    28.6    |
+       Locus level:    29.4     |    29.7    |
+
+     Matching intron chains:     295
+       Matching transcripts:     879
+              Matching loci:     879
+
+          Missed exons:    2635/19796	( 13.3%)
+           Novel exons:    1618/15205	( 10.6%)
+        Missed introns:    2236/14351	( 15.6%)
+         Novel introns:     359/12163	(  3.0%)
+           Missed loci:      56/2993	(  1.9%)
+            Novel loci:      24/2961	(  0.8%)
+#= Summary for dataset: greedy_predictions.pred.sobic.gff3
+#     Query mRNAs :    2057 in    1996 loci  (1534 multi-exon transcripts)
+#            (19 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    2724 in    2011 loci  (2253 multi-exon)
+# Super-loci w/ reference transcripts:     1941
+#-----------------| Sensitivity | Precision  |
+        Base level:    83.5     |    56.6    |
+        Exon level:    30.6     |    35.9    |
+      Intron level:    23.5     |    27.2    |
+Intron chain level:     9.5     |    14.0    |
+  Transcript level:    21.8     |    28.9    |
+       Locus level:    29.5     |    29.8    |
+
+     Matching intron chains:     215
+       Matching transcripts:     594
+              Matching loci:     594
+
+          Missed exons:    1498/11585	( 12.9%)
+           Novel exons:     996/9434	( 10.6%)
+        Missed introns:    1396/8596	( 16.2%)
+         Novel introns:     273/7416	(  3.7%)
+           Missed loci:      66/2011	(  3.3%)
+            Novel loci:      54/1996	(  2.7%)
+#= Summary for dataset: greedy_predictions.pred.potri.gff3
+#     Query mRNAs :    2256 in    2129 loci  (1719 multi-exon transcripts)
+#            (61 multi-transcript loci, ~1.1 transcripts per locus)
+# Reference mRNAs :    3280 in    2143 loci  (2774 multi-exon)
+# Super-loci w/ reference transcripts:     2100
+#-----------------| Sensitivity | Precision  |
+        Base level:    83.7     |    42.0    |
+        Exon level:    30.3     |    35.7    |
+      Intron level:    24.0     |    27.6    |
+Intron chain level:     7.6     |    12.3    |
+  Transcript level:    18.2     |    26.5    |
+       Locus level:    27.9     |    27.9    |
+
+     Matching intron chains:     212
+       Matching transcripts:     597
+              Matching loci:     597
+
+          Missed exons:    1519/13559	( 11.2%)
+           Novel exons:    1029/10792	(  9.5%)
+        Missed introns:    1382/9894	( 14.0%)
+         Novel introns:     229/8599	(  2.7%)
+           Missed loci:      37/2143	(  1.7%)
+            Novel loci:      29/2129	(  1.4%)
+#= Summary for dataset: greedy_predictions.pred.seita.gff3
+#     Query mRNAs :    2154 in    2138 loci  (1578 multi-exon transcripts)
+#            (8 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    2675 in    2145 loci  (2297 multi-exon)
+# Super-loci w/ reference transcripts:     2067
+#-----------------| Sensitivity | Precision  |
+        Base level:    83.5     |    83.2    |
+        Exon level:    30.7     |    35.1    |
+      Intron level:    23.5     |    27.4    |
+Intron chain level:     8.8     |    12.8    |
+  Transcript level:    20.1     |    25.0    |
+       Locus level:    25.1     |    25.2    |
+
+     Matching intron chains:     202
+       Matching transcripts:     538
+              Matching loci:     538
+
+          Missed exons:    1346/11042	( 12.2%)
+           Novel exons:     932/9503	(  9.8%)
+        Missed introns:    1391/8591	( 16.2%)
+         Novel introns:     308/7352	(  4.2%)
+           Missed loci:      76/2145	(  3.5%)
+            Novel loci:      70/2138	(  3.3%)
+#= Summary for dataset: greedy_predictions.pred.bradi.gff3
+#     Query mRNAs :    2191 in    2133 loci  (1592 multi-exon transcripts)
+#            (25 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    3301 in    2148 loci  (2881 multi-exon)
+# Super-loci w/ reference transcripts:     2025
+#-----------------| Sensitivity | Precision  |
+        Base level:    80.8     |    80.6    |
+        Exon level:    27.5     |    33.6    |
+      Intron level:    21.5     |    26.5    |
+Intron chain level:     5.8     |    10.6    |
+  Transcript level:    14.7     |    22.1    |
+       Locus level:    22.6     |    22.7    |
+
+     Matching intron chains:     168
+       Matching transcripts:     485
+              Matching loci:     485
+
+          Missed exons:    1663/11689	( 14.2%)
+           Novel exons:    1037/9356	( 11.1%)
+        Missed introns:    1610/8879	( 18.1%)
+         Novel introns:     335/7197	(  4.7%)
+           Missed loci:     117/2148	(  5.4%)
+            Novel loci:     107/2133	(  5.0%)
+#= Summary for dataset: greedy_predictions.pred.pp3c.gff3
+#     Query mRNAs :    3127 in    1919 loci  (2440 multi-exon transcripts)
+#            (723 multi-transcript loci, ~1.6 transcripts per locus)
+# Reference mRNAs :    4732 in    1983 loci  (4135 multi-exon)
+# Super-loci w/ reference transcripts:     1769
+#-----------------| Sensitivity | Precision  |
+        Base level:    76.9     |    31.8    |
+        Exon level:    17.8     |    24.9    |
+      Intron level:    14.2     |    19.4    |
+Intron chain level:     2.2     |     3.8    |
+  Transcript level:     7.4     |    11.2    |
+       Locus level:    16.4     |    17.0    |
+
+     Matching intron chains:      92
+       Matching transcripts:     350
+              Matching loci:     326
+
+          Missed exons:    2370/15067	( 15.7%)
+           Novel exons:     941/10032	(  9.4%)
+        Missed introns:    2752/10330	( 26.6%)
+         Novel introns:     455/7559	(  6.0%)
+           Missed loci:     203/1983	( 10.2%)
+            Novel loci:     149/1919	(  7.8%)
+
+# Training Stage 2
+
+Performance is good at the base-level but we'd like to improve it at the exon level. This requires an improvement in the identification of splice junctions. Ideally, we also would like to improve the isoform prediction performance as it is the primary advancement.
+
+Hiabao is interested in using base-wise probability scores to update the splice junctions instead of my nearest canonical junction heuristic. InstaDeep has created a U-net architecture for nucleotide-resolution segmentation which can provide the base-wise probabilities, but have not fine tuned it for plants. My goal is to incorporate the U-net into the model in order to simultaneously compute the base probabilities and the decoder output from the encoder output. The U-net logits can be used in post processing and may be fed back into the decoder to improve the generation task. The U-net also provides a potential method to scan the genome for genic regions which could make the model a stand-alone application for genome annotation.
+
+I will add the U-net to the encoder model and fine-tune it on the 7 training genomes. Then I will continue training the full model with the combined input from the encoder and the U-net. Finally, a post-processing algorithm using the U-net derived probabilities will clean up the coordinate portion of the text output. The isoform part may be improved by customizing the CrossEntropy loss to focus on the second part of the output. Finally, I can implement a scanning algorithm which runs the encoder/U-net on genomic sequences until a complete genic segment is identified, then use the stored embeddings to run the decoder.
+
+After the first epoch of training, the Unet reached a eval loss of ~0.42. The loss was not improving in the next epoch, so I decided to restart the trianing with a smaller learning rate and adjusted loss weights. The loss was still flat. I increased the batch size and the gradient clipping threshold and restarted. None of these tactics caused the loss to decline. I stopped fine-tuning for now and began to characterize the performance (recall, precision, f1, mcc) on the validation set.
+
+## Isoform performance analysis
+
+I need defensible performance metrics to determine the performance of isofrom prediction...
+
+Analysis questions (break out labels with and without AS):
+1. For each gene, is the correct number of transcripts identified?
+2. For each transcript, how much of the correct features are included? (Break out CDS and UTR)
+3. How many transcripts per-gene are perfectly correct (CDS/UTR level)
+4. How many total transcripts are perfectly correct? (CDS level, UTR level)
+
