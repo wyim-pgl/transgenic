@@ -11,7 +11,7 @@ from peft import IA3Config, get_peft_model
 from safetensors import safe_open
 
 from modeling_transgenic import transgenicForConditionalGeneration, segmented_sequence_embeddings
-from tokenization_transgenic import GFFTokenizer
+from tokenization_transgenic import GFFTokenizer09
 from configuration_transgenic import TransgenicConfig
 
 def print_gpu_allocation(s:str):
@@ -161,7 +161,7 @@ def validateCDS(gff:str, seq:str, geneModel:str) -> Tuple[bool, str]:
 				return (valid, f"Start codon missing in {features[feature_index_dict[lastCDS]][1]} of {geneModel}.")
 	return (True, None)
 
-def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, addRC=False, addRCIsoOnly=False, clean=False):
+def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=6144, addRC=False, addRCIsoOnly=False, clean=False):
 	# Purpose: 
 	#   Read a genome assembly and gff3 annotation file into a 
 	#   duckdb database for training or inference. For each gene 
@@ -171,11 +171,12 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, addRC=False, add
 	#   multiple genomes to the database
 	# Inputs:
 	#   genome: path to a fasta file containing the genome assembly
-	#   gff3:     path to a gff3 file containing gene annotations
-	#   db:       path to a duckdb database file (will be created if it does not exist)
-	#   maxLen:   Maximum size of gene model sequence to include in the database (larger gene models are skipped)
-	#   addExtra: Max size of random buffer to add to the gene model sequence (used to capture UTR start and end during training)
-	#   addRC:    Add reverse complement of gene model sequence to the database (Used to augment training data)
+	#   gff3:		path to a gff3 file containing gene annotations
+	#   db:			path to a duckdb database file (will be created if it does not exist)
+	#   maxLen:		Maximum size of gene model sequence to include in the database (larger gene models are skipped)
+	#   addExtra:	Max size of random buffer to add to the gene model sequence (used to capture UTR start and end during training)
+	#   staticSize:	Extracted sequences will be this size (SegmentNT performs best with static sizes)
+	#   addRC:		Add reverse complement of gene model sequence to the database (Used to augment training data)
 	#   addRCIsoOnly: When adding RC seqs, only add gene models with alternative splicing
 	#   clean: If true only sequences will be added that have start and stop codons and are a multiple of 3
 	# Outputs:
@@ -199,6 +200,10 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, addRC=False, add
 			"chromosome VARCHAR, "
 			"sequence VARCHAR, "
 			"gff VARCHAR, "
+			"static_fpb, INT, "
+			"static_tpb INT, "
+			"five_prime_buf INT, "
+			"three_prime_buf INT, "
 			"rn INT PRIMARY KEY)")
 	con.sql("CREATE SEQUENCE IF NOT EXISTS row_id START 1;")
 
@@ -241,7 +246,7 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, addRC=False, add
 					
 						try:
 							if valid:
-								con.sql(f"INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff) VALUES (nextval('row_id'), '{geneModel}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence}', '{gff}')")
+								con.sql(f"INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff, static_fpb, static_tpb, five_prime_buf, three_prime_buf) VALUES (nextval('row_id'), '{geneModel}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence}', '{gff}', '{five_prime_buffer}', '{three_prime_buffer}','{int(torch.randint(addExtra, (1,)))}', '{int(torch.randint(addExtra, (1,)))}')")
 						except Exception as e:
 							print(f"{geneModel=}")
 							print(f"{sequence=}")
@@ -256,7 +261,7 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, addRC=False, add
 								if ';' in mRNA_list:
 									try:
 										if valid:
-											con.sql(f"INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff) VALUES (nextval('row_id'), '{geneModel + "-rc"}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence_rc}', '{gff_rc}')")
+											con.sql(f"INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff, static_fpb, static_tpb, five_prime_buf, three_prime_buf) VALUES (nextval('row_id'), '{geneModel + "-rc"}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence_rc}', '{gff_rc}', '{five_prime_buffer}', '{three_prime_buffer}', '{int(torch.randint(addExtra, (1,)))}', '{int(torch.randint(addExtra, (1,)))}')")
 									except Exception as e:
 										print(f"{geneModel=}-rc")
 										print(f"{sequence_rc=}")
@@ -267,7 +272,7 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, addRC=False, add
 							else:
 								try:
 									if valid:
-										con.sql(f"INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff) VALUES (nextval('row_id'), '{geneModel + "-rc"}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence_rc}', '{gff_rc}')")
+										con.sql(f"INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff, static_fpb, static_tpb, five_prime_buf, three_prime_buf) VALUES (nextval('row_id'), '{geneModel + "-rc"}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence_rc}', '{gff_rc}', '{five_prime_buffer}', '{three_prime_buffer}', {int(torch.randint(addExtra, (1,)))}', '{int(torch.randint(addExtra, (1,)))}')")
 								except Exception as e:
 									print(f"{geneModel=}-rc")
 									print(f"{sequence_rc=}")
@@ -286,8 +291,15 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, addRC=False, add
 						cds_num = {}
 					
 					# Construct current gene model
-					five_prime_buffer = int(torch.randint(addExtra, (1,)))
-					three_prime_buffer = int(torch.randint(addExtra, (1,)))
+					gene_length = region_end - region_start
+					if gene_length < staticSize:
+						additional_sequence = staticSize - (gene_length % staticSize)
+						three_prime_buffer = additional_sequence//2
+						if not (additional_sequence % 2):
+							five_prime_buffer = additional_sequence//2
+						else:
+							five_prime_buffer = additional_sequence//2 + 1
+
 					skipGene = False
 					geneModel = attributes.split(';')[0].split('=')[1]
 					region_start = int(start) - five_prime_buffer - 1 # Gffs are 1-indexed
@@ -385,11 +397,10 @@ class isoformData(Dataset):
 	def __getitem__(self, idx):
 		idx += 1
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			gm,region_start,region_end,strand,chr,region_seq, gff,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
+			gm,region_start,region_end,strand,chr,region_seq, gff,fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
 		
-		# Tokenize output targets
+		# Tokenize labels
 		if self.mode == "training":
-			# Tokenize the labels
 			labels = self.decoder_tokenizer.batch_encode_plus(
 				[gff],
 				return_tensors="pt",
@@ -398,15 +409,13 @@ class isoformData(Dataset):
 				add_special_tokens=True,
 				max_length=self.maxlength)["input_ids"]
 		
+		# Ensure labels are less than the maxlength
 		if labels.shape[1] >= self.maxlength:
 			labels = torch.cat((labels[:, 0:(self.maxlength-1)], torch.tensor([[self.decoder_tokenizer.vocab["</s>"]]])), dim=1)
 			print(f"Warning {gm} label truncated to {self.maxlength} tokens", file=sys.stderr)
-		#else:
-		#	if self.dt == "gff":
-		#		labels = torch.cat((labels, torch.tensor([[self.decoder_tokenizer.vocab["</s>"]]])), dim=1)
 
 		# Segment and tokenize the sequences
-		seqs = segmentSequence(region_seq, piece_size=4002)
+		seqs = segmentSequence(region_seq, piece_size=6144)
 		seqs = self.encoder_tokenizer.batch_encode_plus(
 			seqs,
 			return_tensors="pt",
@@ -722,7 +731,7 @@ def segment_collate_fn(batch):
 	if labels:
 		max_len = max([label.shape[1] for label in labels])
 		labels_padded = [F.pad(label, (0, max_len - label.shape[1])) for label in labels]
-		labels_padded = torch.cat(labels_padded)
+		labels_padded = torch.stack(labels_padded)
 
 	if labels:
 		return sequences, attention_masks, labels_padded, organism, chromosome, start, end
@@ -1382,6 +1391,40 @@ def getModel(config, safetensors_model=None, device="cpu", mode="predict"):
 			if "ia3" not in k:
 				newnewtensors[k] = newtensors[k]
 		model.load_state_dict(newnewtensors)
+	
+	return model
+
+def getLargeDecoderModel(config, safetensors_model=None, device="cpu", mode="predict"):
+	if not config:
+		# Load the model and add to device
+		config = TransgenicConfig(
+			d_model=1500, 
+			attention_window=1024, 
+			decoder_ffn_dim=6000, 
+			encoder_attention_heads=15, 
+			decoder_attention_heads=15,
+			decoder_layers=12
+			)
+
+	model = transgenicForConditionalGeneration(config)
+
+	if mode == "train":
+		# Add gradients back for the entire decoder and the hidden mapping layers
+		for param in model.transgenic.decoder.parameters():
+			param.requires_grad = True
+		if f"{device}" != "cpu":
+			try:
+				model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+			except:
+				print("\nNo gradient checkpointing available\n", file=sys.stderr)
+
+	# Load checkpoint if provided
+	if safetensors_model:
+		tensors = {}
+		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
+			for k in f.keys():
+				tensors[k] = f.get_tensor(k)
+		model.load_state_dict(tensors)
 	
 	return model
 
