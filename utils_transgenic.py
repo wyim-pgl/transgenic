@@ -11,7 +11,7 @@ from peft import IA3Config, get_peft_model
 from safetensors import safe_open
 
 from modeling_transgenic import transgenicForConditionalGeneration, segmented_sequence_embeddings
-from tokenization_transgenic import GFFTokenizer09
+from tokenization_transgenic import GFFTokenizer
 from configuration_transgenic import TransgenicConfig
 
 def print_gpu_allocation(s:str):
@@ -200,7 +200,7 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=6144,
 			"chromosome VARCHAR, "
 			"sequence VARCHAR, "
 			"gff VARCHAR, "
-			"static_fpb, INT, "
+			"static_fpb INT, "
 			"static_tpb INT, "
 			"five_prime_buf INT, "
 			"three_prime_buf INT, "
@@ -291,30 +291,39 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=6144,
 						cds_num = {}
 					
 					# Construct current gene model
-					gene_length = region_end - region_start
-					if gene_length < staticSize:
+					gene_length = int(fin) - int(start) + 1
+					if gene_length <= staticSize:
 						additional_sequence = staticSize - (gene_length % staticSize)
-						three_prime_buffer = additional_sequence//2
-						if not (additional_sequence % 2):
-							five_prime_buffer = additional_sequence//2
-						else:
-							five_prime_buffer = additional_sequence//2 + 1
+					else:
+						additional_sequence = ((gene_length // staticSize) + 1)*staticSize - gene_length
+					three_prime_buffer = additional_sequence//2
+					if not (additional_sequence % 2):
+						five_prime_buffer = additional_sequence//2
+					else:
+						five_prime_buffer = additional_sequence//2 + 1
+						
 
 					skipGene = False
 					geneModel = attributes.split(';')[0].split('=')[1]
+					if (int(start) - five_prime_buffer - 1) < 0:
+						five_prime_buffer = int(start) - 1
 					region_start = int(start) - five_prime_buffer - 1 # Gffs are 1-indexed
-					if region_start < 0: region_start = 0
+
+					if (five_prime_buffer + gene_length + three_prime_buffer) <= staticSize:
+						three_prime_buffer = staticSize - (five_prime_buffer + gene_length)
 					region_end = int(fin) + three_prime_buffer        # End not subtracted because python slicing is exclusive
 					
 					# 49,152bp corresponds to 8,192 6-mer tokens (Max input)
 	 				# 25,002 -> 4,167 6-mer tokens (Max output)
-					if region_end - region_start > maxLen:
+					if (region_end - region_start > maxLen):
 						print(f"Skipping {geneModel} because gene length > {maxLen}", file=sys.stderr)
 						region_start = None
 						region_end = None
 						geneModel = None
 						skipGene = True
 						continue
+					if ((region_end - region_start)% staticSize) != 0:
+						print(f"Warning: {geneModel} not a multiple of {staticSize=}", file=sys.stderr)
 
 					# Get forward strand sequence
 					sequence = genome_dict[chr][region_start:region_end]
@@ -866,7 +875,7 @@ def scanGlobalAttentionTokens(vocab:dict, tokenized_sequence:List[int], seqlen:i
 
 	return segmentSequence(picked, piece_size=1024)
 
-def createDatabase(db="transgenic.db", mode="train", maxLen=49152, addExtra=0, addRC=False, addRCIsoOnly=False, clean=False):
+def createDatabase(db="transgenic.db", mode="train", maxLen=49152, addExtra=0, staticSize=6144, addRC=False, addRCIsoOnly=False, clean=False):
 	# Purpose: 
 	#      Create or append to transgenic database. The database is a duckdb database 
 	#      used for both either training or infrence. In 'train' mode, fasta sequences and 
@@ -885,16 +894,19 @@ def createDatabase(db="transgenic.db", mode="train", maxLen=49152, addExtra=0, a
 	files = {
 		"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
 		"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
-		#"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
+		"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
 		"Ptrichocarpa_533_v4.0.fa":"Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
 		"Sbicolor_730_v5.0.fa":"Sbicolor_730_v5.1.gene_exons.clean.gff3",
 		"Bdistachyon_314_v3.0.fa": "Bdistachyon_314_v3.1.gene_exons.clean.gff3",  
-		"Sitalica_312_v2.fa": "Sitalica_312_v2.2.gene_exons.clean.gff3"
+		"Sitalica_312_v2.fa": "Sitalica_312_v2.2.gene_exons.clean.gff3",
+		"Vvinifera_T2T_ref.fasta":"Vvinifera_PN40024_5.1_on_T2T_ref.exon.gff3",
+		"Osativa_323_v7.0.fa":"Osativa_323_v7.0.gene_exons.exon.gff3",
+		"Zmays_493_APGv4.fa":"Zmays_493_RefGen_V4.gene_exons.exon.gff3"
 	}
 	for fasta, gff in files.items():
 		name = fasta.split("_")[0]
 		print(f"Processing {name}...", file=sys.stderr)
-		genome2GeneList("training_data/"+fasta, "training_data/"+gff, db=db, maxLen=maxLen, addExtra=addExtra, addRC=addRC, addRCIsoOnly=addRCIsoOnly, clean=clean)
+		genome2GeneList("training_data/"+fasta, "training_data/"+gff, db=db, maxLen=maxLen, addExtra=addExtra, staticSize=6144, addRC=addRC, addRCIsoOnly=addRCIsoOnly, clean=clean)
 		ds = isoformData(db, dt=GFFTokenizer(), mode="training")
 		length = len(ds)
 		print(f"{name} {length=}")
@@ -1548,27 +1560,29 @@ def analyzePerGeneTranscriptPerformance(label_tokens, prediction_tokens):
 
 if __name__ == '__main__':
 	
-	db = "Segmentation_10Genomes.db"
-	files = {
-		"training_data/Athaliana_167_TAIR10.gene.exon.splice.gff3":["training_data/Athaliana_167_TAIR10.fa","ath"],
-		"training_data/Bdistachyon_314_v3.1.gene_exons.exon.splice.gff3":["training_data/Bdistachyon_314_v3.0.fa","bdi"],
-		"training_data/Sbicolor_730_v5.1.gene_exons.exon.splice.gff3":["training_data/Sbicolor_730_v5.0.fa","sbi"],
-		"training_data/Sitalica_312_v2.2.gene_exons.exon.splice.gff3":["training_data/Sitalica_312_v2.fa","sit"],
-		"training_data/Ptrichocarpa_533_v4.1.gene_exons.exon.splice.gff3":["training_data/Ptrichocarpa_533_v4.0.fa","ptr"],
-		"training_data/Gmax_880_Wm82.a6.v1.gene_exons.exon.splice.gff3":[ "training_data/Gmax_880_v6.0.fa","gma"],
-		"training_data/Ppatens_318_v3.3.gene_exons.exon.splice.gff3":["training_data/Ppatens_318_v3.fa","ppa"],
-		"training_data/Vvinifera_PN40024_5.1_on_T2T_ref.exon.splice.gff3" : ["training_data/Vvinifera_T2T_ref.fasta", "Vvi"],
-		"training_data/Osativa_323_v7.0.gene_exons.exon.splice.gff3" : ["training_data/Osativa_323_v7.0.fa", "Osa"],
-		"training_data/Zmays_493_RefGen_V4.gene_exons.exon.splice.gff3" : ["training_data/Zmays_493_APGv4.fa", "Zma"]
-	}
-	for file in files:
-		genome2SegmentationSet(
-		files[file][0], 
-		file,
-		files[file][1],
-		db)
-	
+	#db = "Segmentation_10Genomes.db"
+	#files = {
+	#	"training_data/Athaliana_167_TAIR10.gene.exon.splice.gff3":["training_data/Athaliana_167_TAIR10.fa","ath"],
+	#	"training_data/Bdistachyon_314_v3.1.gene_exons.exon.splice.gff3":["training_data/Bdistachyon_314_v3.0.fa","bdi"],
+	#	"training_data/Sbicolor_730_v5.1.gene_exons.exon.splice.gff3":["training_data/Sbicolor_730_v5.0.fa","sbi"],
+	#	"training_data/Sitalica_312_v2.2.gene_exons.exon.splice.gff3":["training_data/Sitalica_312_v2.fa","sit"],
+	#	"training_data/Ptrichocarpa_533_v4.1.gene_exons.exon.splice.gff3":["training_data/Ptrichocarpa_533_v4.0.fa","ptr"],
+	#	"training_data/Gmax_880_Wm82.a6.v1.gene_exons.exon.splice.gff3":[ "training_data/Gmax_880_v6.0.fa","gma"],
+	#	"training_data/Ppatens_318_v3.3.gene_exons.exon.splice.gff3":["training_data/Ppatens_318_v3.fa","ppa"],
+	#	"training_data/Vvinifera_PN40024_5.1_on_T2T_ref.exon.splice.gff3" : ["training_data/Vvinifera_T2T_ref.fasta", "Vvi"],
+	#	"training_data/Osativa_323_v7.0.gene_exons.exon.splice.gff3" : ["training_data/Osativa_323_v7.0.fa", "Osa"],
+	#	"training_data/Zmays_493_RefGen_V4.gene_exons.exon.splice.gff3" : ["training_data/Zmays_493_APGv4.fa", "Zma"]
+	#}
+	#for file in files:
+	#	genome2SegmentationSet(
+	#	files[file][0], 
+	#	file,
+	#	files[file][1],
+	#	db)
 
-	ds  = segmentationDataset(6144, 6000, "Segmentation_10Genomes.db")
+	#ds  = segmentationDataset(6144, 6000, "Segmentation_10Genomes.db")
 
-	print(len(ds))
+	#print(len(ds))
+
+	db = "Generation_10G_static6144_addExtra200_addRCIsoOnly_clean.db"
+	createDatabase(db=db, mode="train", maxLen=49152, addExtra=200, staticSize=6144, addRC=True, addRCIsoOnly=True, clean=True)
