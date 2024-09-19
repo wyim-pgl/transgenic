@@ -1505,6 +1505,27 @@ def analyzePerGeneTranscriptPerformance(label_tokens, prediction_tokens):
 
 if __name__ == '__main__':
 	
-	ds  = segmentationDataset(30000, 10000, "Segmentation_7Genomes.db")
+	db = "Segmentation_10Genomes.db"
+	files = {
+		"training_data/Athaliana_167_TAIR10.gene.exon.splice.gff3":["training_data/Athaliana_167_TAIR10.fa","ath"],
+		"training_data/Bdistachyon_314_v3.1.gene_exons.exon.splice.gff3":["training_data/Bdistachyon_314_v3.0.fa","bdi"],
+		"training_data/Sbicolor_730_v5.1.gene_exons.exon.splice.gff3":["training_data/Sbicolor_730_v5.0.fa","sbi"],
+		"training_data/Sitalica_312_v2.2.gene_exons.exon.splice.gff3":["training_data/Sitalica_312_v2.fa","sit"],
+		"training_data/Ptrichocarpa_533_v4.1.gene_exons.exon.splice.gff3":["training_data/Ptrichocarpa_533_v4.0.fa","ptr"],
+		"training_data/Gmax_880_Wm82.a6.v1.gene_exons.exon.splice.gff3":[ "training_data/Gmax_880_v6.0.fa","gma"],
+		"training_data/Ppatens_318_v3.3.gene_exons.exon.splice.gff3":["training_data/Ppatens_318_v3.fa","ppa"],
+		"training_data/Vvinifera_PN40024_5.1_on_T2T_ref.exon.splice.gff3" : ["training_data/Vvinifera_T2T_ref.fasta", "Vvi"],
+		"training_data/Osativa_323_v7.0.gene_exons.exon.splice.gff3" : ["training_data/Osativa_323_v7.0.fa", "Osa"],
+		"training_data/Zmays_493_RefGen_V4.gene_exons.exon.splice.gff3" : ["training_data/Zmays_493_APGv4.fa", "Zma"]
+	}
+	for file in files:
+		genome2SegmentationSet(
+		files[file][0], 
+		file,
+		files[file][1],
+		db)
+	
+
+	ds  = segmentationDataset(6144, 6000, "Segmentation_10Genomes.db")
 
 	print(len(ds))
