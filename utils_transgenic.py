@@ -11,7 +11,7 @@ from peft import IA3Config, get_peft_model
 from safetensors import safe_open
 
 from modeling_transgenic import transgenicForConditionalGeneration, segmented_sequence_embeddings
-from tokenization_transgenic import GFFTokenizer
+from tokenization_transgenic import GFFTokenizer09
 from configuration_transgenic import TransgenicConfig
 
 def print_gpu_allocation(s:str):
@@ -406,7 +406,7 @@ class isoformData(Dataset):
 	def __getitem__(self, idx):
 		idx += 1
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			gm,region_start,region_end,strand,chr,region_seq, gff,fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
+			gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
 		
 		# Tokenize labels
 		if self.mode == "training":
@@ -425,6 +425,7 @@ class isoformData(Dataset):
 
 		# Segment and tokenize the sequences
 		seqs = segmentSequence(region_seq, piece_size=6144)
+		numSeqs = len(seqs)
 		seqs = self.encoder_tokenizer.batch_encode_plus(
 			seqs,
 			return_tensors="pt",
@@ -432,6 +433,13 @@ class isoformData(Dataset):
 			truncation=True,
 			max_length = 1024)["input_ids"]
 		encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
+
+		# Complete the attention mask based on buffers
+		fiveP_mask_index = (sfpb - fpb)//6
+		threeP_mask_index = (stpb - tpb)//6
+		encoder_attention_mask[0, 0:fiveP_mask_index] = False
+		encoder_attention_mask[numSeqs-1, 1024-threeP_mask_index:] = False
+
 
 		# Scan for global attention tokens
 		if self.global_attention:
@@ -492,10 +500,11 @@ def genome2SegmentationSet(genome_file, gff_file, organism, db):
 		)
 
 class segmentationDataset(Dataset):
-	def __init__(self, window_size, step_size, db, encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b"):
+	def __init__(self, window_size, step_size, db, encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", preprocess=False):
 		self.window_size = window_size
 		self.step_size = step_size
 		self.db = db
+		self.preprocess = preprocess
 		self.encoder_model =  encoder_model
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
 
@@ -586,7 +595,65 @@ class segmentationDataset(Dataset):
 				class_idx = self.classes.index(self.gffClassMap[feature])
 				class_tensor[start:end, class_idx] = 1
 		
+		if self.preprocess:
+			class_tensor = class_tensor.numpy().tobytes()
+		
 		# Segment and tokenize the sequences (piece size is 6144 nucleotides)
+		if self.preprocess:
+			seqs = sequence
+			encoder_attention_mask = None
+		else:
+			seqs = segmentSequence(sequence, piece_size=6144)
+			seqs = self.encoder_tokenizer.batch_encode_plus(
+				seqs,
+				return_tensors="pt",
+				padding="max_length",
+				truncation=True,
+				max_length = 1024)["input_ids"]
+			encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
+
+		return (seqs, encoder_attention_mask, class_tensor, window['organism'], window['chromosome'], window['start'], window['end'])
+
+def preProcessSegmentationDataset(newdb, olddb, window_size, step_size, encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b"):
+	dataset = segmentationDataset(window_size, step_size, olddb, encoder_model=encoder_model, preprocess=True)
+	
+	with duckdb.connect(newdb) as con:
+		con.sql(
+			'CREATE TABLE IF NOT EXISTS data ('
+			'sequence VARCHAR, '
+			'label BLOB, '
+			'organism VARCHAR, '
+			'chromosome INT, '
+			'start INT, '
+			'fin VARCHAR, '
+			'rn INT)')
+		con.sql("CREATE SEQUENCE IF NOT EXISTS row_id START 1;")
+		
+	for i in range(len(dataset)):
+		seqs, _, class_tensor, organism, chromosome, start, end = dataset.__getitem__(i)
+	
+	with duckdb.connect(db) as con:
+		con.sql(f"INSERT INTO data (rn, sequence, label, organism, chromosome, start, fin) VALUES (nextval('row_id'),'{seqs}','{class_tensor}','{organism}','{chromosome}','{start}','{end}')")
+
+class preprocessedSegmentationDataset(Dataset):
+	def __init__(self, db):
+		self.db = db
+	
+	def __len__(self):
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			return con.sql("SELECT COUNT(*) FROM data").fetchall()[0][0]
+	
+	def __getitem__(self, idx):
+		index = index + 1
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			sequence,label,organism,chromosome,start,fin, _ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
+		
+		# Retreive tensor from BLOB
+		# TODO: reshape properly...
+		class_tensor = np.frombuffer(label, dtype=np.float32).reshape(3, 3)
+		class_tensor = torch.from_numpy(class_tensor)
+
+		# Tokenize sequence
 		seqs = segmentSequence(sequence, piece_size=6144)
 		seqs = self.encoder_tokenizer.batch_encode_plus(
 			seqs,
@@ -596,7 +663,9 @@ class segmentationDataset(Dataset):
 			max_length = 1024)["input_ids"]
 		encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
 
-		return (seqs, encoder_attention_mask, class_tensor, window['organism'], window['chromosome'], window['start'], window['end'])
+		return (seqs, encoder_attention_mask, class_tensor, organism, chromosome, start, fin)
+		
+
 
 def gffString2GFF3(gff:str, chr:str, region_start:int) -> List[str]:
 	# Purpose: 
@@ -1367,19 +1436,21 @@ def processPredictions(files:list, db:str, buffer=50, outPrefix="transgenic_pred
 def getModel(config, safetensors_model=None, device="cpu", mode="predict"):
 	if not config:
 		# Load the model and add to device
-		config = TransgenicConfig()
+		config = TransgenicConfig(do_segment=False)
 
 	model = transgenicForConditionalGeneration(config)
 
 	if mode == "train":
 		# Add gradients back for the entire decoder and the hidden mapping layers
+		for param in model.transgenic.encoder.esm.parameters():
+			param.requires_grad = False
 		for param in model.transgenic.decoder.parameters():
 			param.requires_grad = True
 		for param in model.transgenic.encoder.hidden_mapping.parameters():
 			param.requires_grad = True
 		for param in model.transgenic.encoder.hidden_mapping_layernorm.parameters():
 			param.requires_grad = True
-		model.print_trainable_parameters()
+		#model.print_trainable_parameters()
 		if f"{device}" != "cpu":
 			try:
 				model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
@@ -1583,6 +1654,9 @@ if __name__ == '__main__':
 	#ds  = segmentationDataset(6144, 6000, "Segmentation_10Genomes.db")
 
 	#print(len(ds))
-
-	db = "Generation_10G_static6144_addExtra200_addRCIsoOnly_clean.db"
-	createDatabase(db=db, mode="train", maxLen=49152, addExtra=200, staticSize=6144, addRC=True, addRCIsoOnly=True, clean=True)
+	db="Generation_10G_static6144_addExtra200_addRCIsoOnly_clean.db"
+	dt = GFFTokenizer09()
+	ds = isoformData(db, dt, mode="training", encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", global_attention=False)
+	for i in range(len(ds)):
+		batch = ds.__getitem__(i)
+		print("hi")
