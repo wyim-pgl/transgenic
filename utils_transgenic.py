@@ -124,41 +124,44 @@ def validateCDS(gff:str, seq:str, geneModel:str) -> Tuple[bool, str]:
 	# Outputs:
 	#      (bool, str) - (valid, error message)
 
-	# Break out the gene features
-	features = [f.split("|") for f in gff.split(">")[0].split(";")]
-	transcripts = [t.split("|") for t in gff.split(">")[1].split(";")]
-	strand = features[0][3]
-	feature_index_dict = {f[1]:i for i,f in enumerate(features)}
+	try:
+		# Break out the gene features
+		features = [f.split("|") for f in gff.split(">")[0].split(";")]
+		transcripts = [t.split("|") for t in gff.split(">")[1].split(";")]
+		strand = features[0][3]
+		feature_index_dict = {f[1]:i for i,f in enumerate(features)}
 
-	# Check start/stop codons and frame
-	stopCodons = ["TAA", "TAG", "TGA"]
-	stopCodonsRC = ["TTA", "CTA", "TCA"]
-	for transcript in transcripts:
-		seqlen = 0
-		for i,typ in enumerate(transcript):
-			if "CDS" in typ:
-				if i == 0:
-					if strand == "+":
-						if seq[int(features[feature_index_dict[typ]][0]):int(features[feature_index_dict[typ]][0])+3] != "ATG":
-							valid = False
-							return (valid, f"Start codon missing in {features[feature_index_dict[typ]][1]} of {geneModel}.")
-					else:
-						if seq[int(features[feature_index_dict[typ]][0]):int(features[feature_index_dict[typ]][0])+3] not in stopCodonsRC:
-							valid = False
-							return (valid, f"Stop codon missing in {features[feature_index_dict[typ]][1]} of {geneModel}.")
-				lastCDS = typ
-				seqlen += int(features[feature_index_dict[typ]][2]) - int(features[feature_index_dict[typ]][0])
-		if seqlen % 3 != 0:
-			valid = False
-			return (valid, f"{geneModel} not a multiple of 3.")
-		if strand == "+":
-			if seq[int(features[feature_index_dict[lastCDS]][2])-3:int(features[feature_index_dict[lastCDS]][2])] not in stopCodons:
+		# Check start/stop codons and frame
+		stopCodons = ["TAA", "TAG", "TGA"]
+		stopCodonsRC = ["TTA", "CTA", "TCA"]
+		for transcript in transcripts:
+			seqlen = 0
+			for i,typ in enumerate(transcript):
+				if "CDS" in typ:
+					if i == 0:
+						if strand == "+":
+							if seq[int(features[feature_index_dict[typ]][0]):int(features[feature_index_dict[typ]][0])+3] != "ATG":
+								valid = False
+								return (valid, f"Start codon missing in {features[feature_index_dict[typ]][1]} of {geneModel}.")
+						else:
+							if seq[int(features[feature_index_dict[typ]][0]):int(features[feature_index_dict[typ]][0])+3] not in stopCodonsRC:
+								valid = False
+								return (valid, f"Stop codon missing in {features[feature_index_dict[typ]][1]} of {geneModel}.")
+					lastCDS = typ
+					seqlen += int(features[feature_index_dict[typ]][2]) - int(features[feature_index_dict[typ]][0])
+			if seqlen % 3 != 0:
 				valid = False
-				return (valid, f"Stop codon missing in {features[feature_index_dict[lastCDS]][1]} of {geneModel}.")
-		else:
-			if seq[int(features[feature_index_dict[lastCDS]][2])-3:int(features[feature_index_dict[lastCDS]][2])] != "CAT":
-				valid = False
-				return (valid, f"Start codon missing in {features[feature_index_dict[lastCDS]][1]} of {geneModel}.")
+				return (valid, f"{geneModel} not a multiple of 3.")
+			if strand == "+":
+				if seq[int(features[feature_index_dict[lastCDS]][2])-3:int(features[feature_index_dict[lastCDS]][2])] not in stopCodons:
+					valid = False
+					return (valid, f"Stop codon missing in {features[feature_index_dict[lastCDS]][1]} of {geneModel}.")
+			else:
+				if seq[int(features[feature_index_dict[lastCDS]][2])-3:int(features[feature_index_dict[lastCDS]][2])] != "CAT":
+					valid = False
+					return (valid, f"Start codon missing in {features[feature_index_dict[lastCDS]][1]} of {geneModel}.")
+	except Exception as e:
+		return (False, f"Error validating {geneModel}, skipping: {e}")
 	return (True, None)
 
 def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=6144, addRC=False, addRCIsoOnly=False, clean=False):
@@ -333,6 +336,10 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=6144,
 				elif skipGene:
 					continue
 				
+				elif typ == 'lncRNA':
+					skipGene = True
+					continue
+
 				elif typ == 'mRNA':
 					mRNA_list = mRNA_list[:-1] + ";"
 
@@ -892,13 +899,13 @@ def createDatabase(db="transgenic.db", mode="train", maxLen=49152, addExtra=0, s
 	#      - Make BED-parsing DB creation function
 
 	files = {
-		"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
-		"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
-		"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
-		"Ptrichocarpa_533_v4.0.fa":"Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
-		"Sbicolor_730_v5.0.fa":"Sbicolor_730_v5.1.gene_exons.clean.gff3",
-		"Bdistachyon_314_v3.0.fa": "Bdistachyon_314_v3.1.gene_exons.clean.gff3",  
-		"Sitalica_312_v2.fa": "Sitalica_312_v2.2.gene_exons.clean.gff3",
+		#"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
+		#"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
+		#"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
+		#"Ptrichocarpa_533_v4.0.fa":"Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
+		#"Sbicolor_730_v5.0.fa":"Sbicolor_730_v5.1.gene_exons.clean.gff3",
+		#"Bdistachyon_314_v3.0.fa": "Bdistachyon_314_v3.1.gene_exons.clean.gff3",  
+		#"Sitalica_312_v2.fa": "Sitalica_312_v2.2.gene_exons.clean.gff3",
 		"Vvinifera_T2T_ref.fasta":"Vvinifera_PN40024_5.1_on_T2T_ref.exon.gff3",
 		"Osativa_323_v7.0.fa":"Osativa_323_v7.0.gene_exons.exon.gff3",
 		"Zmays_493_APGv4.fa":"Zmays_493_RefGen_V4.gene_exons.exon.gff3"
