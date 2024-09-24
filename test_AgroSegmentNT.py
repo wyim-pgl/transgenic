@@ -1,4 +1,4 @@
-import torch, sys
+import torch, sys, os
 from tqdm import tqdm
 from safetensors import safe_open
 from accelerate import Accelerator
@@ -31,19 +31,18 @@ def predictTransgenicAccelerate(
 		print(f"Organism\tChromosome\tStart\tEnd\t{'\t'.join(precision)}\t{'\t'.join(recall)}\t{'\t'.join(f1)}\t{'\t'.join(mcc)}\tMLMCC\tGenic", file=f)
 
 	# Set up accelerator
-	accelerator = Accelerator()
-	device = accelerator.device
+	#accelerator = Accelerator()
+	device = torch.device("cuda")
 	print(f"Running transgenic in prediction mode on {device}", file=sys.stderr)
 	
 	# Set up DataLoader
 	ds  = segmentationDataset(window_size, step_size, database)
 	_, eval_data, _ = torch.utils.data.random_split(ds, [231003, 30800, 46202])
-	dataset =  makeDataLoader(eval_data, shuffle=True, batch_size=1, pin_memory=True, num_workers=4, collate_fn=segment_collate_fn)
+	dataset =  makeDataLoader(eval_data, shuffle=True, batch_size=1, pin_memory=True, num_workers=1, collate_fn=segment_collate_fn)
 
-	
 	# Load the model and add to device
 	model = segmented_sequence_embeddings(encoder_model, segmentation_model, 14)
-	
+
 	if safetensors_model:
 		tensors = {}
 		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
@@ -51,11 +50,12 @@ def predictTransgenicAccelerate(
 				tensors[k] = f.get_tensor(k)
 		model.load_state_dict(tensors)
 	model.eval()
+	model.to(device)
 	
 	# Prep objects for use with accelerator
-	model, dataset = accelerator.prepare(
-		model, dataset
-	)
+	#model, dataset = accelerator.prepare(
+	#	model, dataset
+	#)
 
 	# Prediction loop
 	for batch in tqdm(dataset):
@@ -63,24 +63,24 @@ def predictTransgenicAccelerate(
 			genic = False
 		else: 
 			genic = True
-
-		outputs = model(batch[0], attention_mask=batch[1], segLabels=batch[2])
+		with torch.no_grad():
+			outputs = model(batch[0].to(device), attention_mask=batch[1].to(device), segLabels=batch[2].to(device))
 		#probabilities =  torch.nn.functional.softmax(outputs.seg_logits, dim=-1)[...,0].squeeze()
-		
-		predictions = (outputs.seg_logits[..., 0] > outputs.seg_logits[..., 1]).long().squeeze()
+				
+		predictions = (outputs.seg_logits[..., 0] > outputs.seg_logits[..., 1]).detach().cpu().long().squeeze()
 		predictions = predictions[:, (0,2,3,4,5,6,7)]
-		labels = batch[2][:, (0,2,3,4,5,6,7)].squeeze().int()
-
+		labels = batch[2][:, (0,2,3,4,5,6,7)].detach().cpu().squeeze().int()
+		
 		mlp = MultilabelPrecision(num_labels=7, average=None)(predictions, labels).tolist() # False positive rate
 		mlr = MultilabelRecall(num_labels=7, average=None)(predictions, labels).tolist() # False negative rate
 		mlf1 = MultilabelF1Score(num_labels=7, average=None)(predictions, labels).tolist()
 		mlmcc = MultilabelMatthewsCorrCoef(num_labels=7)(predictions, labels).tolist()
 		mcc = []
 		for i in range(7):
-			mcc.append(BinaryMatthewsCorrCoef()(predictions[:,i], labels[:,i])).item()
+			mcc.append(BinaryMatthewsCorrCoef()(predictions[:,i], labels[:,i]).item())
 
 		with open(outfile, "a") as f:
-			print(f"{batch[3]}\t{batch[4]}\t{batch[5]}\t{batch[6]}\t{"\t".join(mlp)}\t{"\t".join(mlr)}\t{"\t".join(mlf1)}\t{"\t".join(mcc)}\t{mlmcc}\t{genic}", file=f)
+			print(f"{batch[3][0]}\t{batch[4][0]}\t{str(batch[5][0])}\t{str(batch[6][0])}\t{"\t".join([str(i) for i in mlp])}\t{"\t".join([str(i) for i in mlr])}\t{"\t".join([str(i) for i in mlf1])}\t{"\t".join([str(i) for i in mcc])}\t{str(mlmcc)}\t{str(int(genic))}", file=f)
 
 if __name__ == "__main__":
 	torch.manual_seed(123)
