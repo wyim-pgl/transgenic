@@ -1,4 +1,4 @@
-import subprocess, sys, os, duckdb, torch, re, pickle
+import subprocess, sys, os, duckdb, torch, re, pickle, zlib
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
@@ -124,41 +124,44 @@ def validateCDS(gff:str, seq:str, geneModel:str) -> Tuple[bool, str]:
 	# Outputs:
 	#      (bool, str) - (valid, error message)
 
-	# Break out the gene features
-	features = [f.split("|") for f in gff.split(">")[0].split(";")]
-	transcripts = [t.split("|") for t in gff.split(">")[1].split(";")]
-	strand = features[0][3]
-	feature_index_dict = {f[1]:i for i,f in enumerate(features)}
+	try:
+		# Break out the gene features
+		features = [f.split("|") for f in gff.split(">")[0].split(";")]
+		transcripts = [t.split("|") for t in gff.split(">")[1].split(";")]
+		strand = features[0][3]
+		feature_index_dict = {f[1]:i for i,f in enumerate(features)}
 
-	# Check start/stop codons and frame
-	stopCodons = ["TAA", "TAG", "TGA"]
-	stopCodonsRC = ["TTA", "CTA", "TCA"]
-	for transcript in transcripts:
-		seqlen = 0
-		for i,typ in enumerate(transcript):
-			if "CDS" in typ:
-				if i == 0:
-					if strand == "+":
-						if seq[int(features[feature_index_dict[typ]][0]):int(features[feature_index_dict[typ]][0])+3] != "ATG":
-							valid = False
-							return (valid, f"Start codon missing in {features[feature_index_dict[typ]][1]} of {geneModel}.")
-					else:
-						if seq[int(features[feature_index_dict[typ]][0]):int(features[feature_index_dict[typ]][0])+3] not in stopCodonsRC:
-							valid = False
-							return (valid, f"Stop codon missing in {features[feature_index_dict[typ]][1]} of {geneModel}.")
-				lastCDS = typ
-				seqlen += int(features[feature_index_dict[typ]][2]) - int(features[feature_index_dict[typ]][0])
-		if seqlen % 3 != 0:
-			valid = False
-			return (valid, f"{geneModel} not a multiple of 3.")
-		if strand == "+":
-			if seq[int(features[feature_index_dict[lastCDS]][2])-3:int(features[feature_index_dict[lastCDS]][2])] not in stopCodons:
+		# Check start/stop codons and frame
+		stopCodons = ["TAA", "TAG", "TGA"]
+		stopCodonsRC = ["TTA", "CTA", "TCA"]
+		for transcript in transcripts:
+			seqlen = 0
+			for i,typ in enumerate(transcript):
+				if "CDS" in typ:
+					if i == 0:
+						if strand == "+":
+							if seq[int(features[feature_index_dict[typ]][0]):int(features[feature_index_dict[typ]][0])+3] != "ATG":
+								valid = False
+								return (valid, f"Start codon missing in {features[feature_index_dict[typ]][1]} of {geneModel}.")
+						else:
+							if seq[int(features[feature_index_dict[typ]][0]):int(features[feature_index_dict[typ]][0])+3] not in stopCodonsRC:
+								valid = False
+								return (valid, f"Stop codon missing in {features[feature_index_dict[typ]][1]} of {geneModel}.")
+					lastCDS = typ
+					seqlen += int(features[feature_index_dict[typ]][2]) - int(features[feature_index_dict[typ]][0])
+			if seqlen % 3 != 0:
 				valid = False
-				return (valid, f"Stop codon missing in {features[feature_index_dict[lastCDS]][1]} of {geneModel}.")
-		else:
-			if seq[int(features[feature_index_dict[lastCDS]][2])-3:int(features[feature_index_dict[lastCDS]][2])] != "CAT":
-				valid = False
-				return (valid, f"Start codon missing in {features[feature_index_dict[lastCDS]][1]} of {geneModel}.")
+				return (valid, f"{geneModel} not a multiple of 3.")
+			if strand == "+":
+				if seq[int(features[feature_index_dict[lastCDS]][2])-3:int(features[feature_index_dict[lastCDS]][2])] not in stopCodons:
+					valid = False
+					return (valid, f"Stop codon missing in {features[feature_index_dict[lastCDS]][1]} of {geneModel}.")
+			else:
+				if seq[int(features[feature_index_dict[lastCDS]][2])-3:int(features[feature_index_dict[lastCDS]][2])] != "CAT":
+					valid = False
+					return (valid, f"Start codon missing in {features[feature_index_dict[lastCDS]][1]} of {geneModel}.")
+	except Exception as e:
+		return (False, f"Error validating {geneModel}, skipping: {e}")
 	return (True, None)
 
 def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=6144, addRC=False, addRCIsoOnly=False, clean=False):
@@ -333,6 +336,10 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=6144,
 				elif skipGene:
 					continue
 				
+				elif typ == 'lncRNA':
+					skipGene = True
+					continue
+
 				elif typ == 'mRNA':
 					mRNA_list = mRNA_list[:-1] + ";"
 
@@ -462,12 +469,13 @@ class isoformData(Dataset):
 def genome2SegmentationSet(genome_file, gff_file, organism, db):
 
 	# load gff into database with organism name
+	table = organism
 	gff3 = pd.read_csv(gff_file, sep='\t', header=None, comment='#')
 	gff3.columns = ['chromosome', 'source', 'feature', 'start', 'fin', 'score', 'strand', 'frame', 'attribute']
 	gff3['organism'] = organism
 	with duckdb.connect(db) as con:
 		con.sql(
-			'CREATE TABLE IF NOT EXISTS gff ('
+			f'CREATE TABLE IF NOT EXISTS {table}_gff ('
 			'chromosome VARCHAR, '
 			'source VARCHAR, '
 			'feature VARCHAR, '
@@ -480,7 +488,7 @@ def genome2SegmentationSet(genome_file, gff_file, organism, db):
 			'organism VARCHAR)')
 
 		con.sql(
-			'INSERT INTO gff '
+			f'INSERT INTO {table}_gff '
 			'SELECT * '
 			'FROM gff3; '
 		)
@@ -492,25 +500,26 @@ def genome2SegmentationSet(genome_file, gff_file, organism, db):
 	genome_df['length'] = genome_df['sequence'].apply(len)
 	with duckdb.connect(db) as con:
 		con.sql(
-			"CREATE TABLE IF NOT EXISTS genome ("
+			f"CREATE TABLE IF NOT EXISTS {table}_genome ("
 			'chromosome VARCHAR, '
 			'sequence VARCHAR, '
 			'organism VARCHAR, '
 			'length INT)')
 
 		con.sql(
-			'INSERT INTO genome '
+			f'INSERT INTO {table}_genome '
 			'SELECT * '
 			'FROM genome_df; '
 		)
 
 class segmentationDataset(Dataset):
-	def __init__(self, window_size, step_size, db, encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", preprocess=False):
+	def __init__(self, table, window_size, step_size, db, encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", preprocess=False):
 		self.window_size = window_size
 		self.step_size = step_size
 		self.db = db
 		self.preprocess = preprocess
 		self.encoder_model =  encoder_model
+		self.table = table
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
 
 
@@ -539,7 +548,7 @@ class segmentationDataset(Dataset):
 
 		# Partition the genomes into windows based on step_size and window_size
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			seqLengths = con.sql("SELECT organism, chromosome, length FROM genome").df()	
+			seqLengths = con.sql(f"SELECT organism, chromosome, length FROM {table}_genome").df()	
 		
 		window_list = []
 		for i in range(len(seqLengths)):
@@ -565,7 +574,7 @@ class segmentationDataset(Dataset):
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
 			sequence = con.sql(
 				"SELECT sequence "
-				"FROM genome "
+				f"FROM {self.table}_genome "
 				f"WHERE chromosome = '{window['chromosome']}' "
 				f"AND organism = '{window['organism']}'").fetchall()[0][0]
 		sequence = sequence[window['start']:window['end']]
@@ -578,7 +587,7 @@ class segmentationDataset(Dataset):
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
 			annotations = con.sql(
 				"SELECT feature, start, fin "
-				"FROM gff "
+				f"FROM {self.table}_gff "
 				f"WHERE chromosome = '{window['chromosome']}' "
 				f"AND organism = '{window['organism']}' "
 				f"AND (start <= {window['end']} AND fin >= {window['start']})").df()
@@ -601,7 +610,7 @@ class segmentationDataset(Dataset):
 				class_tensor[start:end, class_idx] = 1
 		
 		if self.preprocess:
-			class_tensor = class_tensor.numpy().tobytes()
+			class_tensor = zlib.compress(class_tensor.numpy().tobytes())
 		
 		# Segment and tokenize the sequences (piece size is 6144 nucleotides)
 		if self.preprocess:
@@ -619,26 +628,73 @@ class segmentationDataset(Dataset):
 
 		return (seqs, encoder_attention_mask, class_tensor, window['organism'], window['chromosome'], window['start'], window['end'])
 
-def preProcessSegmentationDataset(newdb, olddb, window_size, step_size, encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b"):
-	dataset = segmentationDataset(window_size, step_size, olddb, encoder_model=encoder_model, preprocess=True)
+def preProcessSegmentationDataset(db, genome, gff, table, window_size, step_size):
+	#dataset = segmentationDataset(table, window_size, step_size, olddb, encoder_model=encoder_model, preprocess=True)
+	#dl = makeDataLoader(dataset, shuffle=False, batch_size=batch_size, pin_memory=False, sampler=None, num_workers=workers, collate_fn=preprocessing_collate_fn)
 	
-	with duckdb.connect(newdb) as con:
-		con.sql(
-			'CREATE TABLE IF NOT EXISTS data ('
-			'sequence VARCHAR, '
-			'label BLOB, '
-			'organism VARCHAR, '
-			'chromosome INT, '
-			'start INT, '
-			'fin VARCHAR, '
-			'rn INT)')
-		con.sql("CREATE SEQUENCE IF NOT EXISTS row_id START 1;")
+	classes = ['protein_coding_gene', 
+				'lncRNA', 
+				'exon', 
+				'intron', 
+				'splice_donor', 
+				'splice_acceptor', 
+				'5UTR', 
+				'3UTR', 
+				'CTCF-bound', 
+				'polyA_signal', 
+				'enhancer_Tissue_specific', 
+				'enhancer_Tissue_invariant', 
+				'promoter_Tissue_specific', 
+				'promoter_Tissue_invariant']
+
+	gffClassMap = {'gene': 'protein_coding_gene',  
+					'exon': 'exon', 
+					'intron': 'intron',
+					'five_prime_cis_splice_site': 'splice_donor', 
+					'three_prime_cis_splice_site': 'splice_acceptor', 
+					'five_prime_UTR': '5UTR', 
+					'three_prime_UTR': '3UTR'}
+	
+	# Read genome sequence and gff into memory
+	genome = loadGenome(genome)
+	gff = pd.read_csv(gff, sep='\t', header=None, comment='#')
+	gff.columns = ['chromosome', 'source', 'feature', 'start', 'fin', 'score', 'strand', 'frame', 'attributes']
+
+	
+	for chr in genome:
+		# Encode each chromosome
+		sequence = genome[chr]
+		chr_gff = gff[gff['chromosome'] == chr].reset_index(drop=True)
+		class_tensor = torch.zeros((len(sequence), len(classes)), dtype=torch.float32)
 		
-	for i in range(len(dataset)):
-		seqs, _, class_tensor, organism, chromosome, start, end = dataset.__getitem__(i)
-	
-	with duckdb.connect(db) as con:
-		con.sql(f"INSERT INTO data (rn, sequence, label, organism, chromosome, start, fin) VALUES (nextval('row_id'),'{seqs}','{class_tensor}','{organism}','{chromosome}','{start}','{end}')")
+		print(f"Processing chr {chr}...", file=sys.stderr)
+		skip = False
+		for i, row in tqdm(chr_gff.iterrows()):
+			start = row['start']
+			end = row['fin']
+			feature = row['feature']
+			nextfeature = chr_gff.loc[i+1, 'feature'] if i+1 < len(chr_gff) else None
+			if feature == 'gene':
+				skip = False
+			if nextfeature == 'lncRNA':
+				skip = True
+			if not skip:			
+				if feature in gffClassMap:
+					class_idx = classes.index(gffClassMap[feature])
+					class_tensor[start:end, class_idx] = 1
+		
+		# Split sequence into windows with step size
+		print(f"Adding {chr} windows...", file=sys.stderr)
+		for i in tqdm(range(0, len(sequence), step_size)):
+			start = i
+			end = i + window_size
+			if end > len(sequence):
+				end = len(sequence)
+			window_seq = sequence[start:end]
+			window_class = class_tensor[start:end]
+			window_class = zlib.compress(window_class.numpy().tobytes())
+			with open(db, 'a') as f:
+				f.write(f"{window_seq}\t{window_class}\t{table}\t{chr}\t{start}\t{end}\n")
 
 class preprocessedSegmentationDataset(Dataset):
 	def __init__(self, db):
@@ -651,11 +707,11 @@ class preprocessedSegmentationDataset(Dataset):
 	def __getitem__(self, idx):
 		index = index + 1
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			sequence,label,organism,chromosome,start,fin, _ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
+			_, sequence,label,organism,chromosome,start,fin = con.sql(f"SELECT * FROM data where rn={idx}").fetchall()[0]
 		
 		# Retreive tensor from BLOB
 		# TODO: reshape properly...
-		class_tensor = np.frombuffer(label, dtype=np.float32).reshape(3, 3)
+		class_tensor = np.frombuffer(zlib.decompress(label), dtype=np.float32).reshape(6144, 14)
 		class_tensor = torch.from_numpy(class_tensor)
 
 		# Tokenize sequence
@@ -821,6 +877,11 @@ def segment_collate_fn(batch):
 	else:
 		return sequences, attention_masks, None, organism, chromosome, start, end
 
+def preprocessing_collate_fn(batch):
+	seqs, _, class_tensor, organism, chromosome, start, end = zip(*batch)
+	return seqs, class_tensor, organism, chromosome, start, end
+
+
 def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=None, num_workers=0, collate_fn=target_collate_fn):
 	if sampler != None:
 		shuffle = False
@@ -966,13 +1027,13 @@ def createDatabase(db="transgenic.db", mode="train", maxLen=49152, addExtra=0, s
 	#      - Make BED-parsing DB creation function
 
 	files = {
-		"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
-		"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
-		"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
-		"Ptrichocarpa_533_v4.0.fa":"Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
-		"Sbicolor_730_v5.0.fa":"Sbicolor_730_v5.1.gene_exons.clean.gff3",
-		"Bdistachyon_314_v3.0.fa": "Bdistachyon_314_v3.1.gene_exons.clean.gff3",  
-		"Sitalica_312_v2.fa": "Sitalica_312_v2.2.gene_exons.clean.gff3",
+		#"Athaliana_167_TAIR10.fa":"Athaliana_167_TAIR10.gene.clean.gff3",
+		#"Gmax_880_v6.0.fa":"Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
+		#"Ppatens_318_v3.fa":"Ppatens_318_v3.3.gene_exons.clean.gff3",
+		#"Ptrichocarpa_533_v4.0.fa":"Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
+		#"Sbicolor_730_v5.0.fa":"Sbicolor_730_v5.1.gene_exons.clean.gff3",
+		#"Bdistachyon_314_v3.0.fa": "Bdistachyon_314_v3.1.gene_exons.clean.gff3",  
+		#"Sitalica_312_v2.fa": "Sitalica_312_v2.2.gene_exons.clean.gff3",
 		"Vvinifera_T2T_ref.fasta":"Vvinifera_PN40024_5.1_on_T2T_ref.exon.gff3",
 		"Osativa_323_v7.0.fa":"Osativa_323_v7.0.gene_exons.exon.gff3",
 		"Zmays_493_APGv4.fa":"Zmays_493_RefGen_V4.gene_exons.exon.gff3"
@@ -1684,32 +1745,43 @@ def analyzePerGeneTranscriptPerformance(label_tokens, prediction_tokens):
 
 if __name__ == '__main__':
 	
-	#db = "Segmentation_10Genomes.db"
+	table = sys.argv[1]
 	#files = {
-	#	"training_data/Athaliana_167_TAIR10.gene.exon.splice.gff3":["training_data/Athaliana_167_TAIR10.fa","ath"],
-	#	"training_data/Bdistachyon_314_v3.1.gene_exons.exon.splice.gff3":["training_data/Bdistachyon_314_v3.0.fa","bdi"],
-	#	"training_data/Sbicolor_730_v5.1.gene_exons.exon.splice.gff3":["training_data/Sbicolor_730_v5.0.fa","sbi"],
-	#	"training_data/Sitalica_312_v2.2.gene_exons.exon.splice.gff3":["training_data/Sitalica_312_v2.fa","sit"],
-	#	"training_data/Ptrichocarpa_533_v4.1.gene_exons.exon.splice.gff3":["training_data/Ptrichocarpa_533_v4.0.fa","ptr"],
-	#	"training_data/Gmax_880_Wm82.a6.v1.gene_exons.exon.splice.gff3":[ "training_data/Gmax_880_v6.0.fa","gma"],
-	#	"training_data/Ppatens_318_v3.3.gene_exons.exon.splice.gff3":["training_data/Ppatens_318_v3.fa","ppa"],
-	#	"training_data/Vvinifera_PN40024_5.1_on_T2T_ref.exon.splice.gff3" : ["training_data/Vvinifera_T2T_ref.fasta", "Vvi"],
-	#	"training_data/Osativa_323_v7.0.gene_exons.exon.splice.gff3" : ["training_data/Osativa_323_v7.0.fa", "Osa"],
-	#	"training_data/Zmays_493_RefGen_V4.gene_exons.exon.splice.gff3" : ["training_data/Zmays_493_APGv4.fa", "Zma"]
+	#	"ath":["training_data/Athaliana_167_TAIR10.fa","training_data/Athaliana_167_TAIR10.gene.exon.splice.gff3"],
+	#	"bdi":["training_data/Bdistachyon_314_v3.0.fa","training_data/Bdistachyon_314_v3.1.gene_exons.exon.splice.gff3"],
+	#	"sbi":["training_data/Sbicolor_730_v5.0.fa","training_data/Sbicolor_730_v5.1.gene_exons.exon.splice.gff3"],
+	#	"sit":["training_data/Sitalica_312_v2.fa","training_data/Sitalica_312_v2.2.gene_exons.exon.splice.gff3"],
+	#	"ptr":["training_data/Ptrichocarpa_533_v4.0.fa","training_data/Ptrichocarpa_533_v4.1.gene_exons.exon.splice.gff3"],
+	#	"gma":[ "training_data/Gmax_880_v6.0.fa","training_data/Gmax_880_Wm82.a6.v1.gene_exons.exon.splice.gff3"],
+	#	"ppa":["training_data/Ppatens_318_v3.fa","training_data/Ppatens_318_v3.3.gene_exons.exon.splice.gff3"],
+	#	"vvi":["training_data/Vvinifera_T2T_ref.fasta","training_data/Vvinifera_PN40024_5.1_on_T2T_ref.exon.splice.gff3"],
+	#	"osa":["training_data/Osativa_323_v7.0.fa","training_data/Osativa_323_v7.0.gene_exons.exon.splice.gff3"],
+	#	"zma":["training_data/Zmays_493_APGv4.fa","training_data/Zmays_493_RefGen_V4.gene_exons.exon.splice.gff3"]
 	#}
-	#for file in files:
-	#	genome2SegmentationSet(
-	#	files[file][0], 
-	#	file,
-	#	files[file][1],
-	#	db)
+	#preProcessSegmentationDataset(f"Segmentation_10Genomes_preprocessed_separate_{table}.csv", files[table][0], files[table][1], table, 6144, 6000)
 
-	#ds  = segmentationDataset(6144, 6000, "Segmentation_10Genomes.db")
+	#db = "Segmentation_10Genomes_preprocessed_separate.db"
+	
+	#with duckdb.connect(db) as con:
+	#		con.sql(
+	#			"CREATE OR REPLACE TABLE data ( "
+	#			"seqeunce VARCHAR, "
+	#			"label BLOB, "
+	#			"organsim VARCHAR, "
+	#			"chromosome VARCHAR, "
+	#			"start INTEGER, "
+	#			"fin INTEGER)"
+	#		)
+	#import ast
+	#for table in files:
+	#
+	#	dataframe = pd.read_csv(f"Segmentation_10Genomes_preprocessed_separate_{table}.csv", header=None, sep="\t")
+	#	dataframe.columns = ["sequence", "label", "organism", "chromosome", "start", "fin"]
+	#	dataframe['label'] = dataframe['label'].apply(lambda x: ast.literal_eval(x))
+	#	
+	#	with duckdb.connect(db) as con:
+	#		con.sql("INSERT INTO data SELECT * FROM dataframe")
 
-	#print(len(ds))
-	db="Generation_10G_static6144_addExtra200_addRCIsoOnly_clean.db"
-	dt = GFFTokenizer()
-	ds = isoformData(db, dt, mode="training", encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", global_attention=False)
-	for i in range(len(ds)):
-		batch = ds.__getitem__(i)
-		print("hi")
+
+
+	
