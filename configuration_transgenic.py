@@ -137,7 +137,9 @@ class TransgenicConfig(PretrainedConfig):
 		],
 		encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b",
 		unlink=False,
-		numSegClasses=8,
+		s_model="InstaDeepAI/segment_nt_multi_species",
+		numSegClasses=14,
+		do_segment = True,
 		**kwargs,
 	):
 		self.vocab_size = vocab_size
@@ -163,6 +165,9 @@ class TransgenicConfig(PretrainedConfig):
 		self.attention_window = attention_window
 		self.encoder_model = encoder_model
 		self.unlink = unlink
+		self.s_model = s_model
+		self.numSegClasses = numSegClasses
+		self.do_segment = do_segment
 
 		super().__init__(
 			pad_token_id=pad_token_id,

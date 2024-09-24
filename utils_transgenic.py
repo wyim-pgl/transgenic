@@ -11,7 +11,7 @@ from peft import IA3Config, get_peft_model
 from safetensors import safe_open
 
 from modeling_transgenic import transgenicForConditionalGeneration, segmented_sequence_embeddings
-from tokenization_transgenic import GFFTokenizer09
+from tokenization_transgenic import GFFTokenizer
 from configuration_transgenic import TransgenicConfig
 
 def print_gpu_allocation(s:str):
@@ -406,7 +406,12 @@ class isoformData(Dataset):
 	def __getitem__(self, idx):
 		idx += 1
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
+			try:
+				gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
+			except:
+				newidx = torch.randint(self.__len__(), (1,)).item()
+				print(f"Warning {idx=} produced an error... using {newidx}", file=sys.stderr)
+				gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={newidx}").fetchall()[0]
 		
 		# Tokenize labels
 		if self.mode == "training":
@@ -989,12 +994,13 @@ def predictionToGFF3(device_type, world_size, suffix, outfile):
 				out.write(f"{prediction[0]}\t{prediction[1]}\t{prediction[2]}\t{prediction[3]}\t{prediction[4]}\t{prediction[5]}\t{prediction[6]}\t{prediction[7]}\n")
 
 class PredictionProcessor():
-	def __init__(self, gff:str, sequence:str):
+	def __init__(self, gff:str, sequence:str, probs):
 		self.gff = gff
 		self.sequence = sequence
+		self.probs = probs
 		self.stopCodons = ["TAA", "TAG", "TGA"]
 		self.spliceDonors = ["AGGT", "GGT","GT","AGGC", "AGAT","GGC","GAT"]
-		#self.spliceAcceptors_highConfidence = ["AGG","AGG","ACG"]
+		self.spliceDonors_prob = ["GT","GC","AT"]
 		self.spliceAcceptors = ["AG","AC"]
 		self.parsable = True
 
@@ -1147,9 +1153,11 @@ class PredictionProcessor():
 	def reverseComplement(self):
 		self.sequence = reverseComplement(self.sequence)
 		self.gff = reverseComplement_gffString(self.gff, len(self.sequence))
+		self.probs = torch.flip(self.probs, dims=[0])
 	
 	# Check start_cds for start codons, if missing search sequence for new start codon
-	# Use the start codon closest to the predicted coordinates
+	# Identify all 'ATG' in the buffer window and select the most probable upstream five_prime_utr classification
+	# If selected probability is less than 0.5, choose the nearest start codon
 	def checkStartCodons(self, buff=50):
 		for i, cds in enumerate(self.start_cds):
 			start = int(self.features[self.feature_index_dict[cds]][0])
@@ -1160,9 +1168,12 @@ class PredictionProcessor():
 				else:
 					buf = buff
 				buffer = self.sequence[start-buf:start+buf]
+				prob_buffer = self.probs[start-buf:start+buf]
 				start_codons = [m.start() for m in re.finditer("ATG", buffer)]
 				if start_codons:
-					pick = int(np.argmin([abs(loc-buf) for loc in start_codons]))
+					pick = np.argmax([prob_buffer[loc-1,5].item() for loc in start_codons])
+					if prob_buffer[start_codons[pick]-1,5] < 0.5:
+						pick = int(np.argmin([abs(loc-buf) for loc in start_codons]))
 					new_start = start + start_codons[pick]-buf
 					self.features[self.feature_index_dict[cds]][0] = str(new_start)
 			
@@ -1171,7 +1182,8 @@ class PredictionProcessor():
 				self.features[self.feature_index_dict[utr]][2] = self.features[self.feature_index_dict[cds]][0]
 
 	# Check end_cds for stop codons, if missing search sequence for new stop codon
-	# Use the stop codon closest to the predicted coordinates
+	# Identify all stop codons in the buffer window and select the most probable downstream three_prime_utr classification
+	# If selected probability is less than 0.5, choose the nearest stop codon
 	def checkStopCodons(self, buff=50):
 		for i, cds in enumerate(self.end_cds):
 			start = int(self.features[self.feature_index_dict[cds]][0])
@@ -1182,9 +1194,12 @@ class PredictionProcessor():
 				else:
 					buf = buff
 				buffer = self.sequence[end-buf:end+buf]
+				prob_buffer = self.probs[start-buf:start+buf]
 				stop_codons = [m.end() for m in re.finditer("|".join(self.stopCodons), buffer)]
 				if stop_codons:
-					pick = int(np.argmin([abs(loc-buf) for loc in stop_codons]))
+					pick = np.argmax([prob_buffer[loc+1,6].item() for loc in stop_codons])
+					if prob_buffer[stop_codons[pick]+1,6] < 0.5:
+						pick = int(np.argmin([abs(loc-buf) for loc in stop_codons]))
 					new_end = end + stop_codons[pick]-buf
 					self.features[self.feature_index_dict[cds]][2] = str(new_end)
 
@@ -1207,9 +1222,34 @@ class PredictionProcessor():
 			seq += self.sequence[int(feat[0]):int(feat[2])]
 		seq = [seq[i:min(i+3, len(seq))] for i in range(0, len(seq), 3)]
 		return "TAG" in seq or "TAA" in seq or "TGA" in seq
+	
+	def checkProbableSpliceJunctions(self, buff=50):
+		# Search buffer for most probable splice junctions, pinpoint locations with canonical sites
 
-	def checkSpliceJunctions(self, buff=50):
-		# Use known splice junctions to adjust feature cordinates.
+		for donor, acceptor in self.cds_pairs:
+			donor_start = int(self.features[self.feature_index_dict[donor]][0])
+			donor_end = int(self.features[self.feature_index_dict[donor]][2])
+			acceptor_start = int(self.features[self.feature_index_dict[acceptor]][0])
+			acceptor_end = int(self.features[self.feature_index_dict[acceptor]][2])
+
+			# Find over-threshold segments in donor buffer (p > 0.5)
+			if donor_end-donor_start < buff:
+				buf = donor_end-donor_start
+			else:
+				buf = buff
+			buffer = self.sequence[donor_end-buf:donor_end+buff]
+			buffer_prob = self.probs[donor_end-buf:donor_end+buff]
+
+			# Find over-threshold segments in acceptor buffer (p > 0.5)
+			if acceptor_end-acceptor_start < buff:
+				buf = acceptor_end-acceptor_start
+			else:
+				buf = buff
+			buffer = self.sequence[acceptor_start-buff:acceptor_start+buf]
+			buffer_prob = self.probs[acceptor_start-buff:acceptor_start+buf]
+
+	def checkCanonicalSpliceJunctions(self, buff=50):
+		# Use canonical splice junctions to adjust feature cordinates.
 		# Search for donor and acceptor splice sites
 		# Find the highest quality donor site closest to prediction. Preference order (AGGT/GGT/AGGC/AGAT/GGC/GAT)
 		# Select the matching acceptor site closest to the prediction which does not introduce in-frame stop codons
@@ -1362,7 +1402,9 @@ class PredictionProcessor():
 				moveOn = True
 				
 			return moveOn
-
+	def checkSpliceJunctions(self, buff=50):
+		self.checkProbableSpliceJunctions(buff=buff)
+	
 	def stitchGFF(self, originalStrand=True):
 		updatedGFF = f"{';'.join(['|'.join(feature) for feature in self.features])}>{';'.join(['|'.join(transcript) for transcript in self.transcripts])}"
 		if originalStrand and (self.strand == "-"):
@@ -1463,10 +1505,10 @@ def getModel(config, safetensors_model=None, device="cpu", mode="predict"):
 		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
 			for k in f.keys():
 				tensors[k] = f.get_tensor(k)
-		tensors["base_model.model.lm_head.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
-		tensors["base_model.model.transgenic.decoder.embed_tokens.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
-		if "base_model.model.transgenic.decoder_embed_tokens.num_feature_embed.weight" in tensors.keys():
-			del tensors["base_model.model.transgenic.decoder_embed_tokens.num_feature_embed.weight"]
+		tensors["transgenic.decoder_embed_tokens.weight"] = tensors["lm_head.weight"]
+		tensors["transgenic.decoder.embed_tokens.weight"] = tensors["transgenic.decoder_embed_tokens.weight"]
+		if "transgenic.decoder_embed_tokens.num_feature_embed.weight" in tensors.keys():
+			del tensors["transgenic.decoder_embed_tokens.num_feature_embed.weight"]
 		
 		newtensors = {k.replace("base_model.model.", "").replace(".base_layer", ""):tensors[k] for k in tensors}
 		newnewtensors = {}
@@ -1511,14 +1553,12 @@ def getLargeDecoderModel(config, safetensors_model=None, device="cpu", mode="pre
 	
 	return model
 
-def getPeftModel(encoder_model, config=None, unlink=False, safetensors_model=None, device="cpu", mode="predict"):
+def getPeftModel(decoder_checkpoint, segment_checkpoint, config=None, unlink=False, safetensors_model=None, device="cpu", mode="predict"):
 	if not config:
 		# Load the model and add to device
 		config = TransgenicConfig()
 
-	model = transgenicForConditionalGeneration(config, 
-											encoder_model=encoder_model, 
-											unlink=unlink)
+	model = transgenicForConditionalGeneration(config)
 
 	# Targets all self-attention components and dense linear layers for peft adaptors in the ESM encoder
 	target_modules = [
@@ -1566,16 +1606,29 @@ def getPeftModel(encoder_model, config=None, unlink=False, safetensors_model=Non
 				print("\nNo gradient checkpointing available\n", file=sys.stderr)
 
 	# Load checkpoint if provided
-	if safetensors_model:
-		tensors = {}
-		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
-			for k in f.keys():
-				tensors[k] = f.get_tensor(k)
-		tensors["base_model.model.lm_head.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
-		tensors["base_model.model.transgenic.decoder.embed_tokens.weight"] = tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
-		if "base_model.model.transgenic.decoder_embed_tokens.num_feature_embed.weight" in tensors.keys():
-			del tensors["base_model.model.transgenic.decoder_embed_tokens.num_feature_embed.weight"]
-		model.load_state_dict(tensors)
+	# Load decoder checkpoint
+	decoder_tensors = {}
+	with safe_open(decoder_checkpoint, framework="pt", device="cpu") as f:
+		for k in f.keys():
+			decoder_tensors[k] = f.get_tensor(k)
+	decoder_tensors["base_model.model.lm_head.weight"] = decoder_tensors["base_model.model.transgenic.decoder_embed_tokens.weight"] 
+	decoder_tensors["base_model.model.transgenic.decoder.embed_tokens.weight"] = decoder_tensors["base_model.model.transgenic.decoder_embed_tokens.weight"]
+	
+
+	# Load segmentation checkpoint
+	segment_tensors = {}
+	with safe_open(segment_checkpoint, framework="pt", device="cpu") as f:
+		for k in f.keys():
+			segment_tensors[k] = f.get_tensor(k)
+	segment_tensors = {k.replace("unet", "base_model.model.transgenic.encoder.unet").replace("uFC", "base_model.model.transgenic.encoder.uFC"):segment_tensors[k] for k in segment_tensors}
+	newSegment_tensors = {}
+	for k in segment_tensors:
+		if ("esm" not in k) & ("hidden" not in k) & ("lm_head" not in k) & ("film" not in k):
+			newSegment_tensors[k] = segment_tensors[k]
+	
+	# Merge dictionaries and load
+	tensors = {**decoder_tensors, **newSegment_tensors}
+	model.load_state_dict(tensors)
 	
 	return model
 
@@ -1655,7 +1708,7 @@ if __name__ == '__main__':
 
 	#print(len(ds))
 	db="Generation_10G_static6144_addExtra200_addRCIsoOnly_clean.db"
-	dt = GFFTokenizer09()
+	dt = GFFTokenizer()
 	ds = isoformData(db, dt, mode="training", encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", global_attention=False)
 	for i in range(len(ds)):
 		batch = ds.__getitem__(i)

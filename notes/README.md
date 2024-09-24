@@ -1801,7 +1801,7 @@ Performance is good at the base-level but we'd like to improve it at the exon le
 
 Hiabao is interested in using base-wise probability scores to update the splice junctions instead of my nearest canonical junction heuristic. InstaDeep has created a U-net architecture for nucleotide-resolution segmentation which can provide the base-wise probabilities, but have not fine tuned it for plants. My goal is to incorporate the U-net into the model in order to simultaneously compute the base probabilities and the decoder output from the encoder output. The U-net logits can be used in post processing and may be fed back into the decoder to improve the generation task. The U-net also provides a potential method to scan the genome for genic regions which could make the model a stand-alone application for genome annotation.
 
-I will add the U-net to the encoder model and fine-tune it on the 7 training genomes. Then I will continue training the full model with the combined input from the encoder and the U-net. Finally, a post-processing algorithm using the U-net derived probabilities will clean up the coordinate portion of the text output. The isoform part may be improved by customizing the CrossEntropy loss to focus on the second part of the output. Finally, I can implement a scanning algorithm which runs the encoder/U-net on genomic sequences until a complete genic segment is identified, then use the stored embeddings to run the decoder.
+I will add the U-net to the encoder model and fine-tune it on the 7 training genomes. Then I will continue training the full model with the combined input from the encoder and the U-net. Finally, a post-processing algorithm using the U-net derived probabilities will clean up the coordinate portion of the text output. The isoform part may be improved by customizing the CrossEntropy loss to focus on the second part of the output (Or maybe I just double the size of the decoder...). Finally, I can implement a scanning algorithm which runs the encoder/U-net on genomic sequences until a complete genic segment is identified, then use the stored embeddings to run the decoder.
 
 After the first epoch of training, the Unet reached a eval loss of ~0.42. The loss was not improving in the next epoch, so I decided to restart the trianing with a smaller learning rate and adjusted loss weights. The loss was still flat. I increased the batch size and the gradient clipping threshold and restarted. None of these tactics caused the loss to decline. I stopped fine-tuning for now and began to characterize the performance (recall, precision, f1, mcc) on the validation set.
 
@@ -1815,3 +1815,11 @@ Analysis questions (break out labels with and without AS):
 3. How many transcripts per-gene are perfectly correct (CDS/UTR level)
 4. How many total transcripts are perfectly correct? (CDS level, UTR level)
 
+After combining the segmentation model with the generative model, I learned that U-Nets like to work on a fixed input size. At smaller sizes than the 12,288 sequences it was trained on (like 500-1500), the U-Net perfromed very poorly. I need to amend that dataset so that I am always encoding the size that the U-net requires and then use the attention mask to pair that down to the genic region for generation.
+Steps to implement:
+1. Re-finetune the AgroSegmentNT model for 6144 size sequences
+2. Prepare a new dataset which includes sequences regions divisible by 6144 (include info on the genic portion)
+3. Continue training the generative part to remove the reliance on PEFT and to make sure the attention masking works
+4. Benchmark the new SegmentNT model
+5. Benchmark the new generative model
+6. Amend manual curation algorithm to use probabilities from SegmentNT
