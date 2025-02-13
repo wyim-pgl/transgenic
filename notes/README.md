@@ -1823,3 +1823,25 @@ Steps to implement:
 4. Benchmark the new SegmentNT model
 5. Benchmark the new generative model
 6. Amend manual curation algorithm to use probabilities from SegmentNT
+
+## Adding start and stop codons and prompting
+
+I had the idea to solve the exposure bias problem by iterative prompting. Essentially, use SegmentNT to prompt the generation with the correct start location  (start or stop codon). Then can the generated features for coordinates that are in severe disagreement with SegmentNT. Iteratively prompt generation with the model output up to the bad coordinate replaced with a SegmentNT coordinate.
+
+This strategy necessitates adding start and stop codon tracks to SegmentNT, so I set out to repurpose unused tracks in SegmentNT output. I amended the dataset and began training but I encountered a lot of overfitting. I am going to try a few different strategies:
+1. Add higher pos_weight for start and stop codon tracks in the BCEwithlogitsloss function 
+2. Freeze the encoder and the Unet-mapping layers (i.e. only train SegmentNT)
+3. Reinitialize the weights of the final neuron connected to the start/stop codon class positions
+4. Provide lower learning rates to the Bulk of segmentNT and higher LR to the output layer
+5. Gradient surgery?
+
+Freezing the unet mapping layers for 5 epochs worked quite well. It could probably use a bit more training with the mapping layers activated, but it seems to work decently well.
+In thinking about designing the iterative prompting strategy, I realized that the model would likely perform better at generation if it did not rely on the features or the transcripts being ordered correctly. Thus, if it puts the start of an alternate transcript first, it may still properly identify the features of the alternate transcript. So I decided to teach the model to find all the features and transcripts in the DNA sequence, independent of the order identified in the GFF. I started training the decoder again using labels with shuffled features and transcripts. After two epochs, the model was doing ok, but not outperforming the original.
+
+Next, I want to try a form of reinforcment learning... Use trl from hugging face and BLEU score!
+Turns out its hard to manage for a custom model...abort
+
+I also realized that the iterative prompting strategy opens up many possible operating modes for the model! It can generate from scratch, or be prompted to complete a gene model that has only a primary transcript, or be prompted to identify the isoforms from a set of known features. Super cool...
+
+Will work on a process for iterative prompting with the SegmentNT probabilties. I think I need to double down on the shuffled transcripts, then I can add missed exons for generation without concern for the order...
+

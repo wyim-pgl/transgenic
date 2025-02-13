@@ -1,10 +1,11 @@
-import subprocess, sys, os, duckdb, torch, re, pickle, zlib
+import subprocess, sys, os, duckdb, torch, re, pickle, zlib, random
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
 from typing import List, Tuple
 import torch.distributed as dist
 from torch.utils.data import  Dataset, DataLoader
+import torch.nn as nn
 import torch.nn.functional as F
 from transformers import AutoTokenizer
 from peft import IA3Config, get_peft_model
@@ -393,11 +394,12 @@ def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=6144,
 
 # geneList custom dataset class for use with DataLoader
 class isoformData(Dataset):
-	def __init__(self, db, dt, mode="inference", encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", global_attention=False):
+	def __init__(self, db, dt, mode="inference", encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", global_attention=False, shuffle=False):
 		self.db = db
 		self.mode = mode
 		self.dt = dt
 		self.global_attention = global_attention
+		self.shuffle = shuffle
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
 		if dt != None:
 			self.decoder_tokenizer = dt
@@ -420,6 +422,12 @@ class isoformData(Dataset):
 				print(f"Warning {idx=} produced an error... using {newidx}", file=sys.stderr)
 				gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={newidx}").fetchall()[0]
 		
+		if self.shuffle:
+			gff_shuffle = [g.split(";") for g in gff.split(">")]
+			random.shuffle(gff_shuffle[0])
+			random.shuffle(gff_shuffle[1])
+			gff = ";".join(gff_shuffle[0]) + ">" + ";".join(gff_shuffle[1])
+
 		# Tokenize labels
 		if self.mode == "training":
 			labels = self.decoder_tokenizer.batch_encode_plus(
@@ -447,10 +455,10 @@ class isoformData(Dataset):
 		encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
 
 		# Complete the attention mask based on buffers
-		fiveP_mask_index = (sfpb - fpb)//6
-		threeP_mask_index = (stpb - tpb)//6
-		encoder_attention_mask[0, 0:fiveP_mask_index] = False
-		encoder_attention_mask[numSeqs-1, 1024-threeP_mask_index:] = False
+		#fiveP_mask_index = (sfpb - fpb)//6
+		#threeP_mask_index = (stpb - tpb)//6
+		#encoder_attention_mask[0, 0:fiveP_mask_index] = False
+		#encoder_attention_mask[numSeqs-1, 1024-threeP_mask_index:] = False
 
 
 		# Scan for global attention tokens
@@ -464,6 +472,60 @@ class isoformData(Dataset):
 			return (seqs, encoder_attention_mask, global_attention_mask, labels, gm, chr, region_start, region_end)
 		else:
 			return (seqs, encoder_attention_mask, global_attention_mask, None, gm, chr, region_start, region_end)
+
+class isoformDataHyena(Dataset):
+	def __init__(self, db, dt, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False):
+		self.db = db
+		self.mode = mode
+		self.dt = dt
+		self.global_attention = global_attention
+		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
+		if dt != None:
+			self.decoder_tokenizer = dt
+			self.maxlength = 2048
+		else:
+			self.decoder_tokenizer = AutoTokenizer.from_pretrained("allenai/led-base-16384", cache_dir="./HFmodels", trust_remote_code=True)
+			self.maxlength = 1024
+
+	def __len__(self):
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			return con.sql("SELECT COUNT(*) FROM geneList").fetchall()[0][0]
+	
+	def __getitem__(self, idx):
+		idx += 1
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			try:
+				gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
+			except:
+				newidx = torch.randint(self.__len__(), (1,)).item()
+				print(f"Warning {idx=} produced an error... using {newidx}", file=sys.stderr)
+				gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={newidx}").fetchall()[0]
+
+		# Tokenize labels
+		if self.mode == "training":
+			labels = self.decoder_tokenizer.batch_encode_plus(
+				[gff],
+				return_tensors="pt",
+				padding=True,
+				truncation=True,
+				add_special_tokens=True,
+				max_length=self.maxlength)["input_ids"]
+		
+		# Ensure labels are less than the maxlength
+		if labels.shape[1] >= self.maxlength:
+			labels = torch.cat((labels[:, 0:(self.maxlength-1)], torch.tensor([[self.decoder_tokenizer.vocab["</s>"]]])), dim=1)
+			#print(f"Warning {gm} label truncated to {self.maxlength} tokens", file=sys.stderr)
+
+		# Tokenize the input sequences and remove the [SEP] token
+		seqs = self.encoder_tokenizer.batch_encode_plus([region_seq], return_tensors="pt")
+		seqs["input_ids"] = seqs["input_ids"][:, :-1]
+
+		attention_mask = (seqs["input_ids"] != self.encoder_tokenizer.pad_token_id)
+
+		if self.mode == "training":
+			return (seqs["input_ids"], attention_mask, labels, gm, chr, region_start, region_end)
+		else:
+			return (seqs["inputs_ids"], attention_mask, None, gm, chr, region_start, region_end)
 
 # Create a database for loading genomic data to SegmentNT
 def genome2SegmentationSet(genome_file, gff_file, organism, db):
@@ -697,22 +759,30 @@ def preProcessSegmentationDataset(db, genome, gff, table, window_size, step_size
 				f.write(f"{window_seq}\t{window_class}\t{table}\t{chr}\t{start}\t{end}\n")
 
 class preprocessedSegmentationDataset(Dataset):
-	def __init__(self, db):
+	def __init__(self, db, encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b"):
 		self.db = db
+		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
 	
 	def __len__(self):
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
 			return con.sql("SELECT COUNT(*) FROM data").fetchall()[0][0]
 	
 	def __getitem__(self, idx):
-		index = index + 1
+		idx = idx + 1
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			_, sequence,label,organism,chromosome,start,fin = con.sql(f"SELECT * FROM data where rn={idx}").fetchall()[0]
+			_, sequence,label,organism,chromosome,start,fin,_ = con.sql(f"SELECT * FROM data where rn={idx}").fetchall()[0]
 		
+		if "N" in sequence:
+			return self.__getitem__(torch.randint(0, self.__len__(), (1,)).item())
+
 		# Retreive tensor from BLOB
-		# TODO: reshape properly...
-		class_tensor = np.frombuffer(zlib.decompress(label), dtype=np.float32).reshape(6144, 14)
-		class_tensor = torch.from_numpy(class_tensor)
+		try:
+			class_tensor = np.frombuffer(zlib.decompress(label), dtype=np.float32).reshape(6144, 14)
+			class_tensor = torch.from_numpy(class_tensor)
+		except:
+			newidx = torch.randint(0, self.__len__(), (1,)).item()
+			print(f"Warning labe with {idx=} could not be parsed... using {newidx}")
+			return self.__getitem__(newidx)
 
 		# Tokenize sequence
 		seqs = segmentSequence(sequence, piece_size=6144)
@@ -725,10 +795,42 @@ class preprocessedSegmentationDataset(Dataset):
 		encoder_attention_mask = (seqs != self.encoder_tokenizer.pad_token_id)
 
 		return (seqs, encoder_attention_mask, class_tensor, organism, chromosome, start, fin)
+
+class preprocessedSegmentationDatasetHyena(Dataset):
+	def __init__(self, db, encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf"):
+		self.db = db
+		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
+	
+	def __len__(self):
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			return con.sql("SELECT COUNT(*) FROM data").fetchall()[0][0]
+	
+	def __getitem__(self, idx):
+		idx = idx + 1
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			_, sequence,label,organism,chromosome,start,fin,_ = con.sql(f"SELECT * FROM data where rn={idx}").fetchall()[0]
 		
+		if "N" in sequence:
+			return self.__getitem__(torch.randint(0, self.__len__(), (1,)).item())
+
+		# Retreive tensor from BLOB
+		try:
+			class_tensor = np.frombuffer(zlib.decompress(label), dtype=np.float32).reshape(6144, 14)
+			class_tensor = torch.from_numpy(class_tensor)
+		except:
+			newidx = torch.randint(0, self.__len__(), (1,)).item()
+			print(f"Warning labe with {idx=} could not be parsed... using {newidx}")
+			return self.__getitem__(newidx)
+
+		# Tokenize the input sequences and remove the [SEP] token
+		seqs = self.encoder_tokenizer.batch_encode_plus([sequence], return_tensors="pt")
+		seqs["input_ids"] = seqs["input_ids"][:, :-1]
+		encoder_attention_mask = (seqs["input_ids"] != self.encoder_tokenizer.pad_token_id)
+
+		return (seqs, encoder_attention_mask, class_tensor, organism, chromosome, start, fin)
 
 
-def gffString2GFF3(gff:str, chr:str, region_start:int) -> List[str]:
+def gffString2GFF3(gff:str, chr:str, region_start:int, extra_attributes:str) -> List[str]:
 	# Purpose: 
 	#      Convert a GFF string (decoded model output) to GFF3 fromat.
 	# Inputs:
@@ -779,11 +881,11 @@ def gffString2GFF3(gff:str, chr:str, region_start:int) -> List[str]:
 	id = str(uuid.uuid4())
 	geneStart = min([x[0] for x in transcriptBounds])
 	geneEnd = max([x[1] for x in transcriptBounds])
-	geneModel = [f"{chr}\ttransgenic\tgene\t{geneStart}\t{geneEnd-1}\t.\t{geneStrand}\t.\tID={id}"]
+	geneModel = [f"{chr}\ttransgenic\tgene\t{geneStart}\t{geneEnd-1}\t.\t{geneStrand}\t.\tID={id};{extra_attributes}"]
 	
 	# Add mRNA models
 	for i,transcript in enumerate(transcripts):
-		geneModel.append(f"{chr}\ttransgenic\tmRNA\t{transcriptBounds[i][0]}\t{transcriptBounds[i][1]-1}\t.\t{geneStrand}\t.\tID={id}.t{i+1};Parent={id}")
+		geneModel.append(f"{chr}\ttransgenic\tmRNA\t{transcriptBounds[i][0]}\t{transcriptBounds[i][1]-1}\t.\t{geneStrand}\t.\tID={id}.t{i+1};Parent={id};{extra_attributes}")
 		transcript = transcript.split("|")
 		for featureID in transcript:
 			if featureID == "":
@@ -791,14 +893,19 @@ def gffString2GFF3(gff:str, chr:str, region_start:int) -> List[str]:
 			featureModel = features[featureID]
 			featureType = re.sub(r'\d+', '', featureID)
 			featureNum = re.sub(r'\D+', '', featureID)
-			geneModel.append(f"{chr}\ttransgenic\t{featureType}\t{int(featureModel[0])+region_start}\t{int(featureModel[2])+region_start-1}\t.\t{geneStrand}\t{phaseLookup[featureModel[4]]}\tID={id}.t{i+1}.{featureType}{featureNum};Parent={id}.t{i+1}")
+			geneModel.append(f"{chr}\ttransgenic\t{featureType}\t{int(featureModel[0])+region_start}\t{int(featureModel[2])+region_start-1}\t.\t{geneStrand}\t{phaseLookup[featureModel[4]]}\tID={id}.t{i+1}.{featureType}{featureNum};Parent={id}.t{i+1};{extra_attributes}")
 	
 	return geneModel
 
 def segmentSequence(seq, piece_size = 6144):
 	# Segment the sequence into evenly sized chunks smaller than 4092bp (encoder max length of 1024 tokens)
 	seqs = [seq[i:min(i+piece_size, len(seq))] for i in range(0, len(seq), piece_size)]
-	return seqs
+	#windowed_seqs = []
+	#for i in range(len(seqs)):
+	#	windowed_seqs.append(seqs[i])
+	#	if i+1 < len(seqs):
+	#		windowed_seqs.append(seqs[i][piece_size//2:len(seqs[i])] + seqs[i+1][0:piece_size//2 ])
+	return seqs #windowed_seqs
 
 def setup(rank, world_size, pg="gloo"):
 	os.environ['MASTER_ADDR'] = 'localhost'
@@ -842,6 +949,32 @@ def target_collate_fn(batch):
 	else:
 		return sequences, attention_masks, global_attention_masks, None, gm, chr, region_start, region_end
 
+def hyena_collate_fn(batch):
+	# Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
+	sequences, attention_masks, labels, gm, chr, region_start, region_end= zip(*batch)
+
+	# Pad and stack the sequences
+	max_len = max([seq.shape[1] for seq in sequences])
+	sequences = [F.pad(seq, (max_len - seq.shape[1], 0)) for seq in sequences]
+	sequences = torch.cat(sequences)
+	
+	
+	#Pad and stack the attention masks
+	max_len = max([mask.shape[1] for mask in attention_masks])
+	attention_masks = [F.pad(mask, (max_len - mask.shape[1], 0)) for mask in attention_masks]
+	attention_masks = torch.cat(attention_masks)
+
+	# Pad and stack the labels
+	if labels:
+		max_len = max([label.shape[1] for label in labels])
+		labels_padded = [F.pad(label, (0, max_len - label.shape[1])) for label in labels]
+		labels_padded = torch.cat(labels_padded)
+
+	if labels:
+		return sequences, attention_masks, labels_padded, gm, chr, region_start, region_end
+	else:
+		return sequences, attention_masks, None, gm, chr, region_start, region_end
+
 def segment_collate_fn(batch):
 	# Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
 	sequences, attention_masks, labels, organism, chromosome, start, end = zip(*batch)
@@ -877,10 +1010,30 @@ def segment_collate_fn(batch):
 	else:
 		return sequences, attention_masks, None, organism, chromosome, start, end
 
-def preprocessing_collate_fn(batch):
-	seqs, _, class_tensor, organism, chromosome, start, end = zip(*batch)
-	return seqs, class_tensor, organism, chromosome, start, end
+def hyena_segment_collate_fn(batch):
+	# Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
+	sequences, attention_masks, labels, organism, chromosome, start, end = zip(*batch)
 
+	# Pad and stack the sequences
+	max_len = max([seq["input_ids"].shape[1] for seq in sequences])
+	sequences = [F.pad(seq["input_ids"], (max_len - seq["input_ids"].shape[1], 0)) for seq in sequences]
+	sequences = torch.cat(sequences)
+	
+	#Pad and stack the attention masks
+	max_len = max([mask.shape[1] for mask in attention_masks])
+	attention_masks = [F.pad(mask, (max_len - mask.shape[1], 0)) for mask in attention_masks]
+	attention_masks = torch.cat(attention_masks)
+
+	# Pad and stack the labels
+	if labels:
+		max_len = max([label.shape[1] for label in labels])
+		labels_padded = [F.pad(label, (0, max_len - label.shape[1])) for label in labels]
+		labels_padded = torch.stack(labels_padded)
+
+	if labels:
+		return sequences, attention_masks, labels_padded, organism, chromosome, start, end
+	else:
+		return sequences, attention_masks, None, organism, chromosome, start, end
 
 def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=None, num_workers=0, collate_fn=target_collate_fn):
 	if sampler != None:
@@ -1061,7 +1214,7 @@ class PredictionProcessor():
 		self.probs = probs
 		self.stopCodons = ["TAA", "TAG", "TGA"]
 		self.spliceDonors = ["AGGT", "GGT","GT","AGGC", "AGAT","GGC","GAT"]
-		self.spliceDonors_prob = ["GT","GC","AT"]
+		self.spliceCanonical = {"GT":"AG", "GC":"AG","AT":"AC"}
 		self.spliceAcceptors = ["AG","AC"]
 		self.parsable = True
 
@@ -1106,6 +1259,10 @@ class PredictionProcessor():
 		self.feature_index_dict = {}
 		for i, feature in enumerate(self.features):
 			self.feature_index_dict[feature[1]] = i
+		
+		self.feature_flag_dict = {}
+		for i, feature in enumerate(self.features):
+			self.feature_flag_dict[feature[1]] = ""
 
 		# Get pairs of start/stop codons and their corresponding 5'/3' UTRs
 		# to update simultaneously
@@ -1134,6 +1291,22 @@ class PredictionProcessor():
 					continue
 				if 'CDS' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'CD' in transcript[i-1]:
 					self.cds_pairs.append((transcript[i-1], typ))
+		
+		# Get all pairs for splice junction validation (Add utr splice junctions)
+		self.splice_pairs = self.cds_pairs
+		for transcript in self.transcripts:
+			for i, typ in enumerate(transcript):
+				if i == 0:
+					continue
+				if 'five_prime_UTR' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'five_prime_UTR' in transcript[i-1]:
+					self.splice_pairs.append((transcript[i-1], typ))
+				if 'three_prime_UTR' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'three_prime_UTR' in transcript[i-1]:
+					self.splice_pairs.append((transcript[i-1], typ))
+		
+		# Identify features in the segmentation probabilities
+		if self.probs != None:
+			self.seqFeatures = self.findSeqFeatures()
+			self.usedSeqFeatures = {"startCodons": [],"stopCodons": [],"donors": [],"acceptors": []}
 
 	def tidyPrediction(self):
 		types = ["CDS", "five_prime_UTR", "three_prime_UTR"]
@@ -1214,100 +1387,187 @@ class PredictionProcessor():
 	def reverseComplement(self):
 		self.sequence = reverseComplement(self.sequence)
 		self.gff = reverseComplement_gffString(self.gff, len(self.sequence))
-		self.probs = torch.flip(self.probs, dims=[0])
+		if self.probs != None:
+			self.probs = torch.flip(self.probs, dims=[0])
 	
-	# Check start_cds for start codons, if missing search sequence for new start codon
-	# Identify all 'ATG' in the buffer window and select the most probable upstream five_prime_utr classification
-	# If selected probability is less than 0.5, choose the nearest start codon
-	def checkStartCodons(self, buff=50):
+	def findLargestGeneRegion(self, lst, threshold=0.4):
+		max_start = max_end = -1
+		current_start = current_length = max_length = 0
+		
+		for i, value in enumerate(lst):
+			if value > threshold:
+				if current_length == 0:
+					current_start = i  # Start a new region
+				current_length += 1
+			else:
+				if current_length > max_length:
+					max_length = current_length
+					max_start = current_start
+					max_end = i - 1  # End of the last valid region
+				
+				# Reset current length as we hit a value below the threshold
+				current_length = 0
+		
+		# Final check in case the largest region is at the end of the list
+		if current_length > max_length:
+			max_length = current_length
+			max_start = current_start
+			max_end = len(lst) - 1
+		
+		if max_start != -1:
+			return (max_start, max_end)
+		else:
+			return (None, None)
+	
+	def findSeqFeatures(self, junctionThresh=0.3, geneThresh=0.2, startThresh=0.3):
+		
+		# Find the central gene region
+		geneStart, geneEnd = self.findLargestGeneRegion(self.probs[:,0], threshold=geneThresh)
+
+		# Find all high probability start codons in the gene region
+		means = []
+		lst = self.probs[geneStart:geneEnd,1].tolist()
+		for i in range(len(lst)):
+			sum_value = lst[i] + (lst[i + 1] if i + 1 < len(lst) else 0) + (lst[i + 2] if i + 2 < len(lst) else 0)
+			means.append(sum_value/3)
+		startCodons = [i + geneStart for i, x in enumerate(means) if x > startThresh]
+
+		# Find all high probability stop codons in the gene region
+		means = []
+		lst = self.probs[geneStart:geneEnd,8].tolist()
+		for i in range(len(lst)):
+			sum_value = lst[i] + (lst[i + 1] if i + 1 < len(lst) else 0) + (lst[i + 2] if i + 2 < len(lst) else 0)
+			means.append(sum_value/3)
+		stopCodons = [i + geneStart + 3 for i, x in enumerate(means) if x > startThresh]
+		
+		# Pick out all splice donors and acceptors
+		means = []
+		lst = self.probs[geneStart:geneEnd,4].tolist()
+		for i in range(len(lst)):
+			sum_value = lst[i] + (lst[i + 1] if i + 1 < len(lst) else 0)
+			means.append(sum_value/2)
+		donors = [i + geneStart for i, x in enumerate(means) if x > junctionThresh]
+
+		means = []
+		lst = self.probs[geneStart:geneEnd,5].tolist()
+		for i in range(len(lst)):
+			sum_value = lst[i] + (lst[i + 1] if i + 1 < len(lst) else 0)
+			means.append(sum_value/2)
+		acceptors = [i + 2 + geneStart for i, x in enumerate(means) if x > junctionThresh]
+
+		return {
+			"startCodons": startCodons,
+			"stopCodons": stopCodons,
+			"donors": donors,
+			"acceptors": acceptors
+		}
+
+	# Use a segmentation model start codon if it is reasonably close to the prediction
+	# Otherwise, look for an 'ATG' within the buffer window 
+	# Reset 5'-UTR end to match start codon
+	def checkStartCodons(self, buff=50, usingSeqFeature=False):
+		
+		if usingSeqFeature:
+			startCodons = self.seqFeatures["startCodons"]
+
 		for i, cds in enumerate(self.start_cds):
 			start = int(self.features[self.feature_index_dict[cds]][0])
-			end = int(self.features[self.feature_index_dict[cds]][2])
-			if self.sequence[start:start+3] != "ATG":
-				if end-start < 2*buff:
-					buf = (end-start)//2
+			if usingSeqFeature:
+				if len(startCodons) > 0:
+					new_start = startCodons[np.argmin([np.abs(start - codon) for codon in startCodons])]
+					if np.abs(start-new_start) <= buff*2:
+						self.features[self.feature_index_dict[cds]][0] = str(new_start)
+						if new_start not in self.usedSeqFeatures["startCodons"]:
+							self.usedSeqFeatures["startCodons"].append(new_start)
+					else:
+						usingSeqFeature = False
 				else:
-					buf = buff
-				buffer = self.sequence[start-buf:start+buf]
-				prob_buffer = self.probs[start-buf:start+buf]
-				start_codons = [m.start() for m in re.finditer("ATG", buffer)]
-				if start_codons:
-					pick = np.argmax([prob_buffer[loc-1,5].item() for loc in start_codons])
-					if prob_buffer[start_codons[pick]-1,5] < 0.5:
-						pick = int(np.argmin([abs(loc-buf) for loc in start_codons]))
-					new_start = start + start_codons[pick]-buf
-					self.features[self.feature_index_dict[cds]][0] = str(new_start)
+					usingSeqFeature = False
 			
+			if not usingSeqFeature:
+				self.feature_flag_dict[cds] += "start"
+				buffer = self.sequence[start-buff:start+buff]
+				startCodons = [m.start() for m in re.finditer("ATG", buffer)]
+				if startCodons:
+					pick = startCodons[np.argmin([np.abs(loc-buff) for loc in startCodons])]
+					new_start = start + pick-buff
+					self.features[self.feature_index_dict[cds]][0] = str(new_start)
+		
+		# Update utr starts
 		for cds, utr in self.start_pairs:
 			if utr:
 				self.features[self.feature_index_dict[utr]][2] = self.features[self.feature_index_dict[cds]][0]
 
 	# Check end_cds for stop codons, if missing search sequence for new stop codon
-	# Identify all stop codons in the buffer window and select the most probable downstream three_prime_utr classification
-	# If selected probability is less than 0.5, choose the nearest stop codon
-	def checkStopCodons(self, buff=50):
+	# Identify all stop codons in the buffer window and select the closest stop codon which maintains phase
+	def checkStopCodons(self, buff=50, usingSeqFeature=False):
+		if usingSeqFeature:
+			stopCodons = self.seqFeatures["stopCodons"]
+		
 		for i, cds in enumerate(self.end_cds):
-			start = int(self.features[self.feature_index_dict[cds]][0])
-			end = int(self.features[self.feature_index_dict[cds]][2])
-			if self.sequence[end-3:end] not in self.stopCodons:
-				if end-start < 2*buff:
-					buf = (end-start)//2
+			stop = int(self.features[self.feature_index_dict[cds]][2])
+			if usingSeqFeature:
+				if len(stopCodons) > 0:
+					new_stop = stopCodons[np.argmin([np.abs(stop - codon) for codon in stopCodons])]
+					if np.abs(stop-new_stop) <= buff*2:
+						self.features[self.feature_index_dict[cds]][2] = str(new_stop)
+						if new_stop not in self.usedSeqFeatures["stopCodons"]:
+							self.usedSeqFeatures["stopCodons"].append(new_stop)
+					else:
+						usingSeqFeature = False
 				else:
-					buf = buff
-				buffer = self.sequence[end-buf:end+buf]
-				prob_buffer = self.probs[start-buf:start+buf]
-				stop_codons = [m.end() for m in re.finditer("|".join(self.stopCodons), buffer)]
-				if stop_codons:
-					pick = np.argmax([prob_buffer[loc+1,6].item() for loc in stop_codons])
-					if prob_buffer[stop_codons[pick]+1,6] < 0.5:
-						pick = int(np.argmin([abs(loc-buf) for loc in stop_codons]))
-					new_end = end + stop_codons[pick]-buf
-					self.features[self.feature_index_dict[cds]][2] = str(new_end)
+					usingSeqFeature = False
 
+			if not usingSeqFeature:
+				self.feature_flag_dict[cds] += "stop"
+				buffer = self.sequence[stop-buff:stop+buff]
+				stopCodons = [m.start() + 3 for m in re.finditer("(TAA)|(TAG)|(TGA)", buffer)]
+				if stopCodons:
+					pick = stopCodons[np.argmin([np.abs(loc-buff) for loc in stopCodons])]
+					new_stop = stop + pick-buff
+					self.features[self.feature_index_dict[cds]][2] = str(new_stop)
+
+		# Amend utr starts
 		for cds, utr in self.end_pairs:
 			if utr:
 				self.features[self.feature_index_dict[utr]][0] = self.features[self.feature_index_dict[cds]][2]
 	
-	# Used to check if a subsequence from cds_pairs makes internal stop codons
-	def containsStopCodon(self, p):
-		if self.cds_pairs.index(p)+1 == len(self.cds_pairs):
-			return False
-		f = []
-		for pair in self.cds_pairs[0:self.cds_pairs.index(p)+1]:
-			for feature in pair:
-				if feature not in f:
-					f.append(feature)
-		f = [self.features[self.feature_index_dict[feature]] for feature in f]
-		seq = ''
-		for feat in f:
-			seq += self.sequence[int(feat[0]):int(feat[2])]
-		seq = [seq[i:min(i+3, len(seq))] for i in range(0, len(seq), 3)]
+	# Used to check if a subsequence makes internal stop codons
+	def containsStopCodon(self, seq, phase):
+		phaseLookup = {"A":0,"B":1,"C":2,".":0}
+		seq = [seq[:phaseLookup[phase]]] + [seq[i:min(i+3, len(seq)-phaseLookup[phase])] for i in range(phaseLookup[phase], len(seq), 3)]
 		return "TAG" in seq or "TAA" in seq or "TGA" in seq
-	
-	def checkProbableSpliceJunctions(self, buff=50):
-		# Search buffer for most probable splice junctions, pinpoint locations with canonical sites
+
+
+	def checkProbableSpliceJunctions(self, buff=100):
+		donors = self.seqFeatures["donors"]
+		acceptors = self.seqFeatures["acceptors"]
 
 		for donor, acceptor in self.cds_pairs:
+			
 			donor_start = int(self.features[self.feature_index_dict[donor]][0])
 			donor_end = int(self.features[self.feature_index_dict[donor]][2])
 			acceptor_start = int(self.features[self.feature_index_dict[acceptor]][0])
 			acceptor_end = int(self.features[self.feature_index_dict[acceptor]][2])
 
-			# Find over-threshold segments in donor buffer (p > 0.5)
-			if donor_end-donor_start < buff:
-				buf = donor_end-donor_start
-			else:
-				buf = buff
-			buffer = self.sequence[donor_end-buf:donor_end+buff]
-			buffer_prob = self.probs[donor_end-buf:donor_end+buff]
-
-			# Find over-threshold segments in acceptor buffer (p > 0.5)
-			if acceptor_end-acceptor_start < buff:
-				buf = acceptor_end-acceptor_start
-			else:
-				buf = buff
-			buffer = self.sequence[acceptor_start-buff:acceptor_start+buf]
-			buffer_prob = self.probs[acceptor_start-buff:acceptor_start+buf]
+			if len(donors) > 0:
+				new_donor = donors[np.argmin([np.abs(d - donor_end) for d in donors])]
+				if np.abs(new_donor - donor_end) < buff:
+					self.features[self.feature_index_dict[donor]][2] = str(new_donor)
+					if new_donor not in self.usedSeqFeatures["donors"]:
+						self.usedSeqFeatures["donors"].append(new_donor)
+				else:
+					self.feature_flag_dict[donor] += "donor"
+			
+			if len(acceptors) > 0:
+				new_acceptor = acceptors[np.argmin([np.abs(a - acceptor_start) for a in acceptors])]
+				if np.abs(new_acceptor - acceptor_start) < buff:
+					self.features[self.feature_index_dict[acceptor]][0] = str(new_acceptor)
+					if new_acceptor not in self.usedSeqFeatures["acceptors"]:
+						self.usedSeqFeatures["acceptors"].append(new_acceptor)
+				else:
+					self.feature_flag_dict[acceptor] += "acceptor"
+			
 
 	def checkCanonicalSpliceJunctions(self, buff=50):
 		# Use canonical splice junctions to adjust feature cordinates.
@@ -1426,14 +1686,14 @@ class PredictionProcessor():
 			except:
 				closestAcceptor = None
 
-			if closestAcceptor:
-				self.features[self.feature_index_dict[acceptor]][0] = str(int(acceptor_start + closestAcceptor))
-				if self.containsStopCodon((donor,acceptor)):
-					if len(self.sjLog[acceptor]["acceptor"][self.sjLog[acceptor]["acceptor"]["chosen"]]) > 1:
-						while self.sjLog[acceptor]["acceptor"][self.sjLog[acceptor]["acceptor"]["chosen"]]:
-							self.features[self.feature_index_dict[acceptor]][0] = str(int(acceptor_start + self.sjLog[acceptor]["acceptor"][self.sjLog[acceptor]["acceptor"]["chosen"]].pop(0)))
-							if not self.containsStopCodon((donor,acceptor)):
-								break
+			#if closestAcceptor:
+			#	self.features[self.feature_index_dict[acceptor]][0] = str(int(acceptor_start + closestAcceptor))
+			#	if self.containsStopCodon((donor,acceptor)):
+			#		if len(self.sjLog[acceptor]["acceptor"][self.sjLog[acceptor]["acceptor"]["chosen"]]) > 1:
+			#			while self.sjLog[acceptor]["acceptor"][self.sjLog[acceptor]["acceptor"]["chosen"]]:
+			#				self.features[self.feature_index_dict[acceptor]][0] = str(int(acceptor_start + self.sjLog[acceptor]["acceptor"][self.sjLog[acceptor]["acceptor"]["chosen"]].pop(0)))
+			#				if not self.containsStopCodon((donor,acceptor)):
+			#					break
 
 	def selectDonorByPhase(self, donor:str, donor_end:int, acceptor:str, dsite:str, asite:str) -> bool:
 		# Select the donor site with the lowest distance to the predicted site which maintains phase in the first transcript
@@ -1465,6 +1725,7 @@ class PredictionProcessor():
 			return moveOn
 	def checkSpliceJunctions(self, buff=50):
 		self.checkProbableSpliceJunctions(buff=buff)
+		#self.checkCanonicalSpliceJunctions(buff=buff)
 	
 	def stitchGFF(self, originalStrand=True):
 		updatedGFF = f"{';'.join(['|'.join(feature) for feature in self.features])}>{';'.join(['|'.join(transcript) for transcript in self.transcripts])}"
@@ -1472,16 +1733,73 @@ class PredictionProcessor():
 			updatedGFF = reverseComplement_gffString(updatedGFF, len(self.sequence))
 		return updatedGFF
 	
-	def postProcessPrediction(self, buff=50) -> str:
+	def analyzeUnused(self):
+		numcds = len(self.cds_pairs) + 1
+
+		# Identify missed alternate starts 
+		unusedStart = list(set(self.seqFeatures["startCodons"])-set(self.usedSeqFeatures["startCodons"]))
+		extraStarts = []
+		for newStart in unusedStart:
+			candidates = [i for i in self.seqFeatures["donors"] if i > newStart]
+			if candidates:
+				newStart_end = candidates[0]
+				extraStarts.append((newStart,newStart_end))
+				if newStart_end not in self.usedSeqFeatures["donors"]:
+					self.usedSeqFeatures["donors"].append(newStart_end)
+
+		# Identify missed Acceptor junctions
+		unusedAcceptors = list(set(self.seqFeatures["acceptors"])-set(self.usedSeqFeatures["acceptors"]))
+		extraAs = []
+		for newA in unusedAcceptors:
+			candidates = [i for i in self.seqFeatures["donors"] if i > newA]
+			if candidates:
+				newA_end = candidates[0]
+				extraAs.append((newA, newA_end))
+				if newA_end not in self.usedSeqFeatures["donors"]:
+					self.usedSeqFeatures["donors"].append(newA_end)
+
+		# Identify missed Donor junctions
+		unusedDonors = list(set(self.seqFeatures["donors"])-set(self.usedSeqFeatures["donors"]))
+		extraDs = []
+		for newD in unusedDonors:
+			candidates = [i for i in self.seqFeatures["acceptors"] if i < newD]
+			if candidates:
+				newD_start = [i for i in self.seqFeatures["acceptors"] if i < newD][-1]
+				extraDs.append((newD_start, newD))
+				if newD_start not in self.usedSeqFeatures["acceptors"]:
+					self.usedSeqFeatures["acceptors"].append(newD_start)
+
+		# Identify unused Stop codons
+		unusedStop = list(set(self.seqFeatures["stopCodons"])-set(self.usedSeqFeatures["stopCodons"]))
+		extraStops = []
+		for newStop in unusedStop:
+			candidates = [i for i in self.seqFeatures["acceptors"] if i < newStop]
+			if candidates:
+				newStop_start = candidates[-1]
+				extraStops.append((newStop_start, newStop))
+				if newStop_start not in self.usedSeqFeatures["acceptors"]:
+					self.usedSeqFeatures["acceptors"].append(newStop_start)
+		
+		return {
+			"extraStarts":extraStarts,
+			"extraStops":extraStops,
+			"extraAs":extraAs,
+			"extraDs":extraDs
+		}
+
+		
+
+
+	def postProcessPrediction(self, buff=100, usingSeqFeature=False) -> str:
 		# Use start/stop codon, splice junction, and valid protein translation to adjust feature cordinates and phases.
 		# Enforce that each transcript is a valid protein-coding sequence.
 		# Ensure that updates do not make overlapping exons
 		# buff: search buffer for cds boundary markers
 
 		if self.parsable:
-			self.checkStartCodons(buff=buff)
-			self.checkStopCodons(buff=buff)
+			self.checkStartCodons(buff=buff, usingSeqFeature=usingSeqFeature)
 			self.checkSpliceJunctions(buff=buff)
+			self.checkStopCodons(buff=buff, usingSeqFeature=usingSeqFeature)
 			return self.stitchGFF()
 		else:
 			return self.gff
@@ -1539,7 +1857,7 @@ def processPredictions(files:list, db:str, buffer=50, outPrefix="transgenic_pred
 def getModel(config, safetensors_model=None, device="cpu", mode="predict"):
 	if not config:
 		# Load the model and add to device
-		config = TransgenicConfig(do_segment=False)
+		config = TransgenicConfig()
 
 	model = transgenicForConditionalGeneration(config)
 
@@ -1745,7 +2063,9 @@ def analyzePerGeneTranscriptPerformance(label_tokens, prediction_tokens):
 
 if __name__ == '__main__':
 	
-	table = sys.argv[1]
+	ds =  preprocessedSegmentationDataset("Segmentation_10Genomes_preprocessed_separate.db")
+	batch  = ds.__getitem__(5000)
+	print("hi")
 	#files = {
 	#	"ath":["training_data/Athaliana_167_TAIR10.fa","training_data/Athaliana_167_TAIR10.gene.exon.splice.gff3"],
 	#	"bdi":["training_data/Bdistachyon_314_v3.0.fa","training_data/Bdistachyon_314_v3.1.gene_exons.exon.splice.gff3"],
