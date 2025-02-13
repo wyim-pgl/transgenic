@@ -1,13 +1,13 @@
-import sys, re, os, json
+import sys
 from typing import List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
-from transformers import AutoModelForMaskedLM, AutoConfig, PreTrainedTokenizer, PreTrainedModel, AutoModel
-from transformers import LEDForConditionalGeneration, T5ForConditionalGeneration, T5Config, EsmForMaskedLM
+from transformers import AutoConfig, PreTrainedModel, AutoModel, AutoModelForImageSegmentation
+from transformers import LEDForConditionalGeneration, EsmForMaskedLM, T5ForConditionalGeneration
 from transformers.modeling_outputs import ModelOutput
 from dataclasses import dataclass
-from configuration_transgenic import TransgenicConfig
-from trl import AutoModelForSeq2SeqLMWithValueHead
+from configuration_transgenic import TransgenicHyenaConfig
+
 
 def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
 	"""
@@ -23,42 +23,6 @@ def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start
 	shifted_input_ids.masked_fill_(shifted_input_ids == -100, pad_token_id)
 
 	return shifted_input_ids
-
-#Copied from transformers.models.led.modeling_led.py
-class LEDLearnedPositionalEmbedding(nn.Embedding):
-	"""
-	This module learns positional embeddings up to a fixed maximum size.
-	"""
-
-	def __init__(self, num_embeddings: int, embedding_dim: int):
-		super().__init__(num_embeddings, embedding_dim)
-
-	def forward(self, input_ids_shape: torch.Size, past_key_values_length: int = 0):
-		"""`input_ids_shape` is expected to be [bsz x seqlen]."""
-		bsz, seq_len = input_ids_shape[:2]
-		positions = torch.arange(
-			past_key_values_length, past_key_values_length + seq_len, dtype=torch.long, device=self.weight.device
-		)
-		return super().forward(positions)
-
-class FiLMLayer(nn.Module):
-	def __init__(self, num_labels=2, hidden_dim=512, output_dim=768):
-		super(FiLMLayer, self).__init__()
-		self.mlp = nn.Sequential(
-			nn.Linear(num_labels, hidden_dim),
-			nn.ReLU(),
-			nn.Dropout(0.2),
-			nn.Linear(hidden_dim, output_dim * 2)  # For gamma and beta
-		)
-		self.dropout = nn.Dropout(0.2)
-
-	def forward(self, probabilities, encoder_output):
-		# probabilities: (n, t, m) -> (batch, seqlen, classes)
-		n, t, m = probabilities.size()
-		out = self.mlp(probabilities.view(-1, m))  # Flatten to (n*t, m)
-		out = out.view(encoder_output.shape[0], encoder_output.shape[1], -1)  # Reshape to match encoder_output
-		gamma, beta = out.chunk(2, dim=-1)  # Split into gamma and beta
-		return self.dropout(gamma) * encoder_output + self.dropout(beta)
 
 #Copied from transformers.models.led.modeling_led.py
 @dataclass
@@ -197,173 +161,16 @@ class LEDSeq2SeqModelOutput(ModelOutput):
 	encoder_global_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
 	segmentation_logits: Optional[Tuple[torch.FloatTensor, ...]] = None
 
-class NumberMaskEmbedTokens(nn.Embedding):
-	def __init__(self, num_embeddings, embedding_dim, padding_idx=0):
-		super().__init__(num_embeddings, embedding_dim, padding_idx=padding_idx)
-		self.num_feature_embed = nn.Embedding(2, embedding_dim)
-
-	def forward(self, input_ids):
-		# Create a mask for numerical tokens and embed it
-		num_mask = self.create_numerical_mask(input_ids)
-		num_mask = self.num_feature_embed(num_mask)
-		
-		# Generate embeddings for the input tokens
-		num_embeddings = super().forward(input_ids)
-
-		# Add the numerical mask to the embeddings
-		num_embeddings = num_embeddings + num_mask
-		
-		return num_embeddings
-
-	def create_numerical_mask(self, input_ids):
-		# Create a binary mask where 1 indicates a numerical token and 0 otherwise
-		num_mask = torch.zeros_like(input_ids, dtype=torch.long)
-		for i, sentence in enumerate(input_ids):
-			for j, token in enumerate(sentence):
-				if (token.item() >= 4) & (token.item() <= 13):
-					num_mask[i,j] = 1
-		return num_mask
-
-class segmented_sequence_embeddings(EsmForMaskedLM):
-	def __init__(self, e_model, s_model, numSegClasses, outputSize = 768, do_segment=False):
-		self.cache_dir = "./HFmodels"
-		self.encoder_model = e_model
-		self.segmentation_model = s_model
-		self.numSegClasses = numSegClasses
-		self.do_segment = do_segment
-		config = AutoConfig.from_pretrained(self.encoder_model, is_decoder=False, trust_remote_code=True)
-		super().__init__(config)
-		
-		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
-		#TODO: Put into config - plants -> 1500, multispecies -> 1024, longformer -> 768
-		self.esm = AutoModelForMaskedLM.from_pretrained(self.encoder_model, cache_dir=self.cache_dir, trust_remote_code=True)
-		self.hidden_mapping = nn.Linear(config.hidden_size, 768)
-		self.hidden_mapping_layernorm = nn.LayerNorm(768, eps=1e-5)
-		
-		if do_segment:
-			SegmentNT = AutoModel.from_pretrained(self.segmentation_model, trust_remote_code=True)
-			self.unet = SegmentNT.unet
-			self.uFC = SegmentNT.fc
-			self.uActivation = SegmentNT.activation_fn
-			#self.film = FiLMLayer(num_labels=2, hidden_dim=512, output_dim=768)
-			self.unet_mapping = nn.Linear(config.hidden_size, 1024)
-			self.unet_mapping_layernorm = nn.LayerNorm(1024, eps=1e-5)
-	
-	def forward(self, input_ids, attention_mask=None, segLabels=None, **kwargs):
-		if len(input_ids.shape) == 1:
-			input_ids.unsqueeze(dim=0)
-		batch_size = input_ids.shape[0]
-		num_segs = input_ids.shape[1] // 1024
-		input_ids = input_ids.reshape(batch_size, int(num_segs), 1024)
-		attention_mask = attention_mask.reshape(batch_size, int(num_segs), 1024)
-		for i in range(batch_size):
-			#with torch.no_grad():
-			embeddings = self.esm(
-				input_ids[i, :, :],
-				attention_mask=attention_mask[i,:,:],
-				encoder_attention_mask=attention_mask[i,:,:],
-				output_hidden_states=True
-			)['hidden_states'][-1]
-			
-			if i == 0:
-				batch_embeds = embeddings.reshape(1, num_segs*1024, -1)
-				batch_mask = attention_mask[i,:,:].reshape(1, num_segs*1024)
-			else:
-				batch_embeds = torch.cat((batch_embeds, embeddings.reshape(1, num_segs*1024, -1)), dim=0)
-				batch_mask = torch.cat((batch_mask, attention_mask[i,:,:].reshape(1, num_segs*1024)), dim=0)
-		
-		#if num_segs > 1:
-		#	batch_embeds = batch_embeds.reshape(num_segs, 1024, -1)
-		#	batch_mask = batch_mask.reshape(num_segs, 1024)
-		#	original_sequence = batch_embeds[0, 0:768].clone()
-		#	original_mask = batch_mask[0, 0:768].clone()
-		#	for i in range(1, num_segs):
-		#		if i+1 < num_segs:
-		#			original_sequence = torch.cat((original_sequence, batch_embeds[i, 256:768]), dim=0)
-		#			original_mask = torch.cat((original_mask, batch_mask[i, 256:768]), dim=0)
-		#		else:
-		#			original_sequence = torch.cat((original_sequence, batch_embeds[i, 256:]), dim=0)
-		#			original_mask = torch.cat((original_mask, batch_mask[i, 256:]), dim=0)
-		#	batch_embeds = original_sequence.unsqueeze(dim=0)
-		#	batch_mask = original_mask.unsqueeze(dim=0)
-		# Use the last hidden state from the nucleotide encoder as input to the decoder
-		# Transform the encoder hidden states to match the decoder input size
-		decoder_inputs_embeds = self.hidden_mapping(batch_embeds)
-		decoder_inputs_embeds = self.hidden_mapping_layernorm(decoder_inputs_embeds) #self.hidden_mapping_layernorm(decoder_inputs_embeds)
-
-		if self.do_segment:
-			# Use the last hidden state from the nucleotide encoder as input to the segmentation model
-			# sequence must be divisible by 2 raised to the power of the number of pooling layers
-			# Transform the encoder hidden states to match the decoder input size
-			seg_inputs = self.unet_mapping(batch_embeds)
-			seg_inputs = self.unet_mapping_layernorm(seg_inputs)
-			
-			
-			# Invert the channels and sequence length channel
-			#seg_inputs = seg_inputs[:,1:,:] # Remove CLS token
-			seg_inputs = torch.transpose(seg_inputs, 2,1)
-
-			# Pass through UNET
-			x = self.uActivation(self.unet(seg_inputs))
-
-			# Invert the channels and sequence length channel
-			x = torch.transpose(x, 2,1)
-
-			# Compute logits for the segmentation model
-			seg_logits = self.uFC(x)
-
-			# Final reshape to have logits per nucleotides, per feature
-			seg_logits = torch.reshape(seg_logits, (seg_logits.shape[0], seg_logits.shape[1] * 6, self.numSegClasses, 2))
-
-			# Apply FILM layer to decoder_inputs_embeds using segmentation probabilities
-			#sl_aggregated = torch.nn.functional.softmax(seg_logits, dim=-1)[...,0].view(-1, 6, 1024, self.numSegClasses)[:,:,:,(4,5)] 
-			#sl_aggregated = sl_aggregated.mean(dim=1)
-			#decoder_inputs_embeds = self.film(sl_aggregated, decoder_inputs_embeds)
-
-			# Compute segmentation loss if called for
-			if segLabels != None:
-
-				# Define weight of positive splice junction classes to counteract class imbalance
-				pos_weight = torch.ones(self.numSegClasses)
-				pos_weight[[1,8]] = 21.0
-				pos_weight[[4,5]] = 7.0
-				pos_weight = pos_weight.to(segLabels.device)
-
-				# Define per-nucleotide weights to focus on basic genic features
-				weight = torch.Tensor((5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0))
-				weight = weight.to(segLabels.device)
-
-				# Define the loss function with pos_weight
-				segLossFn = nn.BCEWithLogitsLoss(pos_weight=pos_weight, weight=weight)
-				#boundaryLossFn = BoundaryLoss()
-				seg_loss = segLossFn(seg_logits[:,0:segLabels.shape[1]][...,0], segLabels)
-				#boundary_loss = boundaryLossFn(seg_logits[:,0:segLabels.shape[1]], segLabels)
-				#seg_loss = None
-				boundary_loss = None
-			else:
-				seg_loss = None
-				boundary_loss = None
-
-
-			# Aggregate U-Net output and apply FiLM to the encoder hidden states
-			# TODO: portion embeddings into a batch for the film layer
-			#sl_aggregated = seg_logits[...,0].view(-1, 6, 1024, self.numSegClasses)  
-			#sl_aggregated = sl_aggregated.mean(dim=1)
-			#decoder_inputs_embeds = self.film(decoder_inputs_embeds, sl_aggregated)
-		else:
-			seg_logits = None
-			seg_loss = None
-			boundary_loss = None
-		self.segmentation_logits = seg_logits
-		return ModelOutput(
-			inputs_embeds=decoder_inputs_embeds, 
-			attention_mask=batch_mask, 
-			seg_logits=seg_logits, 
-			seg_loss=seg_loss,
-			boundary_loss=boundary_loss)
+@dataclass
+class HyenaModelOutput(ModelOutput):
+	last_hidden_state: torch.FloatTensor = None
+	attention_mask: torch.FloatTensor = None
+	encoder_hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+	segmentation_logits: Optional[Tuple[torch.FloatTensor, ...]] = None
+	segmentation_loss: Optional[Tuple[torch.FloatTensor, ...]] = None
 
 class TransgenicPreTrainedModel(PreTrainedModel):
-	config_class = TransgenicConfig
+	config_class = TransgenicHyenaConfig
 	base_model_prefix = "led"
 	supports_gradient_checkpointing = True
 
@@ -388,6 +195,413 @@ class TransgenicPreTrainedModel(PreTrainedModel):
 		}
 		return dummy_inputs
 
+class DynamicProportionalPooling(nn.Module):
+	def __init__(self, padding_value=0.0):
+		"""
+		Dynamic proportional pooling layer with fixed reduction by a factor of 3.
+
+		Args:
+			padding_value (float): Value used for padding at the beginning of the sequence.
+		"""
+		super(DynamicProportionalPooling, self).__init__()
+		self.padding_value = padding_value
+
+	def forward(self, embedding, attention_mask):
+		"""
+		Forward pass for dynamic proportional pooling with a fixed reduction factor.
+
+		Args:
+			embedding (torch.Tensor): Input tensor of shape (batch_size, seq_length, hidden_dim).
+			attention_mask (torch.Tensor): Input tensor of shape (batch_size, seq_length).
+		
+		Returns:
+			Tuple: Output tuple of pooled tensors (pooled_embedding, pooled_mask).
+		"""
+		if type(embedding) == HyenaModelOutput:
+			embedding = embedding.last_hidden_state
+		batch_size, seq_length, hidden_dim = embedding.size()
+
+		# Calculate required padding to ensure divisibility by 3
+		pad_length = (3 - (seq_length % 3)) % 3
+
+		# Add padding at the beginning if needed
+		if pad_length > 0:
+			embedding = nn.functional.pad(embedding, (0,0, pad_length, 0), value=self.padding_value)
+			attention_mask = nn.functional.pad(attention_mask, (pad_length,0, 0, 0), value=self.padding_value)
+
+		# Apply AvgPool1d
+		pool_embed = nn.AvgPool1d(kernel_size=3, stride=3)
+		pool_mask = nn.MaxPool1d(kernel_size=3, stride=3)
+		
+		pooled_embed = pool_embed(embedding.permute(0, 2, 1)).permute(0, 2, 1)
+		pooled_mask = pool_mask(attention_mask.float())
+
+		return (pooled_embed, pooled_mask)
+
+class HyenaDownsample(nn.Module):
+	def __init__(self, in_channels, out_channels, kernel_size=6, stride=6):
+		super(HyenaDownsample, self).__init__()
+		self.conv1 = nn.Conv1d(in_channels, out_channels // 2, kernel_size=kernel_size//2, padding=1)
+		self.conv2 = nn.Conv1d(out_channels // 2, out_channels, kernel_size=kernel_size//2, padding=1)
+		self.downsample = nn.Conv1d(out_channels, out_channels, kernel_size=kernel_size, stride=stride)
+		self.relu = nn.ReLU()
+
+	def forward(self, x):
+		x = self.relu(self.conv1(x))
+		x = self.relu(self.conv2(x))
+		x = self.downsample(x)
+		return x
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class UNet1D(nn.Module):
+	def __init__(self, input_dim=256, hidden_dim=256, num_classes=9):
+		super(UNet1D, self).__init__()
+		
+		# Encoder
+		self.enc1 = nn.Sequential(
+			nn.Conv1d(input_dim, hidden_dim, kernel_size=3, padding=1),
+			nn.ReLU(),
+			nn.Conv1d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
+			nn.ReLU()
+		)
+		self.pool1 = nn.MaxPool1d(2)
+		
+		self.enc2 = nn.Sequential(
+			nn.Conv1d(hidden_dim, hidden_dim*2, kernel_size=3, padding=1),
+			nn.ReLU(),
+			nn.Conv1d(hidden_dim*2, hidden_dim*2, kernel_size=3, padding=1),
+			nn.ReLU()
+		)
+		self.pool2 = nn.MaxPool1d(2)
+		
+		# Bottleneck
+		self.bottleneck = nn.Sequential(
+			nn.Conv1d(hidden_dim*2, hidden_dim*4, kernel_size=3, padding=1),
+			nn.ReLU(),
+			nn.Conv1d(hidden_dim*4, hidden_dim*4, kernel_size=3, padding=1),
+			nn.ReLU()
+		)
+		
+		# Decoder
+		self.up2 = nn.ConvTranspose1d(hidden_dim*4, hidden_dim*2, kernel_size=2, stride=2)
+		self.dec2 = nn.Sequential(
+			nn.Conv1d(hidden_dim*4, hidden_dim*2, kernel_size=3, padding=1),
+			nn.ReLU(),
+			nn.Conv1d(hidden_dim*2, hidden_dim*2, kernel_size=3, padding=1),
+			nn.ReLU()
+		)
+		
+		self.up1 = nn.ConvTranspose1d(hidden_dim*2, hidden_dim, kernel_size=2, stride=2)
+		self.dec1 = nn.Sequential(
+			nn.Conv1d(hidden_dim*2, hidden_dim, kernel_size=3, padding=1),
+			nn.ReLU(),
+			nn.Conv1d(hidden_dim, hidden_dim, kernel_size=3, padding=1),
+			nn.ReLU()
+		)
+		
+		# Final classification layer
+		self.final = nn.Conv1d(hidden_dim, num_classes, kernel_size=1)
+	
+	def forward(self, x):
+		# Encoder
+		enc1 = self.enc1(x)  # [batch, hidden_dim, seq_len]
+		pooled1 = self.pool1(enc1)  # [batch, hidden_dim, 128]
+		
+		enc2 = self.enc2(pooled1)  # [batch, hidden_dim*2, 128]
+		pooled2 = self.pool2(enc2)  # [batch, hidden_dim*2, 64]
+		
+		# Bottleneck
+		bottleneck = self.bottleneck(pooled2)  # [batch, hidden_dim*4, 64]
+		
+		# Decoder
+		up2 = self.up2(bottleneck)  # [batch, hidden_dim*2, 128]
+		dec2 = self.dec2(torch.cat([up2, enc2], dim=1))  # [batch, hidden_dim*2, 128]
+		
+		up1 = self.up1(dec2)  # [batch, hidden_dim, seq_len]
+		dec1 = self.dec1(torch.cat([up1, enc1], dim=1))  # [batch, hidden_dim, seq_len]
+		
+		# Final classification layer
+		out = self.final(dec1)  # [batch, num_classes, seq_len]
+		
+		# Transpose to [batch, seq_len, num_classes]
+		return out.permute(0, 2, 1)
+
+import torch
+import torch.nn as nn
+
+class DownSample1D(nn.Module):
+	def __init__(self, in_channels, out_channels, dropout_rate=0.2):
+		super().__init__()
+		self.conv_layers = nn.Sequential(
+			nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
+			nn.SiLU(),
+			nn.Dropout1d(p=dropout_rate),  # Dropout after activation
+			nn.Conv1d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
+			nn.SiLU(),
+			nn.Dropout1d(p=dropout_rate)  # Another dropout for deeper regularization
+		)
+		self.avg_pool = nn.AvgPool1d(kernel_size=2, stride=2)
+
+	def forward(self, x):
+		x = self.conv_layers(x)
+		x_pooled = self.avg_pool(x)
+		return x_pooled, x  # Returning pooled output + skip connection
+
+class UpSample1D(nn.Module):
+	def __init__(self, in_channels, skip_channels, out_channels, dropout_rate=0.2):
+		super().__init__()
+		self.conv_transpose = nn.ConvTranspose1d(in_channels, out_channels, kernel_size=2, stride=2)
+		self.conv_layers = nn.Sequential(
+			nn.Conv1d(out_channels + skip_channels, out_channels, kernel_size=3, stride=1, padding=1),
+			nn.SiLU(),
+			nn.Dropout1d(p=dropout_rate),  # Dropout after first activation
+			nn.Conv1d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
+			nn.SiLU(),
+			nn.Dropout1d(p=dropout_rate)  # Dropout after second activation
+		)
+
+	def forward(self, x, skip):
+		x = self.conv_transpose(x)  # Upsample
+		x = torch.cat([x, skip], dim=1)  # Concatenate with skip connection
+		x = self.conv_layers(x)  # Convolutions
+		return x
+
+class FinalConv1D(nn.Module):
+	def __init__(self, in_channels, out_channels, dropout_rate=0.2):
+		super().__init__()
+		self.conv_layers = nn.Sequential(
+			nn.Conv1d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
+			nn.SiLU(),
+			nn.Dropout1d(p=dropout_rate),  # Dropout before final layer
+			nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
+		)
+
+	def forward(self, x):
+		return self.conv_layers(x)
+
+class UNet1DSegmentationHead(nn.Module):
+	def __init__(self, num_classes=9, dropout_rate=0.2):
+		super().__init__()
+
+		self._downsample_blocks = nn.ModuleList([
+			DownSample1D(256, 512, dropout_rate),
+			DownSample1D(512, 1024, dropout_rate),
+			DownSample1D(1024, 2048, dropout_rate)
+		])
+		
+		self.conv_layers = nn.Sequential(
+			nn.Conv1d(2048, 4096, kernel_size=3, stride=1, padding=1),
+			nn.SiLU(),
+			nn.Dropout1d(p=dropout_rate),  # Dropout after activation
+			nn.Conv1d(4096, 4096, kernel_size=3, stride=1, padding=1),
+			nn.SiLU(),
+			nn.Dropout1d(p=dropout_rate)  # Another dropout for deeper regularization
+		)
+
+		self._upsample_blocks = nn.ModuleList([
+			UpSample1D(4096, 2048, 2048, dropout_rate),
+			UpSample1D(2048, 1024, 1024, dropout_rate),
+			UpSample1D(1024, 512, 512, dropout_rate)
+		])
+
+		self.final_block = FinalConv1D(512, num_classes, dropout_rate)
+		self.dropout = nn.Dropout1d(p=dropout_rate)  # Global dropout for extra regularization
+
+	def forward(self, x):
+		skips = []
+		for down in self._downsample_blocks:
+			x, skip = down(x)
+			x = self.dropout(x)  # Dropout in encoder
+			skips.append(skip)
+
+		skips = skips[::-1]  # Reverse for upsampling
+
+		x = self.conv_layers(x)
+
+		for i, up in enumerate(self._upsample_blocks):
+			x = up(x, skips[i])
+			x = self.dropout(x)  # Dropout in decoder
+
+		x = self.final_block(x)
+		return x
+
+
+def init_weights(m):
+	if isinstance(m, nn.Conv1d):
+		# Kaiming Initialization for Conv1d layers
+		nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+		if m.bias is not None:
+			nn.init.constant_(m.bias, 0)
+	
+	elif isinstance(m, nn.ConvTranspose1d):
+		# Bilinear Initialization for ConvTranspose1d
+		nn.init.xavier_normal_(m.weight)
+		if m.bias is not None:
+			nn.init.constant_(m.bias, 0)
+	
+	elif isinstance(m, nn.BatchNorm1d):
+		# Constant Initialization for BatchNorm layers
+		nn.init.constant_(m.weight, 1)
+		nn.init.constant_(m.bias, 0)
+	
+	elif isinstance(m, nn.Linear):
+		# Xavier Initialization for Linear layers
+		nn.init.xavier_normal_(m.weight)
+		if m.bias is not None:
+			nn.init.constant_(m.bias, 0)
+
+class FocalLoss(nn.Module):
+	def __init__(self, alpha=0.25, gamma=2):
+		super(FocalLoss, self).__init__()
+		self.alpha = alpha
+		self.gamma = gamma
+		self.bce = nn.BCEWithLogitsLoss(reduction='none')
+
+	def forward(self, logits, targets):
+		bce_loss = self.bce(logits, targets)
+		probas = torch.sigmoid(logits)
+		pt = probas * targets + (1 - probas) * (1 - targets)  # Prob of true class
+		loss = self.alpha * (1 - pt) ** self.gamma * bce_loss  # Focal loss formula
+		return loss.mean()
+
+class WeightedFocalLoss(nn.Module):
+	"Non weighted version of Focal Loss"
+	def __init__(self, alpha=None, gamma=None, pos_weight=None):
+		super(WeightedFocalLoss, self).__init__()
+		if alpha == None: # Set positive class alpha values, negative values are 1-alpha
+			self.alpha = torch.tensor([0.7500, 0.9950, 0.8750, 0.8750, 0.9900, 0.9900, 0.9688, 0.9688, 0.9950])
+		else:
+			self.alpha = alpha
+		if gamma == None:
+			self.gamma = torch.tensor([2, 2, 2, 2, 2, 2, 2, 2, 2])
+		else:
+			self.gamma = gamma
+		self.pw = pos_weight
+
+	def forward(self, inputs, targets):
+		#self.alpha = self.alpha.to(inputs.device)
+		self.pw = self.pw.to(inputs.device)
+		self.gamma = self.gamma.to(inputs.device)
+		BCE_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none', pos_weight=self.pw)
+		pt = torch.sigmoid(inputs) * targets + (1 - torch.sigmoid(inputs)) * (1 - targets) # probability of ground truth class
+		pt = torch.clamp(pt, min=1e-8, max=1 - 1e-8)
+		#at = self.alpha * targets + (1 - self.alpha) * (1 - targets)
+		F_loss = (1-pt)**self.gamma * BCE_loss
+		return F_loss.mean()
+
+class DiceLoss(nn.Module):
+	def __init__(self, smooth=1e-6):
+		super(DiceLoss, self).__init__()
+		self.smooth = smooth  # Prevent division by zero
+
+	def forward(self, y_pred, y_true):
+		# Ensure predictions are between 0 and 1
+		y_pred = torch.sigmoid(y_pred)
+		y_true = y_true.float()
+
+		dice_loss = 0.0
+		num_classes = y_true.size(2)  # Number of classes (channels)
+
+		for c in range(num_classes):
+			intersection = torch.sum(y_pred[:, :,c] * y_true[:,:, c])
+			denominator = torch.sum(y_true[:,:, c]) + torch.sum(y_pred[:,:, c])
+
+			dice_score = (2. * intersection + self.smooth) / (denominator + self.smooth)
+			dice_loss += (1 - dice_score)  # Minimize Dice Loss for each class
+
+		return dice_loss / num_classes  # Average over classes
+
+class IoULoss(nn.Module):
+	def __init__(self, smooth=1e-6):
+		super(IoULoss, self).__init__()
+		self.smooth = smooth  # Prevent division by zero
+
+	def forward(self, y_pred, y_true):
+		y_pred = torch.sigmoid(y_pred)  # Ensure predictions are between 0 and 1
+		y_true = y_true.float()  # Ensure ground truth is float type
+
+		num_classes = y_true.size(2)  # Number of classes (channels)
+		iou_loss = 0.0
+
+		for c in range(num_classes):
+			intersection = torch.sum(y_pred[:,:, c] * y_true[:,:, c])
+			union = torch.sum(y_pred[:,:, c]) + torch.sum(y_true[:,:, c]) - intersection
+
+			iou_score = (intersection + self.smooth) / (union + self.smooth)
+			iou_loss += (1 - iou_score)  # Minimize IoU Loss for each class
+
+		return iou_loss / num_classes  # Average over all classes
+
+class HyenaEncoder(nn.Module):
+	def __init__(self, config):
+		super().__init__()
+		self.do_segment = config.do_segment
+		self.segmentation_model = config.s_model
+		self.numSegClasses = config.numSegClasses
+
+		HyenaConfig = AutoConfig.from_pretrained(config.encoder_model, trust_remote_code=True)
+		HyenaConfig.max_seq_len = config.max_encoder_seqlen
+		HyenaConfig.d_model = config.d_model
+		HyenaConfig.n_layer = config.encoder_n_layer
+		self.hyena = AutoModel.from_config(HyenaConfig, trust_remote_code=True)
+		
+		#HyenaConfig.n_layer = 3
+		#self.segmentation_model = AutoModel.from_config(HyenaConfig, trust_remote_code=True).backbone.layers
+		#self.segmentation_head = nn.Linear(config.d_model, config.numSegClasses)
+
+		#self.segmentation_head  = UNet1D(input_dim=256, hidden_dim=256, num_classes=9)
+		self.segmentation_head = UNet1DSegmentationHead(num_classes=9, dropout_rate=0.0)
+		self.segmentation_head.apply(init_weights)
+	
+	def forward(self, input_ids, segLabels = None, *args, **kwargs):
+		
+		output = self.hyena(input_ids)
+		
+		if self.do_segment:
+			seg_logits = self.segmentation_head(output.last_hidden_state.permute(0,2,1)).permute(0,2,1)
+
+			if segLabels != None:
+
+				# Define weight of positive splice junction classes to counteract class imbalance
+				#pos_weight = torch.ones(self.numSegClasses)
+				#pos_weight[[1,8]] = 10.0
+				#pos_weight[[4,5]] = 5.0
+				#pos_weight[[2,3,6,7]] = 2.0
+				pos_weight = torch.tensor([2.4, 4012, 6, 6, 1586, 1578, 46, 30, 4044])
+				pos_weight = pos_weight.to(segLabels.device)
+
+				# Define per-nucleotide weights to focus on basic genic features
+				#weight = torch.Tensor((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0))
+				#weight = weight.to(segLabels.device)
+
+				# Define the loss function with pos_weight
+				#segLossFn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+				#segLossFn = FocalLoss(alpha=0.5, gamma=2)
+				segLossFn = WeightedFocalLoss( 
+					pos_weight = torch.tensor([2.4, 4012, 6, 6, 1586, 1578, 46, 30, 4044]),
+					gamma=torch.tensor([2, 2, 2, 2, 2, 2, 2, 2, 2]))
+				#segLossFn=IoULoss()
+				#boundaryLossFn = BoundaryLoss()
+				seg_loss = segLossFn(seg_logits, segLabels)
+				#boundary_loss = boundaryLossFn(seg_logits[:,0:segLabels.shape[1]], segLabels)
+				#seg_loss = None
+				boundary_loss = None
+			else:
+				seg_loss = None
+		else:
+			seg_logits = None
+			seg_loss = None
+
+		return HyenaModelOutput(
+			last_hidden_state=output.last_hidden_state,
+			encoder_hidden_states=output.hidden_states,
+			segmentation_logits=seg_logits,
+			segmentation_loss=seg_loss
+		)
+
 class transgenicModel(TransgenicPreTrainedModel):
 	_tied_weights_keys = ["decoder_embed_tokens.weight", "decoder.embed_tokens.weight"]
 
@@ -396,9 +610,17 @@ class transgenicModel(TransgenicPreTrainedModel):
 
 		padding_idx, vocab_size = config.pad_token_id, config.vocab_size
 		#self.decoder_embed_tokens = NumberMaskEmbedTokens(vocab_size, config.d_model, padding_idx)
-		self.decoder_embed_tokens = nn.Embedding(vocab_size, config.d_model, padding_idx)
+		self.decoder_embed_tokens = nn.Embedding(vocab_size, config.d_model*2, padding_idx)
 		
-		self.encoder = segmented_sequence_embeddings(config.encoder_model, config.s_model, config.numSegClasses, do_segment=config.do_segment)
+		# Encoder model
+		self.encoder = HyenaEncoder(config)
+
+		# Compression
+		#self.pool = DynamicProportionalPooling()
+		self.downsample = HyenaDownsample(config.d_model, config.d_model*2, kernel_size=6, stride=6)
+		
+		# Decoder Model
+		config.d_model = config.d_model * 2
 		self.decoder = LEDForConditionalGeneration(config).led.decoder
 		self.decoder.embed_tokens = self.decoder_embed_tokens
 
@@ -418,12 +640,6 @@ class transgenicModel(TransgenicPreTrainedModel):
 	def get_decoder(self):
 		return self.decoder
 
-	#@add_start_docstrings_to_model_forward(LED_INPUTS_DOCSTRING)
-	#@add_code_sample_docstrings(
-	#	checkpoint=_CHECKPOINT_FOR_DOC,
-	#	output_type=Seq2SeqModelOutput,
-	#	config_class=_CONFIG_FOR_DOC,
-	#)
 	def forward(
 		self,
 		input_ids: Optional[torch.LongTensor] = None,
@@ -457,41 +673,27 @@ class transgenicModel(TransgenicPreTrainedModel):
 			decoder_input_ids = shift_tokens_right(
 				input_ids, self.config.pad_token_id, self.config.decoder_start_token_id
 			)
-		# Compute the embeddings with nucleotide transformer encoder
+		# Compute the embeddings with encoder
 		if encoder_outputs is None:
-			encoder_outputs = self.encoder(input_ids, 
-										attention_mask=attention_mask, 
-										return_dict=return_dict
-										).to_tuple()
+			encoder_outputs = self.encoder(input_ids)
+			encoder_outputs.attention_mask = attention_mask
 		else:
-			encoder_outputs = (encoder_outputs["inputs_embeds"], encoder_outputs["attention_mask"], encoder_outputs["seg_logits"])
-		#if encoder_outputs is None:
-		#	encoder_outputs = self.encoder(
-		#		input_ids=input_ids,
-		#		attention_mask=attention_mask,
-		#		global_attention_mask=global_attention_mask,
-		#		head_mask=head_mask,
-		#		inputs_embeds=inputs_embeds,
-		#		output_attentions=output_attentions,
-		#		output_hidden_states=output_hidden_states,
-		#		return_dict=return_dict,
-		#	)
+			encoder_outputs = HyenaModelOutput(
+				last_hidden_state=encoder_outputs, 
+				attention_mask=attention_mask
+				)
 
-		# If the user passed a tuple for encoder_outputs, we wrap it in a LEDEncoderBaseModelOutput when return_dict=False
-		#elif return_dict and not isinstance(encoder_outputs, LEDEncoderBaseModelOutput):
-		#	encoder_outputs = LEDEncoderBaseModelOutput(
-		#		last_hidden_state=encoder_outputs[0],
-		#		hidden_states=encoder_outputs[1] if len(encoder_outputs) > 1 else None,
-		#		attentions=encoder_outputs[2] if len(encoder_outputs) > 2 else None,
-		#		global_attentions=encoder_outputs[3] if len(encoder_outputs) > 3 else None,
-		#	)
+		# Compress to a size that the decoder can handle
+		#pooled = self.pool(encoder_outputs.last_hidden_state, encoder_outputs.attention_mask)
+		downsampled = self.downsample(encoder_outputs.last_hidden_state.permute(0,2,1)).permute(0,2,1)
+		attention_mask = torch.ones(downsampled.shape[0:2]).to(downsampled.device)
 
 		# decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
 		decoder_outputs = self.decoder(
 			input_ids=decoder_input_ids,
 			attention_mask=decoder_attention_mask,
-			encoder_hidden_states=encoder_outputs[0],
-			encoder_attention_mask=encoder_outputs[1].long(), #attention_mask,
+			encoder_hidden_states=downsampled, #pooled[0],
+			encoder_attention_mask=attention_mask, #pooled[1].long(),
 			global_attention_mask=global_attention_mask,
 			head_mask=decoder_head_mask,
 			cross_attn_head_mask=cross_attn_head_mask,
@@ -512,11 +714,11 @@ class transgenicModel(TransgenicPreTrainedModel):
 			decoder_hidden_states=decoder_outputs.hidden_states,
 			decoder_attentions=decoder_outputs.attentions,
 			cross_attentions=decoder_outputs.cross_attentions,
-			encoder_last_hidden_state=encoder_outputs[0],
-			encoder_hidden_states=None,
-			encoder_attentions=encoder_outputs[1],
+			encoder_last_hidden_state=encoder_outputs.last_hidden_state,
+			encoder_hidden_states=encoder_outputs.encoder_hidden_states,
+			encoder_attentions=encoder_outputs.attention_mask,
 			encoder_global_attentions=None,
-			segmentation_logits = encoder_outputs[2],
+			segmentation_logits = encoder_outputs.segmentation_logits,
 		)
 
 class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
@@ -694,7 +896,7 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 
 		return {
 			"input_ids": None,  # encoder_outputs is defined. input_ids not needed
-			"encoder_outputs": encoder_outputs,
+			"encoder_outputs": encoder_outputs.last_hidden_state,
 			"past_key_values": past_key_values,
 			"decoder_input_ids": decoder_input_ids,
 			"attention_mask": attention_mask,
@@ -719,11 +921,41 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 			)
 		return reordered_past
 
+class BiLSTMRegressionHead(nn.Module):
+	def __init__(self, input_dim=256, hidden_dim=128):
+		super(BiLSTMRegressionHead, self).__init__()
+		self.bilstm = nn.LSTM(input_dim, hidden_dim, batch_first=True, bidirectional=True)
+		self.fc = nn.Linear(hidden_dim * 2, 1)  # BiLSTM is bidirectional → output is 2 * hidden_dim
+		self.sigmoid = nn.Sigmoid()  # To scale output between 0 and 1 (optional)
+
+	def forward(self, x):
+		# x: (batch, seq_len=200, channels=256)
+		# BiLSTM Forward Pass
+		lstm_out, _ = self.bilstm(x)  # (batch, seq_len, hidden_dim * 2)
+
+		# Select the last timestep's output
+		last_hidden_state = lstm_out[:, -1, :]  # (batch, hidden_dim * 2)
+
+		# Fully connected layer for regression
+		output = self.fc(last_hidden_state)  # (batch, 1)
+
+		# Optionally scale the output to [0, 200] if using sigmoid
+		output = self.sigmoid(output) * 200  # (batch, 1), ensures position is between 0-200
+
+		return output.squeeze(1)  # Output shape: (batch,)
+
+
 class transgenicModelT5(TransgenicPreTrainedModel):
 
 	def __init__(self, config):
 		super().__init__(config)
-		self.encoder = segmented_sequence_embeddings(config.encoder_model, config.s_model, config.numSegClasses, do_segment=config.do_segment)
+		# Encoder model
+		self.encoder = HyenaEncoder(config)
+
+		# Compression
+		self.pool = DynamicProportionalPooling()
+
+		# Decoder
 		self.decoder = T5ForConditionalGeneration(config).decoder
 
 		# Initialize weights and apply final processing
@@ -776,18 +1008,22 @@ class transgenicModelT5(TransgenicPreTrainedModel):
 			)
 		# Compute the embeddings with nucleotide transformer encoder
 		if encoder_outputs is None:
-			encoder_outputs = self.encoder(input_ids, 
-										attention_mask=attention_mask, 
-										return_dict=return_dict
-										).to_tuple()
+			encoder_outputs = self.encoder(input_ids)
+			encoder_outputs.attention_mask = attention_mask
 		else:
-			encoder_outputs = (encoder_outputs["inputs_embeds"], encoder_outputs["attention_mask"], encoder_outputs["seg_logits"])
+			encoder_outputs = HyenaModelOutput(
+				last_hidden_state=encoder_outputs, 
+				attention_mask=attention_mask
+				)
 		
+		# Compress to a size that the decoder can handle
+		pooled = self.pool(encoder_outputs.last_hidden_state, encoder_outputs.attention_mask)
+
 		decoder_outputs = self.decoder(
 			input_ids=decoder_input_ids,
 			attention_mask=decoder_attention_mask,
-			encoder_hidden_states=encoder_outputs[0],
-			encoder_attention_mask=encoder_outputs[1].long(),
+			encoder_hidden_states=pooled[0],
+			encoder_attention_mask=pooled[1].long(),
 			head_mask=decoder_head_mask,
 			cross_attn_head_mask=cross_attn_head_mask,
 			past_key_values=past_key_values,
@@ -807,11 +1043,11 @@ class transgenicModelT5(TransgenicPreTrainedModel):
 			decoder_hidden_states=decoder_outputs.hidden_states,
 			decoder_attentions=decoder_outputs.attentions,
 			cross_attentions=decoder_outputs.cross_attentions,
-			encoder_last_hidden_state=encoder_outputs[0],
-			encoder_hidden_states=None,
-			encoder_attentions=encoder_outputs[1],
+			encoder_last_hidden_state=encoder_outputs.last_hidden_state,
+			encoder_hidden_states=encoder_outputs.encoder_hidden_states,
+			encoder_attentions=encoder_outputs.attention_mask,
 			encoder_global_attentions=None,
-			segmentation_logits = encoder_outputs[2],
+			segmentation_logits = encoder_outputs.segmentation_logits,
 		)
 
 class transgenicForConditionalGenerationT5(TransgenicPreTrainedModel):
@@ -942,9 +1178,9 @@ class transgenicForConditionalGenerationT5(TransgenicPreTrainedModel):
 
 		masked_lm_loss = None
 		if labels is not None:
-			#weights = torch.ones(50262).to(lm_logits.device)
-			#weights[262:] = 2
-			loss_fct = nn.CrossEntropyLoss()
+			weights = torch.ones(272).to(lm_logits.device)
+			weights[4:14] = 5
+			loss_fct = nn.CrossEntropyLoss(weights=weights)
 			masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
 			#masked_lm_loss = HybridLoss(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
 			#loss_fct = HybridSequenceLoss()
@@ -1007,193 +1243,3 @@ class transgenicForConditionalGenerationT5(TransgenicPreTrainedModel):
 				+ layer_past[2:],
 			)
 		return reordered_past
-
-
-class TransgenicWithValueHead(AutoModelForSeq2SeqLMWithValueHead):
-	def __init__(self, base_model):
-		super().__init__(base_model)
-		self.is_peft_model = False
-
-class HausdorffDistanceLoss(nn.Module):
-	def __init__(self, alpha=0.01):
-		super(HausdorffDistanceLoss, self).__init__()
-		self.alpha = alpha
-
-	def forward(self, pred, target):
-		"""
-		Forward pass to calculate the Hausdorff distance-based loss.
-		Args:
-		- pred (Tensor): Predicted segmentation output (logits) of shape (N, C, H, W).
-		- target (Tensor): Ground truth labels of shape (N, C, H, W) for multilabel.
-		
-		Returns:
-		- hausdorff_loss (Tensor): The Hausdorff distance-based loss value.
-		"""
-		# Convert logits to probabilities, and threshold to binary predictions
-		pred = torch.nn.functional.softmax(pred, dim=-1)[...,0][:,:,(0,2,3,4,5,6,7)]
-		pred_bin = (pred > 0.5).float()
-		target_bin = target[:,:,(0,2,3,4,5,6,7)].float()
-
-		# Initialize loss
-		hausdorff_loss = 0.0
-		
-		# Calculate Hausdorff loss per class (C classes)
-		for c in range(pred_bin.shape[2]):
-			pred_boundaries = self._extract_boundaries(pred_bin[:, :, c])
-			target_boundaries = self._extract_boundaries(target_bin[:, :, c])
-			
-			# Compute the pairwise distance between the boundary points
-			d_pred_to_target = self._pairwise_distance(pred_boundaries, target_boundaries)
-			d_target_to_pred = self._pairwise_distance(target_boundaries, pred_boundaries)
-
-			# Add the Chamfer-like average distance for class `c`
-			hausdorff_loss += torch.mean(d_pred_to_target) + torch.mean(d_target_to_pred)
-		
-		# Average over all classes (optional depending on how you want to combine class losses)
-		hausdorff_loss /= pred_bin.shape[2]
-		
-		return hausdorff_loss * self.alpha
-
-	def _extract_boundaries(self, binary_sequence):
-		"""
-		Extracts boundary points from a binary sequence mask using gradient differences.
-		Args:
-		- binary_sequence (Tensor): Binary segmentation map of shape (batch, sequence).
-		
-		Returns:
-		- boundary_points (Tensor): Boundary point indices (batch, sequence, 1).
-		"""
-		# Approximate boundary extraction using 1D gradient (difference between neighboring points)
-		grad = torch.abs(binary_sequence[:, 1:] - binary_sequence[:, :-1])
-		boundary_points = (grad > 0).nonzero(as_tuple=False)  # Get indices where gradient indicates boundary
-
-		return boundary_points
-
-	def _pairwise_distance(self, points1, points2):
-		"""
-		Compute the pairwise Euclidean distance between two sets of 1D points.
-		Args:
-		- points1 (Tensor): First set of boundary points (batch, sequence, 1).
-		- points2 (Tensor): Second set of boundary points (batch, sequence, 1).
-		
-		Returns:
-		- dists (Tensor): Pairwise distances between points.
-		"""
-		if len(points1) == 0 or len(points2) == 0:
-			return torch.zeros(1, device=points1.device)  # Return 0 if no boundary points exist
-		
-		# Compute pairwise distances between all points in the two sets
-		dists = torch.cdist(points1.float(), points2.float(), p=2)
-		
-		# For each point in points1, find the minimum distance to points2
-		min_dists, _ = torch.min(dists, dim=1)
-
-		return min_dists
-
-# Combined Loss: BCEWithLogits + Hausdorff Loss for DNA Segmentation
-class BoundaryLoss(nn.Module):
-	def __init__(self, alpha=0.01, beta=1.0, numSegClasses=14, device=torch.device("cuda")):
-		"""
-		Initializes the combined loss function for DNA segmentation.
-		Args:
-		- alpha (float): Weight for Hausdorff loss.
-		- beta (float): Weight for Binary Cross-Entropy loss.
-		"""
-		super(BoundaryLoss, self).__init__()
-		self.hausdorff_loss = HausdorffDistanceLoss(alpha)
-		
-		# Define weight of positive splice junction classes to counteract class imbalance
-		pos_weight = torch.ones(numSegClasses)
-		pos_weight[[4, 5]] = 7.0
-		pos_weight = pos_weight.to(device)
-
-		# Define per-nucleotide weights to focus on basic genic features
-		weight = torch.Tensor((5.0, 0.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
-		weight = weight.to(device)
-
-		# Define the loss function with pos_weight
-		self.bce_loss = nn.BCEWithLogitsLoss(pos_weight=pos_weight, weight=weight)  # For multilabel classification
-		self.beta = beta
-
-	def forward(self, pred, target):
-		"""
-		Forward pass to calculate the combined loss.
-		Args:
-		- pred (Tensor): Predicted logits from the model (batch, sequence, num_classes).
-		- target (Tensor): Ground truth labels (batch, sequence, num_classes).
-		
-		Returns:
-		- combined_loss (Tensor): Weighted sum of BCE and Hausdorff losses.
-		"""
-		# BCEWithLogitsLoss expects the target in the same shape as the prediction
-		bce_loss = self.bce_loss(pred[...,0], target)
-		
-		# Hausdorff Loss for boundary accuracy
-		hausdorff_loss = self.hausdorff_loss(pred, target)
-
-		# Combine the two losses with specified weights
-		combined_loss = bce_loss * self.beta + hausdorff_loss
-		return combined_loss
-	
-#def numeric_token_loss(logits, label):
-#	digit_tokens = {'0': 4, '1': 5, '2': 6, '3': 7,'4': 8, '5': 9, '6': 10, '7': 11, '8': 12, '9': 13}
-#	digit_token_ids = {digit_tokens[k]:k for k in digit_tokens}
-#	digit_values = torch.tensor([int(token) for token in digit_tokens], dtype=torch.float32, device=logits.device)
-#	
-#	# Find contigous digits representing a number
-#	digit_positions = [i for i, token in enumerate(label.tolist()) if token in digit_token_ids.keys()] 
-#	contiguous_digits = []
-#	number = []
-#	for j,i in enumerate(digit_positions):
-#		if j == 0: 
-#			number.append(i)
-#		elif i-1 == digit_positions[j-1]:
-#			number.append(i)
-#		else:
-#			contiguous_digits.append(number)
-#			number = [i]
-#	if number:
-#		contiguous_digits.append(number)
-#	
-#	numeric_loss = torch.tensor(0.0, device=logits.device)
-#	for number in contiguous_digits:
-#		number_logits = logits[number]																		# Extract digit logits and target digits
-#		label_digits = label[number]
-		
-		#number_logits_max = number_logits.max(dim=-1, keepdim=True)[0]
-		#number_logits_stable = number_logits - number_logits_max
-#		digit_probs = torch.softmax(number_logits, dim=-1)[:, list(digit_token_ids.keys())] 			# Convert logits to probabilities
-#		
-#		expected_digits = (digit_probs * digit_values).sum(dim=-1) 											# Expected digit values
-#		predicted_number = (expected_digits * (10 ** torch.arange(len(expected_digits) - 1, -1, -1).to(expected_digits.device))).sum() # Compute predicted number
-#		target_number = int(''.join([str(digit_token_ids[d.item()]) for d in label_digits])) 				# Compute target number
-#		numeric_loss += (predicted_number - target_number).abs()  								# Compute numeric loss
-#	if torch.isnan(numeric_loss):
-#		pass
-#	return numeric_loss/(len(contiguous_digits)+1e-8)
-
-def numeric_token_loss(logits, label):
-	digit_tokens = {str(i):i+262 for i in range(0,50000)}
-	digit_token_ids = {digit_tokens[k]:k for k in digit_tokens}
-	digit_values = torch.tensor([int(token) for token in digit_tokens], dtype=torch.float32, device=logits.device)
-	
-	# Find digits in the label
-	digit_positions = [i for i, token in enumerate(label.tolist()) if token in digit_token_ids.keys()] 
-	
-	numeric_loss = torch.tensor(0.0, device=logits.device)
-	for number in digit_positions:
-		number_logits = logits[number]																		# Extract digit logits and target digits
-		label_digits = label[number]
-		digit_probs = torch.softmax(number_logits, dim=-1)[list(digit_token_ids.keys())] 			# Convert logits to probabilities
-		
-		expected_digits = (digit_probs * digit_values).sum(dim=-1)	# Expected digit values
-		target_number = label_digits -262 							# Compute target number
-		numeric_loss += (expected_digits - target_number).abs()	# Compute numeric loss
-	if torch.isnan(numeric_loss):
-		pass
-	return numeric_loss/(len(digit_positions)+1e-8)
-
-# Total loss
-def HybridLoss(logits, label, alpha=1, beta=0.01):
-	ce_loss = nn.CrossEntropyLoss()
-	return alpha * ce_loss(logits, label) + beta * numeric_token_loss(logits, label)

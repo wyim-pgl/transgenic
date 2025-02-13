@@ -29,7 +29,8 @@ def trainSegmentNTAccelerate(
 	output_dir="saved_models_FCG/",
 	accumulation_steps=32,
 	notes="",
-	encoder_model="InstaDeepAI/nucleotide-transformer-v2-500m-multi-species",
+	encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b",
+	segmentation_model="InstaDeepAI/segment_nt_multi_species",
 	unlink=False):
 
 	# start a new wandb run to track this script
@@ -77,6 +78,10 @@ def trainSegmentNTAccelerate(
 		param.requires_grad = False
 	for param in model.hidden_mapping_layernorm.parameters():
 		param.requires_grad = False
+	#for param in model.unet_mapping.parameters():
+	#	param.requires_grad = False
+	#for param in model.unet_mapping_layernorm.parameters():
+	#	param.requires_grad = False
 	#for param in model.film.parameters():
 	#	param.requires_grad = False
 	
@@ -85,7 +90,7 @@ def trainSegmentNTAccelerate(
 		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
 			for k in f.keys():
 				tensors[k] = f.get_tensor(k)
-		model.load_state_dict(tensors)
+		model.load_state_dict(tensors, strict=False)
 
 	model.to(device)
 	
@@ -111,6 +116,8 @@ def trainSegmentNTAccelerate(
 	for epoch in range(num_epochs):
 		total_loss = 0
 		for step, batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
+			if "Zma" in batch[3][0]:
+				continue
 			outputs = model(batch[0].to(device), attention_mask=batch[1].to(device), segLabels=batch[2].to(device))
 			loss = outputs[3] / accumulation_steps
 			#accelerator.backward(loss)
@@ -129,7 +136,7 @@ def trainSegmentNTAccelerate(
 				wandb.log(wandb_log)
 				optimizer.zero_grad()
 			
-			if (step % 300 == 0):
+			if (step % 5000 == 0):
 				print(f"Epoch {epoch=}, Step {step=}, Loss {loss=}", file=sys.stderr)
 				#accelerator.save_state(output_dir=checkpoint_path)
 				save_model(model, f"{checkpoint_path}/model.safetensors")
@@ -142,8 +149,10 @@ def trainSegmentNTAccelerate(
 			model.eval()
 			eval_loss = 0
 			for batch in tqdm(eval_ds, miniters=10, disable=False):
+				if "Zma" in batch[3][0]:
+					continue
 				with torch.no_grad():
-					outputs = model(batch[0], attention_mask=batch[1], segLabels=batch[2])
+					outputs = model(batch[0].to(device), attention_mask=batch[1].to(device), segLabels=batch[2].to(device))
 				loss = outputs[3]
 				eval_loss += loss.detach().float()
 
@@ -191,23 +200,23 @@ if __name__ == '__main__':
 	encoder_model = "InstaDeepAI/agro-nucleotide-transformer-1b"
 	segmentation_model = "InstaDeepAI/segment_nt_multi_species"
 
-	ds  = segmentationDataset(6144, 6000, "/home/jlomas/Segmentation_10Genomes.db")
-	train_data, eval_data, test_data = torch.utils.data.random_split(ds, [800419, 106722,160085])
+	ds  = preprocessedSegmentationDataset("Segmentation_9Genomes_preprocessed_scodons.db")
+	train_data, eval_data, test_data = torch.utils.data.random_split(ds, [534331, 71244,106867])
 
 	trainSegmentNTAccelerate(
 		train_data, 
 		eval_data, 
-		lr=1e-4, 
+		lr=5e-5, 
 		num_epochs=5, 
 		schedule_lr=True, 
 		eval=True, 
-		batch_size=16, 
-		accumulation_steps=16,
+		batch_size=1, 
+		accumulation_steps=32,
 		checkpoint_path="checkpoints_SegmentNT", 
-		safetensors_model=None, #"checkpoints_SegmentNT/model.safetensors",
+		safetensors_model="checkpoints/AgroSegmentNT_Epoch1-5_6144nt_restart_codons.safetensors",
 		output_dir="saved_models_SegmentNT/",
 		max_grad_norm=2,
-		notes="Short length, direct fine tuning of agro SegmentNT",
+		notes="Short length (6144nt), BCE loss with start and stop codons. Unfrozen mapping layers.",
 		encoder_model=encoder_model,
 		unlink = False
 	)
