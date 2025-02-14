@@ -8,7 +8,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from utils_transgenic import *
 from configuration_transgenic import TransgenicHyenaConfig
 from safetensors.torch import save_model
-from modeling_HeynaTransgenic import HyenaEncoder, BiLSTMRegressionHead
+from modeling_HeynaTransgenic import HyenaEncoder, BiLSTMRegressionHead, UNet1DRegressionHead, DilatedCNNRegressionWithAttention
 
 os.environ['HF_HOME'] = './HFmodels'
 
@@ -68,16 +68,16 @@ def trainTransgenicFCGAccelerate(
 	train_ds = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
 	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
 	
-	decoder_checkpoint = "checkpoints_Hyena/model.safetensors"
+	decoder_checkpoint = "checkpoints/Hyena_Gen9G_6144nt_E30.safetensors"
 
-	config = TransgenicHyenaConfig(do_segment=True, numSegClasses=9)
+	config = TransgenicHyenaConfig(do_segment=False)
 	encoder_model = HyenaEncoder(config)
 
 	tensors = {}
 	with safe_open(decoder_checkpoint, framework="pt", device="cpu") as f:
 		for k in f.keys():
 			if ("segmentation" not in k) and ("transgenic.decoder" not in k) and ("lm_head" not in k): 
-				tensors[k] = f.get_tensor(k)
+				tensors[k.replace("transgenic.encoder.", "")] = f.get_tensor(k)
 	#tensors["transgenic.decoder_embed_tokens.weight"] = tensors["lm_head.weight"]
 	#tensors["transgenic.decoder.embed_tokens.weight"] = tensors["transgenic.decoder_embed_tokens.weight"]
 
@@ -87,13 +87,13 @@ def trainTransgenicFCGAccelerate(
 	encoder_model.eval()
 
 	# Set up regression heads
-	biLSTM_Start = BiLSTMRegressionHead()
+	biLSTM_Start = DilatedCNNRegressionWithAttention()
 	biLSTM_Start.to(device)
-	biLSTM_Stop = BiLSTMRegressionHead()
+	biLSTM_Stop = DilatedCNNRegressionWithAttention()
 	biLSTM_Stop.to(device)
-	biLSTM_SD = BiLSTMRegressionHead()
+	biLSTM_SD = DilatedCNNRegressionWithAttention()
 	biLSTM_SD.to(device)
-	biLSTM_SA = BiLSTMRegressionHead()
+	biLSTM_SA = DilatedCNNRegressionWithAttention()
 	biLSTM_SA.to(device)
 
 
@@ -156,6 +156,7 @@ def trainTransgenicFCGAccelerate(
 				outputs.last_hidden_state = outputs.last_hidden_state.detach()
 			except:
 				print(f"Error in batch: {batch[3]}")
+				continue
 			
 			true = dt.batch_decode(lab.detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
 			sequence = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True)[0].replace(" ", "")
@@ -167,8 +168,12 @@ def trainTransgenicFCGAccelerate(
 				if pp.strand == "-":
 					start = len(sequence)-start
 				randomNumber = torch.clamp(torch.round(torch.normal(mean=torch.FloatTensor([100.0]), std=torch.FloatTensor([33.3]))), min=0, max=200).to(torch.int)
+				if start-randomNumber < 0:
+					randomNumber = torch.tensor([start])
+				if start+(200-randomNumber) > len(sequence):
+					randomNumber = torch.tensor([start-len(sequence)+200])
 				prediction = biLSTM_Start(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
-				loss = loss_fn(prediction, torch.FloatTensor([randomNumber]).to(device))
+				loss = loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 				total_loss_start += loss.detach().cpu()
 				loss /= accumulation_steps
 				loss.backward()
@@ -179,16 +184,16 @@ def trainTransgenicFCGAccelerate(
 					if schedule_lr: start_lr_scheduler.step()
 					# log metrics to wandb
 					if log_wandb:
-						wandb_log = {"epoch":epoch, "step":step_start, "loss": loss.detach().float()*accumulation_steps, "mean_loss": (total_loss_start) / (step_start+1), "lr": start_lr_scheduler.get_last_lr()[0]}
+						wandb_log = {"step_start":step_start, "start_loss": loss.detach().float()*accumulation_steps, "start_mean_loss": (total_loss_start) / (step_start+1), "start_lr": start_lr_scheduler.get_last_lr()[0]}
 						for name, param in biLSTM_Start.named_parameters():
 							if (param.grad != None) & (param.requires_grad):
 								grad_norm = param.grad.norm().detach().item()
-								wandb_log[f"{name}_grad_norm"] = grad_norm
+								wandb_log[f"start_{name}_grad_norm"] = grad_norm
 						wandb.log(wandb_log)
 					start_optimizer.zero_grad()
 			
 				if (step_start % 5000 == 0) & (step_start != 0):
-					save_model(biLSTM_Start, f"{checkpoint_path}/biLSTM_Start.safetensors")
+					torch.save(biLSTM_Start.state_dict(), f"{checkpoint_path}/biLSTM_Start.pth")
 				
 				step_start += 1
 			
@@ -198,8 +203,12 @@ def trainTransgenicFCGAccelerate(
 				if pp.strand == "-":
 					stop = len(sequence)-stop
 				randomNumber = torch.clamp(torch.round(torch.normal(mean=torch.FloatTensor([100.0]), std=torch.FloatTensor([33.3]))), min=0, max=200).to(torch.int)
+				if stop-randomNumber < 0:
+					randomNumber = torch.tensor([stop])
+				if stop+(200-randomNumber) > len(sequence):
+					randomNumber = torch.tensor([stop-len(sequence)+200])
 				prediction = biLSTM_Stop(outputs.last_hidden_state[:, stop-randomNumber:stop+(200-randomNumber)])
-				loss = loss_fn(prediction, torch.FloatTensor([randomNumber]).to(device))
+				loss = loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 				total_loss_stop += loss.detach().cpu()
 				loss /= accumulation_steps
 				loss.backward()
@@ -210,27 +219,31 @@ def trainTransgenicFCGAccelerate(
 					if schedule_lr: stop_lr_scheduler.step()
 					# log metrics to wandb
 					if log_wandb:
-						wandb_log = {"epoch":epoch, "step":step_stop, "loss": loss.detach().float()*accumulation_steps, "mean_loss": (total_loss_stop) / (step_stop+1), "lr": stop_lr_scheduler.get_last_lr()[0]}
+						wandb_log = {"stop_step":step_stop, "stop_loss": loss.detach().float()*accumulation_steps, "stop_mean_loss": (total_loss_stop) / (step_stop+1), "stop_lr": stop_lr_scheduler.get_last_lr()[0]}
 						for name, param in biLSTM_Stop.named_parameters():
 							if (param.grad != None) & (param.requires_grad):
 								grad_norm = param.grad.norm().detach().item()
-								wandb_log[f"{name}_grad_norm"] = grad_norm
+								wandb_log[f"stop_{name}_grad_norm"] = grad_norm
 						wandb.log(wandb_log)
 					stop_optimizer.zero_grad()
 			
 				if (step_stop % 5000 == 0) & (step_stop != 0):
-					save_model(biLSTM_Stop, f"{checkpoint_path}/biLSTM_Stop.safetensors")
+					torch.save(biLSTM_Stop.state_dict(), f"{checkpoint_path}/biLSTM_Stop.pth")
 				
 				step_stop += 1
 			
 			# Process Splice donors
-			for cds in pp.splice_pairs:
+			for cds in pp.cds_pairs:
 				sd = int(pp.features[pp.feature_index_dict[cds[0]]][2])
 				if pp.strand == "-":
 					sd = len(sequence)-sd
 				randomNumber = torch.clamp(torch.round(torch.normal(mean=torch.FloatTensor([100.0]), std=torch.FloatTensor([33.3]))), min=0, max=200).to(torch.int)
+				if sd-randomNumber < 0:
+					randomNumber = torch.tensor([sd])
+				if sd+(200-randomNumber) > len(sequence):
+					randomNumber = torch.tensor([sd-len(sequence)+200])
 				prediction = biLSTM_SD(outputs.last_hidden_state[:, sd-randomNumber:sd+(200-randomNumber)])
-				loss = loss_fn(prediction, torch.FloatTensor([randomNumber]).to(device))
+				loss = loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 				total_loss_sd += loss.detach().cpu()
 				loss /= accumulation_steps
 				loss.backward()
@@ -241,27 +254,31 @@ def trainTransgenicFCGAccelerate(
 					if schedule_lr: sd_lr_scheduler.step()
 					# log metrics to wandb
 					if log_wandb:
-						wandb_log = {"epoch":epoch, "step":step_sd, "loss": loss.detach().float()*accumulation_steps, "mean_loss": (total_loss_sd) / (step_sd+1), "lr": sd_lr_scheduler.get_last_lr()[0]}
+						wandb_log = {"sd_step":step_sd, "sd_loss": loss.detach().float()*accumulation_steps, "sd_mean_loss": (total_loss_sd) / (step_sd+1), "sd_lr": sd_lr_scheduler.get_last_lr()[0]}
 						for name, param in biLSTM_SD.named_parameters():
 							if (param.grad != None) & (param.requires_grad):
 								grad_norm = param.grad.norm().detach().item()
-								wandb_log[f"{name}_grad_norm"] = grad_norm
+								wandb_log[f"sd_{name}_grad_norm"] = grad_norm
 						wandb.log(wandb_log)
 					sd_optimizer.zero_grad()
 			
 				if (step_sd % 5000 == 0) & (step_sd != 0):
-					save_model(biLSTM_SD, f"{checkpoint_path}/biLSTM_SD.safetensors")
+					torch.save(biLSTM_SD.state_dict(), f"{checkpoint_path}/biLSTM_SD.pth")
 				
 				step_sd += 1
 
 			# Process Splice Acceptors
-			for cds in pp.splice_pairs:
+			for cds in pp.cds_pairs:
 				sa = int(pp.features[pp.feature_index_dict[cds[1]]][0])
 				if pp.strand == "-":
 					sa = len(sequence)-sa
 				randomNumber = torch.clamp(torch.round(torch.normal(mean=torch.FloatTensor([100.0]), std=torch.FloatTensor([33.3]))), min=0, max=200).to(torch.int)
+				if sa-randomNumber < 0:
+					randomNumber = torch.tensor([sa])
+				if sa+(200-randomNumber) > len(sequence):
+					randomNumber = torch.tensor([sa-len(sequence)+200])
 				prediction = biLSTM_SA(outputs.last_hidden_state[:, sa-randomNumber:sa+(200-randomNumber)])
-				loss = loss_fn(prediction, torch.FloatTensor([randomNumber]).to(device))
+				loss = loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 				total_loss_sa += loss.detach().cpu()
 				loss /= accumulation_steps
 				loss.backward()
@@ -272,18 +289,20 @@ def trainTransgenicFCGAccelerate(
 					if schedule_lr: sa_lr_scheduler.step()
 					# log metrics to wandb
 					if log_wandb:
-						wandb_log = {"epoch":epoch, "step":step_sa, "loss": loss.detach().float()*accumulation_steps, "mean_loss": (total_loss_sa) / (step_sa+1), "lr": sa_lr_scheduler.get_last_lr()[0]}
+						wandb_log = {"sa_step":step_sa, "sa_loss": loss.detach().float()*accumulation_steps, "sa_mean_loss": (total_loss_sa) / (step_sa+1), "sa_lr": sa_lr_scheduler.get_last_lr()[0]}
 						for name, param in biLSTM_SA.named_parameters():
 							if (param.grad != None) & (param.requires_grad):
 								grad_norm = param.grad.norm().detach().item()
-								wandb_log[f"{name}_grad_norm"] = grad_norm
+								wandb_log[f"sa_{name}_grad_norm"] = grad_norm
 						wandb.log(wandb_log)
 					sa_optimizer.zero_grad()
 			
 				if (step_sa % 5000 == 0) & (step_sa != 0):
-					save_model(biLSTM_SA, f"{checkpoint_path}/biLSTM_SA.safetensors")
+					torch.save(biLSTM_SA.state_dict(), f"{checkpoint_path}/biLSTM_SA.pth")
 				
 				step_sa += 1
+			del outputs
+			torch.cuda.empty_cache()
 
 		start_train_epoch_loss = total_loss_start / step_start
 		start_train_ppl = torch.exp(start_train_epoch_loss)
@@ -304,6 +323,9 @@ def trainTransgenicFCGAccelerate(
 			sa_eval_loss = 0
 			step_sa = 0
 			for batch in tqdm(eval_ds, miniters=10, disable=False):
+				if 'Zm' in batch[3][0]: 
+					continue
+				ii, am, lab = batch[0].to(device), batch[1].to(device), batch[2].to(device)
 				with torch.no_grad():
 					outputs = encoder_model(input_ids=batch[0].to(device))
 				
@@ -314,31 +336,53 @@ def trainTransgenicFCGAccelerate(
 				for cds in pp.start_cds:
 					start = int(pp.features[pp.feature_index_dict[cds]][0])
 					randomNumber = torch.clamp(torch.round(torch.normal(mean=torch.FloatTensor([100.0]), std=torch.FloatTensor([33.3]))), min=0, max=200).to(torch.int)
-					prediction = biLSTM_Start(outputs.last_hidden_state[start-randomNumber:start+(200-randomNumber)])
-					start_eval_loss += loss_fn(prediction, randomNumber)
+					if pp.strand == "-":
+						start = len(sequence)-start
+					if start-randomNumber < 0:
+						randomNumber = torch.tensor([start])
+					if start+(200-randomNumber) > len(sequence):
+						randomNumber = torch.tensor([start-len(sequence)+200])
+					prediction = biLSTM_Start(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
+					start_eval_loss += loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 					step_start += 1
 				
 				for cds in pp.end_cds:
 					stop = int(pp.features[pp.feature_index_dict[cds]][2])
 					randomNumber = torch.clamp(torch.round(torch.normal(mean=torch.FloatTensor([100.0]), std=torch.FloatTensor([33.3]))), min=0, max=200).to(torch.int)
-					prediction = biLSTM_Stop(outputs.last_hidden_state[start-randomNumber:start+(200-randomNumber)])
-					stop_eval_loss += loss_fn(prediction, randomNumber)
+					if pp.strand == "-":
+						stop = len(sequence)-stop
+					if start-randomNumber < 0:
+						randomNumber = torch.tensor([start])
+					if stop+(200-randomNumber) > len(sequence):
+						randomNumber = torch.tensor([stop-len(sequence)+200])
+					prediction = biLSTM_Stop(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
+					stop_eval_loss += loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 					step_stop += 1
 				
 				# Splice donors
-				for cds in pp.splice_pairs:
+				for cds in pp.cds_pairs:
 					sd = int(pp.features[pp.feature_index_dict[cds[0]]][2])
 					randomNumber = torch.clamp(torch.round(torch.normal(mean=torch.FloatTensor([100.0]), std=torch.FloatTensor([33.3]))), min=0, max=200).to(torch.int)
-					prediction = biLSTM_SD(outputs.last_hidden_state[start-randomNumber:start+(200-randomNumber)])
-					sd_eval_loss += loss_fn(prediction, randomNumber)
+					if pp.strand == "-":
+						sd = len(sequence)-sd
+					if sd+(200-randomNumber) > len(sequence):
+						randomNumber = torch.tensor([sd-len(sequence)+200])
+					prediction = biLSTM_SD(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
+					sd_eval_loss += loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 					step_sd += 1
 				
 				# Splice acceptors
-				for cds in pp.splice_pairs:
-					start = int(pp.features[pp.feature_index_dict[cds[1]]][0])
+				for cds in pp.cds_pairs:
+					sa = int(pp.features[pp.feature_index_dict[cds[1]]][0])
 					randomNumber = torch.clamp(torch.round(torch.normal(mean=torch.FloatTensor([100.0]), std=torch.FloatTensor([33.3]))), min=0, max=200).to(torch.int)
-					prediction = biLSTM_Start(outputs.last_hidden_state[start-randomNumber:start+(200-randomNumber)])
-					sa_eval_loss += loss_fn(prediction, randomNumber)
+					if pp.strand == "-":
+						sa = len(sequence)-sa
+					if sa-randomNumber < 0:
+						randomNumber = torch.tensor([start])
+					if sa+(200-randomNumber) > len(sequence):
+						randomNumber = torch.tensor([sa-len(sequence)+200])
+					prediction = biLSTM_SA(outputs.last_hidden_state[:, sa-randomNumber:sa+(200-randomNumber)])
+					sa_eval_loss += loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 					step_sa += 1
 
 
@@ -350,15 +394,15 @@ def trainTransgenicFCGAccelerate(
 			sd_eval_ppl = torch.exp(sd_eval_epoch_loss)
 			sa_eval_epoch_loss = sa_eval_loss / step_sa
 			sa_eval_ppl = torch.exp(sa_eval_epoch_loss)
-			print(f"{epoch=}: {start_train_ppl=}, {start_train_epoch_loss=}, {start_eval_ppl=}, {start_eval_epoch_loss=}", file=sys.stderr)
-			if log_wandb:
-				wandb_log = {
-					"start_epoch_train_ppl":start_train_ppl, "start_epoch_train_loss":start_train_epoch_loss, "start_epoch_eval_ppl":start_eval_ppl, "start_epoch_eval_loss":start_eval_epoch_loss,
-					"stop_epoch_train_ppl":stop_train_ppl, "stop_epoch_train_loss":stop_train_epoch_loss, "stop_epoch_eval_ppl":stop_eval_ppl, "stop_epoch_eval_loss":stop_eval_epoch_loss,
-					"sd_epoch_train_ppl":sd_train_ppl, "sd_epoch_train_loss":sd_train_epoch_loss, "sd_epoch_eval_ppl":sd_eval_ppl, "sd_epoch_eval_loss":sd_eval_epoch_loss,
-					"sa_epoch_train_ppl":sa_train_ppl, "sa_epoch_train_loss":sa_train_epoch_loss, "sa_epoch_eval_ppl":sa_eval_ppl, "sa_epoch_eval_loss":sa_eval_epoch_loss
-					}
-				wandb.log(wandb_log)
+			#print(f"{epoch=}: {start_train_ppl=}, {start_train_epoch_loss=}, {start_eval_ppl=}, {start_eval_epoch_loss=}", file=sys.stderr)
+			#if log_wandb:
+			#	wandb_log = {
+			#		"start_epoch_train_ppl":start_train_ppl, "start_epoch_train_loss":start_train_epoch_loss, "start_epoch_eval_ppl":start_eval_ppl, "start_epoch_eval_loss":start_eval_epoch_loss,
+			#		"stop_epoch_train_ppl":stop_train_ppl, "stop_epoch_train_loss":stop_train_epoch_loss, "stop_epoch_eval_ppl":stop_eval_ppl, "stop_epoch_eval_loss":stop_eval_epoch_loss,
+			#		"sd_epoch_train_ppl":sd_train_ppl, "sd_epoch_train_loss":sd_train_epoch_loss, "sd_epoch_eval_ppl":sd_eval_ppl, "sd_epoch_eval_loss":sd_eval_epoch_loss,
+			#		"sa_epoch_train_ppl":sa_train_ppl, "sa_epoch_train_loss":sa_train_epoch_loss, "sa_epoch_eval_ppl":sa_eval_ppl, "sa_epoch_eval_loss":sa_eval_epoch_loss
+			#		}
+			#	wandb.log(wandb_log)
 		else:
 			print(f"Epoch {epoch=}: {train_ppl=}, {train_epoch_loss=}", file=sys.stderr)
 		
@@ -394,7 +438,7 @@ if __name__ == '__main__':
 		schedule_lr=True, 
 		eval=True, 
 		batch_size=1, 
-		accumulation_steps=256,
+		accumulation_steps=64,
 		checkpoint_path="checkpoints_biLSTMRegressionHead/", 
 		safetensors_model=None,
 		output_dir="saved_models_biLSTMRegressionHead/",
@@ -402,5 +446,5 @@ if __name__ == '__main__':
 		notes="Training with biLSTMRegressionHead",
 		encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",
 		unlink = False,
-		log_wandb=False
+		log_wandb=True
 	)

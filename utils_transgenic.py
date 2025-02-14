@@ -1293,15 +1293,15 @@ class PredictionProcessor():
 					self.cds_pairs.append((transcript[i-1], typ))
 		
 		# Get all pairs for splice junction validation (Add utr splice junctions)
-		self.splice_pairs = self.cds_pairs
-		for transcript in self.transcripts:
-			for i, typ in enumerate(transcript):
-				if i == 0:
-					continue
-				if 'five_prime_UTR' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'five_prime_UTR' in transcript[i-1]:
-					self.splice_pairs.append((transcript[i-1], typ))
-				if 'three_prime_UTR' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'three_prime_UTR' in transcript[i-1]:
-					self.splice_pairs.append((transcript[i-1], typ))
+		#self.splice_pairs = self.cds_pairs
+		#for transcript in self.transcripts:
+		#	for i, typ in enumerate(transcript):
+		#		if i == 0:
+		#			continue
+		#		if 'five_prime_UTR' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'five_prime_UTR' in transcript[i-1]:
+		#			self.splice_pairs.append((transcript[i-1], typ))
+		#		if 'three_prime_UTR' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'three_prime_UTR' in transcript[i-1]:
+		#			self.splice_pairs.append((transcript[i-1], typ))
 		
 		# Identify features in the segmentation probabilities
 		if self.probs != None:

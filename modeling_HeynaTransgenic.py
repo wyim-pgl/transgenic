@@ -428,6 +428,141 @@ class UNet1DSegmentationHead(nn.Module):
 		x = self.final_block(x)
 		return x
 
+class AttentionReduction(nn.Module):
+	def __init__(self, input_dim):
+		super().__init__()
+		self.attn_weights = nn.Linear(input_dim, 1)  # Learnable weights per position
+		self.softmax = nn.Softmax(dim=1)  # Normalize across sequence
+
+	def forward(self, x):
+		# x shape: (batch, channels, seq_len)
+		attn_scores = self.attn_weights(x.permute(0, 2, 1))  # (batch, seq_len, 1)
+		attn_scores = self.softmax(attn_scores)  # Normalize to sum = 1
+		x = torch.sum(x * attn_scores.permute(0, 2, 1), dim=2)  # Weighted sum
+		return x
+
+class UNet1DRegressionHead(nn.Module):
+	def __init__(self, dropout_rate=0.2):
+		super().__init__()
+
+		# Downsampling Blocks
+		self._downsample_blocks = nn.ModuleList([
+			DownSample1D(256, 512, dropout_rate),
+			DownSample1D(512, 1024, dropout_rate),
+			DownSample1D(1024, 2048, dropout_rate)
+		])
+		
+		# Bottleneck Convolutions
+		self.conv_layers = nn.Sequential(
+			nn.Conv1d(2048, 4096, kernel_size=3, stride=1, padding=1),
+			nn.SiLU(),
+			nn.Dropout1d(p=dropout_rate),
+			nn.Conv1d(4096, 4096, kernel_size=3, stride=1, padding=1),
+			nn.SiLU(),
+			nn.Dropout1d(p=dropout_rate)
+		)
+
+		# Upsampling Blocks
+		self._upsample_blocks = nn.ModuleList([
+			UpSample1D(4096, 2048, 2048, dropout_rate),
+			UpSample1D(2048, 1024, 1024, dropout_rate),
+			UpSample1D(1024, 512, 512, dropout_rate)
+		])
+
+		# AttentionReduction & regression output
+		#self.global_pool = nn.AdaptiveAvgPool1d(1)  # Reduce sequence to single value
+		self.attn_reduction = AttentionReduction(512)
+		self.final_fc = nn.Linear(512, 1)  # Output single number
+		self.dropout = nn.Dropout(p=dropout_rate)
+
+	def forward(self, x):
+		# Encoder (Downsampling)
+		x = x.permute(0,2,1)
+		skips = []
+		for down in self._downsample_blocks:
+			x, skip = down(x)
+			skips.append(skip)
+
+		# Bottleneck
+		x = self.conv_layers(x)
+
+		# Decoder (Upsampling)
+		for up, skip in zip(self._upsample_blocks, reversed(skips)):
+			x = up(x, skip)
+
+		# Global Pooling + Fully Connected Regression Head
+		#x = self.global_pool(x)  # (batch, 512, 1)
+		x = self.attn_reduction(x)
+		x = self.dropout(x)
+		x = self.final_fc(x)  # (batch, 1)
+		x = 200 * torch.sigmoid(x)
+
+		return x.squeeze(1)
+
+class SoftAttention(nn.Module):
+	def __init__(self, in_channels):
+		super(SoftAttention, self).__init__()
+		self.query = nn.Conv1d(in_channels, 1, kernel_size=1)  # Attention scores
+		self.scale = nn.Parameter(torch.tensor(1.0))  # Learnable scaling factor
+
+	def forward(self, x):
+		attn_scores = self.query(x)  # Shape: (batch, 1, seq_len)
+		attn_scores = torch.tanh(self.scale * attn_scores)  # Scale scores
+		attn_weights = F.softmax(attn_scores, dim=-1)  # Normalize over sequence
+
+		context = torch.sum(attn_weights * x, dim=-1)  # Weighted sum across seq_len
+		return context  # Shape: (batch, channels)
+
+class PositionalEncoding1D(nn.Module):
+	def __init__(self, seq_length, channels):
+		super().__init__()
+		self.pos_embedding = nn.Parameter(torch.randn(1, channels, seq_length))  # Learnable
+
+	def forward(self, x):
+		return x + self.pos_embedding
+
+class SinusoidalPositionalEncoding1D(nn.Module):
+	def __init__(self, seq_length, channels):
+		super().__init__()
+		position = torch.arange(seq_length).unsqueeze(1)
+		div_term = torch.exp(torch.arange(0, channels, 2) * (-torch.log(torch.tensor(10000.0)) / channels))
+		pe = torch.zeros(seq_length, channels)
+		pe[:, 0::2] = torch.sin(position * div_term)
+		pe[:, 1::2] = torch.cos(position * div_term)
+		self.register_buffer('pe', pe.transpose(0, 1).unsqueeze(0))  # Shape: (1, channels, seq_length)
+
+	def forward(self, x):
+		return x + self.pe
+
+class DilatedCNNRegressionWithAttention(nn.Module):
+	def __init__(self, in_channels=256, hidden_channels=64):
+		super(DilatedCNNRegressionWithAttention, self).__init__()
+
+		#self.pos_encoding = PositionalEncoding1D(200, in_channels)
+		self.pos_encoding = SinusoidalPositionalEncoding1D(200, in_channels)
+
+		self.conv1 = nn.Conv1d(in_channels, hidden_channels, kernel_size=3, dilation=1, padding=1)
+		self.conv2 = nn.Conv1d(hidden_channels, hidden_channels, kernel_size=3, dilation=2, padding=2)
+		self.conv3 = nn.Conv1d(hidden_channels, hidden_channels, kernel_size=3, dilation=4, padding=4)
+		self.conv4 = nn.Conv1d(hidden_channels, hidden_channels, kernel_size=3, dilation=8, padding=8)
+		self.conv5 = nn.Conv1d(hidden_channels, hidden_channels, kernel_size=1)  # Reduce channels
+
+		self.attn = SoftAttention(hidden_channels)
+		self.fc_final = nn.Linear(hidden_channels, 1)  # Predict single start codon position
+
+	def forward(self, x):
+		x = x.permute(0,2,1)
+		x = self.pos_encoding(x)
+		x = torch.relu(self.conv1(x))
+		x = torch.relu(self.conv2(x))
+		x = torch.relu(self.conv3(x))
+		x = torch.relu(self.conv4(x))
+		x = torch.relu(self.conv5(x))  # Shape: (batch, hidden_channels, seq_length)
+
+		x = self.attn(x)  # Attention-based sequence reduction, shape: (batch, hidden_channels)
+		x = self.fc_final(x)  # Fully connected layer
+		x = 200 * torch.sigmoid(x)  # Scale output to [0, 200]
+		return x
 
 def init_weights(m):
 	if isinstance(m, nn.Conv1d):
@@ -616,8 +751,8 @@ class transgenicModel(TransgenicPreTrainedModel):
 		self.encoder = HyenaEncoder(config)
 
 		# Compression
-		#self.pool = DynamicProportionalPooling()
-		self.downsample = HyenaDownsample(config.d_model, config.d_model*2, kernel_size=6, stride=6)
+		self.pool = DynamicProportionalPooling()
+		#self.downsample = HyenaDownsample(config.d_model, config.d_model*2, kernel_size=6, stride=6)
 		
 		# Decoder Model
 		config.d_model = config.d_model * 2
@@ -684,16 +819,16 @@ class transgenicModel(TransgenicPreTrainedModel):
 				)
 
 		# Compress to a size that the decoder can handle
-		#pooled = self.pool(encoder_outputs.last_hidden_state, encoder_outputs.attention_mask)
-		downsampled = self.downsample(encoder_outputs.last_hidden_state.permute(0,2,1)).permute(0,2,1)
-		attention_mask = torch.ones(downsampled.shape[0:2]).to(downsampled.device)
+		pooled = self.pool(encoder_outputs.last_hidden_state, encoder_outputs.attention_mask)
+		#downsampled = self.downsample(encoder_outputs.last_hidden_state.permute(0,2,1)).permute(0,2,1)
+		#attention_mask = torch.ones(downsampled.shape[0:2]).to(downsampled.device)
 
 		# decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
 		decoder_outputs = self.decoder(
 			input_ids=decoder_input_ids,
 			attention_mask=decoder_attention_mask,
-			encoder_hidden_states=downsampled, #pooled[0],
-			encoder_attention_mask=attention_mask, #pooled[1].long(),
+			encoder_hidden_states=pooled[0],#downsampled,
+			encoder_attention_mask=pooled[1].long(),#attention_mask, 
 			global_attention_mask=global_attention_mask,
 			head_mask=decoder_head_mask,
 			cross_attn_head_mask=cross_attn_head_mask,
@@ -922,10 +1057,13 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 		return reordered_past
 
 class BiLSTMRegressionHead(nn.Module):
-	def __init__(self, input_dim=256, hidden_dim=128):
+	def __init__(self, input_dim=256, hidden_dim=128, dropout=0.2):
 		super(BiLSTMRegressionHead, self).__init__()
-		self.bilstm = nn.LSTM(input_dim, hidden_dim, batch_first=True, bidirectional=True)
-		self.fc = nn.Linear(hidden_dim * 2, 1)  # BiLSTM is bidirectional → output is 2 * hidden_dim
+		self.bilstm = nn.LSTM(input_dim, hidden_dim, batch_first=True, bidirectional=True, num_layers=4, dropout=dropout)
+		self.fc1 = nn.Linear(hidden_dim * 2, hidden_dim)  # BiLSTM is bidirectional → output is 2 * hidden_dim
+		self.fc2 = nn.Linear(hidden_dim, 1)
+		self.relu = nn.ReLU()  # Non-linearity for better learning
+		self.dropout = nn.Dropout(dropout)
 		self.sigmoid = nn.Sigmoid()  # To scale output between 0 and 1 (optional)
 
 	def forward(self, x):
@@ -936,13 +1074,15 @@ class BiLSTMRegressionHead(nn.Module):
 		# Select the last timestep's output
 		last_hidden_state = lstm_out[:, -1, :]  # (batch, hidden_dim * 2)
 
-		# Fully connected layer for regression
-		output = self.fc(last_hidden_state)  # (batch, 1)
+		# Fully connected layers with non-linearity
+		x = self.relu(self.fc1(last_hidden_state))  
+		x = self.dropout(x)  # Prevent overfitting
+		output = self.fc2(x)  # Final regression output
 
-		# Optionally scale the output to [0, 200] if using sigmoid
-		output = self.sigmoid(output) * 200  # (batch, 1), ensures position is between 0-200
+		# Optionally scale the output to [0, 200]
+		output = self.sigmoid(output) * 200  
 
-		return output.squeeze(1)  # Output shape: (batch,)
+		return output.squeeze(1)
 
 
 class transgenicModelT5(TransgenicPreTrainedModel):
