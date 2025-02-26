@@ -1,7 +1,8 @@
-import sys
+import sys, math
 from typing import List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from transformers import AutoConfig, PreTrainedModel, AutoModel, AutoModelForImageSegmentation
 from transformers import LEDForConditionalGeneration, EsmForMaskedLM, T5ForConditionalGeneration
 from transformers.modeling_outputs import ModelOutput
@@ -241,20 +242,87 @@ class DynamicProportionalPooling(nn.Module):
 class HyenaDownsample(nn.Module):
 	def __init__(self, in_channels, out_channels, kernel_size=6, stride=6):
 		super(HyenaDownsample, self).__init__()
-		self.conv1 = nn.Conv1d(in_channels, out_channels // 2, kernel_size=kernel_size//2, padding=1)
-		self.conv2 = nn.Conv1d(out_channels // 2, out_channels, kernel_size=kernel_size//2, padding=1)
-		self.downsample = nn.Conv1d(out_channels, out_channels, kernel_size=kernel_size, stride=stride)
+		self.conv1 = nn.Conv1d(in_channels, in_channels + (in_channels//2), kernel_size=6, stride=3, padding=2)
+		self.norm1 = nn.LayerNorm(in_channels + (in_channels // 2))
+		self.conv2 = nn.Conv1d(in_channels + (in_channels//2), in_channels*2, kernel_size=2, stride=2)
+		self.norm2 = nn.LayerNorm(in_channels * 2)
 		self.relu = nn.ReLU()
 
 	def forward(self, x):
-		x = self.relu(self.conv1(x))
-		x = self.relu(self.conv2(x))
-		x = self.downsample(x)
+		x = self.conv1(x)
+		x = x.transpose(1, 2)
+		x = self.norm1(x)
+		x = x.transpose(1, 2)
+		x = self.relu(x)
+		
+		x = self.conv2(x)
+		x = x.transpose(1, 2)
+		x = self.norm2(x)
+		x = x.transpose(1, 2)
+		x = self.relu(x)
 		return x
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+class HyenaDownsampleWithRelPosBias(nn.Module):
+	def __init__(self, in_channels):
+		super(HyenaDownsampleWithRelPosBias, self).__init__()
+		
+		# First downsampling convolution without bias.
+		self.conv1 = nn.Conv1d(
+			in_channels, 
+			in_channels + (in_channels // 2),
+			kernel_size=6,
+			stride=3, 
+			padding=2, 
+			bias=False)
+		
+		# Learnable relative positional bias for conv1 (preserves position info relative to kernel)
+		self.rel_bias1 = nn.Parameter(torch.zeros(self.conv1.out_channels, 1, 6))
+		self.norm1 = nn.LayerNorm(in_channels + (in_channels // 2))
+		
+		# Second downsampling convolution without bias
+		self.conv2 = nn.Conv1d(
+			in_channels + (in_channels // 2), 
+			in_channels * 2,
+			kernel_size=2, 
+			stride=2, 
+			bias=False)
+		
+		# Learnable relative positional bias for conv2
+		self.rel_bias2 = nn.Parameter(torch.zeros(self.conv2.out_channels, 1, 2))
+		self.norm2 = nn.LayerNorm(in_channels * 2)
+		
+		# Activation
+		self.relu = nn.ReLU()
+
+	def forward(self, x):
+		# x shape: (batch, channels, length)
+		# First convolve the incoming sequence without bias
+		# Then convolve a sequence of ones with the learnable positional bias
+		# Finally add the relative kernel bias to the convolved sequence
+		conv1_out = F.conv1d(x, self.conv1.weight, bias=None,stride=self.conv1.stride, padding=self.conv1.padding)
+		ones1 = torch.ones(x.size(0), 1, x.size(2), device=x.device)
+		bias_out1 = F.conv1d(ones1, self.rel_bias1, bias=None,
+							stride=self.conv1.stride, padding=self.conv1.padding)
+		out1 = conv1_out + bias_out1
+
+		# Apply LayerNorm and activation
+		out1 = out1.transpose(1, 2)
+		out1 = self.norm1(out1)
+		out1 = out1.transpose(1, 2)
+		out1 = self.relu(out1)
+
+		# Convolve sequence and biases separately, as for the first downsampling
+		conv2_out = F.conv1d(out1, self.conv2.weight, bias=None,stride=self.conv2.stride, padding=self.conv2.padding)
+		ones2 = torch.ones(out1.size(0), 1, out1.size(2), device=out1.device)
+		bias_out2 = F.conv1d(ones2, self.rel_bias2, bias=None, stride=self.conv2.stride, padding=self.conv2.padding)
+		out2 = conv2_out + bias_out2
+
+		# Apply normalization and activation.
+		out2 = out2.transpose(1, 2)
+		out2 = self.norm2(out2)
+		out2 = out2.transpose(1, 2)
+		out2 = self.relu(out2)
+		return out2
 
 class UNet1D(nn.Module):
 	def __init__(self, input_dim=256, hidden_dim=256, num_classes=9):
@@ -329,25 +397,51 @@ class UNet1D(nn.Module):
 		# Transpose to [batch, seq_len, num_classes]
 		return out.permute(0, 2, 1)
 
-import torch
-import torch.nn as nn
+class BCLLayerNorm1D(nn.Module):
+	"""
+	A custom LayerNorm for 1D data of shape [B, C, L].
+	
+	- Normalizes across (C, L) for each sample in the batch.
+	- Learns a single gamma/beta per channel (broadcast across length).
+	- Works with variable sequence length.
+	"""
+	def __init__(self, num_channels, eps=1e-5):
+		super().__init__()
+		self.eps = eps
+		self.gamma = nn.Parameter(torch.ones(1, num_channels, 1))
+		self.beta = nn.Parameter(torch.zeros(1, num_channels, 1))
+
+	def forward(self, x):
+		mean = x.mean(dim=(1, 2), keepdim=True)
+		var = x.var(dim=(1, 2), keepdim=True, unbiased=False)
+		x_norm = (x - mean) / torch.sqrt(var + self.eps)  # shape [B, C, L]
+		return x_norm * self.gamma + self.beta
+
 
 class DownSample1D(nn.Module):
 	def __init__(self, in_channels, out_channels, dropout_rate=0.2):
 		super().__init__()
 		self.conv_layers = nn.Sequential(
-			nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
+			nn.Conv1d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
+			#BCLLayerNorm1D(in_channels),
 			nn.SiLU(),
 			nn.Dropout1d(p=dropout_rate),  # Dropout after activation
-			nn.Conv1d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
+			nn.Conv1d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
+			#BCLLayerNorm1D(in_channels),
 			nn.SiLU(),
 			nn.Dropout1d(p=dropout_rate)  # Another dropout for deeper regularization
 		)
-		self.avg_pool = nn.AvgPool1d(kernel_size=2, stride=2)
+		#self.avg_pool = nn.AvgPool1d(kernel_size=2, stride=2)
+		self.downsample = nn.Conv1d(
+			in_channels, 
+			out_channels, 
+			kernel_size=2, 
+			stride=2
+		)
 
 	def forward(self, x):
 		x = self.conv_layers(x)
-		x_pooled = self.avg_pool(x)
+		x_pooled = self.downsample(x) #self.avg_pool(x)
 		return x_pooled, x  # Returning pooled output + skip connection
 
 class UpSample1D(nn.Module):
@@ -356,9 +450,11 @@ class UpSample1D(nn.Module):
 		self.conv_transpose = nn.ConvTranspose1d(in_channels, out_channels, kernel_size=2, stride=2)
 		self.conv_layers = nn.Sequential(
 			nn.Conv1d(out_channels + skip_channels, out_channels, kernel_size=3, stride=1, padding=1),
+			#BCLLayerNorm1D(out_channels),
 			nn.SiLU(),
 			nn.Dropout1d(p=dropout_rate),  # Dropout after first activation
 			nn.Conv1d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
+			#BCLLayerNorm1D(out_channels),
 			nn.SiLU(),
 			nn.Dropout1d(p=dropout_rate)  # Dropout after second activation
 		)
@@ -374,6 +470,7 @@ class FinalConv1D(nn.Module):
 		super().__init__()
 		self.conv_layers = nn.Sequential(
 			nn.Conv1d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
+			#BCLLayerNorm1D(in_channels),
 			nn.SiLU(),
 			nn.Dropout1d(p=dropout_rate),  # Dropout before final layer
 			nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
@@ -383,38 +480,42 @@ class FinalConv1D(nn.Module):
 		return self.conv_layers(x)
 
 class UNet1DSegmentationHead(nn.Module):
-	def __init__(self, num_classes=9, dropout_rate=0.2):
+	def __init__(self, num_classes=9, dropout_rate=0.1):
 		super().__init__()
+
+		self.positional_embedding = SinusoidalPositionalEmbedding(49152, 256)
 
 		self._downsample_blocks = nn.ModuleList([
 			DownSample1D(256, 512, dropout_rate),
 			DownSample1D(512, 1024, dropout_rate),
-			DownSample1D(1024, 2048, dropout_rate)
+			#DownSample1D(1024, 2048, dropout_rate)
 		])
 		
 		self.conv_layers = nn.Sequential(
-			nn.Conv1d(2048, 4096, kernel_size=3, stride=1, padding=1),
+			nn.Conv1d(1024, 1024, kernel_size=3, stride=1, padding=1),
+			#BCLLayerNorm1D(1024),
 			nn.SiLU(),
 			nn.Dropout1d(p=dropout_rate),  # Dropout after activation
-			nn.Conv1d(4096, 4096, kernel_size=3, stride=1, padding=1),
+			nn.Conv1d(1024, 1024, kernel_size=3, stride=1, padding=1),
+			#BCLLayerNorm1D(1024),
 			nn.SiLU(),
 			nn.Dropout1d(p=dropout_rate)  # Another dropout for deeper regularization
 		)
 
 		self._upsample_blocks = nn.ModuleList([
-			UpSample1D(4096, 2048, 2048, dropout_rate),
-			UpSample1D(2048, 1024, 1024, dropout_rate),
-			UpSample1D(1024, 512, 512, dropout_rate)
+			#UpSample1D(4096, 2048, 2048, dropout_rate),
+			UpSample1D(1024, 512, 512, dropout_rate),
+			UpSample1D(512, 256, 256, dropout_rate)
 		])
 
-		self.final_block = FinalConv1D(512, num_classes, dropout_rate)
-		self.dropout = nn.Dropout1d(p=dropout_rate)  # Global dropout for extra regularization
+		self.final_block = FinalConv1D(256, num_classes, dropout_rate)
 
 	def forward(self, x):
+		x = self.positional_embedding(x.permute(0,2,1)).permute(0,2,1)
+		
 		skips = []
 		for down in self._downsample_blocks:
 			x, skip = down(x)
-			x = self.dropout(x)  # Dropout in encoder
 			skips.append(skip)
 
 		skips = skips[::-1]  # Reverse for upsampling
@@ -423,7 +524,6 @@ class UNet1DSegmentationHead(nn.Module):
 
 		for i, up in enumerate(self._upsample_blocks):
 			x = up(x, skips[i])
-			x = self.dropout(x)  # Dropout in decoder
 
 		x = self.final_block(x)
 		return x
@@ -535,7 +635,7 @@ class SinusoidalPositionalEncoding1D(nn.Module):
 		return x + self.pe
 
 class DilatedCNNRegressionWithAttention(nn.Module):
-	def __init__(self, in_channels=256, hidden_channels=64):
+	def __init__(self, in_channels=256, hidden_channels=128):
 		super(DilatedCNNRegressionWithAttention, self).__init__()
 
 		#self.pos_encoding = PositionalEncoding1D(200, in_channels)
@@ -547,8 +647,9 @@ class DilatedCNNRegressionWithAttention(nn.Module):
 		self.conv4 = nn.Conv1d(hidden_channels, hidden_channels, kernel_size=3, dilation=8, padding=8)
 		self.conv5 = nn.Conv1d(hidden_channels, hidden_channels, kernel_size=1)  # Reduce channels
 
-		self.attn = SoftAttention(hidden_channels)
-		self.fc_final = nn.Linear(hidden_channels, 1)  # Predict single start codon position
+		self.bilstm = nn.LSTM(hidden_channels, hidden_channels, batch_first=True, bidirectional=True, num_layers=1)
+		#self.attn = SoftAttention(hidden_channels)
+		self.fc_final = nn.Linear(in_channels, 1)  # Predict single start codon position
 
 	def forward(self, x):
 		x = x.permute(0,2,1)
@@ -558,8 +659,10 @@ class DilatedCNNRegressionWithAttention(nn.Module):
 		x = torch.relu(self.conv3(x))
 		x = torch.relu(self.conv4(x))
 		x = torch.relu(self.conv5(x))  # Shape: (batch, hidden_channels, seq_length)
-
-		x = self.attn(x)  # Attention-based sequence reduction, shape: (batch, hidden_channels)
+		
+		#x = self.attn(x)  # Attention-based sequence reduction, shape: (batch, hidden_channels)
+		x, _ = self.bilstm(x.permute(0,2,1))  # (batch, seq_len, hidden_dim * 2)
+		x = x[:, -1, :]  # Select the last timestep's output (batch, hidden_dim * 2)
 		x = self.fc_final(x)  # Fully connected layer
 		x = 200 * torch.sigmoid(x)  # Scale output to [0, 200]
 		return x
@@ -603,7 +706,6 @@ class FocalLoss(nn.Module):
 		return loss.mean()
 
 class WeightedFocalLoss(nn.Module):
-	"Non weighted version of Focal Loss"
 	def __init__(self, alpha=None, gamma=None, pos_weight=None):
 		super(WeightedFocalLoss, self).__init__()
 		if alpha == None: # Set positive class alpha values, negative values are 1-alpha
@@ -628,9 +730,10 @@ class WeightedFocalLoss(nn.Module):
 		return F_loss.mean()
 
 class DiceLoss(nn.Module):
-	def __init__(self, smooth=1e-6):
+	def __init__(self, smooth=1e-6, num_classes=9):
 		super(DiceLoss, self).__init__()
 		self.smooth = smooth  # Prevent division by zero
+		self.num_classes = num_classes
 
 	def forward(self, y_pred, y_true):
 		# Ensure predictions are between 0 and 1
@@ -638,16 +741,15 @@ class DiceLoss(nn.Module):
 		y_true = y_true.float()
 
 		dice_loss = 0.0
-		num_classes = y_true.size(2)  # Number of classes (channels)
 
-		for c in range(num_classes):
+		for c in range(self.num_classes):
 			intersection = torch.sum(y_pred[:, :,c] * y_true[:,:, c])
 			denominator = torch.sum(y_true[:,:, c]) + torch.sum(y_pred[:,:, c])
 
 			dice_score = (2. * intersection + self.smooth) / (denominator + self.smooth)
 			dice_loss += (1 - dice_score)  # Minimize Dice Loss for each class
 
-		return dice_loss / num_classes  # Average over classes
+		return dice_loss / self.num_classes  # Average over classes
 
 class IoULoss(nn.Module):
 	def __init__(self, smooth=1e-6):
@@ -683,13 +785,18 @@ class HyenaEncoder(nn.Module):
 		HyenaConfig.n_layer = config.encoder_n_layer
 		self.hyena = AutoModel.from_config(HyenaConfig, trust_remote_code=True)
 		
+		self.focalLoss = WeightedFocalLoss( 
+					pos_weight = torch.tensor([1.2, 1003, 1.5, 1.5, 396, 394, 12, 8, 1011]),
+					gamma=torch.tensor([0, 0, 0, 0, 0, 0, 0, 0, 0]))
+		self.diceLoss = DiceLoss(smooth=1e-6, num_classes=9)
 		#HyenaConfig.n_layer = 3
 		#self.segmentation_model = AutoModel.from_config(HyenaConfig, trust_remote_code=True).backbone.layers
 		#self.segmentation_head = nn.Linear(config.d_model, config.numSegClasses)
 
-		#self.segmentation_head  = UNet1D(input_dim=256, hidden_dim=256, num_classes=9)
-		self.segmentation_head = UNet1DSegmentationHead(num_classes=9, dropout_rate=0.0)
-		self.segmentation_head.apply(init_weights)
+		if self.do_segment:
+			#self.segmentation_head  = UNet1D(input_dim=256, hidden_dim=256, num_classes=9)
+			self.segmentation_head = UNet1DSegmentationHead(num_classes=9, dropout_rate=0.05)
+			self.segmentation_head.apply(init_weights)
 	
 	def forward(self, input_ids, segLabels = None, *args, **kwargs):
 		
@@ -697,7 +804,7 @@ class HyenaEncoder(nn.Module):
 		
 		if self.do_segment:
 			seg_logits = self.segmentation_head(output.last_hidden_state.permute(0,2,1)).permute(0,2,1)
-
+			self.segmentation_logits = seg_logits
 			if segLabels != None:
 
 				# Define weight of positive splice junction classes to counteract class imbalance
@@ -705,8 +812,10 @@ class HyenaEncoder(nn.Module):
 				#pos_weight[[1,8]] = 10.0
 				#pos_weight[[4,5]] = 5.0
 				#pos_weight[[2,3,6,7]] = 2.0
-				pos_weight = torch.tensor([2.4, 4012, 6, 6, 1586, 1578, 46, 30, 4044])
-				pos_weight = pos_weight.to(segLabels.device)
+				#pos_weight = torch.tensor([2.4, 4012, 6, 6, 1586, 1578, 46, 30, 4044])
+				
+				#pos_weight = torch.tensor([1.2, 2006, 3, 3, 793, 789, 23, 15, 2022])
+				#pos_weight = pos_weight.to(segLabels.device)
 
 				# Define per-nucleotide weights to focus on basic genic features
 				#weight = torch.Tensor((1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0))
@@ -715,12 +824,11 @@ class HyenaEncoder(nn.Module):
 				# Define the loss function with pos_weight
 				#segLossFn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 				#segLossFn = FocalLoss(alpha=0.5, gamma=2)
-				segLossFn = WeightedFocalLoss( 
-					pos_weight = torch.tensor([2.4, 4012, 6, 6, 1586, 1578, 46, 30, 4044]),
-					gamma=torch.tensor([2, 2, 2, 2, 2, 2, 2, 2, 2]))
 				#segLossFn=IoULoss()
 				#boundaryLossFn = BoundaryLoss()
-				seg_loss = segLossFn(seg_logits, segLabels)
+				focal_loss = self.focalLoss(seg_logits, segLabels)
+				dice_loss = self.diceLoss(seg_logits, segLabels)
+				seg_loss =  (dice_loss) + (focal_loss)
 				#boundary_loss = boundaryLossFn(seg_logits[:,0:segLabels.shape[1]], segLabels)
 				#seg_loss = None
 				boundary_loss = None
@@ -737,6 +845,38 @@ class HyenaEncoder(nn.Module):
 			segmentation_loss=seg_loss
 		)
 
+class SinusoidalPositionalEmbedding(torch.nn.Module):
+	def __init__(self, max_len, d_model):
+		super().__init__()
+		self.d_model = d_model
+
+		# Create a matrix of shape (max_len, d_model)
+		position = torch.arange(max_len).unsqueeze(1)  # Shape: (max_len, 1)
+		div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))  # Shape: (d_model/2)
+
+		# Compute sinusoidal values
+		pe = torch.zeros(max_len, d_model)
+		pe[:, 0::2] = torch.sin(position * div_term)  # Apply sine to even indices
+		pe[:, 1::2] = torch.cos(position * div_term)  # Apply cosine to odd indices
+
+		# Register as a buffer so it's not updated during training
+		self.register_buffer("pe", pe)
+
+	def forward(self, x):
+		"""Add positional encoding to input tensor x"""
+		return x + self.pe[:x.shape[1], :].unsqueeze(0)  # Shape: (batch_size, seq_len, d_model)
+
+class LearnedPositionalEmbedding(nn.Module):
+	def __init__(self, max_len, d_model):
+		super().__init__()
+		self.embedding = nn.Embedding(max_len, d_model)
+
+	def forward(self, x):
+		"""Add learned positional encoding to input tensor x"""
+		seq_len = x.shape[1]
+		pos_ids = torch.arange(seq_len, device=x.device).unsqueeze(0)  # Shape: (1, seq_len)
+		return x + self.embedding(pos_ids)
+
 class transgenicModel(TransgenicPreTrainedModel):
 	_tied_weights_keys = ["decoder_embed_tokens.weight", "decoder.embed_tokens.weight"]
 
@@ -750,10 +890,16 @@ class transgenicModel(TransgenicPreTrainedModel):
 		# Encoder model
 		self.encoder = HyenaEncoder(config)
 
+		# Positional embeddings for encoder output
+		self.EncoderOutputPositionalEmbedding = SinusoidalPositionalEmbedding(config.max_encoder_seqlen, config.d_model)
+		#self.DownsamplePositionalEmbedding = SinusoidalPositionalEmbedding(config.max_encoder_seqlen//6, config.d_model*2)
+		#self.LearnedPositionalEmbedding = LearnedPositionalEmbedding(config.max_encoder_seqlen, config.d_model)
+
 		# Compression
-		self.pool = DynamicProportionalPooling()
+		#self.pool = DynamicProportionalPooling()
 		#self.downsample = HyenaDownsample(config.d_model, config.d_model*2, kernel_size=6, stride=6)
-		
+		self.downsample = HyenaDownsampleWithRelPosBias(config.d_model)
+
 		# Decoder Model
 		config.d_model = config.d_model * 2
 		self.decoder = LEDForConditionalGeneration(config).led.decoder
@@ -818,17 +964,22 @@ class transgenicModel(TransgenicPreTrainedModel):
 				attention_mask=attention_mask
 				)
 
+		# Inject additional positional embeddings
+		injected = self.EncoderOutputPositionalEmbedding(encoder_outputs.last_hidden_state)
+		#injected = self.LearnedPositionalEmbedding(injected)
+
 		# Compress to a size that the decoder can handle
-		pooled = self.pool(encoder_outputs.last_hidden_state, encoder_outputs.attention_mask)
-		#downsampled = self.downsample(encoder_outputs.last_hidden_state.permute(0,2,1)).permute(0,2,1)
-		#attention_mask = torch.ones(downsampled.shape[0:2]).to(downsampled.device)
+		#pooled = self.pool(encoder_outputs.last_hidden_state, encoder_outputs.attention_mask)
+		downsampled = self.downsample(injected.permute(0,2,1)).permute(0,2,1)
+		#downsampled = self.DownsamplePositionalEmbedding(downsampled)
+		attention_mask = torch.ones(downsampled.shape[0:2]).to(downsampled.device)
 
 		# decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
 		decoder_outputs = self.decoder(
 			input_ids=decoder_input_ids,
 			attention_mask=decoder_attention_mask,
-			encoder_hidden_states=pooled[0],#downsampled,
-			encoder_attention_mask=pooled[1].long(),#attention_mask, 
+			encoder_hidden_states=downsampled,#pooled[0],
+			encoder_attention_mask=attention_mask,# pooled[1].long(),
 			global_attention_mask=global_attention_mask,
 			head_mask=decoder_head_mask,
 			cross_attn_head_mask=cross_attn_head_mask,
@@ -990,8 +1141,8 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 
 		masked_lm_loss = None
 		if labels is not None:
-			#weights = torch.ones(50262).to(lm_logits.device)
-			#weights[262:] = 2
+			#weights = torch.ones(272).to(lm_logits.device)
+			#weights[4:17] = 2
 			loss_fct = nn.CrossEntropyLoss()
 			masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
 			#masked_lm_loss = HybridLoss(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
@@ -1056,10 +1207,100 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 			)
 		return reordered_past
 
+class LEDForConditionalMLM(TransgenicPreTrainedModel):
+	def __init__(self, config):
+		super().__init__(config)
+
+		padding_idx, vocab_size = config.pad_token_id, config.vocab_size
+		self.decoder_embed_tokens = nn.Embedding(vocab_size, config.d_model, padding_idx)
+		
+		# Compression
+		self.downsample = HyenaDownsample(config.d_model//2, config.d_model, kernel_size=6, stride=6)
+		
+		# Decoder Model
+		config.d_model = config.d_model
+		self.decoder = LEDForConditionalGeneration(config).led.decoder
+		self.decoder.embed_tokens = self.decoder_embed_tokens
+
+		# Language modeling head
+		self.lm_head = nn.Linear(config.d_model, self.decoder_embed_tokens.num_embeddings)
+
+		# Initialize weights and apply final processing
+		self.post_init()
+	
+	def forward(self,
+		input_ids: Optional[torch.LongTensor] = None,
+		attention_mask: Optional[torch.Tensor] = None,
+		decoder_input_ids: Optional[torch.LongTensor] = None,
+		decoder_attention_mask: Optional[torch.LongTensor] = None,
+		head_mask: Optional[torch.Tensor] = None,
+		decoder_head_mask: Optional[torch.Tensor] = None,
+		cross_attn_head_mask: Optional[torch.Tensor] = None,
+		encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		global_attention_mask: Optional[torch.FloatTensor] = None,
+		past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		inputs_embeds: Optional[torch.FloatTensor] = None,
+		decoder_inputs_embeds: Optional[torch.FloatTensor] = None,
+		use_cache: Optional[bool] = None,
+		output_attentions: Optional[bool] = None,
+		output_hidden_states: Optional[bool] = None,
+		return_dict: Optional[bool] = None,
+		labels: Optional[torch.LongTensor] = None,
+		label_mask: Optional[torch.Tensor] = None
+	) -> Union[Tuple[torch.Tensor], LEDSeq2SeqModelOutput]:
+		'''
+		inputs_embeds: encoded output of HyenaEncoder
+		decoder_input_ids: generated output from TransgenicForConditionalGeneration
+		labels: target tokens for loss cacluation
+		label_mask: loss function mask to focus on numeric positions 
+		'''
+		
+		# Downsample from Hyena single nucleotide resolution
+		downsampled = self.downsample(inputs_embeds.permute(0,2,1)).permute(0,2,1)
+		downsampled_attention_mask = torch.ones(downsampled.shape[0:2]).to(downsampled.device)
+
+		# Decode all tokens
+		decoder_outputs = self.decoder(
+			input_ids=decoder_input_ids, # predicted GSF input
+			attention_mask=decoder_attention_mask,
+			encoder_hidden_states=downsampled, # Encoder input
+			encoder_attention_mask=downsampled_attention_mask, # Encoder attention mask 
+			global_attention_mask=global_attention_mask,
+			head_mask=decoder_head_mask,
+			cross_attn_head_mask=cross_attn_head_mask,
+			past_key_values=past_key_values,
+			inputs_embeds=decoder_inputs_embeds,
+			use_cache=use_cache,
+			output_attentions=output_attentions,
+			output_hidden_states=output_hidden_states,
+			return_dict=return_dict,
+		)
+
+		# Language classification head
+		lm_logits = self.lm_head(decoder_outputs.last_hidden_state)
+
+		# Masked loss calculation
+		if labels is not None:
+			losses = F.cross_entropy(
+				lm_logits.view(-1, self.config.vocab_size), 
+				labels.view(-1),
+				reduction='none')
+			
+			losses = losses.view(labels.size())
+			masked_losses = losses[label_mask]
+			loss = masked_losses.mean()
+
+		return LEDSeq2SeqLMOutput(
+			loss=loss,
+			logits=lm_logits
+		)
+
+
+
 class BiLSTMRegressionHead(nn.Module):
 	def __init__(self, input_dim=256, hidden_dim=128, dropout=0.2):
 		super(BiLSTMRegressionHead, self).__init__()
-		self.bilstm = nn.LSTM(input_dim, hidden_dim, batch_first=True, bidirectional=True, num_layers=4, dropout=dropout)
+		self.bilstm = nn.LSTM(input_dim, hidden_dim, batch_first=True, bidirectional=True, num_layers=2, dropout=dropout)
 		self.fc1 = nn.Linear(hidden_dim * 2, hidden_dim)  # BiLSTM is bidirectional → output is 2 * hidden_dim
 		self.fc2 = nn.Linear(hidden_dim, 1)
 		self.relu = nn.ReLU()  # Non-linearity for better learning

@@ -3,7 +3,7 @@ from modeling_HeynaTransgenic import transgenicForConditionalGeneration
 from configuration_transgenic import TransgenicHyenaConfig
 
 torch.manual_seed(123)
-decoder_checkpoint =  "checkpoints_Hyena/model.safetensors"
+decoder_checkpoint =  "checkpoints/Hyena_Gen9G_6144nt_SinusoidalDownsample_E0-111.safetensors"#"checkpoints_HyenaPosEmbed/model.safetensors"
 
 config = TransgenicHyenaConfig(do_segment=False)
 model = transgenicForConditionalGeneration(config)
@@ -16,7 +16,14 @@ with safe_open(decoder_checkpoint, framework="pt", device="cpu") as f:
 decoder_tensors["transgenic.decoder_embed_tokens.weight"] = decoder_tensors["lm_head.weight"]
 decoder_tensors["transgenic.decoder.embed_tokens.weight"] = decoder_tensors["transgenic.decoder_embed_tokens.weight"]
 
-model.load_state_dict(decoder_tensors, strict=False)
+# Add missing shared HyenaSin freq weights
+freq_tensors = {}
+for k in decoder_tensors.keys():
+	if "freq" in k:
+		freq_tensors[".".join(k.split(".")[0:9]) + ".3.freq"] = decoder_tensors[k]
+		freq_tensors[".".join(k.split(".")[0:9]) + ".5.freq"] = decoder_tensors[k]
+
+model.load_state_dict(decoder_tensors | freq_tensors, strict=True)
 
 device = torch.device("cuda")
 model.eval()
@@ -86,14 +93,14 @@ with open("validation_hyena_prediction.gff3", "w") as predfile:
 					predfile.write(line + "\n")
 			except:
 				print(f"Error in beamSearch for GeneModel:{batch[3]} ... trying greedy.\n", file=sys.stdout)
-				try:
-					pp, true = greedySearch(batch)
+				#try:
+				#	pp, true = greedySearch(batch)
 			#		gff_predictions = gffString2GFF3(pp.stitchGFF(), batch[5][0], batch[6][0], f"GM={batch[4][0]}")
-					gff_predictions = gffString2GFF3(pp, batch[5][0], batch[6][0], f"GM={batch[3][0]}")
-					for line in gff_predictions:
-						predfile.write(line + "\n")
-				except:
-					print(f"Error in greedySearch for GeneModel:{batch[3]} ... giving up.\n", file=sys.stdout)
+				#	gff_predictions = gffString2GFF3(pp, batch[5][0], batch[6][0], f"GM={batch[3][0]}")
+				#	for line in gff_predictions:
+				#		predfile.write(line + "\n")
+				#except:
+				#	print(f"Error in greedySearch for GeneModel:{batch[3]} ... giving up.\n", file=sys.stdout)
 
 			try:
 				gff_labels = gffString2GFF3(true, batch[5][0], batch[6][0], f"GM={batch[3][0]}")
