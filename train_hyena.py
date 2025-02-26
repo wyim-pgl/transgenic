@@ -76,7 +76,7 @@ def trainTransgenicFCGAccelerate(
 	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
 	
 	#model = getModel(None, safetensors_model=safetensors_model, device="cpu", mode="train")
-	decoder_checkpoint = "checkpoints/Hyena_Gen9G_6144nt_E30.safetensors"
+	decoder_checkpoint = "checkpoints/Hyena_Gen9G_6144nt_E30.safetensors"#"checkpoints_HyenaPosEmbed/model.safetensors"
 	segment_checkpoint = None
 
 	config = TransgenicHyenaConfig(do_segment=False)
@@ -90,10 +90,21 @@ def trainTransgenicFCGAccelerate(
 	#tensors["transgenic.decoder_embed_tokens.weight"] = tensors["lm_head.weight"]
 	#tensors["transgenic.decoder.embed_tokens.weight"] = tensors["transgenic.decoder_embed_tokens.weight"]
 
-	model.load_state_dict(tensors, strict=False)
+	# Add missing shared HyenaSin freq weights
+	freq_tensors = {}
+	for k in tensors.keys():
+		if "freq" in k:
+			freq_tensors[".".join(k.split(".")[0:9]) + ".3.freq"] = tensors[k]
+			freq_tensors[".".join(k.split(".")[0:9]) + ".5.freq"] = tensors[k]
+
+	model.load_state_dict(tensors | freq_tensors, strict=False)
 
 	model.to(device)
 	model.train()
+
+	
+	for param in model.transgenic.encoder.parameters():
+		param.requires_grad = False
 
 	# Setup the optimizer
 	optimizer = optim.AdamW(model.parameters(), lr=lr)
@@ -122,7 +133,7 @@ def trainTransgenicFCGAccelerate(
 				outputs = model(input_ids=ii, attention_mask=am, decoder_input_ids=dii, labels=lab, return_dict=True)
 				total_loss += outputs.loss.detach().float()
 				outputs.loss = outputs.loss / accumulation_steps
-			
+				
 				outputs.loss.backward()
 			except:
 				print(f"Error in batch: {batch[3]}")
@@ -204,14 +215,14 @@ if __name__ == '__main__':
 		train_data, 
 		eval_data, 
 		lr=5e-5, 
-		num_epochs=15, 
+		num_epochs=20, 
 		schedule_lr=True, 
 		eval=True, 
 		batch_size=1, 
 		accumulation_steps=256,
-		checkpoint_path="checkpoints_Hyena/", 
+		checkpoint_path="checkpoints_HyenaPosEmbed/", 
 		safetensors_model=None,
-		output_dir="saved_models_Hyena/",
+		output_dir="saved_models_HyenaPosEmbed/",
 		max_grad_norm=1,
 		notes="Training with Hyena",
 		encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",

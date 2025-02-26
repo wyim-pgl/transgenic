@@ -63,8 +63,8 @@ def trainTransgenicFCGAccelerate(
 	print(f"Using: {device}", file=sys.stderr)
 	
 	# Set up DataLoaders
-	torch.manual_seed(123)
-	torch.cuda.manual_seed_all(123)
+	torch.manual_seed(345)
+	torch.cuda.manual_seed_all(345)
 	train_ds = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
 	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
 	
@@ -88,12 +88,16 @@ def trainTransgenicFCGAccelerate(
 
 	# Set up regression heads
 	biLSTM_Start = DilatedCNNRegressionWithAttention()
+	biLSTM_Start.load_state_dict(torch.load(f"{checkpoint_path}/biLSTM_Start.pth"))
 	biLSTM_Start.to(device)
 	biLSTM_Stop = DilatedCNNRegressionWithAttention()
+	biLSTM_Stop.load_state_dict(torch.load(f"{checkpoint_path}/biLSTM_Stop.pth"))
 	biLSTM_Stop.to(device)
 	biLSTM_SD = DilatedCNNRegressionWithAttention()
+	biLSTM_SD.load_state_dict(torch.load(f"{checkpoint_path}/biLSTM_SD.pth"))
 	biLSTM_SD.to(device)
 	biLSTM_SA = DilatedCNNRegressionWithAttention()
+	biLSTM_SA.load_state_dict(torch.load(f"{checkpoint_path}/biLSTM_SA.pth"))
 	biLSTM_SA.to(device)
 
 
@@ -173,7 +177,7 @@ def trainTransgenicFCGAccelerate(
 				if start+(200-randomNumber) > len(sequence):
 					randomNumber = torch.tensor([start-len(sequence)+200])
 				prediction = biLSTM_Start(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
-				loss = loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
+				loss = torch.log1p(loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device)))
 				total_loss_start += loss.detach().cpu()
 				loss /= accumulation_steps
 				loss.backward()
@@ -208,7 +212,7 @@ def trainTransgenicFCGAccelerate(
 				if stop+(200-randomNumber) > len(sequence):
 					randomNumber = torch.tensor([stop-len(sequence)+200])
 				prediction = biLSTM_Stop(outputs.last_hidden_state[:, stop-randomNumber:stop+(200-randomNumber)])
-				loss = loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
+				loss = torch.log1p(loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device)))
 				total_loss_stop += loss.detach().cpu()
 				loss /= accumulation_steps
 				loss.backward()
@@ -243,7 +247,7 @@ def trainTransgenicFCGAccelerate(
 				if sd+(200-randomNumber) > len(sequence):
 					randomNumber = torch.tensor([sd-len(sequence)+200])
 				prediction = biLSTM_SD(outputs.last_hidden_state[:, sd-randomNumber:sd+(200-randomNumber)])
-				loss = loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
+				loss = torch.log1p(loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device)))
 				total_loss_sd += loss.detach().cpu()
 				loss /= accumulation_steps
 				loss.backward()
@@ -278,7 +282,7 @@ def trainTransgenicFCGAccelerate(
 				if sa+(200-randomNumber) > len(sequence):
 					randomNumber = torch.tensor([sa-len(sequence)+200])
 				prediction = biLSTM_SA(outputs.last_hidden_state[:, sa-randomNumber:sa+(200-randomNumber)])
-				loss = loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
+				loss = torch.log1p(loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device)))
 				total_loss_sa += loss.detach().cpu()
 				loss /= accumulation_steps
 				loss.backward()
@@ -342,7 +346,8 @@ def trainTransgenicFCGAccelerate(
 						randomNumber = torch.tensor([start])
 					if start+(200-randomNumber) > len(sequence):
 						randomNumber = torch.tensor([start-len(sequence)+200])
-					prediction = biLSTM_Start(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
+					with torch.no_grad():
+						prediction = biLSTM_Start(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
 					start_eval_loss += loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 					step_start += 1
 				
@@ -355,7 +360,8 @@ def trainTransgenicFCGAccelerate(
 						randomNumber = torch.tensor([start])
 					if stop+(200-randomNumber) > len(sequence):
 						randomNumber = torch.tensor([stop-len(sequence)+200])
-					prediction = biLSTM_Stop(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
+					with torch.no_grad():
+						prediction = biLSTM_Stop(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
 					stop_eval_loss += loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 					step_stop += 1
 				
@@ -367,7 +373,8 @@ def trainTransgenicFCGAccelerate(
 						sd = len(sequence)-sd
 					if sd+(200-randomNumber) > len(sequence):
 						randomNumber = torch.tensor([sd-len(sequence)+200])
-					prediction = biLSTM_SD(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
+					with torch.no_grad():
+						prediction = biLSTM_SD(outputs.last_hidden_state[:, start-randomNumber:start+(200-randomNumber)])
 					sd_eval_loss += loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 					step_sd += 1
 				
@@ -381,7 +388,8 @@ def trainTransgenicFCGAccelerate(
 						randomNumber = torch.tensor([start])
 					if sa+(200-randomNumber) > len(sequence):
 						randomNumber = torch.tensor([sa-len(sequence)+200])
-					prediction = biLSTM_SA(outputs.last_hidden_state[:, sa-randomNumber:sa+(200-randomNumber)])
+					with torch.no_grad():
+						prediction = biLSTM_SA(outputs.last_hidden_state[:, sa-randomNumber:sa+(200-randomNumber)])
 					sa_eval_loss += loss_fn(prediction.squeeze(), randomNumber.squeeze().to(torch.float).to(device))
 					step_sa += 1
 

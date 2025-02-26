@@ -1,4 +1,4 @@
-import subprocess, sys, os, duckdb, torch, re, pickle, zlib, random
+import subprocess, sys, os, duckdb, torch, re, pickle, zlib, random, copy
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from transformers import AutoTokenizer
 from peft import IA3Config, get_peft_model
 from safetensors import safe_open
+from scipy.ndimage import gaussian_filter1d, binary_dilation, binary_erosion, label
 
 from modeling_transgenic import transgenicForConditionalGeneration, segmented_sequence_embeddings
 from tokenization_transgenic import GFFTokenizer
@@ -1207,6 +1208,39 @@ def predictionToGFF3(device_type, world_size, suffix, outfile):
 			for prediction in predictions:
 				out.write(f"{prediction[0]}\t{prediction[1]}\t{prediction[2]}\t{prediction[3]}\t{prediction[4]}\t{prediction[5]}\t{prediction[6]}\t{prediction[7]}\n")
 
+def classifyGeneSignal(
+		probs, 
+		threshold=0.65,
+		sigma = 100, 
+		#rising_threshold = 0.1, 
+		#falling_threshold = -0.1, 
+		window_length=6144):
+	
+	smoothed_signal = gaussian_filter1d(probs, sigma=sigma)			 # Smooth the signal
+	binary_signal = smoothed_signal > threshold					 # Threshold the signal
+	binary_closed = binary_dilation(binary_signal, iterations=2) # Apply morphological closing (dilation followed by erosion)
+	binary_closed = binary_erosion(binary_closed, iterations=2)
+
+	labeled_array, num_features = label(binary_closed)			# Label connected components in the binary signal
+
+	segments = []												# Extract gene segments
+	for seg in range(1, num_features+1):
+		indices = np.where(labeled_array == seg)[0]
+		start, end = indices[0], indices[-1]
+		length = end - start + 1
+		area = np.sum(smoothed_signal[indices])
+		segments.append({'start': start, 'end': end, 'length': length, 'area': area, 'class':None})
+	
+	for segment in segments: #TODO this logic needs work! Length filter?
+		# Complete gene: segment is fully within the window boundaries.
+		if segment['start'] > 10 and segment['end'] < window_length - 10:
+			segment['class'] = 'Complete'
+		# Gene cut-off: segment touches the right boundary.
+		elif segment['end'] >= window_length - 10:
+			segment['class'] = 'Cutoff'
+	
+	return segments, binary_closed
+
 class PredictionProcessor():
 	def __init__(self, gff:str, sequence:str, probs):
 		self.gff = gff
@@ -1419,41 +1453,56 @@ class PredictionProcessor():
 		else:
 			return (None, None)
 	
-	def findSeqFeatures(self, junctionThresh=0.3, geneThresh=0.2, startThresh=0.3):
+	def findSeqFeatures(self, junctionThresh=0.6, startThresh=0.6):
 		
 		# Find the central gene region
-		geneStart, geneEnd = self.findLargestGeneRegion(self.probs[:,0], threshold=geneThresh)
+		#segments = classifyGeneSignal(self.probs[:, 0], threshold=geneThresh, sigma=200)
+		#prev_len = 0
+		#for segment in segments[0]:
+		#	if int(segment["length"]) > prev_len:
+		#		geneStart = segment["start"]
+		#		geneEnd = segment["end"]
+		#		prev_len = int(segment["length"])
+		
+		#geneStart, geneEnd = self.findLargestGeneRegion(self.probs[:,0], threshold=geneThresh)
 
-		# Find all high probability start codons in the gene region
+		# Find all valid start codons over the threshold
+		# Rank by probability score 
 		means = []
-		lst = self.probs[geneStart:geneEnd,1].tolist()
+		lst = self.probs[:,1].tolist() #self.probs[geneStart:geneEnd,1].tolist()
 		for i in range(len(lst)):
 			sum_value = lst[i] + (lst[i + 1] if i + 1 < len(lst) else 0) + (lst[i + 2] if i + 2 < len(lst) else 0)
 			means.append(sum_value/3)
-		startCodons = [i + geneStart for i, x in enumerate(means) if x > startThresh]
+		startCodons = [i for i, x in enumerate(means) if x > startThresh]
+		startCodons = [i for i in startCodons if self.sequence[i:i+3] == "ATG"]
+		startCodons = sorted(startCodons, key=lambda i: means[i], reverse=True)
 
 		# Find all high probability stop codons in the gene region
 		means = []
-		lst = self.probs[geneStart:geneEnd,8].tolist()
+		lst = self.probs[:,8].tolist()
 		for i in range(len(lst)):
 			sum_value = lst[i] + (lst[i + 1] if i + 1 < len(lst) else 0) + (lst[i + 2] if i + 2 < len(lst) else 0)
 			means.append(sum_value/3)
-		stopCodons = [i + geneStart + 3 for i, x in enumerate(means) if x > startThresh]
+		stopCodons = [i for i, x in enumerate(means) if x > startThresh]
+		stopCodons = [i+3 for i in stopCodons if self.sequence[i:i+3] in self.stopCodons]
+		stopCodons = sorted(stopCodons, key=lambda i: means[i-3], reverse=True)
 		
 		# Pick out all splice donors and acceptors
 		means = []
-		lst = self.probs[geneStart:geneEnd,4].tolist()
+		lst = self.probs[:,4].tolist() 
 		for i in range(len(lst)):
 			sum_value = lst[i] + (lst[i + 1] if i + 1 < len(lst) else 0)
 			means.append(sum_value/2)
-		donors = [i + geneStart for i, x in enumerate(means) if x > junctionThresh]
+		donors = [i for i, x in enumerate(means) if x > junctionThresh]
+		donors = sorted(donors, key=lambda i: means[i], reverse=True)
 
 		means = []
-		lst = self.probs[geneStart:geneEnd,5].tolist()
+		lst = self.probs[:,5].tolist() 
 		for i in range(len(lst)):
 			sum_value = lst[i] + (lst[i + 1] if i + 1 < len(lst) else 0)
 			means.append(sum_value/2)
-		acceptors = [i + 2 + geneStart for i, x in enumerate(means) if x > junctionThresh]
+		acceptors = [i+2 for i, x in enumerate(means) if x > junctionThresh]
+		acceptors = sorted(acceptors, key=lambda i: means[i-2], reverse=True)
 
 		return {
 			"startCodons": startCodons,
@@ -1470,12 +1519,22 @@ class PredictionProcessor():
 		if usingSeqFeature:
 			startCodons = self.seqFeatures["startCodons"]
 
+		# Identify start codons within the buffer region
+		# Pick the highest probability (lowest index) start which doesn't introduce in-frame stop codons
 		for i, cds in enumerate(self.start_cds):
 			start = int(self.features[self.feature_index_dict[cds]][0])
 			if usingSeqFeature:
 				if len(startCodons) > 0:
-					new_start = startCodons[np.argmin([np.abs(start - codon) for codon in startCodons])]
-					if np.abs(start-new_start) <= buff*2:
+					new_starts = [i for i in startCodons if i in range(start-buff,start+buff)]
+					found=False
+					for new_start in new_starts:
+						containsStop = self.containsStopCodon(self.sequence[new_start:int(self.features[self.feature_index_dict[cds]][2])], "A")
+						if not containsStop:
+							found = True
+							break
+					
+					if found:
+						new_start = new_starts[0]
 						self.features[self.feature_index_dict[cds]][0] = str(new_start)
 						if new_start not in self.usedSeqFeatures["startCodons"]:
 							self.usedSeqFeatures["startCodons"].append(new_start)
@@ -1484,6 +1543,8 @@ class PredictionProcessor():
 				else:
 					usingSeqFeature = False
 			
+			# If no start codons from segmentation, look for start codons in the buffer window
+			# Pick the closest start codon to the predicted start
 			if not usingSeqFeature:
 				self.feature_flag_dict[cds] += "start"
 				buffer = self.sequence[start-buff:start+buff]
@@ -1504,12 +1565,30 @@ class PredictionProcessor():
 		if usingSeqFeature:
 			stopCodons = self.seqFeatures["stopCodons"]
 		
+		# Identify stop codons within the buffer region
+		# Pick the highest probability (lowest index) stop which maintains a valid frame (multiple of 3)
 		for i, cds in enumerate(self.end_cds):
 			stop = int(self.features[self.feature_index_dict[cds]][2])
 			if usingSeqFeature:
 				if len(stopCodons) > 0:
-					new_stop = stopCodons[np.argmin([np.abs(stop - codon) for codon in stopCodons])]
-					if np.abs(stop-new_stop) <= buff*2:
+					new_stops = [i for i in stopCodons if i in range(stop-buff, stop+buff)]
+
+					# TODO: Only matching frame to the first transcript. in the future, consider all transcripts
+					working_transcript_index = [i for i,t in enumerate(self.transcripts) if cds in self.transcripts[i]][0]
+					upstream = self.transcripts[working_transcript_index][:-1]
+					length = 0
+					for feat in upstream:
+						length += int(self.features[self.feature_index_dict[feat]][2]) - int(self.features[self.feature_index_dict[feat]][0]) 
+					
+					found = False
+					for new_stop in new_stops:
+						full_length = length + (new_stop - int(self.features[self.feature_index_dict[cds]][0]))
+						if full_length % 3 == 0:
+							found = True
+							break
+
+
+					if found:
 						self.features[self.feature_index_dict[cds]][2] = str(new_stop)
 						if new_stop not in self.usedSeqFeatures["stopCodons"]:
 							self.usedSeqFeatures["stopCodons"].append(new_stop)
@@ -1518,6 +1597,8 @@ class PredictionProcessor():
 				else:
 					usingSeqFeature = False
 
+			# If no stop codons from segmentation, look for stop codons in the buffer window
+			# Pick the closest stop codon to the predicted stop
 			if not usingSeqFeature:
 				self.feature_flag_dict[cds] += "stop"
 				buffer = self.sequence[stop-buff:stop+buff]
@@ -1544,15 +1625,16 @@ class PredictionProcessor():
 		acceptors = self.seqFeatures["acceptors"]
 
 		for donor, acceptor in self.cds_pairs:
-			
-			donor_start = int(self.features[self.feature_index_dict[donor]][0])
 			donor_end = int(self.features[self.feature_index_dict[donor]][2])
 			acceptor_start = int(self.features[self.feature_index_dict[acceptor]][0])
-			acceptor_end = int(self.features[self.feature_index_dict[acceptor]][2])
 
+			# Identify stop codons within the buffer region
+			# Pick the highest probability (lowest index) 
+			# TODO: Consider matching donor and acceptor pairs
 			if len(donors) > 0:
-				new_donor = donors[np.argmin([np.abs(d - donor_end) for d in donors])]
-				if np.abs(new_donor - donor_end) < buff:
+				new_donors = [i for i in donors if i in range(donor_end-buff,donor_end+buff)]
+				if len(new_donors)>0:
+					new_donor = new_donors[0]
 					self.features[self.feature_index_dict[donor]][2] = str(new_donor)
 					if new_donor not in self.usedSeqFeatures["donors"]:
 						self.usedSeqFeatures["donors"].append(new_donor)
@@ -1560,8 +1642,9 @@ class PredictionProcessor():
 					self.feature_flag_dict[donor] += "donor"
 			
 			if len(acceptors) > 0:
-				new_acceptor = acceptors[np.argmin([np.abs(a - acceptor_start) for a in acceptors])]
-				if np.abs(new_acceptor - acceptor_start) < buff:
+				new_acceptors = [i for i in acceptors if i in range(acceptor_start-buff,acceptor_start+buff)]
+				if len(new_acceptors)>0:
+					new_acceptor = new_acceptors[0]
 					self.features[self.feature_index_dict[acceptor]][0] = str(new_acceptor)
 					if new_acceptor not in self.usedSeqFeatures["acceptors"]:
 						self.usedSeqFeatures["acceptors"].append(new_acceptor)
@@ -1797,9 +1880,9 @@ class PredictionProcessor():
 		# buff: search buffer for cds boundary markers
 
 		if self.parsable:
-			self.checkStartCodons(buff=buff, usingSeqFeature=usingSeqFeature)
-			self.checkSpliceJunctions(buff=buff)
-			self.checkStopCodons(buff=buff, usingSeqFeature=usingSeqFeature)
+			self.checkSpliceJunctions(buff=10)
+			self.checkStartCodons(buff=150, usingSeqFeature=usingSeqFeature)
+			self.checkStopCodons(buff=150, usingSeqFeature=usingSeqFeature)
 			return self.stitchGFF()
 		else:
 			return self.gff
@@ -2060,6 +2143,84 @@ def analyzePerGeneTranscriptPerformance(label_tokens, prediction_tokens):
 			#TODO
 			pass
 
+def createDenoisingLabel(pred, true, dt):
+	# Parse GSF strings
+	try:
+		true_features = [feat.split("|") for feat in true.split(">")[0].split(";")]
+		true_transcripts = [set(feat.split("|")) for feat in true.split(">")[1].split(";")]
+		pred_features = [feat.split("|") for feat in pred.split(">")[0].split(";")]
+		pred_transcripts = [set(feat.split("|")) for feat in pred.split(">")[1].split(";")]
+	except:
+		return None
+	
+	# Set up feature index dictionaries for lookup
+	true_fid = {}
+	for i, feature in enumerate(true_features):
+		true_fid[feature[1]] = i
+
+	pred_fid = {}
+	for i, feature in enumerate(pred_features):
+		pred_fid[feature[1]] = i
+	
+	# Identify structurally matched transcripts
+	matches = []
+	match_type = None
+	for i,p in enumerate(pred_transcripts):
+		for j, t in enumerate(true_transcripts):
+			if p == t:
+				matches.append([i,j])
+				if match_type != "CDS":
+					match_type = "Full"
+			else:
+				p = {x for x in p if "CDS" in x}
+				t = {x for x in t if "CDS" in x}
+				if p==t:
+					matches.append([i,j])
+					match_type = "CDS"
+	
+	if matches == []:
+		return None
+
+	# Create label (corrected prediction)
+	label_features = copy.deepcopy(pred_features)
+	mask_features = []
+	for p,t in matches:
+		for feat in true_transcripts[t]:
+			if (match_type == "CDS") & ("CDS" not in feat):
+				continue
+			label_features[pred_fid[feat]][0] = true_features[true_fid[feat]][0] # Start coord
+			label_features[pred_fid[feat]][2] = true_features[true_fid[feat]][2] # End coord
+			label_features[pred_fid[feat]][4] = true_features[true_fid[feat]][4] # Phase
+			mask_features.append(feat)
+	mask_features = set(mask_features)
+	
+	# Re-tokenize
+	label = ";".join(["|".join(i) for i in label_features]) + ">" + pred.split(">")[1]
+	tokenized_label = dt.batch_encode_plus(
+		[label],
+		return_tensors="pt",
+		padding=True,
+		truncation=True,
+		add_special_tokens=True,
+		max_length=2048)
+	
+	# Create mask for features with ground truth labels
+	tokenized_mask_features = torch.tensor(dt.encode("|".join(list(mask_features)))[1:-1])
+	tokens_to_mask_inverse = torch.tensor(list(range(4,17)))
+	
+	feature_transcript_split =  torch.nonzero(tokenized_label["input_ids"] == 17, as_tuple=True)[1][0]
+	splits_indices = torch.nonzero(tokenized_label["input_ids"] == 21, as_tuple=True)[1]
+	splits_indices = splits_indices[splits_indices < feature_transcript_split]
+
+	mlm_mask = copy.deepcopy(tokenized_label["attention_mask"]) == False
+	prev_split = 0
+	for split in splits_indices:
+		id_section = tokenized_label["input_ids"][:, int(prev_split):int(split)]
+		if torch.isin(id_section, tokenized_mask_features).sum() > 0:
+			mlm_mask[:, prev_split:split] = torch.isin(id_section, tokens_to_mask_inverse)
+		prev_split = split
+
+	return (label, mlm_mask)
 
 if __name__ == '__main__':
 	
