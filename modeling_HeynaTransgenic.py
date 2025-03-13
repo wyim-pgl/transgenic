@@ -292,7 +292,7 @@ class HyenaDownsampleWithRelPosBias(nn.Module):
 		self.norm2 = nn.LayerNorm(in_channels * 2)
 		
 		# Activation
-		self.relu = nn.ReLU()
+		self.relu = nn.ReLU(inplace=True)
 
 	def forward(self, x):
 		# x shape: (batch, channels, length)
@@ -418,17 +418,26 @@ class BCLLayerNorm1D(nn.Module):
 		return x_norm * self.gamma + self.beta
 
 
+class FusedConv(nn.Module):
+	def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1):
+		super().__init__()
+		self.conv = nn.Conv1d(in_channels, out_channels, kernel_size, stride, padding)
+		self.activation = nn.ReLU(inplace=True)
+
+	def forward(self, x):
+		return self.activation(self.conv(x))
+
 class DownSample1D(nn.Module):
 	def __init__(self, in_channels, out_channels, dropout_rate=0.2):
 		super().__init__()
 		self.conv_layers = nn.Sequential(
-			nn.Conv1d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
+			FusedConv(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
 			#BCLLayerNorm1D(in_channels),
-			nn.SiLU(),
+			#nn.ReLU(inplace=True),
 			nn.Dropout1d(p=dropout_rate),  # Dropout after activation
-			nn.Conv1d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
+			FusedConv(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
 			#BCLLayerNorm1D(in_channels),
-			nn.SiLU(),
+			#nn.ReLU(inplace=True),
 			nn.Dropout1d(p=dropout_rate)  # Another dropout for deeper regularization
 		)
 		#self.avg_pool = nn.AvgPool1d(kernel_size=2, stride=2)
@@ -449,13 +458,13 @@ class UpSample1D(nn.Module):
 		super().__init__()
 		self.conv_transpose = nn.ConvTranspose1d(in_channels, out_channels, kernel_size=2, stride=2)
 		self.conv_layers = nn.Sequential(
-			nn.Conv1d(out_channels + skip_channels, out_channels, kernel_size=3, stride=1, padding=1),
+			FusedConv(out_channels + skip_channels, out_channels, kernel_size=3, stride=1, padding=1),
 			#BCLLayerNorm1D(out_channels),
-			nn.SiLU(),
+			#nn.ReLU(inplace=True),
 			nn.Dropout1d(p=dropout_rate),  # Dropout after first activation
-			nn.Conv1d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
+			FusedConv(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
 			#BCLLayerNorm1D(out_channels),
-			nn.SiLU(),
+			#nn.ReLU(inplace=True),
 			nn.Dropout1d(p=dropout_rate)  # Dropout after second activation
 		)
 
@@ -469,9 +478,9 @@ class FinalConv1D(nn.Module):
 	def __init__(self, in_channels, out_channels, dropout_rate=0.2):
 		super().__init__()
 		self.conv_layers = nn.Sequential(
-			nn.Conv1d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
+			FusedConv(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
 			#BCLLayerNorm1D(in_channels),
-			nn.SiLU(),
+			#nn.ReLU(inplace=True),
 			nn.Dropout1d(p=dropout_rate),  # Dropout before final layer
 			nn.Conv1d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
 		)
@@ -480,38 +489,41 @@ class FinalConv1D(nn.Module):
 		return self.conv_layers(x)
 
 class UNet1DSegmentationHead(nn.Module):
-	def __init__(self, num_classes=9, dropout_rate=0.1):
+	def __init__(self, d_model=256, num_classes=9, dropout_rate=0.1):
 		super().__init__()
 
-		self.positional_embedding = SinusoidalPositionalEmbedding(49152, 256)
+		self.positional_embedding = SinusoidalPositionalEmbedding(49152, d_model)
+
+		self.reduce_channels = nn.Conv1d(d_model, d_model//2, kernel_size=3, stride=1, padding=1)
 
 		self._downsample_blocks = nn.ModuleList([
-			DownSample1D(256, 512, dropout_rate),
-			DownSample1D(512, 1024, dropout_rate),
+			DownSample1D(d_model//2, d_model, dropout_rate),
+			DownSample1D(d_model, d_model*2, dropout_rate),
 			#DownSample1D(1024, 2048, dropout_rate)
 		])
 		
 		self.conv_layers = nn.Sequential(
-			nn.Conv1d(1024, 1024, kernel_size=3, stride=1, padding=1),
+			nn.Conv1d(d_model*2, d_model*2, kernel_size=3, stride=1, padding=1),
 			#BCLLayerNorm1D(1024),
-			nn.SiLU(),
+			nn.ReLU(inplace=True),
 			nn.Dropout1d(p=dropout_rate),  # Dropout after activation
-			nn.Conv1d(1024, 1024, kernel_size=3, stride=1, padding=1),
+			nn.Conv1d(d_model*2, d_model*2, kernel_size=3, stride=1, padding=1),
 			#BCLLayerNorm1D(1024),
-			nn.SiLU(),
+			nn.ReLU(inplace=True),
 			nn.Dropout1d(p=dropout_rate)  # Another dropout for deeper regularization
 		)
 
 		self._upsample_blocks = nn.ModuleList([
 			#UpSample1D(4096, 2048, 2048, dropout_rate),
-			UpSample1D(1024, 512, 512, dropout_rate),
-			UpSample1D(512, 256, 256, dropout_rate)
+			UpSample1D(d_model*2,d_model, d_model, dropout_rate),
+			UpSample1D(d_model, d_model//2, d_model//2, dropout_rate)
 		])
 
-		self.final_block = FinalConv1D(256, num_classes, dropout_rate)
+		self.final_block = FinalConv1D(d_model//2, num_classes, dropout_rate)
 
 	def forward(self, x):
 		x = self.positional_embedding(x.permute(0,2,1)).permute(0,2,1)
+		x = self.reduce_channels(x)
 		
 		skips = []
 		for down in self._downsample_blocks:
@@ -787,7 +799,7 @@ class HyenaEncoder(nn.Module):
 		
 		self.focalLoss = WeightedFocalLoss( 
 					pos_weight = torch.tensor([1.2, 1003, 1.5, 1.5, 396, 394, 12, 8, 1011]),
-					gamma=torch.tensor([0, 0, 0, 0, 0, 0, 0, 0, 0]))
+					gamma=torch.tensor([1, 1, 1, 1, 1, 1, 1, 1, 1]))
 		self.diceLoss = DiceLoss(smooth=1e-6, num_classes=9)
 		#HyenaConfig.n_layer = 3
 		#self.segmentation_model = AutoModel.from_config(HyenaConfig, trust_remote_code=True).backbone.layers
@@ -795,7 +807,7 @@ class HyenaEncoder(nn.Module):
 
 		if self.do_segment:
 			#self.segmentation_head  = UNet1D(input_dim=256, hidden_dim=256, num_classes=9)
-			self.segmentation_head = UNet1DSegmentationHead(num_classes=9, dropout_rate=0.05)
+			self.segmentation_head = UNet1DSegmentationHead(d_model=config.d_model, num_classes=9, dropout_rate=0.05)
 			self.segmentation_head.apply(init_weights)
 	
 	def forward(self, input_ids, segLabels = None, *args, **kwargs):
@@ -828,7 +840,7 @@ class HyenaEncoder(nn.Module):
 				#boundaryLossFn = BoundaryLoss()
 				focal_loss = self.focalLoss(seg_logits, segLabels)
 				dice_loss = self.diceLoss(seg_logits, segLabels)
-				seg_loss =  (dice_loss) + (focal_loss)
+				seg_loss =  (0.65*dice_loss) + (0.35*focal_loss)
 				#boundary_loss = boundaryLossFn(seg_logits[:,0:segLabels.shape[1]], segLabels)
 				#seg_loss = None
 				boundary_loss = None
@@ -1206,6 +1218,55 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 				+ layer_past[2:],
 			)
 		return reordered_past
+
+class HyenaForMLM(TransgenicPreTrainedModel):
+	_tied_weights_keys = ["decoder.weight", "encoder.hyena.backbone.embeddings.word_embeddings.weight"]
+	def __init__(self, config, dropout_rate=0.1):
+		super().__init__(config)
+
+		self.encoder = HyenaEncoder(config)
+		
+		self.dense = nn.Linear(config.d_model, config.d_model)
+		self.activation = nn.ReLU()
+		self.layer_norm = nn.LayerNorm(config.d_model)
+		self.dropout = nn.Dropout(dropout_rate)
+		
+		self.decoder = nn.Linear(config.d_model, 16, bias=False)
+		self.decoder.weight = self.encoder.hyena.backbone.embeddings.word_embeddings.weight
+	
+	def forward(self, input_ids, labels = None, mask_index=None):
+		hidden_states = self.encoder(input_ids).last_hidden_state
+
+		x = self.activation(self.dense(hidden_states))
+		x = self.layer_norm(x)
+		x = self.dropout(x)
+		logits = self.decoder(x)
+		
+		if (labels != None) and (mask_index != None):
+			loss_fn = nn.CrossEntropyLoss()
+			loss = loss_fn(logits[mask_index], labels[mask_index])
+			return [logits, loss]
+		
+		return [logits]
+	
+class HyenaMLMHead(nn.Module):
+	def __init__(self, d_model, vocab_size, dropout_rate=0.1):
+		super().__init__()
+		self.dense = nn.Linear(d_model, d_model)
+		self.activation = nn.ReLU()  # You could also use nn.SiLU() if preferred
+		self.layer_norm = nn.LayerNorm(d_model)
+		self.dropout = nn.Dropout(dropout_rate)
+		self.decoder = nn.Linear(d_model, vocab_size, bias=False)
+		# Optionally, if you want to share weights with your input embedding, do it here.
+
+	def forward(self, hidden_states):
+		# hidden_states shape: (batch_size, seq_length, d_model)
+		x = self.dense(hidden_states)
+		x = self.activation(x)
+		x = self.layer_norm(x)
+		x = self.dropout(x)
+		logits = self.decoder(x)
+		return logits
 
 class LEDForConditionalMLM(TransgenicPreTrainedModel):
 	def __init__(self, config):

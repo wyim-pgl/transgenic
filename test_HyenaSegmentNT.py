@@ -39,10 +39,10 @@ def predictTransgenicAccelerate(
 	dt = GFFTokenizer()
 	ds  = preprocessedSegmentationDatasetHyena("Segmentation_9Genomes_preprocessed_scodons.db")
 	train_data, eval_data, test_data = torch.utils.data.random_split(ds, [534331, 71244,106867])
-	dataset = makeDataLoader(eval_data, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_segment_collate_fn)
+	dataset = makeDataLoader(test_data, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_segment_collate_fn)
 
 	# Load the model and add to device
-	segment_checkpoint = "checkpoints_HyenaSegment/model.safetensors"#"checkpoints/Hyena_Segment_FocalDice_E0-4.safetensors"
+	segment_checkpoint = "checkpoints/Hyena_SegmentFocalDice_E13-21.safetensors"#"checkpoints/Hyena_Segment_FocalDice_E0-4.safetensors"
 	config = TransgenicHyenaConfig(do_segment=True, numSegClasses=9)
 	model = HyenaEncoder(config)
 
@@ -57,7 +57,7 @@ def predictTransgenicAccelerate(
 	for key in tensors:
 		if "transgenic.decoder." not in key:
 			new_tensors[key] = tensors[key]
-	del new_tensors["segmentation_head.positional_embedding.pe"]
+	#del new_tensors["segmentation_head.positional_embedding.pe"]
 
 	freq_tensors = {}
 	for k in tensors.keys():
@@ -76,33 +76,33 @@ def predictTransgenicAccelerate(
 		else: 
 			genic = True
 		
-		if genic:
-			with torch.no_grad():
-				outputs = model(batch[0].to(device), attention_mask=batch[1].to(device), segLabels=batch[2][:, :, 0:9].to(device))
-			#probabilities =  torch.nn.functional.softmax(outputs.seg_logits, dim=-1)[...,0].squeeze()
-					
-			predictions = torch.sigmoid(outputs.segmentation_logits).squeeze().cpu()
-			labels = batch[2][:, :, 0:9].detach().cpu().squeeze().int()
-			
-			#seq = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True)[0].replace(" ", "")
-			#import matplotlib.pyplot as plt
-			#plt.figure(figsize=(10, 4))
-			#plt.bar(range(6144), labels[:,3].numpy())
-			#plt.bar(range(6144), predictions[:,3].numpy())
-			#plt.ylim(0.5, 1)
-			#plt.savefig("plot.png")
-			#plt.close()
-			
-			mlp = MultilabelPrecision(num_labels=9, average=None)(predictions, labels).tolist() # False positive rate
-			mlr = MultilabelRecall(num_labels=9, average=None)(predictions, labels).tolist() # False negative rate
-			mlf1 = MultilabelF1Score(num_labels=9, average=None)(predictions, labels).tolist()
-			mlmcc = MultilabelMatthewsCorrCoef(num_labels=9)(predictions, labels).tolist()
-			mcc = []
-			for i in range(9):
-				mcc.append(BinaryMatthewsCorrCoef()(predictions[:,i], labels[:,i]).item())
+		#if genic:
+		with torch.no_grad():
+			outputs = model(batch[0].to(device), attention_mask=batch[1].to(device), segLabels=batch[2][:, :, 0:9].to(device))
+		#probabilities =  torch.nn.functional.softmax(outputs.seg_logits, dim=-1)[...,0].squeeze()
+				
+		predictions = torch.sigmoid(outputs.segmentation_logits).squeeze().cpu()
+		labels = batch[2][:, :, 0:9].detach().cpu().squeeze().int()
+		
+		#seq = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True)[0].replace(" ", "")
+		#import matplotlib.pyplot as plt
+		#plt.figure(figsize=(10, 4))
+		#plt.bar(range(6144), labels[:,3].numpy())
+		#plt.bar(range(6144), predictions[:,3].numpy())
+		#plt.ylim(0.5, 1)
+		#plt.savefig("plot.png")
+		#plt.close()
+		
+		mlp = MultilabelPrecision(num_labels=9, average=None)(predictions, labels).tolist() # False positive rate
+		mlr = MultilabelRecall(num_labels=9, average=None)(predictions, labels).tolist() # False negative rate
+		mlf1 = MultilabelF1Score(num_labels=9, average=None)(predictions, labels).tolist()
+		mlmcc = MultilabelMatthewsCorrCoef(num_labels=9)(predictions, labels).tolist()
+		mcc = []
+		for i in range(9):
+			mcc.append(BinaryMatthewsCorrCoef()(predictions[:,i], labels[:,i]).item())
 
-			with open(outfile, "a") as f:
-				print(f"{batch[3][0]}\t{batch[4][0]}\t{str(batch[5][0])}\t{str(batch[6][0])}\t{"\t".join([str(i) for i in mlp])}\t{"\t".join([str(i) for i in mlr])}\t{"\t".join([str(i) for i in mlf1])}\t{"\t".join([str(i) for i in mcc])}\t{str(mlmcc)}\t{str(int(genic))}", file=f)
+		with open(outfile, "a") as f:
+			print(f"{batch[3][0]}\t{batch[4][0]}\t{str(batch[5][0])}\t{str(batch[6][0])}\t{"\t".join([str(i) for i in mlp])}\t{"\t".join([str(i) for i in mlr])}\t{"\t".join([str(i) for i in mlf1])}\t{"\t".join([str(i) for i in mcc])}\t{str(mlmcc)}\t{str(int(genic))}", file=f)
 
 if __name__ == "__main__":
 	torch.manual_seed(123)

@@ -71,8 +71,8 @@ def trainTransgenicFCGAccelerate(
 	print(f"Using: {device}", file=sys.stderr)
 	
 	# Set up DataLoaders
-	torch.manual_seed(567)
-	torch.cuda.manual_seed_all(567)
+	torch.manual_seed(678)
+	torch.cuda.manual_seed_all(678)
 	train_ds = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_segment_collate_fn)
 	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_segment_collate_fn)
 	
@@ -83,17 +83,29 @@ def trainTransgenicFCGAccelerate(
 	#	for i in range(9):
 	#		class_bp[i] += batch[2][:, :, i].sum().item()
 
-	#"checkpoints_HyenaSegment/model.safetensors"
+	#"checkpoints/Hyena_SegmentFocalDice_E5-12.safetensors"
 	#"checkpoints_HyenaSegment/model.safetensors""checkpoints/Hyena_Segment_FocalDice_E0-4.safetensors"
 	# #"checkpoints/Hyena_Gen9G_6144nt_SinusoidalDownsample_E15.safetensors"
-	segment_checkpoint = "checkpoints/Hyena_SegmentFocalDice_E5-12.safetensors"
-	config = TransgenicHyenaConfig(do_segment=True, numSegClasses=9)
+	# "checkpoints/Hyena_Gen9G_6144nt_wide_E12.safetensors"
+	segment_checkpoint = "checkpoints_HyenaSegment/model.safetensors"
+	#config = TransgenicHyenaConfig(do_segment=True, numSegClasses=9)
+	config = TransgenicHyenaConfig(
+	do_segment=True, 
+	numSegClasses=9,
+	d_model=512,
+	encoder_layers=9,
+	decoder_layers=9,
+	encoder_n_layer=9,
+	attention_window = [
+			1024,1024,1024,1024,1024,1024,
+			1024,1024,1024
+		])
 	model = HyenaEncoder(config)
 
 	tensors = {}
 	with safe_open(segment_checkpoint, framework="pt", device="cpu") as f:
 		for k in f.keys():
-			if ("transgenic.decoder" not in k) and ("lm_head" not in k): # and ("segmentation" not in k):
+			if ("transgenic.decoder" not in k) and ("lm_head" not in k) and ("transgenic.downsample" not in k) and ("final_logits_bias" not in k) and ("transgenic.EncoderOutputPositionalEmbedding" not in k): # and ("segmentation" not in k):
 				tensors[k] = f.get_tensor(k)
 
 	#new_tensors = {}
@@ -104,7 +116,7 @@ def trainTransgenicFCGAccelerate(
 	#		new_tensors[k.replace("3.weight", "6.weight")] = tensors[k]
 
 	tensors = {key.replace("transgenic.encoder.", ""):tensors[key] for key in tensors}
-	del tensors["segmentation_head.positional_embedding.pe"]
+	#del tensors["segmentation_head.positional_embedding.pe"]
 
 	freq_tensors = {}
 	for k in tensors.keys():
@@ -112,7 +124,7 @@ def trainTransgenicFCGAccelerate(
 			freq_tensors[".".join(k.split(".")[0:7]) + ".3.freq"] = tensors[k]
 			freq_tensors[".".join(k.split(".")[0:7]) + ".5.freq"] = tensors[k]
 
-	model.load_state_dict(tensors | freq_tensors, strict=False)
+	model.load_state_dict(tensors | freq_tensors, strict=True)
 
 	model.to(device)
 	model.train()
@@ -272,7 +284,7 @@ def trainTransgenicFCGAccelerate(
 				with torch.no_grad():
 					outputs = model(batch[0].to(device), segLabels=batch[2][:, :, 0:9].to(device))
 				
-				if torch.sum(lab[:, :, 0]) > 0:
+				if torch.sum(batch[2][:, :, 0]) > 0:
 					genic_steps += 1
 					predictions = torch.sigmoid(outputs.segmentation_logits).squeeze().cpu()
 					labels = batch[2][:, :, 0:9].detach().cpu().squeeze().int()
@@ -345,5 +357,5 @@ if __name__ == '__main__':
 		notes="Training with Hyena",
 		encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",
 		unlink = False,
-		log_wandb=True
+		log_wandb=False
 	)
