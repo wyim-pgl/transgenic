@@ -3,21 +3,21 @@ from tqdm import tqdm
 from safetensors import safe_open
 from accelerate import Accelerator
 from torchmetrics.classification import MultilabelPrecision, MultilabelRecall, MultilabelF1Score, MultilabelMatthewsCorrCoef, BinaryMatthewsCorrCoef
-from utils_transgenic import segmentationDataset, makeDataLoader, segment_collate_fn
+from utils_transgenic import preprocessedSegmentationDataset, makeDataLoader, segment_collate_fn
 from modeling_transgenic import segmented_sequence_embeddings
 
 def predictTransgenicAccelerate(
 		encoder_model:str, 
 		segmentation_model:str, 
 		safetensors_model:str, 
-		database:segmentationDataset, 
+		database:preprocessedSegmentationDataset, 
 		outfile="SegmentNTPerformance.out", 
 		batch_size=1,
 		window_size=12288,
 		step_size=11000):
 	
 	# apply heaeder to output file
-	features = ["Gene", "Exon", "Intron", "SDonor", "SAcceptor", "UTR5", "UTR3"]
+	features = ["Gene", "Start_Codon", "Exon", "Intron", "SDonor", "SAcceptor", "UTR5", "UTR3","Stop_Codon"]
 	precision = []
 	recall = []
 	f1 = []
@@ -36,18 +36,19 @@ def predictTransgenicAccelerate(
 	print(f"Running transgenic in prediction mode on {device}", file=sys.stderr)
 	
 	# Set up DataLoader
-	ds  = segmentationDataset(window_size, step_size, database)
-	_, eval_data, _ = torch.utils.data.random_split(ds, [231003, 30800, 46202])
-	dataset =  makeDataLoader(eval_data, shuffle=True, batch_size=1, pin_memory=True, num_workers=1, collate_fn=segment_collate_fn)
+	ds  = preprocessedSegmentationDataset(database)
+	_, eval_data, test_data = torch.utils.data.random_split(ds, [534331, 71244,106867])
+	dataset =  makeDataLoader(test_data, shuffle=True, batch_size=1, pin_memory=True, num_workers=1, collate_fn=segment_collate_fn)
 
 	# Load the model and add to device
-	model = segmented_sequence_embeddings(encoder_model, segmentation_model, 14)
+	model = segmented_sequence_embeddings(encoder_model, segmentation_model, 14, do_segment=True)
 
 	if safetensors_model:
 		tensors = {}
 		with safe_open(safetensors_model, framework="pt", device="cpu") as f:
 			for k in f.keys():
-				tensors[k] = f.get_tensor(k)
+				if "film" not in k:
+					tensors[k] = f.get_tensor(k)
 		model.load_state_dict(tensors)
 	model.eval()
 	model.to(device)
@@ -59,7 +60,7 @@ def predictTransgenicAccelerate(
 
 	# Prediction loop
 	for batch in tqdm(dataset):
-		if batch[2][:,0].sum() == 0:	
+		if batch[2][:,:,0].sum() == 0:	
 			genic = False
 		else: 
 			genic = True
@@ -68,13 +69,13 @@ def predictTransgenicAccelerate(
 		#probabilities =  torch.nn.functional.softmax(outputs.seg_logits, dim=-1)[...,0].squeeze()
 				
 		predictions = (outputs.seg_logits[..., 0] > outputs.seg_logits[..., 1]).detach().cpu().long().squeeze()
-		predictions = predictions[:, (0,2,3,4,5,6,7)]
-		labels = batch[2][:, (0,2,3,4,5,6,7)].detach().cpu().squeeze().int()
+		predictions = predictions[:, (0,1,2,3,4,5,6,7,8)]
+		labels = batch[2][:, :, (0,1,2,3,4,5,6,7,8)].detach().cpu().squeeze().int()
 		
-		mlp = MultilabelPrecision(num_labels=7, average=None)(predictions, labels).tolist() # False positive rate
-		mlr = MultilabelRecall(num_labels=7, average=None)(predictions, labels).tolist() # False negative rate
-		mlf1 = MultilabelF1Score(num_labels=7, average=None)(predictions, labels).tolist()
-		mlmcc = MultilabelMatthewsCorrCoef(num_labels=7)(predictions, labels).tolist()
+		mlp = MultilabelPrecision(num_labels=9, average=None)(predictions, labels).tolist() # False positive rate
+		mlr = MultilabelRecall(num_labels=9, average=None)(predictions, labels).tolist() # False negative rate
+		mlf1 = MultilabelF1Score(num_labels=9, average=None)(predictions, labels).tolist()
+		mlmcc = MultilabelMatthewsCorrCoef(num_labels=9)(predictions, labels).tolist()
 		mcc = []
 		for i in range(7):
 			mcc.append(BinaryMatthewsCorrCoef()(predictions[:,i], labels[:,i]).item())
@@ -86,8 +87,8 @@ if __name__ == "__main__":
 	torch.manual_seed(123)
 	encoder_model = "InstaDeepAI/agro-nucleotide-transformer-1b"
 	segmentation_model = "InstaDeepAI/segment_nt_multi_species"
-	safetensors_model = "checkpoints_SegmentNT/model.safetensors"
-	database = "Segmentation_7Genomes.db"
+	safetensors_model = "checkpoints/AgroSegmentNT_Epoch6_6144nt_restart_codons.safetensors"
+	database = "Segmentation_9Genomes_preprocessed_scodons.db"
 
 	predictTransgenicAccelerate(
 		encoder_model, 

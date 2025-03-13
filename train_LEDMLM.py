@@ -1,23 +1,16 @@
 #!/usr/bin/env python
-import torch, os, wandb, gc, time
+import torch, os, wandb, gc
 import torch.optim as optim
 from torch.nn.utils import clip_grad_norm_
 from transformers import get_linear_schedule_with_warmup
 import torch.multiprocessing as mp
-from accelerate import Accelerator
+from torch.nn.parallel import DistributedDataParallel as DDP
 from utils_transgenic import *
 from configuration_transgenic import TransgenicHyenaConfig
 from safetensors.torch import save_model
-from modeling_HeynaTransgenic import transgenicForConditionalGeneration
+from modeling_HeynaTransgenic import transgenicForConditionalGeneration, LEDForConditionalMLM
 
 os.environ['HF_HOME'] = './HFmodels'
-
-def linear_decay(step, total_steps, start_value=0.5, end_value=0.0):
-	if step >= total_steps:
-		return end_value 
-	
-	decay_rate = (start_value - end_value) / total_steps
-	return start_value - (decay_rate * step)
 
 def trainTransgenicFCGAccelerate(
 	train_ds:isoformData, 
@@ -52,7 +45,7 @@ def trainTransgenicFCGAccelerate(
 			config={
 			"learning_rate": lr,
 			"schedule_lr": schedule_lr,
-			"architecture": "Hyena",
+			"architecture": "LEDMLM",
 			"dataset": "9G_6144nt",
 			"epochs": num_epochs,
 			"max_grad_norm": max_grad_norm,
@@ -64,62 +57,38 @@ def trainTransgenicFCGAccelerate(
 			}
 		)
 
-	print(f"Training transgenic with Hyena. {checkpoint_path=} {output_dir=} {safetensors_model=}", file=sys.stderr)
+	print(f"Training LEDMLM with HyenaTransgenicForConditionalGeneration. {checkpoint_path=} {output_dir=} {safetensors_model=}", file=sys.stderr)
 
 	device = torch.device("cuda")
 	print(f"Using: {device}", file=sys.stderr)
 	
 	# Set up DataLoaders
-	torch.manual_seed(345)
-	torch.cuda.manual_seed_all(345)
+	torch.manual_seed(123)
+	torch.cuda.manual_seed_all(123)
 	train_ds = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
 	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
 	
-	#model = getModel(None, safetensors_model=safetensors_model, device="cpu", mode="train")
-	# "checkpoints/Hyena_Gen9G_6144nt_E30.safetensors"
-	# #"checkpoints_HyenaPosEmbed/model.safetensors"
-	decoder_checkpoint = "checkpoints_HyenaWide/model.safetensors"
-	segment_checkpoint = None
+	
+	# Initialize generation model
+	config = TransgenicHyenaConfig(do_segment=False)
+	genmodel = transgenicForConditionalGeneration(config)
 
-	config = TransgenicHyenaConfig(
-	do_segment=False, 
-	numSegClasses=9,
-	d_model=1024,
-	encoder_layers=9,
-	decoder_layers=9,
-	encoder_n_layer=9,
-	attention_window = [
-			1024,1024,1024,1024,1024,1024,
-			1024,1024,1024
-		])
-	model = transgenicForConditionalGeneration(config)
-
+	# Load weights
+	decoder_checkpoint = "checkpoints/Hyena_Gen9G_6144nt_E30.safetensors"
 	tensors = {}
 	with safe_open(decoder_checkpoint, framework="pt", device="cpu") as f:
 		for k in f.keys():
-			#if ("segmentation" not in k) and ("transgenic.decoder" not in k) and ("lm_head" not in k): 
-			tensors[k] = f.get_tensor(k)
-	tensors["transgenic.decoder_embed_tokens.weight"] = tensors["lm_head.weight"]
-	tensors["transgenic.decoder.embed_tokens.weight"] = tensors["transgenic.decoder_embed_tokens.weight"]
+			if ("segmentation" not in k): 
+				tensors[k] = f.get_tensor(k)
 
-	# Add missing shared HyenaSin freq weights
-	freq_tensors = {}
-	for k in tensors.keys():
-		if "freq" in k:
-			freq_tensors[".".join(k.split(".")[0:9]) + ".3.freq"] = tensors[k]
-			freq_tensors[".".join(k.split(".")[0:9]) + ".5.freq"] = tensors[k]
+	genmodel.load_state_dict(tensors, strict=False)
+	genmodel.to(device)
+	genmodel.eval()
 
-	#model.load_state_dict(tensors | freq_tensors, strict=True)
-	model.gradient_checkpointing_enable()
+	# Load MLM model
+	config = TransgenicHyenaConfig(do_segment=False, d_model=512)
+	model = LEDForConditionalMLM(config)
 	model.to(device)
-	model.train()
-
-	
-	#for param in model.transgenic.encoder.parameters():
-	#	param.requires_grad = False
-
-	# Add accelerator
-	accelerator = Accelerator()
 
 	# Setup the optimizer
 	optimizer = optim.AdamW(model.parameters(), lr=lr)
@@ -134,70 +103,119 @@ def trainTransgenicFCGAccelerate(
 		num_training_steps=t_total
 		)
 	
-	model, optimizer, train_ds, schedule_lr = accelerator.prepare(
-		model, optimizer, train_ds, schedule_lr
-	)
-
 	# Training loop
 	best_eval_score = None
 	for epoch in range(num_epochs):
 		total_loss = 0
+		mlm_steps = 0
 		for step, batch in enumerate(tqdm(train_ds, miniters=10, disable=False)):
 			if 'Zm' in batch[3][0]: 
 				continue
 
 			ii, am, lab = batch[0].to(device), batch[1].to(device), batch[2].to(device)
-			if ii.shape[1] > 49000:
-				continue
-			
-			dii = None
 			try:
-				outputs = None
-				outputs = model(input_ids=ii, attention_mask=am, decoder_input_ids=dii, labels=lab, return_dict=True)
-				total_loss += outputs.loss.detach().float()
-				outputs.loss = outputs.loss / accumulation_steps
-				#outputs.loss.backward()
-				accelerator.backward(outputs.loss)
-				if (step+1) % accumulation_steps == 0:
-					clip_grad_norm_(model.parameters(), max_grad_norm)
-					optimizer.step()
-					if schedule_lr: lr_scheduler.step()
-					# log metrics to wandb
-					if log_wandb:
-						wandb_log = {"epoch":epoch, "step":step, "loss": outputs.loss.detach().float()*accumulation_steps, "mean_loss": (total_loss) / (step+1), "lr": lr_scheduler.get_last_lr()[0]}
-						for name, param in model.named_parameters():
-							if (param.grad != None) & (param.requires_grad):
-								grad_norm = param.grad.norm().detach().item()
-								wandb_log[f"{name}_grad_norm"] = grad_norm
-						wandb.log(wandb_log)
-					optimizer.zero_grad()
+				encoder_outputs = genmodel.transgenic.encoder(ii)
+
+				gen_outputs = genmodel.generate(
+					encoder_outputs=encoder_outputs,
+					#inputs=ii, 
+					attention_mask=am, 
+					num_return_sequences=1, 
+					max_length=2048
+				)
+				pred = dt.batch_decode(gen_outputs.detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+				true = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
 				
-				if (step % 5000 == 0) & (step != 0):
-					print(f"Epoch {epoch}, Step {step}, Loss {outputs.loss.detach().float()*accumulation_steps}", file=sys.stderr)
-					save_model(model, f"{checkpoint_path}/model.safetensors")
-				del outputs
-				torch.cuda.empty_cache()
-			except Exception as e:
-				print(f"Error in batch: {batch[3]}, {e}")
+				mlm_label = createDenoisingLabel(pred, true, dt)
+				
+
+				if mlm_label:
+					tokenized_label = dt.batch_encode_plus(
+						[mlm_label[0]],
+						return_tensors="pt",
+						padding=True,
+						truncation=True,
+						add_special_tokens=True,
+						max_length=2048)
+
+					outputs = model(
+						inputs_embeds=encoder_outputs.last_hidden_state,
+						labels=tokenized_label["input_ids"].to(device), 
+						label_mask=mlm_label[1].to(device), 
+						decoder_input_ids=gen_outputs[:, 1:],
+						return_dict=True)
+					
+					total_loss += outputs.loss.detach().float()
+					outputs.loss = outputs.loss / accumulation_steps
+					outputs.loss.backward()
+					mlm_steps += 1
+			except:
+				print(f"Error in batch: {batch[3]}")
+			
+			if (mlm_steps+1) % accumulation_steps == 0:
+				clip_grad_norm_(model.parameters(), max_grad_norm)
+				optimizer.step()
+				if schedule_lr: lr_scheduler.step()
+				# log metrics to wandb
+				if log_wandb:
+					wandb_log = {"epoch":epoch, "step":mlm_steps, "loss": outputs.loss.detach().float()*accumulation_steps, "mean_loss": (total_loss) / (mlm_steps+1), "lr": lr_scheduler.get_last_lr()[0]}
+					for name, param in model.named_parameters():
+						if (param.grad != None) & (param.requires_grad):
+							grad_norm = param.grad.norm().detach().item()
+							wandb_log[f"{name}_grad_norm"] = grad_norm
+					wandb.log(wandb_log)
 				optimizer.zero_grad()
-				model.zero_grad()
-				del outputs
-				torch.cuda.empty_cache()
-				gc.collect()
-				time.sleep(1)
-				continue
 			
-			
+			if (mlm_steps % 5000 == 0) & (step != 0):
+				print(f"Epoch {epoch}, Step {step}, Loss {outputs.loss.detach().float()*accumulation_steps}", file=sys.stderr)
+				save_model(model, f"{checkpoint_path}/model.safetensors")
+			del gen_outputs
+			torch.cuda.empty_cache()
 			
 
-		train_epoch_loss = total_loss / len(train_ds)
+		train_epoch_loss = total_loss / mlm_steps
 		train_ppl = torch.exp(train_epoch_loss)
 
 		if eval:
 			eval_loss = 0
 			for batch in tqdm(eval_ds, miniters=10, disable=False):
-				with torch.no_grad():
-					outputs = model(input_ids=batch[0].to(device), attention_mask=batch[1].to(device), labels=batch[2].to(device), return_dict=True)
+				ii, am, lab = batch[0].to(device), batch[1].to(device), batch[2].to(device)
+				encoder_outputs = genmodel.transgenic.encoder(ii)
+
+				gen_outputs = genmodel.generate(
+					encoder_outputs=encoder_outputs,
+					#inputs=ii, 
+					attention_mask=am, 
+					num_return_sequences=1, 
+					max_length=2048
+				)
+				pred = dt.batch_decode(gen_outputs.detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+				true = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+				
+				mlm_label = createDenoisingLabel(pred, true, dt)
+				
+
+				if mlm_label:
+					tokenized_label = dt.batch_encode_plus(
+						[mlm_label[0]],
+						return_tensors="pt",
+						padding=True,
+						truncation=True,
+						add_special_tokens=True,
+						max_length=2048)
+
+					outputs = model(
+						inputs_embeds=encoder_outputs.last_hidden_state,
+						labels=tokenized_label["input_ids"].to(device), 
+						label_mask=mlm_label[1].to(device), 
+						decoder_input_ids=gen_outputs[:, 1:],
+						return_dict=True)
+					
+					total_loss += outputs.loss.detach().float()
+					outputs.loss = outputs.loss / accumulation_steps
+					outputs.loss.backward()
+					mlm_steps += 1
+				
 				eval_loss += outputs.loss.detach().float()
 
 			eval_epoch_loss = eval_loss / len(eval_ds)
@@ -245,15 +263,15 @@ if __name__ == '__main__':
 	trainTransgenicFCGAccelerate(
 		train_data, 
 		eval_data, 
-		lr=1e-4, 
-		num_epochs=20, 
+		lr=5e-5, 
+		num_epochs=15, 
 		schedule_lr=True, 
 		eval=True, 
 		batch_size=1, 
 		accumulation_steps=64,
-		checkpoint_path="checkpoints_HyenaWide/", 
+		checkpoint_path="checkpoints_LEDMLM/", 
 		safetensors_model=None,
-		output_dir="saved_models_HyenaWide/",
+		output_dir="saved_models_LEDMLM/",
 		max_grad_norm=1,
 		notes="Training with Hyena",
 		encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",

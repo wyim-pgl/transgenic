@@ -830,6 +830,70 @@ class preprocessedSegmentationDatasetHyena(Dataset):
 
 		return (seqs, encoder_attention_mask, class_tensor, organism, chromosome, start, fin)
 
+class MLMDatasetHyena(Dataset):
+	def __init__(self, db, encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf"):
+		self.db = db
+		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
+	
+	def __len__(self):
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			return con.sql("SELECT COUNT(*) FROM data").fetchall()[0][0]
+	
+	def __getitem__(self, idx):
+		idx = idx + 1
+		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
+			_, sequence,label,organism,chromosome,start,fin,_ = con.sql(f"SELECT * FROM data where rn={idx}").fetchall()[0]
+
+		# Tokenize the input sequences and remove the [SEP] token
+		seqs = self.encoder_tokenizer.batch_encode_plus([sequence], return_tensors="pt")
+		seqs["input_ids"] = seqs["input_ids"][:, :-1]
+		encoder_attention_mask = (seqs["input_ids"] != self.encoder_tokenizer.pad_token_id)
+
+		masked_seqs, mask_index = mask_sequences(seqs.input_ids)
+
+		return (masked_seqs, mask_index, seqs.input_ids, organism, chromosome, start, fin)
+
+def mask_sequences(seqs, num_masked_nucleotides=921, mask_token=3):
+	"""
+	Masks groups of 3 contiguous nucleotides in each sequence of a batch and returns a boolean mask.
+	
+	Args:
+		seqs (torch.Tensor): 2D tensor of shape (batch_size, seq_len) representing the batch of sequences.
+							Each sequence should have a length divisible by 3.
+		num_masked_nucleotides (int): Desired number of nucleotides to mask per sequence.
+									Will be rounded down to the nearest multiple of 3.
+		mask_token (int): The token to use for masking.
+	
+	Returns:
+		tuple: (masked_seqs, mask_bool) where:
+			- masked_seqs (torch.Tensor): The sequences after masking.
+			- mask_bool (torch.BoolTensor): Boolean tensor of the same shape as seqs,
+			with True at masked positions.
+	"""
+	batch_size, seq_len = seqs.size()
+	if seq_len % 3 != 0:
+		raise ValueError("Sequence length must be divisible by 3.")
+	
+	# Calculate number of 3-mer groups per sequence.
+	num_3mers = seq_len // 3
+	
+	# Determine the number of groups to mask per sequence.
+	num_groups = num_masked_nucleotides // 3 
+	
+	# Create copies for the outputs.
+	masked_seqs = seqs.clone()
+	mask_bool = torch.zeros_like(seqs, dtype=torch.bool)
+	
+	# Iterate over each sequence in the batch.
+	# Randomly select non-overlapping group indices for the sequence.
+	for i in range(batch_size):
+		group_indices = random.sample(range(num_3mers), num_groups)
+		for g in group_indices:
+			start = g * 3
+			masked_seqs[i, start:start+3] = mask_token
+			mask_bool[i, start:start+3] = True
+			
+	return masked_seqs, mask_bool
 
 def gffString2GFF3(gff:str, chr:str, region_start:int, extra_attributes:str) -> List[str]:
 	# Purpose: 
@@ -975,6 +1039,27 @@ def hyena_collate_fn(batch):
 		return sequences, attention_masks, labels_padded, gm, chr, region_start, region_end
 	else:
 		return sequences, attention_masks, None, gm, chr, region_start, region_end
+
+def hyenaMLM_collate_fn(batch):
+	# Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
+	sequences, attention_masks, labels, gm, chr, region_start, region_end= zip(*batch)
+
+	# Pad and stack the sequences
+	max_len = max([seq.shape[1] for seq in sequences])
+	sequences = [F.pad(seq, (max_len - seq.shape[1], 0)) for seq in sequences]
+	sequences = torch.cat(sequences)
+	
+	#Pad and stack the attention masks
+	max_len = max([mask.shape[1] for mask in attention_masks])
+	attention_masks = [F.pad(mask, (max_len - mask.shape[1], 0)) for mask in attention_masks]
+	attention_masks = torch.cat(attention_masks)
+
+	# Pad and stack the labels
+	max_len = max([label.shape[1] for label in labels])
+	labels = [F.pad(label, (max_len - label.shape[1], 0)) for label in labels]
+	labels = torch.cat(labels)
+
+	return sequences, attention_masks, labels, gm, chr, region_start, region_end
 
 def segment_collate_fn(batch):
 	# Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
@@ -1317,25 +1402,19 @@ class PredictionProcessor():
 					break
 			self.end_pairs.append(new_pair)
 	
-		# Get cds pairs for splice junction validation
+		# Get pairs for splice junction validation
 		self.cds_pairs = []
+		self.utr_pairs=[]
 		for transcript in self.transcripts:
 			for i, typ in enumerate(transcript):
 				if i == 0:
 					continue
 				if 'CDS' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'CD' in transcript[i-1]:
 					self.cds_pairs.append((transcript[i-1], typ))
-		
-		# Get all pairs for splice junction validation (Add utr splice junctions)
-		#self.splice_pairs = self.cds_pairs
-		#for transcript in self.transcripts:
-		#	for i, typ in enumerate(transcript):
-		#		if i == 0:
-		#			continue
-		#		if 'five_prime_UTR' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'five_prime_UTR' in transcript[i-1]:
-		#			self.splice_pairs.append((transcript[i-1], typ))
-		#		if 'three_prime_UTR' in typ and (transcript[i-1], typ) not in self.cds_pairs and 'three_prime_UTR' in transcript[i-1]:
-		#			self.splice_pairs.append((transcript[i-1], typ))
+				if 'five_prime_UTR' in typ and (transcript[i-1], typ) not in self.utr_pairs and 'five_prime_UTR' in transcript[i-1]:
+					self.utr_pairs.append((transcript[i-1], typ))
+				if 'three_prime_UTR' in typ and (transcript[i-1], typ) not in self.utr_pairs and 'three_prime_UTR' in transcript[i-1]:
+					self.utr_pairs.append((transcript[i-1], typ))
 		
 		# Identify features in the segmentation probabilities
 		if self.probs != None:
@@ -1488,12 +1567,13 @@ class PredictionProcessor():
 		stopCodons = sorted(stopCodons, key=lambda i: means[i-3], reverse=True)
 		
 		# Pick out all splice donors and acceptors
+		# limit to canonical splice junctions
 		means = []
 		lst = self.probs[:,4].tolist() 
 		for i in range(len(lst)):
 			sum_value = lst[i] + (lst[i + 1] if i + 1 < len(lst) else 0)
 			means.append(sum_value/2)
-		donors = [i for i, x in enumerate(means) if x > junctionThresh]
+		donors = [i for i, x in enumerate(means) if (x > junctionThresh) and (self.sequence[i:i+2] in self.spliceCanonical.keys())]
 		donors = sorted(donors, key=lambda i: means[i], reverse=True)
 
 		means = []
@@ -1501,7 +1581,7 @@ class PredictionProcessor():
 		for i in range(len(lst)):
 			sum_value = lst[i] + (lst[i + 1] if i + 1 < len(lst) else 0)
 			means.append(sum_value/2)
-		acceptors = [i+2 for i, x in enumerate(means) if x > junctionThresh]
+		acceptors = [i+2 for i, x in enumerate(means) if x > junctionThresh and (self.sequence[i:i+2] in self.spliceCanonical.values())]
 		acceptors = sorted(acceptors, key=lambda i: means[i-2], reverse=True)
 
 		return {
@@ -1521,23 +1601,35 @@ class PredictionProcessor():
 
 		# Identify start codons within the buffer region
 		# Pick the highest probability (lowest index) start which doesn't introduce in-frame stop codons
+		# Set phase to 'A' (Always 'A' for the first cds)
 		for i, cds in enumerate(self.start_cds):
+			self.features[self.feature_index_dict[cds]][4] = 'A'
 			start = int(self.features[self.feature_index_dict[cds]][0])
 			if usingSeqFeature:
 				if len(startCodons) > 0:
 					new_starts = [i for i in startCodons if i in range(start-buff,start+buff)]
 					found=False
-					for new_start in new_starts:
-						containsStop = self.containsStopCodon(self.sequence[new_start:int(self.features[self.feature_index_dict[cds]][2])], "A")
-						if not containsStop:
+					if len(new_starts)>0:
+						# If only one CDS, don't constrain by stop codons
+						if self.start_cds == self.end_cds:
+							new_start = new_starts[0]
 							found = True
-							break
-					
-					if found:
-						new_start = new_starts[0]
-						self.features[self.feature_index_dict[cds]][0] = str(new_start)
-						if new_start not in self.usedSeqFeatures["startCodons"]:
-							self.usedSeqFeatures["startCodons"].append(new_start)
+						else:
+							for new_start in new_starts:
+								containsStop = self.containsStopCodon(self.sequence[new_start:int(self.features[self.feature_index_dict[cds]][2])], "A")
+								if not containsStop:
+									found = True
+									break
+						
+						if found:
+							self.features[self.feature_index_dict[cds]][0] = str(new_start)
+							if new_start not in self.usedSeqFeatures["startCodons"]:
+								self.usedSeqFeatures["startCodons"].append(new_start)
+						else:
+							self.features[self.feature_index_dict[cds]][0] = str(new_starts[0])
+							if new_starts[0] not in self.usedSeqFeatures["startCodons"]:
+								self.usedSeqFeatures["startCodons"].append(new_starts[0])
+							usingSeqFeature = False
 					else:
 						usingSeqFeature = False
 				else:
@@ -1572,26 +1664,31 @@ class PredictionProcessor():
 			if usingSeqFeature:
 				if len(stopCodons) > 0:
 					new_stops = [i for i in stopCodons if i in range(stop-buff, stop+buff)]
-
-					# TODO: Only matching frame to the first transcript. in the future, consider all transcripts
-					working_transcript_index = [i for i,t in enumerate(self.transcripts) if cds in self.transcripts[i]][0]
-					upstream = self.transcripts[working_transcript_index][:-1]
-					length = 0
-					for feat in upstream:
-						length += int(self.features[self.feature_index_dict[feat]][2]) - int(self.features[self.feature_index_dict[feat]][0]) 
-					
 					found = False
-					for new_stop in new_stops:
-						full_length = length + (new_stop - int(self.features[self.feature_index_dict[cds]][0]))
-						if full_length % 3 == 0:
-							found = True
-							break
+					if len(new_stops)>0:
+						# Only matching frame to the first transcript
+						working_transcript_index = [i for i,t in enumerate(self.transcripts) if cds in self.transcripts[i]][0]
+						upstream_cds = [i for i in self.transcripts[working_transcript_index] if "CDS" in i]
+						upstream = upstream_cds[:-1]
+						length = 0
+						for feat in upstream:
+							length += int(self.features[self.feature_index_dict[feat]][2]) - int(self.features[self.feature_index_dict[feat]][0]) 
+						
+						for new_stop in new_stops:
+							full_length = length + (new_stop - int(self.features[self.feature_index_dict[cds]][0]))
+							if full_length % 3 == 0:
+								found = True
+								break
 
-
-					if found:
-						self.features[self.feature_index_dict[cds]][2] = str(new_stop)
-						if new_stop not in self.usedSeqFeatures["stopCodons"]:
-							self.usedSeqFeatures["stopCodons"].append(new_stop)
+						if found:
+							self.features[self.feature_index_dict[cds]][2] = str(new_stop)
+							if new_stop not in self.usedSeqFeatures["stopCodons"]:
+								self.usedSeqFeatures["stopCodons"].append(new_stop)
+						else:
+							self.features[self.feature_index_dict[cds]][2] = str(new_stops[0])
+							if new_stops[0] not in self.usedSeqFeatures["stopCodons"]:
+								self.usedSeqFeatures["stopCodons"].append(new_stops[0])
+							usingSeqFeature = False
 					else:
 						usingSeqFeature = False
 				else:
@@ -1620,36 +1717,95 @@ class PredictionProcessor():
 		return "TAG" in seq or "TAA" in seq or "TGA" in seq
 
 
-	def checkProbableSpliceJunctions(self, buff=100):
+	def checkProbableSpliceJunctions(self, pairs, buff=100, cds=True):
+		phase_lookup = {"A":0, "B":1,"C":2}
+		index_lookup = {0:"A", 1:"B",2:"C"}
+
 		donors = self.seqFeatures["donors"]
 		acceptors = self.seqFeatures["acceptors"]
 
-		for donor, acceptor in self.cds_pairs:
+		for donor, acceptor in pairs:
+			donor_start = int(self.features[self.feature_index_dict[donor]][0])
 			donor_end = int(self.features[self.feature_index_dict[donor]][2])
+			donor_phase = self.features[self.feature_index_dict[donor]][4]
 			acceptor_start = int(self.features[self.feature_index_dict[acceptor]][0])
 
-			# Identify stop codons within the buffer region
-			# Pick the highest probability (lowest index) 
-			# TODO: Consider matching donor and acceptor pairs
+			# Identify splice donor sites within the buffer region
+			# Pick the highest probability donor (lowest index) which doesn't introduce an inframe stop codon
+			# Update acceptor phase based on selection
+			donor_type = None
 			if len(donors) > 0:
 				new_donors = [i for i in donors if i in range(donor_end-buff,donor_end+buff)]
-				if len(new_donors)>0:
-					new_donor = new_donors[0]
-					self.features[self.feature_index_dict[donor]][2] = str(new_donor)
-					if new_donor not in self.usedSeqFeatures["donors"]:
-						self.usedSeqFeatures["donors"].append(new_donor)
-				else:
+				found = False
+				if (len(new_donors)>0) and cds: # Working on CDS feature
+					for new_donor in new_donors:
+						containsStop = self.containsStopCodon(self.sequence[donor_start:new_donor], donor_phase) # Maybe just use whole seq instead of tracking phase?
+						if not containsStop:
+							found = True
+							break
+					
+					if found:
+						self.features[self.feature_index_dict[donor]][2] = str(new_donor)
+						donor_type  = self.sequence[new_donor:new_donor+2]
+						acceptor_phase = index_lookup[(phase_lookup[donor_phase] + (3-((new_donor-donor_start)%3)))%3]
+						self.features[self.feature_index_dict[acceptor]][4] = acceptor_phase
+						if new_donor not in self.usedSeqFeatures["donors"]:
+							self.usedSeqFeatures["donors"].append(new_donor)
+					else:
+						self.features[self.feature_index_dict[donor]][2] = str(new_donors[0])
+						donor_type  = self.sequence[new_donors[0]:new_donors[0]+2]
+						acceptor_phase = index_lookup[(phase_lookup[donor_phase] + ((new_donors[0]-donor_start)%3))%3]
+						self.features[self.feature_index_dict[acceptor]][4] = acceptor_phase
+						if new_donors[0] not in self.usedSeqFeatures["donors"]:
+							self.usedSeqFeatures["donors"].append(new_donors[0])
+				
+				elif (len(new_donors)>0): # Working on UTR feature
+					self.features[self.feature_index_dict[donor]][2] = str(new_donors[0])
+					donor_type  = self.sequence[new_donors[0]:new_donors[0]+2]
+					if new_donors[0] not in self.usedSeqFeatures["donors"]:
+							self.usedSeqFeatures["donors"].append(new_donors[0])
+				
+				else: # If no donor site from segmentation, look for nearest donor in the buffer window
 					self.feature_flag_dict[donor] += "donor"
+					buffer = self.sequence[donor_end-buff:donor_end+buff]
+					donors = [m.start() for m in re.finditer("GT", buffer)]
+					if donors:
+						pick = donors[np.argmin([np.abs(loc-buff) for loc in donors])]
+						new_donor = donor_end + pick-buff
+						self.features[self.feature_index_dict[donor]][2] = str(new_donor)
+						donor_type  = self.sequence[new_donor:new_donor+2]
+						if cds:
+							acceptor_phase = index_lookup[(phase_lookup[donor_phase] + ((new_donor-donor_start)%3))%3]
+							self.features[self.feature_index_dict[acceptor]][4] = acceptor_phase
 			
+			# Identify splice acceptor sites within the buffer region
+			# Pick the highest probability acceptor (lowest index) which matches the canonical splice site pairing of the donor site
 			if len(acceptors) > 0:
 				new_acceptors = [i for i in acceptors if i in range(acceptor_start-buff,acceptor_start+buff)]
+				found = False
 				if len(new_acceptors)>0:
-					new_acceptor = new_acceptors[0]
-					self.features[self.feature_index_dict[acceptor]][0] = str(new_acceptor)
-					if new_acceptor not in self.usedSeqFeatures["acceptors"]:
-						self.usedSeqFeatures["acceptors"].append(new_acceptor)
+					for new_acceptor in new_acceptors:
+						if donor_type and (donor_type in self.spliceCanonical.keys()):
+							if self.sequence[new_acceptor-2:new_acceptor] == self.spliceCanonical[donor_type]:
+								found = True
+								break
+					
+					if found:
+						self.features[self.feature_index_dict[acceptor]][0] = str(new_acceptor)
+						if new_acceptor not in self.usedSeqFeatures["acceptors"]:
+							self.usedSeqFeatures["acceptors"].append(new_acceptor)
+					else:
+						self.features[self.feature_index_dict[acceptor]][0] = str(new_acceptors[0])
+						if new_acceptors[0] not in self.usedSeqFeatures["acceptors"]:
+							self.usedSeqFeatures["acceptors"].append(new_acceptors[0])
 				else:
 					self.feature_flag_dict[acceptor] += "acceptor"
+					buffer = self.sequence[acceptor_start-buff:acceptor_start+buff]
+					acceptors = [m.start() for m in re.finditer("AG", buffer)]
+					if acceptors:
+						pick = acceptors[np.argmin([np.abs(loc-buff) for loc in acceptors])]
+						new_acceptor = acceptor_start + pick-buff +2
+						self.features[self.feature_index_dict[acceptor]][0] = str(new_acceptor)
 			
 
 	def checkCanonicalSpliceJunctions(self, buff=50):
@@ -1806,8 +1962,8 @@ class PredictionProcessor():
 				moveOn = True
 				
 			return moveOn
-	def checkSpliceJunctions(self, buff=50):
-		self.checkProbableSpliceJunctions(buff=buff)
+	def checkSpliceJunctions(self, pairs, buff=50, cds=True):
+		self.checkProbableSpliceJunctions(pairs, buff=buff, cds=cds)
 		#self.checkCanonicalSpliceJunctions(buff=buff)
 	
 	def stitchGFF(self, originalStrand=True):
@@ -1873,16 +2029,17 @@ class PredictionProcessor():
 		
 
 
-	def postProcessPrediction(self, buff=100, usingSeqFeature=False) -> str:
+	def postProcessPrediction(self, utr_splice_buf = 100, splice_buffer=10, start_buffer=150, stop_buffer=150, seqFeature=True) -> str:
 		# Use start/stop codon, splice junction, and valid protein translation to adjust feature cordinates and phases.
 		# Enforce that each transcript is a valid protein-coding sequence.
 		# Ensure that updates do not make overlapping exons
 		# buff: search buffer for cds boundary markers
 
 		if self.parsable:
-			self.checkSpliceJunctions(buff=10)
-			self.checkStartCodons(buff=150, usingSeqFeature=usingSeqFeature)
-			self.checkStopCodons(buff=150, usingSeqFeature=usingSeqFeature)
+			self.checkStartCodons(buff=start_buffer, usingSeqFeature=seqFeature)
+			self.checkSpliceJunctions(self.cds_pairs, buff=splice_buffer)
+			self.checkStopCodons(buff=stop_buffer, usingSeqFeature=seqFeature)
+			self.checkSpliceJunctions(self.utr_pairs, buff=utr_splice_buf, cds=False)
 			return self.stitchGFF()
 		else:
 			return self.gff

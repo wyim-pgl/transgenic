@@ -529,7 +529,7 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 			_tied_weights_keys = []
 		super().__init__(config)
 		self.transgenic = transgenicModel(config)
-		self.register_buffer("final_logits_bias", torch.zeros((1, self.transgenic.decoder_embed_tokens.num_embeddings)))
+		self.register_buffer("final_logits_bias", torch.zeros((1, self.transgenic.decoder_embed_tokens.num_embeddings))) # Fix biases
 		self.lm_head = nn.Linear(config.d_model, self.transgenic.decoder_embed_tokens.num_embeddings, bias=False)
 
 		# Initialize weights and apply final processing
