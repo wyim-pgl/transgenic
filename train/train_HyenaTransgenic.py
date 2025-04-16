@@ -7,10 +7,11 @@ from transformers import get_linear_schedule_with_warmup
 from accelerate import Accelerator
 from safetensors.torch import save_model, safe_open
 
-from ..datasets.datasets import isoformData, isoformDataHyena, makeDataLoader, hyena_collate_fn
-from ..models.tokenization_transgenic import GFFTokenizer
-from ..models.modeling_HeynaTransgenic import transgenicForConditionalGeneration
-from ..models.configuration_transgenic import HyenaTransgenicConfig
+sys.path.insert(0, f'{os.getcwd()}/src')
+from datasets.datasets import isoformData, isoformDataHyena, makeDataLoader, hyena_collate_fn
+from models.tokenization_transgenic import GFFTokenizer
+from models.modeling_HeynaTransgenic import transgenicForConditionalGeneration
+from models.configuration_transgenic import HyenaTransgenicConfig
 
 os.environ['HF_HOME'] = './HFmodels'
 
@@ -20,6 +21,22 @@ def linear_decay(step, total_steps, start_value=0.5, end_value=0.0):
 	
 	decay_rate = (start_value - end_value) / total_steps
 	return start_value - (decay_rate * step)
+
+def get_attr(obj, names):
+	if len(names) == 1:
+		return getattr(obj, names[0])
+	elif type(obj) == torch.nn.modules.container.ModuleList:
+		return get_attr(obj[int(names[0])], names[1:])
+	else:
+		return get_attr(getattr(obj, names[0]), names[1:])
+
+def set_attr(obj, names, val):
+	if len(names) == 1:
+		setattr(obj, names[0], val)
+	elif type(obj) == torch.nn.modules.container.ModuleList:
+		return set_attr(obj[int(names[0])], names[1:], val)
+	else:
+		set_attr(getattr(obj, names[0]), names[1:], val)
 
 def trainTransgenicFCGAccelerate(
 	train_ds:isoformData, 
@@ -72,35 +89,45 @@ def trainTransgenicFCGAccelerate(
 	print(f"Using: {device}", file=sys.stderr)
 	
 	# Set up DataLoaders
-	torch.manual_seed(345)
-	torch.cuda.manual_seed_all(345)
+	torch.manual_seed(234)
+	torch.cuda.manual_seed_all(234)
 	train_ds = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
 	eval_ds = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
 	
 	#model = getModel(None, safetensors_model=safetensors_model, device="cpu", mode="train")
 	# "checkpoints/Hyena_Gen9G_6144nt_E30.safetensors"
+	# "checkpoints/Hyena_Gen9G_6144nt_wide_E12.safetensors"
 	# #"checkpoints_HyenaPosEmbed/model.safetensors"
-	decoder_checkpoint = "checkpoints_HyenaWide/model.safetensors"
+	# "checkpoints_HyenaWide/model.safetensors"
+	# "checkpoints/Hyena_Gen9G_6144nt_512L18_E2.safetensors"
+	decoder_checkpoint = "checkpoints/Hyena_Gen9G_6144nt_768L12_E15.safetensors"#"checkpoints/Hyena_Gen9G_6144nt_768L12_E5.safetensors"#"checkpoints/Hyena_Gen9G_6144nt_wide_E12.safetensors"
 	segment_checkpoint = None
+	layers = 12
+	attentionWindow = [
+			1024,1024,1024,1024,1024,1024,
+			1024,1024,1024,1024,1024,1024,
+			#1024,1024,1024,1024,1024,1024
+		]
 
 	config = HyenaTransgenicConfig(
 	do_segment=False, 
 	numSegClasses=9,
-	d_model=1024,
-	encoder_layers=9,
-	decoder_layers=9,
-	encoder_n_layer=9,
-	attention_window = [
-			1024,1024,1024,1024,1024,1024,
-			1024,1024,1024
-		])
+	d_model=768,
+	encoder_layers=layers,
+	decoder_layers=layers,
+	encoder_n_layer=layers,
+	attention_window = attentionWindow,
+	dropout=0.1,
+	encoder_attention_heads=6,
+	decoder_attention_heads=6
+	)
 	model = transgenicForConditionalGeneration(config)
 
 	tensors = {}
 	with safe_open(decoder_checkpoint, framework="pt", device="cpu") as f:
 		for k in f.keys():
 			#if ("segmentation" not in k) and ("transgenic.decoder" not in k) and ("lm_head" not in k): 
-			tensors[k] = f.get_tensor(k)
+			tensors[k.replace("_orig_mod.", "")] = f.get_tensor(k)
 	tensors["transgenic.decoder_embed_tokens.weight"] = tensors["lm_head.weight"]
 	tensors["transgenic.decoder.embed_tokens.weight"] = tensors["transgenic.decoder_embed_tokens.weight"]
 
@@ -111,7 +138,30 @@ def trainTransgenicFCGAccelerate(
 			freq_tensors[".".join(k.split(".")[0:9]) + ".3.freq"] = tensors[k]
 			freq_tensors[".".join(k.split(".")[0:9]) + ".5.freq"] = tensors[k]
 
-	#model.load_state_dict(tensors | freq_tensors, strict=True)
+	state_dict = tensors | freq_tensors
+
+	#missing_keys = []
+	#for key, dict_param in state_dict.items():
+	#
+	#	submod_names = key.split(".")
+	#	try:
+	#		curr_param = get_attr(model, submod_names)
+	#	except:
+	#		curr_param = None
+	#	
+	#	if curr_param != None:
+	#		if curr_param.shape != dict_param.shape: 
+	#			with torch.no_grad():
+	#				curr_param[tuple(slice(0, dim) for dim in dict_param.shape)] = dict_param
+	#			set_attr(model, submod_names, curr_param)
+	#		else:
+	#			# Or re-use it (as done in load_state_dict) but the sizes have to match!
+	#			set_attr(model, submod_names, curr_param)
+	#	else:
+	#		missing_keys.append(key)
+	
+	model.load_state_dict(state_dict, strict=True)
+
 	model.gradient_checkpointing_enable()
 	model.to(device)
 	model.train()
@@ -120,11 +170,21 @@ def trainTransgenicFCGAccelerate(
 	#for param in model.transgenic.encoder.parameters():
 	#	param.requires_grad = False
 
-	# Add accelerator
-	accelerator = Accelerator()
+	#pretrained_params = []
+	#new_params = []
+	#for name, param in model.named_parameters():
+		# Example condition: assume new layers contain 'new_layer' in their name.
+	#	if name in new_keys.missing_keys:
+	#		new_params.append(param)
+	#	else:
+	#		pretrained_params.append(param)
 
 	# Setup the optimizer
-	optimizer = optim.AdamW(model.parameters(), lr=lr)
+	optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=0.02)
+	#optimizer = optim.AdamW([
+	#	{'params': pretrained_params, 'lr': lr / 2},
+	#	{'params': new_params, 'lr': lr}
+	#], weight_decay=0.01)
 	optimizer.zero_grad()
 	
 	# Create the learning rate scheduler
@@ -132,10 +192,12 @@ def trainTransgenicFCGAccelerate(
 	if schedule_lr:
 		lr_scheduler = get_linear_schedule_with_warmup(
 		optimizer=optimizer,
-		num_warmup_steps=t_total*0.05,
+		num_warmup_steps=0,#t_total*0.05,
 		num_training_steps=t_total
 		)
 	
+	# Add accelerator
+	accelerator = Accelerator()
 	model, optimizer, train_ds, schedule_lr = accelerator.prepare(
 		model, optimizer, train_ds, schedule_lr
 	)
@@ -149,8 +211,8 @@ def trainTransgenicFCGAccelerate(
 				continue
 
 			ii, am, lab = batch[0].to(device), batch[1].to(device), batch[2].to(device)
-			if ii.shape[1] > 49000:
-				continue
+			#if ii.shape[1] > 49000:
+			#	continue
 			
 			dii = None
 			try:
@@ -247,17 +309,17 @@ if __name__ == '__main__':
 	trainTransgenicFCGAccelerate(
 		train_data, 
 		eval_data, 
-		lr=1e-4, 
-		num_epochs=20, 
+		lr=5e-5, 
+		num_epochs=10, 
 		schedule_lr=True, 
 		eval=True, 
 		batch_size=1, 
-		accumulation_steps=64,
+		accumulation_steps=128,
 		checkpoint_path="checkpoints_HyenaWide/", 
 		safetensors_model=None,
 		output_dir="saved_models_HyenaWide/",
 		max_grad_norm=1,
-		notes="Training with Hyena",
+		notes="d_model=768, 12 layers, 8 attn_heads, training from original 512 pretrained, restart from epoch5",
 		encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",
 		unlink = False,
 		log_wandb=True
