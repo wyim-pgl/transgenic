@@ -5,8 +5,8 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 
-from ..utils.sequence import loadGenome, reverseComplement, validateCDS
-from ..utils.gsf import reverseComplement_gffString
+from utils.sequence import loadGenome, reverseComplement, validateCDS
+from utils.gsf import reverseComplement_gffString
 
 #TODO: Add functionality to make a single input from a genome sequence and a single gene model
 

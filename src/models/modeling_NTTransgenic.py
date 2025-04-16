@@ -6,7 +6,7 @@ from transformers import AutoModelForMaskedLM, AutoConfig, PreTrainedTokenizer, 
 from transformers import LEDForConditionalGeneration, T5ForConditionalGeneration, T5Config, EsmForMaskedLM
 from transformers.modeling_outputs import ModelOutput
 from dataclasses import dataclass
-from configuration_transgenic import TransgenicConfig
+from configuration_transgenic import NTTransgenicConfig
 from trl import AutoModelForSeq2SeqLMWithValueHead
 
 def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
@@ -363,7 +363,7 @@ class segmented_sequence_embeddings(EsmForMaskedLM):
 			boundary_loss=boundary_loss)
 
 class TransgenicPreTrainedModel(PreTrainedModel):
-	config_class = TransgenicConfig
+	config_class = NTTransgenicConfig
 	base_model_prefix = "led"
 	supports_gradient_checkpointing = True
 

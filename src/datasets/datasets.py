@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.utils.data import  Dataset, DataLoader
 from transformers import AutoTokenizer
 
-from ..utils.sequence import segmentSequence, scanGlobalAttentionTokens, mask_sequences
+from utils.sequence import segmentSequence, scanGlobalAttentionTokens, mask_sequences
 
 class isoformData(Dataset):
 	def __init__(self, db, dt, mode="inference", encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", global_attention=False, shuffle=False):

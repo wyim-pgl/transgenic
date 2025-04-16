@@ -7,7 +7,7 @@ from transformers import AutoConfig, PreTrainedModel, AutoModel, AutoModelForIma
 from transformers import LEDForConditionalGeneration, EsmForMaskedLM, T5ForConditionalGeneration
 from transformers.modeling_outputs import ModelOutput
 from dataclasses import dataclass
-from configuration_transgenic import TransgenicHyenaConfig
+from models.configuration_transgenic import HyenaTransgenicConfig
 
 
 def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
@@ -171,7 +171,7 @@ class HyenaModelOutput(ModelOutput):
 	segmentation_loss: Optional[Tuple[torch.FloatTensor, ...]] = None
 
 class TransgenicPreTrainedModel(PreTrainedModel):
-	config_class = TransgenicHyenaConfig
+	config_class = HyenaTransgenicConfig
 	base_model_prefix = "led"
 	supports_gradient_checkpointing = True
 
@@ -840,7 +840,7 @@ class HyenaEncoder(nn.Module):
 				#boundaryLossFn = BoundaryLoss()
 				focal_loss = self.focalLoss(seg_logits, segLabels)
 				dice_loss = self.diceLoss(seg_logits, segLabels)
-				seg_loss =  (0.65*dice_loss) + (0.35*focal_loss)
+				seg_loss =  (0.5*dice_loss) + (0.5*focal_loss)
 				#boundary_loss = boundaryLossFn(seg_logits[:,0:segLabels.shape[1]], segLabels)
 				#seg_loss = None
 				boundary_loss = None
