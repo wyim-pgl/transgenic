@@ -8,11 +8,13 @@ import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchmetrics.classification import MultilabelPrecision, MultilabelRecall
 from safetensors.torch import save_model, safe_open
+from accelerate import Accelerator
 
-from ..datasets.datasets import isoformData, preprocessedSegmentationDatasetHyena, makeDataLoader, hyena_segment_collate_fn
-from ..models.tokenization_transgenic import GFFTokenizer
-from ..models.modeling_HeynaTransgenic import HyenaEncoder
-from ..models.configuration_transgenic import HyenaTransgenicConfig
+sys.path.insert(0, f'{os.getcwd()}/src')
+from datasets.datasets import isoformData, preprocessedSegmentationDatasetHyena, makeDataLoader, hyena_segment_collate_fn
+from models.tokenization_transgenic import GFFTokenizer
+from models.modeling_HeynaTransgenic import HyenaEncoder
+from models.configuration_transgenic import HyenaTransgenicConfig
 
 os.environ['HF_HOME'] = './HFmodels'
 
@@ -90,26 +92,44 @@ def trainTransgenicFCGAccelerate(
 	#"checkpoints_HyenaSegment/model.safetensors""checkpoints/Hyena_Segment_FocalDice_E0-4.safetensors"
 	# #"checkpoints/Hyena_Gen9G_6144nt_SinusoidalDownsample_E15.safetensors"
 	# "checkpoints/Hyena_Gen9G_6144nt_wide_E12.safetensors"
-	segment_checkpoint = "checkpoints_HyenaSegment/model.safetensors"
+	segment_checkpoint = "checkpoints/Hyena_Gen9G_6144nt_768L12_E22.safetensors"#"checkpoints_HyenaSegment/model.safetensors"
 	#config = TransgenicHyenaConfig(do_segment=True, numSegClasses=9)
+	#config = HyenaTransgenicConfig(
+	#do_segment=True, 
+	#numSegClasses=9,
+	#d_model=512,
+	#encoder_layers=9,
+	#decoder_layers=9,
+	#encoder_n_layer=9,
+	#attention_window = [
+	#		1024,1024,1024,1024,1024,1024,
+	#		1024,1024,1024
+	#	])
+	layers = 12
+	attentionWindow = [
+			1024,1024,1024,1024,1024,1024,
+			1024,1024,1024,1024,1024,1024]
+
 	config = HyenaTransgenicConfig(
 	do_segment=True, 
 	numSegClasses=9,
-	d_model=512,
-	encoder_layers=9,
-	decoder_layers=9,
-	encoder_n_layer=9,
-	attention_window = [
-			1024,1024,1024,1024,1024,1024,
-			1024,1024,1024
-		])
+	d_model=768,
+	encoder_layers=layers,
+	decoder_layers=layers,
+	encoder_n_layer=layers,
+	attention_window = attentionWindow,
+	dropout=0.1,
+	encoder_attention_heads=6,
+	decoder_attention_heads=6
+	)
+	
 	model = HyenaEncoder(config)
 
 	tensors = {}
 	with safe_open(segment_checkpoint, framework="pt", device="cpu") as f:
 		for k in f.keys():
 			if ("transgenic.decoder" not in k) and ("lm_head" not in k) and ("transgenic.downsample" not in k) and ("final_logits_bias" not in k) and ("transgenic.EncoderOutputPositionalEmbedding" not in k): # and ("segmentation" not in k):
-				tensors[k] = f.get_tensor(k)
+				tensors[k.replace("_orig_mod.", "")] = f.get_tensor(k)
 
 	#new_tensors = {}
 	#for k in tensors.keys():
@@ -127,7 +147,7 @@ def trainTransgenicFCGAccelerate(
 			freq_tensors[".".join(k.split(".")[0:7]) + ".3.freq"] = tensors[k]
 			freq_tensors[".".join(k.split(".")[0:7]) + ".5.freq"] = tensors[k]
 
-	model.load_state_dict(tensors | freq_tensors, strict=True)
+	model.load_state_dict(tensors | freq_tensors, strict=False)
 
 	model.to(device)
 	model.train()
@@ -145,7 +165,7 @@ def trainTransgenicFCGAccelerate(
 	if schedule_lr:
 		lr_scheduler = get_linear_schedule_with_warmup(
 		optimizer=optimizer,
-		num_warmup_steps=0, #0.05*t_total,
+		num_warmup_steps=0.05*t_total,
 		num_training_steps=t_total
 		)
 	
@@ -173,6 +193,12 @@ def trainTransgenicFCGAccelerate(
 		{"total_mlr_Stop_Codon":0}
 	]
 	
+	# Add accelerator
+	accelerator = Accelerator()
+	model, optimizer, train_ds, schedule_lr = accelerator.prepare(
+		model, optimizer, train_ds, schedule_lr
+	)
+
 	# Training loop
 	best_eval_score = None
 	for epoch in range(num_epochs):
@@ -226,7 +252,8 @@ def trainTransgenicFCGAccelerate(
 			total_loss += outputs.segmentation_loss.detach().float()
 			outputs.segmentation_loss /= accumulation_steps
 			
-			outputs.segmentation_loss.backward()
+			#outputs.segmentation_loss.backward()
+			accelerator.backward(outputs.segmentation_loss)
 			#except:
 			#	print(f"Error in batch: {batch[3]}")
 			
@@ -347,12 +374,12 @@ if __name__ == '__main__':
 	trainTransgenicFCGAccelerate(
 		train_data, 
 		eval_data, 
-		lr=1e-4, 
+		lr=5e-5, 
 		num_epochs=20, 
 		schedule_lr=True, 
 		eval=True, 
 		batch_size=1, 
-		accumulation_steps=128,
+		accumulation_steps=96,
 		checkpoint_path="checkpoints_HyenaSegment/", 
 		safetensors_model=None,
 		output_dir="saved_models_Hyena/",
@@ -360,5 +387,5 @@ if __name__ == '__main__':
 		notes="Training with Hyena",
 		encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",
 		unlink = False,
-		log_wandb=False
+		log_wandb=True
 	)
