@@ -1,11 +1,16 @@
-import re, sys
+import re, sys, os
 from safetensors import safe_open
 from peft import IA3Config, get_peft_model
+
+sys.path.insert(0, f'{os.getcwd()}/src')
+from models.modeling_HeynaTransgenic import transgenicForConditionalGeneration, transgenicModel
+from models.configuration_transgenic import HyenaTransgenicConfig
+from models.tokenization_transgenic import GFFTokenizer
 
 def getModel(config, safetensors_model=None, device="cpu", mode="predict"):
 	if not config:
 		# Load the model and add to device
-		config = TransgenicConfig()
+		config = HyenaTransgenicConfig()
 
 	model = transgenicForConditionalGeneration(config)
 
@@ -49,7 +54,7 @@ def getModel(config, safetensors_model=None, device="cpu", mode="predict"):
 def getLargeDecoderModel(config, safetensors_model=None, device="cpu", mode="predict"):
 	if not config:
 		# Load the model and add to device
-		config = TransgenicConfig(
+		config = HyenaTransgenicConfig(
 			d_model=1500, 
 			attention_window=1024, 
 			decoder_ffn_dim=6000, 
@@ -83,7 +88,7 @@ def getLargeDecoderModel(config, safetensors_model=None, device="cpu", mode="pre
 def getPeftModel(decoder_checkpoint, segment_checkpoint, config=None, unlink=False, safetensors_model=None, device="cpu", mode="predict"):
 	if not config:
 		# Load the model and add to device
-		config = TransgenicConfig()
+		config = HyenaTransgenicConfig()
 
 	model = transgenicForConditionalGeneration(config)
 
@@ -159,13 +164,56 @@ def getPeftModel(decoder_checkpoint, segment_checkpoint, config=None, unlink=Fal
 	
 	return model
 
-def registerModel():
-	from modeling_transgenic import transgenicForConditionalGeneration, transgenicModel
-	from configuration_transgenic import TransgenicConfig
+def registerModel(hub_name, model):
 
-	TransgenicConfig.register_for_auto_class()
+	HyenaTransgenicConfig.register_for_auto_class()
 	transgenicModel.register_for_auto_class("AutoModel")
 	transgenicForConditionalGeneration.register_for_auto_class("AutoModel")
+	GFFTokenizer.register_for_auto_class("AutoTokenizer")
+	tokenizer = GFFTokenizer()
 
-	model = getModel(TransgenicConfig(), safetensors_model="checkpoints_ESMpeftReal_local09/model.safetensors", device="cpu", mode="predict")
-	model.push_to_hub("jlomas/transgenic-agro-E9")
+	model.push_to_hub(hub_name, safe_serialization=False)
+	tokenizer.push_to_hub(hub_name)
+
+if __name__ == "__main__":
+	from huggingface_hub import login
+	login(token="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")
+	generation_checkpoint = "checkpoints/Hyena_Gen9G_6144nt_768L12_E22.safetensors"
+	layers = 12
+	attentionWindow = [
+			1024,1024,1024,1024,1024,1024,
+			1024,1024,1024,1024,1024,1024,
+			#1024,1024,1024,1024,1024,1024
+		]
+
+	config = HyenaTransgenicConfig(
+	do_segment=False, 
+	numSegClasses=9,
+	d_model=768,
+	encoder_layers=layers,
+	decoder_layers=layers,
+	encoder_n_layer=layers,
+	attention_window = attentionWindow,
+	dropout=0,
+	encoder_attention_heads=6,
+	decoder_attention_heads=6
+	)
+	model = transgenicForConditionalGeneration(config)
+
+	generation_tensors = {}
+	with safe_open(generation_checkpoint, framework="pt", device="cpu") as f:
+		for k in f.keys():
+			if "segment" not in k:
+				generation_tensors[k.replace("_orig_mod.", "")] = f.get_tensor(k)
+	generation_tensors["transgenic.decoder_embed_tokens.weight"] = generation_tensors["lm_head.weight"]
+	generation_tensors["transgenic.decoder.embed_tokens.weight"] = generation_tensors["transgenic.decoder_embed_tokens.weight"]
+
+	freq_tensors = {}
+	for k in generation_tensors.keys():
+		if "freq" in k:
+			freq_tensors[".".join(k.split(".")[0:9]) + ".3.freq"] = generation_tensors[k]
+			freq_tensors[".".join(k.split(".")[0:9]) + ".5.freq"] = generation_tensors[k]
+
+	model.load_state_dict(generation_tensors | freq_tensors, strict=True)
+
+	registerModel("jlomas/HyenaTransgenic-768L12A6-400M", model)
