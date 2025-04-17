@@ -176,8 +176,6 @@ def registerModel(hub_name, model):
 	tokenizer.push_to_hub(hub_name)
 
 if __name__ == "__main__":
-	from huggingface_hub import login
-	login(token="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")
 	generation_checkpoint = "checkpoints/Hyena_Gen9G_6144nt_768L12_E22.safetensors"
 	layers = 12
 	attentionWindow = [
