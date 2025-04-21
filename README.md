@@ -25,7 +25,7 @@ The GSF annotation is:
 
 # Using TransGenic
 ## Quick start
-See the following notebook examples on Google Colab:
+See the following notebook example on Google Colab:
 - [Colab: Inference on a single sequence](https://colab.research.google.com/github/JohnnyLomas/transgenic/blob/main/examples/Transgenic_SingleSequence_Colab.ipynb)
 
 Or run the notebook examples locally from the ```examples/``` folder after setting up an environment as described below.
