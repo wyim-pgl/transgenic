@@ -5,12 +5,22 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 
-from utils.sequence import loadGenome, reverseComplement, validateCDS
-from utils.gsf import reverseComplement_gffString
+from ..utils.sequence import loadGenome, reverseComplement, validateCDS
+from ..utils.gsf import reverseComplement_gffString
 
-#TODO: Add functionality to make a single input from a genome sequence and a single gene model
-
-def genome2GSFDataset(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=6144, addRC=False, addRCIsoOnly=False, clean=False):
+def genome2GSFDataset(
+		genome: str, 
+		gff3: str, 
+		db: str,
+		anoType = 'gff',
+		mode = 'predict',
+		maxLen=49152, 
+		addExtra=0, 
+		staticSize=6144, 
+		addRC=False, 
+		addRCIsoOnly=False, 
+		clean=False
+	):
 	# Purpose: 
 	#   Read a genome assembly and gff3 annotation file into a 
 	#   duckdb database for training or inference. For each gene 
@@ -18,21 +28,22 @@ def genome2GSFDataset(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=614
 	#   from the genome and the target annotation string is created.
 	#   The function may be called multiple times to append add 
 	#   multiple genomes to the database
+
 	# Inputs:
-	#   genome: path to a fasta file containing the genome assembly
+	#   genome: 	path to a fasta file containing the genome assembly
 	#   gff3:		path to a gff3 file containing gene annotations
 	#   db:			path to a duckdb database file (will be created if it does not exist)
+	#   anoType:	'gff' or 'bed' (default: 'gff'). The type of annotation file to use
+	#   mode:		'train' or 'predict' (default: 'predict'). Train mode includes gff3 labels in the database
 	#   maxLen:		Maximum size of gene model sequence to include in the database (larger gene models are skipped)
 	#   addExtra:	Max size of random buffer to add to the gene model sequence (used to capture UTR start and end during training)
-	#   staticSize:	Extracted sequences will be this size (SegmentNT performs best with static sizes)
+	#   staticSize:	Extracted sequences will be a multiple of this size (padded with random amounts of neighboring sequence)
 	#   addRC:		Add reverse complement of gene model sequence to the database (Used to augment training data)
 	#   addRCIsoOnly: When adding RC seqs, only add gene models with alternative splicing
-	#   clean: If true only sequences will be added that have start and stop codons and are a multiple of 3
+	#   clean:		Only add sequences that have start and stop codons and are a multiple of 3
+	
 	# Outputs:
 	#   A duckdb database used to load data into the model
-	# TODO:
-	#   - Add support for bed files
-	#   - Add inference mode with just target sequences for prediction
 
 	# Load genome into a dictionary
 	genome_dict = loadGenome(genome)
@@ -73,12 +84,28 @@ def genome2GSFDataset(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=614
 				continue
 			else:
 				line = line.strip().split('\t')
-				chr, _, typ, start, fin, _, strand, phase, attributes = line
+				
+				if anoType == 'gff':
+					chr, _, typ, start, fin, _, strand, phase, attributes = line
+				elif anoType == 'bed':
+					chr, start, fin, attributes, _, strand = line
+					attributes = f"ID={attributes};"
+					typ = 'gene'
+					phase = "."
+				
+				# In prediction mode, only add gene regions
+				if (mode == 'predict') and (typ != "gene"):
+					continue
+
 				if typ == 'gene':
 					# Add previous gene model to the database
 					if (region_start != None) & (not skipGene):
 						mRNA_list = mRNA_list[1:-1]
-						gff = f"{feature_list[:-1]}>{mRNA_list}"
+						if feature_list and mRNA_list:
+							gff = f"{feature_list[:-1]}>{mRNA_list}"
+						else:
+							gff = None
+						
 						valid = True
 						if clean:
 							valid, error = validateCDS(gff, sequence, geneModel)
@@ -95,7 +122,13 @@ def genome2GSFDataset(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=614
 					
 						try:
 							if valid:
-								con.sql(f"INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff, static_fpb, static_tpb, five_prime_buf, three_prime_buf) VALUES (nextval('row_id'), '{geneModel}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence}', '{gff}', '{five_prime_buffer}', '{three_prime_buffer}','{int(torch.randint(addExtra, (1,)))}', '{int(torch.randint(addExtra, (1,)))}')")
+								if addExtra:
+									five_prime = int(torch.randint(addExtra, (1,)))
+									three_prime = int(torch.randint(addExtra, (1,)))
+								else:
+									five_prime = 0
+									three_prime = 0
+								con.sql(f"INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff, static_fpb, static_tpb, five_prime_buf, three_prime_buf) VALUES (nextval('row_id'), '{geneModel}', {region_start}, {region_end}, '{strand}', '{chr}', '{sequence}', '{gff}', '{five_prime_buffer}', '{three_prime_buffer}','{five_prime}', '{three_prime}')")
 						except Exception as e:
 							print(f"{geneModel=}")
 							print(f"{sequence=}")

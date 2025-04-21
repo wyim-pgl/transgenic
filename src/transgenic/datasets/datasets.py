@@ -5,7 +5,8 @@ import torch.nn.functional as F
 from torch.utils.data import  Dataset, DataLoader
 from transformers import AutoTokenizer
 
-from utils.sequence import segmentSequence, scanGlobalAttentionTokens, mask_sequences
+from ..utils.sequence import segmentSequence, scanGlobalAttentionTokens, mask_sequences
+from ..model.tokenization_transgenic import GFFTokenizer
 
 class isoformData(Dataset):
 	def __init__(self, db, dt, mode="inference", encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", global_attention=False, shuffle=False):
@@ -88,18 +89,13 @@ class isoformData(Dataset):
 			return (seqs, encoder_attention_mask, global_attention_mask, None, gm, chr, region_start, region_end)
 
 class isoformDataHyena(Dataset):
-	def __init__(self, db, dt, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False):
+	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False):
 		self.db = db
 		self.mode = mode
-		self.dt = dt
+		self.dt = GFFTokenizer()
 		self.global_attention = global_attention
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
-		if dt != None:
-			self.decoder_tokenizer = dt
-			self.maxlength = 2048
-		else:
-			self.decoder_tokenizer = AutoTokenizer.from_pretrained("allenai/led-base-16384", cache_dir="./HFmodels", trust_remote_code=True)
-			self.maxlength = 1024
+		self.maxlength = 2048
 
 	def __len__(self):
 		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
@@ -116,8 +112,8 @@ class isoformDataHyena(Dataset):
 				gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={newidx}").fetchall()[0]
 
 		# Tokenize labels
-		if self.mode == "training":
-			labels = self.decoder_tokenizer.batch_encode_plus(
+		if self.mode == "train":
+			labels = self.dt.batch_encode_plus(
 				[gff],
 				return_tensors="pt",
 				padding=True,
@@ -125,21 +121,21 @@ class isoformDataHyena(Dataset):
 				add_special_tokens=True,
 				max_length=self.maxlength)["input_ids"]
 		
-		# Ensure labels are less than the maxlength
-		if labels.shape[1] >= self.maxlength:
-			labels = torch.cat((labels[:, 0:(self.maxlength-1)], torch.tensor([[self.decoder_tokenizer.vocab["</s>"]]])), dim=1)
-			#print(f"Warning {gm} label truncated to {self.maxlength} tokens", file=sys.stderr)
+			# Ensure labels are less than the maxlength
+			if labels.shape[1] >= self.maxlength:
+				labels = torch.cat((labels[:, 0:(self.maxlength-1)], torch.tensor([[self.decoder_tokenizer.vocab["</s>"]]])), dim=1)
+				#print(f"Warning {gm} label truncated to {self.maxlength} tokens", file=sys.stderr)
 
 		# Tokenize the input sequences and remove the [SEP] token
 		seqs = self.encoder_tokenizer.batch_encode_plus([region_seq], return_tensors="pt")
 		seqs["input_ids"] = seqs["input_ids"][:, :-1]
 
 		attention_mask = (seqs["input_ids"] != self.encoder_tokenizer.pad_token_id)
-
-		if self.mode == "training":
+		
+		if self.mode == "train":
 			return (seqs["input_ids"], attention_mask, labels, gm, chr, region_start, region_end)
 		else:
-			return (seqs["inputs_ids"], attention_mask, None, gm, chr, region_start, region_end)
+			return (seqs["input_ids"], attention_mask, None, gm, chr, region_start, region_end)
 
 # Create a database for loading genomic data to SegmentNT
 class segmentationDataset(Dataset):
@@ -401,12 +397,12 @@ def hyena_collate_fn(batch):
 	attention_masks = torch.cat(attention_masks)
 
 	# Pad and stack the labels
-	if labels:
+	if None not in labels:
 		max_len = max([label.shape[1] for label in labels])
 		labels_padded = [F.pad(label, (0, max_len - label.shape[1])) for label in labels]
 		labels_padded = torch.cat(labels_padded)
 
-	if labels:
+	if None not in labels:
 		return sequences, attention_masks, labels_padded, gm, chr, region_start, region_end
 	else:
 		return sequences, attention_masks, None, gm, chr, region_start, region_end

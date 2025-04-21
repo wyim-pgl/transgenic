@@ -2,12 +2,12 @@ import torch, sys
 from tqdm import tqdm
 from safetensors import safe_open
 
-from ..models.configuration_transgenic import HyenaTransgenicConfig
-from ..models.modeling_HeynaTransgenic import transgenicForConditionalGeneration, HyenaEncoder
-from ..models.tokenization_transgenic import GFFTokenizer
-from ..datasets.datasets import makeDataLoader, isoformDataHyena, hyena_collate_fn
-from ..utils.postprocess import PredictionProcessor
-from ..utils.gsf import gffString2GFF3
+from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
+from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration, HyenaEncoder
+from transgenic.model.tokenization_transgenic import GFFTokenizer
+from transgenic.datasets.datasets import makeDataLoader, isoformDataHyena, hyena_collate_fn
+from transgenic.utils.postprocess import PredictionProcessor
+from transgenic.utils.gsf import gffString2GFF3
 
 torch.manual_seed(123)
 decoder_checkpoint =  "checkpoints_Hyena/model.safetensors"
