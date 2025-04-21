@@ -1,0 +1,1199 @@
+import sys, re, os, json
+from typing import List, Optional, Tuple, Union
+import torch
+import torch.nn as nn
+from transformers import AutoModelForMaskedLM, AutoConfig, PreTrainedTokenizer, PreTrainedModel, AutoModel
+from transformers import LEDForConditionalGeneration, T5ForConditionalGeneration, T5Config, EsmForMaskedLM
+from transformers.modeling_outputs import ModelOutput
+from dataclasses import dataclass
+from configuration_transgenic import NTTransgenicConfig
+from trl import AutoModelForSeq2SeqLMWithValueHead
+
+def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
+	"""
+	Shift input ids one token to the right.
+	"""
+	shifted_input_ids = input_ids.new_zeros(input_ids.shape)
+	shifted_input_ids[:, 1:] = input_ids[:, :-1].clone()
+	shifted_input_ids[:, 0] = decoder_start_token_id
+
+	if pad_token_id is None:
+		raise ValueError("config.pad_token_id has to be defined.")
+	# replace possible -100 values in labels by `pad_token_id`
+	shifted_input_ids.masked_fill_(shifted_input_ids == -100, pad_token_id)
+
+	return shifted_input_ids
+
+#Copied from transformers.models.led.modeling_led.py
+class LEDLearnedPositionalEmbedding(nn.Embedding):
+	"""
+	This module learns positional embeddings up to a fixed maximum size.
+	"""
+
+	def __init__(self, num_embeddings: int, embedding_dim: int):
+		super().__init__(num_embeddings, embedding_dim)
+
+	def forward(self, input_ids_shape: torch.Size, past_key_values_length: int = 0):
+		"""`input_ids_shape` is expected to be [bsz x seqlen]."""
+		bsz, seq_len = input_ids_shape[:2]
+		positions = torch.arange(
+			past_key_values_length, past_key_values_length + seq_len, dtype=torch.long, device=self.weight.device
+		)
+		return super().forward(positions)
+
+class FiLMLayer(nn.Module):
+	def __init__(self, num_labels=2, hidden_dim=512, output_dim=768):
+		super(FiLMLayer, self).__init__()
+		self.mlp = nn.Sequential(
+			nn.Linear(num_labels, hidden_dim),
+			nn.ReLU(),
+			nn.Dropout(0.2),
+			nn.Linear(hidden_dim, output_dim * 2)  # For gamma and beta
+		)
+		self.dropout = nn.Dropout(0.2)
+
+	def forward(self, probabilities, encoder_output):
+		# probabilities: (n, t, m) -> (batch, seqlen, classes)
+		n, t, m = probabilities.size()
+		out = self.mlp(probabilities.view(-1, m))  # Flatten to (n*t, m)
+		out = out.view(encoder_output.shape[0], encoder_output.shape[1], -1)  # Reshape to match encoder_output
+		gamma, beta = out.chunk(2, dim=-1)  # Split into gamma and beta
+		return self.dropout(gamma) * encoder_output + self.dropout(beta)
+
+#Copied from transformers.models.led.modeling_led.py
+@dataclass
+class LEDSeq2SeqLMOutput(ModelOutput):
+	"""
+	Base class for sequence-to-sequence language models outputs.
+
+	Args:
+		loss (`torch.FloatTensor` of shape `(1,)`, *optional*, returned when `labels` is provided):
+			Language modeling loss.
+		logits (`torch.FloatTensor` of shape `(batch_size, sequence_length, config.vocab_size)`):
+			Prediction scores of the language modeling head (scores for each vocabulary token before SoftMax).
+		past_key_values (`List[torch.FloatTensor]`, *optional*, returned when `use_cache=True` is passed or when `config.use_cache=True`):
+			List of `torch.FloatTensor` of length `config.n_layers`, with each tensor of shape `(2, batch_size,
+			num_heads, sequence_length, embed_size_per_head)`).
+
+			Contains pre-computed hidden-states (key and values in the attention blocks) of the decoder that can be
+			used (see `past_key_values` input) to speed up sequential decoding.
+		decoder_hidden_states (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
+			Tuple of `torch.FloatTensor` (one for the output of the embeddings + one for the output of each layer) of
+			shape `(batch_size, sequence_length, hidden_size)`.
+
+			Hidden-states of the decoder at the output of each layer plus the initial embedding outputs.
+		decoder_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+			sequence_length)`.
+
+			Attentions weights of the decoder, after the attention softmax, used to compute the weighted average in the
+			self-attention heads.
+		cross_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+			sequence_length)`.
+
+			Attentions weights of the decoder's cross-attention layer, after the attention softmax, used to compute the
+			weighted average in the cross-attention heads.
+		encoder_last_hidden_state (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`, *optional*):
+			Sequence of hidden-states at the output of the last layer of the encoder of the model.
+		encoder_hidden_states (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
+			Tuple of `torch.FloatTensor` (one for the output of the embeddings + one for the output of each layer) of
+			shape `(batch_size, sequence_length, hidden_size)`.
+
+			Hidden-states of the encoder at the output of each layer plus the initial embedding outputs.
+		encoder_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+			sequence_length)`.
+
+			Attentions weights of the encoder, after the attention softmax, used to compute the weighted average in the
+			self-attention heads.
+		encoder_global_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length, x)`,
+			where `x` is the number of tokens with global attention mask.
+
+			Global attentions weights after the attention softmax, used to compute the weighted average in the
+			self-attention heads. Those are the attention weights from every token with global attention to every token
+			in the sequence.
+	"""
+
+	loss: Optional[torch.FloatTensor] = None
+	logits: torch.FloatTensor = None
+	past_key_values: Optional[List[torch.FloatTensor]] = None
+	decoder_hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+	decoder_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	cross_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	encoder_last_hidden_state: Optional[torch.FloatTensor] = None
+	encoder_hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+	encoder_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	encoder_global_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	segmentation_logits: Optional[Tuple[torch.FloatTensor, ...]] = None
+
+#Copied from transformers.models.led.modeling_led.py
+@dataclass
+class LEDSeq2SeqModelOutput(ModelOutput):
+	"""
+	Base class for model encoder's outputs that also contains : pre-computed hidden states that can speed up sequential
+	decoding.
+
+	Args:
+		last_hidden_state (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`):
+			Sequence of hidden-states at the output of the last layer of the decoder of the model.
+
+			If `past_key_values` is used only the last hidden-state of the sequences of shape `(batch_size, 1,
+			hidden_size)` is output.
+		past_key_values (`List[torch.FloatTensor]`, *optional*, returned when `use_cache=True` is passed or when `config.use_cache=True`):
+			List of `torch.FloatTensor` of length `config.n_layers`, with each tensor of shape `(2, batch_size,
+			num_heads, sequence_length, embed_size_per_head)`).
+
+			Contains pre-computed hidden-states (key and values in the attention blocks) of the decoder that can be
+			used (see `past_key_values` input) to speed up sequential decoding.
+		decoder_hidden_states (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
+			Tuple of `torch.FloatTensor` (one for the output of the embeddings + one for the output of each layer) of
+			shape `(batch_size, sequence_length, hidden_size)`.
+
+			Hidden-states of the decoder at the output of each layer plus the initial embedding outputs.
+		decoder_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+			sequence_length)`.
+
+			Attentions weights of the decoder, after the attention softmax, used to compute the weighted average in the
+			self-attention heads.
+		cross_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+			sequence_length)`.
+
+			Attentions weights of the decoder's cross-attention layer, after the attention softmax, used to compute the
+			weighted average in the cross-attention heads.
+		encoder_last_hidden_state (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`, *optional*):
+			Sequence of hidden-states at the output of the last layer of the encoder of the model.
+		encoder_hidden_states (`tuple(torch.FloatTensor)`, *optional*, returned when `output_hidden_states=True` is passed or when `config.output_hidden_states=True`):
+			Tuple of `torch.FloatTensor` (one for the output of the embeddings + one for the output of each layer) of
+			shape `(batch_size, sequence_length, hidden_size)`.
+
+			Hidden-states of the encoder at the output of each layer plus the initial embedding outputs.
+		encoder_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length,
+			sequence_length)`.
+
+			Attentions weights of the encoder, after the attention softmax, used to compute the weighted average in the
+			self-attention heads.
+		encoder_global_attentions (`tuple(torch.FloatTensor)`, *optional*, returned when `output_attentions=True` is passed or when `config.output_attentions=True`):
+			Tuple of `torch.FloatTensor` (one for each layer) of shape `(batch_size, num_heads, sequence_length, x)`,
+			where `x` is the number of tokens with global attention mask.
+
+			Global attentions weights after the attention softmax, used to compute the weighted average in the
+			self-attention heads. Those are the attention weights from every token with global attention to every token
+			in the sequence.
+	"""
+
+	last_hidden_state: torch.FloatTensor = None
+	past_key_values: Optional[List[torch.FloatTensor]] = None
+	decoder_hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+	decoder_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	cross_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	encoder_last_hidden_state: Optional[torch.FloatTensor] = None
+	encoder_hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+	encoder_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	encoder_global_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
+	segmentation_logits: Optional[Tuple[torch.FloatTensor, ...]] = None
+
+class NumberMaskEmbedTokens(nn.Embedding):
+	def __init__(self, num_embeddings, embedding_dim, padding_idx=0):
+		super().__init__(num_embeddings, embedding_dim, padding_idx=padding_idx)
+		self.num_feature_embed = nn.Embedding(2, embedding_dim)
+
+	def forward(self, input_ids):
+		# Create a mask for numerical tokens and embed it
+		num_mask = self.create_numerical_mask(input_ids)
+		num_mask = self.num_feature_embed(num_mask)
+		
+		# Generate embeddings for the input tokens
+		num_embeddings = super().forward(input_ids)
+
+		# Add the numerical mask to the embeddings
+		num_embeddings = num_embeddings + num_mask
+		
+		return num_embeddings
+
+	def create_numerical_mask(self, input_ids):
+		# Create a binary mask where 1 indicates a numerical token and 0 otherwise
+		num_mask = torch.zeros_like(input_ids, dtype=torch.long)
+		for i, sentence in enumerate(input_ids):
+			for j, token in enumerate(sentence):
+				if (token.item() >= 4) & (token.item() <= 13):
+					num_mask[i,j] = 1
+		return num_mask
+
+class segmented_sequence_embeddings(EsmForMaskedLM):
+	def __init__(self, e_model, s_model, numSegClasses, outputSize = 768, do_segment=False):
+		self.cache_dir = "./HFmodels"
+		self.encoder_model = e_model
+		self.segmentation_model = s_model
+		self.numSegClasses = numSegClasses
+		self.do_segment = do_segment
+		config = AutoConfig.from_pretrained(self.encoder_model, is_decoder=False, trust_remote_code=True)
+		super().__init__(config)
+		
+		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
+		#TODO: Put into config - plants -> 1500, multispecies -> 1024, longformer -> 768
+		self.esm = AutoModelForMaskedLM.from_pretrained(self.encoder_model, cache_dir=self.cache_dir, trust_remote_code=True)
+		self.hidden_mapping = nn.Linear(config.hidden_size, 768)
+		self.hidden_mapping_layernorm = nn.LayerNorm(768, eps=1e-5)
+		
+		if do_segment:
+			SegmentNT = AutoModel.from_pretrained(self.segmentation_model, trust_remote_code=True)
+			self.unet = SegmentNT.unet
+			self.uFC = SegmentNT.fc
+			self.uActivation = SegmentNT.activation_fn
+			#self.film = FiLMLayer(num_labels=2, hidden_dim=512, output_dim=768)
+			self.unet_mapping = nn.Linear(config.hidden_size, 1024)
+			self.unet_mapping_layernorm = nn.LayerNorm(1024, eps=1e-5)
+	
+	def forward(self, input_ids, attention_mask=None, segLabels=None, **kwargs):
+		if len(input_ids.shape) == 1:
+			input_ids.unsqueeze(dim=0)
+		batch_size = input_ids.shape[0]
+		num_segs = input_ids.shape[1] // 1024
+		input_ids = input_ids.reshape(batch_size, int(num_segs), 1024)
+		attention_mask = attention_mask.reshape(batch_size, int(num_segs), 1024)
+		for i in range(batch_size):
+			#with torch.no_grad():
+			embeddings = self.esm(
+				input_ids[i, :, :],
+				attention_mask=attention_mask[i,:,:],
+				encoder_attention_mask=attention_mask[i,:,:],
+				output_hidden_states=True
+			)['hidden_states'][-1]
+			
+			if i == 0:
+				batch_embeds = embeddings.reshape(1, num_segs*1024, -1)
+				batch_mask = attention_mask[i,:,:].reshape(1, num_segs*1024)
+			else:
+				batch_embeds = torch.cat((batch_embeds, embeddings.reshape(1, num_segs*1024, -1)), dim=0)
+				batch_mask = torch.cat((batch_mask, attention_mask[i,:,:].reshape(1, num_segs*1024)), dim=0)
+		
+		#if num_segs > 1:
+		#	batch_embeds = batch_embeds.reshape(num_segs, 1024, -1)
+		#	batch_mask = batch_mask.reshape(num_segs, 1024)
+		#	original_sequence = batch_embeds[0, 0:768].clone()
+		#	original_mask = batch_mask[0, 0:768].clone()
+		#	for i in range(1, num_segs):
+		#		if i+1 < num_segs:
+		#			original_sequence = torch.cat((original_sequence, batch_embeds[i, 256:768]), dim=0)
+		#			original_mask = torch.cat((original_mask, batch_mask[i, 256:768]), dim=0)
+		#		else:
+		#			original_sequence = torch.cat((original_sequence, batch_embeds[i, 256:]), dim=0)
+		#			original_mask = torch.cat((original_mask, batch_mask[i, 256:]), dim=0)
+		#	batch_embeds = original_sequence.unsqueeze(dim=0)
+		#	batch_mask = original_mask.unsqueeze(dim=0)
+		# Use the last hidden state from the nucleotide encoder as input to the decoder
+		# Transform the encoder hidden states to match the decoder input size
+		decoder_inputs_embeds = self.hidden_mapping(batch_embeds)
+		decoder_inputs_embeds = self.hidden_mapping_layernorm(decoder_inputs_embeds) #self.hidden_mapping_layernorm(decoder_inputs_embeds)
+
+		if self.do_segment:
+			# Use the last hidden state from the nucleotide encoder as input to the segmentation model
+			# sequence must be divisible by 2 raised to the power of the number of pooling layers
+			# Transform the encoder hidden states to match the decoder input size
+			seg_inputs = self.unet_mapping(batch_embeds)
+			seg_inputs = self.unet_mapping_layernorm(seg_inputs)
+			
+			
+			# Invert the channels and sequence length channel
+			#seg_inputs = seg_inputs[:,1:,:] # Remove CLS token
+			seg_inputs = torch.transpose(seg_inputs, 2,1)
+
+			# Pass through UNET
+			x = self.uActivation(self.unet(seg_inputs))
+
+			# Invert the channels and sequence length channel
+			x = torch.transpose(x, 2,1)
+
+			# Compute logits for the segmentation model
+			seg_logits = self.uFC(x)
+
+			# Final reshape to have logits per nucleotides, per feature
+			seg_logits = torch.reshape(seg_logits, (seg_logits.shape[0], seg_logits.shape[1] * 6, self.numSegClasses, 2))
+
+			# Apply FILM layer to decoder_inputs_embeds using segmentation probabilities
+			#sl_aggregated = torch.nn.functional.softmax(seg_logits, dim=-1)[...,0].view(-1, 6, 1024, self.numSegClasses)[:,:,:,(4,5)] 
+			#sl_aggregated = sl_aggregated.mean(dim=1)
+			#decoder_inputs_embeds = self.film(sl_aggregated, decoder_inputs_embeds)
+
+			# Compute segmentation loss if called for
+			if segLabels != None:
+
+				# Define weight of positive splice junction classes to counteract class imbalance
+				pos_weight = torch.ones(self.numSegClasses)
+				pos_weight[[1,8]] = 21.0
+				pos_weight[[4,5]] = 7.0
+				pos_weight = pos_weight.to(segLabels.device)
+
+				# Define per-nucleotide weights to focus on basic genic features
+				weight = torch.Tensor((5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+				weight = weight.to(segLabels.device)
+
+				# Define the loss function with pos_weight
+				segLossFn = nn.BCEWithLogitsLoss(pos_weight=pos_weight, weight=weight)
+				#boundaryLossFn = BoundaryLoss()
+				seg_loss = segLossFn(seg_logits[:,0:segLabels.shape[1]][...,0], segLabels)
+				#boundary_loss = boundaryLossFn(seg_logits[:,0:segLabels.shape[1]], segLabels)
+				#seg_loss = None
+				boundary_loss = None
+			else:
+				seg_loss = None
+				boundary_loss = None
+
+
+			# Aggregate U-Net output and apply FiLM to the encoder hidden states
+			# TODO: portion embeddings into a batch for the film layer
+			#sl_aggregated = seg_logits[...,0].view(-1, 6, 1024, self.numSegClasses)  
+			#sl_aggregated = sl_aggregated.mean(dim=1)
+			#decoder_inputs_embeds = self.film(decoder_inputs_embeds, sl_aggregated)
+		else:
+			seg_logits = None
+			seg_loss = None
+			boundary_loss = None
+		self.segmentation_logits = seg_logits
+		return ModelOutput(
+			inputs_embeds=decoder_inputs_embeds, 
+			attention_mask=batch_mask, 
+			seg_logits=seg_logits, 
+			seg_loss=seg_loss,
+			boundary_loss=boundary_loss)
+
+class TransgenicPreTrainedModel(PreTrainedModel):
+	config_class = NTTransgenicConfig
+	base_model_prefix = "led"
+	supports_gradient_checkpointing = True
+
+	def _init_weights(self, module):
+		std = self.config.init_std
+		if isinstance(module, nn.Linear):
+			module.weight.data.normal_(mean=0.0, std=std)
+			if module.bias is not None:
+				module.bias.data.zero_()
+		elif isinstance(module, nn.Embedding):
+			module.weight.data.normal_(mean=0.0, std=std)
+			if module.padding_idx is not None:
+				module.weight.data[module.padding_idx].zero_()
+
+	@property
+	def dummy_inputs(self):
+		pad_token = self.config.pad_token_id
+		input_ids = torch.tensor([[0, 6, 10, 4, 2], [0, 8, 12, 2, pad_token]], device=self.device)
+		dummy_inputs = {
+			"attention_mask": input_ids.ne(pad_token),
+			"input_ids": input_ids,
+		}
+		return dummy_inputs
+
+class transgenicModel(TransgenicPreTrainedModel):
+	_tied_weights_keys = ["decoder_embed_tokens.weight", "decoder.embed_tokens.weight"]
+
+	def __init__(self, config):
+		super().__init__(config)
+
+		padding_idx, vocab_size = config.pad_token_id, config.vocab_size
+		#self.decoder_embed_tokens = NumberMaskEmbedTokens(vocab_size, config.d_model, padding_idx)
+		self.decoder_embed_tokens = nn.Embedding(vocab_size, config.d_model, padding_idx)
+		
+		self.encoder = segmented_sequence_embeddings(config.encoder_model, config.s_model, config.numSegClasses, do_segment=config.do_segment)
+		self.decoder = LEDForConditionalGeneration(config).led.decoder
+		self.decoder.embed_tokens = self.decoder_embed_tokens
+
+		# Initialize weights and apply final processing
+		self.post_init()
+
+	def get_input_embeddings(self):
+		return self.decoder_embed_tokens
+
+	def set_input_embeddings(self, value):
+		self.decoder_embed_tokens = value
+		self.decoder.embed_tokens = self.decoder_embed_tokens
+
+	def get_encoder(self):
+		return self.encoder
+
+	def get_decoder(self):
+		return self.decoder
+
+	#@add_start_docstrings_to_model_forward(LED_INPUTS_DOCSTRING)
+	#@add_code_sample_docstrings(
+	#	checkpoint=_CHECKPOINT_FOR_DOC,
+	#	output_type=Seq2SeqModelOutput,
+	#	config_class=_CONFIG_FOR_DOC,
+	#)
+	def forward(
+		self,
+		input_ids: Optional[torch.LongTensor] = None,
+		attention_mask: Optional[torch.Tensor] = None,
+		decoder_input_ids: Optional[torch.LongTensor] = None,
+		decoder_attention_mask: Optional[torch.LongTensor] = None,
+		head_mask: Optional[torch.Tensor] = None,
+		decoder_head_mask: Optional[torch.Tensor] = None,
+		cross_attn_head_mask: Optional[torch.Tensor] = None,
+		encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		global_attention_mask: Optional[torch.FloatTensor] = None,
+		past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		inputs_embeds: Optional[torch.FloatTensor] = None,
+		decoder_inputs_embeds: Optional[torch.FloatTensor] = None,
+		use_cache: Optional[bool] = None,
+		output_attentions: Optional[bool] = None,
+		output_hidden_states: Optional[bool] = None,
+		return_dict: Optional[bool] = None,
+	) -> Union[Tuple[torch.Tensor], LEDSeq2SeqModelOutput]:
+		output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+		output_hidden_states = (
+			output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+		)
+		use_cache = use_cache if use_cache is not None else self.config.use_cache
+		return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+		# Using this like Bart, as LED is derived from it. So far
+		# No checkpoint on the hub exists that uses that in practice.
+		# https://github.com/huggingface/transformers/blob/ac3cb660cad283163f7c73cad511124e845ca388/src/transformers/models/bart/modeling_bart.py#L1153
+		if decoder_input_ids is None and decoder_inputs_embeds is None:
+			decoder_input_ids = shift_tokens_right(
+				input_ids, self.config.pad_token_id, self.config.decoder_start_token_id
+			)
+		# Compute the embeddings with nucleotide transformer encoder
+		if encoder_outputs is None:
+			encoder_outputs = self.encoder(input_ids, 
+										attention_mask=attention_mask, 
+										return_dict=return_dict
+										).to_tuple()
+		else:
+			encoder_outputs = (encoder_outputs["inputs_embeds"], encoder_outputs["attention_mask"], encoder_outputs["seg_logits"])
+		#if encoder_outputs is None:
+		#	encoder_outputs = self.encoder(
+		#		input_ids=input_ids,
+		#		attention_mask=attention_mask,
+		#		global_attention_mask=global_attention_mask,
+		#		head_mask=head_mask,
+		#		inputs_embeds=inputs_embeds,
+		#		output_attentions=output_attentions,
+		#		output_hidden_states=output_hidden_states,
+		#		return_dict=return_dict,
+		#	)
+
+		# If the user passed a tuple for encoder_outputs, we wrap it in a LEDEncoderBaseModelOutput when return_dict=False
+		#elif return_dict and not isinstance(encoder_outputs, LEDEncoderBaseModelOutput):
+		#	encoder_outputs = LEDEncoderBaseModelOutput(
+		#		last_hidden_state=encoder_outputs[0],
+		#		hidden_states=encoder_outputs[1] if len(encoder_outputs) > 1 else None,
+		#		attentions=encoder_outputs[2] if len(encoder_outputs) > 2 else None,
+		#		global_attentions=encoder_outputs[3] if len(encoder_outputs) > 3 else None,
+		#	)
+
+		# decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
+		decoder_outputs = self.decoder(
+			input_ids=decoder_input_ids,
+			attention_mask=decoder_attention_mask,
+			encoder_hidden_states=encoder_outputs[0],
+			encoder_attention_mask=encoder_outputs[1].long(), #attention_mask,
+			global_attention_mask=global_attention_mask,
+			head_mask=decoder_head_mask,
+			cross_attn_head_mask=cross_attn_head_mask,
+			past_key_values=past_key_values,
+			inputs_embeds=decoder_inputs_embeds,
+			use_cache=use_cache,
+			output_attentions=output_attentions,
+			output_hidden_states=output_hidden_states,
+			return_dict=return_dict,
+		)
+
+		if not return_dict:
+			return decoder_outputs + encoder_outputs
+
+		return LEDSeq2SeqModelOutput(
+			last_hidden_state=decoder_outputs.last_hidden_state,
+			past_key_values=decoder_outputs.past_key_values,
+			decoder_hidden_states=decoder_outputs.hidden_states,
+			decoder_attentions=decoder_outputs.attentions,
+			cross_attentions=decoder_outputs.cross_attentions,
+			encoder_last_hidden_state=encoder_outputs[0],
+			encoder_hidden_states=None,
+			encoder_attentions=encoder_outputs[1],
+			encoder_global_attentions=None,
+			segmentation_logits = encoder_outputs[2],
+		)
+
+class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
+	base_model_prefix = "transgenic"
+	_keys_to_ignore_on_load_missing = ["final_logits_bias"]
+	_tied_weights_keys = ["transgenic.decoder_embed_tokens.weight", "lm_head.weight"]
+
+	def __init__(self, config, unlink=False):
+		if not unlink:
+			_tied_weights_keys = []
+		super().__init__(config)
+		self.transgenic = transgenicModel(config)
+		self.register_buffer("final_logits_bias", torch.zeros((1, self.transgenic.decoder_embed_tokens.num_embeddings))) # Fix biases
+		self.lm_head = nn.Linear(config.d_model, self.transgenic.decoder_embed_tokens.num_embeddings, bias=False)
+
+		# Initialize weights and apply final processing
+		self.post_init()
+		self.initialize_weights()
+
+	def get_encoder(self):
+		return self.transgenic.get_encoder()
+
+	def get_decoder(self):
+		return self.transgenic.get_decoder()
+
+	def resize_token_embeddings(self, new_num_tokens: int, pad_to_multiple_of: Optional[int] = None) -> nn.Embedding:
+		new_embeddings = super().resize_token_embeddings(new_num_tokens, pad_to_multiple_of)
+		self._resize_final_logits_bias(new_embeddings.weight.shape[0])
+		return new_embeddings
+
+	def _resize_final_logits_bias(self, new_num_tokens: int) -> None:
+		old_num_tokens = self.final_logits_bias.shape[-1]
+		if new_num_tokens <= old_num_tokens:
+			new_bias = self.final_logits_bias[:, :new_num_tokens]
+		else:
+			extra_bias = torch.zeros((1, new_num_tokens - old_num_tokens), device=self.final_logits_bias.device)
+			new_bias = torch.cat([self.final_logits_bias, extra_bias], dim=1)
+		self.register_buffer("final_logits_bias", new_bias)
+
+	def get_output_embeddings(self):
+		return self.lm_head
+
+	def set_output_embeddings(self, new_embeddings):
+		self.lm_head = new_embeddings
+	
+	def initialize_weights(self):
+		for m in self.transgenic.decoder.modules():
+			if isinstance(m, nn.Linear):
+				nn.init.xavier_uniform_(m.weight)
+				if m.bias is not None:
+					nn.init.constant_(m.bias, 0)
+		#nn.init.xavier_uniform_(self.transgenic.encoder.hidden_mapping.weight)
+		#nn.init.constant_(self.transgenic.encoder.hidden_mapping.bias, 0)
+
+	#@add_start_docstrings_to_model_forward(LED_INPUTS_DOCSTRING)
+	#@replace_return_docstrings(output_type=Seq2SeqLMOutput, config_class=_CONFIG_FOR_DOC)
+	#@add_end_docstrings(LED_GENERATION_EXAMPLE)
+	def forward(
+		self,
+		input_ids: Optional[torch.LongTensor] = None,
+		attention_mask: Optional[torch.Tensor] = None,
+		decoder_input_ids: Optional[torch.LongTensor] = None,
+		decoder_attention_mask: Optional[torch.LongTensor] = None,
+		head_mask: Optional[torch.Tensor] = None,
+		decoder_head_mask: Optional[torch.Tensor] = None,
+		cross_attn_head_mask: Optional[torch.Tensor] = None,
+		encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		global_attention_mask: Optional[torch.FloatTensor] = None,
+		past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		inputs_embeds: Optional[torch.FloatTensor] = None,
+		decoder_inputs_embeds: Optional[torch.FloatTensor] = None,
+		labels: Optional[torch.LongTensor] = None,
+		use_cache: Optional[bool] = None,
+		output_attentions: Optional[bool] = None,
+		output_hidden_states: Optional[bool] = None,
+		return_dict: Optional[bool] = None,
+	) -> Union[Tuple[torch.Tensor], LEDSeq2SeqLMOutput]:
+		r"""
+		labels (`torch.LongTensor` of shape `(batch_size, sequence_length)`, *optional*):
+			Labels for computing the masked language modeling loss. Indices should either be in `[0, ...,
+			config.vocab_size]` or -100 (see `input_ids` docstring). Tokens with indices set to `-100` are ignored
+			(masked), the loss is only computed for the tokens with labels in `[0, ..., config.vocab_size]`.
+
+		Returns:
+
+		Conditional generation example:
+
+		```python
+		>>> from transformers import AutoTokenizer, LEDForConditionalGeneration
+
+		>>> tokenizer = AutoTokenizer.from_pretrained("allenai/led-base-16384")
+		>>> TXT = "My friends are <mask> but they eat too many carbs."
+
+		>>> model = LEDForConditionalGeneration.from_pretrained("allenai/led-base-16384")
+		>>> input_ids = tokenizer([TXT], return_tensors="pt")["input_ids"]
+
+		>>> prediction = model.generate(input_ids)[0]
+		>>> print(tokenizer.decode(prediction, skip_special_tokens=True))
+		```"""
+		return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+		if labels is not None:
+			if use_cache:
+				print("The `use_cache` argument is changed to `False` since `labels` is provided.", file=sys.stderr)
+			use_cache = False
+			if decoder_input_ids is None and decoder_inputs_embeds is None:
+				decoder_input_ids = shift_tokens_right(
+					labels, self.config.pad_token_id, self.config.decoder_start_token_id
+				)
+		
+		outputs = self.transgenic(
+			input_ids,
+			attention_mask=attention_mask,
+			decoder_input_ids=decoder_input_ids,
+			decoder_attention_mask=decoder_attention_mask,
+			encoder_outputs=encoder_outputs,
+			global_attention_mask=global_attention_mask,
+			head_mask=head_mask,
+			decoder_head_mask=decoder_head_mask,
+			cross_attn_head_mask=cross_attn_head_mask,
+			past_key_values=past_key_values,
+			inputs_embeds=inputs_embeds,
+			decoder_inputs_embeds=decoder_inputs_embeds,
+			use_cache=use_cache,
+			output_attentions=output_attentions,
+			output_hidden_states=output_hidden_states,
+			return_dict=return_dict,
+		)
+		lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
+
+		if not return_dict:
+			output = (lm_logits,) + outputs[1:]
+			return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+
+		masked_lm_loss = None
+		if labels is not None:
+			#weights = torch.ones(50262).to(lm_logits.device)
+			#weights[262:] = 2
+			loss_fct = nn.CrossEntropyLoss()
+			masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
+			#masked_lm_loss = HybridLoss(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
+			#loss_fct = HybridSequenceLoss()
+			#masked_lm_loss = loss_fct(lm_logits, labels)
+
+		return LEDSeq2SeqLMOutput(
+			loss=masked_lm_loss,
+			logits=lm_logits,
+			past_key_values=outputs.past_key_values,
+			decoder_hidden_states=outputs.decoder_hidden_states,
+			decoder_attentions=outputs.decoder_attentions,
+			cross_attentions=outputs.cross_attentions,
+			encoder_last_hidden_state=outputs.encoder_last_hidden_state,
+			encoder_hidden_states=outputs.encoder_hidden_states,
+			encoder_attentions=outputs.encoder_attentions,
+			encoder_global_attentions=outputs.encoder_global_attentions,
+			segmentation_logits=outputs.segmentation_logits,
+		)
+
+	def prepare_inputs_for_generation(
+		self,
+		decoder_input_ids,
+		past_key_values=None,
+		attention_mask=None,
+		global_attention_mask=None,
+		head_mask=None,
+		decoder_head_mask=None,
+		cross_attn_head_mask=None,
+		use_cache=None,
+		encoder_outputs=None,
+		**kwargs,
+	):
+		# cut decoder_input_ids if past is used
+		if past_key_values is not None:
+			decoder_input_ids = decoder_input_ids[:, -1:]
+
+		return {
+			"input_ids": None,  # encoder_outputs is defined. input_ids not needed
+			"encoder_outputs": encoder_outputs,
+			"past_key_values": past_key_values,
+			"decoder_input_ids": decoder_input_ids,
+			"attention_mask": attention_mask,
+			"global_attention_mask": global_attention_mask,
+			"head_mask": head_mask,
+			"decoder_head_mask": decoder_head_mask,
+			"cross_attn_head_mask": cross_attn_head_mask,
+			"use_cache": use_cache,  # change this to avoid caching (presumably for debugging)
+		}
+
+	def prepare_decoder_input_ids_from_labels(self, labels: torch.Tensor):
+		return shift_tokens_right(labels, self.config.pad_token_id, self.config.decoder_start_token_id)
+
+	@staticmethod
+	def _reorder_cache(past_key_values, beam_idx):
+		reordered_past = ()
+		for layer_past in past_key_values:
+			# cached cross_attention states don't have to be reordered -> they are always the same
+			reordered_past += (
+				tuple(past_state.index_select(0, beam_idx.to(past_state.device)) for past_state in layer_past[:2])
+				+ layer_past[2:],
+			)
+		return reordered_past
+
+class transgenicModelT5(TransgenicPreTrainedModel):
+
+	def __init__(self, config):
+		super().__init__(config)
+		self.encoder = segmented_sequence_embeddings(config.encoder_model, config.s_model, config.numSegClasses, do_segment=config.do_segment)
+		self.decoder = T5ForConditionalGeneration(config).decoder
+
+		# Initialize weights and apply final processing
+		self.post_init()
+
+	def get_input_embeddings(self):
+		return self.decoder.embed_tokens
+
+	def set_input_embeddings(self, value):
+		self.decoder.embed_tokens = value
+
+	def get_encoder(self):
+		return self.encoder
+
+	def get_decoder(self):
+		return self.decoder
+
+	def forward(
+		self,
+		input_ids: Optional[torch.LongTensor] = None,
+		attention_mask: Optional[torch.Tensor] = None,
+		decoder_input_ids: Optional[torch.LongTensor] = None,
+		decoder_attention_mask: Optional[torch.LongTensor] = None,
+		head_mask: Optional[torch.Tensor] = None,
+		decoder_head_mask: Optional[torch.Tensor] = None,
+		cross_attn_head_mask: Optional[torch.Tensor] = None,
+		encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		global_attention_mask: Optional[torch.FloatTensor] = None,
+		past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		inputs_embeds: Optional[torch.FloatTensor] = None,
+		decoder_inputs_embeds: Optional[torch.FloatTensor] = None,
+		use_cache: Optional[bool] = None,
+		output_attentions: Optional[bool] = None,
+		output_hidden_states: Optional[bool] = None,
+		return_dict: Optional[bool] = None,
+	) -> Union[Tuple[torch.Tensor], LEDSeq2SeqModelOutput]:
+		output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+		output_hidden_states = (
+			output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+		)
+		use_cache = use_cache if use_cache is not None else self.config.use_cache
+		return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+		# Using this like Bart, as LED is derived from it. So far
+		# No checkpoint on the hub exists that uses that in practice.
+		# https://github.com/huggingface/transformers/blob/ac3cb660cad283163f7c73cad511124e845ca388/src/transformers/models/bart/modeling_bart.py#L1153
+		if decoder_input_ids is None and decoder_inputs_embeds is None:
+			decoder_input_ids = shift_tokens_right(
+				input_ids, self.config.pad_token_id, self.config.decoder_start_token_id
+			)
+		# Compute the embeddings with nucleotide transformer encoder
+		if encoder_outputs is None:
+			encoder_outputs = self.encoder(input_ids, 
+										attention_mask=attention_mask, 
+										return_dict=return_dict
+										).to_tuple()
+		else:
+			encoder_outputs = (encoder_outputs["inputs_embeds"], encoder_outputs["attention_mask"], encoder_outputs["seg_logits"])
+		
+		decoder_outputs = self.decoder(
+			input_ids=decoder_input_ids,
+			attention_mask=decoder_attention_mask,
+			encoder_hidden_states=encoder_outputs[0],
+			encoder_attention_mask=encoder_outputs[1].long(),
+			head_mask=decoder_head_mask,
+			cross_attn_head_mask=cross_attn_head_mask,
+			past_key_values=past_key_values,
+			inputs_embeds=decoder_inputs_embeds,
+			use_cache=use_cache,
+			output_attentions=output_attentions,
+			output_hidden_states=output_hidden_states,
+			return_dict=return_dict,
+		)
+
+		if not return_dict:
+			return decoder_outputs + encoder_outputs
+
+		return LEDSeq2SeqModelOutput(
+			last_hidden_state=decoder_outputs.last_hidden_state,
+			past_key_values=decoder_outputs.past_key_values,
+			decoder_hidden_states=decoder_outputs.hidden_states,
+			decoder_attentions=decoder_outputs.attentions,
+			cross_attentions=decoder_outputs.cross_attentions,
+			encoder_last_hidden_state=encoder_outputs[0],
+			encoder_hidden_states=None,
+			encoder_attentions=encoder_outputs[1],
+			encoder_global_attentions=None,
+			segmentation_logits = encoder_outputs[2],
+		)
+
+class transgenicForConditionalGenerationT5(TransgenicPreTrainedModel):
+	base_model_prefix = "transgenic"
+	_keys_to_ignore_on_load_missing = ["final_logits_bias"]
+	_tied_weights_keys = ["transgenic.decoder.embed_tokens.weight", "gff_head.weight"]
+
+	def __init__(self, config, unlink=False):
+		if not unlink:
+			_tied_weights_keys = []
+		super().__init__(config)
+		self.transgenic = transgenicModelT5(config)
+		self.gff_head = nn.Linear(config.d_model, config.vocab_size, bias=True)
+
+		# Initialize weights and apply final processing
+		self.post_init()
+		self.initialize_weights()
+
+	def get_encoder(self):
+		return self.transgenic.get_encoder()
+
+	def get_decoder(self):
+		return self.transgenic.get_decoder()
+
+	def resize_token_embeddings(self, new_num_tokens: int, pad_to_multiple_of: Optional[int] = None) -> nn.Embedding:
+		new_embeddings = super().resize_token_embeddings(new_num_tokens, pad_to_multiple_of)
+		self._resize_final_logits_bias(new_embeddings.weight.shape[0])
+		return new_embeddings
+
+	def _resize_final_logits_bias(self, new_num_tokens: int) -> None:
+		old_num_tokens = self.final_logits_bias.shape[-1]
+		if new_num_tokens <= old_num_tokens:
+			new_bias = self.final_logits_bias[:, :new_num_tokens]
+		else:
+			extra_bias = torch.zeros((1, new_num_tokens - old_num_tokens), device=self.final_logits_bias.device)
+			new_bias = torch.cat([self.final_logits_bias, extra_bias], dim=1)
+		self.register_buffer("final_logits_bias", new_bias)
+
+	def get_output_embeddings(self):
+		return self.gff_head
+
+	def set_output_embeddings(self, new_embeddings):
+		self.gff_head = new_embeddings
+	
+	def initialize_weights(self):
+		for m in self.transgenic.decoder.modules():
+			if isinstance(m, nn.Linear):
+				nn.init.xavier_uniform_(m.weight)
+				if m.bias is not None:
+					nn.init.constant_(m.bias, 0)
+
+	def forward(
+		self,
+		input_ids: Optional[torch.LongTensor] = None,
+		attention_mask: Optional[torch.Tensor] = None,
+		decoder_input_ids: Optional[torch.LongTensor] = None,
+		decoder_attention_mask: Optional[torch.LongTensor] = None,
+		head_mask: Optional[torch.Tensor] = None,
+		decoder_head_mask: Optional[torch.Tensor] = None,
+		cross_attn_head_mask: Optional[torch.Tensor] = None,
+		encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		global_attention_mask: Optional[torch.FloatTensor] = None,
+		past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
+		inputs_embeds: Optional[torch.FloatTensor] = None,
+		decoder_inputs_embeds: Optional[torch.FloatTensor] = None,
+		labels: Optional[torch.LongTensor] = None,
+		use_cache: Optional[bool] = None,
+		output_attentions: Optional[bool] = None,
+		output_hidden_states: Optional[bool] = None,
+		return_dict: Optional[bool] = None,
+	) -> Union[Tuple[torch.Tensor], LEDSeq2SeqLMOutput]:
+		r"""
+		labels (`torch.LongTensor` of shape `(batch_size, sequence_length)`, *optional*):
+			Labels for computing the masked language modeling loss. Indices should either be in `[0, ...,
+			config.vocab_size]` or -100 (see `input_ids` docstring). Tokens with indices set to `-100` are ignored
+			(masked), the loss is only computed for the tokens with labels in `[0, ..., config.vocab_size]`.
+
+		Returns:
+
+		Conditional generation example:
+
+		```python
+		>>> from transformers import AutoTokenizer, LEDForConditionalGeneration
+
+		>>> tokenizer = AutoTokenizer.from_pretrained("allenai/led-base-16384")
+		>>> TXT = "My friends are <mask> but they eat too many carbs."
+
+		>>> model = LEDForConditionalGeneration.from_pretrained("allenai/led-base-16384")
+		>>> input_ids = tokenizer([TXT], return_tensors="pt")["input_ids"]
+
+		>>> prediction = model.generate(input_ids)[0]
+		>>> print(tokenizer.decode(prediction, skip_special_tokens=True))
+		```"""
+		return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+		if labels is not None:
+			if use_cache:
+				print("The `use_cache` argument is changed to `False` since `labels` is provided.", file=sys.stderr)
+			use_cache = False
+			if decoder_input_ids is None and decoder_inputs_embeds is None:
+				decoder_input_ids = shift_tokens_right(
+					labels, self.config.pad_token_id, self.config.decoder_start_token_id
+				)
+		
+		outputs = self.transgenic(
+			input_ids,
+			attention_mask=attention_mask,
+			decoder_input_ids=decoder_input_ids,
+			decoder_attention_mask=decoder_attention_mask,
+			encoder_outputs=encoder_outputs,
+			global_attention_mask=global_attention_mask,
+			head_mask=head_mask,
+			decoder_head_mask=decoder_head_mask,
+			cross_attn_head_mask=cross_attn_head_mask,
+			past_key_values=past_key_values,
+			inputs_embeds=inputs_embeds,
+			decoder_inputs_embeds=decoder_inputs_embeds,
+			use_cache=use_cache,
+			output_attentions=output_attentions,
+			output_hidden_states=output_hidden_states,
+			return_dict=return_dict,
+		)
+		lm_logits = self.gff_head(outputs[0])
+
+		if not return_dict:
+			output = (lm_logits,) + outputs[1:]
+			return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+
+		masked_lm_loss = None
+		if labels is not None:
+			#weights = torch.ones(50262).to(lm_logits.device)
+			#weights[262:] = 2
+			loss_fct = nn.CrossEntropyLoss()
+			masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
+			#masked_lm_loss = HybridLoss(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
+			#loss_fct = HybridSequenceLoss()
+			#masked_lm_loss = loss_fct(lm_logits, labels)
+
+		return LEDSeq2SeqLMOutput(
+			loss=masked_lm_loss,
+			logits=lm_logits,
+			past_key_values=outputs.past_key_values,
+			decoder_hidden_states=outputs.decoder_hidden_states,
+			decoder_attentions=outputs.decoder_attentions,
+			cross_attentions=outputs.cross_attentions,
+			encoder_last_hidden_state=outputs.encoder_last_hidden_state,
+			encoder_hidden_states=outputs.encoder_hidden_states,
+			encoder_attentions=outputs.encoder_attentions,
+			encoder_global_attentions=outputs.encoder_global_attentions,
+			segmentation_logits=outputs.segmentation_logits,
+		)
+
+	def prepare_inputs_for_generation(
+		self,
+		decoder_input_ids,
+		past_key_values=None,
+		attention_mask=None,
+		global_attention_mask=None,
+		head_mask=None,
+		decoder_head_mask=None,
+		cross_attn_head_mask=None,
+		use_cache=None,
+		encoder_outputs=None,
+		**kwargs,
+	):
+		# cut decoder_input_ids if past is used
+		if past_key_values is not None:
+			decoder_input_ids = decoder_input_ids[:, -1:]
+
+		return {
+			"input_ids": None,  # encoder_outputs is defined. input_ids not needed
+			"encoder_outputs": encoder_outputs,
+			"past_key_values": past_key_values,
+			"decoder_input_ids": decoder_input_ids,
+			"attention_mask": attention_mask,
+			"global_attention_mask": global_attention_mask,
+			"head_mask": head_mask,
+			"decoder_head_mask": decoder_head_mask,
+			"cross_attn_head_mask": cross_attn_head_mask,
+			"use_cache": use_cache,  # change this to avoid caching (presumably for debugging)
+		}
+
+	def prepare_decoder_input_ids_from_labels(self, labels: torch.Tensor):
+		return shift_tokens_right(labels, self.config.pad_token_id, self.config.decoder_start_token_id)
+
+	@staticmethod
+	def _reorder_cache(past_key_values, beam_idx):
+		reordered_past = ()
+		for layer_past in past_key_values:
+			# cached cross_attention states don't have to be reordered -> they are always the same
+			reordered_past += (
+				tuple(past_state.index_select(0, beam_idx.to(past_state.device)) for past_state in layer_past[:2])
+				+ layer_past[2:],
+			)
+		return reordered_past
+
+
+class TransgenicWithValueHead(AutoModelForSeq2SeqLMWithValueHead):
+	def __init__(self, base_model):
+		super().__init__(base_model)
+		self.is_peft_model = False
+
+class HausdorffDistanceLoss(nn.Module):
+	def __init__(self, alpha=0.01):
+		super(HausdorffDistanceLoss, self).__init__()
+		self.alpha = alpha
+
+	def forward(self, pred, target):
+		"""
+		Forward pass to calculate the Hausdorff distance-based loss.
+		Args:
+		- pred (Tensor): Predicted segmentation output (logits) of shape (N, C, H, W).
+		- target (Tensor): Ground truth labels of shape (N, C, H, W) for multilabel.
+		
+		Returns:
+		- hausdorff_loss (Tensor): The Hausdorff distance-based loss value.
+		"""
+		# Convert logits to probabilities, and threshold to binary predictions
+		pred = torch.nn.functional.softmax(pred, dim=-1)[...,0][:,:,(0,2,3,4,5,6,7)]
+		pred_bin = (pred > 0.5).float()
+		target_bin = target[:,:,(0,2,3,4,5,6,7)].float()
+
+		# Initialize loss
+		hausdorff_loss = 0.0
+		
+		# Calculate Hausdorff loss per class (C classes)
+		for c in range(pred_bin.shape[2]):
+			pred_boundaries = self._extract_boundaries(pred_bin[:, :, c])
+			target_boundaries = self._extract_boundaries(target_bin[:, :, c])
+			
+			# Compute the pairwise distance between the boundary points
+			d_pred_to_target = self._pairwise_distance(pred_boundaries, target_boundaries)
+			d_target_to_pred = self._pairwise_distance(target_boundaries, pred_boundaries)
+
+			# Add the Chamfer-like average distance for class `c`
+			hausdorff_loss += torch.mean(d_pred_to_target) + torch.mean(d_target_to_pred)
+		
+		# Average over all classes (optional depending on how you want to combine class losses)
+		hausdorff_loss /= pred_bin.shape[2]
+		
+		return hausdorff_loss * self.alpha
+
+	def _extract_boundaries(self, binary_sequence):
+		"""
+		Extracts boundary points from a binary sequence mask using gradient differences.
+		Args:
+		- binary_sequence (Tensor): Binary segmentation map of shape (batch, sequence).
+		
+		Returns:
+		- boundary_points (Tensor): Boundary point indices (batch, sequence, 1).
+		"""
+		# Approximate boundary extraction using 1D gradient (difference between neighboring points)
+		grad = torch.abs(binary_sequence[:, 1:] - binary_sequence[:, :-1])
+		boundary_points = (grad > 0).nonzero(as_tuple=False)  # Get indices where gradient indicates boundary
+
+		return boundary_points
+
+	def _pairwise_distance(self, points1, points2):
+		"""
+		Compute the pairwise Euclidean distance between two sets of 1D points.
+		Args:
+		- points1 (Tensor): First set of boundary points (batch, sequence, 1).
+		- points2 (Tensor): Second set of boundary points (batch, sequence, 1).
+		
+		Returns:
+		- dists (Tensor): Pairwise distances between points.
+		"""
+		if len(points1) == 0 or len(points2) == 0:
+			return torch.zeros(1, device=points1.device)  # Return 0 if no boundary points exist
+		
+		# Compute pairwise distances between all points in the two sets
+		dists = torch.cdist(points1.float(), points2.float(), p=2)
+		
+		# For each point in points1, find the minimum distance to points2
+		min_dists, _ = torch.min(dists, dim=1)
+
+		return min_dists
+
+# Combined Loss: BCEWithLogits + Hausdorff Loss for DNA Segmentation
+class BoundaryLoss(nn.Module):
+	def __init__(self, alpha=0.01, beta=1.0, numSegClasses=14, device=torch.device("cuda")):
+		"""
+		Initializes the combined loss function for DNA segmentation.
+		Args:
+		- alpha (float): Weight for Hausdorff loss.
+		- beta (float): Weight for Binary Cross-Entropy loss.
+		"""
+		super(BoundaryLoss, self).__init__()
+		self.hausdorff_loss = HausdorffDistanceLoss(alpha)
+		
+		# Define weight of positive splice junction classes to counteract class imbalance
+		pos_weight = torch.ones(numSegClasses)
+		pos_weight[[4, 5]] = 7.0
+		pos_weight = pos_weight.to(device)
+
+		# Define per-nucleotide weights to focus on basic genic features
+		weight = torch.Tensor((5.0, 0.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+		weight = weight.to(device)
+
+		# Define the loss function with pos_weight
+		self.bce_loss = nn.BCEWithLogitsLoss(pos_weight=pos_weight, weight=weight)  # For multilabel classification
+		self.beta = beta
+
+	def forward(self, pred, target):
+		"""
+		Forward pass to calculate the combined loss.
+		Args:
+		- pred (Tensor): Predicted logits from the model (batch, sequence, num_classes).
+		- target (Tensor): Ground truth labels (batch, sequence, num_classes).
+		
+		Returns:
+		- combined_loss (Tensor): Weighted sum of BCE and Hausdorff losses.
+		"""
+		# BCEWithLogitsLoss expects the target in the same shape as the prediction
+		bce_loss = self.bce_loss(pred[...,0], target)
+		
+		# Hausdorff Loss for boundary accuracy
+		hausdorff_loss = self.hausdorff_loss(pred, target)
+
+		# Combine the two losses with specified weights
+		combined_loss = bce_loss * self.beta + hausdorff_loss
+		return combined_loss
+	
+#def numeric_token_loss(logits, label):
+#	digit_tokens = {'0': 4, '1': 5, '2': 6, '3': 7,'4': 8, '5': 9, '6': 10, '7': 11, '8': 12, '9': 13}
+#	digit_token_ids = {digit_tokens[k]:k for k in digit_tokens}
+#	digit_values = torch.tensor([int(token) for token in digit_tokens], dtype=torch.float32, device=logits.device)
+#	
+#	# Find contigous digits representing a number
+#	digit_positions = [i for i, token in enumerate(label.tolist()) if token in digit_token_ids.keys()] 
+#	contiguous_digits = []
+#	number = []
+#	for j,i in enumerate(digit_positions):
+#		if j == 0: 
+#			number.append(i)
+#		elif i-1 == digit_positions[j-1]:
+#			number.append(i)
+#		else:
+#			contiguous_digits.append(number)
+#			number = [i]
+#	if number:
+#		contiguous_digits.append(number)
+#	
+#	numeric_loss = torch.tensor(0.0, device=logits.device)
+#	for number in contiguous_digits:
+#		number_logits = logits[number]																		# Extract digit logits and target digits
+#		label_digits = label[number]
+		
+		#number_logits_max = number_logits.max(dim=-1, keepdim=True)[0]
+		#number_logits_stable = number_logits - number_logits_max
+#		digit_probs = torch.softmax(number_logits, dim=-1)[:, list(digit_token_ids.keys())] 			# Convert logits to probabilities
+#		
+#		expected_digits = (digit_probs * digit_values).sum(dim=-1) 											# Expected digit values
+#		predicted_number = (expected_digits * (10 ** torch.arange(len(expected_digits) - 1, -1, -1).to(expected_digits.device))).sum() # Compute predicted number
+#		target_number = int(''.join([str(digit_token_ids[d.item()]) for d in label_digits])) 				# Compute target number
+#		numeric_loss += (predicted_number - target_number).abs()  								# Compute numeric loss
+#	if torch.isnan(numeric_loss):
+#		pass
+#	return numeric_loss/(len(contiguous_digits)+1e-8)
+
+def numeric_token_loss(logits, label):
+	digit_tokens = {str(i):i+262 for i in range(0,50000)}
+	digit_token_ids = {digit_tokens[k]:k for k in digit_tokens}
+	digit_values = torch.tensor([int(token) for token in digit_tokens], dtype=torch.float32, device=logits.device)
+	
+	# Find digits in the label
+	digit_positions = [i for i, token in enumerate(label.tolist()) if token in digit_token_ids.keys()] 
+	
+	numeric_loss = torch.tensor(0.0, device=logits.device)
+	for number in digit_positions:
+		number_logits = logits[number]																		# Extract digit logits and target digits
+		label_digits = label[number]
+		digit_probs = torch.softmax(number_logits, dim=-1)[list(digit_token_ids.keys())] 			# Convert logits to probabilities
+		
+		expected_digits = (digit_probs * digit_values).sum(dim=-1)	# Expected digit values
+		target_number = label_digits -262 							# Compute target number
+		numeric_loss += (expected_digits - target_number).abs()	# Compute numeric loss
+	if torch.isnan(numeric_loss):
+		pass
+	return numeric_loss/(len(digit_positions)+1e-8)
+
+# Total loss
+def HybridLoss(logits, label, alpha=1, beta=0.01):
+	ce_loss = nn.CrossEntropyLoss()
+	return alpha * ce_loss(logits, label) + beta * numeric_token_loss(logits, label)

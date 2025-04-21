@@ -3,12 +3,12 @@ from tqdm import tqdm
 from safetensors import safe_open
 
 sys.path.insert(0, f'{os.getcwd()}/src')
-from datasets.datasets import isoformDataHyena, makeDataLoader, hyena_collate_fn
-from models.tokenization_transgenic import GFFTokenizer
-from models.modeling_HeynaTransgenic import transgenicForConditionalGeneration
-from models.configuration_transgenic import HyenaTransgenicConfig
-from utils.gsf import gffString2GFF3
-from utils.postprocess import PredictionProcessor
+from transgenic.datasets.datasets import isoformDataHyena, makeDataLoader, hyena_collate_fn
+from transgenic.model.tokenization_transgenic import GFFTokenizer
+from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration
+from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
+from transgenic.utils.gsf import gffString2GFF3
+from transgenic.utils.postprocess import PredictionProcessor
 
 torch.manual_seed(123)
 #"checkpoints/Hyena_Gen9G_6144nt_SinusoidalDownsample_E15.safetensors"
