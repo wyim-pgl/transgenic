@@ -1,0 +1,16 @@
+name: transgenic
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - setuptools
+  - wheel
+  - packaging
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  - pyyaml
+  - requests
+  - tqdm

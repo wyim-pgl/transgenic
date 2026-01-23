@@ -1,3 +1,11 @@
+"""
+Test T5-style decoder with Nucleotide Transformer encoder and segmentation.
+
+Combines T5 decoder with AgroNT encoder and segmentation head for
+post-processed predictions.
+
+Output: validation_T5Transgenic_prediction.gff3, validation_T5Transgenic_labels.gff3
+"""
 import torch, sys
 from tqdm import tqdm
 from safetensors import safe_open

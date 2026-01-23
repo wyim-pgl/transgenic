@@ -1,3 +1,11 @@
+"""
+Test coordinate adjustment using combined segmentation and generation models.
+
+Uses segmentation probabilities to refine GSF predictions (start/stop codons,
+splice junctions) via PredictionProcessor post-processing.
+
+Output: validation_prediction.gff3, validation_labels.gff3
+"""
 import torch, sys
 from tqdm import tqdm
 from safetensors import safe_open

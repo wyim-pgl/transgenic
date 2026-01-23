@@ -1,3 +1,12 @@
+"""
+Compare raw vs post-processed predictions with HyenaDNA model.
+
+Generates both raw GSF predictions and PredictionProcessor-refined outputs
+to evaluate the impact of coordinate adjustment.
+
+Output: hyenaTest_prediction_noPost.gff3, hyenaTest_prediction_post.gff3,
+        hyenaTest_labels.gff3, hyenaTest_labels_success.gff3
+"""
 import torch, sys, os
 from tqdm import tqdm
 from safetensors import safe_open
