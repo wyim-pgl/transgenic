@@ -3,6 +3,22 @@ TransGenic is a transformer for DNA-to-annotation machine translation. Gene anno
 
 ![TransGenic Workflow](Figures/Gemini_Generated_Image_mb4afmb4afmb4afm.png)
 
+## Architecture
+
+TransGenic uses an encoder-decoder architecture:
+- **Encoder**: [HyenaDNA](https://github.com/HazyResearch/hyena-dna), a long-range genomic foundation model capable of processing sequences up to 1 million nucleotides using sub-quadratic convolution operations instead of full attention
+- **Decoder**: [Longformer](https://huggingface.co/docs/transformers/model_doc/longformer)-based autoregressive decoder that generates structured text annotations
+
+This design enables the model to capture long-range dependencies in DNA while producing human-readable outputs.
+
+## Key Features
+
+- **De novo annotation**: Generate complete gene structures from unannotated DNA sequences
+- **Splice variant prediction**: Predict alternative isoforms via prompt completion given an existing transcript
+- **Compact output format**: Gene Sentence Format (GSF) reduces annotation redundancy for efficient generation
+- **Plant-focused**: Trained on 9 phylogenetically diverse plant species
+- **High accuracy**: Achieves 92% base-level F1 score on *Arabidopsis thaliana* test data
+
 # Gene sentence format (GSF)
 TransGenic produces output in a format modified from the standard Gene Feature Format (GFF). Gene sentence format (GSF) contains identical information as GFF but reduces the redundancy and length of output annotations. This permits generative decoding within reasonable memory requirements for the decoder's attention mechanisms.
 
