@@ -169,18 +169,39 @@ cd transgenic
 
 ### Check Your System
 
-Before installing, determine which environment file to use:
+Run the system check script to determine which environment file to use:
 
 ```bash
-# Check if NVIDIA GPU is available
-nvidia-smi
+./scripts/check_system.sh
 ```
 
-| Result | Recommendation |
-|--------|----------------|
-| Shows GPU info (e.g., "NVIDIA RTX 4090") | Use **x86 with CUDA GPU** |
-| "command not found" or no GPU | Use **x86 CPU Only** |
-| NVIDIA Grace Blackwell (aarch64) | Use **GB10 ARM CPU** |
+Example output:
+```
+============================================
+TransGenic System Check
+============================================
+
+[Architecture]
+  uname -m: x86_64
+  Type: x86_64 (Intel/AMD 64-bit)
+
+[GPU Check]
+  nvidia-smi: Found
+  GPU: NVIDIA GeForce RTX 4090
+  Driver: 550.54.14
+  CUDA: 12.4
+
+[Recommended Environment]
+  → x86 with CUDA GPU
+  → Use: environment.yml
+============================================
+```
+
+| Architecture | GPU | Recommendation |
+|--------------|-----|----------------|
+| x86_64 | NVIDIA GPU detected | `environment.yml` |
+| x86_64 | No GPU | `environment.cpu.yml` |
+| aarch64 | NVIDIA GB10 | `environment.gb10.base.yml` + install script |
 
 **Verify CUDA after installation:**
 ```bash
@@ -297,6 +318,7 @@ The `scripts/` folder contains utility scripts:
 
 | Script | Description |
 |--------|-------------|
+| `check_system.sh` | Check system architecture and GPU for environment selection |
 | `gff2gsf.py` | Convert GFF3 annotations to GSF format |
 | `install_ml_stack_gb10.sh` | Install PyTorch + HuggingFace stack for GB10 ARM |
 | `test_torch_cuda_gb10.py` | CUDA verification test for GB10 |
