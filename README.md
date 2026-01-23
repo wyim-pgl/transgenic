@@ -218,8 +218,8 @@ For Linux/Windows systems with NVIDIA GPU (GTX, RTX, Tesla, etc.). Includes CUDA
 
 ```bash
 # Create environment with all dependencies
-mamba create -y -n transgenic && mamba activate transgenic
-mamba env update -f environment.yml
+conda env create -f environment.yml
+conda activate transgenic
 
 # Install the transgenic module
 pip install -e .
@@ -248,11 +248,11 @@ This separation provides the most stable setup on aarch64 architectures, avoidin
 
 ```bash
 # Remove existing environment (if present)
-micromamba env remove -n transgenic -y || true
+conda env remove -n transgenic -y || true
 
 # Create base environment
-micromamba env create -f environment.gb10.base.yml -y
-micromamba activate transgenic
+conda env create -f environment.gb10.base.yml -y
+conda activate transgenic
 
 # Install ML stack (PyTorch CUDA + HuggingFace + transgenic)
 chmod +x scripts/install_ml_stack_gb10.sh
