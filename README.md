@@ -264,17 +264,35 @@ chmod +x scripts/install_ml_stack_gb10.sh
 
 All checkpoints were trained on 9 plant genomes covering diverse phyla, including dicot, monocot, and moss species. The highest performance on test set evaluation (92% base-level F1 in *Arabidopsis*) was achieved using the 400M parameter model. Both checkpoints used sequences padded with neighboring genomic sequence to the next multiple of 6144 nucleotides.
 
-[HyenaTransgenic-768L12A6-400M](https://huggingface.co/jlomas/HyenaTransgenic-768L12A6-400M)
-- Hidden size = 768, 12 layers, 6 attention heads (~400M parameters)
+### Training Data
+Nine phylogenetically diverse plant species:
+- *Arabidopsis thaliana*, *Glycine max* (Soybean), *Oryza sativa* (Rice)
+- *Sorghum bicolor*, *Populus trichocarpa* (Poplar), *Brachypodium distachyon*
+- *Vitis vinifera* (Grape), *Setaria italica* (Millet), *Physcomitrella patens* (Moss)
 
-[HyenaTransgenic-512L9A4-160M](https://huggingface.co/jlomas/HyenaTransgenic-512L9A4-160M)
-- Hidden size = 512, 9 layers, 4 attention heads (~160M parameters)
+### Available Models
+
+| Model | Parameters | Hidden Size | Layers | Attention Heads | F1 Score |
+|-------|------------|-------------|--------|-----------------|----------|
+| [HyenaTransgenic-768L12A6-400M](https://huggingface.co/jlomas/HyenaTransgenic-768L12A6-400M) | ~400M | 768 | 12 | 6 | 92% |
+| [HyenaTransgenic-512L9A4-160M](https://huggingface.co/jlomas/HyenaTransgenic-512L9A4-160M) | ~160M | 512 | 9 | 4 | - |
+
+### Training Configuration
+- **Learning rate**: 5e-5
+- **Batch size**: 96 (effective)
+- **Loss**: Cross Entropy
+- **Mixed precision**: BF16
+- **Input length**: Multiples of 6,144nt (max 49,152nt)
+
+### Intended Uses
+1. Generate *de novo* annotations for plant DNA sequences containing genes
+2. Add alternatively spliced isoforms to known primary mRNA transcripts via prompt completion
 
 ## Inference
 
 The general outline of an inference workflow is:
-1. Create a DuckDB database from a FASTA and a [GFF3|BED] file which describes the sequences to be used for prediction
-2. Initialize a PyTorch Dataset and DataLoader for the database
+1. Create a [DuckDB](https://duckdb.org/) database from a FASTA and a [GFF3|BED] file which describes the sequences to be used for prediction
+2. Initialize a [PyTorch Dataset and DataLoader](https://pytorch.org/tutorials/beginner/basics/data_tutorial.html) for the database
 3. Generate annotations using `model.generate`
 4. Convert GSF outputs to a GFF3 formatted output file
 
@@ -289,10 +307,14 @@ The general outline of an inference workflow is:
 - De novo prediction from BED file (gene coordinates only)
 - Splice variant prediction from GFF3 file (prompt completion with existing transcript)
 
-NOTE: When building databases from GFF3 files, TransGenic expects the GFF3 to be sorted using a sort order similar to the one used by AGAT. To sort using AGAT:
-```
+### GFF3 Sorting Requirement
+
+When building databases from GFF3 files, TransGenic expects the GFF3 to be sorted using a sort order similar to the one used by [AGAT (Another GFF Analysis Toolkit)](https://github.com/NBISweden/AGAT). To sort using AGAT:
+```bash
 agat_convert_sp_gxf2gxf.pl -g [file.gff3] -o [file.sorted.gff3]
 ```
+
+See [AGAT documentation](https://agat.readthedocs.io/) for installation and usage.
 
 ## Test Scripts
 
