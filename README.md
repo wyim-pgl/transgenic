@@ -167,14 +167,27 @@ git clone git@github.com:JohnnyLomas/transgenic.git
 cd transgenic
 ```
 
-### x86 CPU/GPU (Linux, Windows, macOS)
+### x86 with CUDA GPU
 
-Standard installation using conda/mamba with the full environment file:
+Standard installation using conda/mamba with the full environment file (includes CUDA):
 
 ```bash
 # Create environment with all dependencies
 mamba create -y -n transgenic && mamba activate transgenic
 mamba env update -f environment.yml
+
+# Install the transgenic module
+pip install -e .
+```
+
+### x86 CPU Only (No GPU)
+
+For systems without NVIDIA GPU:
+
+```bash
+# Create CPU-only environment
+mamba create -y -n transgenic && mamba activate transgenic
+mamba env update -f environment.cpu.yml
 
 # Install the transgenic module
 pip install -e .
