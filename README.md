@@ -158,13 +158,21 @@ print(gsf_prediction)
 ```
 
 For local development, run notebook examples from the `examples/` folder after setting up an environment as described below.
+
 ## Set-up
-```
+
+```bash
 # Clone the repo
 git clone git@github.com:JohnnyLomas/transgenic.git
 cd transgenic
+```
 
-# Environment
+### x86 CPU/GPU (Linux, Windows, macOS)
+
+Standard installation using conda/mamba with the full environment file:
+
+```bash
+# Create environment with all dependencies
 mamba create -y -n transgenic && mamba activate transgenic
 mamba env update -f environment.yml
 
