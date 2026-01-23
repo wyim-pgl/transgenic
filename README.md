@@ -167,9 +167,31 @@ git clone git@github.com:JohnnyLomas/transgenic.git
 cd transgenic
 ```
 
+### Check Your System
+
+Before installing, determine which environment file to use:
+
+```bash
+# Check if NVIDIA GPU is available
+nvidia-smi
+```
+
+| Result | Recommendation |
+|--------|----------------|
+| Shows GPU info (e.g., "NVIDIA RTX 4090") | Use **x86 with CUDA GPU** |
+| "command not found" or no GPU | Use **x86 CPU Only** |
+| NVIDIA Grace Blackwell (aarch64) | Use **GB10 ARM CPU** |
+
+**Verify CUDA after installation:**
+```bash
+python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
+python -c "import torch; print(f'CUDA version: {torch.version.cuda}')"
+python -c "import torch; print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"N/A\"}')"
+```
+
 ### x86 with CUDA GPU
 
-Standard installation using conda/mamba with the full environment file (includes CUDA):
+For Linux/Windows systems with NVIDIA GPU (GTX, RTX, Tesla, etc.). Includes CUDA 12.4 support.
 
 ```bash
 # Create environment with all dependencies
@@ -182,7 +204,7 @@ pip install -e .
 
 ### x86 CPU Only (No GPU)
 
-For systems without NVIDIA GPU:
+For systems without NVIDIA GPU (Intel/AMD CPU only, macOS, or VMs without GPU passthrough). Inference will be slower but fully functional.
 
 ```bash
 # Create CPU-only environment
