@@ -1,3 +1,12 @@
+"""
+Test segmentation model performance using HyenaDNA encoder.
+
+Evaluates multilabel classification metrics (Precision, Recall, F1, MCC) for
+genomic feature prediction: Gene, Start_Codon, Exon, Intron, Splice Donor/Acceptor,
+5'-UTR, 3'-UTR, Stop_Codon.
+
+Output: HyenaSegmentPerformance.out (TSV with per-sample metrics)
+"""
 import torch, sys
 from tqdm import tqdm
 from safetensors import safe_open

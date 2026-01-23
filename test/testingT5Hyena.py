@@ -1,3 +1,10 @@
+"""
+Test T5-style decoder with HyenaDNA encoder.
+
+Uses T5 decoder architecture without segmentation head for pure generation.
+
+Output: validation_T5Hyena_prediction.gff3, validation_T5Hyena_labels.gff3
+"""
 import torch, sys
 from tqdm import tqdm
 from safetensors import safe_open

@@ -1,3 +1,11 @@
+"""
+Test dual-model setup with separate decoder and segmentation models.
+
+Loads decoder (generation) and segmentation models independently, combines
+their outputs for post-processed predictions.
+
+Output: validation_hyena_prediction.gff3, validation_hyena_labels.gff3
+"""
 import torch, sys
 from tqdm import tqdm
 from safetensors import safe_open

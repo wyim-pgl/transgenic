@@ -1,3 +1,11 @@
+"""
+Test prompt completion (splice variant prediction) with HyenaDNA model.
+
+Provides the first transcript features as decoder input to predict additional
+isoforms. Uses 768-dim, 12-layer model configuration.
+
+Output: hyenaTest_prediction_noPost.gff3, hyenaTest_labels.gff3, hyenaTest_labels_success.gff3
+"""
 import torch, sys, os
 from tqdm import tqdm
 from safetensors import safe_open

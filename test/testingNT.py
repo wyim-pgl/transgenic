@@ -1,3 +1,12 @@
+"""
+Test Nucleotide Transformer (NT) based generation with segmentation.
+
+Uses AgroNT encoder with decoder and segmentation heads for full annotation
+prediction with coordinate refinement.
+
+Output: validation_prediction_noPost.gff3, validation_prediction_post.gff3,
+        validation_labels.gff3, validation_labels_success.gff3
+"""
 import torch, sys
 from tqdm import tqdm
 from safetensors import safe_open

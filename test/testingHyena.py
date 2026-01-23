@@ -1,3 +1,10 @@
+"""
+Test HyenaDNA-based generation model without post-processing.
+
+Runs beam search generation on evaluation set and converts GSF to GFF3.
+
+Output: validation_hyena_prediction.gff3, validation_hyena_labels.gff3
+"""
 import torch, sys
 from tqdm import tqdm
 from safetensors import safe_open
