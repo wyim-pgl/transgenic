@@ -86,6 +86,28 @@ Chr1  source  three_prime_UTR 800  900  .  +  .  ID=utr3
 - UTRs use `.` for phase since they are non-coding
 - Transcript includes UTRs in the proper order
 
+## Converting GFF3 to GSF
+
+Use `scripts/gff2gsf.py` to convert existing GFF3 annotations to GSF format:
+
+```bash
+# Basic usage (output to stdout)
+python scripts/gff2gsf.py annotation.gff3
+
+# Save to file
+python scripts/gff2gsf.py annotation.gff3 -o output.gsf
+
+# Use absolute coordinates instead of relative
+python scripts/gff2gsf.py annotation.gff3 --absolute
+```
+
+**Output format** (tab-separated):
+```
+gene_id    GSF_string
+AT1G01010  0|CDS1|150|+|A;200|CDS2|350|+|B>CDS1|CDS2
+AT1G01020  0|five_prime_UTR1|50|+|.;50|CDS1|200|+|A>five_prime_UTR1|CDS1
+```
+
 # Using TransGenic
 ## Quick start
 
