@@ -231,8 +231,8 @@ For systems without NVIDIA GPU (Intel/AMD CPU only, macOS, or VMs without GPU pa
 
 ```bash
 # Create CPU-only environment
-mamba create -y -n transgenic && mamba activate transgenic
-mamba env update -f environment.cpu.yml
+conda env create -f environment.cpu.yml
+conda activate transgenic
 
 # Install the transgenic module
 pip install -e .
