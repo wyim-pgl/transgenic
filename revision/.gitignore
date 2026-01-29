@@ -1,0 +1,8 @@
+# Large data files - download with 01_download_references.sh
+data/
+
+# Results (generated)
+results/
+
+# Figures (generated)
+figures/

@@ -1,0 +1,51 @@
+name: transgenic-revision
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  # Core Python
+  - python=3.11
+  - pip
+
+  # Bioinformatics tools
+  - gffcompare=0.12.6
+  - gffread=0.12.7
+  - bedtools=2.31.1
+  - samtools=1.21
+  - minimap2=2.28
+
+  # Data processing
+  - pandas=2.2
+  - numpy=1.26
+  - scipy=1.14
+  - polars=1.0
+
+  # Visualization
+  - matplotlib=3.9
+  - seaborn=0.13
+  - plotly=5.24
+
+  # GTF/GFF parsing
+  - gtfparse=2.5
+  - gffutils=0.13
+  - pybedtools=0.10
+
+  # Utilities
+  - biopython=1.84
+  - pyyaml=6.0
+  - tqdm=4.66
+  - click=8.1
+  - rich=13.9
+
+  # Jupyter for analysis
+  - jupyterlab=4.2
+  - ipykernel
+
+  # Statistics
+  - statsmodels=0.14
+  - scikit-learn=1.5
+
+  # Download utilities
+  - wget
+  - curl
