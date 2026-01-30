@@ -162,8 +162,8 @@ def trainTransgenicFCGAccelerate(
 				print(f"Error in batch: {batch[3]}")
 				continue
 			
-			true = dt.batch_decode(lab.detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
-			sequence = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True)[0].replace(" ", "")
+			true = dt.batch_decode(lab.detach().cpu().numpy(), skip_special_tokens=True, clean_up_tokenization_spaces=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+			sequence = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True, clean_up_tokenization_spaces=True)[0].replace(" ", "")
 			pp = PredictionProcessor(true, sequence, None)
 
 			# Process start codons
@@ -333,8 +333,8 @@ def trainTransgenicFCGAccelerate(
 				with torch.no_grad():
 					outputs = encoder_model(input_ids=batch[0].to(device))
 				
-				true = dt.batch_decode(lab.detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
-				sequence = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True)[0].replace(" ", "")
+				true = dt.batch_decode(lab.detach().cpu().numpy(), skip_special_tokens=True, clean_up_tokenization_spaces=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+				sequence = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True, clean_up_tokenization_spaces=True)[0].replace(" ", "")
 				pp = PredictionProcessor(true, sequence, None)
 				
 				for cds in pp.start_cds:

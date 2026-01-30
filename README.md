@@ -1,5 +1,5 @@
 # TransGenic
-TransGenic is a transformer for DNA-to-annotation machine translation. Gene annotations specify the structure of a gene within a DNA sequence by providing the composition of each mRNA transcript based on the coordinate locations of sub-genic features, including coding sequences (CDS), introns, and unstranslated regions (UTR). TransGenic uses a HyenaDNA encoder with the Longformer decoder to predict a text-based annotation format from raw DNA sequence.
+TransGenic is a transformer for DNA-to-annotation machine translation. Gene annotations specify the structure of a gene within a DNA sequence by providing the composition of each mRNA transcript based on the coordinate locations of sub-genic features, including coding sequences (CDS), introns, and untranslated regions (UTR). TransGenic uses a HyenaDNA encoder with the Longformer decoder to predict a text-based annotation format from raw DNA sequence.
 
 ![TransGenic Workflow](Figures/Gemini_Generated_Image_mb4afmb4afmb4afm.png)
 
@@ -142,14 +142,14 @@ from transformers import AutoModel, AutoTokenizer
 # Load model and tokenizers from HuggingFace
 model_name = "jlomas/HyenaTransgenic-768L12A6-400M"
 model = AutoModel.from_pretrained(model_name, trust_remote_code=True)
-gffTokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-dnaTokenizer = AutoTokenizer.from_pretrained(
+gsf_tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+dna_tokenizer = AutoTokenizer.from_pretrained(
     "LongSafari/hyenadna-large-1m-seqlen-hf", trust_remote_code=True
 )
 
 # Tokenize DNA sequence
 seq = "ATGCGT...your_sequence...TGATGA"
-input_ids = dnaTokenizer.batch_encode_plus(
+input_ids = dna_tokenizer.batch_encode_plus(
     [seq], return_tensors="pt"
 )["input_ids"][:, :-1]
 
@@ -167,7 +167,7 @@ outputs = model.generate(
 )
 
 # Decode to GSF format
-gsf_prediction = gffTokenizer.batch_decode(
+gsf_prediction = gsf_tokenizer.batch_decode(
     outputs.detach().cpu().numpy(),
     skip_special_tokens=True
 )[0]
@@ -177,105 +177,57 @@ print(gsf_prediction)
 
 For local development, run notebook examples from the `examples/` folder after setting up an environment as described below.
 
-## Set-up
+## Installation
+
+### Quick Install (pip)
+
+If you already have PyTorch installed:
 
 ```bash
-# Clone the repo
+# Clone and install
+git clone git@github.com:JohnnyLomas/transgenic.git
+cd transgenic
+pip install -e .
+```
+
+### Full Environment Setup (conda)
+
+For a complete environment with all dependencies, first clone the repository:
+
+```bash
 git clone git@github.com:JohnnyLomas/transgenic.git
 cd transgenic
 ```
 
-### Check Your System
+Run `./scripts/check_system.sh` to determine which environment file to use, then follow the appropriate instructions below.
 
-Run the system check script to determine which environment file to use:
+#### Environment Options
 
-```bash
-./scripts/check_system.sh
-```
+- **x86 with NVIDIA GPU** (`environment.yml`): For Linux/Windows with GTX, RTX, or Tesla GPUs. Includes CUDA 12.4.
+  ```bash
+  conda env create -f environment.yml
+  conda activate transgenic
+  pip install -e .
+  ```
 
-Example output:
-```
-============================================
-TransGenic System Check
-============================================
+- **x86 CPU only** (`environment.cpu.yml`): For systems without GPU (macOS, VMs, CPU-only machines). Slower but fully functional.
+  ```bash
+  conda env create -f environment.cpu.yml
+  conda activate transgenic
+  pip install -e .
+  ```
 
-[Architecture]
-  uname -m: x86_64
-  Type: x86_64 (Intel/AMD 64-bit)
+- **GB10 ARM** (`environment.gb10.base.yml`): For NVIDIA Grace Blackwell aarch64 systems. Uses a two-step install to avoid dependency conflicts.
+  ```bash
+  conda env create -f environment.gb10.base.yml -y
+  conda activate transgenic
+  ./scripts/install_ml_stack_gb10.sh
+  ```
 
-[GPU Check]
-  nvidia-smi: Found
-  GPU: NVIDIA GeForce RTX 4090
-  Driver: 550.54.14
-  CUDA: 12.4
+#### Verify CUDA
 
-[Recommended Environment]
-  → x86 with CUDA GPU
-  → Use: environment.yml
-============================================
-```
-
-| Architecture | GPU | Recommendation |
-|--------------|-----|----------------|
-| x86_64 | NVIDIA GPU detected | `environment.yml` |
-| x86_64 | No GPU | `environment.cpu.yml` |
-| aarch64 | NVIDIA GB10 | `environment.gb10.base.yml` + install script |
-
-**Verify CUDA after installation:**
 ```bash
 python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
-python -c "import torch; print(f'CUDA version: {torch.version.cuda}')"
-python -c "import torch; print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"N/A\"}')"
-```
-
-### x86 with CUDA GPU
-
-For Linux/Windows systems with NVIDIA GPU (GTX, RTX, Tesla, etc.). Includes CUDA 12.4 support.
-
-```bash
-# Create environment with all dependencies
-conda env create -f environment.yml
-conda activate transgenic
-
-# Install the transgenic module
-pip install -e .
-```
-
-### x86 CPU Only (No GPU)
-
-For systems without NVIDIA GPU (Intel/AMD CPU only, macOS, or VMs without GPU passthrough). Inference will be slower but fully functional.
-
-```bash
-# Create CPU-only environment
-conda env create -f environment.cpu.yml
-conda activate transgenic
-
-# Install the transgenic module
-pip install -e .
-```
-
-### GB10 ARM CPU (NVIDIA Grace Blackwell)
-`environment.gb10.base.yml` and `scripts/install_ml_stack_gb10.sh` are installation files for NVIDIA GB10 ARM CPU environments. This two-step approach is recommended for aarch64 platforms:
-
-1. **Base environment via conda-forge**: Only basic dependencies (numpy, pandas, etc.) are installed through conda-forge
-2. **PyTorch via pip from PyTorch index**: torch, torchvision, and torchaudio are installed exclusively from the official PyTorch wheel index
-
-This separation provides the most stable setup on aarch64 architectures, avoiding common dependency conflicts.
-
-```bash
-# Remove existing environment (if present)
-conda env remove -n transgenic -y || true
-
-# Create base environment
-conda env create -f environment.gb10.base.yml -y
-conda activate transgenic
-
-# Install ML stack (PyTorch CUDA + HuggingFace + transgenic)
-chmod +x scripts/install_ml_stack_gb10.sh
-./scripts/install_ml_stack_gb10.sh
-
-# Optional: For development with editable install, run additionally:
-# pip install -e .
 ```
 
 ## Pretrained Checkpoints on HuggingFace
@@ -325,6 +277,16 @@ The general outline of an inference workflow is:
 - De novo prediction from BED file (gene coordinates only)
 - Splice variant prediction from GFF3 file (prompt completion with existing transcript)
 
+### Example Data Files
+
+The `examples/` folder includes *Arabidopsis thaliana* chromosome 4 data files for testing:
+
+| File | Description |
+|------|-------------|
+| `ATH_Chr4.fas` | FASTA sequence file for chromosome 4 |
+| `ATH_Chr4_gene.bed` | BED file with gene coordinates |
+| `ATH_Chr4.sorted.gff3` | Sorted GFF3 annotation file |
+
 ### GFF3 Sorting Requirement
 
 When building databases from GFF3 files, TransGenic expects the GFF3 to be sorted using a sort order similar to the one used by [AGAT (Another GFF Analysis Toolkit)](https://github.com/NBISweden/AGAT). To sort using AGAT:
@@ -333,6 +295,109 @@ agat_convert_sp_gxf2gxf.pl -g [file.gff3] -o [file.sorted.gff3]
 ```
 
 See [AGAT documentation](https://agat.readthedocs.io/) for installation and usage.
+
+## Training
+
+Training scripts are located in the [`train/`](https://github.com/JohnnyLomas/transgenic/tree/main/train) folder. These scripts use the [Accelerate](https://huggingface.co/docs/accelerate) library for distributed training and [Weights & Biases](https://wandb.ai/) for experiment tracking.
+
+### Training Scripts
+
+| Script | Description |
+|--------|-------------|
+| `train_HyenaTransgenic.py` | Main training script for HyenaDNA encoder with Longformer decoder |
+| `train_NTTransgenic.py` | Training with Nucleotide Transformer encoder |
+| `train_HyenaT5Transgenic.py` | T5 decoder with HyenaDNA encoder |
+| `train_NTT5Transgenic.py` | T5 decoder with Nucleotide Transformer encoder |
+| `train_HyenaSegment.py` | Segmentation model training with HyenaDNA |
+| `train_NTSegment.py` | Segmentation model training with Nucleotide Transformer |
+| `train_HyenaMLM.py` | Masked language model pretraining |
+
+### Training Workflow
+
+#### 1. Prepare Training Data
+
+Create a DuckDB database from your genome FASTA and sorted GFF3 annotation files using the preprocessing utilities:
+
+```python
+from transgenic.datasets.preprocess import genome2GSFDataset
+
+# For training data (includes GSF labels)
+genome2GSFDataset(
+    genome="genome.fasta",
+    gff3="annotations.sorted.gff3",
+    db="training_data.db",
+    anoType="gff",
+    mode="train",
+    maxLen=49152,        # Max sequence length (49,152bp = 8,192 tokens)
+    addExtra=200,        # Random buffer for UTR boundaries
+    staticSize=6144,     # Sequences padded to multiples of this size
+    addRC=True,          # Add reverse complement augmentation
+    addRCIsoOnly=True,   # Only augment genes with alternative splicing
+    clean=True           # Validate CDS start/stop codons
+)
+
+# Append additional genomes to the same database
+genome2GSFDataset(
+    genome="genome2.fasta",
+    gff3="annotations2.sorted.gff3",
+    db="training_data.db",  # Same database
+    ...
+)
+```
+
+#### 2. Configure and Run Training
+
+Edit the training script to set your database path and hyperparameters:
+
+```python
+# In train/train_HyenaTransgenic.py
+db = "training_data.db"
+dt = GFFTokenizer()
+ds = isoformDataHyena(db, dt, mode="training", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf")
+train_data, eval_data, test_data = torch.utils.data.random_split(ds, [train_size, eval_size, test_size])
+
+trainTransgenicFCGAccelerate(
+    train_data,
+    eval_data,
+    lr=5e-5,
+    num_epochs=10,
+    schedule_lr=True,
+    eval=True,
+    batch_size=1,
+    accumulation_steps=128,  # Effective batch size = batch_size * accumulation_steps
+    checkpoint_path="checkpoints/",
+    max_grad_norm=1.0,
+    log_wandb=True
+)
+```
+
+#### 3. Launch Training
+
+```bash
+# Single GPU
+python train/train_HyenaTransgenic.py
+
+# Multi-GPU with Accelerate
+accelerate launch train/train_HyenaTransgenic.py
+```
+
+#### 4. Monitor Training
+
+Training metrics are logged to Weights & Biases:
+- Loss and perplexity per step/epoch
+- Gradient norms for each layer
+- Learning rate schedule
+
+### Key Hyperparameters
+
+The pretrained models used:
+- **Learning rate**: 5e-5
+- **Effective batch size**: 96-128 (via gradient accumulation)
+- **Mixed precision**: BF16
+- **Optimizer**: AdamW with weight decay 0.02
+- **Scheduler**: Linear warmup
+- **Gradient clipping**: max norm 1.0
+- **Input length**: Multiples of 6,144nt (max 49,152nt)
 
 ## Test Scripts
 
@@ -362,3 +427,9 @@ The `scripts/` folder contains utility scripts:
 | `gff2gsf.py` | Convert GFF3 annotations to GSF format |
 | `install_ml_stack_gb10.sh` | Install PyTorch + HuggingFace stack for GB10 ARM |
 | `test_torch_cuda_gb10.py` | CUDA verification test for GB10 |
+
+## License
+
+This project is licensed under the [Creative Commons Attribution-NoDerivatives 4.0 International License (CC-BY-ND 4.0)](https://creativecommons.org/licenses/by-nd/4.0/).
+
+You are free to share and redistribute the material for any purpose, including commercially, as long as you give appropriate credit and do not distribute modified versions.

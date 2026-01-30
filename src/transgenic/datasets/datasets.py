@@ -113,21 +113,14 @@ class isoformDataHyena(Dataset):
 
 		# Tokenize labels
 		if self.mode == "train":
-			labels = self.dt.batch_encode_plus(
-				[gff],
-				return_tensors="pt",
-				padding=True,
-				truncation=True,
-				add_special_tokens=True,
-				max_length=self.maxlength)["input_ids"]
-		
-			# Ensure labels are less than the maxlength
-			if labels.shape[1] >= self.maxlength:
-				labels = torch.cat((labels[:, 0:(self.maxlength-1)], torch.tensor([[self.decoder_tokenizer.vocab["</s>"]]])), dim=1)
-				#print(f"Warning {gm} label truncated to {self.maxlength} tokens", file=sys.stderr)
+			tokens = self.dt._tokenize(gff)
+			token_ids = [self.dt._convert_token_to_id(t) for t in tokens]
+			if len(token_ids) > self.maxlength:
+				token_ids = token_ids[:self.maxlength-1] + [self.dt.vocab["</s>"]]
+			labels = torch.tensor([token_ids])
 
 		# Tokenize the input sequences and remove the [SEP] token
-		seqs = self.encoder_tokenizer.batch_encode_plus([region_seq], return_tensors="pt")
+		seqs = self.encoder_tokenizer(region_seq, return_tensors="pt")
 		seqs["input_ids"] = seqs["input_ids"][:, :-1]
 
 		attention_mask = (seqs["input_ids"] != self.encoder_tokenizer.pad_token_id)
