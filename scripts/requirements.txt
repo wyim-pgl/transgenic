@@ -1,0 +1,37 @@
+# Core Python
+packaging
+setuptools
+wheel
+
+# Scientific stack
+numpy
+pandas
+scipy
+matplotlib
+sympy
+
+# Utilities
+pyyaml
+requests
+tqdm
+filelock
+fsspec
+networkx
+pillow
+regex
+typing_extensions
+jinja2
+
+# Hugging Face ecosystem
+transformers
+datasets
+tokenizers
+accelerate
+safetensors
+huggingface_hub
+
+# Training / fine-tuning
+wandb
+einops
+peft
+

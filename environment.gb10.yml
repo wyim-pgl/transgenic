@@ -1,0 +1,36 @@
+name: transgenic-gb10
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - setuptools
+  - wheel
+  - packaging
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  - pyyaml
+  - requests
+  - tqdm
+  # HuggingFace ecosystem
+  - transformers
+  - datasets
+  - tokenizers
+  - accelerate
+  - safetensors
+  - huggingface_hub
+  # Training utilities
+  - wandb
+  - einops
+  - peft
+  # Additional deps from original env
+  - filelock
+  - fsspec
+  - networkx
+  - pillow
+  - regex
+  - typing_extensions
+  - sympy
+  - jinja2

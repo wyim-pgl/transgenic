@@ -44,9 +44,9 @@ def beamSearch(batch, iter=1, maxiter=5):
 					do_sample=True,
 					decoder_input_ids = None
 				)
-		pred = dt.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
-		true = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
-		sequence = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True)[0].replace(" ", "")
+		pred = dt.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True, clean_up_tokenization_spaces=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+		true = dt.batch_decode(batch[2].detach().cpu().numpy(), skip_special_tokens=True, clean_up_tokenization_spaces=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+		sequence = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True, clean_up_tokenization_spaces=True)[0].replace(" ", "")
 		probabilities = torch.sigmoid(model.transgenic.encoder.segmentation_logits.detach().cpu()).squeeze()
 		#pp = PredictionProcessor(pred, sequence, probabilities)
 		#pp.postProcessPrediction(buff=200, usingSeqFeature=True)
@@ -62,9 +62,9 @@ def greedySearch(batch):
 					num_return_sequences=1, 
 					max_length=2048
 				)
-		pred = dt.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
-		true = dt.batch_decode(batch[3].detach().cpu().numpy(), skip_special_tokens=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
-		sequence = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True)[0].replace(" ", "")
+		pred = dt.batch_decode(outputs.detach().cpu().numpy(), skip_special_tokens=True, clean_up_tokenization_spaces=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+		true = dt.batch_decode(batch[3].detach().cpu().numpy(), skip_special_tokens=True, clean_up_tokenization_spaces=True)[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+		sequence = ds.encoder_tokenizer.batch_decode(batch[0].detach().cpu().numpy(), skip_special_tokens=True, clean_up_tokenization_spaces=True)[0].replace(" ", "")
 		probabilities = torch.nn.functional.softmax(model.transgenic.encoder.segmentation_logits.detach().cpu(), dim=-1)[...,0].squeeze()[0:len(sequence), (0,1,2,3,4,5,6,7,8)]
 		#pp = PredictionProcessor(pred, sequence, probabilities)
 		#pp.postProcessPrediction(buff=200)
