@@ -366,7 +366,55 @@ genome2GSFDataset(
 )
 ```
 
-### Using the CLI Script
+### Using the Database Creation Script
+
+For building databases from the command line without writing Python, use `scripts/create_database.py`:
+
+```bash
+# Single species (training with augmentation)
+python scripts/create_database.py \
+    --fasta Arabidopsis_thaliana.fa \
+    --gff Arabidopsis_thaliana.sorted.gff3 \
+    --output train.db --mode train \
+    --add-extra 200 --add-rc-iso-only --clean
+
+# Multi-species (9 plant genomes in one command)
+python scripts/create_database.py \
+    --fasta At.fa Os.fa Gm.fa Sb.fa Pt.fa Bd.fa Vv.fa Si.fa Pp.fa \
+    --gff   At.gff3 Os.gff3 Gm.gff3 Sb.gff3 Pt.gff3 Bd.gff3 Vv.gff3 Si.gff3 Pp.gff3 \
+    --output 9species_train.db --mode train \
+    --add-extra 200 --add-rc-iso-only --clean
+
+# Inference database (no labels)
+python scripts/create_database.py \
+    --fasta Zea_mays.fa \
+    --gff Zea_mays.sorted.gff3 \
+    --output predict.db --mode predict
+
+# Append more species to an existing database
+python scripts/create_database.py \
+    --fasta Zea_mays.fa \
+    --gff Zea_mays.sorted.gff3 \
+    --output 9species_train.db --mode train --append
+```
+
+**Key options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--fasta` | (required) | One or more genome FASTA files |
+| `--gff` | (required) | Matching sorted GFF3 files (same count and order as `--fasta`) |
+| `--output` | (required) | Output DuckDB file path |
+| `--mode` | `train` | `train` (includes GSF labels) or `predict` (sequences only) |
+| `--add-extra` | `0` | Random flanking buffer in bp (recommended: 200 for training) |
+| `--add-rc` | off | Add reverse complement copies of all genes |
+| `--add-rc-iso-only` | off | Add RC only for multi-isoform genes (mutually exclusive with `--add-rc`) |
+| `--clean` | off | Validate CDS integrity and skip invalid genes |
+| `--static-size` | `6144` | Pad sequences to multiples of this size |
+| `--max-len` | `49152` | Skip genes exceeding this padded length |
+| `--append` | off | Append to existing database instead of overwriting |
+
+### Using the Inference CLI Script
 
 For a complete inference pipeline (database creation + model inference + GFF3 output), use the command-line script:
 
@@ -588,6 +636,7 @@ The `scripts/` folder contains utility scripts:
 | Script | Description |
 |--------|-------------|
 | `check_system.sh` | Check system architecture and GPU for environment selection |
+| `create_database.py` | Create DuckDB databases from FASTA + GFF3 pairs (single or multi-species) |
 | `gff2gsf.py` | Convert GFF3 annotations to GSF format |
 | `install_ml_stack_gb10.sh` | Install PyTorch + HuggingFace stack for GB10 ARM |
 | `test_torch_cuda_gb10.py` | CUDA verification test for GB10 |
@@ -627,6 +676,17 @@ agat_convert_sp_gxf2gxf.pl -g annotation.gff3 -o annotation.sorted.gff3
 ```
 
 ### Step 2: Build DuckDB Database
+
+Use the CLI script for a quick command-line workflow, or call the Python API directly for more control:
+
+```bash
+# CLI: multi-species training database in one command
+python scripts/create_database.py \
+    --fasta At.fa Os.fa Gm.fa Sb.fa Pt.fa Bd.fa Vv.fa Si.fa Pp.fa \
+    --gff   At.gff3 Os.gff3 Gm.gff3 Sb.gff3 Pt.gff3 Bd.gff3 Vv.gff3 Si.gff3 Pp.gff3 \
+    --output training_10G.db --mode train \
+    --add-extra 200 --add-rc-iso-only --clean
+```
 
 The `genome2GSFDataset()` function converts FASTA + GFF3 into a DuckDB database. Internally, it:
 
