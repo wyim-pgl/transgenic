@@ -58,6 +58,12 @@ class LegacyCacheWrapper:
 	This wrapper bridges the two interfaces.
 	"""
 	def __init__(self, past_key_values):
+		"""Initialize the cache wrapper around a tuple-based KV cache.
+
+		Args:
+			past_key_values: Tuple of per-layer (key, value) tensor pairs,
+				or None if no cache exists.
+		"""
 		self._past = past_key_values
 
 	def get_seq_length(self, layer_idx=0):
@@ -68,12 +74,15 @@ class LegacyCacheWrapper:
 		return self._past[0][0].shape[2]
 
 	def __iter__(self):
+		"""Iterate over per-layer cache entries, yielding (key, value) tensor pairs."""
 		return iter(self._past)
 
 	def __getitem__(self, idx):
+		"""Return the cached (key, value) tensor pair for a given layer index."""
 		return self._past[idx]
 
 	def __len__(self):
+		"""Return the number of cached layers, or 0 if no cache exists."""
 		return len(self._past) if self._past else 0
 
 	def to_legacy_cache(self):
@@ -349,6 +358,15 @@ class HyenaEncoder(nn.Module):
 	length n — enabling processing of sequences up to 1M nucleotides.
 	"""
 	def __init__(self, config):
+		"""Initialize the HyenaDNA encoder from a TransGenic config.
+
+		Loads the HyenaDNA architecture and overrides its max sequence
+		length, hidden dimension, and layer count from the TransGenic config.
+
+		Args:
+			config: HyenaTransgenicConfig with encoder_model, max_encoder_seqlen,
+				d_model, and encoder_n_layer fields.
+		"""
 		super().__init__()
 
 		# Load HyenaDNA configuration and override with TransGenic settings
@@ -448,6 +466,16 @@ class transgenicModel(TransgenicPreTrainedModel):
 	_tied_weights_keys = ["decoder_embed_tokens.weight", "decoder.embed_tokens.weight"]
 
 	def __init__(self, config):
+		"""Initialize the encoder-decoder backbone.
+
+		Constructs the HyenaDNA encoder, sinusoidal positional embedding,
+		Conv1d downsampler (6x compression), and Longformer sliding-window
+		decoder. The decoder operates at 2*d_model hidden dimension to
+		match the expanded downsampled encoder output.
+
+		Args:
+			config: HyenaTransgenicConfig instance with model hyperparameters.
+		"""
 		super().__init__(config)
 
 		padding_idx, vocab_size = config.pad_token_id, config.vocab_size
