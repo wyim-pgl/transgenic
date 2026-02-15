@@ -16,6 +16,28 @@ Example:
 
 import argparse
 import os
+import sys
+import warnings
+import threading
+
+# Suppress all warnings and HuggingFace noise BEFORE imports
+warnings.filterwarnings("ignore")
+os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
+os.environ["SAFETENSORS_FAST_GPU"] = "0"
+os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
+os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
+os.environ["HF_HUB_OFFLINE"] = "1"  # Use cached models only
+os.environ["TRANSFORMERS_OFFLINE"] = "1"  # Prevent transformers from checking HF Hub
+
+import logging
+logging.getLogger("transformers").setLevel(logging.CRITICAL)
+logging.getLogger("huggingface_hub").setLevel(logging.CRITICAL)
+logging.getLogger("safetensors").setLevel(logging.CRITICAL)
+
+# Suppress thread exceptions (e.g., safetensors auto-conversion)
+threading.excepthook = lambda args: None
+
 import torch
 from tqdm import tqdm
 from torch.utils.data import DataLoader
@@ -64,8 +86,8 @@ def parse_args():
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=1,
-        help="Batch size for inference (default: 1)"
+        default=32,
+        help="Batch size for inference (default: 32)"
     )
     parser.add_argument(
         "--max-length",
@@ -96,45 +118,55 @@ def parse_args():
         action="store_true",
         help="Skip database creation if it already exists"
     )
+    parser.add_argument(
+        "--quiet", "-q",
+        action="store_true",
+        help="Suppress parsing error messages"
+    )
     return parser.parse_args()
 
 
-def get_decoder_input_ids(labels: torch.Tensor, device: torch.device) -> torch.Tensor:
+def get_single_decoder_input_ids(labels_list: list) -> list:
     """
     Extract elements of the first transcript to use as decoder input IDs.
-
-    This parses the label sequence to find the first transcript's features,
-    which are then used to condition the model to generate additional isoforms.
-
-    Args:
-        labels: Tensor of label token IDs
-        device: Device to place the output tensor on
-
-    Returns:
-        Tensor of decoder input IDs for the first transcript
+    Returns a list of integers (token IDs).
     """
-    labs = ",".join([str(i) for i in labels.tolist()[0]])
+    labs = ",".join([str(i) for i in labels_list])
 
     # Token 17 separates transcripts, token 21 separates features
-    last_element = labs.split(",17,")[1].split(",21,")[0].split(",")[-1]
-
     try:
+        last_element = labs.split(",17,")[1].split(",21,")[0].split(",")[-1]
         last_element_index = [
             f",{last_element}," in i
             for i in labs.split(",17,")[0].split(",21,")
         ].index(True)
-    except ValueError:
+    except (ValueError, IndexError):
         last_element_index = len(labs.split(",17,")[0].split(",21,")) - 1
 
     # Reconstruct the first transcript's token sequence
     first_transcript = ",21,".join(
         labs.split(",17,")[0].split(",21,")[0:last_element_index + 1]
     )
-    decoder_ids = torch.tensor(
-        list(map(int, first_transcript.split(",")))
-    ).unsqueeze(0).to(device)
+    return list(map(int, first_transcript.split(",")))
 
-    return decoder_ids
+
+def get_batch_decoder_input_ids(labels: torch.Tensor, device: torch.device, pad_token_id: int = 0) -> torch.Tensor:
+    """
+    Extract decoder input IDs for a batch of labels.
+    Pads to the max length in the batch.
+    """
+    batch_ids = []
+    for i in range(labels.shape[0]):
+        ids = get_single_decoder_input_ids(labels[i].tolist())
+        batch_ids.append(ids)
+
+    # Pad to max length
+    max_len = max(len(ids) for ids in batch_ids)
+    padded = []
+    for ids in batch_ids:
+        padded.append(ids + [pad_token_id] * (max_len - len(ids)))
+
+    return torch.tensor(padded, device=device)
 
 
 def main():
@@ -171,6 +203,9 @@ def main():
     model.to(device)
     model.eval()
 
+    # Enable optimizations
+    torch.backends.cudnn.benchmark = True
+
     # Initialize dataset and dataloader
     print("Initializing dataset...")
     ds_comp = isoformDataHyena(db_path, mode="train")
@@ -190,6 +225,12 @@ def main():
     # Prediction loop
     print(f"Generating predictions...")
     total = args.num_sequences or len(dl_comp)
+    error_count = 0
+
+    # Redirect stderr if quiet mode
+    if args.quiet:
+        stderr_backup = sys.stderr
+        sys.stderr = open(os.devnull, 'w')
 
     for step, batch in enumerate(tqdm(dl_comp, total=total)):
         if args.num_sequences and step >= args.num_sequences:
@@ -198,13 +239,14 @@ def main():
         # Unpack batch: input_ids, attention_mask, labels, gene_model, chrom, start
         ii = batch[0].to(device)
         am = batch[1].to(device)
-        lab = batch[2].to(device)
-        gene_model = batch[3][0]
-        chrom = batch[4][0]
-        start = batch[5][0]
+        lab = batch[2]
+        gene_models = batch[3]
+        chroms = batch[4]
+        starts = batch[5]
+        batch_size = ii.shape[0]
 
-        # Get decoder input IDs from first transcript
-        dii = get_decoder_input_ids(lab, device)
+        # Get decoder input IDs for the batch
+        dii = get_batch_decoder_input_ids(lab, device)
 
         # Generate annotation with beam search
         with torch.no_grad():
@@ -214,26 +256,40 @@ def main():
                 num_return_sequences=1,
                 max_length=args.max_length,
                 num_beams=args.num_beams,
-                do_sample=True,
+                do_sample=False,
                 decoder_input_ids=dii,
-                use_cache=False
+                use_cache=True
             )
 
-        # Decode the output to GSF
-        pred = gffTokenizer.batch_decode(
+        # Decode the outputs to GSF
+        preds = gffTokenizer.batch_decode(
             outputs.detach().cpu().numpy(),
             skip_special_tokens=True
-        )[0].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+        )
 
-        # Convert the GSF to GFF3
-        gff = gffString2GFF3(pred, chrom, start, f"GM={gene_model}")
+        # Process each sample in the batch
+        for i in range(batch_size):
+            pred = preds[i].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+            gff = gffString2GFF3(pred, chroms[i], starts[i], f"GM={gene_models[i]}")
 
-        # Write the GFF3 output
-        with open(args.output, "a") as f:
-            for line in gff:
-                f.write(line + "\n")
+            # Track parsing errors
+            if gff == [""] or gff == []:
+                error_count += 1
+
+            # Write the GFF3 output (skip empty results from parsing errors)
+            with open(args.output, "a") as f:
+                for line in gff:
+                    if line:
+                        f.write(line + "\n")
+
+    # Restore stderr if quiet mode
+    if args.quiet:
+        sys.stderr.close()
+        sys.stderr = stderr_backup
 
     print(f"Output written to: {args.output}")
+    if error_count > 0:
+        print(f"Parsing errors: {error_count}/{total} sequences skipped")
 
 
 if __name__ == "__main__":

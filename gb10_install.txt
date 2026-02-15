@@ -2,5 +2,5 @@ conda create -n transgenic python=3.12
 conda activate transgenic
 pip install --pre torch torchvision torchaudio   --index-url https://download.pytorch.org/whl/nightly/cu128
 pip install -r requirements.txt
-export TORCHINDUCTOR_DISABLE=1
+# TORCHINDUCTOR_DISABLE removed – torch.compile now uses safe fallback chain
 export CUDA_VISIBLE_DEVICES=0

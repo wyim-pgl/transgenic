@@ -1,7 +1,13 @@
 #!/usr/bin/env python
-import torch, os, wandb, gc, time, sys, math, json, argparse
+import os
+# These env vars must be set before importing torch (read at CUDA init time)
+os.environ['HF_HOME'] = './HFmodels'
+os.environ.setdefault('PYTORCH_CUDA_ALLOC_CONF', 'backend:cudaMallocAsync')
+
+import torch, wandb, gc, time, sys, math, json, argparse
 from tqdm import tqdm
 import torch.optim as optim
+import bitsandbytes as bnb
 from torch.nn.utils import clip_grad_norm_
 from transformers import get_linear_schedule_with_warmup
 from accelerate import Accelerator
@@ -12,8 +18,6 @@ from transgenic.datasets.datasets import isoformData, isoformDataHyena, makeData
 from transgenic.model.tokenization_transgenic import GFFTokenizer
 from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration
 from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
-
-os.environ['HF_HOME'] = './HFmodels'
 
 def linear_decay(step, total_steps, start_value=0.5, end_value=0.0):
 	if step >= total_steps:
@@ -104,15 +108,19 @@ def trainTransgenicFCGAccelerate(
 
 	print(f"Training transgenic with Hyena. {checkpoint_path=} {output_dir=}", file=sys.stderr)
 
+	# Enable TF32 for matmul on Blackwell tensor cores
+	torch.set_float32_matmul_precision('high')
+	torch.backends.cudnn.benchmark = True
+
 	accelerator = Accelerator(mixed_precision="fp16")
 	device = accelerator.device
 	print(f"Using: {device}", file=sys.stderr)
-	
+
 	# Set up DataLoaders
 	torch.manual_seed(234)
 	torch.cuda.manual_seed_all(234)
-	train_dl = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
-	eval_dl = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
+	train_dl = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=8, collate_fn=hyena_collate_fn, persistent_workers=True)
+	eval_dl = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=8, collate_fn=hyena_collate_fn, persistent_workers=True)
 	
 	# Larger model size (roughly 3x params vs d_model=768, layers=12):
 	# (1152/768)^2 * (16/12) ~= 3.0
@@ -145,7 +153,19 @@ def trainTransgenicFCGAccelerate(
 	model.to(device)
 	model.train()
 
-	
+	# torch.compile – use "default" mode to avoid Triton OOM on GB10 (limited SMs).
+	# Falls back to aot_eager (no Triton) or no-compile if compilation fails.
+	if not os.environ.get("TORCHINDUCTOR_DISABLE"):
+		try:
+			model = torch.compile(model, mode="default")
+			print("Model compiled with torch.compile (default mode).", file=sys.stderr)
+		except Exception as e:
+			try:
+				model = torch.compile(model, backend="aot_eager")
+				print(f"torch.compile default failed ({e}); using aot_eager backend.", file=sys.stderr)
+			except Exception as e2:
+				print(f"Warning: torch.compile failed entirely; continuing without compile: {e2}", file=sys.stderr)
+
 	#for param in model.transgenic.encoder.parameters():
 	#	param.requires_grad = False
 
@@ -158,8 +178,8 @@ def trainTransgenicFCGAccelerate(
 	#	else:
 	#		pretrained_params.append(param)
 
-	# Setup the optimizer
-	optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=0.02)
+	# Setup the optimizer (8-bit AdamW reduces optimizer memory footprint)
+	optimizer = bnb.optim.AdamW8bit(model.parameters(), lr=lr, weight_decay=0.02)
 	#optimizer = optim.AdamW([
 	#	{'params': pretrained_params, 'lr': lr / 2},
 	#	{'params': new_params, 'lr': lr}
@@ -171,11 +191,13 @@ def trainTransgenicFCGAccelerate(
 	t_total = steps_per_epoch * num_epochs
 	lr_scheduler = None
 	if schedule_lr:
+		warmup_steps = int(t_total * 0.05)
 		lr_scheduler = get_linear_schedule_with_warmup(
 		optimizer=optimizer,
-		num_warmup_steps=0,#t_total*0.05,
+		num_warmup_steps=warmup_steps,
 		num_training_steps=t_total
 		)
+		print(f"LR schedule: {warmup_steps} warmup steps, {t_total} total steps", file=sys.stderr)
 
 	# Prepare with accelerator
 	if lr_scheduler is None:
@@ -217,9 +239,7 @@ def trainTransgenicFCGAccelerate(
 		for epoch in range(start_epoch, num_epochs):
 			total_loss = 0
 			for step, batch in enumerate(tqdm(train_dl, miniters=10, disable=False)):
-				if 'Zm' in batch[3][0]: 
-					continue
-
+				# 'Zm' genes are now filtered at dataset level via exclude_prefix
 				ii, am, lab = batch[0].to(device), batch[1].to(device), batch[2].to(device)
 				#if ii.shape[1] > 49000:
 				#	continue
@@ -332,7 +352,7 @@ if __name__ == '__main__':
 	torch.manual_seed(123)
 
 	db = args.db
-	ds = isoformDataHyena(db, mode="train", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False)
+	ds = isoformDataHyena(db, mode="train", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix="Zm")
 	total = len(ds)
 	train_size = int(total * 0.75)
 	eval_size = int(total * 0.10)
