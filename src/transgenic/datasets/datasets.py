@@ -492,4 +492,5 @@ def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=Non
 		batch_size=batch_size, 
 		pin_memory=pin_memory,
 		sampler=sampler,
-		num_workers=num_workers)
+		num_workers=num_workers,
+		prefetch_factor=128,)
