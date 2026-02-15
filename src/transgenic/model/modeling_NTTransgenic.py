@@ -1,3 +1,38 @@
+"""
+Nucleotide Transformer (NT) variant of the TransGenic model for genome annotation.
+
+This module implements a sequence-to-sequence architecture that uses a pre-trained
+Nucleotide Transformer (NT) / ESM model as the DNA encoder and either a Longformer
+(LED) or T5 decoder to generate GFF-format gene annotations from raw nucleotide
+sequences.
+
+Key architectural differences from the HyenaDNA variant (modeling_transgenic.py):
+  - Encoder: Uses ESM / Nucleotide Transformer instead of HyenaDNA for DNA encoding.
+    The NT model has a fixed 1024-token context window, so long sequences are split
+    into 1024-token segments and processed independently before being reassembled.
+  - Dimension projection: A learned Linear layer (hidden_mapping) projects the NT
+    hidden dimension to 768 to match the Longformer decoder's expected input size.
+  - Optional segmentation: An optional U-Net head (from InstaDeep's SegmentNT)
+    predicts per-nucleotide genomic features (exon, intron, splice sites, etc.).
+  - FiLM conditioning: A Feature-wise Linear Modulation layer can condition the
+    encoder output on the segmentation probabilities (currently commented out but
+    kept for future experimentation).
+  - T5 decoder variant: In addition to the LED-based decoder, a T5-based decoder
+    variant is provided for comparison experiments.
+
+Module structure:
+  - Helper function: shift_tokens_right
+  - Positional embedding: LEDLearnedPositionalEmbedding
+  - FiLM layer: FiLMLayer
+  - Output dataclasses: LEDSeq2SeqLMOutput, LEDSeq2SeqModelOutput
+  - Numerical embedding: NumberMaskEmbedTokens
+  - NT encoder wrapper: segmented_sequence_embeddings
+  - LED-based model: transgenicModel / transgenicForConditionalGeneration
+  - T5-based model: transgenicModelT5 / transgenicForConditionalGenerationT5
+  - RLHF wrapper: TransgenicWithValueHead
+  - Loss functions: HausdorffDistanceLoss, BoundaryLoss, numeric_token_loss, HybridLoss
+"""
+
 import sys, re, os, json
 from typing import List, Optional, Tuple, Union
 import torch
@@ -9,9 +44,27 @@ from dataclasses import dataclass
 from configuration_transgenic import NTTransgenicConfig
 from trl import AutoModelForSeq2SeqLMWithValueHead
 
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
 def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
 	"""
-	Shift input ids one token to the right.
+	Shift input ids one token to the right for teacher-forced decoder input.
+
+	During training, the decoder receives the target sequence shifted right by one
+	position so that each decoder time-step predicts the next token. The first
+	position is filled with ``decoder_start_token_id`` (typically <s> or <pad>),
+	and any -100 ignore-index values (used by HuggingFace to mask loss) are
+	replaced with ``pad_token_id`` so they form valid embedding lookups.
+
+	Args:
+		input_ids: Target token IDs of shape (batch_size, seq_len).
+		pad_token_id: Token ID used for padding.
+		decoder_start_token_id: Token ID inserted at position 0 to start decoding.
+
+	Returns:
+		shifted_input_ids: Right-shifted version of input_ids, same shape.
 	"""
 	shifted_input_ids = input_ids.new_zeros(input_ids.shape)
 	shifted_input_ids[:, 1:] = input_ids[:, :-1].clone()
@@ -24,10 +77,19 @@ def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start
 
 	return shifted_input_ids
 
-#Copied from transformers.models.led.modeling_led.py
+# =============================================================================
+# Positional Embedding (from LED / Longformer)
+# =============================================================================
+
+# Copied from transformers.models.led.modeling_led.py
 class LEDLearnedPositionalEmbedding(nn.Embedding):
 	"""
-	This module learns positional embeddings up to a fixed maximum size.
+	Learned positional embeddings up to a fixed maximum sequence length.
+
+	Unlike sinusoidal positional encodings, these embeddings are fully learned
+	parameters. This is the standard positional embedding used by the LED
+	(Longformer Encoder-Decoder) model. It is used here for the decoder side
+	of the TransGenic architecture.
 	"""
 
 	def __init__(self, num_embeddings: int, embedding_dim: int):
@@ -36,14 +98,49 @@ class LEDLearnedPositionalEmbedding(nn.Embedding):
 	def forward(self, input_ids_shape: torch.Size, past_key_values_length: int = 0):
 		"""`input_ids_shape` is expected to be [bsz x seqlen]."""
 		bsz, seq_len = input_ids_shape[:2]
+		# Create position indices starting from past_key_values_length to support
+		# incremental decoding (where earlier positions are cached)
 		positions = torch.arange(
 			past_key_values_length, past_key_values_length + seq_len, dtype=torch.long, device=self.weight.device
 		)
 		return super().forward(positions)
 
+# =============================================================================
+# Feature-wise Linear Modulation (FiLM) Layer
+# =============================================================================
+
 class FiLMLayer(nn.Module):
+	"""
+	Feature-wise Linear Modulation (FiLM) layer for conditioning encoder output
+	on segmentation probabilities.
+
+	FiLM modulates feature maps by applying a learned affine transformation
+	(scale gamma and shift beta) that is conditioned on an auxiliary input --
+	in this case, the per-nucleotide segmentation class probabilities. This
+	allows the decoder to be informed about predicted genomic feature boundaries
+	(exons, introns, splice sites) before generating the GFF annotation text.
+
+	The conditioning signal (segmentation probabilities) is passed through a
+	small MLP that outputs gamma and beta vectors of the same dimension as the
+	encoder output. The modulated output is: gamma * encoder_output + beta.
+
+	Args:
+		num_labels: Number of segmentation classes (input dimension for the
+			conditioning signal). Default 2 for binary splice-site labels.
+		hidden_dim: Hidden dimension of the conditioning MLP. Default 512.
+		output_dim: Dimension of the encoder output to modulate. Default 768
+			(matching the Longformer decoder hidden size).
+
+	Note:
+		This layer is currently not active in the forward pass (the FiLM
+		application is commented out in segmented_sequence_embeddings) but is
+		retained for future experimentation.
+	"""
+
 	def __init__(self, num_labels=2, hidden_dim=512, output_dim=768):
 		super(FiLMLayer, self).__init__()
+		# MLP that maps segmentation probabilities to gamma and beta vectors.
+		# Output is 2x output_dim because it is split into gamma and beta.
 		self.mlp = nn.Sequential(
 			nn.Linear(num_labels, hidden_dim),
 			nn.ReLU(),
@@ -53,18 +150,42 @@ class FiLMLayer(nn.Module):
 		self.dropout = nn.Dropout(0.2)
 
 	def forward(self, probabilities, encoder_output):
+		"""
+		Apply feature-wise linear modulation to the encoder output.
+
+		Args:
+			probabilities: Segmentation class probabilities of shape
+				(batch, seq_len, num_labels).
+			encoder_output: Encoder hidden states of shape
+				(batch, seq_len, output_dim).
+
+		Returns:
+			Modulated encoder output of the same shape as encoder_output.
+		"""
 		# probabilities: (n, t, m) -> (batch, seqlen, classes)
 		n, t, m = probabilities.size()
 		out = self.mlp(probabilities.view(-1, m))  # Flatten to (n*t, m)
 		out = out.view(encoder_output.shape[0], encoder_output.shape[1], -1)  # Reshape to match encoder_output
 		gamma, beta = out.chunk(2, dim=-1)  # Split into gamma and beta
+		# Apply affine transformation: scale by gamma and shift by beta
 		return self.dropout(gamma) * encoder_output + self.dropout(beta)
 
-#Copied from transformers.models.led.modeling_led.py
+# =============================================================================
+# Custom Output Dataclasses
+# =============================================================================
+# These extend the standard HuggingFace ModelOutput dataclasses with an
+# additional `segmentation_logits` field to carry U-Net segmentation predictions
+# alongside the standard seq2seq outputs through the model pipeline.
+
+# Copied from transformers.models.led.modeling_led.py, extended with segmentation_logits
 @dataclass
 class LEDSeq2SeqLMOutput(ModelOutput):
 	"""
-	Base class for sequence-to-sequence language models outputs.
+	Output dataclass for TransGenic conditional generation models (LM head variant).
+
+	Extends the standard LED seq2seq LM output with a ``segmentation_logits``
+	field that carries the per-nucleotide genomic feature predictions from the
+	optional U-Net segmentation head.
 
 	Args:
 		loss (`torch.FloatTensor` of shape `(1,)`, *optional*, returned when `labels` is provided):
@@ -114,6 +235,10 @@ class LEDSeq2SeqLMOutput(ModelOutput):
 			Global attentions weights after the attention softmax, used to compute the weighted average in the
 			self-attention heads. Those are the attention weights from every token with global attention to every token
 			in the sequence.
+		segmentation_logits (`torch.FloatTensor`, *optional*):
+			Per-nucleotide segmentation logits from the optional U-Net head, with shape
+			(batch_size, seq_len, num_seg_classes, 2). Present only when the model is
+			configured with ``do_segment=True``.
 	"""
 
 	loss: Optional[torch.FloatTensor] = None
@@ -128,12 +253,15 @@ class LEDSeq2SeqLMOutput(ModelOutput):
 	encoder_global_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
 	segmentation_logits: Optional[Tuple[torch.FloatTensor, ...]] = None
 
-#Copied from transformers.models.led.modeling_led.py
+# Copied from transformers.models.led.modeling_led.py, extended with segmentation_logits
 @dataclass
 class LEDSeq2SeqModelOutput(ModelOutput):
 	"""
-	Base class for model encoder's outputs that also contains : pre-computed hidden states that can speed up sequential
-	decoding.
+	Output dataclass for TransGenic base models (without LM head).
+
+	Extends the standard LED seq2seq model output with a ``segmentation_logits``
+	field. This is used by the base model classes (transgenicModel, transgenicModelT5)
+	that return decoder hidden states before the LM head projection.
 
 	Args:
 		last_hidden_state (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`):
@@ -184,6 +312,8 @@ class LEDSeq2SeqModelOutput(ModelOutput):
 			Global attentions weights after the attention softmax, used to compute the weighted average in the
 			self-attention heads. Those are the attention weights from every token with global attention to every token
 			in the sequence.
+		segmentation_logits (`torch.FloatTensor`, *optional*):
+			Per-nucleotide segmentation logits from the optional U-Net head.
 	"""
 
 	last_hidden_state: torch.FloatTensor = None
@@ -197,25 +327,78 @@ class LEDSeq2SeqModelOutput(ModelOutput):
 	encoder_global_attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
 	segmentation_logits: Optional[Tuple[torch.FloatTensor, ...]] = None
 
+# =============================================================================
+# Numerical Token Embedding Layer
+# =============================================================================
+
 class NumberMaskEmbedTokens(nn.Embedding):
+	"""
+	Token embedding layer with an additional learnable embedding for digit tokens.
+
+	In the GFF annotation output, genomic coordinates are represented as sequences
+	of digit tokens (token IDs 4-13, representing digits 0-9). Standard token
+	embeddings treat each digit as an independent symbol with no numerical
+	semantics. This layer adds a learned binary feature embedding on top of the
+	standard token embeddings to help the model distinguish digit tokens from
+	non-digit tokens and potentially learn numerical value relationships.
+
+	The binary mask is: 1 for digit tokens (IDs 4-13), 0 for all other tokens.
+	A 2-class embedding (nn.Embedding(2, embedding_dim)) maps this mask to a
+	dense vector that is added element-wise to the standard token embedding.
+
+	Note:
+		This class is currently not used in the active model configuration --
+		the standard nn.Embedding is used instead (see transgenicModel.__init__).
+		It is retained for experimental purposes.
+
+	Args:
+		num_embeddings: Size of the token vocabulary.
+		embedding_dim: Dimension of each token embedding vector.
+		padding_idx: Index of the padding token (default 0).
+	"""
+
 	def __init__(self, num_embeddings, embedding_dim, padding_idx=0):
 		super().__init__(num_embeddings, embedding_dim, padding_idx=padding_idx)
+		# Binary embedding: index 0 = non-digit token, index 1 = digit token
 		self.num_feature_embed = nn.Embedding(2, embedding_dim)
 
 	def forward(self, input_ids):
+		"""
+		Compute token embeddings with additive digit-token feature.
+
+		Args:
+			input_ids: Token IDs of shape (batch_size, seq_len).
+
+		Returns:
+			Token embeddings of shape (batch_size, seq_len, embedding_dim),
+			with the digit feature embedding added to digit token positions.
+		"""
 		# Create a mask for numerical tokens and embed it
 		num_mask = self.create_numerical_mask(input_ids)
 		num_mask = self.num_feature_embed(num_mask)
-		
+
 		# Generate embeddings for the input tokens
 		num_embeddings = super().forward(input_ids)
 
 		# Add the numerical mask to the embeddings
 		num_embeddings = num_embeddings + num_mask
-		
+
 		return num_embeddings
 
 	def create_numerical_mask(self, input_ids):
+		"""
+		Create a binary mask identifying digit tokens in the input.
+
+		Digit tokens have IDs in the range [4, 13], corresponding to the
+		characters '0' through '9' in the GFF annotation tokenizer.
+
+		Args:
+			input_ids: Token IDs of shape (batch_size, seq_len).
+
+		Returns:
+			Binary mask of shape (batch_size, seq_len) with dtype torch.long,
+			where 1 indicates a digit token and 0 indicates a non-digit token.
+		"""
 		# Create a binary mask where 1 indicates a numerical token and 0 otherwise
 		num_mask = torch.zeros_like(input_ids, dtype=torch.long)
 		for i, sentence in enumerate(input_ids):
@@ -224,7 +407,41 @@ class NumberMaskEmbedTokens(nn.Embedding):
 					num_mask[i,j] = 1
 		return num_mask
 
+# =============================================================================
+# Nucleotide Transformer Encoder with Optional Segmentation U-Net
+# =============================================================================
+
 class segmented_sequence_embeddings(EsmForMaskedLM):
+	"""
+	Nucleotide Transformer (NT) encoder wrapper with optional genomic segmentation.
+
+	This class wraps a pre-trained ESM/NT model to encode raw DNA sequences and
+	optionally runs a U-Net segmentation head (from InstaDeep's SegmentNT) to
+	predict per-nucleotide genomic features (exon, intron, UTR, splice sites, etc.).
+
+	Because the NT model has a fixed context window of 1024 tokens, long input
+	sequences are split into non-overlapping 1024-token segments. Each segment is
+	processed independently through the NT encoder, and the resulting hidden states
+	are concatenated back into the full sequence length. A learned linear projection
+	(hidden_mapping) then maps the NT hidden dimension to 768 to match the
+	Longformer decoder's expected input size.
+
+	When segmentation is enabled (do_segment=True), the U-Net components from a
+	pre-trained SegmentNT model are loaded and used to predict per-nucleotide
+	feature labels. The segmentation loss (BCEWithLogitsLoss with class-imbalance
+	weighting) is computed during training when ground-truth labels are provided.
+
+	Args:
+		e_model: Name or path of the pre-trained NT/ESM model (e.g.,
+			"InstaDeepAI/nucleotide-transformer-v2-500m-multi-species").
+		s_model: Name or path of the pre-trained SegmentNT model for the U-Net
+			segmentation head.
+		numSegClasses: Number of segmentation classes (e.g., 14 for the full
+			set of genomic feature types).
+		outputSize: Target output dimension for the decoder (default 768).
+		do_segment: Whether to enable the U-Net segmentation head.
+	"""
+
 	def __init__(self, e_model, s_model, numSegClasses, outputSize = 768, do_segment=False):
 		self.cache_dir = "./HFmodels"
 		self.encoder_model = e_model
@@ -233,45 +450,90 @@ class segmented_sequence_embeddings(EsmForMaskedLM):
 		self.do_segment = do_segment
 		config = AutoConfig.from_pretrained(self.encoder_model, is_decoder=False, trust_remote_code=True)
 		super().__init__(config)
-		
-		# TODO: Exlpore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
-		#TODO: Put into config - plants -> 1500, multispecies -> 1024, longformer -> 768
+
+		# Load the pre-trained NT/ESM encoder model for DNA sequence encoding
+		# TODO: Explore other options? (hidden states, BiLSTM, linear, attention, pooling, convolution)
+		# TODO: Put output size into config - plants -> 1500, multispecies -> 1024, longformer -> 768
 		self.esm = AutoModelForMaskedLM.from_pretrained(self.encoder_model, cache_dir=self.cache_dir, trust_remote_code=True)
+		# Linear projection: NT hidden dimension -> 768 (Longformer decoder dimension)
 		self.hidden_mapping = nn.Linear(config.hidden_size, 768)
 		self.hidden_mapping_layernorm = nn.LayerNorm(768, eps=1e-5)
-		
+
 		if do_segment:
+			# Load U-Net segmentation components from a pre-trained SegmentNT model
 			SegmentNT = AutoModel.from_pretrained(self.segmentation_model, trust_remote_code=True)
-			self.unet = SegmentNT.unet
-			self.uFC = SegmentNT.fc
-			self.uActivation = SegmentNT.activation_fn
+			self.unet = SegmentNT.unet                  # U-Net convolutional backbone
+			self.uFC = SegmentNT.fc                      # Final fully connected classification head
+			self.uActivation = SegmentNT.activation_fn   # Activation function (e.g., GELU)
 			#self.film = FiLMLayer(num_labels=2, hidden_dim=512, output_dim=768)
+			# Linear projection: NT hidden dimension -> 1024 (U-Net expected input dimension)
 			self.unet_mapping = nn.Linear(config.hidden_size, 1024)
 			self.unet_mapping_layernorm = nn.LayerNorm(1024, eps=1e-5)
 	
 	def forward(self, input_ids, attention_mask=None, segLabels=None, **kwargs):
+		"""
+		Encode DNA sequences through the NT model, optionally run segmentation.
+
+		The input DNA token sequence is split into 1024-token segments (the NT
+		context window size). Each segment is independently encoded by the NT
+		model. The resulting hidden states are concatenated, projected to the
+		decoder dimension via hidden_mapping, and optionally processed by the
+		segmentation U-Net.
+
+		Args:
+			input_ids: DNA token IDs of shape (batch_size, seq_len), where
+				seq_len must be a multiple of 1024.
+			attention_mask: Attention mask of shape (batch_size, seq_len).
+			segLabels: Optional ground-truth segmentation labels of shape
+				(batch_size, seq_len, num_seg_classes) for computing
+				segmentation loss during training.
+			**kwargs: Additional keyword arguments (passed through but unused).
+
+		Returns:
+			ModelOutput with fields:
+				- inputs_embeds: Projected encoder hidden states for the decoder,
+				  shape (batch_size, seq_len, 768).
+				- attention_mask: Reassembled attention mask, shape (batch_size, seq_len).
+				- seg_logits: Segmentation logits if do_segment=True, else None.
+				- seg_loss: Segmentation loss if do_segment=True and segLabels
+				  provided, else None.
+				- boundary_loss: Boundary loss (currently always None, placeholder
+				  for future Hausdorff-based boundary loss).
+		"""
+		# Handle unbatched input by adding a batch dimension
 		if len(input_ids.shape) == 1:
 			input_ids.unsqueeze(dim=0)
+
 		batch_size = input_ids.shape[0]
+		# Calculate number of 1024-token segments needed to cover the full sequence
 		num_segs = input_ids.shape[1] // 1024
+
+		# Reshape from (batch, seq_len) -> (batch, num_segments, 1024) for per-segment encoding
 		input_ids = input_ids.reshape(batch_size, int(num_segs), 1024)
 		attention_mask = attention_mask.reshape(batch_size, int(num_segs), 1024)
+
+		# Process each batch item through the NT encoder segment by segment
 		for i in range(batch_size):
-			#with torch.no_grad():
+			# Encode all segments for this batch item simultaneously
+			# (num_segs segments are treated as a batch of independent 1024-length sequences)
 			embeddings = self.esm(
 				input_ids[i, :, :],
 				attention_mask=attention_mask[i,:,:],
 				encoder_attention_mask=attention_mask[i,:,:],
 				output_hidden_states=True
-			)['hidden_states'][-1]
-			
+			)['hidden_states'][-1]  # Use the last hidden layer output
+
+			# Flatten segments back to a single sequence and accumulate across the batch
 			if i == 0:
 				batch_embeds = embeddings.reshape(1, num_segs*1024, -1)
 				batch_mask = attention_mask[i,:,:].reshape(1, num_segs*1024)
 			else:
 				batch_embeds = torch.cat((batch_embeds, embeddings.reshape(1, num_segs*1024, -1)), dim=0)
 				batch_mask = torch.cat((batch_mask, attention_mask[i,:,:].reshape(1, num_segs*1024)), dim=0)
-		
+
+		# Commented-out overlapping segment strategy: instead of simple concatenation,
+		# this would use overlapping windows (256-token overlap) and average the
+		# overlapping regions to reduce boundary artifacts between segments.
 		#if num_segs > 1:
 		#	batch_embeds = batch_embeds.reshape(num_segs, 1024, -1)
 		#	batch_mask = batch_mask.reshape(num_segs, 1024)
@@ -286,79 +548,95 @@ class segmented_sequence_embeddings(EsmForMaskedLM):
 		#			original_mask = torch.cat((original_mask, batch_mask[i, 256:]), dim=0)
 		#	batch_embeds = original_sequence.unsqueeze(dim=0)
 		#	batch_mask = original_mask.unsqueeze(dim=0)
-		# Use the last hidden state from the nucleotide encoder as input to the decoder
-		# Transform the encoder hidden states to match the decoder input size
-		decoder_inputs_embeds = self.hidden_mapping(batch_embeds)
-		decoder_inputs_embeds = self.hidden_mapping_layernorm(decoder_inputs_embeds) #self.hidden_mapping_layernorm(decoder_inputs_embeds)
 
+		# Project NT hidden states from NT hidden dimension -> 768 (decoder dimension)
+		# and apply layer normalization for training stability
+		decoder_inputs_embeds = self.hidden_mapping(batch_embeds)
+		decoder_inputs_embeds = self.hidden_mapping_layernorm(decoder_inputs_embeds)
+
+		# --- Optional segmentation U-Net branch ---
 		if self.do_segment:
-			# Use the last hidden state from the nucleotide encoder as input to the segmentation model
-			# sequence must be divisible by 2 raised to the power of the number of pooling layers
-			# Transform the encoder hidden states to match the decoder input size
+			# Project NT hidden states to the U-Net's expected input dimension (1024)
+			# Note: the U-Net requires the sequence length to be divisible by 2^(num_pooling_layers)
 			seg_inputs = self.unet_mapping(batch_embeds)
 			seg_inputs = self.unet_mapping_layernorm(seg_inputs)
-			
-			
-			# Invert the channels and sequence length channel
-			#seg_inputs = seg_inputs[:,1:,:] # Remove CLS token
+
+			# Transpose from (batch, seq_len, channels) -> (batch, channels, seq_len)
+			# because the 1D U-Net operates on the channel-first convention
 			seg_inputs = torch.transpose(seg_inputs, 2,1)
 
-			# Pass through UNET
+			# Pass through the U-Net and apply activation
 			x = self.uActivation(self.unet(seg_inputs))
 
-			# Invert the channels and sequence length channel
+			# Transpose back to (batch, seq_len, channels) for the classification head
 			x = torch.transpose(x, 2,1)
 
-			# Compute logits for the segmentation model
+			# Apply the final fully connected layer to produce per-nucleotide class logits
 			seg_logits = self.uFC(x)
 
-			# Final reshape to have logits per nucleotides, per feature
+			# Reshape U-Net output: the U-Net processes at a 6x reduced resolution,
+			# so we unfold the last dimension to recover per-nucleotide predictions.
+			# Final shape: (batch, seq_len, num_seg_classes, 2) where the last dim
+			# holds logits for the positive and negative class of each feature type.
 			seg_logits = torch.reshape(seg_logits, (seg_logits.shape[0], seg_logits.shape[1] * 6, self.numSegClasses, 2))
 
-			# Apply FILM layer to decoder_inputs_embeds using segmentation probabilities
-			#sl_aggregated = torch.nn.functional.softmax(seg_logits, dim=-1)[...,0].view(-1, 6, 1024, self.numSegClasses)[:,:,:,(4,5)] 
+			# Commented-out FiLM conditioning: this would use splice-site segmentation
+			# probabilities (classes 4,5) to modulate the encoder hidden states via FiLM,
+			# allowing the decoder to be explicitly conditioned on predicted splice sites.
+			#sl_aggregated = torch.nn.functional.softmax(seg_logits, dim=-1)[...,0].view(-1, 6, 1024, self.numSegClasses)[:,:,:,(4,5)]
 			#sl_aggregated = sl_aggregated.mean(dim=1)
 			#decoder_inputs_embeds = self.film(sl_aggregated, decoder_inputs_embeds)
 
-			# Compute segmentation loss if called for
+			# --- Compute segmentation loss during training ---
 			if segLabels != None:
 
-				# Define weight of positive splice junction classes to counteract class imbalance
+				# Positive class weights to address severe class imbalance for rare
+				# genomic features. Splice junction signals (classes 1, 8) are very
+				# sparse so they get 21x weight; donor/acceptor sites (classes 4, 5)
+				# get 7x weight.
 				pos_weight = torch.ones(self.numSegClasses)
 				pos_weight[[1,8]] = 21.0
 				pos_weight[[4,5]] = 7.0
 				pos_weight = pos_weight.to(segLabels.device)
 
-				# Define per-nucleotide weights to focus on basic genic features
+				# Per-class loss weights: the first 9 classes (core genic features)
+				# are weighted at 5.0; the remaining 5 classes (auxiliary features)
+				# are zeroed out to focus training on the primary annotation tasks.
 				weight = torch.Tensor((5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0))
 				weight = weight.to(segLabels.device)
 
-				# Define the loss function with pos_weight
+				# Binary cross-entropy loss with logits, incorporating both per-class
+				# positive weights and per-class loss weights
 				segLossFn = nn.BCEWithLogitsLoss(pos_weight=pos_weight, weight=weight)
 				#boundaryLossFn = BoundaryLoss()
+				# Truncate seg_logits to match segLabels length and take first binary
+				# prediction channel ([...,0])
 				seg_loss = segLossFn(seg_logits[:,0:segLabels.shape[1]][...,0], segLabels)
 				#boundary_loss = boundaryLossFn(seg_logits[:,0:segLabels.shape[1]], segLabels)
-				#seg_loss = None
 				boundary_loss = None
 			else:
 				seg_loss = None
 				boundary_loss = None
 
-
-			# Aggregate U-Net output and apply FiLM to the encoder hidden states
+			# Commented-out FiLM aggregation: alternative approach to condition decoder
+			# on segmentation by averaging U-Net logits across the 6-nucleotide blocks
+			# and applying FiLM modulation.
 			# TODO: portion embeddings into a batch for the film layer
-			#sl_aggregated = seg_logits[...,0].view(-1, 6, 1024, self.numSegClasses)  
+			#sl_aggregated = seg_logits[...,0].view(-1, 6, 1024, self.numSegClasses)
 			#sl_aggregated = sl_aggregated.mean(dim=1)
 			#decoder_inputs_embeds = self.film(decoder_inputs_embeds, sl_aggregated)
 		else:
 			seg_logits = None
 			seg_loss = None
 			boundary_loss = None
+
+		# Store segmentation logits as an instance attribute for external access
 		self.segmentation_logits = seg_logits
+
 		return ModelOutput(
-			inputs_embeds=decoder_inputs_embeds, 
-			attention_mask=batch_mask, 
-			seg_logits=seg_logits, 
+			inputs_embeds=decoder_inputs_embeds,
+			attention_mask=batch_mask,
+			seg_logits=seg_logits,
 			seg_loss=seg_loss,
 			boundary_loss=boundary_loss)
 
