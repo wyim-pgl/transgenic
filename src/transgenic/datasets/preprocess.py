@@ -62,7 +62,8 @@ def genome2GSFDataset(
 		staticSize=6144,
 		addRC=False,
 		addRCIsoOnly=False,
-		clean=False
+		clean=False,
+		speciesPrefix: str = ''
 	):
 	"""
 	Build a DuckDB database from a genome FASTA and GFF3/BED annotation file.
@@ -90,6 +91,9 @@ def genome2GSFDataset(
 		                    splicing (multiple mRNA transcripts).
 		clean (bool):       Validate CDS integrity (start/stop codons, reading
 		                    frame) before insertion; skip invalid genes.
+		speciesPrefix (str): Prefix to prepend to chromosome names (e.g., "Zm"
+		                    turns "Chr01" into "Zm_Chr01"). Useful for multi-species
+		                    databases to avoid chromosome name collisions. Default "".
 	"""
 	# Purpose:
 	#   Read a genome assembly and gff3 annotation file into a
@@ -119,6 +123,11 @@ def genome2GSFDataset(
 	# Load genome FASTA into a dict: {chromosome_name: sequence_string}
 	# ═══════════════════════════════════════════════════════════════
 	genome_dict = loadGenome(genome)
+
+	# Optionally prefix chromosome names to avoid collisions in multi-species DBs
+	# e.g., speciesPrefix="Zm" turns {"Chr01": "ATCG..."} into {"Zm_Chr01": "ATCG..."}
+	if speciesPrefix:
+		genome_dict = {f"{speciesPrefix}_{k}": v for k, v in genome_dict.items()}
 
 	# ═══════════════════════════════════════════════════════════════
 	# Connect to DuckDB and initialize the geneList table + row counter
@@ -178,6 +187,10 @@ def genome2GSFDataset(
 					attributes = f"ID={attributes};"
 					typ = 'gene'
 					phase = "."
+
+				# Prefix chromosome name for multi-species databases
+				if speciesPrefix:
+					chr = f"{speciesPrefix}_{chr}"
 
 				# In prediction mode, only process gene-level entries (skip CDS, UTR, mRNA)
 				# since we only need the sequence region, not the annotation labels

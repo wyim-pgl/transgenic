@@ -125,6 +125,20 @@ Examples:
         help="Annotation file format (default: gff).",
     )
 
+    # Species prefix
+    pfx = parser.add_argument_group("Species prefix (chromosome naming)")
+    pfx.add_argument(
+        "--species-prefix", type=str, nargs="*", default=None,
+        help="Prefix(es) to prepend to chromosome names (e.g., 'Zm' turns Chr01 into Zm_Chr01). "
+             "By default, the prefix is auto-derived from each FASTA filename "
+             "(e.g., Zm.fa → 'Zm'). Provide explicit values to override "
+             "(must match --fasta in count and order). Use --no-prefix to disable.",
+    )
+    pfx.add_argument(
+        "--no-prefix", action="store_true",
+        help="Do not add species prefix to chromosome names.",
+    )
+
     # Behavior
     parser.add_argument(
         "--append", action="store_true",
@@ -157,6 +171,22 @@ def main():
         print("Error: --add-rc and --add-rc-iso-only are mutually exclusive.", file=sys.stderr)
         sys.exit(1)
 
+    # Resolve species prefixes for chromosome naming
+    if args.no_prefix:
+        prefixes = [""] * len(args.fasta)
+    elif args.species_prefix is not None:
+        if len(args.species_prefix) != len(args.fasta):
+            print(
+                f"Error: --species-prefix ({len(args.species_prefix)} values) "
+                f"must match --fasta ({len(args.fasta)} files) in count.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        prefixes = args.species_prefix
+    else:
+        # Auto-derive from FASTA filenames: Zm.fa → "Zm", Arabidopsis_thaliana.fa → "Arabidopsis_thaliana"
+        prefixes = [os.path.splitext(os.path.basename(f))[0] for f in args.fasta]
+
     # Handle existing database
     if os.path.exists(args.output) and not args.append:
         print(f"Removing existing database: {args.output}", file=sys.stderr)
@@ -174,7 +204,7 @@ def main():
 
     # Process each genome/annotation pair
     total_start = time.time()
-    for i, (fasta, gff) in enumerate(zip(args.fasta, args.gff)):
+    for i, (fasta, gff, prefix) in enumerate(zip(args.fasta, args.gff, prefixes)):
         species = os.path.splitext(os.path.basename(fasta))[0]
         print(
             f"\n[{i+1}/{len(args.fasta)}] Processing {species}...",
@@ -182,6 +212,8 @@ def main():
         )
         print(f"  FASTA: {fasta}", file=sys.stderr)
         print(f"  GFF3:  {gff}", file=sys.stderr)
+        if prefix:
+            print(f"  Prefix: {prefix}_ (e.g., Chr01 → {prefix}_Chr01)", file=sys.stderr)
 
         t0 = time.time()
         genome2GSFDataset(
@@ -196,6 +228,7 @@ def main():
             addRC=args.add_rc,
             addRCIsoOnly=args.add_rc_iso_only,
             clean=args.clean,
+            speciesPrefix=prefix,
         )
         elapsed = time.time() - t0
         print(f"  Done in {elapsed:.1f}s", file=sys.stderr)
