@@ -284,7 +284,7 @@ The `genome2GSFDataset` function creates a `geneList` table with the following c
 | `start` | INT | 0-indexed start of the extracted sequence region in the chromosome |
 | `fin` | INT | End of the extracted sequence region (exclusive, Python-style) |
 | `strand` | VARCHAR | Gene strand: `+` or `-` |
-| `chromosome` | VARCHAR | Chromosome/scaffold name from the FASTA |
+| `chromosome` | VARCHAR | Chromosome/scaffold name (with optional species prefix, e.g., `Zm_Chr01`) |
 | `sequence` | VARCHAR | Extracted DNA sequence (gene + flanking buffer) |
 | `gff` | VARCHAR | GSF-formatted annotation string (NULL in predict mode) |
 | `static_fpb` | INT | Static 5' flanking buffer size (bp) |
@@ -413,6 +413,56 @@ python scripts/create_database.py \
 | `--static-size` | `6144` | Pad sequences to multiples of this size |
 | `--max-len` | `49152` | Skip genes exceeding this padded length |
 | `--append` | off | Append to existing database instead of overwriting |
+| `--species-prefix` | auto | Prefix(es) for chromosome names (see below) |
+| `--no-prefix` | off | Disable chromosome prefix entirely |
+
+#### Species Prefix (Chromosome Naming)
+
+When building multi-species databases, different species often share generic chromosome names like `Chr01`, `Chr02`, etc. To prevent collisions, `create_database.py` automatically prepends a species prefix derived from the FASTA filename:
+
+```
+Zm.fa  →  Chr01 becomes Zm_Chr01
+At.fa  →  Chr01 becomes At_Chr01
+```
+
+This is the **default behavior** — no extra flags needed:
+
+```bash
+# Auto-prefix: At.fa → At_Chr01, Os.fa → Os_Chr01, ...
+python scripts/create_database.py \
+    --fasta At.fa Os.fa Zm.fa \
+    --gff   At.gff3 Os.gff3 Zm.gff3 \
+    --output 3species.db --mode train
+```
+
+You can override the auto-derived prefix with explicit names:
+
+```bash
+# Manual prefix: Arabidopsis_Chr01, Rice_Chr01, Maize_Chr01
+python scripts/create_database.py \
+    --fasta At.fa Os.fa Zm.fa \
+    --gff   At.gff3 Os.gff3 Zm.gff3 \
+    --species-prefix Arabidopsis Rice Maize \
+    --output 3species.db --mode train
+```
+
+Or disable prefixing entirely (original behavior):
+
+```bash
+# No prefix: chromosome names stored as-is from the FASTA/GFF3
+python scripts/create_database.py \
+    --fasta Zm.fa --gff Zm.gff3 \
+    --output single.db --mode train --no-prefix
+```
+
+The `speciesPrefix` parameter is also available in the Python API:
+
+```python
+genome2GSFDataset(
+    genome="Zm.fa", gff3="Zm.sorted.gff3", db="multi.db",
+    mode="train", speciesPrefix="Zm"   # Chr01 → Zm_Chr01
+)
+```
 
 ### Using the Inference CLI Script
 
