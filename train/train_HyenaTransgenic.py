@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import torch, os, wandb, gc, time, sys, math, json
+import torch, os, wandb, gc, time, sys, math, json, argparse
 from tqdm import tqdm
 import torch.optim as optim
 from torch.nn.utils import clip_grad_norm_
@@ -322,11 +322,23 @@ def trainTransgenicFCGAccelerate(
 
 
 if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description="Train HyenaTransgenic model")
+	parser.add_argument("--db", type=str,
+		default="/home/framazan/data/Generation_10G_static6144_addExtra200_addRCIsoOnly_clean.db",
+		help="Path to DuckDB training database")
+	parser.add_argument("--no-wandb", action="store_true",
+		help="Disable Weights & Biases logging")
+	args = parser.parse_args()
+
 	torch.manual_seed(123)
 
-	db="/home/framazan/data/Generation_10G_static6144_addExtra200_addRCIsoOnly_clean.db"
+	db = args.db
 	ds = isoformDataHyena(db, mode="train", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False)
-	train_data, eval_data, test_data = torch.utils.data.random_split(ds, [339817, 45309,67964])
+	total = len(ds)
+	train_size = int(total * 0.75)
+	eval_size = int(total * 0.10)
+	test_size = total - train_size - eval_size
+	train_data, eval_data, test_data = torch.utils.data.random_split(ds, [train_size, eval_size, test_size])
 
 	trainTransgenicFCGAccelerate(
 		train_data, 
@@ -343,5 +355,5 @@ if __name__ == '__main__':
 		notes="HyenaTransgenic ~3x params (d_model=1152, layers=16, heads=8), training from scratch",
 		encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",
 		unlink = False,
-		log_wandb=True
+		log_wandb=not args.no_wandb
 	)
