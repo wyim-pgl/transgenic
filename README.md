@@ -185,7 +185,7 @@ If you already have PyTorch installed:
 
 ```bash
 # Clone and install
-git clone git@github.com:JohnnyLomas/transgenic.git
+git clone https://github.com/wyim-pgl/transgenic.git
 cd transgenic
 pip install -e .
 ```
@@ -195,7 +195,7 @@ pip install -e .
 For a complete environment with all dependencies, first clone the repository:
 
 ```bash
-git clone git@github.com:JohnnyLomas/transgenic.git
+git clone https://github.com/wyim-pgl/transgenic.git
 cd transgenic
 ```
 
