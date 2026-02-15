@@ -143,7 +143,6 @@ def trainTransgenicFCGAccelerate(
 
 	model.gradient_checkpointing_enable()
 	model.to(device)
-	model = torch.compile(model)
 	model.train()
 
 	
@@ -347,8 +346,8 @@ if __name__ == '__main__':
 		num_epochs=10, 
 		schedule_lr=True, 
 		eval=True, 
-		batch_size=2, 
-		accumulation_steps=128,
+		batch_size=16,
+		accumulation_steps=16,
 		checkpoint_path="checkpoints_HyenaWide/", 
 		output_dir="saved_models_HyenaWide/",
 		max_grad_norm=1,
