@@ -2,7 +2,8 @@
 import os
 # These env vars must be set before importing torch (read at CUDA init time)
 os.environ['HF_HOME'] = './HFmodels'
-os.environ.setdefault('PYTORCH_CUDA_ALLOC_CONF', 'backend:cudaMallocAsync')
+# cudaMallocAsync disabled – can over-allocate on GB10 unified memory with 80GB GPU cap
+# os.environ.setdefault('PYTORCH_CUDA_ALLOC_CONF', 'backend:cudaMallocAsync')
 
 import torch, wandb, gc, time, sys, math, json, argparse
 from tqdm import tqdm
@@ -112,15 +113,17 @@ def trainTransgenicFCGAccelerate(
 	torch.set_float32_matmul_precision('high')
 	torch.backends.cudnn.benchmark = True
 
-	accelerator = Accelerator(mixed_precision="fp16")
+	accelerator = Accelerator(mixed_precision="bf16")
 	device = accelerator.device
-	print(f"Using: {device}", file=sys.stderr)
+	# Cap GPU memory at 100GB on GB10 unified memory (prevent OOM killer)
+	torch.cuda.set_per_process_memory_fraction(0.78)  # ~100GB of 128.5GB
+	print(f"Using: {device} (GPU mem capped at {torch.cuda.get_device_properties(0).total_memory * 0.78 / 1e9:.0f}GB)", file=sys.stderr)
 
 	# Set up DataLoaders
 	torch.manual_seed(234)
 	torch.cuda.manual_seed_all(234)
-	train_dl = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=8, collate_fn=hyena_collate_fn, persistent_workers=True)
-	eval_dl = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=8, collate_fn=hyena_collate_fn, persistent_workers=True)
+	train_dl = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=False, num_workers=4, collate_fn=hyena_collate_fn, persistent_workers=True)
+	eval_dl = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=False, num_workers=4, collate_fn=hyena_collate_fn, persistent_workers=True)
 	
 	# Larger model size (roughly 3x params vs d_model=768, layers=12):
 	# (1152/768)^2 * (16/12) ~= 3.0
@@ -153,18 +156,16 @@ def trainTransgenicFCGAccelerate(
 	model.to(device)
 	model.train()
 
-	# torch.compile – use "default" mode to avoid Triton OOM on GB10 (limited SMs).
-	# Falls back to aot_eager (no Triton) or no-compile if compilation fails.
-	if not os.environ.get("TORCHINDUCTOR_DISABLE"):
+	# torch.compile disabled on GB10 – Triton fused layernorm backward kernel needs
+	# 180KB SM shared memory but GB10 only has 101KB. Forward pass compiles OK but
+	# backward pass fails on every batch, preventing any learning.
+	# Set TRANSGENIC_COMPILE=1 to opt-in on GPUs with larger SM shared memory.
+	if os.environ.get("TRANSGENIC_COMPILE"):
 		try:
-			model = torch.compile(model, mode="default")
-			print("Model compiled with torch.compile (default mode).", file=sys.stderr)
+			model = torch.compile(model)
+			print("Model compiled with torch.compile (inductor).", file=sys.stderr)
 		except Exception as e:
-			try:
-				model = torch.compile(model, backend="aot_eager")
-				print(f"torch.compile default failed ({e}); using aot_eager backend.", file=sys.stderr)
-			except Exception as e2:
-				print(f"Warning: torch.compile failed entirely; continuing without compile: {e2}", file=sys.stderr)
+			print(f"Warning: torch.compile failed; continuing without compile: {e}", file=sys.stderr)
 
 	#for param in model.transgenic.encoder.parameters():
 	#	param.requires_grad = False
@@ -241,8 +242,9 @@ def trainTransgenicFCGAccelerate(
 			for step, batch in enumerate(tqdm(train_dl, miniters=10, disable=False)):
 				# 'Zm' genes are now filtered at dataset level via exclude_prefix
 				ii, am, lab = batch[0].to(device), batch[1].to(device), batch[2].to(device)
-				#if ii.shape[1] > 49000:
-				#	continue
+				# Skip oversized batches that would OOM (batch*seqlen threshold for 80GB GPU cap)
+				if ii.shape[0] * ii.shape[1] > 100_000:
+					continue
 				
 				dii = None
 				try:
@@ -366,8 +368,8 @@ if __name__ == '__main__':
 		num_epochs=10, 
 		schedule_lr=True, 
 		eval=True, 
-		batch_size=16,
-		accumulation_steps=16,
+		batch_size=8,
+		accumulation_steps=32,
 		checkpoint_path="checkpoints_HyenaWide/", 
 		output_dir="saved_models_HyenaWide/",
 		max_grad_norm=1,
