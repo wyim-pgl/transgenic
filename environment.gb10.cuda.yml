@@ -1,0 +1,39 @@
+name: transgenic-gb10
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu130
+    # PyTorch with CUDA 13.0 (GB10 Blackwell)
+    - torch==2.10.0+cu130
+    - torchvision==0.25.0+cu130
+    - torchaudio==2.10.0+cu130
+    # HuggingFace ecosystem
+    - transformers>=4.44.0
+    - datasets>=3.0.0
+    - accelerate>=0.34.0
+    - safetensors>=0.4.0
+    - tokenizers
+    - huggingface-hub>=0.20.0
+    - peft>=0.12.0
+    - trl>=0.11.0
+    # Scientific computing
+    - numpy>=1.24.0
+    - pandas>=2.0.0
+    - scipy
+    - matplotlib
+    - duckdb>=0.9.0
+    # Training utilities
+    - wandb
+    - einops
+    - torcheval
+    - torchmetrics
+    # General utilities
+    - tqdm
+    - pyyaml
+    - requests
+    - setuptools
+    - wheel
+    - packaging
