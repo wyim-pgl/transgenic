@@ -3,6 +3,21 @@ TransGenic is a transformer for DNA-to-annotation machine translation. Gene anno
 
 ![TransGenic Workflow](Figures/Gemini_Generated_Image_mb4afmb4afmb4afm.png)
 
+## Table of Contents
+
+- [Architecture](#architecture)
+- [Key Features](#key-features)
+- [Gene Sentence Format (GSF)](#gene-sentence-format-gsf)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Pretrained Checkpoints](#pretrained-checkpoints-on-huggingface)
+- [Building a DuckDB Database](#building-a-duckdb-database)
+- [Inference](#inference)
+- [Training](#training)
+- [End-to-End Pipeline](#end-to-end-pipeline)
+- [Benchmark Results](#benchmark-results)
+- [License](#license)
+
 ## Architecture
 
 TransGenic uses an encoder-decoder architecture:
@@ -19,19 +34,20 @@ This design enables the model to capture long-range dependencies in DNA while pr
 - **Plant-focused**: Trained on 9 phylogenetically diverse plant species
 - **High accuracy**: Achieves 92% base-level F1 score on *Arabidopsis thaliana* test data
 
-# Gene sentence format (GSF)
-TransGenic produces output in a format modified from the standard Gene Feature Format (GFF). Gene sentence format (GSF) contains identical information as GFF but reduces the redundancy and length of output annotations. This permits generative decoding within reasonable memory requirements for the decoder's attention mechanisms.
+## Gene Sentence Format (GSF)
 
-Gene sentence format specifies gene model outputs in two parts, a feature list and a transcript list. The feature list specifies the coordinate locations of sub-genic features (CDS, 5'-UTR, and 3'-UTR) and the transcript list specifies the composition of spliced mRNA transcripts based on the components in the feature list.
+TransGenic produces output in Gene Sentence Format (GSF), a compact representation modified from the standard Gene Feature Format (GFF). GSF contains the same information as GFF but reduces redundancy and output length, enabling generative decoding within reasonable memory requirements for the decoder's attention mechanisms.
 
-## GSF Format Structure
+GSF specifies gene model outputs in two parts: a **feature list** and a **transcript list**. The feature list defines the coordinate locations of sub-genic features (CDS, 5'-UTR, and 3'-UTR), and the transcript list defines the composition of each spliced mRNA transcript by referencing features from the feature list.
+
+### GSF Format Structure
 
 GSF consists of two parts separated by `>`:
 ```
 <feature_list>><transcript_list>
 ```
 
-### Feature List
+#### Feature List
 Each feature follows the format: `start|type|end|strand|phase`
 - **start**: 0-indexed start coordinate (relative to extracted sequence)
 - **type**: Feature type with unique number (CDS1, CDS2, five_prime_UTR1, three_prime_UTR1, etc.)
@@ -45,14 +61,14 @@ Each feature follows the format: `start|type|end|strand|phase`
 
 Multiple features are separated by `;`
 
-### Transcript List
+#### Transcript List
 After the `>` separator, transcripts list their component features:
 - Features are separated by `|`
 - Multiple transcripts (isoforms) are separated by `;`
 
-## Examples
+### Examples
 
-### Example 1: Simple single-transcript gene (3 CDS)
+#### Example 1: Simple single-transcript gene (3 CDS)
 **GFF:**
 ```
 Chr1  source  gene  100  400  .  +  .  ID=gene1
@@ -67,7 +83,7 @@ Chr1  source  CDS   350  400  .  +  1  ID=cds3
 ```
 Note: Coordinates are relative to the extracted sequence (gene start = 0).
 
-### Example 2: Gene with alternative splicing (2 transcripts)
+#### Example 2: Gene with alternative splicing (2 transcripts)
 **GFF:**
 ```
 Chr1  source  gene  100  350  .  +  .  ID=gene1
@@ -87,7 +103,7 @@ Chr1  source  CDS   280  350  .  +  0  ID=cds3
 - Second transcript skips CDS1 (alternative start): `CDS2|CDS3`
 - Coordinates are relative to gene start (100 → 0)
 
-### Example 3: Gene with UTRs
+#### Example 3: Gene with UTRs
 **GFF:**
 ```
 Chr1  source  gene            500  900  .  +  .  ID=gene1
@@ -104,7 +120,7 @@ Chr1  source  three_prime_UTR 800  900  .  +  .  ID=utr3
 - UTRs use `.` for phase since they are non-coding
 - Transcript includes UTRs in the proper order
 
-## Converting GFF3 to GSF
+### Converting GFF3 to GSF
 
 Use `scripts/gff2gsf.py` to convert existing GFF3 annotations to GSF format:
 
@@ -126,8 +142,7 @@ AT1G01010  0|CDS1|150|+|A;200|CDS2|350|+|B>CDS1|CDS2
 AT1G01020  0|five_prime_UTR1|50|+|.;50|CDS1|200|+|A>five_prime_UTR1|CDS1
 ```
 
-# Using TransGenic
-## Quick start
+## Quick Start
 
 Try TransGenic instantly on Google Colab (no installation required):
 
@@ -534,12 +549,11 @@ The `examples/` folder includes *Arabidopsis thaliana* chromosome 4 data files f
 
 ### GFF3 Sorting Requirement
 
-When building databases from GFF3 files, TransGenic expects the GFF3 to be sorted using a sort order similar to the one used by [AGAT (Another GFF Analysis Toolkit)](https://github.com/NBISweden/AGAT). To sort using AGAT:
-```bash
-agat_convert_sp_gxf2gxf.pl -g [file.gff3] -o [file.sorted.gff3]
-```
+GFF3 files must be sorted with [AGAT](https://github.com/NBISweden/AGAT) before use (see [Prerequisites](#prerequisites)):
 
-See [AGAT documentation](https://agat.readthedocs.io/) for installation and usage.
+```bash
+agat_convert_sp_gxf2gxf.pl -g annotation.gff3 -o annotation.sorted.gff3
+```
 
 ## Training
 
@@ -594,27 +608,25 @@ genome2GSFDataset(
 
 #### 2. Configure and Run Training
 
-Edit the training script to set your database path and hyperparameters:
+All training scripts accept command-line arguments (see the [CLI options table](#3-launch-training) below). You can also call the training function directly from Python:
 
 ```python
-# In train/train_HyenaTransgenic.py
-db = "training_data.db"
-dt = GFFTokenizer()
-ds = isoformDataHyena(db, dt, mode="training", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf")
-train_data, eval_data, test_data = torch.utils.data.random_split(ds, [train_size, eval_size, test_size])
+from transgenic.datasets.datasets import isoformDataHyena
+from transgenic.model.tokenization_transgenic import GFFTokenizer
 
-trainTransgenicFCGAccelerate(
-    train_data,
-    eval_data,
-    lr=5e-5,
-    num_epochs=10,
-    schedule_lr=True,
-    eval=True,
-    batch_size=1,
-    accumulation_steps=128,  # Effective batch size = batch_size * accumulation_steps
-    checkpoint_path="checkpoints/",
-    max_grad_norm=1.0,
-    log_wandb=True
+# Load dataset from DuckDB
+ds = isoformDataHyena(
+    "training_data.db",
+    mode="train",
+    encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",
+    exclude_prefix="Zm"   # Exclude maize for cross-species evaluation
+)
+
+# Split: 75% train, 10% eval, 15% test
+import torch
+total = len(ds)
+train_data, eval_data, test_data = torch.utils.data.random_split(
+    ds, [int(total*0.75), int(total*0.10), total - int(total*0.75) - int(total*0.10)]
 )
 ```
 

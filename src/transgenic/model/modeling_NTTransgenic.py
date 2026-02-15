@@ -93,6 +93,12 @@ class LEDLearnedPositionalEmbedding(nn.Embedding):
 	"""
 
 	def __init__(self, num_embeddings: int, embedding_dim: int):
+		"""Initialize learned positional embeddings for the LED decoder.
+
+		Args:
+			num_embeddings: Maximum number of positions (i.e., max sequence length).
+			embedding_dim: Dimension of each positional embedding vector.
+		"""
 		super().__init__(num_embeddings, embedding_dim)
 
 	def forward(self, input_ids_shape: torch.Size, past_key_values_length: int = 0):
@@ -138,6 +144,17 @@ class FiLMLayer(nn.Module):
 	"""
 
 	def __init__(self, num_labels=2, hidden_dim=512, output_dim=768):
+		"""Initialize the FiLM conditioning layer.
+
+		Builds a two-layer MLP that maps segmentation class probabilities to
+		gamma (scale) and beta (shift) vectors for affine modulation.
+
+		Args:
+			num_labels: Number of segmentation classes (input dimension).
+			hidden_dim: Hidden dimension of the conditioning MLP.
+			output_dim: Dimension of the encoder output to modulate (must
+				match the decoder hidden size).
+		"""
 		super(FiLMLayer, self).__init__()
 		# MLP that maps segmentation probabilities to gamma and beta vectors.
 		# Output is 2x output_dim because it is split into gamma and beta.
@@ -358,6 +375,16 @@ class NumberMaskEmbedTokens(nn.Embedding):
 	"""
 
 	def __init__(self, num_embeddings, embedding_dim, padding_idx=0):
+		"""Initialize token embeddings with an additive digit-token feature.
+
+		Creates the standard token embedding table plus a binary embedding
+		that distinguishes digit tokens (IDs 4-13) from non-digit tokens.
+
+		Args:
+			num_embeddings: Size of the token vocabulary.
+			embedding_dim: Dimension of each token embedding vector.
+			padding_idx: Index of the padding token (default 0).
+		"""
 		super().__init__(num_embeddings, embedding_dim, padding_idx=padding_idx)
 		# Binary embedding: index 0 = non-digit token, index 1 = digit token
 		self.num_feature_embed = nn.Embedding(2, embedding_dim)
@@ -443,6 +470,20 @@ class segmented_sequence_embeddings(EsmForMaskedLM):
 	"""
 
 	def __init__(self, e_model, s_model, numSegClasses, outputSize = 768, do_segment=False):
+		"""Initialize the NT encoder wrapper with optional segmentation head.
+
+		Loads a pre-trained ESM/NT model for DNA encoding, creates a linear
+		projection layer to map the NT hidden dimension to the decoder dimension
+		(768), and optionally loads U-Net segmentation components from a
+		pre-trained SegmentNT model.
+
+		Args:
+			e_model: Name or path of the pre-trained NT/ESM model.
+			s_model: Name or path of the pre-trained SegmentNT model.
+			numSegClasses: Number of segmentation classes.
+			outputSize: Target output dimension for the decoder (default 768).
+			do_segment: Whether to enable the U-Net segmentation head.
+		"""
 		self.cache_dir = "./HFmodels"
 		self.encoder_model = e_model
 		self.segmentation_model = s_model
@@ -646,6 +687,16 @@ class TransgenicPreTrainedModel(PreTrainedModel):
 	supports_gradient_checkpointing = True
 
 	def _init_weights(self, module):
+		"""Initialize weights for Linear and Embedding layers.
+
+		Linear weights are drawn from a normal distribution with mean 0 and
+		standard deviation ``config.init_std``; biases are zeroed. Embedding
+		weights follow the same normal distribution, with the padding index
+		row zeroed out.
+
+		Args:
+			module: The ``nn.Module`` whose parameters are to be initialized.
+		"""
 		std = self.config.init_std
 		if isinstance(module, nn.Linear):
 			module.weight.data.normal_(mean=0.0, std=std)
@@ -658,6 +709,15 @@ class TransgenicPreTrainedModel(PreTrainedModel):
 
 	@property
 	def dummy_inputs(self):
+		"""Return dummy input tensors for tracing or testing the model.
+
+		Produces a minimal batch of two sequences with corresponding
+		attention masks derived from the pad token ID, suitable for
+		``torch.jit.trace`` or quick forward-pass sanity checks.
+
+		Returns:
+			dict: A dictionary with ``"input_ids"`` and ``"attention_mask"`` tensors.
+		"""
 		pad_token = self.config.pad_token_id
 		input_ids = torch.tensor([[0, 6, 10, 4, 2], [0, 8, 12, 2, pad_token]], device=self.device)
 		dummy_inputs = {
@@ -721,6 +781,38 @@ class transgenicModel(TransgenicPreTrainedModel):
 		output_hidden_states: Optional[bool] = None,
 		return_dict: Optional[bool] = None,
 	) -> Union[Tuple[torch.Tensor], LEDSeq2SeqModelOutput]:
+		"""Forward pass through the NT encoder and LED decoder (base model).
+
+		Encodes DNA token IDs through the segmented NT encoder, then decodes
+		GFF annotation tokens with the Longformer decoder using cross-attention
+		over the encoder hidden states. If ``encoder_outputs`` is provided
+		(e.g., during generation), the encoder step is skipped.
+
+		Args:
+			input_ids: DNA token IDs of shape ``(batch, seq_len)``.
+			attention_mask: Mask for the encoder input.
+			decoder_input_ids: Target GFF token IDs, right-shifted for
+				teacher forcing. Auto-generated from ``input_ids`` if not given.
+			decoder_attention_mask: Mask for the decoder input.
+			head_mask: Mask to nullify selected encoder attention heads.
+			decoder_head_mask: Mask to nullify selected decoder attention heads.
+			cross_attn_head_mask: Mask for decoder cross-attention heads.
+			encoder_outputs: Pre-computed encoder outputs (skips encoding).
+			global_attention_mask: LED global attention mask (for Longformer).
+			past_key_values: Cached decoder key/value states for fast decoding.
+			inputs_embeds: Pre-computed encoder input embeddings (unused here).
+			decoder_inputs_embeds: Pre-computed decoder input embeddings.
+			use_cache: Whether to return ``past_key_values`` for caching.
+			output_attentions: Whether to return attention weight tensors.
+			output_hidden_states: Whether to return all hidden state tensors.
+			return_dict: Whether to return a ``LEDSeq2SeqModelOutput`` instead
+				of a plain tuple.
+
+		Returns:
+			``LEDSeq2SeqModelOutput`` (if ``return_dict=True``) or a tuple of
+			decoder and encoder outputs, including segmentation logits when the
+			segmentation head is active.
+		"""
 		output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
 		output_hidden_states = (
 			output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -737,11 +829,13 @@ class transgenicModel(TransgenicPreTrainedModel):
 			)
 		# Compute the embeddings with nucleotide transformer encoder
 		if encoder_outputs is None:
-			encoder_outputs = self.encoder(input_ids, 
-										attention_mask=attention_mask, 
+			encoder_outputs = self.encoder(input_ids,
+										attention_mask=attention_mask,
 										return_dict=return_dict
 										).to_tuple()
 		else:
+			# Unpack pre-computed encoder outputs into the expected tuple format:
+			# (encoder_hidden_states, attention_mask, segmentation_logits)
 			encoder_outputs = (encoder_outputs["inputs_embeds"], encoder_outputs["attention_mask"], encoder_outputs["seg_logits"])
 		#if encoder_outputs is None:
 		#	encoder_outputs = self.encoder(
@@ -803,6 +897,18 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 	_tied_weights_keys = ["transgenic.decoder_embed_tokens.weight", "lm_head.weight"]
 
 	def __init__(self, config, unlink=False):
+		"""Initialize the LED-based conditional generation model.
+
+		Wraps the base ``transgenicModel`` (NT encoder + LED decoder) and adds
+		a linear language-model head that projects decoder hidden states to
+		vocabulary logits, plus a ``final_logits_bias`` buffer. Decoder
+		linear layer weights are Xavier-initialized after ``post_init``.
+
+		Args:
+			config: ``NTTransgenicConfig`` instance with model hyperparameters.
+			unlink: If True, untie the decoder embedding and LM head weights
+				(default False keeps them tied).
+		"""
 		if not unlink:
 			_tied_weights_keys = []
 		super().__init__(config)
@@ -966,6 +1072,16 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 		encoder_outputs=None,
 		**kwargs,
 	):
+		"""Prepare model inputs for autoregressive generation.
+
+		Called at each generation step by ``model.generate()``. When cached
+		key/value states (``past_key_values``) are available, only the last
+		decoder token is kept to avoid redundant computation. The encoder is
+		not re-run because ``encoder_outputs`` is passed through.
+
+		Returns:
+			dict: Keyword arguments to be passed to ``forward()``.
+		"""
 		# cut decoder_input_ids if past is used
 		if past_key_values is not None:
 			decoder_input_ids = decoder_input_ids[:, -1:]
@@ -984,10 +1100,35 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 		}
 
 	def prepare_decoder_input_ids_from_labels(self, labels: torch.Tensor):
+		"""Create decoder input IDs from labels by shifting them right.
+
+		Used during training to produce teacher-forced decoder inputs from
+		the ground-truth label sequence.
+
+		Args:
+			labels: Target token IDs of shape ``(batch_size, seq_len)``.
+
+		Returns:
+			Right-shifted label IDs suitable for decoder input.
+		"""
 		return shift_tokens_right(labels, self.config.pad_token_id, self.config.decoder_start_token_id)
 
 	@staticmethod
 	def _reorder_cache(past_key_values, beam_idx):
+		"""Reorder cached key/value states for beam search.
+
+		During beam search, hypotheses are reordered at each step. This
+		method reindexes the cached decoder self-attention states to match
+		the new beam ordering. Cross-attention states are not reordered
+		because they are identical across all beams.
+
+		Args:
+			past_key_values: Tuple of cached layer states from the decoder.
+			beam_idx: Index tensor mapping new beam positions to old ones.
+
+		Returns:
+			Reordered ``past_key_values`` tuple.
+		"""
 		reordered_past = ()
 		for layer_past in past_key_values:
 			# cached cross_attention states don't have to be reordered -> they are always the same
@@ -1000,6 +1141,16 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel):
 class transgenicModelT5(TransgenicPreTrainedModel):
 
 	def __init__(self, config):
+		"""Initialize the T5-based TransGenic base model.
+
+		Pairs the segmented NT encoder with a T5 decoder (instead of LED).
+		The encoder processes DNA tokens and the T5 decoder generates GFF
+		annotation tokens via cross-attention over the projected encoder
+		hidden states.
+
+		Args:
+			config: ``NTTransgenicConfig`` instance with model hyperparameters.
+		"""
 		super().__init__(config)
 		self.encoder = segmented_sequence_embeddings(config.encoder_model, config.s_model, config.numSegClasses, do_segment=config.do_segment)
 		self.decoder = T5ForConditionalGeneration(config).decoder
@@ -1038,6 +1189,35 @@ class transgenicModelT5(TransgenicPreTrainedModel):
 		output_hidden_states: Optional[bool] = None,
 		return_dict: Optional[bool] = None,
 	) -> Union[Tuple[torch.Tensor], LEDSeq2SeqModelOutput]:
+		"""Forward pass through the NT encoder and T5 decoder (base model).
+
+		Mirrors ``transgenicModel.forward()`` but uses a T5 decoder instead
+		of the LED/Longformer decoder. The NT encoder hidden states are
+		projected and passed as ``encoder_hidden_states`` to the T5 decoder
+		for cross-attention. Note that T5 does not support global attention
+		masks, so that argument is accepted but unused.
+
+		Args:
+			input_ids: DNA token IDs of shape ``(batch, seq_len)``.
+			attention_mask: Mask for the encoder input.
+			decoder_input_ids: Target GFF token IDs, right-shifted.
+			decoder_attention_mask: Mask for the decoder input.
+			head_mask: Mask to nullify selected encoder attention heads.
+			decoder_head_mask: Mask to nullify selected decoder attention heads.
+			cross_attn_head_mask: Mask for decoder cross-attention heads.
+			encoder_outputs: Pre-computed encoder outputs (skips encoding).
+			global_attention_mask: Unused (kept for API compatibility with LED).
+			past_key_values: Cached decoder key/value states for fast decoding.
+			inputs_embeds: Pre-computed encoder input embeddings (unused).
+			decoder_inputs_embeds: Pre-computed decoder input embeddings.
+			use_cache: Whether to return ``past_key_values`` for caching.
+			output_attentions: Whether to return attention weight tensors.
+			output_hidden_states: Whether to return all hidden state tensors.
+			return_dict: Whether to return a ``LEDSeq2SeqModelOutput``.
+
+		Returns:
+			``LEDSeq2SeqModelOutput`` or tuple of decoder and encoder outputs.
+		"""
 		output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
 		output_hidden_states = (
 			output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -1054,13 +1234,14 @@ class transgenicModelT5(TransgenicPreTrainedModel):
 			)
 		# Compute the embeddings with nucleotide transformer encoder
 		if encoder_outputs is None:
-			encoder_outputs = self.encoder(input_ids, 
-										attention_mask=attention_mask, 
+			encoder_outputs = self.encoder(input_ids,
+										attention_mask=attention_mask,
 										return_dict=return_dict
 										).to_tuple()
 		else:
+			# Unpack pre-computed encoder outputs into the expected tuple format
 			encoder_outputs = (encoder_outputs["inputs_embeds"], encoder_outputs["attention_mask"], encoder_outputs["seg_logits"])
-		
+
 		decoder_outputs = self.decoder(
 			input_ids=decoder_input_ids,
 			attention_mask=decoder_attention_mask,
@@ -1098,6 +1279,18 @@ class transgenicForConditionalGenerationT5(TransgenicPreTrainedModel):
 	_tied_weights_keys = ["transgenic.decoder.embed_tokens.weight", "gff_head.weight"]
 
 	def __init__(self, config, unlink=False):
+		"""Initialize the T5-based conditional generation model.
+
+		Wraps the base ``transgenicModelT5`` (NT encoder + T5 decoder) and
+		adds a linear ``gff_head`` that projects decoder hidden states to
+		vocabulary logits. Decoder linear layer weights are Xavier-initialized
+		after ``post_init``.
+
+		Args:
+			config: ``NTTransgenicConfig`` instance with model hyperparameters.
+			unlink: If True, untie the decoder embedding and LM head weights
+				(default False keeps them tied).
+		"""
 		if not unlink:
 			_tied_weights_keys = []
 		super().__init__(config)
@@ -1255,6 +1448,15 @@ class transgenicForConditionalGenerationT5(TransgenicPreTrainedModel):
 		encoder_outputs=None,
 		**kwargs,
 	):
+		"""Prepare model inputs for autoregressive generation (T5 variant).
+
+		Identical to the LED variant: when cached key/value states are
+		available, only the last decoder token is retained to avoid
+		redundant computation.
+
+		Returns:
+			dict: Keyword arguments to be passed to ``forward()``.
+		"""
 		# cut decoder_input_ids if past is used
 		if past_key_values is not None:
 			decoder_input_ids = decoder_input_ids[:, -1:]
@@ -1273,10 +1475,30 @@ class transgenicForConditionalGenerationT5(TransgenicPreTrainedModel):
 		}
 
 	def prepare_decoder_input_ids_from_labels(self, labels: torch.Tensor):
+		"""Create decoder input IDs from labels by shifting them right.
+
+		Args:
+			labels: Target token IDs of shape ``(batch_size, seq_len)``.
+
+		Returns:
+			Right-shifted label IDs suitable for decoder input.
+		"""
 		return shift_tokens_right(labels, self.config.pad_token_id, self.config.decoder_start_token_id)
 
 	@staticmethod
 	def _reorder_cache(past_key_values, beam_idx):
+		"""Reorder cached key/value states for beam search (T5 variant).
+
+		Reindexes cached decoder self-attention states to match the new
+		beam ordering. Cross-attention states are unchanged across beams.
+
+		Args:
+			past_key_values: Tuple of cached layer states from the decoder.
+			beam_idx: Index tensor mapping new beam positions to old ones.
+
+		Returns:
+			Reordered ``past_key_values`` tuple.
+		"""
 		reordered_past = ()
 		for layer_past in past_key_values:
 			# cached cross_attention states don't have to be reordered -> they are always the same
@@ -1289,11 +1511,33 @@ class transgenicForConditionalGenerationT5(TransgenicPreTrainedModel):
 
 class TransgenicWithValueHead(AutoModelForSeq2SeqLMWithValueHead):
 	def __init__(self, base_model):
+		"""Initialize the RLHF value-head wrapper for TransGenic.
+
+		Extends ``AutoModelForSeq2SeqLMWithValueHead`` from the TRL library
+		by adding a scalar value head on top of the seq2seq model for
+		reinforcement learning from human feedback (RLHF) training.
+		Explicitly sets ``is_peft_model = False`` to avoid PEFT-related
+		code paths in TRL.
+
+		Args:
+			base_model: A pre-trained ``transgenicForConditionalGeneration``
+				(or T5 variant) model instance.
+		"""
 		super().__init__(base_model)
 		self.is_peft_model = False
 
 class HausdorffDistanceLoss(nn.Module):
 	def __init__(self, alpha=0.01):
+		"""Initialize the Hausdorff distance-based boundary loss.
+
+		The loss encourages predicted segmentation boundaries to align with
+		ground-truth boundaries by computing a Chamfer-like average distance
+		between boundary point sets, scaled by ``alpha``.
+
+		Args:
+			alpha: Scaling factor applied to the final Hausdorff loss
+				(default 0.01 to keep it small relative to BCE loss).
+		"""
 		super(HausdorffDistanceLoss, self).__init__()
 		self.alpha = alpha
 
@@ -1451,6 +1695,26 @@ class BoundaryLoss(nn.Module):
 #	return numeric_loss/(len(contiguous_digits)+1e-8)
 
 def numeric_token_loss(logits, label):
+	"""Compute a soft numeric distance loss for number-valued tokens.
+
+	For each position in ``label`` that corresponds to a numeric token
+	(IDs 262 through 50261, representing integer values 0 through 49999),
+	this function computes the expected numeric value from the model's
+	softmax distribution over the numeric token IDs and penalizes the
+	absolute difference from the true numeric value. This encourages the
+	model to predict numbers that are numerically close to the target,
+	even when the exact token is wrong.
+
+	Args:
+		logits: Model output logits for a single sequence, shape
+			``(seq_len, vocab_size)``.
+		label: Ground-truth token IDs for a single sequence, shape
+			``(seq_len,)``.
+
+	Returns:
+		Scalar tensor with the mean absolute numeric error across all
+		numeric token positions (zero if no numeric tokens are present).
+	"""
 	digit_tokens = {str(i):i+262 for i in range(0,50000)}
 	digit_token_ids = {digit_tokens[k]:k for k in digit_tokens}
 	digit_values = torch.tensor([int(token) for token in digit_tokens], dtype=torch.float32, device=logits.device)
