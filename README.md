@@ -217,11 +217,11 @@ Run `./scripts/check_system.sh` to determine which environment file to use, then
   pip install -e .
   ```
 
-- **GB10 ARM** (`environment.gb10.base.yml`): For NVIDIA Grace Blackwell aarch64 systems. Uses a two-step install to avoid dependency conflicts.
+- **GB10 ARM** (`environment.gb10.cuda.yml`): For NVIDIA GB10 Blackwell aarch64 systems with CUDA 13.0. Conda installs only Python and pip; all ML packages are installed via pip with CUDA support.
   ```bash
-  conda env create -f environment.gb10.base.yml -y
-  conda activate transgenic
-  ./scripts/install_ml_stack_gb10.sh
+  conda env create -f environment.gb10.cuda.yml
+  conda activate transgenic-gb10
+  pip install -e .
   ```
 
 #### Verify CUDA
