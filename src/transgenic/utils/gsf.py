@@ -92,21 +92,49 @@ def gffString2GFF3(gff:str, chr:str, region_start:int, extra_attributes:str) -> 
 		return [""]
 	
 	# Get the gene start and end for each transcript
+	# Filter out missing features instead of skipping entirely
+	validTranscripts = []
 	transcriptBounds = []
 	for transcript in transcripts:
 		geneStart = None
 		geneEnd = None
-		for feat in transcript.split("|"):	
+		validFeats = []
+		for feat in transcript.split("|"):
+			if feat not in features:
+				# Skip missing feature, continue with the rest
+				continue
+			# Validate feature has correct format (5 elements: start|type|end|strand|phase)
+			featureData = features[feat]
+			if len(featureData) < 5:
+				print(f"Warning: malformed feature '{feat}' has {len(featureData)} elements, expected 5. Skipping.", file=sys.stderr)
+				continue
+			try:
+				featStart = int(featureData[0])
+				featEnd = int(featureData[2])
+			except ValueError:
+				print(f"Warning: feature '{feat}' has non-integer coordinates: start='{featureData[0]}', end='{featureData[2]}'. Skipping.", file=sys.stderr)
+				continue
+			validFeats.append(feat)
 			if geneStart is None:
-				geneStart = int(features[feat][0])
-			elif int(features[feat][0]) < geneStart:
-				geneStart = int(features[feat][0])
-			
+				geneStart = featStart
+			elif featStart < geneStart:
+				geneStart = featStart
+
 			if geneEnd is None:
-				geneEnd = int(features[feat][2])
-			elif int(features[feat][2]) > geneEnd:
-				geneEnd = int(features[feat][2])
+				geneEnd = featEnd
+			elif featEnd > geneEnd:
+				geneEnd = featEnd
+
+		# Skip transcripts with no valid features
+		if not validFeats or geneStart is None:
+			continue
+		validTranscripts.append("|".join(validFeats))
 		transcriptBounds.append((geneStart+region_start, geneEnd+region_start))
+
+	# If no valid transcripts remain, return empty
+	if not validTranscripts:
+		return [""]
+	transcripts = validTranscripts
 	
 	# Construct the GFF3 string
 	import uuid
@@ -123,6 +151,9 @@ def gffString2GFF3(gff:str, chr:str, region_start:int, extra_attributes:str) -> 
 			if featureID == "":
 				continue
 			featureModel = features[featureID]
+			if len(featureModel) < 5 or featureModel[4] not in phaseLookup:
+				print(f"Error: malformed feature '{featureID}', skipping.", file=sys.stderr)
+				return [""]
 			featureType = re.sub(r'\d+', '', featureID)
 			featureNum = re.sub(r'\D+', '', featureID)
 			geneModel.append(f"{chr}\ttransgenic\t{featureType}\t{int(featureModel[0])+region_start}\t{int(featureModel[2])+region_start-1}\t.\t{geneStrand}\t{phaseLookup[featureModel[4]]}\tID={id}.t{i+1}.{featureType}{featureNum};Parent={id}.t{i+1};{extra_attributes}")

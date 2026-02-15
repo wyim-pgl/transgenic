@@ -6,6 +6,30 @@ import torch.nn.functional as F
 from transformers import AutoConfig, PreTrainedModel, AutoModel, GenerationMixin
 from transformers import LEDForConditionalGeneration
 from transformers.modeling_outputs import ModelOutput
+
+
+class LegacyCacheWrapper:
+	"""Wrapper to make legacy tuple cache compatible with newer transformers API."""
+	def __init__(self, past_key_values):
+		self._past = past_key_values
+
+	def get_seq_length(self, layer_idx=0):
+		if self._past is None or len(self._past) == 0:
+			return 0
+		# Return the sequence length from the first layer's self-attention key
+		return self._past[0][0].shape[2]
+
+	def __iter__(self):
+		return iter(self._past)
+
+	def __getitem__(self, idx):
+		return self._past[idx]
+
+	def __len__(self):
+		return len(self._past) if self._past else 0
+
+	def to_legacy_cache(self):
+		return self._past
 from dataclasses import dataclass
 from .configuration_transgenic import HyenaTransgenicConfig
 
@@ -412,6 +436,10 @@ class transgenicModel(TransgenicPreTrainedModel):
 		downsampled = self.downsample(injected.permute(0,2,1)).permute(0,2,1)
 		attention_mask = torch.ones(downsampled.shape[0:2]).to(downsampled.device)
 
+		# Wrap legacy tuple past_key_values for newer transformers compatibility
+		if past_key_values is not None and isinstance(past_key_values, tuple):
+			past_key_values = LegacyCacheWrapper(past_key_values)
+
 		# decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
 		decoder_outputs = self.decoder(
 			input_ids=decoder_input_ids,
@@ -428,6 +456,11 @@ class transgenicModel(TransgenicPreTrainedModel):
 			output_hidden_states=output_hidden_states,
 			return_dict=return_dict,
 		)
+
+		# Convert cache back to legacy tuple format if needed
+		if decoder_outputs.past_key_values is not None:
+			if hasattr(decoder_outputs.past_key_values, 'to_legacy_cache'):
+				decoder_outputs.past_key_values = decoder_outputs.past_key_values.to_legacy_cache()
 
 		if not return_dict:
 			return decoder_outputs + encoder_outputs

@@ -1,7 +1,7 @@
-import duckdb, random, torch, sys, zlib
+import duckdb, random, torch, sys, zlib, os
 import pandas as pd
 import numpy as np
-import torch.nn.functional as F 
+import torch.nn.functional as F
 from torch.utils.data import  Dataset, DataLoader
 from transformers import AutoTokenizer
 
@@ -89,27 +89,60 @@ class isoformData(Dataset):
 			return (seqs, encoder_attention_mask, global_attention_mask, None, gm, chr, region_start, region_end)
 
 class isoformDataHyena(Dataset):
-	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False):
+	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None):
 		self.db = db
 		self.mode = mode
 		self.dt = GFFTokenizer()
 		self.global_attention = global_attention
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
 		self.maxlength = 2048
+		self._worker_pid = None
+		self._con = None
+
+		# Build index map once at init (optionally excluding genes by prefix)
+		with duckdb.connect(self.db, config={"access_mode": "READ_ONLY"}) as con:
+			if exclude_prefix:
+				rows = con.sql("SELECT rn FROM geneList WHERE geneModel NOT LIKE ? ORDER BY rn",
+					params=[f"{exclude_prefix}%"]).fetchall()
+			else:
+				rows = con.sql("SELECT rn FROM geneList ORDER BY rn").fetchall()
+			self._index_map = [row[0] for row in rows]
+		self._length = len(self._index_map)
+
+	def _get_connection(self):
+		"""Return a persistent read-only DuckDB connection, one per worker process."""
+		pid = os.getpid()
+		if self._worker_pid != pid or self._con is None:
+			# Close inherited connection from parent process after fork
+			if self._con is not None:
+				try:
+					self._con.close()
+				except Exception:
+					pass
+			self._con = duckdb.connect(self.db, config={"access_mode": "READ_ONLY"})
+			self._worker_pid = pid
+		return self._con
+
+	def __del__(self):
+		if self._con is not None:
+			try:
+				self._con.close()
+			except Exception:
+				pass
 
 	def __len__(self):
-		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			return con.sql("SELECT COUNT(*) FROM geneList").fetchall()[0][0]
-	
+		return self._length
+
 	def __getitem__(self, idx):
-		idx += 1
-		with duckdb.connect(self.db, config = {"access_mode": "READ_ONLY"}) as con:
-			try:
-				gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
-			except:
-				newidx = torch.randint(self.__len__(), (1,)).item()
-				print(f"Warning {idx=} produced an error... using {newidx}", file=sys.stderr)
-				gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql(f"SELECT * FROM geneList where rn={newidx}").fetchall()[0]
+		rn = self._index_map[idx]
+		con = self._get_connection()
+		try:
+			gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql("SELECT * FROM geneList where rn=?", params=[rn]).fetchall()[0]
+		except Exception as e:
+			newidx = torch.randint(self._length, (1,)).item()
+			rn_fallback = self._index_map[newidx]
+			print(f"Warning rn={rn} produced {type(e).__name__}: {e}; falling back to rn={rn_fallback}", file=sys.stderr)
+			gm,region_start,region_end,strand,chr,region_seq, gff,sfpb, stpb, fpb, tpb,_ = con.sql("SELECT * FROM geneList where rn=?", params=[rn_fallback]).fetchall()[0]
 
 		# Tokenize labels
 		if self.mode == "train":
@@ -124,7 +157,7 @@ class isoformDataHyena(Dataset):
 		seqs["input_ids"] = seqs["input_ids"][:, :-1]
 
 		attention_mask = (seqs["input_ids"] != self.encoder_tokenizer.pad_token_id)
-		
+
 		if self.mode == "train":
 			return (seqs["input_ids"], attention_mask, labels, gm, chr, region_start, region_end)
 		else:
@@ -481,16 +514,17 @@ def hyena_segment_collate_fn(batch):
 	else:
 		return sequences, attention_masks, None, organism, chromosome, start, end
 
-def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=None, num_workers=0, collate_fn=target_collate_fn):
+def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=None, num_workers=0, collate_fn=target_collate_fn, persistent_workers=False):
 	if sampler != None:
 		shuffle = False
-	
+
 	return DataLoader(
-		dat, 
-		shuffle=shuffle, 
-		collate_fn=collate_fn, 
-		batch_size=batch_size, 
+		dat,
+		shuffle=shuffle,
+		collate_fn=collate_fn,
+		batch_size=batch_size,
 		pin_memory=pin_memory,
 		sampler=sampler,
 		num_workers=num_workers,
-		prefetch_factor=128,)
+		prefetch_factor=128,
+		persistent_workers=persistent_workers if num_workers > 0 else False,)
