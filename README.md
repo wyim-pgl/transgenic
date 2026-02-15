@@ -622,10 +622,10 @@ trainTransgenicFCGAccelerate(
 
 ```bash
 # Single GPU (generic)
-python train/train_HyenaTransgenic.py
+python train/train_HyenaTransgenic.py --db training_data.db
 
 # Multi-GPU with Accelerate
-accelerate launch train/train_HyenaTransgenic.py
+accelerate launch train/train_HyenaTransgenic.py --db training_data.db
 
 # RTX 4090 optimized (torch.compile, TF32, pinned memory, OOM-safe batch skipping)
 python train/train_HyenaTransgenic_RTX4090.py --db training_data.db
@@ -640,14 +640,99 @@ python train/train_HyenaTransgenic_RTX4090.py \
     --epochs 20
 
 # GB10 optimized (no torch.compile, cudaMallocAsync disabled, pin_memory=False)
-python train/train_HyenaTransgenic_GB10.py
+python train/train_HyenaTransgenic_GB10.py --db training_data.db
 ```
 
-#### 4. Monitor Training
+**CLI options** (available in all three training scripts):
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--db` | (required) | Path to DuckDB training database |
+| `--resume` | off | Resume from checkpoint: `auto` or explicit path |
+| `--batch-size` | 16 / 4 / 8 | Micro-batch size (generic / RTX 4090 / GB10) |
+| `--accumulation-steps` | 16 / 64 / 32 | Gradient accumulation steps |
+| `--num-workers` | 8 / 6 / 4 | DataLoader worker count |
+| `--save-every-n-steps` | 5000 | Save checkpoint every N optimizer steps |
+| `--checkpoint-path` | `checkpoints/` | Directory for Accelerate checkpoints |
+| `--no-wandb` | off | Disable Weights & Biases logging |
+
+#### 4. Resume Training from Checkpoint
+
+All three training scripts support **step-level resumable checkpoints** via [Accelerate](https://huggingface.co/docs/accelerate). Training can be interrupted at any time (Ctrl+C, OOM, node failure) and resumed from exactly where it left off — no wasted computation.
+
+##### How Checkpoints Work
+
+Each checkpoint is a self-contained directory saved by `accelerator.save_state()`:
+
+```
+checkpoints/
+├── accelerate_epoch0_step5000/      # Saved at global optimizer step 5000
+│   ├── model.safetensors            # Full model weights
+│   ├── optimizer.bin                # Optimizer state (momentum, variance)
+│   ├── scheduler.bin                # LR scheduler state
+│   ├── random_states_0.pkl          # RNG state for reproducibility
+│   └── meta.json                    # Epoch, step, global_step metadata
+├── accelerate_epoch0_step10000/
+│   └── ...
+└── accelerate_epoch1_step0/         # Saved at epoch boundary
+    └── ...
+```
+
+The `meta.json` file tracks the exact training position:
+
+```json
+{
+  "epoch": 0,
+  "step": 4096,
+  "global_step": 5000,
+  "best_eval_score": 2.31
+}
+```
+
+- **`epoch`**: Current epoch number
+- **`step`**: Micro-batch step within the epoch (for step-level resume)
+- **`global_step`**: Total optimizer steps completed across all epochs
+- **`best_eval_score`**: Best evaluation loss seen so far
+
+##### When Checkpoints Are Saved
+
+1. **Every N optimizer steps** — controlled by `--save-every-n-steps` (default: 5000)
+2. **Every epoch boundary** — saved automatically at the end of each epoch
+3. **On KeyboardInterrupt (Ctrl+C)** — graceful shutdown saves the current epoch and step, so no progress is lost
+
+##### Resuming
+
+Use `--resume auto` to automatically find and load the most recent checkpoint (by highest `global_step` in `meta.json`):
+
+```bash
+# Auto-resume: finds latest checkpoint in --checkpoint-path
+python train/train_HyenaTransgenic_RTX4090.py \
+    --db training_data.db \
+    --resume auto
+
+# Resume from a specific checkpoint directory
+python train/train_HyenaTransgenic_RTX4090.py \
+    --db training_data.db \
+    --resume checkpoints/accelerate_epoch0_step5000
+```
+
+On resume, the training loop:
+1. Loads the full training state from the checkpoint (model, optimizer, scheduler, RNG)
+2. Reads `meta.json` to recover `epoch`, `step`, and `global_step`
+3. Skips already-processed micro-batches: `if epoch == start_epoch and step < resume_step: continue`
+4. Continues training from exactly where it was interrupted
+
+All three scripts (`train_HyenaTransgenic.py`, `train_HyenaTransgenic_GB10.py`, `train_HyenaTransgenic_RTX4090.py`) share identical resume logic.
+
+##### Without `--resume`
+
+When `--resume` is not specified, training starts from scratch (epoch 0, step 0). Existing checkpoints in `--checkpoint-path` are not loaded. This preserves full backward compatibility with the original training behavior.
+
+#### 5. Monitor Training
 
 Training metrics are logged to Weights & Biases:
 - Loss and perplexity per step/epoch
-- Gradient norms for each layer
+- Gradient norms for each layer (logged every 10th optimizer step)
 - Learning rate schedule
 
 ### Key Hyperparameters
