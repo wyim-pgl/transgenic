@@ -104,15 +104,15 @@ def trainTransgenicFCGAccelerate(
 
 	print(f"Training transgenic with Hyena. {checkpoint_path=} {output_dir=}", file=sys.stderr)
 
-	accelerator = Accelerator()
+	accelerator = Accelerator(mixed_precision="fp16")
 	device = accelerator.device
 	print(f"Using: {device}", file=sys.stderr)
 	
 	# Set up DataLoaders
 	torch.manual_seed(234)
 	torch.cuda.manual_seed_all(234)
-	train_dl = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=20, collate_fn=hyena_collate_fn)
-	eval_dl = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=20, collate_fn=hyena_collate_fn)
+	train_dl = makeDataLoader(train_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
+	eval_dl = makeDataLoader(eval_ds, shuffle=True, batch_size=batch_size, pin_memory=True, num_workers=4, collate_fn=hyena_collate_fn)
 	
 	# Larger model size (roughly 3x params vs d_model=768, layers=12):
 	# (1152/768)^2 * (16/12) ~= 3.0
@@ -143,6 +143,7 @@ def trainTransgenicFCGAccelerate(
 
 	model.gradient_checkpointing_enable()
 	model.to(device)
+	model = torch.compile(model)
 	model.train()
 
 	
@@ -259,7 +260,6 @@ def trainTransgenicFCGAccelerate(
 						# Lightweight model-only snapshot (not enough to resume optimizer)
 						save_model(accelerator.unwrap_model(model), f"{checkpoint_path}/model.safetensors")
 					del outputs
-					torch.cuda.empty_cache()
 				except Exception as e:
 					print(f"Error in batch: {batch[3]}, {e}")
 					optimizer.zero_grad()
