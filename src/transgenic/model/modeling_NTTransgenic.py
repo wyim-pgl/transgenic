@@ -813,6 +813,7 @@ class transgenicModel(TransgenicPreTrainedModel):
 			decoder and encoder outputs, including segmentation logits when the
 			segmentation head is active.
 		"""
+		# --- Phase 1: Resolve configuration defaults for optional flags ---
 		output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
 		output_hidden_states = (
 			output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -820,15 +821,20 @@ class transgenicModel(TransgenicPreTrainedModel):
 		use_cache = use_cache if use_cache is not None else self.config.use_cache
 		return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
+		# --- Phase 2: Prepare decoder inputs via teacher forcing ---
 		# Using this like Bart, as LED is derived from it. So far
 		# No checkpoint on the hub exists that uses that in practice.
 		# https://github.com/huggingface/transformers/blob/ac3cb660cad283163f7c73cad511124e845ca388/src/transformers/models/bart/modeling_bart.py#L1153
 		if decoder_input_ids is None and decoder_inputs_embeds is None:
+			# Auto-generate right-shifted decoder input from the encoder input_ids
 			decoder_input_ids = shift_tokens_right(
 				input_ids, self.config.pad_token_id, self.config.decoder_start_token_id
 			)
+
+		# --- Phase 3: Encode DNA sequence through the segmented NT encoder ---
 		# Compute the embeddings with nucleotide transformer encoder
 		if encoder_outputs is None:
+			# Run the NT encoder and convert the ModelOutput to a tuple for indexing
 			encoder_outputs = self.encoder(input_ids,
 										attention_mask=attention_mask,
 										return_dict=return_dict
@@ -858,7 +864,9 @@ class transgenicModel(TransgenicPreTrainedModel):
 		#		global_attentions=encoder_outputs[3] if len(encoder_outputs) > 3 else None,
 		#	)
 
+		# --- Phase 4: Decode GFF annotation tokens via Longformer decoder ---
 		# decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
+		# encoder_outputs[0] = projected hidden states, encoder_outputs[1] = attention mask
 		decoder_outputs = self.decoder(
 			input_ids=decoder_input_ids,
 			attention_mask=decoder_attention_mask,
@@ -875,6 +883,7 @@ class transgenicModel(TransgenicPreTrainedModel):
 			return_dict=return_dict,
 		)
 
+		# --- Phase 5: Package and return outputs ---
 		if not return_dict:
 			return decoder_outputs + encoder_outputs
 
@@ -1715,27 +1724,52 @@ def numeric_token_loss(logits, label):
 		Scalar tensor with the mean absolute numeric error across all
 		numeric token positions (zero if no numeric tokens are present).
 	"""
+	# Map string integers "0".."49999" to token IDs 262..50261 (offset by 262 in the vocabulary)
 	digit_tokens = {str(i):i+262 for i in range(0,50000)}
+	# Reverse mapping: token ID -> string integer value
 	digit_token_ids = {digit_tokens[k]:k for k in digit_tokens}
+	# Tensor of numeric values [0, 1, 2, ..., 49999] for computing the expected value
 	digit_values = torch.tensor([int(token) for token in digit_tokens], dtype=torch.float32, device=logits.device)
-	
-	# Find digits in the label
-	digit_positions = [i for i, token in enumerate(label.tolist()) if token in digit_token_ids.keys()] 
-	
+
+	# Find all positions in the label sequence that contain numeric tokens
+	digit_positions = [i for i, token in enumerate(label.tolist()) if token in digit_token_ids.keys()]
+
 	numeric_loss = torch.tensor(0.0, device=logits.device)
 	for number in digit_positions:
-		number_logits = logits[number]																		# Extract digit logits and target digits
-		label_digits = label[number]
-		digit_probs = torch.softmax(number_logits, dim=-1)[list(digit_token_ids.keys())] 			# Convert logits to probabilities
-		
-		expected_digits = (digit_probs * digit_values).sum(dim=-1)	# Expected digit values
-		target_number = label_digits -262 							# Compute target number
-		numeric_loss += (expected_digits - target_number).abs()	# Compute numeric loss
+		number_logits = logits[number]								# Extract logits at this numeric position
+		label_digits = label[number]								# Ground-truth token ID at this position
+		# Softmax over all numeric token IDs to get probability distribution over numeric values
+		digit_probs = torch.softmax(number_logits, dim=-1)[list(digit_token_ids.keys())]
+
+		# Compute expected numeric value as weighted sum: sum(prob_i * value_i)
+		expected_digits = (digit_probs * digit_values).sum(dim=-1)
+		# Convert token ID back to numeric value by subtracting the vocabulary offset
+		target_number = label_digits -262
+		# Accumulate absolute error between predicted and target numeric values
+		numeric_loss += (expected_digits - target_number).abs()
+	# Guard against NaN (can occur with degenerate inputs); leave loss unchanged
 	if torch.isnan(numeric_loss):
 		pass
+	# Normalize by number of numeric positions (epsilon avoids division by zero)
 	return numeric_loss/(len(digit_positions)+1e-8)
 
 # Total loss
 def HybridLoss(logits, label, alpha=1, beta=0.01):
+	"""Compute a combined cross-entropy and numeric token loss.
+
+	Blends the standard cross-entropy loss (for all tokens) with a soft
+	numeric distance penalty (for numeric tokens only) to encourage both
+	exact token accuracy and numerical proximity in the predicted GFF
+	coordinate values.
+
+	Args:
+		logits: Flattened model logits of shape ``(batch * seq_len, vocab_size)``.
+		label: Flattened ground-truth token IDs of shape ``(batch * seq_len,)``.
+		alpha: Weight for the cross-entropy component (default 1).
+		beta: Weight for the numeric token loss component (default 0.01).
+
+	Returns:
+		Scalar tensor with the weighted sum of the two loss terms.
+	"""
 	ce_loss = nn.CrossEntropyLoss()
 	return alpha * ce_loss(logits, label) + beta * numeric_token_loss(logits, label)
