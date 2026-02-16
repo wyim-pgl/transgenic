@@ -733,7 +733,7 @@ def hyena_segment_collate_fn(batch):
 		return sequences, attention_masks, None, organism, chromosome, start, end
 
 
-def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=None, num_workers=0, collate_fn=target_collate_fn, persistent_workers=False):
+def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, prefetch_factor=2, sampler=None, num_workers=0, collate_fn=target_collate_fn, persistent_workers=False):
 	"""Create a PyTorch DataLoader with sensible defaults for TransGenic training.
 
 	Args:
@@ -761,5 +761,5 @@ def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=Non
 		pin_memory=pin_memory,
 		sampler=sampler,
 		num_workers=num_workers,
-		prefetch_factor=2 if num_workers > 0 else None,  # Pre-fetch 2 batches per worker
+		prefetch_factor=prefetch_factor if num_workers > 0 else None,  # Pre-fetch 2 batches per worker
 		persistent_workers=persistent_workers if num_workers > 0 else False,)  # Only valid with workers
