@@ -16,3 +16,4 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+train/stashed_version.py
