@@ -40,6 +40,9 @@ python scripts/gff2gsf.py annotation.gff3 -o output.gsf
 
 # Check system for environment selection
 ./scripts/check_system.sh
+
+# Run a test script (ad-hoc scripts, no pytest framework)
+python test/testingHyena.py
 ```
 
 ## Architecture
@@ -181,7 +184,7 @@ python train/train_HyenaTransgenic_RTX4090.py \
 - **x86 GPU (CUDA 12.4)**: `conda env create -f environment.yml`
 - **CPU only**: `conda env create -f environment.cpu.yml`
 - **GB10 ARM (CUDA 13.0)**: `conda env create -f environment.gb10.cuda.yml`
-- **Python**: 3.12 (required for f-string nesting in model code)
+- **Python**: 3.12+ recommended (f-string nesting in model code); `pyproject.toml` allows >=3.10
 
 ## GFF3 Requirements
 

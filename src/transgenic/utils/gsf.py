@@ -34,7 +34,7 @@ GSF Format Overview:
 """
 
 import re, sys
-from typing import List
+from typing import List, Optional, Tuple
 
 def reverseComplement_gffString(gff, length):
 	"""
@@ -150,6 +150,150 @@ def reverseComplement_gffString(gff, length):
 	# Reassemble the GSF string: features joined by ; with fields joined by |,
 	# separated from transcripts by >
 	return f"{';'.join(['|'.join(feature) for feature in new_features])}>{';'.join(['|'.join(transcript) for transcript in new_transcripts])}"
+
+def get_cds_fingerprint(gff_lines: List[str]) -> Optional[Tuple]:
+	"""
+	Generate a fingerprint from a GFF3 gene prediction for deduplication.
+
+	Builds a per-transcript fingerprint from CDS coordinates grouped by their
+	parent mRNA.  Two predictions are duplicates when they share the same
+	chromosome, strand, and identical set of per-transcript CDS intervals.
+
+	For genes without CDS features (e.g. UTR-only), the mRNA boundaries are
+	used instead so that they are still eligible for deduplication.
+
+	Args:
+		gff_lines: List of GFF3-formatted lines from gffString2GFF3().
+
+	Returns:
+		A hashable tuple that uniquely identifies the gene structure, or None
+		if no parseable features are found.
+	"""
+	strand = None
+	chrom = None
+	# CDS coords keyed by parent mRNA ID
+	transcript_cds = {}
+	# mRNA boundaries as fallback for CDS-less genes
+	mrna_bounds = {}
+
+	for line in gff_lines:
+		cols = line.split("\t")
+		if len(cols) < 9:
+			continue
+		feat_type = cols[2]
+		if feat_type == "gene":
+			chrom = cols[0]
+			strand = cols[6]
+		elif feat_type == "mRNA":
+			attrs = cols[8]
+			mid = attrs.split("ID=")[1].split(";")[0] if "ID=" in attrs else None
+			if mid:
+				mrna_bounds[mid] = (int(cols[3]), int(cols[4]))
+		elif feat_type == "CDS":
+			attrs = cols[8]
+			parent = attrs.split("Parent=")[1].split(";")[0] if "Parent=" in attrs else None
+			if parent:
+				transcript_cds.setdefault(parent, []).append((int(cols[3]), int(cols[4])))
+
+	if chrom is None:
+		return None
+
+	if transcript_cds:
+		# Sorted tuple of per-transcript CDS sets (each transcript's CDS sorted)
+		per_tx = tuple(sorted(
+			tuple(sorted(coords)) for coords in transcript_cds.values()
+		))
+		return (chrom, strand, per_tx)
+
+	# Fallback: no CDS, use mRNA boundaries
+	if mrna_bounds:
+		bounds = tuple(sorted(mrna_bounds.values()))
+		return (chrom, strand, bounds)
+
+	return None
+
+
+def get_utr_span(gff_lines: List[str]) -> int:
+	"""
+	Calculate total UTR span (in bases) from GFF3 gene prediction lines.
+
+	Sums the length of all five_prime_UTR and three_prime_UTR features.
+	Used to break ties when two predictions share the same CDS fingerprint:
+	the prediction with longer UTR coverage is preferred because it captures
+	more of the gene's regulatory regions.
+
+	Args:
+		gff_lines: List of GFF3-formatted lines from gffString2GFF3().
+
+	Returns:
+		Total UTR span in bases (0 if no UTR features are present).
+	"""
+	total = 0
+	for line in gff_lines:
+		cols = line.split("\t")
+		if len(cols) >= 9 and "UTR" in cols[2]:
+			total += int(cols[4]) - int(cols[3]) + 1
+	return total
+
+
+def dedup_gff3_file(output_path: str) -> int:
+	"""
+	Remove superseded gene blocks from a GFF3 file, keeping the last
+	occurrence of each CDS fingerprint (which has the longest UTR).
+
+	This is a post-hoc cleanup pass for the streaming write design: during
+	inference, a prediction with longer UTR replaces the fingerprint entry
+	but both versions exist in the file.  This pass removes the older ones.
+
+	Args:
+		output_path: Path to the GFF3 output file to deduplicate in-place.
+
+	Returns:
+		Number of superseded gene blocks removed.
+	"""
+	gene_blocks = []
+	current_block = []
+	header_lines = []
+
+	with open(output_path) as f:
+		for line in f:
+			line = line.rstrip("\n")
+			if line.startswith("#"):
+				header_lines.append(line)
+				continue
+			cols = line.split("\t")
+			if len(cols) >= 9 and cols[2] == "gene":
+				if current_block:
+					gene_blocks.append(current_block)
+				current_block = [line]
+			elif len(cols) >= 9:
+				current_block.append(line)
+	if current_block:
+		gene_blocks.append(current_block)
+
+	# For each fingerprint, the last occurrence has the longest UTR
+	# (guaranteed by the caller logic that only writes a replacement
+	# when the new UTR is strictly longer).
+	last_occurrence = {}
+	for i, block in enumerate(gene_blocks):
+		fp = get_cds_fingerprint(block)
+		if fp is not None:
+			last_occurrence[fp] = i
+
+	removed = 0
+	with open(output_path, "w") as f:
+		for line in header_lines:
+			f.write(line + "\n")
+		for i, block in enumerate(gene_blocks):
+			fp = get_cds_fingerprint(block)
+			if fp is None or last_occurrence[fp] == i:
+				for line in block:
+					f.write(line + "\n")
+			else:
+				removed += 1
+
+	return removed
+
 
 def gffString2GFF3(gff:str, chr:str, region_start:int, extra_attributes:str) -> List[str]:
 	"""
