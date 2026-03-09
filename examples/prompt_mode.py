@@ -21,14 +21,14 @@ import warnings
 import threading
 
 # Suppress all warnings and HuggingFace noise BEFORE imports
-warnings.filterwarnings("ignore")
-os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
-os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
-os.environ["SAFETENSORS_FAST_GPU"] = "0"
-os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
-os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
-os.environ["HF_HUB_OFFLINE"] = "1"  # Use cached models only
-os.environ["TRANSFORMERS_OFFLINE"] = "1"  # Prevent transformers from checking HF Hub
+# warnings.filterwarnings("ignore")
+# os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+# os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
+# os.environ["SAFETENSORS_FAST_GPU"] = "0"
+# os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
+# os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
+# os.environ["HF_HUB_OFFLINE"] = "1"  # Use cached models only
+# os.environ["TRANSFORMERS_OFFLINE"] = "1"  # Prevent transformers from checking HF Hub
 
 import logging
 logging.getLogger("transformers").setLevel(logging.CRITICAL)
@@ -86,7 +86,7 @@ def parse_args():
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=32,
+        default=1,
         help="Batch size for inference (default: 32)"
     )
     parser.add_argument(
@@ -150,14 +150,21 @@ def get_single_decoder_input_ids(labels_list: list) -> list:
     return list(map(int, first_transcript.split(",")))
 
 
-def get_batch_decoder_input_ids(labels: torch.Tensor, device: torch.device, pad_token_id: int = 0) -> torch.Tensor:
+def get_batch_decoder_input_ids(labels: torch.Tensor, device: torch.device, pad_token_id: int = 0, decoder_start_token_id: int = 2) -> torch.Tensor:
     """
     Extract decoder input IDs for a batch of labels.
     Pads to the max length in the batch.
+    Prepends decoder_start_token_id so HuggingFace generate() doesn't
+    auto-prepend it (which would add +1 token and overflow max_length).
     """
     batch_ids = []
+    max_prompt_len = 2047  # Reserve 1 for decoder_start_token_id
     for i in range(labels.shape[0]):
         ids = get_single_decoder_input_ids(labels[i].tolist())
+        # Trim to max_prompt_len
+        ids = ids[:max_prompt_len]
+        # Prepend decoder_start_token_id so HF doesn't auto-prepend it
+        ids = [decoder_start_token_id] + ids
         batch_ids.append(ids)
 
     # Pad to max length
@@ -213,9 +220,10 @@ def main():
         ds_comp,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=0,
+        num_workers=2,
         pin_memory=True,
-        collate_fn=hyena_collate_fn
+        collate_fn=hyena_collate_fn,
+        prefetch_factor=4
     )
 
     # Clear output file if it exists
@@ -232,7 +240,7 @@ def main():
         stderr_backup = sys.stderr
         sys.stderr = open(os.devnull, 'w')
 
-    for step, batch in enumerate(tqdm(dl_comp, total=total)):
+    for step, batch in enumerate(tqdm(dl_comp, total=total, miniters=5, mininterval=10)):
         if args.num_sequences and step >= args.num_sequences:
             break
 
@@ -245,16 +253,19 @@ def main():
         starts = batch[5]
         batch_size = ii.shape[0]
 
-        # Get decoder input IDs for the batch
-        dii = get_batch_decoder_input_ids(lab, device)
+        # Get decoder input IDs for the batch (prepends decoder_start_token_id)
+        dii = get_batch_decoder_input_ids(lab, device, decoder_start_token_id=model.config.decoder_start_token_id)
 
         # Generate annotation with beam search
+        # Use max_new_tokens instead of max_length to avoid overflow when
+        # decoder_input_ids is already close to the model's max sequence length.
+        max_new_tokens = max(1, args.max_length - dii.shape[1])
         with torch.no_grad():
             outputs = model.generate(
                 inputs=ii,
                 attention_mask=am,
                 num_return_sequences=1,
-                max_length=args.max_length,
+                max_new_tokens=max_new_tokens,
                 num_beams=args.num_beams,
                 do_sample=False,
                 decoder_input_ids=dii,
