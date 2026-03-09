@@ -27,6 +27,9 @@ python scripts/create_database.py \
 # Full inference pipeline (sort GFF3 → build DB → inference → GFF3 output)
 python src/run_genome_annotation.py genome.fa genes.gff3 -o output.gff3 --device cuda
 
+# Prompt mode: complete splice variants from existing annotation
+python examples/prompt_mode.py --genome genome.fas --gff annotation.gff3 --output output.gff
+
 # Training (platform-specific)
 python train/train_HyenaTransgenic.py --db training.db
 python train/train_HyenaTransgenic_RTX4090.py --db training.db
@@ -51,7 +54,7 @@ python test/testingHyena.py
 
 - **Encoder**: HyenaDNA (`LongSafari/hyenadna-large-1m-seqlen-hf`) — processes DNA sequences up to 1M nucleotides using sub-quadratic convolution
 - **Decoder**: Longformer-based autoregressive decoder — generates GSF text annotations with sliding window attention
-- **Downsampling**: 2-stage Conv1d with relative positional bias (6x compression from encoder to decoder)
+- **Downsampling**: 2-stage Conv1d with relative positional bias (6x compression: stage1 kernel=6/stride=3, stage2 kernel=2/stride=2)
 - **Model class**: `transgenicForConditionalGeneration` in `src/transgenic/model/modeling_HyenaTransgenic.py`
 
 ### Model Variants
@@ -87,6 +90,10 @@ python test/testingHyena.py
 5. **Post-processing** (`src/transgenic/utils/postprocess.py`):
    - `PredictionProcessor` — refines GSF predictions using segmentation probabilities
    - Validates start/stop codons, splice junctions, reading frames
+
+6. **CDS deduplication** (`src/transgenic/utils/gsf.py`):
+   - `get_cds_fingerprint()` — extract CDS coordinate signature for dedup
+   - `dedup_gff3_file()` — remove superseded gene blocks (prefers longer UTR spans)
 
 ### Gene Sentence Format (GSF)
 
@@ -134,15 +141,22 @@ scripts/                  # CLI utilities
 ├── check_system.sh       # System/GPU detection
 └── ...
 
-examples/                 # Jupyter notebooks and example data
+examples/                 # Jupyter notebooks, example data, prompt_mode.py
 src/run_genome_annotation.py  # Full inference pipeline CLI
+revision/                 # Publication revision evaluation (gffcompare, splice events)
+src/transgenic/misc/      # Legacy/archived scripts (not actively used)
 ```
 
 ## Training
 
 ### Training Scripts
 
-All three main training scripts share the same CLI interface:
+**Main:** `train_HyenaTransgenic.py` (generic), `_RTX4090.py`, `_GB10.py`
+**Encoder variants:** `train_NTTransgenic.py` (Nucleotide Transformer), `train_HyenaT5Transgenic.py` (T5 decoder), `train_NTT5Transgenic.py` (NT+T5)
+**Segmentation:** `train_HyenaSegment.py`, `train_NTSegment.py`
+**Other:** `train_HyenaMLM.py` (masked LM pretraining), `profile_training.py`
+
+All main scripts share the same CLI interface:
 
 ```bash
 python train/train_HyenaTransgenic_RTX4090.py \
@@ -193,9 +207,26 @@ GFF3 files must be sorted using AGAT before processing:
 agat_convert_sp_gxf2gxf.pl -g file.gff3 -o file.sorted.gff3
 ```
 
+## Key Constants
+
+- **6144 bp** — encoder chunk size; sequences padded to multiples of this (`staticSize`)
+- **49152 bp** — max encoder input (8 × 6144)
+- **2048** — max decoder position embeddings
+- **Attention window** — default `[1024]*N_layers` (one-sided; total = 2×), reduced to 768 on RTX 4090
+- **Special tokens**: `bos=0` (`<s>`), `pad=1` (`<pad>`), `eos=2` (`</s>`), `decoder_start=2`
+- **GFFTokenizer vocab (272 tokens)**: 0-3 special, 4-13 digits, 14-21 phase/strand/delimiters, 22-171 CDS1-150, 172-221 five_prime_UTR1-50, 222-271 three_prime_UTR1-50
+
+## Inference
+
+- Model inherits HuggingFace `GenerationMixin` — use `model.generate()` with greedy (default) or beam search (`num_beams`)
+- `prepare_inputs_for_generation()` handles KV cache reuse (only passes last decoder token after first step)
+- `_reorder_cache()` reorders self-attention caches for beam search; cross-attention caches are frozen
+- Prompt mode (`examples/prompt_mode.py`): provides first transcript as `decoder_input_ids` to generate additional isoforms
+
 ## Code Style
 
 - Model files (`modeling_*.py`) and training scripts use **tabs** for indentation
 - Scripts (`scripts/`) and utility files use **4 spaces** for indentation
 - All source files have English docstrings and inline comments
 - Type hints used in function signatures where applicable
+- No linting/formatting tooling configured (no ruff, black, flake8, or mypy)

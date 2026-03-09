@@ -425,29 +425,52 @@ def gffString2GFF3(gff:str, chr:str, region_start:int, extra_attributes:str) -> 
 	# End coordinate is adjusted by -1 to convert from half-open to closed interval.
 	geneModel = [f"{chr}\ttransgenic\tgene\t{geneStart}\t{geneEnd-1}\t.\t{geneStrand}\t.\tID={id};{extra_attributes}"]
 
-	# Add mRNA (transcript) lines and their child features (CDS, UTR)
+	# Add mRNA (transcript) lines and their child features (exon, CDS, UTR)
 	for i,transcript in enumerate(transcripts):
 		# mRNA line: represents one transcript isoform, parented to the gene.
 		# Transcript IDs are suffixed with .t1, .t2, etc. for each isoform.
-		geneModel.append(f"{chr}\ttransgenic\tmRNA\t{transcriptBounds[i][0]}\t{transcriptBounds[i][1]-1}\t.\t{geneStrand}\t.\tID={id}.t{i+1};Parent={id};{extra_attributes}")
+		txId = f"{id}.t{i+1}"
+		geneModel.append(f"{chr}\ttransgenic\tmRNA\t{transcriptBounds[i][0]}\t{transcriptBounds[i][1]-1}\t.\t{geneStrand}\t.\tID={txId};Parent={id};{extra_attributes}")
+
+		# First pass: collect absolute intervals for all valid features in
+		# this transcript so we can derive exon boundaries.
+		feat_intervals = []  # [(abs_start, abs_end)]
+		feat_lines = []      # deferred CDS/UTR GFF3 lines
 		transcript = transcript.split("|")
 		for featureID in transcript:
-			# Skip empty feature IDs that may arise from trailing pipe characters
 			if featureID == "":
 				continue
 			featureModel = features[featureID]
-			# Validate feature structure and phase before emitting GFF3 line
 			if len(featureModel) < 5 or featureModel[4] not in phaseLookup:
 				print(f"Error: malformed feature '{featureID}', skipping.", file=sys.stderr)
 				return [""]
-			# Extract the feature type name (e.g., "CDS") by stripping numeric suffix
 			featureType = re.sub(r'\d+', '', featureID)
-			# Extract the numeric suffix (e.g., "1" from "CDS1") for the feature sub-ID
 			featureNum = re.sub(r'\D+', '', featureID)
-			# Feature line: CDS or UTR, parented to the mRNA.
-			# Coordinates: add region_start for absolute position; subtract 1 from end
-			# to convert from half-open interval to GFF3 closed interval.
-			# Phase is mapped from GSF encoding (A/B/C) to GFF3 numeric (0/1/2).
-			geneModel.append(f"{chr}\ttransgenic\t{featureType}\t{int(featureModel[0])+region_start}\t{int(featureModel[2])+region_start-1}\t.\t{geneStrand}\t{phaseLookup[featureModel[4]]}\tID={id}.t{i+1}.{featureType}{featureNum};Parent={id}.t{i+1};{extra_attributes}")
+			abs_start = int(featureModel[0]) + region_start
+			abs_end   = int(featureModel[2]) + region_start - 1
+			feat_intervals.append((abs_start, abs_end))
+			feat_lines.append(
+				f"{chr}\ttransgenic\t{featureType}\t{abs_start}\t{abs_end}\t.\t{geneStrand}\t{phaseLookup[featureModel[4]]}\tID={txId}.{featureType}{featureNum};Parent={txId};{extra_attributes}"
+			)
+
+		# Build exon features by merging adjacent/overlapping CDS and UTR
+		# intervals.  Gaps between merged intervals represent introns.
+		if feat_intervals:
+			sorted_ivs = sorted(feat_intervals, key=lambda x: x[0])
+			merged_exons = [list(sorted_ivs[0])]
+			for s, e in sorted_ivs[1:]:
+				# Merge if overlapping or directly adjacent (gap of 0-1 bp)
+				if s <= merged_exons[-1][1] + 1:
+					merged_exons[-1][1] = max(merged_exons[-1][1], e)
+				else:
+					merged_exons.append([s, e])
+
+			for exon_idx, (es, ee) in enumerate(merged_exons, 1):
+				geneModel.append(
+					f"{chr}\ttransgenic\texon\t{es}\t{ee}\t.\t{geneStrand}\t.\tID={txId}.exon{exon_idx};Parent={txId};{extra_attributes}"
+				)
+
+		# Append CDS/UTR lines after exons
+		geneModel.extend(feat_lines)
 
 	return geneModel
