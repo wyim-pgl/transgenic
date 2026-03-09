@@ -45,7 +45,7 @@ from transformers import AutoTokenizer
 
 from transgenic.datasets.preprocess import genome2GSFDataset
 from transgenic.datasets.datasets import isoformDataHyena, hyena_collate_fn
-from transgenic.utils.gsf import gffString2GFF3
+from transgenic.utils.gsf import gffString2GFF3, get_cds_fingerprint, get_utr_span, dedup_gff3_file
 from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration
 
 
@@ -234,6 +234,8 @@ def main():
     print(f"Generating predictions...")
     total = args.num_sequences or len(dl_comp)
     error_count = 0
+    duplicate_count = 0
+    seen_fingerprints = {}  # {fingerprint: utr_span}
 
     # Redirect stderr if quiet mode
     if args.quiet:
@@ -281,13 +283,29 @@ def main():
         # Process each sample in the batch
         for i in range(batch_size):
             pred = preds[i].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
-            gff = gffString2GFF3(pred, chroms[i], starts[i], f"GM={gene_models[i]}")
+            try:
+                gff = gffString2GFF3(pred, chroms[i], starts[i], f"GM={gene_models[i]}")
+            except Exception:
+                error_count += 1
+                continue
 
             # Track parsing errors
             if gff == [""] or gff == []:
                 error_count += 1
+                continue
 
-            # Write the GFF3 output (skip empty results from parsing errors)
+            # Deduplicate by CDS coordinate fingerprint; prefer longer UTR
+            fp = get_cds_fingerprint(gff)
+            if fp is not None:
+                utr = get_utr_span(gff)
+                if fp in seen_fingerprints:
+                    if utr <= seen_fingerprints[fp]:
+                        duplicate_count += 1
+                        continue
+                    duplicate_count += 1
+                seen_fingerprints[fp] = utr
+
+            # Write the GFF3 output
             with open(args.output, "a") as f:
                 for line in gff:
                     if line:
@@ -298,9 +316,17 @@ def main():
         sys.stderr.close()
         sys.stderr = stderr_backup
 
+    # Final cleanup: remove superseded entries (replaced by longer-UTR versions)
+    if os.path.exists(args.output):
+        superseded = dedup_gff3_file(args.output)
+        if superseded:
+            print(f"Cleanup: removed {superseded} superseded gene blocks from output")
+
     print(f"Output written to: {args.output}")
     if error_count > 0:
         print(f"Parsing errors: {error_count}/{total} sequences skipped")
+    if duplicate_count > 0:
+        print(f"Removed {duplicate_count} duplicate predictions (identical CDS coordinates)")
 
 
 if __name__ == "__main__":

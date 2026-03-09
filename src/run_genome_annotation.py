@@ -64,7 +64,7 @@ except ImportError:
 #                     coordinates, adding the chromosome and offset.
 from transgenic.datasets.preprocess import genome2GSFDataset
 from transgenic.datasets.datasets import isoformDataHyena, hyena_collate_fn
-from transgenic.utils.gsf import gffString2GFF3
+from transgenic.utils.gsf import gffString2GFF3, get_cds_fingerprint, get_utr_span, dedup_gff3_file
 
 
 def ensure_parent_dir(path):
@@ -444,6 +444,38 @@ def main():
 
     processed = 0   # Total number of samples processed (including resumed).
     rejected = 0    # Count of predictions that failed GFF3 conversion.
+    duplicates = 0  # Count of duplicate predictions (identical CDS coordinates).
+    seen_fingerprints = {}  # {fingerprint: utr_span} for deduplication.
+
+    # On resume, rebuild fingerprints from the existing output file so that
+    # predictions already written are not duplicated in the appended output.
+    if args.resume and output_exists and os.path.getsize(args.output) > 0:
+        gene_lines = []
+        with open(args.output) as f:
+            for line in f:
+                line = line.rstrip("\n")
+                if line.startswith("#"):
+                    continue
+                cols = line.split("\t")
+                if len(cols) >= 9 and cols[2] == "gene":
+                    # Flush the previous gene block
+                    if gene_lines:
+                        fp = get_cds_fingerprint(gene_lines)
+                        if fp is not None:
+                            utr = get_utr_span(gene_lines)
+                            if fp not in seen_fingerprints or utr > seen_fingerprints[fp]:
+                                seen_fingerprints[fp] = utr
+                    gene_lines = [line]
+                elif len(cols) >= 9:
+                    gene_lines.append(line)
+            # Flush the last gene block
+            if gene_lines:
+                fp = get_cds_fingerprint(gene_lines)
+                if fp is not None:
+                    utr = get_utr_span(gene_lines)
+                    if fp not in seen_fingerprints or utr > seen_fingerprints[fp]:
+                        seen_fingerprints[fp] = utr
+        print(f"Resume: loaded {len(seen_fingerprints)} fingerprints from existing output")
 
     try:
         if args.resume:
@@ -548,6 +580,31 @@ def main():
                         print(f"Warning: failed to log rejected sample: {log_err}")
                     continue  # Skip to the next sample in this batch.
 
+                # gffString2GFF3 returns [""] for unparseable predictions that
+                # don't raise an exception (e.g. missing CDS1, empty transcripts).
+                if gff_lines == [""] or gff_lines == []:
+                    rejected += 1
+                    continue
+
+                # Deduplicate predictions by CDS coordinate fingerprint.
+                # Two predictions with identical (chrom, strand, CDS coords)
+                # represent the same gene predicted independently.  When a
+                # duplicate is found, the version with longer total UTR span
+                # is preferred (it captures more regulatory context).
+                fp = get_cds_fingerprint(gff_lines)
+                if fp is not None:
+                    utr = get_utr_span(gff_lines)
+                    if fp in seen_fingerprints:
+                        if utr <= seen_fingerprints[fp]:
+                            # New prediction has equal or shorter UTR; skip it.
+                            duplicates += 1
+                            continue
+                        # New prediction has longer UTR; write it now and the
+                        # superseded entry will be removed by dedup_gff3_file
+                        # at the end of the run.
+                        duplicates += 1
+                    seen_fingerprints[fp] = utr
+
                 # Append the successfully converted GFF3 lines to the output.
                 # Opening the file in append mode for each sample (rather than
                 # keeping a persistent file handle) ensures that data is flushed
@@ -601,10 +658,21 @@ def main():
                 except OSError as e:
                     print(f"Warning: Failed to cleanup database file: {e}")
 
+    # Final dedup cleanup: remove superseded gene blocks from the output
+    # file.  During streaming writes, a prediction with longer UTR may have
+    # replaced an earlier one in seen_fingerprints, leaving both versions in
+    # the file.  This pass keeps only the last (longest-UTR) version.
+    if os.path.exists(args.output):
+        superseded = dedup_gff3_file(args.output)
+        if superseded:
+            print(f"Cleanup: removed {superseded} superseded gene blocks from output")
+
     # Print a summary of rejected predictions (if any) so the user knows to
     # review the rejects file.
     if rejected:
         print(f"Rejected {rejected} predictions; saved to {reject_path}")
+    if duplicates:
+        print(f"Removed {duplicates} duplicate predictions (identical CDS coordinates)")
     print(f"Done. Results saved to {args.output}")
 
 if __name__ == "__main__":
