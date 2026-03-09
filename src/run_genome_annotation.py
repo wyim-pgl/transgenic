@@ -137,6 +137,7 @@ def main():
     parser.add_argument("--prefetch_factor", type=int, default=2, help="DataLoader prefetch factor when num_workers>0 (default: 2).")
     parser.add_argument("--compile", action="store_true", help="Use torch.compile to optimize model inference.")
     parser.add_argument("--reject_output", default=None, help="Path to save rejected/hallucinated generations (default: <output>.rejects.txt)")
+    parser.add_argument("--bed", action="store_true", help="Treat input annotation as BED format instead of GFF3.")
 
     args = parser.parse_args()
 
@@ -227,7 +228,7 @@ def main():
                 genome=args.fasta_file,
                 gff3=gff_to_use,
                 db=db_path,
-                anoType="gff",       # Annotation type: standard GFF format.
+                anoType="bed" if args.bed else "gff",
                 mode="predict"       # Prediction mode: input-only, no targets.
             )
         except Exception as e:
