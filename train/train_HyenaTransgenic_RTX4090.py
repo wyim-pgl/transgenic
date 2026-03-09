@@ -72,13 +72,13 @@ class TrainingProfile:
 PROFILE_PRESETS: Dict[str, TrainingProfile] = {
     "rtx4090": TrainingProfile(
         name="rtx4090",
-        batch_size=2,
-        accumulation_steps=64,
-        eval_batch_size=4,
+        batch_size=1,
+        accumulation_steps=128,
+        eval_batch_size=1,
         num_workers=2,
         prefetch_factor=2,
         pin_memory=True,
-        max_tokens_per_batch=49_000,
+        max_tokens_per_batch=90000,
         attention_window=1024,
         snapshot_interval=2500,
     ),
@@ -161,11 +161,9 @@ def train(
     notes: str,
     resume_from_checkpoint: Optional[str],
     save_every_epoch: bool,
-    save_every_n_steps: int = 5000,
+    save_every_n_steps: int = 2000,
     unlink: bool,
     log_wandb: bool,
-    compile_mode: str,
-
 ):
     if torch.cuda.is_available():
         device_name = torch.cuda.get_device_name(0)
@@ -175,8 +173,8 @@ def train(
         total_mem_gb = 0
 
     if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(234)
-    torch.manual_seed(234)
+        torch.cuda.manual_seed_all(123)
+    torch.manual_seed(123)
     # cuDNN autotune squeezes extra throughput out of the 4090.
     torch.backends.cudnn.benchmark = True
 
@@ -240,18 +238,14 @@ def train(
     )
     model = transgenicForConditionalGeneration(config)
     model.gradient_checkpointing_enable()
-    # torch.compile fuses Hyena/Longformer kernels where possible.
-    model.lm_head = torch.compile(model.lm_head)
-    # model.transgenic.decoder = torch.compile(model.transgenic.decoder, mode='reduce-overhead')
-    model.transgenic.encoder = torch.compile(model.transgenic.encoder)
-    model.transgenic.downsample = torch.compile(model.transgenic.downsample)
+    model = model.to(device)
 
     optimizer = bnb.optim.AdamW8bit(model.parameters(), lr=lr, weight_decay=0.02)
     optimizer.zero_grad(set_to_none=True)
 
     lr_scheduler = None
     if schedule_lr:
-        warmup_steps = int(total_opt_steps * 0.03)
+        warmup_steps = int(total_opt_steps * 0.05)
         lr_scheduler = get_linear_schedule_with_warmup(
             optimizer=optimizer,
             num_warmup_steps=warmup_steps,
@@ -317,7 +311,7 @@ def train(
             processed_batches = 0
             skipped_batches = 0
 
-            progress = tqdm(train_dl, leave=False)
+            progress = tqdm(train_dl, leave=False, miniters=10)
             for step, batch in enumerate(progress):
                 # Skip already-processed steps when resuming mid-epoch
                 if epoch == start_epoch and step < resume_step:
@@ -332,8 +326,8 @@ def train(
 
                 processed_batches += 1
                 
-                # Mark the beginning of a step for CUDA Graphs to prevent buffer overwriting errors
-                torch.compiler.cudagraph_mark_step_begin()
+                # # Mark the beginning of a step for CUDA Graphs to prevent buffer overwriting errors
+                # torch.compiler.cudagraph_mark_step_begin()
 
                 with accelerator.accumulate(model):
                     outputs = model(input_ids=ii, attention_mask=am, labels=lab, return_dict=True)
@@ -344,13 +338,18 @@ def train(
                     if accelerator.sync_gradients:
                         global_step += 1
                         # Only clip/step when gradients from all micro-batches are in sync.
-                        clip_grad_norm_(model.parameters(), max_grad_norm)
+                        accelerator.clip_grad_norm_(model.parameters(), max_grad_norm)
                         optimizer.step()
                         if lr_scheduler is not None:
                             lr_scheduler.step()
-                        optimizer.zero_grad(set_to_none=True)
+                        # Save full resumable checkpoint every save_every_n_steps optimizer steps
+                        if save_every_n_steps and global_step % save_every_n_steps == 0:
+                            _save_state(epoch, step + 1, global_step, best_eval_score)
+                            print(f"Checkpoint saved at epoch {epoch}, step {step+1}, global_step {global_step}", file=sys.stderr)
 
-                        if log_wandb:
+                    if log_wandb:
+                        log_payload = {}
+                        if step % 70 == 0:
                             log_payload = {
                                 "epoch": epoch,
                                 "step": step,
@@ -361,20 +360,21 @@ def train(
                             }
                             if lr_scheduler is not None:
                                 log_payload["lr"] = lr_scheduler.get_last_lr()[0]
-                            # Log per-parameter gradient norms every 10 optimizer steps
-                            if global_step % 10 == 0:
-                                for name, param in model.named_parameters():
-                                    if param.grad is not None and param.requires_grad:
-                                        log_payload[f"{name}_grad_norm"] = param.grad.norm().detach().item()
+                        
+                        # Only log grad norms if grads are available (i.e., after optimizer step)
+                        if accelerator.sync_gradients:
+                            for name, param in model.named_parameters():
+                                if param.grad is not None and param.requires_grad:
+                                    log_payload[f"{name}_grad_norm"] = param.grad.norm().detach().item()
+                        
+                        if log_payload:
                             wandb.log(log_payload)
 
-                        # Save full resumable checkpoint every save_every_n_steps optimizer steps
-                        if save_every_n_steps and global_step % save_every_n_steps == 0:
-                            _save_state(epoch, step + 1, global_step, best_eval_score)
-                            print(f"Checkpoint saved at epoch {epoch}, step {step+1}, global_step {global_step}", file=sys.stderr)
-
-                del outputs
-
+                    if accelerator.sync_gradients:
+                        optimizer.zero_grad(set_to_none=True)
+                        torch.cuda.empty_cache()
+                        gc.collect()
+                del outputs, ii, am, lab, meta
             if processed_batches == 0:
                 raise RuntimeError("No batches processed – lower batch_size or max_tokens_per_batch.")
 
@@ -457,10 +457,10 @@ if __name__ == "__main__":
     config = {
         "db": "/home/framazan/data/Generation_10G_static6144_addExtra200_addRCIsoOnly_clean.db",
         "profile": "rtx4090",
-        "batch_size": 2,
-        "accumulation_steps": 64,
+        "batch_size": 1,
+        "accumulation_steps": 128,
         "attention_window": 1024,
-        "max_tokens_per_batch": 49000,
+        "max_tokens_per_batch": 90000,
         "num_workers": 2,
         "prefetch_factor": 2,
         "checkpoint_path": "/home/framazan/checkpoints/",
@@ -473,11 +473,10 @@ if __name__ == "__main__":
         "notes": "Transgenic RTX 4090 run 1st",
         "encoder_model": "LongSafari/hyenadna-large-1m-seqlen-hf",
         "resume": None,  # or "auto" or checkpoint path
-        "save_every_n_steps": 5000,
+        "save_every_n_steps": 2000,
         "save_every_epoch": True,
         "unlink": False,
         "log_wandb": True,
-        "compile_mode": "max-autotune",
 
     }
 
@@ -538,6 +537,4 @@ if __name__ == "__main__":
         save_every_n_steps=config["save_every_n_steps"],
         unlink=config["unlink"],
         log_wandb=config["log_wandb"],
-        compile_mode=config["compile_mode"],
-
     )
