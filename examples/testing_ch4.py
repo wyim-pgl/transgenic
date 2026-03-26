@@ -1,12 +1,27 @@
+"""
+Chr4 evaluation module for TransGenic training.
+
+Provides `evaluate_chr4()` which can be called:
+  1. Standalone via CLI: `python testing_ch4.py --checkpoint_dir <path>`
+  2. From the training loop after each epoch (pass a model directly)
+
+Runs inference on 500 random A. thaliana Chr4 gene regions, writes predicted
+GFF3, runs gffcompare against the reference, parses the .stats file, and
+returns a structured metrics dict. Also counts isoforms via gffread.
+"""
+
 import os
+import re
 import shutil
 import subprocess
+import sys
 import tempfile
-from typing import Any, cast
+from typing import Any, Dict, Optional, cast
 
 import torch
-from torch.utils.data import DataLoader
-from tqdm import tqdm
+import random
+import numpy as np
+from torch.utils.data import DataLoader, Subset
 
 from transgenic.datasets.datasets import hyena_collate_fn, isoformDataHyena
 from transgenic.datasets.preprocess import genome2GSFDataset
@@ -14,17 +29,25 @@ from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGe
 from transgenic.model.tokenization_transgenic import GFFTokenizer
 from transgenic.utils.gsf import gffString2GFF3
 
+# ── Paths (all relative to THIS file's directory) ──────────────────────────
+_EXAMPLES_DIR = os.path.dirname(os.path.abspath(__file__))
+CHR4_FASTA = os.path.join(_EXAMPLES_DIR, "ATH_Chr4.fas")
+CHR4_BED   = os.path.join(_EXAMPLES_DIR, "ATH_Chr4_gene.bed")
+CHR4_REF   = os.path.join(_EXAMPLES_DIR, "ATH_Chr4.sorted.gff3")
 
-def generate_with_adaptive_chunks(
-    model: Any,
-    ii: torch.Tensor,
-    am: torch.Tensor,
-    max_length: int,
-) -> torch.Tensor:
-    """Generate with automatic chunk downscaling when CUDA OOM happens."""
+
+def _set_seed(seed: int = 42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+def _generate_batch(model, ii, am, max_length=2048):
+    """Generate with automatic chunk downscaling on OOM."""
     batch_n = ii.size(0)
     chunk_size = batch_n
-
     while chunk_size >= 1:
         try:
             out_chunks = []
@@ -47,119 +70,151 @@ def generate_with_adaptive_chunks(
             if ii.is_cuda:
                 torch.cuda.empty_cache()
             chunk_size //= 2
-
-    raise RuntimeError(
-        "Generation failed due to CUDA OOM even with chunk_size=1. "
-        "Lower BATCH_SIZE or MAX_GEN_LEN."
-    )
+    raise RuntimeError("Generation OOM even at chunk_size=1")
 
 
-def count_isoforms_with_gffread(gff_path: str) -> int:
-    """Use gffread to normalize to GTF and count transcript entries."""
+def _parse_gffcompare_stats(stats_path: str) -> Dict[str, float]:
+    """Parse a gffcompare .stats file and return a flat metrics dict."""
+    metrics = {}
+    if not os.path.isfile(stats_path):
+        return metrics
+
+    with open(stats_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            # Parse "Query mRNAs : 123 in 456 loci (~7.8 transcripts per locus)"
+            m = re.search(r"Query mRNAs\s*:\s*(\d+)\s+in\s+(\d+)\s+loci", line)
+            if m:
+                metrics["query_mRNAs"] = int(m.group(1))
+                metrics["query_loci"] = int(m.group(2))
+                tpl = re.search(r"~([\d.]+)\s+transcripts per locus", line)
+                if tpl:
+                    metrics["transcripts_per_locus"] = float(tpl.group(1))
+                continue
+
+            # Parse sensitivity/precision lines like:
+            #    Base level:    88.1     |    67.7    |
+            m = re.match(
+                r"\s*(Base|Exon|Intron|Intron chain|Transcript|Locus)\s+level:\s+([\d.]+)\s+\|\s+([\d.]+)",
+                line,
+            )
+            if m:
+                level = m.group(1).strip().lower().replace(" ", "_")
+                metrics[f"{level}_sensitivity"] = float(m.group(2))
+                metrics[f"{level}_precision"] = float(m.group(3))
+                continue
+
+            # Parse "Matching transcripts: 2098"
+            m = re.match(r"\s*Matching (intron chains|transcripts|loci):\s+(\d+)", line)
+            if m:
+                key = m.group(1).replace(" ", "_")
+                metrics[f"matching_{key}"] = int(m.group(2))
+
+    return metrics
+
+
+def _count_isoforms_gffread(gff_path: str) -> int:
+    """Count transcripts via gffread normalization."""
     if shutil.which("gffread") is None:
         return -1
-
     with tempfile.NamedTemporaryFile(suffix=".gtf", delete=False) as tf:
         gtf_path = tf.name
-
     try:
         subprocess.run(
             ["gffread", "-T", gff_path, "-o", gtf_path],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-            text=True,
+            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True,
         )
-
-        isoforms = 0
-        with open(gtf_path, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("#"):
-                    continue
-                cols = line.rstrip("\n").split("\t")
-                if len(cols) > 2 and cols[2] == "transcript":
-                    isoforms += 1
-        return isoforms
+        count = 0
+        with open(gtf_path) as fh:
+            for line in fh:
+                if not line.startswith("#"):
+                    cols = line.split("\t")
+                    if len(cols) > 2 and cols[2] == "transcript":
+                        count += 1
+        return count
+    except Exception:
+        return -1
     finally:
         if os.path.exists(gtf_path):
             os.remove(gtf_path)
 
 
-def main() -> None:
-    db_path = "ath_chr4_predict.db"
-    output_gff_path = "ath_chr4_predict.gff"
+def evaluate_chr4(
+    model: Any,
+    device: torch.device,
+    *,
+    n_samples: int = 500,
+    batch_size: int = 4,
+    max_gen_len: int = 2048,
+    work_dir: Optional[str] = None,
+    seed: int = 42,
+    verbose: bool = True,
+) -> Dict[str, float]:
+    """Run inference on `n_samples` random Chr4 gene regions, gffcompare, return metrics.
 
-    genome2GSFDataset(
-        "ATH_Chr4.fas",
-        "ATH_Chr4_gene.bed",
-        db_path,
-        anoType="bed",
-        mode="predict",
-    )
+    Args:
+        model: A transgenicForConditionalGeneration already on `device`.
+        device: torch.device for inference.
+        n_samples: Number of random gene regions to evaluate (default 500).
+        batch_size: Inference batch size.
+        max_gen_len: Maximum decoder output tokens.
+        work_dir: Directory for temporary files. If None, uses a temp dir.
+        seed: Random seed for reproducible sample selection.
+        verbose: Print progress to stderr.
+
+    Returns:
+        Dict with gffcompare metrics + isoform count + gene count.
+    """
+    _set_seed(seed)
+
+    cleanup_work_dir = work_dir is None
+    if work_dir is None:
+        work_dir = tempfile.mkdtemp(prefix="transgenic_eval_chr4_")
+    os.makedirs(work_dir, exist_ok=True)
+
+    db_path = os.path.join(work_dir, "eval_chr4.db")
+    pred_gff_path = os.path.join(work_dir, "eval_chr4_pred.gff")
+    compare_prefix = os.path.join(work_dir, "eval_chr4_cmp")
+
+    # ── 1. Build evaluation dataset ─────────────────────────────────────
+    if not os.path.isfile(db_path):
+        genome2GSFDataset(CHR4_FASTA, CHR4_BED, db_path, anoType="bed", mode="predict")
 
     ds = isoformDataHyena(db_path, mode="inference")
 
-    cpu_count = os.cpu_count() or 4
-    default_workers = min(8, max(2, cpu_count // 2))
-    batch_size = int(os.getenv("BATCH_SIZE", "8"))
-    num_workers = int(os.getenv("NUM_WORKERS", str(default_workers)))
-    prefetch_factor = int(os.getenv("PREFETCH_FACTOR", "4"))
-    max_gen_len = int(os.getenv("MAX_GEN_LEN", "2048"))
+    # Select n_samples random indices (reproducible via seed)
+    total = len(ds)
+    n_samples = min(n_samples, total)
+    indices = random.sample(range(total), n_samples)
+    subset = Subset(ds, indices)
 
-    dl_kwargs = {
-        "dataset": ds,
-        "batch_size": batch_size,
-        "shuffle": False,
-        "num_workers": num_workers,
-        "pin_memory": torch.cuda.is_available(),
-        "collate_fn": hyena_collate_fn,
-    }
-    if num_workers > 0:
-        dl_kwargs["prefetch_factor"] = max(2, prefetch_factor)
-        dl_kwargs["persistent_workers"] = True
-
-    dl = DataLoader(**dl_kwargs)
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if device.type == "cuda":
-        torch.backends.cudnn.benchmark = True
-        torch.backends.cuda.matmul.allow_tf32 = True
-
-    best_model_dir = "/home/framazan/checkpoints/accelerate_epoch7_step16571"
-    if not os.path.isdir(best_model_dir):
-        raise FileNotFoundError(
-            f"{best_model_dir} not found. Run training until a checkpoint is saved."
-        )
-
-    model = transgenicForConditionalGeneration.from_pretrained(
-        best_model_dir,
-        local_files_only=True,
-    )
-    model = cast(Any, model)
-    model.eval()
-    model.to(device)
-
-    total_params = sum(p.numel() for p in model.parameters())
-    print(f"Model parameters: {total_params:,}")
-    print(
-        f"Runtime config -> batch_size={batch_size}, num_workers={num_workers}, "
-        f"prefetch_factor={max(2, prefetch_factor)}, max_gen_len={max_gen_len}"
+    dl = DataLoader(
+        subset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=2,
+        pin_memory=(device.type == "cuda"),
+        collate_fn=hyena_collate_fn,
+        persistent_workers=True,
     )
 
+    # ── 2. Run inference ────────────────────────────────────────────────
     gff_tokenizer = GFFTokenizer()
+    model.eval()
     genes_predicted = 0
 
-    with open(output_gff_path, "w", encoding="utf-8") as out_f:
-        for batch in tqdm(dl, desc="Predicting"):
+    if verbose:
+        from tqdm import tqdm
+        dl_iter = tqdm(dl, desc="Chr4 eval", leave=False, file=sys.stderr)
+    else:
+        dl_iter = dl
+
+    with open(pred_gff_path, "w", encoding="utf-8") as out_f:
+        for batch in dl_iter:
             ii = batch[0].to(device, non_blocking=True)
             am = batch[1].to(device, non_blocking=True)
 
-            output_tokens = generate_with_adaptive_chunks(
-                model=model,
-                ii=ii,
-                am=am,
-                max_length=max_gen_len,
-            )
+            output_tokens = _generate_batch(model, ii, am, max_length=max_gen_len)
 
             decoded_batch = gff_tokenizer.batch_decode(
                 output_tokens.detach().cpu().numpy(),
@@ -175,21 +230,101 @@ def main() -> None:
                 )
                 gff_lines = gffString2GFF3(
                     pred,
-                    batch[4][idx],
-                    batch[5][idx],
-                    f"GM={batch[3][idx]}",
+                    batch[4][idx],   # chr
+                    batch[5][idx],   # region_start
+                    f"GM={batch[3][idx]}",  # gene model name
                 )
                 for line in gff_lines:
                     out_f.write(line + "\n")
                 genes_predicted += 1
 
-    isoforms_predicted = count_isoforms_with_gffread(output_gff_path)
+            # Free GPU memory between batches
+            del ii, am, output_tokens
+            if device.type == "cuda":
+                torch.cuda.empty_cache()
 
-    print(f"Genes predicted: {genes_predicted:,}")
-    if isoforms_predicted >= 0:
-        print(f"Isoforms predicted (gffread): {isoforms_predicted:,}")
+    # ── 3. Run gffcompare ───────────────────────────────────────────────
+    metrics: Dict[str, float] = {"genes_predicted": genes_predicted}
+
+    if shutil.which("gffcompare") is not None:
+        try:
+            subprocess.run(
+                ["gffcompare", "-r", CHR4_REF, "-o", compare_prefix, pred_gff_path],
+                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True,
+            )
+            stats_path = compare_prefix + ".stats"
+            parsed = _parse_gffcompare_stats(stats_path)
+            metrics.update(parsed)
+        except subprocess.CalledProcessError as e:
+            print(f"Warning: gffcompare failed: {e.stderr}", file=sys.stderr)
     else:
-        print("Isoforms predicted (gffread): unavailable (gffread not found in PATH)")
+        print("Warning: gffcompare not found in PATH, skipping comparison", file=sys.stderr)
+
+    # ── 4. Count isoforms via gffread ───────────────────────────────────
+    isoforms = _count_isoforms_gffread(pred_gff_path)
+    if isoforms >= 0:
+        metrics["isoforms_predicted"] = isoforms
+
+    # ── 5. Clean up temporary files ─────────────────────────────────────
+    if cleanup_work_dir:
+        import shutil as _shutil
+        try:
+            _shutil.rmtree(work_dir, ignore_errors=True)
+        except Exception:
+            pass
+
+    if verbose:
+        print(f"\n[Chr4 eval] genes={genes_predicted}", file=sys.stderr, end="")
+        if isoforms >= 0:
+            print(f" isoforms={isoforms}", file=sys.stderr, end="")
+        for k in ("transcript_sensitivity", "transcript_precision",
+                   "exon_sensitivity", "exon_precision",
+                   "base_sensitivity", "base_precision",
+                   "transcripts_per_locus"):
+            if k in metrics:
+                print(f" {k}={metrics[k]:.1f}", file=sys.stderr, end="")
+        print("", file=sys.stderr)
+
+    return metrics
+
+
+# ── CLI entrypoint ──────────────────────────────────────────────────────
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Evaluate TransGenic on A. thaliana Chr4")
+    parser.add_argument("--checkpoint_dir", type=str, required=True,
+                        help="Path to model checkpoint directory")
+    parser.add_argument("--n_samples", type=int, default=500,
+                        help="Number of random gene regions to evaluate (default: 500)")
+    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--max_gen_len", type=int, default=2048)
+    parser.add_argument("--work_dir", type=str, default=None,
+                        help="Directory for temp files (default: auto)")
+    parser.add_argument("--seed", type=int, default=42)
+    args = parser.parse_args()
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = transgenicForConditionalGeneration.from_pretrained(
+        args.checkpoint_dir, local_files_only=True,
+    )
+    model = cast(Any, model)
+    model.to(device)
+
+    metrics = evaluate_chr4(
+        model, device,
+        n_samples=args.n_samples,
+        batch_size=args.batch_size,
+        max_gen_len=args.max_gen_len,
+        work_dir=args.work_dir,
+        seed=args.seed,
+    )
+
+    print("\n=== Chr4 Evaluation Results ===")
+    for k, v in sorted(metrics.items()):
+        if isinstance(v, float):
+            print(f"  {k}: {v:.2f}")
+        else:
+            print(f"  {k}: {v}")
 
 
 if __name__ == "__main__":

@@ -27,3 +27,5 @@ examples/HFmodels/
 examples/ath_chr4_predict.db
 examples/ath_chr4_predict.cleaned.gff
 examples/ath_chr4_predict.gff
+train/wandb/*
+train/HFmodels/*

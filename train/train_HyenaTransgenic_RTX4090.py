@@ -38,6 +38,10 @@ from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
 from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration
 from transgenic.model.tokenization_transgenic import GFFTokenizer
 
+# Chr4 evaluation module (500-sample gffcompare after each epoch)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "examples"))
+from testing_ch4 import evaluate_chr4
+
 
 @dataclass
 class TrainingProfile:
@@ -566,6 +570,33 @@ def train(
 			if save_every_epoch:
 				_save_state(epoch + 1, 0, global_step, best_eval_score)
 
+			# ── Chr4 gffcompare evaluation (500 random gene regions) ─────────
+			try:
+				unwrapped = accelerator.unwrap_model(model)
+				chr4_metrics = evaluate_chr4(
+					unwrapped, device,
+					n_samples=500,
+					batch_size=2,
+					max_gen_len=2048,
+					seed=16,
+					verbose=True,
+				)
+				print(
+					f"  Chr4 eval: tx_sens={chr4_metrics.get('transcript_sensitivity', 'N/A')}"
+					f"  tx_prec={chr4_metrics.get('transcript_precision', 'N/A')}"
+					f"  exon_sens={chr4_metrics.get('exon_sensitivity', 'N/A')}"
+					f"  exon_prec={chr4_metrics.get('exon_precision', 'N/A')}"
+					f"  isoforms={chr4_metrics.get('isoforms_predicted', 'N/A')}"
+					f"  tx/locus={chr4_metrics.get('transcripts_per_locus', 'N/A')}",
+					file=sys.stderr,
+				)
+				if log_wandb:
+					wandb.log({f"chr4/{k}": v for k, v in chr4_metrics.items()})
+			except Exception as e:
+				print(f"Warning: Chr4 evaluation failed: {e}", file=sys.stderr)
+			finally:
+				model.train()  # Restore training mode
+
 			torch.cuda.empty_cache()
 			gc.collect()
 
@@ -616,16 +647,16 @@ if __name__ == "__main__":
 		"max_tokens_per_batch": 90000,
 		"num_workers": 2,
 		"prefetch_factor": 2,
-		"checkpoint_path": "/home/framazan/checkpoints/",
+		"checkpoint_path": "/home/framazan/checkpoints_new/",
 		"output_dir": "/home/framazan/saved_models/",
 		"epochs": 10,
 		"lr": 2e-5,
 		"schedule_lr": True,
 		"do_eval": True,
 		"max_grad_norm": 1.0,
-		"notes": "Transgenic RTX 4090 run 1st",
+		"notes": "Transgenic RTX 4090 run with isoform tokne",
 		"encoder_model": "LongSafari/hyenadna-large-1m-seqlen-hf",
-		"resume": "/home/framazan/checkpoints/accelerate_epoch7_step16571",  # or "auto" or checkpoint path
+		"resume": "",  # or "auto" or checkpoint path
 		"save_every_n_steps": 400,
 		"save_every_epoch": True,
 		"unlink": False,
