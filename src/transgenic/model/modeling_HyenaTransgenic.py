@@ -671,6 +671,19 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 		# LM head: projects from 2*d_model to vocabulary size
 		self.lm_head = nn.Linear(config.d_model * 2, self.transgenic.decoder_embed_tokens.num_embeddings, bias=False)
 
+		# Transcript count regression head: predicts the number of alternative
+		# transcripts (1 to max_transcript_count) from the mean-pooled encoder
+		# output. Used as an auxiliary loss during training and can constrain
+		# generation at inference time.
+		max_tc = getattr(config, 'max_transcript_count', 15)
+		self.tx_count_head = nn.Sequential(
+			nn.Linear(config.d_model, config.d_model // 4),
+			nn.GELU(),
+			nn.Dropout(config.dropout),
+			nn.Linear(config.d_model // 4, 1),  # Regression output (scalar)
+		)
+		self.max_transcript_count = max_tc
+
 		# Initialize weights and apply post-processing (HuggingFace convention)
 		self.post_init()
 		self.initialize_weights()  # Xavier init for decoder linear layers
@@ -731,6 +744,7 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 		inputs_embeds: Optional[torch.FloatTensor] = None,
 		decoder_inputs_embeds: Optional[torch.FloatTensor] = None,
 		labels: Optional[torch.LongTensor] = None,
+		transcript_counts: Optional[torch.FloatTensor] = None,
 		use_cache: Optional[bool] = None,
 		output_attentions: Optional[bool] = None,
 		output_hidden_states: Optional[bool] = None,
@@ -796,9 +810,38 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 		# Compute cross-entropy loss when labels are provided
 		masked_lm_loss = None
 		if labels is not None:
-			loss_fct = nn.CrossEntropyLoss()  # Ignores pad tokens (index 0) by default
+			# Per-token weighted CE loss: upweight structural tokens that control
+			# transcript count and sequence termination to penalize hallucinated
+			# transcripts and missing EOS signals.
+			weight = torch.ones(self.config.vocab_size, device=lm_logits.device)
+			weight[2] = 3.0    # </s> — penalize missing/extra end-of-sequence
+			weight[17] = 2.0   # >   — penalize features→transcripts separator
+			weight[21] = 2.0   # ;   — penalize transcript/feature separators
+			weight[272] = 2.0  # <iso> — penalize isoform separators
+			loss_fct = nn.CrossEntropyLoss(weight=weight, label_smoothing=0.1)
 			# Flatten logits and labels for loss computation
 			masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
+
+			# Transcript count regression auxiliary loss.
+			# Uses the mean-pooled encoder last hidden state (from the downsampler)
+			# to predict the number of alternative transcripts.
+			if transcript_counts is not None:
+				enc_hidden = outputs.encoder_last_hidden_state  # (batch, seq/6, d_model)
+				# Mean-pool over the sequence dimension
+				if attention_mask is not None:
+					# Downsample attention mask to match encoder output length
+					ds_len = enc_hidden.shape[1]
+					ds_mask = attention_mask[:, :ds_len * 6:6].float()  # Approximate downsampled mask
+					if ds_mask.shape[1] < ds_len:
+						ds_mask = torch.ones(enc_hidden.shape[0], ds_len, device=enc_hidden.device)
+					pooled = (enc_hidden * ds_mask.unsqueeze(-1)).sum(dim=1) / ds_mask.sum(dim=1, keepdim=True).clamp(min=1)
+				else:
+					pooled = enc_hidden.mean(dim=1)
+				# Predict transcript count (regression, 1-based)
+				tx_pred = self.tx_count_head(pooled).squeeze(-1)  # (batch,)
+				tx_loss = nn.functional.mse_loss(tx_pred, transcript_counts.float())
+				# Scale the regression loss to avoid dominating the CE loss
+				masked_lm_loss = masked_lm_loss + 0.1 * tx_loss
 
 		return LEDSeq2SeqLMOutput(
 			loss=masked_lm_loss,

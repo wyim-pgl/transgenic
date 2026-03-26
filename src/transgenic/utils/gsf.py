@@ -244,6 +244,18 @@ def gffString2GFF3(gff:str, chr:str, region_start:int, extra_attributes:str) -> 
 			except ValueError:
 				print(f"Warning: feature '{feat}' has non-integer coordinates: start='{featureData[0]}', end='{featureData[2]}'. Skipping.", file=sys.stderr)
 				continue
+			# Reject features with flipped coordinates (start >= end)
+			if featStart >= featEnd:
+				print(f"Warning: feature '{feat}' has flipped/zero-length coordinates: start={featStart}, end={featEnd}. Skipping.", file=sys.stderr)
+				continue
+			# Reject features with negative coordinates
+			if featStart < 0:
+				print(f"Warning: feature '{feat}' has negative start coordinate: {featStart}. Skipping.", file=sys.stderr)
+				continue
+			# Reject CDS features shorter than 3bp (sub-codon)
+			if 'CDS' in feat and (featEnd - featStart) < 3:
+				print(f"Warning: CDS feature '{feat}' is shorter than 3bp ({featEnd - featStart}bp). Skipping.", file=sys.stderr)
+				continue
 			validFeats.append(feat)
 			# Track the minimum start coordinate across all features in this transcript
 			if geneStart is None:

@@ -17,3 +17,13 @@ __pycache__/
 .DS_Store
 Thumbs.db
 train/stashed_version.py
+*.refmap
+*.db
+*.log
+*.tmap
+examples/HFmodels/
+/HFmodels
+/wandb
+examples/ath_chr4_predict.db
+examples/ath_chr4_predict.cleaned.gff
+examples/ath_chr4_predict.gff

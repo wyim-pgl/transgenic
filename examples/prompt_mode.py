@@ -220,10 +220,10 @@ def main():
         ds_comp,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=2,
+        num_workers=4,
         pin_memory=True,
         collate_fn=hyena_collate_fn,
-        prefetch_factor=4
+        prefetch_factor=8
     )
 
     # Clear output file if it exists

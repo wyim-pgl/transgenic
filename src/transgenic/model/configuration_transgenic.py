@@ -28,7 +28,7 @@ class HyenaTransgenicConfig(PretrainedConfig):
 	[jlomas/HyenaTransgenic-768L12A6-400M](https://huggingface.co/jlomas/HyenaTransgenic-768L12A6-400M)
 
 	Args:
-		vocab_size: Number of GFF decoder tokens (see GFFTokenizer). Default 272.
+		vocab_size: Number of GFF decoder tokens (see GFFTokenizer). Default 288.
 		max_encoder_position_embeddings: Max encoder positional embedding length.
 		max_decoder_position_embeddings: Max decoder positional embedding length.
 		encoder_layers / decoder_layers: Number of transformer layers in each stack.
@@ -41,6 +41,8 @@ class HyenaTransgenicConfig(PretrainedConfig):
 		max_encoder_seqlen: Maximum DNA input sequence length the encoder can handle.
 		encoder_n_layer: Number of HyenaDNA layers (may differ from decoder layers).
 		unlink: If True, decoder embedding and LM head weights are NOT tied.
+	max_transcript_count: Maximum number of alternative transcripts for the
+		transcript count regression head (default 15).
 	"""
 
 	model_type = "transgenicHyena"  # Identifies this config type in HuggingFace model registry
@@ -56,7 +58,7 @@ class HyenaTransgenicConfig(PretrainedConfig):
 
 	def __init__(
 		self,
-		vocab_size=272,                           # GFF token vocabulary size (special + digit + feature tokens)
+		vocab_size=288,                           # GFF token vocabulary size (special + digit + feature + isoform tokens)
 		max_encoder_position_embeddings=16384,    # Max positional embeddings for encoder sinusoidal PE
 		max_decoder_position_embeddings=2048,     # Max positional embeddings for Longformer decoder
 		encoder_layers=12,                        # Number of HyenaDNA encoder transformer blocks
@@ -88,6 +90,7 @@ class HyenaTransgenicConfig(PretrainedConfig):
 		max_encoder_seqlen=49152,                 # Max DNA nucleotide sequence length for encoder input
 		encoder_n_layer=12,                       # Number of HyenaDNA layers to instantiate
 		unlink=False,                             # Whether to untie decoder embedding ↔ LM head weights
+		max_transcript_count=15,                  # Max transcript count for regression head
 		**kwargs,
 	):
 		# Store all hyperparameters as instance attributes
@@ -116,6 +119,7 @@ class HyenaTransgenicConfig(PretrainedConfig):
 		self.encoder_n_layer = encoder_n_layer
 		self.max_encoder_seqlen = max_encoder_seqlen
 		self.unlink = unlink
+		self.max_transcript_count = max_transcript_count
 
 		# Initialize the HuggingFace PretrainedConfig base class with special token IDs
 		super().__init__(

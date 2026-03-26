@@ -17,13 +17,15 @@ The tokenizer maps each GFF element (digits, feature names, delimiters)
 to unique integer IDs. During decoding, token IDs are converted back to
 a GFF string that can be interpreted as genomic annotations.
 
-Vocabulary structure (272 tokens):
+Vocabulary structure (288 tokens):
   0-3:     Special tokens (<s>, <pad>, </s>, <unk>)
   4-13:    Individual digits (0-9) for encoding coordinates
   14-21:   Letters and delimiters (A, B, C, >, ., +, -, ;)
   22-171:  CDS feature tokens (CDS1 through CDS150)
   172-221: 5' UTR tokens (five_prime_UTR1 through five_prime_UTR50)
   222-271: 3' UTR tokens (three_prime_UTR1 through three_prime_UTR50)
+  272:     <iso> — dedicated isoform/transcript separator (replaces ; in transcript section)
+  273-287: <tx1> through <tx15> — transcript count planning tokens
 """
 
 import re, json, os
@@ -41,7 +43,7 @@ class GFFTokenizer(PreTrainedTokenizer):
 
 		Args:
 			vocab: Optional custom vocabulary dict {token_str: token_id}.
-			       If None, builds the default 272-token GFF vocabulary.
+			       If None, builds the default 288-token GFF vocabulary.
 		"""
 		if vocab is None:
 			# Build the default vocabulary mapping
@@ -61,7 +63,7 @@ class GFFTokenizer(PreTrainedTokenizer):
 				".": 18,       # Phase "." (not applicable, used for UTR features)
 				"+": 19,       # Forward strand indicator
 				"-": 20,       # Reverse strand indicator
-				";": 21        # Delimiter between individual features or transcript entries
+				";": 21        # Delimiter between individual features (in feature section)
 			}
 			# Add CDS feature tokens: CDS1 through CDS150
 			# Each exon/CDS in a gene gets a unique numbered token
@@ -72,6 +74,19 @@ class GFFTokenizer(PreTrainedTokenizer):
 			for i in range(1, 51):
 				self.vocab[f"five_prime_UTR{i}"] = i + 171   # IDs 172-221
 				self.vocab[f"three_prime_UTR{i}"] = i + 221  # IDs 222-271
+
+			# Isoform-aware tokens:
+			# <iso> is a dedicated transcript separator that replaces ';' in the
+			# transcript section (after '>'), disambiguating transcript boundaries
+			# from feature boundaries.
+			self.vocab["<iso>"] = 272
+
+			# <tx1> through <tx15> are transcript count planning tokens. Emitted
+			# immediately before '>' to signal how many transcripts will follow.
+			# This gives the decoder an explicit planning signal about isoform
+			# complexity in the upcoming transcript section.
+			for i in range(1, 16):
+				self.vocab[f"<tx{i}>"] = 272 + i       # IDs 273-287
 		else:
 			self.vocab = vocab  # Use caller-provided vocabulary
 
@@ -104,6 +119,11 @@ class GFFTokenizer(PreTrainedTokenizer):
 		and '|' (columns within an entry). Numeric columns are split into
 		individual digit tokens; named columns become single tokens.
 
+		In the isoform-aware mode:
+		  - A <tx:N> token is emitted before '>' to signal the transcript count
+		  - ';' delimiters in the transcript section (after '>') are replaced
+		    with the dedicated '<iso>' separator token
+
 		Args:
 			text: Raw GFF string (e.g., "100|CDS1|200|+|A;300|CDS2|400|+|B>CDS1|CDS2")
 
@@ -112,22 +132,48 @@ class GFFTokenizer(PreTrainedTokenizer):
 		"""
 		tokens = ["<s>"]  # Always start with beginning-of-sequence token
 
-		for features in text.split(">"):         # Split features section from transcripts
-			for feature in features.split(";"):   # Split individual feature entries
-				for column in feature.split("|"):  # Split columns within a feature
+		# Split into features section and transcripts section
+		parts = text.split(">")
+		features_section = parts[0] if len(parts) > 0 else ""
+		transcripts_section = parts[1] if len(parts) > 1 else ""
+
+		# Count transcripts and emit <tx:N> planning token
+		if transcripts_section:
+			tx_count = min(transcripts_section.count(";") + 1, 15)
+		else:
+			tx_count = 1
+		tx_token = f"<tx{tx_count}>"
+
+		# Tokenize features section (using ';' as delimiter between features)
+		for feature in features_section.split(";"):
+			for column in feature.split("|"):
+				if re.search(r'^\d+$', column):
+					# Numeric column (coordinate): split into individual digits
+					tokens.extend([digit for digit in column])
+				else:
+					# Non-numeric column (feature name, strand, phase): single token
+					tokens.append(column)
+			tokens.append(";")  # Re-add semicolon delimiter after each feature
+
+		# Replace trailing ';' with <tx:N> and '>' tokens
+		if tokens[-1] == ";":
+			tokens[-1] = tx_token
+		tokens.append(">")
+
+		# Tokenize transcripts section (using '<iso>' as delimiter between transcripts)
+		if transcripts_section:
+			for j, transcript in enumerate(transcripts_section.split(";")):
+				for column in transcript.split("|"):
 					if re.search(r'^\d+$', column):
-						# Numeric column (coordinate): split into individual digits
-						# e.g., "1234" → ["1", "2", "3", "4"]
 						tokens.extend([digit for digit in column])
 					else:
-						# Non-numeric column (feature name, strand, phase): single token
-						# e.g., "CDS1", "+", "A"
 						tokens.append(column)
-				tokens.append(";")  # Re-add semicolon delimiter after each feature
-			tokens.append(">")      # Re-add section delimiter after features/transcripts
+				# Use <iso> between transcripts (not after the last one)
+				if j < tx_count - 1:
+					tokens.append("<iso>")
 
-		# Remove trailing ";>" pair and add end-of-sequence token
-		return tokens[:-2] + ["</s>"]
+		tokens.append("</s>")
+		return tokens
 
 	def _convert_token_to_id(self, token):
 		"""Look up the integer ID for a token string. Returns <unk> ID if not found."""
@@ -145,6 +191,10 @@ class GFFTokenizer(PreTrainedTokenizer):
 		Pipe '|' delimiters are re-inserted between columns, and ';'/'>'
 		delimiters are cleaned up to produce valid GFF format.
 
+		Isoform-aware tokens are handled:
+		  - <iso> is converted back to ';' (standard transcript separator)
+		  - <tx:N> tokens are stripped (they are planning signals only)
+
 		Args:
 			tokens: List of token strings (or integer IDs).
 
@@ -153,18 +203,29 @@ class GFFTokenizer(PreTrainedTokenizer):
 		"""
 		toks = []
 		for i, token in enumerate(tokens):
+			# Convert integer IDs to strings if needed
+			if isinstance(token, int):
+				token = self._convert_id_to_token(token)
+			# Strip transcript count planning tokens (they are for the decoder only)
+			if re.match(r'^<tx\d+>$', token):
+				continue
+			# Convert <iso> back to ';' for standard GFF output
+			if token == "<iso>":
+				toks.append(";")
+				continue
 			if token.isnumeric() and i != 0:
-				if tokens[i - 1].isnumeric():
+				# Check previous non-skipped token for digit merging
+				if toks and toks[-1].isnumeric():
 					# Merge consecutive digits into a single number string
-					# e.g., ["1", "2", "3"] → "123"
 					toks[-1] = toks[-1] + token
 					continue
 			toks.append(token)
 
 		# Join all tokens with pipe delimiter, then clean up formatting
-		toks = '|'.join([self._convert_id_to_token(token) if isinstance(token, int) else token for token in toks])
+		toks = '|'.join(toks)
 		toks = re.sub(r'\|;\|>\|', '>', toks)  # Remove extra pipes around ;>
 		toks = re.sub(r';>', '>', toks)          # Clean ;> to just >
+		toks = re.sub(r'\|>', '>', toks)         # Remove pipe before > (from stripped <tx:N>)
 		toks = re.sub(r'>\|', '>', toks)         # Remove pipe after >
 		toks = re.sub(r'\|;\|', ';', toks)       # Remove extra pipes around ;
 		return toks
