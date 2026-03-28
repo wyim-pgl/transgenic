@@ -170,6 +170,7 @@ def train(
 	unlink: bool,
 	log_wandb: bool,
 	train_sampler=None,
+	train_dl_kwargs: Optional[Dict] = None,
 ):
 	if torch.cuda.is_available():
 		device_name = torch.cuda.get_device_name(0)
@@ -216,19 +217,24 @@ def train(
 			},
 		)
 
-	dl_kwargs = profile.dataloader_kwargs(is_eval=False)
+	# Build dl_kwargs from caller or profile. Train DL is rebuilt per-epoch
+	# with a deterministic generator seed, so only store the kwargs here.
+	if train_dl_kwargs is not None:
+		dl_kwargs = dict(train_dl_kwargs)
+	else:
+		dl_kwargs = profile.dataloader_kwargs(is_eval=False)
 	eval_dl_kwargs = profile.dataloader_kwargs(is_eval=True)
 
-	# If an isoform-rebalanced sampler is provided, use it instead of shuffle.
-	if train_sampler is not None:
-		dl_kwargs["sampler"] = train_sampler
-		dl_kwargs["shuffle"] = False
+	# Remove sampler/shuffle from dl_kwargs – they are set per-epoch below.
+	dl_kwargs.pop("sampler", None)
 
-	train_dl = makeDataLoader(train_ds, **dl_kwargs)
 	eval_dl = makeDataLoader(eval_ds, **eval_dl_kwargs)
 
-	steps_per_epoch = max(1, math.ceil(len(train_dl) / profile.accumulation_steps))
+	# Build a temporary train_dl just to compute steps_per_epoch.
+	_tmp_dl = makeDataLoader(train_ds, **{**dl_kwargs, "shuffle": False})
+	steps_per_epoch = max(1, math.ceil(len(_tmp_dl) / profile.accumulation_steps))
 	total_opt_steps = steps_per_epoch * num_epochs
+	del _tmp_dl
 
 	base_d_model = 1152
 	layers = 16
@@ -265,17 +271,23 @@ def train(
 		if accelerator.is_main_process:
 			print(f"LR schedule: {warmup_steps} warmup steps, {total_opt_steps} total", file=sys.stderr)
 
+	# Prepare model, optimizer, eval_dl (and optionally lr_scheduler).
+	# Train DataLoader is prepared each epoch inside the loop.
 	if lr_scheduler is None:
-		model, optimizer, train_dl, eval_dl = accelerator.prepare(model, optimizer, train_dl, eval_dl)
+		model, optimizer, eval_dl = accelerator.prepare(model, optimizer, eval_dl)
 	else:
-		model, optimizer, train_dl, eval_dl, lr_scheduler = accelerator.prepare(
-			model, optimizer, train_dl, eval_dl, lr_scheduler
+		model, optimizer, eval_dl, lr_scheduler = accelerator.prepare(
+			model, optimizer, eval_dl, lr_scheduler
 		)
 
 	start_epoch = 0
 	resume_step = 0                             # Micro-batch step to resume from (within start_epoch)
 	global_step = 0                             # Total optimizer steps completed so far
 	best_eval_score: Optional[float] = None
+	# Running-loss accumulators restored from checkpoint for correct epoch-level metrics.
+	resume_loss_sum = 0.0
+	resume_processed = 0
+	resume_skipped = 0
 	if resume_from_checkpoint is not None:
 		resume_from_checkpoint = os.path.abspath(resume_from_checkpoint)
 		is_best_model_dir = os.path.basename(os.path.normpath(resume_from_checkpoint)) == "best_model"
@@ -322,6 +334,10 @@ def train(
 				global_step = int(meta.get("global_step", 0))
 				best = meta.get("best_eval_score")
 				best_eval_score = None if best is None else float(best)
+				# Restore running loss accumulators so epoch mean is correct.
+				resume_loss_sum = float(meta.get("running_loss_sum", 0.0))
+				resume_processed = int(meta.get("processed_batches", 0))
+				resume_skipped = int(meta.get("skipped_batches", 0))
 
 		# Ensure scheduler resumes at the saved optimization step (no warmup restart).
 		if lr_scheduler is not None and global_step > 0:
@@ -330,7 +346,9 @@ def train(
 		accelerator.wait_for_everyone()
 		print(f"Resumed from {resume_from_checkpoint}; epoch={start_epoch}, step={resume_step}, global_step={global_step}", file=sys.stderr)
 
-	def _save_state(epoch: int, step: int, global_step: int, best_score: Optional[float]):
+	def _save_state(epoch: int, step: int, global_step: int, best_score: Optional[float],
+	                running_loss_sum: float = 0.0, processed_batches: int = 0,
+	                skipped_batches: int = 0):
 		ckpt_dir = os.path.join(checkpoint_path, f"accelerate_epoch{epoch}_step{global_step}")
 		accelerator.save_state(ckpt_dir)
 		# Save decoder tokenizer at checkpoint root so AutoTokenizer.from_pretrained(ckpt_dir)
@@ -388,6 +406,10 @@ def train(
 				"global_step": global_step,
 				"lr": float(optimizer.param_groups[0]["lr"]),
 				"best_eval_score": None if best_score is None else float(best_score),
+				"running_loss_sum": float(running_loss_sum),
+				"processed_batches": int(processed_batches),
+				"skipped_batches": int(skipped_batches),
+				"epoch_seed": 123 + epoch,
 			},
 		)
 
@@ -399,7 +421,7 @@ def train(
 
 			unwrapped_model = accelerator.unwrap_model(model)
 			# Export model + config in standard HF format for easy inference loading.
-			unwrapped_model.save_pretrained(best_dir, safe_serialization=True)
+			unwrapped_model.save_pretrained(best_dir, safe_serialization=False)
 
 			# Export decoder tokenizer at root and encoder tokenizer in a subdirectory.
 			gff_tokenizer = GFFTokenizer()
@@ -437,16 +459,51 @@ def train(
 	try:
 		for epoch in range(start_epoch, num_epochs):
 			model.train()
-			total_loss = 0.0
-			processed_batches = 0
-			skipped_batches = 0
 
-			progress = tqdm(train_dl, leave=False, miniters=10)
-			for step, batch in enumerate(progress):
-				# Skip already-processed steps when resuming mid-epoch
-				if epoch == start_epoch and step < resume_step:
-					continue
+			# ── Build a fresh DataLoader with a deterministic per-epoch seed ──
+			# This guarantees the shuffle order for epoch E is ALWAYS the same,
+			# regardless of whether we are starting fresh or resuming mid-epoch.
+			g = torch.Generator()
+			g.manual_seed(123 + epoch)
 
+			if train_sampler is not None:
+				# Recreate the WeightedRandomSampler with the epoch-specific generator
+				# so the same sequence of draws is produced on resume.
+				epoch_sampler = torch.utils.data.WeightedRandomSampler(
+					weights=train_sampler.weights,
+					num_samples=train_sampler.num_samples,
+					replacement=train_sampler.replacement,
+					generator=g,
+				)
+				epoch_dl_kwargs = {**dl_kwargs, "sampler": epoch_sampler, "shuffle": False}
+			else:
+				epoch_dl_kwargs = {**dl_kwargs, "generator": g}
+
+			train_dl_raw = makeDataLoader(train_ds, **epoch_dl_kwargs)
+			train_dl = accelerator.prepare(train_dl_raw)
+
+			# ── Handle mid-epoch resume via accelerator.skip_first_batches ──
+			# Because the generator seed is deterministic, the batch order is
+			# identical to the original run.  skip_first_batches fast-forwards
+			# through exactly the batches the model already trained on.
+			start_step_offset = 0
+			if epoch == start_epoch and resume_step > 0:
+				print(f"Skipping first {resume_step} batches (deterministic replay)...", file=sys.stderr)
+				active_dl = accelerator.skip_first_batches(train_dl, resume_step)
+				start_step_offset = resume_step
+				# Restore running-loss accumulators from checkpoint so epoch mean is correct.
+				total_loss = resume_loss_sum
+				processed_batches = resume_processed
+				skipped_batches = resume_skipped
+				print(f"Restored running loss: sum={total_loss:.4f}, processed={processed_batches}, skipped={skipped_batches}", file=sys.stderr)
+			else:
+				active_dl = train_dl
+				total_loss = 0.0
+				processed_batches = 0
+				skipped_batches = 0
+
+			progress = tqdm(active_dl, leave=False, miniters=10)
+			for step, batch in enumerate(progress, start=start_step_offset):
 				ii, am, lab, *meta = batch
 				# Extract transcript counts for regression head if available
 				# (last element of batch from hyena_collate_fn when in training mode)
@@ -480,7 +537,10 @@ def train(
 							lr_scheduler.step()
 						# Save full resumable checkpoint every save_every_n_steps optimizer steps
 						if save_every_n_steps and global_step % save_every_n_steps == 0:
-							_save_state(epoch, step + 1, global_step, best_eval_score)
+							_save_state(epoch, step + 1, global_step, best_eval_score,
+							            running_loss_sum=total_loss,
+							            processed_batches=processed_batches,
+							            skipped_batches=skipped_batches)
 							print(f"Checkpoint saved at epoch {epoch}, step {step+1}, global_step {global_step}", file=sys.stderr)
 
 					if log_wandb:
@@ -511,6 +571,9 @@ def train(
 						torch.cuda.empty_cache()
 						gc.collect()
 				del outputs, ii, am, lab, meta
+
+			# Free the per-epoch DataLoader to release memory before eval.
+			del train_dl, train_dl_raw, active_dl, progress
 			if processed_batches == 0:
 				raise RuntimeError("No batches processed – lower batch_size or max_tokens_per_batch.")
 
@@ -568,7 +631,9 @@ def train(
 					_save_best("train_loss", train_epoch_loss)
 
 			if save_every_epoch:
-				_save_state(epoch + 1, 0, global_step, best_eval_score)
+				_save_state(epoch + 1, 0, global_step, best_eval_score,
+				            running_loss_sum=0.0, processed_batches=0,
+				            skipped_batches=0)
 
 			# ── Chr4 gffcompare evaluation (500 random gene regions) ─────────
 			try:
@@ -620,11 +685,26 @@ def train(
 		except Exception:
 			safe_best_score = None
 		try:
+			safe_loss_sum = total_loss if 'total_loss' in locals() else 0.0
+		except Exception:
+			safe_loss_sum = 0.0
+		try:
+			safe_proc = processed_batches if 'processed_batches' in locals() else 0
+		except Exception:
+			safe_proc = 0
+		try:
+			safe_skip = skipped_batches if 'skipped_batches' in locals() else 0
+		except Exception:
+			safe_skip = 0
+		try:
 			_save_state(
 				epoch=safe_epoch,
 				step=safe_step,
 				global_step=safe_global_step,
 				best_score=safe_best_score,
+				running_loss_sum=safe_loss_sum,
+				processed_batches=safe_proc,
+				skipped_batches=safe_skip,
 			)
 			print(f"Checkpoint saved at epoch {safe_epoch}, step {safe_step}, global_step {safe_global_step}", file=sys.stderr)
 		except Exception as e:
@@ -646,10 +726,10 @@ if __name__ == "__main__":
 		"attention_window": 1024,
 		"max_tokens_per_batch": 90000,
 		"num_workers": 2,
-		"prefetch_factor": 2,
+		"prefetch_factor": 4,
 		"checkpoint_path": "/home/framazan/checkpoints_new/",
 		"output_dir": "/home/framazan/saved_models/",
-		"epochs": 10,
+		"epochs": 7,
 		"lr": 2e-5,
 		"schedule_lr": True,
 		"do_eval": True,
@@ -657,7 +737,7 @@ if __name__ == "__main__":
 		"notes": "Transgenic RTX 4090 run with isoform tokne",
 		"encoder_model": "LongSafari/hyenadna-large-1m-seqlen-hf",
 		"resume": "",  # or "auto" or checkpoint path
-		"save_every_n_steps": 400,
+		"save_every_n_steps": 100,
 		"save_every_epoch": True,
 		"unlink": False,
 		"log_wandb": True,
@@ -737,5 +817,6 @@ if __name__ == "__main__":
 		unlink=config["unlink"],
 		log_wandb=config["log_wandb"],
 		train_sampler=train_sampler,
+		train_dl_kwargs=profile.dataloader_kwargs(is_eval=False),
 	)
 

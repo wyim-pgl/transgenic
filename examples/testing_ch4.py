@@ -139,6 +139,65 @@ def _count_isoforms_gffread(gff_path: str) -> int:
             os.remove(gtf_path)
 
 
+def _build_subset_ref_gff(ref_gff_path: str, gene_names: set, output_path: str) -> str:
+    """Extract reference GFF3 features for only the specified gene names.
+
+    Handles the parent-child hierarchy:
+      gene  → ID=AT4GXXXXX
+      mRNA  → Parent=AT4GXXXXX; ID=PAC:YYYYY
+      exon/CDS → Parent=PAC:YYYYY
+
+    Returns:
+        Path to the subset reference GFF3 file.
+    """
+    # Pass 1: collect mRNA/transcript IDs that belong to our gene set
+    child_ids = set()  # IDs of mRNAs whose parent is in gene_names
+    with open(ref_gff_path, "r") as fh:
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            cols = line.rstrip("\n").split("\t")
+            if len(cols) < 9:
+                continue
+            attrs = cols[8]
+            # Check if this feature's Parent is one of our genes
+            parent_match = re.search(r"Parent=([^;]+)", attrs)
+            if parent_match:
+                parent_id = parent_match.group(1)
+                if parent_id in gene_names:
+                    # This is a direct child (mRNA) of a selected gene
+                    id_match = re.search(r"ID=([^;]+)", attrs)
+                    if id_match:
+                        child_ids.add(id_match.group(1))
+
+    # Pass 2: write features that belong to selected genes
+    with open(ref_gff_path, "r") as fh, open(output_path, "w") as out:
+        out.write("##gff-version 3\n")
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            cols = line.rstrip("\n").split("\t")
+            if len(cols) < 9:
+                continue
+            attrs = cols[8]
+            # Gene line: check if ID is in our set
+            id_match = re.search(r"ID=([^;]+)", attrs)
+            if id_match and id_match.group(1) in gene_names:
+                out.write(line if line.endswith("\n") else line + "\n")
+                continue
+            # mRNA or child feature: check Parent
+            parent_match = re.search(r"Parent=([^;]+)", attrs)
+            if parent_match:
+                parent_id = parent_match.group(1)
+                if parent_id in gene_names or parent_id in child_ids:
+                    # Track grandchild IDs too (for deeper hierarchies)
+                    if id_match:
+                        child_ids.add(id_match.group(1))
+                    out.write(line if line.endswith("\n") else line + "\n")
+
+    return output_path
+
+
 def evaluate_chr4(
     model: Any,
     device: torch.device,
@@ -202,6 +261,7 @@ def evaluate_chr4(
     gff_tokenizer = GFFTokenizer()
     model.eval()
     genes_predicted = 0
+    evaluated_gene_names = set()  # Track which genes we actually evaluated
 
     if verbose:
         from tqdm import tqdm
@@ -223,6 +283,8 @@ def evaluate_chr4(
             )
 
             for idx, pred_raw in enumerate(decoded_batch):
+                gene_name = batch[3][idx]  # gene model name (e.g. AT4G00020)
+                evaluated_gene_names.add(gene_name)
                 pred = (
                     pred_raw.replace("|</s>", "")
                     .replace("</s>", "")
@@ -232,7 +294,7 @@ def evaluate_chr4(
                     pred,
                     batch[4][idx],   # chr
                     batch[5][idx],   # region_start
-                    f"GM={batch[3][idx]}",  # gene model name
+                    f"GM={gene_name}",  # gene model name
                 )
                 for line in gff_lines:
                     out_f.write(line + "\n")
@@ -243,13 +305,23 @@ def evaluate_chr4(
             if device.type == "cuda":
                 torch.cuda.empty_cache()
 
-    # ── 3. Run gffcompare ───────────────────────────────────────────────
+    # ── 3. Build subset reference & run gffcompare ──────────────────────
+    # Create a reference GFF3 containing ONLY the genes we evaluated, so
+    # that sensitivity/precision are measured against the correct denominator.
     metrics: Dict[str, float] = {"genes_predicted": genes_predicted}
+    subset_ref_path = os.path.join(work_dir, "eval_chr4_ref_subset.gff3")
 
     if shutil.which("gffcompare") is not None:
         try:
+            _build_subset_ref_gff(CHR4_REF, evaluated_gene_names, subset_ref_path)
+            if verbose:
+                # Count lines in subset ref for verification
+                with open(subset_ref_path) as _f:
+                    ref_lines = sum(1 for _ in _f)
+                print(f"  Subset reference: {len(evaluated_gene_names)} genes, {ref_lines} GFF3 lines", file=sys.stderr)
+
             subprocess.run(
-                ["gffcompare", "-r", CHR4_REF, "-o", compare_prefix, pred_gff_path],
+                ["gffcompare", "-r", subset_ref_path, "-o", compare_prefix, pred_gff_path],
                 check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True,
             )
             stats_path = compare_prefix + ".stats"

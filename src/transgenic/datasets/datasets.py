@@ -790,7 +790,7 @@ def hyena_segment_collate_fn(batch):
 		return sequences, attention_masks, None, organism, chromosome, start, end
 
 
-def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, prefetch_factor=2, sampler=None, num_workers=0, collate_fn=target_collate_fn, persistent_workers=False):
+def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, prefetch_factor=2, sampler=None, num_workers=0, collate_fn=target_collate_fn, persistent_workers=False, generator=None):
 	"""Create a PyTorch DataLoader with sensible defaults for TransGenic training.
 
 	Args:
@@ -803,6 +803,8 @@ def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, prefetch_fa
 		num_workers: Number of DataLoader worker processes (0 = main process only).
 		collate_fn: Function to collate/pad a list of samples into a batch.
 		persistent_workers: Keep workers alive between epochs to avoid respawn cost.
+		generator: Optional torch.Generator for deterministic shuffle order.
+		           Used for reproducible mid-epoch resume.
 
 	Returns:
 		Configured DataLoader instance.
@@ -819,4 +821,5 @@ def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, prefetch_fa
 		sampler=sampler,
 		num_workers=num_workers,
 		prefetch_factor=prefetch_factor if num_workers > 0 else None,  # Pre-fetch 2 batches per worker
-		persistent_workers=persistent_workers if num_workers > 0 else False,)  # Only valid with workers
+		persistent_workers=persistent_workers if num_workers > 0 else False,  # Only valid with workers
+		generator=generator,)
