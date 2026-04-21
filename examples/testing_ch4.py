@@ -62,6 +62,8 @@ def _generate_batch(model, ii, am, max_length=2048):
                         num_beams=1,
                         do_sample=False,
                         use_cache=True,
+                        repetition_penalty=1.3,
+                        no_repeat_ngram_size=5,
                     )
                     seq = out.sequences if hasattr(out, "sequences") else out
                     out_chunks.append(seq)

@@ -250,7 +250,8 @@ class TransgenicPreTrainedModel(PreTrainedModel):
 # ═══════════════════════════════════════════════════════════════════════════
 
 class HyenaDownsampleWithRelPosBias(nn.Module):
-	"""Two-stage strided convolution with learnable relative positional biases.
+	"""Two-stage strided convolution with learnable relative positional biases
+	and a gated skip connection from the intermediate (3x) resolution.
 
 	Compresses the encoder output sequence by ~6x while expanding the
 	hidden dimension from d_model to 2*d_model:
@@ -259,6 +260,15 @@ class HyenaDownsampleWithRelPosBias(nn.Module):
 	  Stage 2: Conv1d(1.5*d_model → 2*d_model, kernel=2, stride=2) → ~2x compression
 
 	Total compression: stride 3 * stride 2 = 6x sequence length reduction.
+
+	Gated Skip Connection:
+	  The 6x downsampling destroys single-nucleotide positional precision
+	  needed for accurate exon boundary prediction. To preserve finer-grained
+	  positional information, the intermediate 3x-downsampled features are:
+	    1. Average-pooled (kernel=2, stride=2) to match the 6x output length
+	    2. Projected from 1.5*d_model to 2*d_model
+	    3. Mixed into the 6x output via a learned channel-wise sigmoid gate
+	  This gives the decoder access to higher-resolution encoder features.
 
 	Relative Positional Bias:
 	  Instead of using bias terms in the convolution (which are position-independent),
@@ -269,6 +279,8 @@ class HyenaDownsampleWithRelPosBias(nn.Module):
 	Example: Input (batch=1, d_model=1152, seq_len=6000)
 	  → Stage 1: (1, 1728, 2000)
 	  → Stage 2: (1, 2304, 1000)
+	  → Skip:    (1, 1728, 2000) → pool → (1, 1728, 1000) → proj → (1, 2304, 1000)
+	  → Output:  gate * skip + (1 - gate) * stage2
 	"""
 	def __init__(self, in_channels):
 		"""
@@ -277,10 +289,13 @@ class HyenaDownsampleWithRelPosBias(nn.Module):
 		"""
 		super(HyenaDownsampleWithRelPosBias, self).__init__()
 
+		self.mid_channels = in_channels + (in_channels // 2)  # 1.5 * d_model
+		self.out_channels = in_channels * 2                    # 2 * d_model
+
 		# Stage 1: 3x downsampling (kernel_size=6, stride=3, padding=2)
 		self.conv1 = nn.Conv1d(
 			in_channels,
-			in_channels + (in_channels // 2),  # d_model → 1.5 * d_model
+			self.mid_channels,  # d_model → 1.5 * d_model
 			kernel_size=6,
 			stride=3,
 			padding=2,
@@ -289,21 +304,31 @@ class HyenaDownsampleWithRelPosBias(nn.Module):
 		# Learnable relative positional bias for stage 1 convolution
 		# Shape: (out_channels, 1, kernel_size) — broadcast across input channels
 		self.rel_bias1 = nn.Parameter(torch.zeros(self.conv1.out_channels, 1, 6))
-		self.norm1 = nn.LayerNorm(in_channels + (in_channels // 2))  # Post-conv normalization
+		self.norm1 = nn.LayerNorm(self.mid_channels)  # Post-conv normalization
 
 		# Stage 2: 2x downsampling (kernel_size=2, stride=2)
 		self.conv2 = nn.Conv1d(
-			in_channels + (in_channels // 2),
-			in_channels * 2,               # 1.5 * d_model → 2 * d_model
+			self.mid_channels,
+			self.out_channels,               # 1.5 * d_model → 2 * d_model
 			kernel_size=2,
 			stride=2,
 			bias=False)  # No bias — using relative positional bias
 
 		# Learnable relative positional bias for stage 2 convolution
 		self.rel_bias2 = nn.Parameter(torch.zeros(self.conv2.out_channels, 1, 2))
-		self.norm2 = nn.LayerNorm(in_channels * 2)  # Post-conv normalization
+		self.norm2 = nn.LayerNorm(self.out_channels)  # Post-conv normalization
 
 		self.relu = nn.ReLU(inplace=True)  # In-place activation to save memory
+
+		# ── Gated skip connection from 3x intermediate ──
+		# Project 1.5*d_model → 2*d_model to match the stage 2 output
+		self.skip_proj = nn.Linear(self.mid_channels, self.out_channels)
+		self.skip_norm = nn.LayerNorm(self.out_channels)
+		# Channel-wise gate: learns how much of the 3x skip to mix in
+		self.skip_gate = nn.Sequential(
+			nn.Linear(self.out_channels, self.out_channels),
+			nn.Sigmoid(),
+		)
 
 	def forward(self, x):
 		"""
@@ -328,6 +353,9 @@ class HyenaDownsampleWithRelPosBias(nn.Module):
 		out1 = out1.transpose(1, 2)   # Back to (batch, C, L) for Conv1d
 		out1 = self.relu(out1)
 
+		# Save 3x intermediate for skip connection (before stage 2)
+		out1_skip = out1  # (batch, 1.5*d_model, seq_len/3)
+
 		# ── Stage 2: 2x downsampling ──
 		conv2_out = F.conv1d(out1, self.conv2.weight, bias=None, stride=self.conv2.stride, padding=self.conv2.padding)
 		ones2 = torch.ones(out1.size(0), 1, out1.size(2), device=out1.device)
@@ -339,6 +367,25 @@ class HyenaDownsampleWithRelPosBias(nn.Module):
 		out2 = self.norm2(out2)
 		out2 = out2.transpose(1, 2)
 		out2 = self.relu(out2)
+
+		# ── Gated skip connection ──
+		# Pool 3x features to match 6x output length: (batch, mid_ch, L/3) → (batch, mid_ch, L/6)
+		skip = F.avg_pool1d(out1_skip, kernel_size=2, stride=2)
+		# Handle length mismatch (round down to match out2)
+		min_len = min(skip.size(2), out2.size(2))
+		skip = skip[:, :, :min_len]
+		out2 = out2[:, :, :min_len]
+		# Project skip from 1.5*d_model → 2*d_model and gate
+		skip = skip.transpose(1, 2)  # (batch, L/6, mid_ch)
+		skip = self.skip_proj(skip)  # (batch, L/6, 2*d_model)
+		skip = self.skip_norm(skip)
+		skip = self.relu(skip)
+		# Compute gate from the 6x output (channel-wise sigmoid)
+		out2_for_gate = out2.transpose(1, 2)  # (batch, L/6, 2*d_model)
+		gate = self.skip_gate(out2_for_gate)   # (batch, L/6, 2*d_model) in [0, 1]
+		# Mix: blend skip features into the output
+		out2 = (out2_for_gate + gate * skip).transpose(1, 2)  # Back to (batch, 2*d_model, L/6)
+
 		return out2
 
 
@@ -810,21 +857,38 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 		# Compute cross-entropy loss when labels are provided
 		masked_lm_loss = None
 		if labels is not None:
-			# Per-token weighted CE loss: upweight structural tokens that control
-			# transcript count and sequence termination to penalize hallucinated
-			# transcripts and missing EOS signals.
+			# Per-token weighted CE loss: heavily upweight structural tokens that
+			# control gene structure, transcript boundaries, and sequence termination.
+			# This fights the degenerate repetitive tail where the model emits
+			# raw digits without feature type tokens.
 			weight = torch.ones(self.config.vocab_size, device=lm_logits.device)
-			weight[2] = 3.0    # </s> — penalize missing/extra end-of-sequence
-			weight[17] = 2.0   # >   — penalize features→transcripts separator
-			weight[21] = 2.0   # ;   — penalize transcript/feature separators
-			weight[272] = 2.0  # <iso> — penalize isoform separators
-			loss_fct = nn.CrossEntropyLoss(weight=weight, label_smoothing=0.1)
+			weight[2] = 5.0    # </s> — must learn to stop; most critical token
+			weight[17] = 4.0   # >   — features→transcripts separator; key structural signal
+			weight[21] = 3.0   # ;   — feature separator; controls feature count
+			weight[272] = 3.0  # <iso> — isoform separator
+			weight[22:272] = 2.0  # All CDS/UTR feature name tokens — the annotation skeleton
+			loss_fct = nn.CrossEntropyLoss(weight=weight)
 			# Flatten logits and labels for loss computation
 			masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
 
-			# Transcript count regression auxiliary loss.
-			# Uses the mean-pooled encoder last hidden state (from the downsampler)
-			# to predict the number of alternative transcripts.
+			# ── Digit:Structure ratio penalty ──
+			# Penalize sequences where digit tokens vastly outnumber structural
+			# tokens (CDS/UTR names, ;, >). This is the signature of the
+			# degenerate repetitive tail. Valid GFF has ~4-5 digits per
+			# structural token; ratios >8:1 indicate hallucination.
+			with torch.no_grad():
+				pred_ids = lm_logits.argmax(dim=-1)  # (batch, seq_len)
+				is_digit = (pred_ids >= 4) & (pred_ids <= 13)
+				is_struct = ((pred_ids >= 22) & (pred_ids <= 271)) | (pred_ids == 21) | (pred_ids == 17) | (pred_ids == 2)
+				digit_count = is_digit.float().sum(dim=-1)
+				struct_count = is_struct.float().sum(dim=-1)
+			ratio_penalty = F.relu(digit_count / (struct_count + 1.0) - 8.0).mean()
+			masked_lm_loss = masked_lm_loss + 0.05 * ratio_penalty
+
+			# ── Transcript count regression auxiliary loss ──
+			# Uses the mean-pooled encoder last hidden state to predict the
+			# number of alternative transcripts. Huber loss is more robust to
+			# outliers (genes with many isoforms) than MSE.
 			if transcript_counts is not None:
 				enc_hidden = outputs.encoder_last_hidden_state  # (batch, seq/6, d_model)
 				# Mean-pool over the sequence dimension
@@ -839,9 +903,10 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 					pooled = enc_hidden.mean(dim=1)
 				# Predict transcript count (regression, 1-based)
 				tx_pred = self.tx_count_head(pooled).squeeze(-1)  # (batch,)
-				tx_loss = nn.functional.mse_loss(tx_pred, transcript_counts.float())
-				# Scale the regression loss to avoid dominating the CE loss
-				masked_lm_loss = masked_lm_loss + 0.1 * tx_loss
+				tx_loss = nn.functional.huber_loss(tx_pred, transcript_counts.float(), delta=2.0)
+				# Increased weight: the regression head successfully reduced
+				# isoforms from 50K to ~1.3K; stronger signal pushes harder
+				masked_lm_loss = masked_lm_loss + 0.5 * tx_loss
 
 		return LEDSeq2SeqLMOutput(
 			loss=masked_lm_loss,
