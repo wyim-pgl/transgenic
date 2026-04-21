@@ -176,6 +176,45 @@ def get_batch_decoder_input_ids(labels: torch.Tensor, device: torch.device, pad_
     return torch.tensor(padded, device=device)
 
 
+def _is_valid_coordinate_pair(start_val, end_val) -> bool:
+    """Return True when coordinates are numeric and end is greater than start."""
+    try:
+        return int(end_val) > int(start_val)
+    except (TypeError, ValueError):
+        return False
+
+
+def _normalize_gff_lines(gff_lines: list) -> tuple[list, int, int]:
+    """Normalize GFF lines by fixing flipped coords and dropping malformed lines.
+
+    Returns:
+        valid_lines: normalized output lines
+        dropped_malformed: malformed/non-numeric lines that were skipped
+        flipped_fixed: lines where start/end were swapped
+    """
+    valid_lines = []
+    dropped_malformed = 0
+    flipped_fixed = 0
+    for line in gff_lines:
+        if not line:
+            continue
+        cols = line.split("\t")
+        if len(cols) < 5:
+            dropped_malformed += 1
+            continue
+        try:
+            start = int(cols[3])
+            end = int(cols[4])
+        except ValueError:
+            dropped_malformed += 1
+            continue
+        if start > end:
+            cols[3], cols[4] = str(end), str(start)
+            flipped_fixed += 1
+        valid_lines.append("\t".join(cols))
+    return valid_lines, dropped_malformed, flipped_fixed
+
+
 def main():
     args = parse_args()
 
@@ -223,7 +262,7 @@ def main():
         num_workers=2,
         pin_memory=True,
         collate_fn=hyena_collate_fn,
-        prefetch_factor=4
+        prefetch_factor=2
     )
 
     # Clear output file if it exists
@@ -234,6 +273,9 @@ def main():
     print(f"Generating predictions...")
     total = args.num_sequences or len(dl_comp)
     error_count = 0
+    skipped_input_count = 0
+    dropped_malformed_feature_count = 0
+    fixed_flipped_feature_count = 0
     duplicate_count = 0
     seen_fingerprints = {}  # {fingerprint: utr_span}
 
@@ -246,33 +288,116 @@ def main():
         if args.num_sequences and step >= args.num_sequences:
             break
 
-        # Unpack batch: input_ids, attention_mask, labels, gene_model, chrom, start
+        # Unpack batch: input_ids, attention_mask, labels, gene_model, chrom, start, end
         ii = batch[0].to(device)
         am = batch[1].to(device)
         lab = batch[2]
         gene_models = batch[3]
         chroms = batch[4]
         starts = batch[5]
+        ends = batch[6]
         batch_size = ii.shape[0]
 
+        # Validate each sample up front so malformed inputs do not crash generate().
+        valid_indices = []
+        for i in range(batch_size):
+            gm_id = str(gene_models[i])
+            if not _is_valid_coordinate_pair(starts[i], ends[i]):
+                skipped_input_count += 1
+                print(
+                    f"Warning: invalid/flipped/zero-length region coordinates for {gm_id} ({starts[i]}->{ends[i]}). Skipping sample.",
+                    file=sys.stderr,
+                )
+                continue
+
+            # Empty effective sequence (all attention mask zeros) causes Hyena conv failure.
+            if int(am[i].sum().item()) <= 0:
+                skipped_input_count += 1
+                print(f"Warning: empty encoder input for {gm_id}. Skipping sample.", file=sys.stderr)
+                continue
+
+            # Labels are required in prompt mode to build decoder_input_ids.
+            if lab is None or int((lab[i] != 0).sum().item()) <= 0:
+                skipped_input_count += 1
+                print(f"Warning: empty decoder prompt labels for {gm_id}. Skipping sample.", file=sys.stderr)
+                continue
+
+            valid_indices.append(i)
+
+        if not valid_indices:
+            continue
+
+        valid_idx_cpu = torch.tensor(valid_indices, dtype=torch.long)
+        valid_idx_device = valid_idx_cpu.to(device)
+        ii_valid = ii.index_select(0, valid_idx_device)
+        am_valid = am.index_select(0, valid_idx_device)
+        lab_valid = lab.index_select(0, valid_idx_cpu)
+        valid_gene_models = [gene_models[i] for i in valid_indices]
+        valid_chroms = [chroms[i] for i in valid_indices]
+        valid_starts = [starts[i] for i in valid_indices]
+
         # Get decoder input IDs for the batch (prepends decoder_start_token_id)
-        dii = get_batch_decoder_input_ids(lab, device, decoder_start_token_id=model.config.decoder_start_token_id)
+        dii = get_batch_decoder_input_ids(lab_valid, device, decoder_start_token_id=model.config.decoder_start_token_id)
 
         # Generate annotation with beam search
         # Use max_new_tokens instead of max_length to avoid overflow when
         # decoder_input_ids is already close to the model's max sequence length.
         max_new_tokens = max(1, args.max_length - dii.shape[1])
-        with torch.no_grad():
-            outputs = model.generate(
-                inputs=ii,
-                attention_mask=am,
-                num_return_sequences=1,
-                max_new_tokens=max_new_tokens,
-                num_beams=args.num_beams,
-                do_sample=False,
-                decoder_input_ids=dii,
-                use_cache=True
-            )
+        outputs = None
+        try:
+            with torch.no_grad():
+                outputs = model.generate(
+                    inputs=ii_valid,
+                    attention_mask=am_valid,
+                    num_return_sequences=1,
+                    max_new_tokens=max_new_tokens,
+                    num_beams=args.num_beams,
+                    do_sample=False,
+                    decoder_input_ids=dii,
+                    use_cache=True
+                )
+        except RuntimeError as e:
+            # Fall back to per-sample generation so one bad sample does not kill the run.
+            print(f"Warning: batch generate failed ({e}). Retrying per-sample.", file=sys.stderr)
+            per_sample_outputs = []
+            kept_indices = []
+            for local_idx, gm_id in enumerate(valid_gene_models):
+                one_ii = ii_valid[local_idx:local_idx + 1]
+                one_am = am_valid[local_idx:local_idx + 1]
+                one_lab = lab_valid[local_idx:local_idx + 1]
+                try:
+                    one_dii = get_batch_decoder_input_ids(
+                        one_lab,
+                        device,
+                        decoder_start_token_id=model.config.decoder_start_token_id,
+                    )
+                    one_max_new_tokens = max(1, args.max_length - one_dii.shape[1])
+                    with torch.no_grad():
+                        one_out = model.generate(
+                            inputs=one_ii,
+                            attention_mask=one_am,
+                            num_return_sequences=1,
+                            max_new_tokens=one_max_new_tokens,
+                            num_beams=args.num_beams,
+                            do_sample=False,
+                            decoder_input_ids=one_dii,
+                            use_cache=True,
+                        )
+                    per_sample_outputs.append(one_out.detach().cpu())
+                    kept_indices.append(local_idx)
+                except Exception as sample_error:
+                    skipped_input_count += 1
+                    print(
+                        f"Warning: generation failed for {gm_id}: {sample_error}. Skipping sample.",
+                        file=sys.stderr,
+                    )
+            if per_sample_outputs:
+                outputs = torch.cat(per_sample_outputs, dim=0)
+                valid_gene_models = [valid_gene_models[i] for i in kept_indices]
+                valid_chroms = [valid_chroms[i] for i in kept_indices]
+                valid_starts = [valid_starts[i] for i in kept_indices]
+            else:
+                continue
 
         # Decode the outputs to GSF
         preds = gffTokenizer.batch_decode(
@@ -281,13 +406,22 @@ def main():
         )
 
         # Process each sample in the batch
-        for i in range(batch_size):
-            pred = preds[i].replace("|</s>", "").replace("</s>", "").replace("<s>", "")
+        for i, pred_text in enumerate(preds):
+            gm_id = str(valid_gene_models[i])
+            pred = pred_text.replace("|</s>", "").replace("</s>", "").replace("<s>", "")
             try:
-                gff = gffString2GFF3(pred, chroms[i], starts[i], f"GM={gene_models[i]}")
-            except Exception:
+                gff = gffString2GFF3(pred, valid_chroms[i], valid_starts[i], f"GM={gm_id}")
+            except Exception as e:
                 error_count += 1
+                print(f"Warning: parsing failed for {gm_id}: {e}. Skipping sample.", file=sys.stderr)
                 continue
+
+            gff, dropped_malformed, flipped_fixed = _normalize_gff_lines(gff)
+            if dropped_malformed:
+                error_count += dropped_malformed
+                dropped_malformed_feature_count += dropped_malformed
+            if flipped_fixed:
+                fixed_flipped_feature_count += flipped_fixed
 
             # Track parsing errors
             if gff == [""] or gff == []:
@@ -323,6 +457,12 @@ def main():
             print(f"Cleanup: removed {superseded} superseded gene blocks from output")
 
     print(f"Output written to: {args.output}")
+    if skipped_input_count > 0:
+        print(f"Input records skipped: {skipped_input_count}")
+    if fixed_flipped_feature_count > 0:
+        print(f"Fixed flipped output features: {fixed_flipped_feature_count}")
+    if dropped_malformed_feature_count > 0:
+        print(f"Dropped malformed output features: {dropped_malformed_feature_count}")
     if error_count > 0:
         print(f"Parsing errors: {error_count}/{total} sequences skipped")
     if duplicate_count > 0:
