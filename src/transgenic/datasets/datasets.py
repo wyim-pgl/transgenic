@@ -694,7 +694,7 @@ def hyena_collate_fn(batch):
 	# RIGHT-pad labels to the longest label in the batch
 	if None not in labels:
 		max_len = max([label.shape[1] for label in labels])
-		labels_padded = [F.pad(label, (0, max_len - label.shape[1])) for label in labels]  # Right-pad with 0
+		labels_padded = [F.pad(label, (0, max_len - label.shape[1]), value=-100) for label in labels]  # Right-pad with ignore index
 		labels_padded = torch.cat(labels_padded)
 
 	if None not in labels:

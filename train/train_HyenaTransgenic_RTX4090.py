@@ -155,6 +155,12 @@ def train(
 	eval_ds,
 	profile: TrainingProfile,
 	*,
+	encoder_d_model: int,
+	decoder_d_model: int,
+	encoder_layers: int,
+	decoder_layers: int,
+	encoder_heads: int,
+	decoder_heads: int,
 	lr: float,
 	num_epochs: int,
 	schedule_lr: bool,
@@ -167,6 +173,7 @@ def train(
 	resume_from_checkpoint: Optional[str],
 	save_every_epoch: bool,
 	save_every_n_steps: int = 2000,
+	wandb_log_interval: int = 10,
 	unlink: bool,
 	log_wandb: bool,
 	train_sampler=None,
@@ -199,6 +206,12 @@ def train(
 			project="transgenic",
 			config={
 				"profile": profile.name,
+				"encoder_d_model": encoder_d_model,
+				"decoder_d_model": decoder_d_model,
+				"encoder_layers": encoder_layers,
+				"decoder_layers": decoder_layers,
+				"encoder_heads": encoder_heads,
+				"decoder_heads": decoder_heads,
 				"learning_rate": lr,
 				"schedule_lr": schedule_lr,
 				"architecture": "Hyena",
@@ -236,20 +249,20 @@ def train(
 	total_opt_steps = steps_per_epoch * num_epochs
 	del _tmp_dl
 
-	base_d_model = 1152
-	layers = 16
-	heads = 8
 	config = HyenaTransgenicConfig(
-		d_model=base_d_model,
-		encoder_layers=layers,
-		decoder_layers=layers,
-		encoder_n_layer=layers,
-		encoder_ffn_dim=base_d_model * 4,
-		decoder_ffn_dim=base_d_model * 4,
-		attention_window=[profile.attention_window] * layers,
+		d_model=encoder_d_model,
+		encoder_d_model=encoder_d_model,
+		decoder_d_model=decoder_d_model,
+		encoder_layers=encoder_layers,
+		decoder_layers=decoder_layers,
+		encoder_n_layer=encoder_layers,
+		encoder_ffn_dim=encoder_d_model * 4,
+		decoder_ffn_dim=decoder_d_model * 4,
+		# LED validates attention_window against encoder num_hidden_layers.
+		attention_window=[profile.attention_window] * encoder_layers,
 		dropout=0.2,
-		encoder_attention_heads=heads,
-		decoder_attention_heads=heads,
+		encoder_attention_heads=encoder_heads,
+		decoder_attention_heads=decoder_heads,
 		encoder_model=encoder_model,
 		unlink=unlink,
 	)
@@ -522,6 +535,7 @@ def train(
 				# torch.compiler.cudagraph_mark_step_begin()
 
 				with accelerator.accumulate(model):
+					last_grad_norm = None
 					outputs = model(input_ids=ii, attention_mask=am, labels=lab,
 					                transcript_counts=tx_counts, return_dict=True)
 					loss_value = float(outputs.loss.detach())
@@ -531,7 +545,11 @@ def train(
 					if accelerator.sync_gradients:
 						global_step += 1
 						# Only clip/step when gradients from all micro-batches are in sync.
-						accelerator.clip_grad_norm_(model.parameters(), max_grad_norm)
+						grad_norm = accelerator.clip_grad_norm_(model.parameters(), max_grad_norm)
+						if isinstance(grad_norm, torch.Tensor):
+							last_grad_norm = float(grad_norm.detach().cpu().item())
+						elif grad_norm is not None:
+							last_grad_norm = float(grad_norm)
 						optimizer.step()
 						if lr_scheduler is not None:
 							lr_scheduler.step()
@@ -545,7 +563,7 @@ def train(
 
 					if log_wandb:
 						log_payload = {}
-						if step % 70 == 0:
+						if step % max(1, wandb_log_interval) == 0:
 							log_payload = {
 								"epoch": epoch,
 								"step": step,
@@ -556,20 +574,14 @@ def train(
 							}
 							if lr_scheduler is not None:
 								log_payload["lr"] = lr_scheduler.get_last_lr()[0]
-						
-						# Only log grad norms if grads are available (i.e., after optimizer step)
-						if accelerator.sync_gradients:
-							for name, param in model.named_parameters():
-								if param.grad is not None and param.requires_grad:
-									log_payload[f"{name}_grad_norm"] = param.grad.norm().detach().item()
+							if last_grad_norm is not None:
+								log_payload["grad_norm"] = last_grad_norm
 						
 						if log_payload:
 							wandb.log(log_payload)
 
 					if accelerator.sync_gradients:
 						optimizer.zero_grad(set_to_none=True)
-						torch.cuda.empty_cache()
-						gc.collect()
 				del outputs, ii, am, lab, meta
 
 			# Free the per-epoch DataLoader to release memory before eval.
@@ -721,6 +733,13 @@ if __name__ == "__main__":
 	config = {
 		"db": "/home/framazan/data/Generation_10G_static6144_addExtra200_addRCIsoOnly_clean.db",
 		"profile": "rtx4090",
+		# Keep encoder pretrained-compatible; scale decoder aggressively for higher isoform capacity.
+		"encoder_d_model": 256,
+		"decoder_d_model": 1536,
+		"encoder_layers": 8,
+		"decoder_layers": 24,
+		"encoder_heads": 8,
+		"decoder_heads": 12,
 		"batch_size": 1,
 		"accumulation_steps": 128,
 		"attention_window": 1024,
@@ -738,6 +757,7 @@ if __name__ == "__main__":
 		"encoder_model": "LongSafari/hyenadna-large-1m-seqlen-hf",
 		"resume": "",  # or "auto" or checkpoint path
 		"save_every_n_steps": 100,
+		"wandb_log_interval": 10,
 		"save_every_epoch": True,
 		"unlink": False,
 		"log_wandb": True,
@@ -802,6 +822,12 @@ if __name__ == "__main__":
 		train_ds=train_data,
 		eval_ds=eval_data,
 		profile=profile,
+		encoder_d_model=config["encoder_d_model"],
+		decoder_d_model=config["decoder_d_model"],
+		encoder_layers=config["encoder_layers"],
+		decoder_layers=config["decoder_layers"],
+		encoder_heads=config["encoder_heads"],
+		decoder_heads=config["decoder_heads"],
 		lr=config["lr"],
 		num_epochs=config["epochs"],
 		schedule_lr=config["schedule_lr"],
@@ -814,6 +840,7 @@ if __name__ == "__main__":
 		resume_from_checkpoint=resume_ckpt,
 		save_every_epoch=config["save_every_epoch"],
 		save_every_n_steps=config["save_every_n_steps"],
+		wandb_log_interval=config["wandb_log_interval"],
 		unlink=config["unlink"],
 		log_wandb=config["log_wandb"],
 		train_sampler=train_sampler,

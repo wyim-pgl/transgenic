@@ -33,7 +33,7 @@ Model hierarchy:
         └─ LEDForConditionalGeneration.decoder (Longformer decoder)
 """
 
-import sys, math
+import sys, math, copy
 from typing import List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
@@ -282,7 +282,7 @@ class HyenaDownsampleWithRelPosBias(nn.Module):
 	  → Skip:    (1, 1728, 2000) → pool → (1, 1728, 1000) → proj → (1, 2304, 1000)
 	  → Output:  gate * skip + (1 - gate) * stage2
 	"""
-	def __init__(self, in_channels):
+	def __init__(self, in_channels, out_channels=None):
 		"""
 		Args:
 			in_channels: Input channel dimension (d_model from encoder).
@@ -290,7 +290,7 @@ class HyenaDownsampleWithRelPosBias(nn.Module):
 		super(HyenaDownsampleWithRelPosBias, self).__init__()
 
 		self.mid_channels = in_channels + (in_channels // 2)  # 1.5 * d_model
-		self.out_channels = in_channels * 2                    # 2 * d_model
+		self.out_channels = (in_channels * 2) if out_channels is None else out_channels
 
 		# Stage 1: 3x downsampling (kernel_size=6, stride=3, padding=2)
 		self.conv1 = nn.Conv1d(
@@ -419,11 +419,72 @@ class HyenaEncoder(nn.Module):
 		# Load HyenaDNA configuration and override with TransGenic settings
 		HyenaConfig = AutoConfig.from_pretrained(config.encoder_model, trust_remote_code=True)
 		HyenaConfig.max_seq_len = config.max_encoder_seqlen  # Override max sequence length
-		HyenaConfig.d_model = config.d_model                  # Override hidden dimension
+		HyenaConfig.d_model = getattr(config, "encoder_d_model", config.d_model)  # Override hidden dimension
 		HyenaConfig.n_layer = config.encoder_n_layer           # Override layer count
-		# Instantiate from config (not from_pretrained — weights are initialized fresh
-		# and loaded separately or fine-tuned from scratch)
+		# Instantiate with target architecture, then optionally load compatible
+		# pretrained weights by key+shape for widened/deeper variants.
 		self.hyena = AutoModel.from_config(HyenaConfig, trust_remote_code=True)
+
+		if getattr(config, "load_pretrained_encoder", True):
+			try:
+				pretrained_hyena = AutoModel.from_pretrained(config.encoder_model, trust_remote_code=True)
+				if getattr(config, "allow_partial_encoder_load", True):
+					target_state = self.hyena.state_dict()
+					pretrained_state = pretrained_hyena.state_dict()
+
+					def _adapt_tensor_shape(src: torch.Tensor, tgt: torch.Tensor) -> Optional[torch.Tensor]:
+						# Adapt pretrained tensor into target shape via per-dimension tiling/truncation.
+						# This preserves learned structure much better than random init for widened models.
+						if src.ndim != tgt.ndim:
+							return None
+						out = src.detach().to(dtype=tgt.dtype, device="cpu")
+						for dim in range(out.ndim):
+							sz_src = out.shape[dim]
+							sz_tgt = tgt.shape[dim]
+							if sz_src == sz_tgt:
+								continue
+							if sz_src < sz_tgt:
+								repeat_factor = math.ceil(sz_tgt / sz_src)
+								repeats = [1] * out.ndim
+								repeats[dim] = repeat_factor
+								out = out.repeat(*repeats)
+							# Truncate to target size in this dimension
+							out = out.narrow(dim, 0, sz_tgt)
+						# Ensure final shape matches exactly
+						if tuple(out.shape) != tuple(tgt.shape):
+							return None
+						return out
+
+					adapted = {}
+					exact_match = 0
+					inflated_match = 0
+					for k, tgt in target_state.items():
+						src = pretrained_state.get(k)
+						if src is None:
+							continue
+						if tuple(src.shape) == tuple(tgt.shape):
+							adapted[k] = src.to(dtype=tgt.dtype)
+							exact_match += 1
+							continue
+						new_tensor = _adapt_tensor_shape(src, tgt)
+						if new_tensor is not None:
+							adapted[k] = new_tensor
+							inflated_match += 1
+
+					load_result = self.hyena.load_state_dict(adapted, strict=False)
+					print(
+						f"Hyena encoder init: loaded {len(adapted)}/{len(target_state)} tensors "
+						f"(exact={exact_match}, adapted={inflated_match}) "
+						f"from {config.encoder_model}; missing={len(load_result.missing_keys)} "
+						f"unexpected={len(load_result.unexpected_keys)}",
+						file=sys.stderr,
+					)
+				else:
+					self.hyena.load_state_dict(pretrained_hyena.state_dict(), strict=True)
+					print(f"Hyena encoder init: loaded full pretrained weights from {config.encoder_model}", file=sys.stderr)
+				del pretrained_hyena
+			except Exception as exc:
+				print(f"Warning: pretrained Hyena encoder load failed, using random init: {exc}", file=sys.stderr)
 
 	def forward(self, input_ids, segLabels=None, *args, **kwargs):
 		"""
@@ -524,29 +585,29 @@ class transgenicModel(TransgenicPreTrainedModel):
 			config: HyenaTransgenicConfig instance with model hyperparameters.
 		"""
 		super().__init__(config)
+		self.encoder_dim = getattr(config, "encoder_d_model", config.d_model)
+		self.decoder_dim = getattr(config, "decoder_d_model", self.encoder_dim * 2)
 
 		padding_idx, vocab_size = config.pad_token_id, config.vocab_size
-		# Decoder token embeddings: vocab_size → 2*d_model (matches downsampled encoder output dim)
-		self.decoder_embed_tokens = nn.Embedding(vocab_size, config.d_model * 2, padding_idx)
+		# Decoder token embeddings: vocab_size → decoder hidden dimension.
+		self.decoder_embed_tokens = nn.Embedding(vocab_size, self.decoder_dim, padding_idx)
 
 		# HyenaDNA encoder (pretrained DNA foundation model)
 		self.encoder = HyenaEncoder(config)
 
 		# Sinusoidal positional embeddings for encoder output
 		# Injects position information before downsampling destroys it
-		self.EncoderOutputPositionalEmbedding = SinusoidalPositionalEmbedding(config.max_encoder_seqlen, config.d_model)
+		self.EncoderOutputPositionalEmbedding = SinusoidalPositionalEmbedding(config.max_encoder_seqlen, self.encoder_dim)
 
-		# 6x downsampling: Conv1d compression with relative positional bias
-		# Reduces seq_len by 6x while expanding d_model → 2*d_model
-		self.downsample = HyenaDownsampleWithRelPosBias(config.d_model)
+		# 6x downsampling: Conv1d compression with relative positional bias.
+		# Projects encoder hidden width into decoder hidden width for cross-attention.
+		self.downsample = HyenaDownsampleWithRelPosBias(self.encoder_dim, out_channels=self.decoder_dim)
 
-		# Longformer decoder: initialize from LED config with doubled d_model
-		# We temporarily modify config.d_model to 2x for decoder initialization,
-		# then restore it (to keep encoder config correct)
-		config.d_model = config.d_model * 2
-		self.decoder = LEDForConditionalGeneration(config).led.decoder  # Extract just the decoder
+		# Build decoder from a copied config to avoid mutating the shared config.
+		decoder_config = copy.deepcopy(config)
+		decoder_config.d_model = self.decoder_dim
+		self.decoder = LEDForConditionalGeneration(decoder_config).led.decoder  # Extract just the decoder
 		self.decoder.embed_tokens = self.decoder_embed_tokens            # Share embeddings
-		config.d_model = config.d_model // 2  # Restore original d_model
 
 		# HuggingFace post-initialization: applies _init_weights to all modules
 		self.post_init()
@@ -710,13 +771,15 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 		if not unlink:
 			_tied_weights_keys = []  # Clear tied keys to prevent weight sharing
 		super().__init__(config)
+		self.encoder_dim = getattr(config, "encoder_d_model", config.d_model)
+		self.decoder_dim = getattr(config, "decoder_d_model", self.encoder_dim * 2)
 
 		# Backbone encoder-decoder model
 		self.transgenic = transgenicModel(config)
 		# Logits bias: (1, vocab_size) — added to logits for fine-grained output adjustment
 		self.register_buffer("final_logits_bias", torch.zeros((1, self.transgenic.decoder_embed_tokens.num_embeddings)))
-		# LM head: projects from 2*d_model to vocabulary size
-		self.lm_head = nn.Linear(config.d_model * 2, self.transgenic.decoder_embed_tokens.num_embeddings, bias=False)
+		# LM head: projects decoder hidden states to vocabulary logits.
+		self.lm_head = nn.Linear(self.decoder_dim, self.transgenic.decoder_embed_tokens.num_embeddings, bias=False)
 
 		# Transcript count regression head: predicts the number of alternative
 		# transcripts (1 to max_transcript_count) from the mean-pooled encoder
@@ -724,10 +787,10 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 		# generation at inference time.
 		max_tc = getattr(config, 'max_transcript_count', 15)
 		self.tx_count_head = nn.Sequential(
-			nn.Linear(config.d_model, config.d_model // 4),
+			nn.Linear(self.encoder_dim, self.encoder_dim // 4),
 			nn.GELU(),
 			nn.Dropout(config.dropout),
-			nn.Linear(config.d_model // 4, 1),  # Regression output (scalar)
+			nn.Linear(self.encoder_dim // 4, 1),  # Regression output (scalar)
 		)
 		self.max_transcript_count = max_tc
 
@@ -867,7 +930,7 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 			weight[21] = 3.0   # ;   — feature separator; controls feature count
 			weight[272] = 3.0  # <iso> — isoform separator
 			weight[22:272] = 2.0  # All CDS/UTR feature name tokens — the annotation skeleton
-			loss_fct = nn.CrossEntropyLoss(weight=weight)
+			loss_fct = nn.CrossEntropyLoss(weight=weight, ignore_index=-100)
 			# Flatten logits and labels for loss computation
 			masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
 
@@ -878,10 +941,11 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 			# structural token; ratios >8:1 indicate hallucination.
 			with torch.no_grad():
 				pred_ids = lm_logits.argmax(dim=-1)  # (batch, seq_len)
+				valid_mask = labels.ne(-100)
 				is_digit = (pred_ids >= 4) & (pred_ids <= 13)
 				is_struct = ((pred_ids >= 22) & (pred_ids <= 271)) | (pred_ids == 21) | (pred_ids == 17) | (pred_ids == 2)
-				digit_count = is_digit.float().sum(dim=-1)
-				struct_count = is_struct.float().sum(dim=-1)
+				digit_count = (is_digit & valid_mask).float().sum(dim=-1)
+				struct_count = (is_struct & valid_mask).float().sum(dim=-1)
 			ratio_penalty = F.relu(digit_count / (struct_count + 1.0) - 8.0).mean()
 			masked_lm_loss = masked_lm_loss + 0.05 * ratio_penalty
 

@@ -263,6 +263,7 @@ def evaluate_chr4(
     gff_tokenizer = GFFTokenizer()
     model.eval()
     genes_predicted = 0
+    genes_parsed = 0
     evaluated_gene_names = set()  # Track which genes we actually evaluated
 
     if verbose:
@@ -298,8 +299,11 @@ def evaluate_chr4(
                     batch[5][idx],   # region_start
                     f"GM={gene_name}",  # gene model name
                 )
-                for line in gff_lines:
-                    out_f.write(line + "\n")
+                is_valid_parse = not (len(gff_lines) == 1 and gff_lines[0] == "")
+                if is_valid_parse:
+                    genes_parsed += 1
+                    for line in gff_lines:
+                        out_f.write(line + "\n")
                 genes_predicted += 1
 
             # Free GPU memory between batches
@@ -310,7 +314,11 @@ def evaluate_chr4(
     # ── 3. Build subset reference & run gffcompare ──────────────────────
     # Create a reference GFF3 containing ONLY the genes we evaluated, so
     # that sensitivity/precision are measured against the correct denominator.
-    metrics: Dict[str, float] = {"genes_predicted": genes_predicted}
+    metrics: Dict[str, float] = {
+        "genes_predicted": genes_predicted,
+        "genes_parsed": genes_parsed,
+        "parse_success_rate": (genes_parsed / max(1, genes_predicted)) * 100.0,
+    }
     subset_ref_path = os.path.join(work_dir, "eval_chr4_ref_subset.gff3")
 
     if shutil.which("gffcompare") is not None:
@@ -348,7 +356,7 @@ def evaluate_chr4(
             pass
 
     if verbose:
-        print(f"\n[Chr4 eval] genes={genes_predicted}", file=sys.stderr, end="")
+        print(f"\n[Chr4 eval] genes={genes_predicted} parsed={genes_parsed} parse_success_rate={metrics['parse_success_rate']:.1f}", file=sys.stderr, end="")
         if isoforms >= 0:
             print(f" isoforms={isoforms}", file=sys.stderr, end="")
         for k in ("transcript_sensitivity", "transcript_precision",
