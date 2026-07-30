@@ -69,6 +69,11 @@ LOCI = ["AT2G37450", "AT4G22540", "AT3G56730", "AT1G78940", "AT3G29185", "AT3G13
 # junction no TAIR10 isoform uses). The other three differ only in chain
 # combination or in UTR splicing, so they go to the supplement, not the figure.
 STRONG = ["AT2G37450", "AT4G22540", "AT3G56730"]
+# The rebuilt Figure 4. (A) is the locus recovered forensically from the published
+# model's plot-prep file; (B) is the only locus in the test set where every distinct
+# TAIR10 chain came back; (C)-(E) are the Panel-C loci with a directly visible novel
+# feature. See fig4_forensics/FIG4_LOCUS_FORENSICS.md and panelC_examples/README.md.
+FIGURE4 = ["AT1G43770", "AT1G44575", "AT2G37450", "AT4G22540", "AT3G56730"]
 
 # Okabe-Ito derived, colour-vision-safe.
 GREY = "#8C8C8C"
@@ -174,7 +179,17 @@ def analyse(locus: str) -> dict:
             novel_tx, novel_match, novel_chain = pt, hits[0], pc
             break
     if novel_tx is None:
-        raise ValueError(f"{locus}: no AtRTD3-matched novel isoform")
+        # No AtRTD3-supported chain that TAIR10 lacks. If instead the model reproduced
+        # two or more distinct TAIR10 chains and AtRTD3 documents them too, this is the
+        # "reproduced shared alternative transcripts" panel (Fig. 4A), not a failure.
+        art_chain_set = set(art_chains.values())
+        pred_chains = {chain(r["cds"]) for r in pred.values() if len(chain(r["cds"])) >= 1}
+        reproduced = [c for c in pred_chains if c in tair_chains]
+        shared = [c for c in reproduced if c in art_chain_set]
+        if len(shared) >= 2:
+            return _analyse_reproduced(locus, pred, tair, art, tair_chains,
+                                       art_chains, reproduced, shared)
+        raise ValueError(f"{locus}: no AtRTD3-matched novel isoform and no reproduced pair")
 
     novel_exons = [s for s in (pred[novel_tx]["cds"] + pred[novel_tx]["utr"])
                    if not any(overlaps(s, b) for b in tair_exons)]
@@ -264,6 +279,27 @@ def analyse(locus: str) -> dict:
                 strand=next(iter(tair.values()))["strand"])
 
 
+
+def _analyse_reproduced(locus, pred, tair, art, tair_chains, art_chains,
+                        reproduced, shared):
+    """Panel-A/B case: the model reproduced >=2 distinct TAIR10 chains and >=2 of them
+    are documented by AtRTD3. The feature to highlight is what distinguishes the
+    reproduced chains from each other - the alternatively spliced introns."""
+    longest = max(reproduced, key=len)
+    others = [c for c in reproduced if c != longest]
+    feats = sorted({j for c in others for j in set(longest) ^ set(c)}
+                   or set(longest))
+    # every AtRTD3 transcript carrying one of the reproduced chains counts as support
+    identical = sorted((t for t, c in art_chains.items() if c in reproduced), key=suffix)
+    other = sorted((t for t in art if t not in identical), key=suffix)
+    return dict(locus=locus, pred=pred, tair=tair, art=art,
+                novel_tx=None, novel_match=identical[0] if identical else None,
+                mode="reproduced", feats=feats,
+                identical=identical, site_shared=[], overlap_only=[], other=other,
+                n_reproduced=len(reproduced), n_shared=len(shared),
+                chrom=next(iter(tair.values()))["chr"],
+                strand=next(iter(tair.values()))["strand"])
+
 def build_rows(a: dict) -> tuple[list, list]:
     """Rows as (label, record, colour, highlight) plus (n, group-name) bands."""
     rows, bands = [], []
@@ -279,10 +315,21 @@ def build_rows(a: dict) -> tuple[list, list]:
     rows += tair_rows
     bands.append((len(tair_rows), "TAIR10"))
 
-    pred_rows = [("novel", a["pred"][a["novel_tx"]], ORANGE, True)]
-    for t in sorted(a["pred"], key=suffix):
-        if t != a["novel_tx"]:
-            pred_rows.append(("reproduced", a["pred"][t], BLUE, False))
+    if a["novel_tx"] is None:
+        # one row per distinct predicted chain, so six identical predictions of the
+        # same isoform do not become six rows
+        pred_rows, seen_p = [], set()
+        for t in sorted(a["pred"], key=suffix):
+            c = chain(a["pred"][t]["cds"])
+            if c in seen_p:
+                continue
+            seen_p.add(c)
+            pred_rows.append((f"pred {len(pred_rows) + 1}", a["pred"][t], BLUE, True))
+    else:
+        pred_rows = [("novel", a["pred"][a["novel_tx"]], ORANGE, True)]
+        for t in sorted(a["pred"], key=suffix):
+            if t != a["novel_tx"]:
+                pred_rows.append(("reproduced", a["pred"][t], BLUE, False))
     rows += pred_rows
     bands.append((len(pred_rows), "TransGenic"))
 
@@ -292,8 +339,10 @@ def build_rows(a: dict) -> tuple[list, list]:
     # rows whose chains in fact differ. `placed` stops a transcript being drawn
     # twice when it falls into two categories (e.g. the chain match is also the
     # only non-supporting isoform at a two-transcript locus).
-    placed = {a["novel_match"]}
-    art_rows = [(a["novel_match"], a["art"][a["novel_match"]], DGREEN, True)]
+    placed = {a["novel_match"]} if a["novel_match"] else set()
+    art_rows = ([(a["novel_match"], a["art"][a["novel_match"]],
+                  GREEN if a["novel_tx"] is None else DGREEN, a["novel_tx"] is not None)]
+                if a["novel_match"] else [])
     for t in ([x for x in a["identical"] if x not in placed]
               + [x for x in a["site_shared"] if x not in placed])[:MAX_SUPPORT]:
         art_rows.append((t, a["art"][t], GREEN, False))
@@ -315,7 +364,13 @@ def build_rows(a: dict) -> tuple[list, list]:
 def support_note(a: dict) -> str:
     n_id, n_ss, n_all = len(a["identical"]), len(a["site_shared"]), len(a["art"])
     n_tair = len(a["tair"])
+    n_tair_chains = len({chain(r["cds"]) for r in a["tair"].values()})
     mode = a["mode"]
+    if mode == "reproduced":
+        return (f"TransGenic reproduced {a['n_reproduced']} of {n_tair_chains} distinct "
+                f"TAIR10 chains and predicted nothing outside them   |   "
+                f"AtRTD3 documents {a['n_shared']} of them "
+                f"({n_id} of {n_all} transcripts)")
     if mode == "exon":
         n_ov = len(a["overlap_only"])
         return (f"TAIR10: 0 of {n_tair} transcripts carry this exon   |   "
@@ -336,6 +391,10 @@ def support_note(a: dict) -> str:
 def headline(a: dict) -> tuple[str, str]:
     f0 = a["feats"][0]
     mode = a["mode"]
+    if mode == "reproduced":
+        n = len(a["feats"])
+        return ("alternatively spliced intron" + ("s" if n > 1 else ""),
+                f"{f0[0]:,}-{f0[1]:,}" + (f" +{n - 1} more" if n > 1 else ""))
     if mode == "exon":
         return ("novel exon", f"{f0[0]:,}–{f0[1]:,} ({f0[1] - f0[0] + 1} bp)")
     if mode == "junction":
@@ -425,8 +484,11 @@ def render(ax, a: dict, *, compact: bool) -> None:
     ax.tick_params(axis="x", labelsize=label_fs + 0.6)
     ax.set_xlabel(f"{a['chrom']} position (kb), {a['strand']} strand\n{support_note(a)}",
                   fontsize=label_fs + 0.8, labelpad=8, linespacing=1.9)
-    ax.set_title(f"{a['locus']}  —  TransGenic predicts an AtRTD3-supported isoform "
-                 f"absent from TAIR10", fontsize=band_fs, pad=16 if compact else 20)
+    title = (f"{a['locus']}  —  TransGenic reproduces the alternative transcripts "
+             f"shared by TAIR10 and AtRTD3" if a["mode"] == "reproduced" else
+             f"{a['locus']}  —  TransGenic predicts an AtRTD3-supported isoform "
+             f"absent from TAIR10")
+    ax.set_title(title, fontsize=band_fs, pad=16 if compact else 20)
 
 
 def legend_handles() -> list:
@@ -450,15 +512,17 @@ def draw_locus(locus: str) -> dict:
         fig.savefig(OUT / f"figure4_panelC_{locus}.{ext}", dpi=300,
                     bbox_inches="tight", facecolor="white")
     plt.close(fig)
-    print(f"{locus:10s} {a['mode']:12s} novel={a['novel_tx'].split('.')[-1]:6s} "
-          f"match={a['novel_match']:15s} rows={len(rows):2d} "
+    novel_lbl = a["novel_tx"].split(".")[-1] if a["novel_tx"] else "-"
+    print(f"{locus:10s} {a['mode']:12s} novel={novel_lbl:6s} "
+          f"match={str(a['novel_match']):15s} rows={len(rows):2d} "
           f"AtRTD3 {len(a['identical'])} identical / {len(a['site_shared'])} site-shared "
           f"of {len(a['art'])}")
     return a
 
 
 def draw_sheet(loci: list, name: str = "all", ncol: int = 2,
-               panel_labels: list | None = None) -> None:
+               panel_labels: list | None = None,
+               prefix: str = "figure4_panelC_") -> None:
     """Multi-panel sheet. ncol=1 gives the single-column layout used for the
     manuscript figure; ncol=2 the wider supplementary sheet. panel_labels stamps
     (C), (D), ... on each panel so the legend can refer to them directly."""
@@ -482,19 +546,22 @@ def draw_sheet(loci: list, name: str = "all", ncol: int = 2,
                fontsize=7.2, loc="lower center", bbox_to_anchor=(0.5, 0.002))
     fig.tight_layout(rect=(0, 0.035 if ncol > 1 else 0.055, 1, 1), h_pad=2.6, w_pad=3.0)
     for ext in ("pdf", "png"):
-        fig.savefig(OUT / f"figure4_panelC_{name}.{ext}", dpi=300,
+        fig.savefig(OUT / f"{prefix}{name}.{ext}", dpi=300,
                     bbox_inches="tight", facecolor="white")
     plt.close(fig)
-    print(f"sheet -> figure4_panelC_{name}.png ({len(analyses)} panels, {ncol} col)")
+    print(f"sheet -> {prefix}{name}.png ({len(analyses)} panels, {ncol} col)")
 
 
 if __name__ == "__main__":
-    targets = sys.argv[1:] or LOCI
+    targets = sys.argv[1:] or sorted(set(LOCI) | set(FIGURE4))
     for loc in targets:
         draw_locus(loc)
     if not sys.argv[1:]:
         print()
-        # manuscript Figure 4C-E: the three loci with a directly visible novel feature
+        # the rebuilt manuscript Figure 4
+        draw_sheet(FIGURE4, name="figure4_example_loci_rebuilt", ncol=2, prefix="",
+                   panel_labels=["(A)", "(B)", "(C)", "(D)", "(E)"])
+        # manuscript Figure 4C-E only, if a three-panel version is wanted
         draw_sheet(STRONG, name="strong3", ncol=1, panel_labels=["(C)", "(D)", "(E)"])
-        # supplementary: every candidate, including the three weak ones
+        # supplementary: every Panel-C candidate, including the three weak ones
         draw_sheet(LOCI, name="all", ncol=2)

@@ -24,7 +24,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(REPO / "Figures"))
 from make_figure4_panelC import (  # noqa: E402
-    LOCI, DGREEN, GREY, ORANGE, analyse, build_rows, chain, headline, overlaps,
+    LOCI, FIGURE4, DGREEN, GREY, ORANGE, STRONG, analyse, build_rows, chain, headline, overlaps,
 )
 
 
@@ -56,13 +56,24 @@ def main(loci: list) -> int:
             print(f"{i:>3} {name:<8} {label:<16} "
                   f"{str(is_exonic(rec, feat)):>7} {str(touches(rec, feat)):>9}")
 
-        novel_rec = a["pred"][a["novel_tx"]]
-        match_rec = a["art"][a["novel_match"]]
+        novel_rec = a["pred"][a["novel_tx"]] if a["novel_tx"] else None
+        match_rec = a["art"][a["novel_match"]] if a["novel_match"] else None
 
         # In combination mode the shaded junctions are by definition present in some
         # TAIR10 isoform - only their combination is new - so checks 1 and 2 do not
         # apply. What must hold there is check 3 plus "chain absent from TAIR10".
-        if a["mode"] == "combination":
+        if a["mode"] == "reproduced":
+            # Panel-A claim: every predicted chain equals a TAIR10 chain, and at least
+            # two distinct reproduced chains are also documented by AtRTD3.
+            tair_set = {chain(r["cds"]) for r in a["tair"].values()}
+            art_set = {chain(r["cds"]) for r in a["art"].values() if r["cds"]}
+            pred_set = {chain(r["cds"]) for r in a["pred"].values()}
+            extra = pred_set - tair_set
+            if extra:
+                failures.append(f"{locus}: prediction has {len(extra)} chain(s) absent from TAIR10")
+            if len(pred_set & tair_set & art_set) < 2:
+                failures.append(f"{locus}: fewer than 2 reproduced chains shared with AtRTD3")
+        elif a["mode"] == "combination":
             if chain(novel_rec["cds"]) in {chain(r["cds"]) for r in a["tair"].values()}:
                 failures.append(f"{locus}: novel chain is present in TAIR10")
         else:
@@ -81,8 +92,9 @@ def main(loci: list) -> int:
             if not ok:
                 failures.append(f"{locus}: novel track does not carry the feature")
 
-        # 3. exact-chain-match claim
-        if chain(match_rec["cds"]) != chain(novel_rec["cds"]):
+        # 3. exact-chain-match claim (novel panels only)
+        if novel_rec is not None and match_rec is not None and \
+                chain(match_rec["cds"]) != chain(novel_rec["cds"]):
             failures.append(f"{locus}: {a['novel_match']} chain != novel prediction chain")
 
     print("\n" + "=" * 72)
@@ -97,4 +109,4 @@ def main(loci: list) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:] or LOCI))
+    raise SystemExit(main(sys.argv[1:] or sorted(set(LOCI) | set(FIGURE4))))

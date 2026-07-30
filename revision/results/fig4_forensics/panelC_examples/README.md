@@ -89,3 +89,45 @@ Outputs `figure4_panelC_<locus>.{pdf,png}` for each locus plus `figure4_panelC_a
 These are candidates independent of the original figure locus. **AT1G43770** remains the locus
 confirmed (by its `temp.clean.gff3` prep file) to be in the published Figure 4; these six are
 freshly verified alternatives if a new or replacement example is wanted.
+
+---
+
+## Genome-wide panel scan (2026-07-30) — `scan_panels.py`
+
+All 4,875 prompted A. thaliana loci were classified on CDS intron chains against TAIR10 and
+AtRTD3 (`panels.tsv`). Panel definitions follow the manuscript legend; A and B are separated
+by how much was recovered, since the legend's wording overlaps.
+
+| Panel | Criterion | Loci |
+|---|---|---|
+| A | 2 distinct TAIR10 chains reproduced, both in AtRTD3, nothing predicted outside them | 29 |
+| B | **3+** distinct TAIR10 chains reproduced, 2+ in AtRTD3, nothing outside them | **3** |
+| C | a predicted chain in AtRTD3 but in no TAIR10 transcript | 10 |
+
+**AT1G43770 is classified A by this scan**, independently of the forensic evidence — the two
+lines of evidence agree.
+
+### Panel B: all three candidates, compared
+
+| Locus | Chr | kb | TAIR10 chains | reproduced | AtRTD3-documented | shaded introns | verdict |
+|---|---|---|---|---|---|---|---|
+| **AT1G44575** | Chr1 (−) | 1.5 | 4 | **4 (all)** | 2 | 6 | **best** |
+| AT5G01230 | Chr5 (+) | 2.7 | 4 | 3 | 2 | 14 | shading dominates |
+| AT5G62890 | Chr5 (+) | 3.5 | 4 | 3 | 2 | 23 | unreadable — shading covers the panel |
+
+**AT1G44575 is the only locus in the test set where the model recovered every distinct TAIR10
+chain (4 of 4) while predicting nothing outside them.** That is precisely "recovered additional
+TAIR10 isoforms supported by AtRTD3", and at 1.5 kb with six discriminating introns it stays
+legible. The other two reproduce 3 of 4 chains but differ at 14 and 23 introns respectively,
+so the highlight bands swamp the figure.
+
+### Resulting Figure 4
+
+| Panel | Locus | Basis |
+|---|---|---|
+| A | **AT1G43770** | forensically anchored (the only plot-prep file in the published model's directory) **and** independently classified A by the scan |
+| B | **AT1G44575** | best of 3 candidates genome-wide |
+| C | **AT2G37450** | cassette exon; AT4G22540 / AT3G56730 available as further panels |
+
+Every panel now has a source file, a drawing script, and an automated check
+(`verify_panelC_figures.py`, currently 10/10 loci).
