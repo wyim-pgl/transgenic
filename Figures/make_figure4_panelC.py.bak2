@@ -86,7 +86,6 @@ SHADE = "#F0C000"
 
 MAX_SUPPORT = 2      # AtRTD3 splice-site sharers drawn per panel
 MAX_CONTEXT = 2      # AtRTD3 non-supporting isoforms drawn per panel
-MAX_SHADE = 3        # shaded bands per panel; more reads as stripes, not highlight
 H_CDS, H_UTR = 0.34, 0.17
 ROW_H = 0.30         # inches per transcript row - fixed, so all panels share a scale
 FIG_W = 7.6
@@ -272,17 +271,7 @@ def analyse(locus: str) -> dict:
     for grp in (identical, site_shared, overlap_only, other):
         grp.sort(key=suffix)
 
-    # For every predicted transcript, the AtRTD3 transcripts with the identical CDS
-    # chain. This is the confirmation the figure exists to show, so it is carried
-    # through to the track labels rather than left implicit in the colours.
-    confirms = {}
-    for pt, pr in pred.items():
-        pc = chain(pr["cds"])
-        hits = sorted((t for t, c in art_chains.items() if c == pc), key=suffix)
-        if hits:
-            confirms[pt] = hits
-
-    return dict(locus=locus, pred=pred, tair=tair, art=art, confirms=confirms,
+    return dict(locus=locus, pred=pred, tair=tair, art=art,
                 novel_tx=novel_tx, novel_match=novel_match, mode=mode, feats=feats,
                 identical=identical, site_shared=site_shared,
                 overlap_only=overlap_only, other=other,
@@ -303,13 +292,7 @@ def _analyse_reproduced(locus, pred, tair, art, tair_chains, art_chains,
     # every AtRTD3 transcript carrying one of the reproduced chains counts as support
     identical = sorted((t for t, c in art_chains.items() if c in reproduced), key=suffix)
     other = sorted((t for t in art if t not in identical), key=suffix)
-    confirms = {}
-    for pt, pr in pred.items():
-        pc = chain(pr["cds"])
-        hits = sorted((t for t, c in art_chains.items() if c == pc), key=suffix)
-        if hits:
-            confirms[pt] = hits
-    return dict(locus=locus, pred=pred, tair=tair, art=art, confirms=confirms,
+    return dict(locus=locus, pred=pred, tair=tair, art=art,
                 novel_tx=None, novel_match=identical[0] if identical else None,
                 mode="reproduced", feats=feats,
                 identical=identical, site_shared=[], overlap_only=[], other=other,
@@ -328,9 +311,7 @@ def build_rows(a: dict) -> tuple[list, list]:
         if c in seen:
             continue
         seen.add(c)
-        # "t1" not ".1": at this locus AtRTD3 ids end in .1/.2 too, and they are not
-        # the same transcripts, so the two must not share a label pattern.
-        tair_rows.append((f"t{len(tair_rows) + 1}", a["tair"][t], GREY, False))
+        tair_rows.append((f".{len(tair_rows) + 1}", a["tair"][t], GREY, False))
     rows += tair_rows
     bands.append((len(tair_rows), "TAIR10"))
 
@@ -343,21 +324,12 @@ def build_rows(a: dict) -> tuple[list, list]:
             if c in seen_p:
                 continue
             seen_p.add(c)
-            conf = a["confirms"].get(t)
-            lbl = f"pred {len(pred_rows) + 1}"
-            if conf:
-                lbl += f"  ✓ {conf[0]}" + (f" +{len(conf) - 1}" if len(conf) > 1 else "")
-            pred_rows.append((lbl, a["pred"][t], BLUE, bool(conf)))
+            pred_rows.append((f"pred {len(pred_rows) + 1}", a["pred"][t], BLUE, True))
     else:
-        conf = a["confirms"].get(a["novel_tx"])
-        nlbl = "novel" + (f"  ✓ {conf[0]}" + (f" +{len(conf) - 1}" if len(conf) > 1 else "")
-                          if conf else "")
-        pred_rows = [(nlbl, a["pred"][a["novel_tx"]], ORANGE, True)]
+        pred_rows = [("novel", a["pred"][a["novel_tx"]], ORANGE, True)]
         for t in sorted(a["pred"], key=suffix):
             if t != a["novel_tx"]:
-                c2 = a["confirms"].get(t)
-                pred_rows.append(("reproduced" + (f"  ✓ {c2[0]}" if c2 else ""),
-                                  a["pred"][t], BLUE, False))
+                pred_rows.append(("reproduced", a["pred"][t], BLUE, False))
     rows += pred_rows
     bands.append((len(pred_rows), "TransGenic"))
 
@@ -368,15 +340,12 @@ def build_rows(a: dict) -> tuple[list, list]:
     # twice when it falls into two categories (e.g. the chain match is also the
     # only non-supporting isoform at a two-transcript locus).
     placed = {a["novel_match"]} if a["novel_match"] else set()
-    confirmed_art = {t for v in a["confirms"].values() for t in v}
-    def art_label(t):
-        return f"{t}  ✓" if t in confirmed_art else t
-    art_rows = ([(art_label(a["novel_match"]), a["art"][a["novel_match"]],
+    art_rows = ([(a["novel_match"], a["art"][a["novel_match"]],
                   GREEN if a["novel_tx"] is None else DGREEN, a["novel_tx"] is not None)]
                 if a["novel_match"] else [])
     for t in ([x for x in a["identical"] if x not in placed]
               + [x for x in a["site_shared"] if x not in placed])[:MAX_SUPPORT]:
-        art_rows.append((art_label(t), a["art"][t], GREEN, False))
+        art_rows.append((t, a["art"][t], GREEN, False))
         placed.add(t)
     # Context rows: show an overlap-only isoform first when one exists, so a reader
     # sees that some AtRTD3 transcripts cross the interval without sharing the feature.
@@ -384,7 +353,7 @@ def build_rows(a: dict) -> tuple[list, list]:
             + [x for x in a["other"] if x not in placed]
             + [x for x in a["overlap_only"] if x not in placed][1:])
     for t in pool[:MAX_CONTEXT]:
-        art_rows.append((art_label(t), a["art"][t], PALE, False))
+        art_rows.append((t, a["art"][t], PALE, False))
         placed.add(t)
     rows += art_rows
     bands.append((len(art_rows), "AtRTD3"))
@@ -424,18 +393,14 @@ def headline(a: dict) -> tuple[str, str]:
     mode = a["mode"]
     if mode == "reproduced":
         n = len(a["feats"])
-        shown = min(n, MAX_SHADE)
-        extra = (f"; {n - shown} further intron{'s' if n - shown > 1 else ''} differ"
-                 if n > shown else "")
         return ("alternatively spliced intron" + ("s" if n > 1 else ""),
-                f"{shown} shaded{extra}" if n > 1 else f"{f0[0]:,}-{f0[1]:,}")
+                f"{f0[0]:,}-{f0[1]:,}" + (f" +{n - 1} more" if n > 1 else ""))
     if mode == "exon":
         return ("novel exon", f"{f0[0]:,}–{f0[1]:,} ({f0[1] - f0[0] + 1} bp)")
     if mode == "junction":
         return ("novel junction", f"{f0[0]:,}–{f0[1]:,}")
     if mode in ("retained", "unspliced_utr"):
         n = len(a["feats"])
-        _ = n
         kind = ("retained intron" if mode == "retained"
                 else "unspliced intron in predicted UTR")
         return (kind + ("s" if n > 1 and mode == "retained" else ""),
@@ -465,30 +430,27 @@ def render(ax, a: dict, *, compact: bool) -> None:
     gx0, gx1 = min(s for s, _ in spans), max(e for _, e in spans)
     width = gx1 - gx0
     pad = width * 0.02
-    off = gx0          # draw in bp offset from the locus start: integer ticks, no
-                       # decimal kilobases, and the absolute span goes in the axis label
+    kb = 1000.0
 
     label_fs = 5.4 if compact else 6.0
     band_fs = 7.0 if compact else 8.5
 
     # A 63 bp exon in a 2.4 kb window is a hairline; give every shaded feature a
     # floor of 1.5% of the window so the highlight reads at print size.
-    # At most MAX_SHADE bands: six overlapping bands read as a striped background
-    # rather than as a highlight. The count is stated in the headline instead.
-    for s, e in a["feats"][:MAX_SHADE]:
+    for s, e in a["feats"]:
         half = max((e - s) / 2, width * 0.015)
         mid = (s + e) / 2
-        ax.axvspan(mid - half - off, mid + half - off,
-                   color=SHADE, alpha=0.20, zorder=0, lw=0)
+        ax.axvspan((mid - half) / kb, (mid + half) / kb,
+                   color=SHADE, alpha=0.22, zorder=0, lw=0)
 
     y = n
     for label, rec, color, hl in rows:
-        scaled = {**rec, "cds": [(s - off, e - off) for s, e in rec["cds"]],
-                  "utr": [(s - off, e - off) for s, e in rec["utr"]],
-                  "exon": [(s - off, e - off) for s, e in rec["exon"]]}
+        scaled = {**rec, "cds": [(s / kb, e / kb) for s, e in rec["cds"]],
+                  "utr": [(s / kb, e / kb) for s, e in rec["utr"]],
+                  "exon": [(s / kb, e / kb) for s, e in rec["exon"]]}
         draw_tx(ax, y, scaled, color, lw=1.2 if hl else 0.7)
         if hl:
-            ax.plot(gx1 + pad * 1.2 - off, y,
+            ax.plot((gx1 + pad * 1.2) / kb, y,
                     marker="<" if a["strand"] == "-" else ">", color=color, markersize=5)
         # transcript labels ride the axes edge so they line up across every panel
         ax.text(1.015, y, label, transform=ax.get_yaxis_transform(),
@@ -512,56 +474,39 @@ def render(ax, a: dict, *, compact: bool) -> None:
     ax.text(0.5, 1.015, f"{kind}   {where}", transform=ax.transAxes,
             ha="center", va="bottom", fontsize=label_fs + 0.4, color="#7A5C00")
 
-    ax.set_xlim(-pad * 1.5, width + pad * 2.5)
+    ax.set_xlim((gx0 - pad * 1.5) / kb, (gx1 + pad * 2.5) / kb)
     ax.set_ylim(0.35, n + 0.9)
     ax.set_yticks([])
     for sp in ("top", "left", "right"):
         ax.spines[sp].set_visible(False)
-    ax.xaxis.set_major_locator(plt.MaxNLocator(5, integer=True, steps=[1, 2, 5, 10]))
+    ax.xaxis.set_major_locator(plt.MaxNLocator(5))
     ax.ticklabel_format(axis="x", style="plain", useOffset=False)
     ax.tick_params(axis="x", labelsize=label_fs + 0.6)
-    ax.set_xlabel(
-        f"bp from locus start   ·   {a['chrom']}:{gx0:,}–{gx1:,} ({a['strand']} strand)"
-        f"\n{support_note(a)}",
-        fontsize=label_fs + 0.8, labelpad=8, linespacing=1.9)
-    # On the multi-panel sheet the long sentence repeats five times and collides with
-    # the (A)/(B)/... marker, so the panel keeps only the locus; the kind of event is
-    # already spelled out in the amber line directly beneath.
-    if compact:
-        title = a["locus"]
-    elif a["mode"] == "reproduced":
-        title = f"{a['locus']}  —  TransGenic isoforms confirmed by AtRTD3 long reads"
-    else:
-        title = (f"{a['locus']}  —  TransGenic predicts an isoform confirmed by AtRTD3 "
-                 f"and absent from TAIR10")
-    ax.set_title(title, fontsize=band_fs + (1.0 if compact else 0),
-                 fontweight="bold" if compact else "normal",
-                 pad=16 if compact else 20)
+    ax.set_xlabel(f"{a['chrom']} position (kb), {a['strand']} strand\n{support_note(a)}",
+                  fontsize=label_fs + 0.8, labelpad=8, linespacing=1.9)
+    title = (f"{a['locus']}  —  TransGenic reproduces the alternative transcripts "
+             f"shared by TAIR10 and AtRTD3" if a["mode"] == "reproduced" else
+             f"{a['locus']}  —  TransGenic predicts an AtRTD3-supported isoform "
+             f"absent from TAIR10")
+    ax.set_title(title, fontsize=band_fs, pad=16 if compact else 20)
 
 
-LEGEND = [(GREY, "TAIR10 reference"),
-          (ORANGE, "TransGenic — absent from TAIR10"),
-          (BLUE, "TransGenic — reproduces a TAIR10 chain"),
-          (DGREEN, "AtRTD3 — confirms the TransGenic chain"),
-          (GREEN, "AtRTD3 — carries the marked feature"),
-          (PALE, "AtRTD3 — other isoforms")]
-
-
-def legend_handles(used: set | None = None) -> list:
-    """Only the colours a panel actually draws. A key for an unused colour invites the
-    reader to hunt for a track that is not there."""
-    return [Line2D([0], [0], color=c, lw=4, label=t)
-            for c, t in LEGEND if used is None or c in used]
+def legend_handles() -> list:
+    return [Line2D([0], [0], color=GREY, lw=4, label="TAIR10 reference"),
+            Line2D([0], [0], color=ORANGE, lw=4, label="TransGenic (novel isoform)"),
+            Line2D([0], [0], color=BLUE, lw=4, label="TransGenic (reproduced)"),
+            Line2D([0], [0], color=DGREEN, lw=4, label="AtRTD3 (exact chain match)"),
+            Line2D([0], [0], color=GREEN, lw=4, label="AtRTD3 (supports highlighted feature)"),
+            Line2D([0], [0], color=PALE, lw=4, label="AtRTD3 (other isoforms)")]
 
 
 def draw_locus(locus: str) -> dict:
     a = analyse(locus)
     rows, _ = build_rows(a)
-    used = {c for _, _, c, _ in rows}
     fig, ax = plt.subplots(figsize=(FIG_W, ROW_H * len(rows) + 1.9))
     render(ax, a, compact=False)
-    fig.legend(handles=legend_handles(used), ncol=min(3, len(used)), frameon=False,
-               fontsize=6.2, loc="lower center", bbox_to_anchor=(0.5, -0.01))
+    fig.legend(handles=legend_handles(), ncol=3, frameon=False, fontsize=6.2,
+               loc="lower center", bbox_to_anchor=(0.5, -0.01))
     fig.tight_layout(rect=(0, 0.10, 1, 1))
     for ext in ("pdf", "png"):
         fig.savefig(OUT / f"figure4_panelC_{locus}.{ext}", dpi=300,
@@ -593,12 +538,11 @@ def draw_sheet(loci: list, name: str = "all", ncol: int = 2,
     for i, (ax, a) in enumerate(zip(flat, analyses)):
         render(ax, a, compact=True)
         if panel_labels:
-            ax.text(-0.075, 1.055, panel_labels[i], transform=ax.transAxes,
-                    fontsize=12, fontweight="bold", va="bottom", ha="right")
+            ax.text(-0.085, 1.06, panel_labels[i], transform=ax.transAxes,
+                    fontsize=11, fontweight="bold", va="bottom", ha="left")
     for ax in flat[len(analyses):]:
         ax.axis("off")
-    used = {c for a in analyses for _, _, c, _ in build_rows(a)[0]}
-    fig.legend(handles=legend_handles(used), ncol=3 if ncol > 1 else 2, frameon=False,
+    fig.legend(handles=legend_handles(), ncol=6 if ncol > 1 else 3, frameon=False,
                fontsize=7.2, loc="lower center", bbox_to_anchor=(0.5, 0.002))
     fig.tight_layout(rect=(0, 0.035 if ncol > 1 else 0.055, 1, 1), h_pad=2.6, w_pad=3.0)
     for ext in ("pdf", "png"):
