@@ -262,6 +262,8 @@ Nine phylogenetically diverse plant species:
 | [HyenaTransgenic-768L12A6-400M](https://huggingface.co/jlomas/HyenaTransgenic-768L12A6-400M) | ~400M | 768 | 12 | 6 | 92% |
 | [HyenaTransgenic-512L9A4-160M](https://huggingface.co/jlomas/HyenaTransgenic-512L9A4-160M) | ~160M | 512 | 9 | 4 | - |
 
+> **Tokenizer vocabulary versions.** The published checkpoints have `vocab_size: 272` and each HF repository ships the matching legacy `GFFTokenizer` (v1), so `AutoTokenizer.from_pretrained(<checkpoint>, trust_remote_code=True)` always pairs correctly. The tokenizer in this repository defaults to the isoform-aware 288-token vocabulary (v2: adds `<iso>` and `<tx1>`–`<tx15>` planning tokens) used for new training runs. When using this repo's tokenizer class with a published 272-token checkpoint (e.g., fine-tuning), instantiate `GFFTokenizer(vocab_version="v1")`; `run_genome_annotation.py` and `examples/prompt_mode.py` check tokenizer/checkpoint vocabulary agreement at load time and fail fast on a mismatch.
+
 ### Training Configuration
 - **Learning rate**: 5e-5
 - **Batch size**: 96 (effective)
@@ -525,6 +527,18 @@ The general outline of an inference workflow is:
 2. Initialize a [PyTorch Dataset and DataLoader](https://pytorch.org/tutorials/beginner/basics/data_tutorial.html) for the database
 3. Generate annotations using `model.generate`
 4. Convert GSF outputs to a GFF3 formatted output file
+
+### Generation modes
+
+TransGenic supports three generation modes for producing annotations:
+
+| Mode | Description | Command |
+|---|---|---|
+| **de novo** | The decoder generates the complete GSF string conditioned only on the encoded DNA. | `python src/run_genome_annotation.py genome.fa genes.gff3 -o output.gff3 --device cuda` |
+| **reference-prompted** | The features of the first transcript in the reference GFF3 are supplied as a GSF prefix, and the decoder completes additional isoforms. | `python examples/prompt_mode.py --genome genome.fa --gff reference.sorted.gff3 --output completion.gff --batch-size 96` |
+| **self-prompted (two-stage)** | The model's own de novo output is supplied as the prompt GFF3, so the first predicted transcript seeds completion of additional isoforms. | `python src/run_genome_annotation.py genome.fa genes.gff3 -o denovo.gff3 --device cuda` followed by `python examples/prompt_mode.py --genome genome.fa --gff denovo.gff3 --output self_prompted.gff --batch-size 96` |
+
+The self-prompted mode yields a fully ab initio isoform-completion pipeline, but it typically produces more transcripts with lower structural consistency than reference-prompted mode.
 
 ### Example Notebooks
 

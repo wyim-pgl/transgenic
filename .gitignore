@@ -30,3 +30,7 @@ examples/ath_chr4_predict.gff
 train/wandb/*
 train/HFmodels/*
 ath_chr4_comparison_*
+
+# superseded figure outputs kept locally to avoid submission mix-ups
+Figures/_deprecated/
+*.bak-*

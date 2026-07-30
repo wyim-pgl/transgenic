@@ -27,13 +27,13 @@ echo ""
 
 cd "${ATRTD3_DIR}"
 
-# AtRTD3 GTF
+# AtRTD3 GTF (transfix build with TranSuite translations; Chr* seqIDs)
 if [[ ! -f "AtRTD3.gtf" ]]; then
     echo "Downloading AtRTD3 GTF..."
-    wget -q --show-progress -c "https://ics.hutton.ac.uk/atRTD/RTD3/AtRTD3_29122021.gtf" \
+    wget -q --show-progress -c "https://ics.hutton.ac.uk/atRTD/RTD3/atRTD3_TS_21Feb22_transfix.gtf" \
         -O "AtRTD3.gtf" 2>&1 || {
         echo "Trying curl..."
-        curl -L -# -o "AtRTD3.gtf" "https://ics.hutton.ac.uk/atRTD/RTD3/AtRTD3_29122021.gtf"
+        curl -L -# -o "AtRTD3.gtf" "https://ics.hutton.ac.uk/atRTD/RTD3/atRTD3_TS_21Feb22_transfix.gtf"
     }
     echo "  -> AtRTD3.gtf downloaded"
 else

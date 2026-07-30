@@ -1,0 +1,342 @@
+#!/usr/bin/env python3
+"""Cross-check every quantitative claim in manuscript_v2.md against the result files.
+
+Each check prints PASS/FAIL with the manuscript value, the value re-derived from
+the source file, and the file the source value came from. Exit code is the
+number of failures.
+
+Usage:
+    python 19_verify_manuscript_numbers.py
+"""
+
+from __future__ import annotations
+
+import csv
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+RES = ROOT / "transgenic" / "revision" / "results"
+CMP = ROOT / "transgenic_comparison"
+
+TRAINING_SPECIES = [
+    "A_thaliana", "B_distachyon", "G_max", "O_sativa", "P_patens",
+    "P_trichocarpa", "S_bicolor", "S_italica", "V_vinifera",
+]
+
+results: list[tuple[bool, str, str, str, str]] = []
+
+
+def check(name: str, claimed, derived, source: str, tol: float = 0.051) -> None:
+    """Record a check. Numeric comparison uses an absolute tolerance."""
+    if isinstance(claimed, (int, float)) and isinstance(derived, (int, float)):
+        ok = abs(float(claimed) - float(derived)) <= tol
+    else:
+        ok = claimed == derived
+    results.append((ok, name, str(claimed), str(derived), source))
+
+
+def load_csv(path: Path) -> list[dict]:
+    with path.open(newline="") as fh:
+        return list(csv.DictReader(fh))
+
+
+def jload(path: Path) -> dict:
+    with path.open() as fh:
+        return json.load(fh)
+
+
+def stats_metrics(path: Path) -> dict[str, tuple[float, float]]:
+    """Parse a gffcompare .stats file into {level: (sensitivity, precision)}."""
+    out: dict[str, tuple[float, float]] = {}
+    pat = re.compile(r"^\s*([A-Za-z ]+?) level:\s*([\d.-]+)\s*\|\s*([\d.-]+)")
+    for line in path.read_text().splitlines():
+        m = pat.match(line)
+        if m:
+            out[m.group(1).strip()] = (float(m.group(2)), float(m.group(3)))
+    return out
+
+
+def stats_counts(path: Path) -> dict[str, int]:
+    txt = path.read_text()
+    out: dict[str, int] = {}
+    m = re.search(r"Query mRNAs :\s*(\d+) in\s*(\d+) loci", txt)
+    if m:
+        out["query_mrna"], out["query_loci"] = int(m.group(1)), int(m.group(2))
+    m = re.search(r"Reference mRNAs :\s*(\d+) in\s*(\d+) loci", txt)
+    if m:
+        out["ref_mrna"], out["ref_loci"] = int(m.group(1)), int(m.group(2))
+    return out
+
+
+# ---------------------------------------------------------------- BUSCO ----
+busco_path = CMP / "busco_summary_final.normalized.csv"
+busco = load_csv(busco_path)
+by_tool: dict[str, dict[str, float]] = {}
+for r in busco:
+    by_tool.setdefault(r["Tool"], {})[r["Species"]] = float(r["Complete (%)"])
+
+for tool, label, lo, hi, mean in [
+    ("transgenic400Mprompt", "prompted 400M", 78.1, 100.0, 95.2),
+    ("transgenic400M", "de novo 400M", 48.0, 78.6, 62.4),
+    ("transgenic160M", "de novo 160M", 35.3, 61.4, 49.7),
+]:
+    vals = list(by_tool[tool].values())
+    check(f"BUSCO {label} min", lo, min(vals), busco_path.name)
+    check(f"BUSCO {label} max", hi, max(vals), busco_path.name)
+    check(f"BUSCO {label} mean", mean, sum(vals) / len(vals), busco_path.name)
+
+check("BUSCO Z. mays prompted 400M", 78.1, by_tool["transgenic400Mprompt"]["Z_mays"], busco_path.name)
+check("BUSCO Z. mays Helixer", 97.6, by_tool["helixer"]["Z_mays"], busco_path.name)
+
+# ---------------------------------------------- transcript-level isoforms ----
+p = RES / "prompted400Mbeam1_vs_TAIR10" / "summary_report.json"
+j = jload(p)
+t = j["transcript_level_metrics"]
+src = "prompted400Mbeam1_vs_TAIR10/summary_report.json"
+check("prompted vs TAIR10 isoform recall %", 61.9, t["isoform_recall"] * 100, src)
+check("prompted vs TAIR10 isoform precision %", 74.4, t["isoform_precision"] * 100, src)
+check("prompted vs TAIR10 isoform F1 %", 67.6, t["isoform_f1"] * 100, src)
+check("prompted vs TAIR10 distinct ref matched", 21919, t["distinct_ref_matched"], src)
+check("prompted vs TAIR10 total reference", 35386, t["total_reference"], src)
+check("prompted vs TAIR10 total predicted", 29923, t["total_predicted"], src)
+check("prompted vs TAIR10 exact matches", 22260, t["exact_matches"], src)
+check("prompted vs TAIR10 duplicate queries", 341, t["duplicate_exact_matches"], src)
+
+ic = j["isoform_count_analysis"]
+denom = ic["exact_count_matches"] + ic["underpredictions"] + ic["overpredictions"]
+check("isoform-count exact (n)", 22955, ic["exact_count_matches"], src)
+check("isoform-count under (n)", 4419, ic["underpredictions"], src)
+check("isoform-count over (n)", 39, ic["overpredictions"], src)
+check("isoform-count denominator 27,413", 27413, denom, src + " (exact+under+over)")
+check("isoform-count exact %", 83.7, 100 * ic["exact_count_matches"] / denom, src)
+
+p = RES / "prompted400Mbeam1_vs_AtRTD3" / "summary_report.json"
+j = jload(p)
+t = j["transcript_level_metrics"]
+src = "prompted400Mbeam1_vs_AtRTD3/summary_report.json"
+check("prompted vs AtRTD3 recall %", 12.5, t["isoform_recall"] * 100, src)
+check("prompted vs AtRTD3 precision %", 72.5, t["isoform_precision"] * 100, src)
+check("prompted vs AtRTD3 distinct ref matched", 21252, t["distinct_ref_matched"], src)
+check("prompted vs AtRTD3 total reference", 169499, t["total_reference"], src)
+check("prompted vs AtRTD3 duplicate queries", 442, t["duplicate_exact_matches"], src)
+ic = j["isoform_count_analysis"]
+check("AtRTD3 isoform-count exact (n)", 8635, ic["exact_count_matches"], src)
+check("AtRTD3 isoform-count under (n)", 18239, ic["underpredictions"], src)
+check("AtRTD3 isoform-count over (n)", 52, ic["overpredictions"], src)
+check("AtRTD3 missed genes (no prediction)", 14003, ic["missed_genes"], src)
+check("AtRTD3 novel (outside documented loci)", 487, ic["novel_genes"], src)
+
+p = RES / "denovo400M_vs_TAIR10" / "summary_report.json"
+t = jload(p)["transcript_level_metrics"]
+src = "denovo400M_vs_TAIR10/summary_report.json"
+check("de novo vs TAIR10 recall %", 33.0, t["isoform_recall"] * 100, src)
+check("de novo vs TAIR10 precision %", 42.4, t["isoform_precision"] * 100, src)
+check("de novo vs TAIR10 distinct ref matched", 11681, t["distinct_ref_matched"], src)
+
+# ------------------------------------------------------- splice events ----
+p = RES / "prompted400Mbeam1_vs_TAIR10" / "splice_events_report.json"
+ev = jload(p)["per_event_type"]
+src = "prompted400Mbeam1_vs_TAIR10/splice_events_report.json"
+for etype, rec, prec in [("SE", 6.9, 52.5), ("A5SS", 6.8, 28.3), ("A3SS", 6.6, 43.9), ("IR", 12.2, 41.8)]:
+    check(f"prompted {etype} recall %", rec, ev[etype]["recall"] * 100, src)
+    check(f"prompted {etype} precision %", prec, ev[etype]["precision"] * 100, src)
+
+p = RES / "prompted400Mbeam1_vs_AtRTD3" / "splice_events_report.json"
+ev = jload(p)["per_event_type"]
+src = "prompted400Mbeam1_vs_AtRTD3/splice_events_report.json"
+precs = [ev[e]["precision"] * 100 for e in ("SE", "A5SS", "A3SS", "IR")]
+recs = [ev[e]["recall"] * 100 for e in ("SE", "A5SS", "A3SS", "IR")]
+check("AtRTD3 event precision min %", 36.5, min(precs), src)
+check("AtRTD3 event precision max %", 55.4, max(precs), src)
+check("AtRTD3 event recall min %", 0.5, min(recs), src)
+check("AtRTD3 event recall max %", 1.0, max(recs), src)
+
+p = RES / "denovo400M_vs_TAIR10" / "splice_events_report.json"
+dn = jload(p)
+ev = dn["per_event_type"]
+src = "denovo400M_vs_TAIR10/splice_events_report.json"
+recs = [ev[e]["recall"] * 100 for e in ("SE", "A5SS", "A3SS", "IR")]
+check("de novo event recall min %", 0.0, min(recs), src)
+check("de novo event recall max %", 0.1, max(recs), src)
+check("de novo events predicted (total)", 342, dn["summary"]["total_predicted_events"], src)
+check("de novo events matched (total)", 7, dn["summary"]["total_matched_events"], src)
+check("TAIR10 reference events (total)", 14643, dn["summary"]["total_reference_events"], src)
+
+# ------------------------------------------------------------- alt-only ----
+alt = RES / "altonly"
+m = stats_metrics(alt / "A_thaliana_transgenic400Mprompt_beam1_vs_AtRTD3.stats")
+src = "altonly/A_thaliana_transgenic400Mprompt_beam1_vs_AtRTD3.stats"
+check("alt-only AtRTD3 prompted base Sn", 59.4, m["Base"][0], src)
+check("alt-only AtRTD3 prompted base Pr", 77.3, m["Base"][1], src)
+check("alt-only AtRTD3 prompted transcript Sn", 10.3, m["Transcript"][0], src)
+check("alt-only AtRTD3 prompted transcript Pr", 47.3, m["Transcript"][1], src)
+check("alt-only AtRTD3 prompted intron-chain Pr", 59.5, m["Intron chain"][1], src)
+
+m = stats_metrics(alt / "A_thaliana_transgenic400M_vs_AtRTD3.stats")
+src = "altonly/A_thaliana_transgenic400M_vs_AtRTD3.stats"
+check("alt-only AtRTD3 de novo base Sn", 56.9, m["Base"][0], src)
+check("alt-only AtRTD3 de novo base Pr", 75.5, m["Base"][1], src)
+
+m = stats_metrics(alt / "A_thaliana_augustusSampling_vs_AtRTD3.stats")
+src = "altonly/A_thaliana_augustusSampling_vs_AtRTD3.stats"
+check("alt-only AtRTD3 AUGUSTUS transcript Pr", 16.3, m["Transcript"][1], src)
+check("alt-only AtRTD3 AUGUSTUS intron-chain Pr", 18.0, m["Intron chain"][1], src)
+
+m = stats_metrics(alt / "A_thaliana_augustusSampling_vs_TAIR10.stats")
+c = stats_counts(alt / "A_thaliana_augustusSampling_vs_TAIR10.stats")
+src = "altonly/A_thaliana_augustusSampling_vs_TAIR10.stats"
+check("alt-only TAIR10 AUGUSTUS transcript Sn", 21.9, m["Transcript"][0], src)
+check("alt-only TAIR10 AUGUSTUS transcript Pr", 2.5, m["Transcript"][1], src)
+check("AUGUSTUS predicted transcripts", 69049, c["query_mrna"], src)
+check("AUGUSTUS loci with a prediction", 25641, c["query_loci"], src)
+check("AUGUSTUS transcripts per predicted locus", 2.7, c["query_mrna"] / c["query_loci"], src)
+c2 = stats_counts(alt / "A_thaliana_transgenic400Mprompt_beam1_vs_TAIR10.stats")
+# The alt-only run reports 29,922 query mRNAs vs 29,923 in the full-reference run:
+# one transcript falls outside the alt-only reference's sequence set. The
+# manuscript's precision denominator (29,923) comes from the full-reference run.
+check("prompted predicted transcripts (alt-only run)", 29922, c2["query_mrna"], "altonly/...prompt_beam1_vs_TAIR10.stats")
+check("prompted loci with a prediction", 27213, c2["query_loci"], "altonly/...prompt_beam1_vs_TAIR10.stats")
+check("prompted transcripts per predicted locus", 1.1, c2["query_mrna"] / c2["query_loci"], "altonly/...prompt_beam1_vs_TAIR10.stats")
+check("AUGUSTUS/TransGenic candidate ratio ~2.3x", 2.3, c["query_mrna"] / c2["query_mrna"], "derived", tol=0.05)
+check("alt-only TAIR10 prompted transcript Sn", 9.3, m2 := stats_metrics(alt / "A_thaliana_transgenic400Mprompt_beam1_vs_TAIR10.stats")["Transcript"][0], "altonly/...prompt_beam1_vs_TAIR10.stats")
+
+p = RES / "augustusSampling_vs_TAIR10" / "summary_report.json"
+if p.exists():
+    t = jload(p)["transcript_level_metrics"]
+    src = "augustusSampling_vs_TAIR10/summary_report.json"
+    check("AUGUSTUS full TAIR10 transcript recall %", 37.7, t["isoform_recall"] * 100, src)
+    check("AUGUSTUS full TAIR10 transcript precision %", 25.7, t["isoform_precision"] * 100, src)
+    check("AUGUSTUS full TAIR10 transcript F1 %", 30.6, t["isoform_f1"] * 100, src)
+else:
+    results.append((False, "AUGUSTUS full TAIR10 summary_report.json", "expected", "MISSING", str(p)))
+
+p = RES / "augustusSampling_vs_AtRTD3" / "summary_report.json"
+if p.exists():
+    t = jload(p)["transcript_level_metrics"]
+    src = "augustusSampling_vs_AtRTD3/summary_report.json"
+    check("AUGUSTUS full AtRTD3 transcript recall %", 9.2, t["isoform_recall"] * 100, src)
+    check("AUGUSTUS full AtRTD3 transcript precision %", 29.8, t["isoform_precision"] * 100, src)
+else:
+    results.append((False, "AUGUSTUS full AtRTD3 summary_report.json", "expected", "MISSING", str(p)))
+
+# ------------------------------------------------------ self-consistency ----
+sc_path = RES / "selfconsistency_summary.csv"
+sc = {r["species_variant"]: r for r in load_csv(sc_path)}
+src = sc_path.name
+for suffix, label, lo, hi in [
+    ("_transgenic400M", "de novo 400M", 8.9, 27.4),
+    ("_transgenic400Mprompt", "prompted 400M", 85.4, 98.2),
+    ("_REF", "reference", 92.9, 100.0),
+]:
+    vals = [float(v["pct_fully_consistent"]) for k, v in sc.items() if k.endswith(suffix)]
+    check(f"self-consistency {label} min %", lo, min(vals), src)
+    check(f"self-consistency {label} max %", hi, max(vals), src)
+    if label == "prompted 400M":
+        check("self-consistency prompted mean %", 94.1, sum(vals) / len(vals), src)
+
+beam1 = sc.get("A_thaliana_transgenic400Mprompt_beam1")
+if beam1:
+    check("duplicate transcripts (n)", 311, int(beam1["duplicate_transcripts"]), src)
+    check("beam1 transcripts checked", 29713, int(beam1["n_transcripts"]), src)
+    check("duplicate %", 1.0, 100 * int(beam1["duplicate_transcripts"]) / int(beam1["n_transcripts"]), src)
+else:
+    results.append((False, "beam1 self-consistency row", "expected", "MISSING", src))
+
+# --------------------------------------------------------------- TSS/TES ----
+tss_path = RES / "tss_tes_summary.csv"
+tss = load_csv(tss_path)
+src = tss_path.name
+den = [r for r in tss if r["species_variant"].endswith("_transgenic400M")]
+pro = [r for r in tss if r["species_variant"].endswith("_transgenic400Mprompt")]
+check("de novo TSS exact min %", 2.9, min(float(r["TSS_exact_pct"]) for r in den), src)
+check("de novo TSS exact max %", 22.1, max(float(r["TSS_exact_pct"]) for r in den), src)
+check("de novo TSS +-50 min %", 33.4, min(float(r["TSS_within50_pct"]) for r in den), src)
+check("de novo TSS +-50 max %", 66.2, max(float(r["TSS_within50_pct"]) for r in den), src)
+check("de novo TSS +-100 min %", 45.7, min(float(r["TSS_within100_pct"]) for r in den), src)
+check("de novo TSS +-100 max %", 81.1, max(float(r["TSS_within100_pct"]) for r in den), src)
+check("de novo TSS median offset min", 27, min(int(r["TSS_median_delta"]) for r in den), src, tol=0)
+check("de novo TSS median offset max", 123, max(int(r["TSS_median_delta"]) for r in den), src, tol=0)
+check("prompted TSS exact min %", 66.7, min(float(r["TSS_exact_pct"]) for r in pro), src)
+check("prompted TSS exact max %", 98.0, max(float(r["TSS_exact_pct"]) for r in pro), src)
+check("prompted TSS +-50 min %", 87.0, min(float(r["TSS_within50_pct"]) for r in pro), src)
+check("prompted TSS +-50 max %", 99.5, max(float(r["TSS_within50_pct"]) for r in pro), src)
+
+# ------------------------------------------------------------ vocabulary ----
+fs_path = RES / "feature_stats_summary.csv"
+fs = {r["species"]: r for r in load_csv(fs_path)}
+src = fs_path.name
+species13 = [k for k in fs if k != "AtRTD3"]
+within = {k: float(fs[k]["pct_within_limits"]) for k in species13}
+check("vocabulary min coverage % (13 refs)", 99.085, min(within.values()), src)
+check("Z. mays genes over limits", 360, int(fs["Z_mays"]["over_any"]), src)
+check("S. lycopersicum genes over limits", 2, int(fs["S_lycopersicum"]["over_any"]), src)
+check("refs fully representable (all features)", 11, sum(1 for v in within.values() if v == 100.0), src, tol=0)
+check("refs fully representable for CDS", 12, sum(1 for k in species13 if int(fs[k]["over_150_cds"]) == 0), src, tol=0)
+cds_maxes = sorted((int(fs[k]["cds_max"]) for k in species13), reverse=True)
+check("highest CDS segment count (S. lycopersicum)", 201, cds_maxes[0], src, tol=0)
+check("next-highest CDS segment count (Z. mays)", 146, cds_maxes[1], src, tol=0)
+check("max 5'UTR segments (Z. mays)", 232, int(fs["Z_mays"]["utr5_max"]), src, tol=0)
+check("max 3'UTR segments (Z. mays)", 322, int(fs["Z_mays"]["utr3_max"]), src, tol=0)
+
+# ------------------------------------------------------------- AS stats ----
+as_path = RES / "asstats_summary.csv"
+ast = {r["species"]: r for r in load_csv(as_path)}
+src = as_path.name
+pcts = {k: float(ast[k]["pct_multi_transcript"]) for k in TRAINING_SPECIES}
+check("multi-transcript min % (training)", 14.2, min(pcts.values()), src)
+check("multi-transcript max % (training)", 70.3, max(pcts.values()), src)
+check("max transcripts per gene (training)", 26, max(int(ast[k]["max_transcripts_per_gene"]) for k in TRAINING_SPECIES), src, tol=0)
+
+# --------------------------------------------------------- Chr4 pilot ----
+p = ROOT / "transgenic" / "ath_chr4_comparison_FINAL.stats"
+m, c = stats_metrics(p), stats_counts(p)
+src = "ath_chr4_comparison_FINAL.stats"
+check("Chr4 base Sn", 88.1, m["Base"][0], src)
+check("Chr4 base Pr", 67.7, m["Base"][1], src)
+check("Chr4 transcript Sn", 39.2, m["Transcript"][0], src)
+check("Chr4 transcript Pr", 4.4, m["Transcript"][1], src)
+check("Chr4 locus Sn", 51.2, m["Locus"][0], src)
+check("Chr4 locus Pr", 51.9, m["Locus"][1], src)
+check("Chr4 predicted transcripts", 47741, c["query_mrna"], src)
+check("Chr4 predicted loci", 3914, c["query_loci"], src)
+check("Chr4 reference transcripts", 5350, c["ref_mrna"], src)
+
+# ---------------------------------------------------------- benchmark F1 ----
+gc_path = CMP / "gffcompare_summary.csv"
+gc = load_csv(gc_path)
+
+
+def f1(sn: float, pr: float) -> float:
+    return 0.0 if sn + pr == 0 else 2 * sn * pr / (sn + pr)
+
+
+gmap = {(r["Species"], r["Tool"]): r for r in gc}
+src = gc_path.name
+# These are the 13-species benchmark values reported in Supplemental Table S2. They
+# are NOT the 92.2% / 71.1% quoted in the abstract and first Results paragraph, which
+# come from the original held-out test-split evaluation behind Figure 3.
+r = gmap[("A_thaliana", "transgenic400M")]
+check("A. thaliana 400M de novo base F1 (Table S2)", 92.4,
+      f1(float(r["Base_Sensitivity"]), float(r["Base_Precision"])), src)
+r = gmap[("Z_mays", "transgenic400M")]
+check("Z. mays 400M de novo base F1 (Table S2)", 70.6,
+      f1(float(r["Base_Sensitivity"]), float(r["Base_Precision"])), src)
+
+# ------------------------------------------------------------- report ----
+fails = [r for r in results if not r[0]]
+width = max(len(r[1]) for r in results) + 2
+print(f"{'CHECK':<{width}} {'MANUSCRIPT':>14}  {'SOURCE VALUE':>14}   FILE")
+print("-" * (width + 50))
+for ok, name, claimed, derived, source in results:
+    flag = "  " if ok else "**"
+    print(f"{flag}{name:<{width - 2}} {claimed:>14}  {derived[:14]:>14}   {source}")
+print("-" * (width + 50))
+print(f"{len(results) - len(fails)}/{len(results)} checks passed, {len(fails)} MISMATCH")
+if fails:
+    print("\nMISMATCHES:")
+    for _, name, claimed, derived, source in fails:
+        print(f"  - {name}: manuscript={claimed}  source={derived}  ({source})")
+sys.exit(len(fails))

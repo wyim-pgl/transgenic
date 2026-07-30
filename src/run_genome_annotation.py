@@ -414,6 +414,21 @@ def main():
         # tokenizer is specific to the Gene Structure Format vocabulary and is
         # used to decode the model's integer output tokens back into GSF text.
         gffTokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
+
+        # Fail fast on a tokenizer/checkpoint vocabulary mismatch: the
+        # published checkpoints have vocab_size 272 (legacy tokenizer), while
+        # the current repo's default GFF tokenizer builds 288 tokens. Encoding
+        # with the larger vocabulary against the smaller embedding table
+        # would produce out-of-range token ids.
+        model_vocab_size = getattr(model.config, "vocab_size", None)
+        if model_vocab_size is not None and len(gffTokenizer.get_vocab()) > model_vocab_size:
+            raise ValueError(
+                f"Tokenizer vocabulary ({len(gffTokenizer.get_vocab())} tokens) exceeds "
+                f"the checkpoint's vocab_size ({model_vocab_size}). Load the tokenizer "
+                f"from the checkpoint repository (AutoTokenizer.from_pretrained("
+                f"'{args.model}', trust_remote_code=True)) or instantiate GFFTokenizer "
+                f"with vocab_version='v1'."
+            )
     except Exception as e:
         print(f"Error loading model: {e}")
         sys.exit(1)

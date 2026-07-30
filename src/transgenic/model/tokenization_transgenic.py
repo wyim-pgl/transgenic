@@ -17,15 +17,21 @@ The tokenizer maps each GFF element (digits, feature names, delimiters)
 to unique integer IDs. During decoding, token IDs are converted back to
 a GFF string that can be interpreted as genomic annotations.
 
-Vocabulary structure (288 tokens):
+Vocabulary structure (288 tokens in "v2", 272 tokens in legacy "v1"):
   0-3:     Special tokens (<s>, <pad>, </s>, <unk>)
   4-13:    Individual digits (0-9) for encoding coordinates
   14-21:   Letters and delimiters (A, B, C, >, ., +, -, ;)
   22-171:  CDS feature tokens (CDS1 through CDS150)
   172-221: 5' UTR tokens (five_prime_UTR1 through five_prime_UTR50)
   222-271: 3' UTR tokens (three_prime_UTR1 through three_prime_UTR50)
-  272:     <iso> — dedicated isoform/transcript separator (replaces ; in transcript section)
-  273-287: <tx1> through <tx15> — transcript count planning tokens
+  272:     <iso> — dedicated isoform/transcript separator (replaces ; in transcript section) [v2 only]
+  273-287: <tx1> through <tx15> — transcript count planning tokens [v2 only]
+
+The published HyenaTransgenic checkpoints (jlomas/HyenaTransgenic-*) have
+vocab_size 272 and ship the legacy "v1" tokenizer in their HF repos, so
+AutoTokenizer.from_pretrained(<checkpoint>) pairs correctly. Pass
+vocab_version="v1" when using this local tokenizer class with those
+checkpoints (e.g., fine-tuning) so no out-of-range token ids can be emitted.
 """
 
 import re, json, os
@@ -37,14 +43,21 @@ class GFFTokenizer(PreTrainedTokenizer):
 
 	model_input_names = ["input_ids", "attention_mask"]  # Required by HF pipeline API
 
-	def __init__(self, vocab=None, **kwargs):
+	def __init__(self, vocab=None, vocab_version="v2", **kwargs):
 		"""
 		Initialize the GFF vocabulary.
 
 		Args:
 			vocab: Optional custom vocabulary dict {token_str: token_id}.
-			       If None, builds the default 288-token GFF vocabulary.
+			       If None, builds the default vocabulary for `vocab_version`.
+			vocab_version: "v2" (default) builds the 288-token isoform-aware
+			       vocabulary (<iso>, <tx1>-<tx15>); "v1" builds the legacy
+			       272-token vocabulary matching the published
+			       jlomas/HyenaTransgenic-* checkpoints (vocab_size 272).
 		"""
+		if vocab_version not in ("v1", "v2"):
+			raise ValueError(f"Unknown vocab_version '{vocab_version}'; expected 'v1' or 'v2'.")
+		self.vocab_version = vocab_version
 		if vocab is None:
 			# Build the default vocabulary mapping
 			self.vocab = {
@@ -75,18 +88,21 @@ class GFFTokenizer(PreTrainedTokenizer):
 				self.vocab[f"five_prime_UTR{i}"] = i + 171   # IDs 172-221
 				self.vocab[f"three_prime_UTR{i}"] = i + 221  # IDs 222-271
 
-			# Isoform-aware tokens:
-			# <iso> is a dedicated transcript separator that replaces ';' in the
-			# transcript section (after '>'), disambiguating transcript boundaries
-			# from feature boundaries.
-			self.vocab["<iso>"] = 272
+			# Isoform-aware tokens (v2 only; excluded from the legacy 272-token
+			# v1 vocabulary so that ids stay within the published checkpoints'
+			# vocab_size of 272):
+			if self.vocab_version == "v2":
+				# <iso> is a dedicated transcript separator that replaces ';' in the
+				# transcript section (after '>'), disambiguating transcript boundaries
+				# from feature boundaries.
+				self.vocab["<iso>"] = 272
 
-			# <tx1> through <tx15> are transcript count planning tokens. Emitted
-			# immediately before '>' to signal how many transcripts will follow.
-			# This gives the decoder an explicit planning signal about isoform
-			# complexity in the upcoming transcript section.
-			for i in range(1, 16):
-				self.vocab[f"<tx{i}>"] = 272 + i       # IDs 273-287
+				# <tx1> through <tx15> are transcript count planning tokens. Emitted
+				# immediately before '>' to signal how many transcripts will follow.
+				# This gives the decoder an explicit planning signal about isoform
+				# complexity in the upcoming transcript section.
+				for i in range(1, 16):
+					self.vocab[f"<tx{i}>"] = 272 + i       # IDs 273-287
 		else:
 			self.vocab = vocab  # Use caller-provided vocabulary
 
@@ -119,10 +135,13 @@ class GFFTokenizer(PreTrainedTokenizer):
 		and '|' (columns within an entry). Numeric columns are split into
 		individual digit tokens; named columns become single tokens.
 
-		In the isoform-aware mode:
+		In the isoform-aware mode (vocab_version="v2", the default):
 		  - A <tx:N> token is emitted before '>' to signal the transcript count
 		  - ';' delimiters in the transcript section (after '>') are replaced
 		    with the dedicated '<iso>' separator token
+
+		With vocab_version="v1" the legacy algorithm shipped with the published
+		checkpoints is used (';' separates transcripts, no <iso>/<txN> tokens).
 
 		Args:
 			text: Raw GFF string (e.g., "100|CDS1|200|+|A;300|CDS2|400|+|B>CDS1|CDS2")
@@ -131,6 +150,22 @@ class GFFTokenizer(PreTrainedTokenizer):
 			List of token strings starting with <s> and ending with </s>.
 		"""
 		tokens = ["<s>"]  # Always start with beginning-of-sequence token
+
+		if self.vocab_version == "v1":
+			# Legacy tokenization matching the tokenizer shipped with the
+			# published jlomas/HyenaTransgenic-* checkpoints: ';' separates
+			# both features and transcripts, no <iso>/<txN> tokens, so all
+			# emitted ids stay within the 272-token checkpoint vocabulary.
+			for features in text.split(">"):
+				for feature in features.split(";"):
+					for column in feature.split("|"):
+						if re.search(r'^\d+$', column):
+							tokens.extend([digit for digit in column])
+						else:
+							tokens.append(column)
+					tokens.append(";")
+				tokens.append(">")
+			return tokens[:-2] + ["</s>"]
 
 		# Split into features section and transcripts section
 		parts = text.split(">")

@@ -1,0 +1,25 @@
+Reference,Prediction set,Event type,Reference events (n),Predicted events (n),Matched events (n),Recall (%),Precision (%),F1 (%)
+TAIR10,"TransGenic 400M, de novo",SE,1526,18,0,0.00,0.00,0.00
+TAIR10,"TransGenic 400M, de novo",A5SS,5204,147,5,0.10,3.40,0.19
+TAIR10,"TransGenic 400M, de novo",A3SS,5152,96,2,0.04,2.08,0.08
+TAIR10,"TransGenic 400M, de novo",IR,2761,81,0,0.00,0.00,0.00
+TAIR10,"TransGenic 400M, reference-prompted (top beam)",SE,1526,202,106,6.95,52.48,12.27
+TAIR10,"TransGenic 400M, reference-prompted (top beam)",A5SS,5204,1248,353,6.78,28.29,10.94
+TAIR10,"TransGenic 400M, reference-prompted (top beam)",A3SS,5152,776,341,6.62,43.94,11.50
+TAIR10,"TransGenic 400M, reference-prompted (top beam)",IR,2761,807,337,12.21,41.76,18.89
+TAIR10,AUGUSTUS v3.5.0 posterior sampling,SE,1526,4861,108,7.08,2.22,3.38
+TAIR10,AUGUSTUS v3.5.0 posterior sampling,A5SS,5204,16935,828,15.91,4.89,7.48
+TAIR10,AUGUSTUS v3.5.0 posterior sampling,A3SS,5152,17140,841,16.32,4.91,7.55
+TAIR10,AUGUSTUS v3.5.0 posterior sampling,IR,2761,2981,78,2.83,2.62,2.72
+AtRTD3,"TransGenic 400M, de novo",SE,16234,18,2,0.01,11.11,0.02
+AtRTD3,"TransGenic 400M, de novo",A5SS,46397,147,17,0.04,11.56,0.07
+AtRTD3,"TransGenic 400M, de novo",A3SS,46297,96,5,0.01,5.21,0.02
+AtRTD3,"TransGenic 400M, de novo",IR,71238,81,16,0.02,19.75,0.04
+AtRTD3,"TransGenic 400M, reference-prompted (top beam)",SE,16234,202,78,0.48,38.61,0.95
+AtRTD3,"TransGenic 400M, reference-prompted (top beam)",A5SS,46397,1248,455,0.98,36.46,1.91
+AtRTD3,"TransGenic 400M, reference-prompted (top beam)",A3SS,46297,776,402,0.87,51.80,1.71
+AtRTD3,"TransGenic 400M, reference-prompted (top beam)",IR,71238,807,447,0.63,55.39,1.24
+AtRTD3,AUGUSTUS v3.5.0 posterior sampling,SE,16234,4861,332,2.05,6.83,3.15
+AtRTD3,AUGUSTUS v3.5.0 posterior sampling,A5SS,46397,16935,3326,7.17,19.64,10.50
+AtRTD3,AUGUSTUS v3.5.0 posterior sampling,A3SS,46297,17140,3270,7.06,19.08,10.31
+AtRTD3,AUGUSTUS v3.5.0 posterior sampling,IR,71238,2981,488,0.69,16.37,1.32

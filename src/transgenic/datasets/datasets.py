@@ -172,7 +172,7 @@ class isoformDataHyena(Dataset):
 	    the inherited connection is closed and a fresh one is opened
 	  - Connections are closed in __del__ when the dataset is garbage-collected
 	"""
-	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None):
+	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None, gff_vocab_version="v2"):
 		"""
 		Args:
 			db: Path to DuckDB database file.
@@ -180,10 +180,14 @@ class isoformDataHyena(Dataset):
 			encoder_model: HuggingFace model ID for the HyenaDNA encoder tokenizer.
 			global_attention: Whether to use global attention (not used with HyenaDNA).
 			exclude_prefix: Gene name prefix to exclude (e.g., "Zm" for maize).
+			gff_vocab_version: Vocabulary version for the decoder GFF tokenizer.
+				Use "v1" (legacy 272 tokens) when pairing with the published
+				jlomas/HyenaTransgenic-* checkpoints (vocab_size 272); "v2"
+				(288 tokens) matches newly trained isoform-aware models.
 		"""
 		self.db = db
 		self.mode = mode
-		self.dt = GFFTokenizer()  # Decoder tokenizer for GFF annotation strings
+		self.dt = GFFTokenizer(vocab_version=gff_vocab_version)  # Decoder tokenizer for GFF annotation strings
 		self.global_attention = global_attention
 		# Load HyenaDNA tokenizer (single-nucleotide: A=0, C=1, G=2, T=3, etc.)
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)

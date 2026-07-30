@@ -183,7 +183,7 @@ def parse_gtf(gtf_path: Path) -> Dict[str, List[Transcript]]:
             start = int(start) - 1  # Convert to 0-based
             end = int(end)  # GTF end is already 1-based inclusive, so this is exclusive
 
-            # Parse attributes
+            # Parse attributes (GTF `key "value"` and GFF3 `key=value` styles)
             attr_dict = {}
             for attr in attributes.split(';'):
                 attr = attr.strip()
@@ -192,14 +192,32 @@ def parse_gtf(gtf_path: Path) -> Dict[str, List[Transcript]]:
                 match = re.match(r'(\w+)\s*"([^"]*)"', attr)
                 if match:
                     attr_dict[match.group(1)] = match.group(2)
+                elif '=' in attr:
+                    k, v = attr.split('=', 1)
+                    attr_dict[k] = v
 
             gene_id = attr_dict.get('gene_id', '')
             transcript_id = attr_dict.get('transcript_id', '')
 
-            if not gene_id or not transcript_id:
+            # GFF3: exon lines carry Parent=<transcript_id>; gene/transcript
+            # lines carry ID=<id> and Parent=<gene_id>
+            if not transcript_id and 'Parent' in attr_dict:
+                transcript_id = attr_dict['Parent'].split(',')[0]
+            if feature in ('transcript', 'mRNA') and 'ID' in attr_dict:
+                transcript_id = attr_dict['ID']
+                gene_id = attr_dict.get('Parent', gene_id)
+            if feature == 'gene' and 'ID' in attr_dict:
                 continue
 
-            if feature == 'transcript':
+            # GFF3 predictions may lack a resolvable gene at exon level;
+            # gene_id will be back-filled from the transcript registry below.
+            if feature == 'exon' and not gene_id:
+                gene_id = attr_dict.get('gene', '')
+
+            if not transcript_id:
+                continue
+
+            if feature in ('transcript', 'mRNA'):
                 transcript = Transcript(
                     transcript_id=transcript_id,
                     gene_id=gene_id,
@@ -217,9 +235,19 @@ def parse_gtf(gtf_path: Path) -> Dict[str, List[Transcript]]:
                         chrom=chrom,
                         strand=strand
                     )
+                elif not transcripts[transcript_id].gene_id and gene_id:
+                    transcripts[transcript_id].gene_id = gene_id
 
                 exon = Exon(chrom=chrom, start=start, end=end, strand=strand)
                 transcripts[transcript_id].exons.append(exon)
+
+    # Back-fill gene identity for transcripts whose exons carried no gene_id
+    # (GFF3 predictions: exon -> Parent transcript -> Parent gene).
+    # Also key fallback: for TransGenic outputs the transcript ID is
+    # "<gene_id>.t<N>", so the gene can be recovered from the ID prefix.
+    for tid, transcript in transcripts.items():
+        if not transcript.gene_id:
+            transcript.gene_id = tid.rsplit('.', 1)[0]
 
     # Group by gene
     for transcript in transcripts.values():

@@ -1,0 +1,14 @@
+Tool,Version,Use,Command line
+GFFCompare,v0.12.10,"13-species benchmark (Table S2, Figure 5)",`gffcompare -r <reference.gff3> -o <prefix> <prediction.gff3>`
+GFFCompare,v0.12.6,"Isoform, alternative-transcript-only, and splice-event analyses (Tables S4a–c)",`gffcompare -r <reference.gtf> -o <prefix> <prediction.gff3>`
+BUSCO,v6.0.0,"Functional completeness (Table S3, Figure S1)",`busco -i <proteins.fa> -m prot -l viridiplantae_odb10 -c 2 --offline`
+PASA,v2.5.3,Protein extraction for BUSCO,`gff3_file_to_proteins.pl <annotation.gff3> <genome.fa> prot`
+ANNEVO,v2.2,Whole-genome ab initio benchmark,`annevo predict --genome <genome.fa> --lineage plant`
+Helixer,land_plant_v0.3 checkpoint (`land_plant_v0.3_a_0080.h5`),Whole-genome ab initio benchmark,`Helixer.py --lineage land_plant --subsequence-length 64152 --fasta-path <genome.fa> --gff-output-path <out.gff3>`
+Tiberius,v1.1.7,"Whole-genome ab initio benchmark, with and without soft-masked input",`tiberius --genome <genome.fa> --out <out.gtf>` (soft-masked run uses the soft-masked assembly)
+AUGUSTUS,v3.5.0,Posterior-sampling isoform baseline (Table S4),`augustus --species=arabidopsis --sample=100 --alternatives-from-sampling=true --noInFrameStop=true <locus.fa>`
+AGAT,v1.6.1,"Annotation cleaning, sorting, intron addition",`agat_convert_sp_gxf2gxf.pl`; `agat_sp_add_introns.pl`
+HISAT2 (modified extraction script),—,Intron-interval records added during dataset construction,`hisat2_extract_splice_sites_gff3.py <annotation.gff3>`
+rMATS-style event classifier,this study (`03_splice_event_detection.py`),Splice-event classification (Table S4c),`python 03_splice_event_detection.py --reference <ref.gtf> --prediction <pred.gff3>`
+TransGenic,this study (400M and 160M checkpoints),De novo and prompted annotation,`python src/run_genome_annotation.py <genome.fa> <loci.gff3> -o <out.gff3> --device cuda`
+AtRTD3,atRTD3_TS_21Feb22_transfix,Long-read reference transcriptome,https://ics.hutton.ac.uk/atRTD/RTD3/
