@@ -45,7 +45,9 @@ class GFFCompareResults:
     # Transcript-level metrics
     total_reference: int
     total_predicted: int
-    exact_matches: int  # class code '='
+    exact_matches: int  # query transcripts with class code '='
+    distinct_ref_matched: int  # DISTINCT reference transcripts recovered by '='
+    duplicate_exact_matches: int  # exact_matches - distinct_ref_matched
     partial_matches: int  # class codes 'c', 'j', 'k'
     # Calculated metrics
     isoform_recall: float
@@ -77,11 +79,18 @@ def run_gffcompare(
     """
     output_prefix.parent.mkdir(parents=True, exist_ok=True)
 
+    # Skip gffcompare if a usable .tmap already exists in the output dir
+    existing = list(output_prefix.parent.glob(f"{output_prefix.name}.*.tmap"))
+    if existing:
+        console.print(f"[yellow]Reusing existing GFFCompare output: {existing[0]}[/yellow]")
+        return existing[0]
+
     cmd = [
         "gffcompare",
         "-r", str(reference_gtf),
         "-o", str(output_prefix),
-        "-T",  # Do not generate .tmap and .refmap files (use tracking instead)
+        # NOTE: do NOT pass -T here; -T suppresses .tmap/.refmap output,
+        # which this script parses below.
     ]
 
     if genome_fasta:
@@ -97,6 +106,14 @@ def run_gffcompare(
     if result.returncode != 0:
         console.print(f"[red]GFFCompare error:[/red] {result.stderr}")
         raise RuntimeError(f"GFFCompare failed: {result.stderr}")
+
+    # gffcompare v0.12.x writes .tmap/.refmap NEXT TO THE QUERY FILE,
+    # not next to the -o prefix. Move them into the output directory.
+    import shutil
+    for suffix in (".tmap", ".refmap"):
+        stray = predicted_gtf.parent / f"{output_prefix.name}.{predicted_gtf.name}{suffix}"
+        if stray.exists():
+            shutil.move(str(stray), str(output_prefix.parent / stray.name))
 
     tracking_file = Path(f"{output_prefix}.tracking")
     if not tracking_file.exists():
@@ -165,7 +182,7 @@ def parse_stats_file(stats_path: Path) -> dict:
     return stats
 
 
-def calculate_metrics(tmap_df: pd.DataFrame) -> GFFCompareResults:
+def calculate_metrics(tmap_df: pd.DataFrame, total_reference_all: int = 0) -> GFFCompareResults:
     """
     Calculate isoform-level metrics from GFFCompare results.
 
@@ -174,28 +191,40 @@ def calculate_metrics(tmap_df: pd.DataFrame) -> GFFCompareResults:
     - 'c' : Query contained in reference
     - 'k' : Reference contained in query
     - 'j' : At least one splice junction shared
+
+    Definitions:
+    - Isoform Recall    = (# DISTINCT reference transcripts matched by >=1 query
+                          with class '=') / (# ALL reference transcripts)
+    - Isoform Precision = (# query transcripts with class '=') /
+                          (# ALL query transcripts)
+    Multiple queries matching the same reference transcript are reported
+    separately (duplicate_exact_matches) since they indicate redundant
+    isoform predictions.
     """
     class_code_counts = tmap_df['class_code'].value_counts().to_dict()
 
     # Count transcripts
     total_predicted = len(tmap_df)
 
-    # Exact matches (class code '=')
+    # Exact matches (class code '='), query side
     exact_matches = class_code_counts.get('=', 0)
+
+    # Distinct reference transcripts recovered by an exact match
+    eq = tmap_df[tmap_df['class_code'] == '=']
+    distinct_ref_matched = eq['ref_id'].nunique()
+    duplicate_exact_matches = int(exact_matches - distinct_ref_matched)
 
     # Partial matches (structural similarity)
     partial_codes = ['c', 'k', 'j']
     partial_matches = sum(class_code_counts.get(c, 0) for c in partial_codes)
 
-    # Reference transcripts (unique ref_ids, excluding '-' for novel)
-    ref_transcripts = tmap_df[tmap_df['ref_id'] != '-']['ref_id'].nunique()
-    total_reference = ref_transcripts if ref_transcripts > 0 else tmap_df['ref_id'].nunique()
+    # Total reference transcripts: count from the reference annotation,
+    # NOT from the tmap (tmap only contains matched/located references)
+    total_reference = total_reference_all
 
     # Calculate precision/recall
-    # Note: For recall, we need to know total reference transcripts
-    # This might require parsing the reference GTF separately
     isoform_precision = exact_matches / total_predicted if total_predicted > 0 else 0
-    isoform_recall = exact_matches / total_reference if total_reference > 0 else 0
+    isoform_recall = distinct_ref_matched / total_reference if total_reference > 0 else 0
 
     # F1 score
     if isoform_precision + isoform_recall > 0:
@@ -213,6 +242,8 @@ def calculate_metrics(tmap_df: pd.DataFrame) -> GFFCompareResults:
         total_reference=total_reference,
         total_predicted=total_predicted,
         exact_matches=exact_matches,
+        distinct_ref_matched=distinct_ref_matched,
+        duplicate_exact_matches=duplicate_exact_matches,
         partial_matches=partial_matches,
         isoform_recall=isoform_recall,
         isoform_precision=isoform_precision,
@@ -224,16 +255,27 @@ def calculate_metrics(tmap_df: pd.DataFrame) -> GFFCompareResults:
 
 
 def count_reference_transcripts(reference_gtf: Path) -> int:
-    """Count total transcripts in reference GTF."""
+    """Count total transcripts in reference GTF/GFF3.
+
+    Counts 'transcript'/'mRNA' feature lines; for GTF files lacking
+    transcript features (e.g., AtRTD3), counts distinct transcript_id.
+    """
     count = 0
+    tx_ids = set()
     with open(reference_gtf) as f:
         for line in f:
             if line.startswith('#'):
                 continue
             fields = line.strip().split('\t')
-            if len(fields) >= 3 and fields[2] == 'transcript':
+            if len(fields) < 3:
+                continue
+            if fields[2] in ('transcript', 'mRNA'):
                 count += 1
-    return count
+            elif len(fields) >= 9:
+                m = re.search(r'transcript_id "([^"]+)"', fields[8])
+                if m:
+                    tx_ids.add(m.group(1))
+    return count if count > 0 else len(tx_ids)
 
 
 def analyze_isoform_distribution(
@@ -251,8 +293,19 @@ def analyze_isoform_distribution(
     - difference
     """
     def count_isoforms_per_gene(gtf_path: Path) -> dict:
-        """Count transcripts per gene from GTF."""
+        """Count transcripts per gene from GTF or GFF3.
+
+        Handles: GTF with transcript lines, GFF3 with mRNA ID/Parent lines,
+        and GTF without transcript lines (distinct transcript_id per gene_id).
+        Gene IDs are normalized by stripping annotation-version suffixes
+        (.TAIR10, .ITAGx.y, .Wm82..., .RefGen_Vx) so that prediction GM
+        links and reference IDs share a namespace.
+        """
+        def norm(gid):
+            return re.sub(r'\.(TAIR10|ITAG[\d.]+|Wm82.*|RefGen_V\d+)$', '', gid)
+
         gene_counts = {}
+        tx_by_gene = {}
         with open(gtf_path) as f:
             for line in f:
                 if line.startswith('#'):
@@ -260,16 +313,32 @@ def analyze_isoform_distribution(
                 fields = line.strip().split('\t')
                 if len(fields) < 9:
                     continue
-                if fields[2] != 'transcript':
-                    continue
-
-                # Parse attributes
                 attrs = fields[8]
-                gene_id_match = re.search(r'gene_id\s*"([^"]+)"', attrs)
-                if gene_id_match:
-                    gene_id = gene_id_match.group(1)
-                    gene_counts[gene_id] = gene_counts.get(gene_id, 0) + 1
-
+                feat = fields[2]
+                if feat in ('transcript', 'mRNA'):
+                    gene_id = None
+                    # TransGenic predictions: link via GM=<ref gene>.<version>
+                    m = re.search(r'GM=([^;]+)', attrs)
+                    if m:
+                        gene_id = m.group(1)
+                    if not gene_id:
+                        m = re.search(r'gene_id\s*"([^"]+)"', attrs)
+                        if m:
+                            gene_id = m.group(1)
+                        else:
+                            m = re.search(r'Parent=([^;]+)', attrs)
+                            if m:
+                                gene_id = m.group(1)
+                    if gene_id:
+                        gene_id = norm(gene_id)
+                        gene_counts[gene_id] = gene_counts.get(gene_id, 0) + 1
+                else:
+                    mg = re.search(r'gene_id\s*"([^"]+)"', attrs)
+                    mt = re.search(r'transcript_id\s*"([^"]+)"', attrs)
+                    if mg and mt:
+                        tx_by_gene.setdefault(norm(mg.group(1)), set()).add(mt.group(1))
+        if not gene_counts and tx_by_gene:
+            gene_counts = {g: len(t) for g, t in tx_by_gene.items()}
         return gene_counts
 
     ref_counts = count_isoforms_per_gene(reference_gtf)
@@ -326,6 +395,8 @@ def generate_summary_report(
             'isoform_precision': results.isoform_precision,
             'isoform_f1': results.isoform_f1,
             'exact_matches': results.exact_matches,
+            'distinct_ref_matched': results.distinct_ref_matched,
+            'duplicate_exact_matches': results.duplicate_exact_matches,
             'partial_matches': results.partial_matches,
             'total_reference': results.total_reference,
             'total_predicted': results.total_predicted,
@@ -471,12 +542,7 @@ def main(reference: str, predicted: str, output_dir: str, genome: str, prefix: s
     ref_transcript_count = count_reference_transcripts(reference_path)
     console.print(f"[blue]Reference transcripts: {ref_transcript_count}[/blue]")
 
-    results = calculate_metrics(tmap_df)
-    # Update with actual reference count
-    results.total_reference = ref_transcript_count
-    results.isoform_recall = results.exact_matches / ref_transcript_count if ref_transcript_count > 0 else 0
-    if results.isoform_precision + results.isoform_recall > 0:
-        results.isoform_f1 = 2 * (results.isoform_precision * results.isoform_recall) / (results.isoform_precision + results.isoform_recall)
+    results = calculate_metrics(tmap_df, total_reference_all=ref_transcript_count)
 
     # Step 4: Analyze isoform distribution
     console.print("[blue]Analyzing isoform distribution...[/blue]")

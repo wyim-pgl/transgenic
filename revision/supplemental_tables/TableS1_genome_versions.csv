@@ -1,0 +1,14 @@
+Species,Assembly / annotation version,Reference,Role
+Arabidopsis thaliana,TAIR10,"Lamesch et al., 2012",Training / test
+Vitis vinifera,PN_T2T,"Shi et al., 2023",Training
+Glycine max,Wm82 ISU-01 v2.1,"Espina et al., 2024",Training
+Populus trichocarpa,v4,"Tuskan et al., 2006",Training
+Sorghum bicolor,v5,"McCormick et al., 2018",Training
+Brachypodium distachyon,v3,"The International Brachypodium Initiative, 2010",Training
+Setaria italica,v2,"Bennetzen et al., 2012",Training
+Oryza sativa,MSU v7.0,"Ouyang et al., 2007",Training
+Physcomitrium patens,v3,"Lang et al., 2018",Training
+Zea mays,RefGen_V4,"Jiao et al., 2017",Held-out test
+Brassica rapa,BrapaO_302V_711 v1.1,"Wang et al., 2011",Extended benchmark
+Lactuca sativa,v5 (Lsativa_467),"Reyes-Chin-Wo et al., 2017",Extended benchmark
+Solanum lycopersicum,ITAG5.0 (SL5.0),"The Tomato Genome Consortium, 2012",Extended benchmark

@@ -28,7 +28,7 @@ class HyenaTransgenicConfig(PretrainedConfig):
 	[jlomas/HyenaTransgenic-768L12A6-400M](https://huggingface.co/jlomas/HyenaTransgenic-768L12A6-400M)
 
 	Args:
-		vocab_size: Number of GFF decoder tokens (see GFFTokenizer). Default 272.
+		vocab_size: Number of GFF decoder tokens (see GFFTokenizer). Default 288.
 		max_encoder_position_embeddings: Max encoder positional embedding length.
 		max_decoder_position_embeddings: Max decoder positional embedding length.
 		encoder_layers / decoder_layers: Number of transformer layers in each stack.
@@ -41,6 +41,8 @@ class HyenaTransgenicConfig(PretrainedConfig):
 		max_encoder_seqlen: Maximum DNA input sequence length the encoder can handle.
 		encoder_n_layer: Number of HyenaDNA layers (may differ from decoder layers).
 		unlink: If True, decoder embedding and LM head weights are NOT tied.
+	max_transcript_count: Maximum number of alternative transcripts for the
+		transcript count regression head (default 15).
 	"""
 
 	model_type = "transgenicHyena"  # Identifies this config type in HuggingFace model registry
@@ -56,7 +58,7 @@ class HyenaTransgenicConfig(PretrainedConfig):
 
 	def __init__(
 		self,
-		vocab_size=272,                           # GFF token vocabulary size (special + digit + feature tokens)
+		vocab_size=288,                           # GFF token vocabulary size (special + digit + feature + isoform tokens)
 		max_encoder_position_embeddings=16384,    # Max positional embeddings for encoder sinusoidal PE
 		max_decoder_position_embeddings=2048,     # Max positional embeddings for Longformer decoder
 		encoder_layers=12,                        # Number of HyenaDNA encoder transformer blocks
@@ -70,7 +72,9 @@ class HyenaTransgenicConfig(PretrainedConfig):
 		use_cache=True,                           # Cache past key/values for faster autoregressive generation
 		is_encoder_decoder=True,                  # Signals HF that this is a seq2seq model
 		activation_function="gelu",               # Non-linearity in FFN blocks
-		d_model=768,                              # Hidden dimension shared across encoder projection and decoder
+		d_model=768,                              # Backward-compat base dim (defaults encoder dim)
+		encoder_d_model=None,                     # Explicit encoder hidden dim (defaults to d_model)
+		decoder_d_model=None,                     # Explicit decoder hidden dim (defaults to 2*encoder_d_model)
 		dropout=0.1,                              # Dropout probability for attention weights and FFN outputs
 		attention_dropout=0.0,                    # Extra dropout on attention probabilities (disabled by default)
 		activation_dropout=0.0,                   # Dropout after activation in FFN (disabled by default)
@@ -87,14 +91,24 @@ class HyenaTransgenicConfig(PretrainedConfig):
 		encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",  # Pretrained HyenaDNA checkpoint
 		max_encoder_seqlen=49152,                 # Max DNA nucleotide sequence length for encoder input
 		encoder_n_layer=12,                       # Number of HyenaDNA layers to instantiate
+		load_pretrained_encoder=True,             # Load compatible pretrained encoder weights when available
+		allow_partial_encoder_load=True,          # Allow shape-filtered partial load for widened/deeper configs
 		unlink=False,                             # Whether to untie decoder embedding ↔ LM head weights
+		max_transcript_count=15,                  # Max transcript count for regression head
 		**kwargs,
 	):
 		# Store all hyperparameters as instance attributes
 		self.vocab_size = vocab_size
 		self.max_encoder_position_embeddings = max_encoder_position_embeddings
 		self.max_decoder_position_embeddings = max_decoder_position_embeddings
-		self.d_model = d_model
+		# Resolve asymmetric dims while preserving backward compatibility.
+		resolved_encoder_d_model = d_model if encoder_d_model is None else encoder_d_model
+		resolved_decoder_d_model = (resolved_encoder_d_model * 2) if decoder_d_model is None else decoder_d_model
+
+		# Keep d_model as encoder width for compatibility with older code.
+		self.d_model = resolved_encoder_d_model
+		self.encoder_d_model = resolved_encoder_d_model
+		self.decoder_d_model = resolved_decoder_d_model
 		self.encoder_ffn_dim = encoder_ffn_dim
 		self.encoder_layers = encoder_layers
 		self.encoder_attention_heads = encoder_attention_heads
@@ -115,7 +129,10 @@ class HyenaTransgenicConfig(PretrainedConfig):
 		self.encoder_model = encoder_model
 		self.encoder_n_layer = encoder_n_layer
 		self.max_encoder_seqlen = max_encoder_seqlen
+		self.load_pretrained_encoder = load_pretrained_encoder
+		self.allow_partial_encoder_load = allow_partial_encoder_load
 		self.unlink = unlink
+		self.max_transcript_count = max_transcript_count
 
 		# Initialize the HuggingFace PretrainedConfig base class with special token IDs
 		super().__init__(

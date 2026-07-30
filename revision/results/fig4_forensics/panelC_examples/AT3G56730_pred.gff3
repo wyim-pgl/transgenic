@@ -1,0 +1,13 @@
+Chr3	transgenic	gene	21013991	21015078	.	+	.	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55;GM=AT3G56730.TAIR10
+Chr3	transgenic	mRNA	21013991	21015025	.	+	.	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55;GM=AT3G56730.TAIR10
+Chr3	transgenic	CDS	21014049	21014094	.	+	0	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1.CDS1;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1;GM=AT3G56730.TAIR10
+Chr3	transgenic	CDS	21014350	21014547	.	+	2	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1.CDS2;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1;GM=AT3G56730.TAIR10
+Chr3	transgenic	CDS	21014636	21014910	.	+	2	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1.CDS3;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1;GM=AT3G56730.TAIR10
+Chr3	transgenic	five_prime_UTR	21013991	21014048	.	+	.	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1.five_prime_UTR1;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1;GM=AT3G56730.TAIR10
+Chr3	transgenic	three_prime_UTR	21014911	21015025	.	+	.	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1.three_prime_UTR1;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t1;GM=AT3G56730.TAIR10
+Chr3	transgenic	mRNA	21013991	21015078	.	+	.	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55;GM=AT3G56730.TAIR10
+Chr3	transgenic	CDS	21014049	21014094	.	+	0	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2.CDS1;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2;GM=AT3G56730.TAIR10
+Chr3	transgenic	CDS	21014350	21014508	.	+	2	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2.CDS4;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2;GM=AT3G56730.TAIR10
+Chr3	transgenic	CDS	21014636	21014910	.	+	0	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2.CDS5;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2;GM=AT3G56730.TAIR10
+Chr3	transgenic	five_prime_UTR	21013991	21014048	.	+	.	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2.five_prime_UTR1;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2;GM=AT3G56730.TAIR10
+Chr3	transgenic	three_prime_UTR	21014911	21015078	.	+	.	ID=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2.three_prime_UTR2;Parent=df45febc-c55b-49aa-b9ae-ae0bd487ca55.t2;GM=AT3G56730.TAIR10

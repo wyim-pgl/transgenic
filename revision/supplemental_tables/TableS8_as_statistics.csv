@@ -1,0 +1,15 @@
+Annotation,Genes (n),Transcripts (n),Multi-transcript genes (n),Multi-transcript genes (%),Mean transcripts per gene,Max transcripts per gene
+Arabidopsis thaliana,27206,35176,5804,21.33,1.293,10
+Brachypodium distachyon,34310,52972,8010,23.35,1.544,25
+Brassica rapa,38746,57411,9573,24.71,1.482,20
+Glycine max,48387,80374,14292,29.54,1.661,21
+Lactuca sativa,38910,62656,18029,46.34,1.61,13
+Oryza sativa,42189,52398,6371,15.1,1.242,13
+Physcomitrium patens,32926,87513,23151,70.31,2.658,26
+Populus trichocarpa,34699,52400,9252,26.66,1.51,21
+Sorghum bicolor,32160,44210,6552,20.37,1.375,21
+Setaria italica,34584,43001,5067,14.65,1.243,25
+Solanum lycopersicum,36648,43752,3808,10.39,1.194,18
+Vitis vinifera,47971,48974,6823,14.22,1.021,3
+Zea mays,39324,131318,14851,37.77,3.339,366
+AtRTD3 (A. thaliana long-read transcriptome),40571,168951,20350,50.16,4.164,134

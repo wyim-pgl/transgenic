@@ -1,0 +1,7 @@
+GFFCompare level,Sensitivity (%),Precision (%),F1 (%)
+Base,88.1,67.7,76.6
+Exon,67.8,76.5,71.9
+Intron,72.0,84.1,77.6
+Intron chain,32.6,4.5,7.9
+Transcript,39.2,4.4,7.9
+Locus,51.2,51.9,51.5

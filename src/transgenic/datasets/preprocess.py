@@ -124,6 +124,16 @@ def genome2GSFDataset(
 	# ═══════════════════════════════════════════════════════════════
 	genome_dict = loadGenome(genome)
 
+	# Accept both naming styles for chromosome IDs (e.g., "0" and "Chr0")
+	# so GFF seqids and FASTA headers can differ only by a "Chr" prefix.
+	aliased_genome_dict = dict(genome_dict)
+	for chrom, seq in genome_dict.items():
+		if chrom.startswith("Chr"):
+			aliased_genome_dict.setdefault(chrom[3:], seq)
+		else:
+			aliased_genome_dict.setdefault(f"Chr{chrom}", seq)
+	genome_dict = aliased_genome_dict
+
 	# Optionally prefix chromosome names to avoid collisions in multi-species DBs
 	# e.g., speciesPrefix="Zm" turns {"Chr01": "ATCG..."} into {"Zm_Chr01": "ATCG..."}
 	if speciesPrefix:
@@ -337,8 +347,41 @@ def genome2GSFDataset(
 					if ((region_end - region_start)% staticSize) != 0:
 						print(f"Warning: {geneModel} not a multiple of {staticSize=}", file=sys.stderr)
 
+					# Guard against invalid sequence indexes from malformed GFF coordinates.
+					# Clamp to chromosome bounds, then skip if the resulting interval is empty/inverted.
+					if chr not in genome_dict:
+						print(f"Skipping {geneModel} because chromosome '{chr}' is missing from genome.", file=sys.stderr)
+						region_start = None
+						region_end = None
+						geneModel = None
+						skipGene = True
+						continue
+					chrom_len = len(genome_dict[chr])
+					raw_region_start = region_start
+					raw_region_end = region_end
+					region_start = max(0, region_start)
+					region_end = min(chrom_len, region_end)
+					if region_end <= region_start:
+						print(
+							f"Skipping {geneModel} because invalid sequence index range "
+							f"[{raw_region_start}, {raw_region_end}) -> [{region_start}, {region_end})",
+							file=sys.stderr,
+						)
+						region_start = None
+						region_end = None
+						geneModel = None
+						skipGene = True
+						continue
+
 					# Extract the forward-strand DNA sequence for this gene region
 					sequence = genome_dict[chr][region_start:region_end]
+					if not sequence:
+						print(f"Skipping {geneModel} because extracted sequence length is 0.", file=sys.stderr)
+						region_start = None
+						region_end = None
+						geneModel = None
+						skipGene = True
+						continue
 					# Pre-compute reverse complement if RC augmentation is enabled
 					if addRC:
 						sequence_rc = reverseComplement(sequence)

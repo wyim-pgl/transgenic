@@ -172,7 +172,7 @@ class isoformDataHyena(Dataset):
 	    the inherited connection is closed and a fresh one is opened
 	  - Connections are closed in __del__ when the dataset is garbage-collected
 	"""
-	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None):
+	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None, gff_vocab_version="v2"):
 		"""
 		Args:
 			db: Path to DuckDB database file.
@@ -180,10 +180,14 @@ class isoformDataHyena(Dataset):
 			encoder_model: HuggingFace model ID for the HyenaDNA encoder tokenizer.
 			global_attention: Whether to use global attention (not used with HyenaDNA).
 			exclude_prefix: Gene name prefix to exclude (e.g., "Zm" for maize).
+			gff_vocab_version: Vocabulary version for the decoder GFF tokenizer.
+				Use "v1" (legacy 272 tokens) when pairing with the published
+				jlomas/HyenaTransgenic-* checkpoints (vocab_size 272); "v2"
+				(288 tokens) matches newly trained isoform-aware models.
 		"""
 		self.db = db
 		self.mode = mode
-		self.dt = GFFTokenizer()  # Decoder tokenizer for GFF annotation strings
+		self.dt = GFFTokenizer(vocab_version=gff_vocab_version)  # Decoder tokenizer for GFF annotation strings
 		self.global_attention = global_attention
 		# Load HyenaDNA tokenizer (single-nucleotide: A=0, C=1, G=2, T=3, etc.)
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
@@ -193,15 +197,45 @@ class isoformDataHyena(Dataset):
 
 		# Build an index map at init time: maps dataset index → database row number
 		# This is done once in the main process and handles exclude_prefix filtering
+		# Also compute isoform counts for sampling weight rebalancing
+		self._sample_weights = None
 		with duckdb.connect(self.db, config={"access_mode": "READ_ONLY"}) as con:
 			if exclude_prefix:
 				# SQL-level filtering: exclude genes whose name starts with the prefix
-				rows = con.sql("SELECT rn FROM geneList WHERE geneModel NOT LIKE ? ORDER BY rn",
+				rows = con.sql("SELECT rn, gff FROM geneList WHERE geneModel NOT LIKE ? ORDER BY rn",
 					params=[f"{exclude_prefix}%"]).fetchall()
 			else:
-				rows = con.sql("SELECT rn FROM geneList ORDER BY rn").fetchall()
+				rows = con.sql("SELECT rn, gff FROM geneList ORDER BY rn").fetchall()
 			self._index_map = [row[0] for row in rows]  # List of valid row numbers
+
+			# Compute moderate isoform count rebalancing weights for training.
+			# Genes with multiple isoforms get a sqrt(isoform_count) weight boost.
+			# This gently upsamples multi-isoform genes without being drastic.
+			if mode == "train":
+				import math
+				weights = []
+				for row in rows:
+					gff_str = row[1] if row[1] else ""
+					# Count isoforms: number of semicolons in transcript section + 1
+					if ">" in gff_str:
+						transcript_section = gff_str.split(">", 1)[1]
+						iso_count = transcript_section.count(";") + 1
+					else:
+						iso_count = 1
+					# Moderate boost: sqrt(isoform_count) so 4-isoform gene gets 2x weight
+					weights.append(math.sqrt(max(iso_count, 1)))
+				self._sample_weights = weights
+
 		self._length = len(self._index_map)  # Cache length to avoid repeated DB queries
+
+	def get_sample_weights(self):
+		"""Return per-sample weights for isoform count rebalancing.
+
+		Multi-isoform genes receive sqrt(isoform_count) weight boost.
+		Returns None in inference mode or if weights were not computed.
+		Use with torch.utils.data.WeightedRandomSampler for rebalanced training.
+		"""
+		return self._sample_weights
 
 	def _get_connection(self):
 		"""Return a persistent read-only DuckDB connection for this worker process.
@@ -265,7 +299,12 @@ class isoformDataHyena(Dataset):
 			gm, region_start, region_end, strand, chr, region_seq, gff, sfpb, stpb, fpb, tpb, _ = con.sql("SELECT * FROM geneList where rn=?", params=[rn_fallback]).fetchall()[0]
 
 		# Tokenize GFF labels using the custom GFFTokenizer
+		tx_count = 1  # Default transcript count
 		if self.mode == "train":
+			# Count the number of isoforms/transcripts for regression head
+			if gff and ">" in gff:
+				transcript_section = gff.split(">", 1)[1]
+				tx_count = min(transcript_section.count(";") + 1, 15)
 			tokens = self.dt._tokenize(gff)  # Split GFF into token strings
 			token_ids = [self.dt._convert_token_to_id(t) for t in tokens]  # Convert to integer IDs
 			# Truncate if over max length, preserving </s> end token
@@ -275,16 +314,32 @@ class isoformDataHyena(Dataset):
 
 		# Tokenize the full DNA sequence with HyenaDNA tokenizer
 		# HyenaDNA uses single-nucleotide vocabulary (no segmentation needed)
+		if not region_seq:
+			fallback_idx = torch.randint(self._length, (1,)).item()
+			print(
+				f"Warning rn={rn} produced empty sequence region; falling back to rn={self._index_map[fallback_idx]}",
+				file=sys.stderr,
+			)
+			return self.__getitem__(fallback_idx)
+
 		seqs = self.encoder_tokenizer(region_seq, return_tensors="pt")
-		seqs["input_ids"] = seqs["input_ids"][:, :-1]  # Remove the trailing [SEP] token
+		if seqs["input_ids"].shape[1] > 1:
+			seqs["input_ids"] = seqs["input_ids"][:, :-1]  # Remove the trailing [SEP] token
+		if seqs["input_ids"].shape[1] == 0:
+			fallback_idx = torch.randint(self._length, (1,)).item()
+			print(
+				f"Warning rn={rn} tokenized to zero length; falling back to rn={self._index_map[fallback_idx]}",
+				file=sys.stderr,
+			)
+			return self.__getitem__(fallback_idx)
 
 		# Create attention mask: True for real nucleotide tokens, False for padding
 		attention_mask = (seqs["input_ids"] != self.encoder_tokenizer.pad_token_id)
 
 		if self.mode == "train":
-			return (seqs["input_ids"], attention_mask, labels, gm, chr, region_start, region_end)
+			return (seqs["input_ids"], attention_mask, labels, gm, chr, region_start, region_end, tx_count)
 		else:
-			return (seqs["input_ids"], attention_mask, None, gm, chr, region_start, region_end)
+			return (seqs["input_ids"], attention_mask, None, gm, chr, region_start, region_end, 0)
 
 
 class segmentationDataset(Dataset):
@@ -621,8 +676,14 @@ def hyena_collate_fn(batch):
 
 	This is the PRIMARY collate function used during TransGenic training.
 	"""
-	# Unpack batch tuples
-	sequences, attention_masks, labels, gm, chr, region_start, region_end = zip(*batch)
+	# Unpack batch tuples (8 elements: seq, mask, labels, gm, chr, start, end, tx_count)
+	if len(batch[0]) == 8:
+		sequences, attention_masks, labels, gm, chr, region_start, region_end, tx_counts = zip(*batch)
+		tx_counts = torch.tensor(tx_counts, dtype=torch.float32)
+	else:
+		# Backward compatibility with 7-element tuples
+		sequences, attention_masks, labels, gm, chr, region_start, region_end = zip(*batch)
+		tx_counts = None
 
 	# LEFT-pad sequences to the longest sequence in the batch
 	max_len = max([seq.shape[1] for seq in sequences])
@@ -637,13 +698,13 @@ def hyena_collate_fn(batch):
 	# RIGHT-pad labels to the longest label in the batch
 	if None not in labels:
 		max_len = max([label.shape[1] for label in labels])
-		labels_padded = [F.pad(label, (0, max_len - label.shape[1])) for label in labels]  # Right-pad with 0
+		labels_padded = [F.pad(label, (0, max_len - label.shape[1]), value=-100) for label in labels]  # Right-pad with ignore index
 		labels_padded = torch.cat(labels_padded)
 
 	if None not in labels:
-		return sequences, attention_masks, labels_padded, gm, chr, region_start, region_end
+		return sequences, attention_masks, labels_padded, gm, chr, region_start, region_end, tx_counts
 	else:
-		return sequences, attention_masks, None, gm, chr, region_start, region_end
+		return sequences, attention_masks, None, gm, chr, region_start, region_end, None
 
 
 def hyenaMLM_collate_fn(batch):
@@ -733,7 +794,7 @@ def hyena_segment_collate_fn(batch):
 		return sequences, attention_masks, None, organism, chromosome, start, end
 
 
-def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, prefetch_factor=2, sampler=None, num_workers=0, collate_fn=target_collate_fn, persistent_workers=False):
+def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, prefetch_factor=2, sampler=None, num_workers=0, collate_fn=target_collate_fn, persistent_workers=False, generator=None):
 	"""Create a PyTorch DataLoader with sensible defaults for TransGenic training.
 
 	Args:
@@ -746,6 +807,8 @@ def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, prefetch_fa
 		num_workers: Number of DataLoader worker processes (0 = main process only).
 		collate_fn: Function to collate/pad a list of samples into a batch.
 		persistent_workers: Keep workers alive between epochs to avoid respawn cost.
+		generator: Optional torch.Generator for deterministic shuffle order.
+		           Used for reproducible mid-epoch resume.
 
 	Returns:
 		Configured DataLoader instance.
@@ -762,4 +825,5 @@ def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, prefetch_fa
 		sampler=sampler,
 		num_workers=num_workers,
 		prefetch_factor=prefetch_factor if num_workers > 0 else None,  # Pre-fetch 2 batches per worker
-		persistent_workers=persistent_workers if num_workers > 0 else False,)  # Only valid with workers
+		persistent_workers=persistent_workers if num_workers > 0 else False,  # Only valid with workers
+		generator=generator,)

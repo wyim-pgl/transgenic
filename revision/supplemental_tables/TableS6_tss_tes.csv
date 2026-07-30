@@ -1,0 +1,53 @@
+Species,Prediction set,Transcripts compared (n),TSS exact (%),TSS ±50 nt (%),TSS ±100 nt (%),TSS median offset (nt),TES exact (%),TES ±50 nt (%),TES ±100 nt (%),TES median offset (nt)
+Arabidopsis thaliana,"TransGenic 160M, de novo",27524,6.57,65.67,81.8,29,5.25,64.95,81.27,30
+Arabidopsis thaliana,"TransGenic 160M, reference-prompted",30068,95.23,98.66,98.89,0,94.88,97.46,98.3,0
+Arabidopsis thaliana,"TransGenic 400M, de novo",27422,13.7,66.21,81.11,27,12.74,65.77,80.73,28
+Arabidopsis thaliana,"TransGenic 400M, reference-prompted",59426,96.53,99.45,99.69,0,96.74,99.35,99.59,0
+Brachypodium distachyon,"TransGenic 160M, de novo",35965,4.25,43.51,59.35,67,3.54,43.05,58.85,68
+Brachypodium distachyon,"TransGenic 160M, reference-prompted",39267,93.61,97.33,97.69,0,92.72,95.46,95.7,0
+Brachypodium distachyon,"TransGenic 400M, de novo",34922,9.02,47.02,62.08,58,8.39,46.62,61.73,59
+Brachypodium distachyon,"TransGenic 400M, reference-prompted",37841,95.63,98.56,98.82,0,96.39,98.59,99.05,0
+Brassica rapa,"TransGenic 160M, de novo",39627,4.46,58.56,76.67,38,3.73,58.01,76.11,38
+Brassica rapa,"TransGenic 160M, reference-prompted",45174,91.78,96.35,97.12,0,91.85,96.2,97.26,0
+Brassica rapa,"TransGenic 400M, de novo",39254,8.33,60.46,77.46,35,7.76,59.87,76.74,36
+Brassica rapa,"TransGenic 400M, reference-prompted",42707,95.22,98.85,99.23,0,93.83,98.18,99.11,0
+Glycine max,"TransGenic 160M, de novo",53177,1.57,46.08,64.99,58,1.22,45.24,64.17,60
+Glycine max,"TransGenic 160M, reference-prompted",61907,86.66,93.62,94.71,0,85.37,92.3,93.56,0
+Glycine max,"TransGenic 400M, de novo",51116,2.91,49.21,68.3,52,2.67,47.74,66.83,55
+Glycine max,"TransGenic 400M, reference-prompted",56951,90.24,96.11,97.22,0,89.14,95.49,96.67,0
+Lactuca sativa,"TransGenic 160M, de novo",41099,5.01,42.63,58.67,69,3.5,42.24,57.39,71
+Lactuca sativa,"TransGenic 160M, reference-prompted",47674,83.37,89.82,92.26,0,82.49,88.58,89.91,0
+Lactuca sativa,"TransGenic 400M, de novo",1816,10.9,45.48,60.46,62,9.69,44.49,60.57,64
+Lactuca sativa,"TransGenic 400M, reference-prompted",45627,85.13,90.53,92.37,0,84.59,90.49,92.2,0
+Oryza sativa,"TransGenic 160M, de novo",43032,9.27,55.29,69.72,39,7.39,54.85,69.49,40
+Oryza sativa,"TransGenic 160M, reference-prompted",46115,96.03,98.0,98.55,0,94.81,96.34,96.98,0
+Oryza sativa,"TransGenic 400M, de novo",42783,22.11,59.53,72.63,31,20.7,59.29,72.4,32
+Oryza sativa,"TransGenic 400M, reference-prompted",44831,97.98,99.49,99.55,0,97.84,99.32,99.36,0
+Physcomitrium patens,"TransGenic 160M, de novo",57130,1.49,35.42,52.88,90,0.99,34.1,50.94,97
+Physcomitrium patens,"TransGenic 160M, reference-prompted",70156,67.04,84.54,86.99,0,65.48,84.09,86.78,0
+Physcomitrium patens,"TransGenic 400M, de novo",58143,3.13,38.6,56.79,78,2.54,36.78,54.41,85
+Physcomitrium patens,"TransGenic 400M, reference-prompted",70744,66.69,86.98,89.71,0,66.13,85.87,89.0,0
+Populus trichocarpa,"TransGenic 160M, de novo",37066,2.51,49.05,67.44,52,2.19,48.18,66.74,54
+Populus trichocarpa,"TransGenic 160M, reference-prompted",43771,87.9,94.31,95.16,0,86.33,93.35,94.63,0
+Populus trichocarpa,"TransGenic 400M, de novo",36100,5.26,50.47,68.63,50,4.9,50.28,68.55,50
+Populus trichocarpa,"TransGenic 400M, reference-prompted",81824,90.7,96.97,97.9,0,88.83,95.66,97.23,0
+Sorghum bicolor,"TransGenic 160M, de novo",34437,2.71,47.37,65.59,55,2.34,47.09,64.72,57
+Sorghum bicolor,"TransGenic 160M, reference-prompted",35745,94.26,98.14,98.7,0,93.51,97.21,97.67,0
+Sorghum bicolor,"TransGenic 400M, de novo",33631,4.03,35.07,50.95,97,3.71,34.76,50.5,99
+Sorghum bicolor,"TransGenic 400M, reference-prompted",35716,94.72,97.69,98.16,0,93.13,96.75,97.72,0
+Setaria italica,"TransGenic 160M, de novo",35939,6.79,48.17,63.9,55,5.65,47.96,63.74,55
+Setaria italica,"TransGenic 160M, reference-prompted",36957,96.01,97.37,97.48,0,96.78,98.0,98.11,0
+Setaria italica,"TransGenic 400M, de novo",35078,14.07,52.92,68.09,44,13.18,52.93,67.92,45
+Setaria italica,"TransGenic 400M, reference-prompted",36276,97.67,99.44,99.54,0,97.6,98.67,98.78,0
+Solanum lycopersicum,"TransGenic 160M, de novo",40089,5.02,34.05,49.03,105,4.27,33.88,48.86,106
+Solanum lycopersicum,"TransGenic 160M, reference-prompted",60288,89.47,91.8,92.42,0,85.2,87.94,88.41,0
+Solanum lycopersicum,"TransGenic 400M, de novo",38723,11.66,36.5,51.07,96,10.64,35.67,50.32,99
+Solanum lycopersicum,"TransGenic 400M, reference-prompted",51723,94.86,96.17,96.39,0,92.65,95.63,95.86,0
+Vitis vinifera,"TransGenic 160M, de novo",45157,5.12,29.74,42.83,140,4.16,29.49,42.19,145
+Vitis vinifera,"TransGenic 160M, reference-prompted",44529,90.74,92.43,93.56,0,89.94,92.15,92.51,0
+Vitis vinifera,"TransGenic 400M, de novo",43042,12.94,33.42,45.67,123,11.83,32.9,44.95,128
+Vitis vinifera,"TransGenic 400M, reference-prompted",42533,94.36,95.52,96.29,0,94.23,95.8,96.06,0
+Zea mays,"TransGenic 160M, de novo",42362,8.67,45.28,59.21,64,7.92,44.26,57.69,68
+Zea mays,"TransGenic 160M, reference-prompted",55464,83.26,91.14,93.38,0,80.56,87.97,90.06,0
+Zea mays,"TransGenic 400M, de novo",41135,15.96,49.56,63.45,52,15.44,48.55,62.29,54
+Zea mays,"TransGenic 400M, reference-prompted",152892,87.58,94.01,95.16,0,86.56,93.26,94.12,0

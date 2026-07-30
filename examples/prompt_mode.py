@@ -246,6 +246,20 @@ def main():
     model = transgenicForConditionalGeneration.from_pretrained(args.model)
     gffTokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
 
+    # Fail fast on a tokenizer/checkpoint vocabulary mismatch: the published
+    # checkpoints have vocab_size 272 (legacy tokenizer), while the current
+    # repo's default GFF tokenizer builds 288 tokens. Encoding prompt GFFs
+    # with the larger vocabulary would produce out-of-range token ids.
+    model_vocab_size = getattr(model.config, "vocab_size", None)
+    if model_vocab_size is not None and len(gffTokenizer.get_vocab()) > model_vocab_size:
+        raise ValueError(
+            f"Tokenizer vocabulary ({len(gffTokenizer.get_vocab())} tokens) exceeds "
+            f"the checkpoint's vocab_size ({model_vocab_size}). Load the tokenizer "
+            f"from the checkpoint repository (AutoTokenizer.from_pretrained("
+            f"'{args.model}', trust_remote_code=True)) or instantiate GFFTokenizer "
+            f"with vocab_version='v1'."
+        )
+
     model.to(device)
     model.eval()
 
@@ -254,12 +268,16 @@ def main():
 
     # Initialize dataset and dataloader
     print("Initializing dataset...")
-    ds_comp = isoformDataHyena(db_path, mode="train")
+    # The dataset's prompt tokenizer must match the checkpoint vocabulary:
+    # published checkpoints (vocab_size 272) require the legacy "v1" scheme,
+    # newly trained isoform-aware models use the default 288-token "v2".
+    gff_vocab_version = "v1" if model_vocab_size is not None and model_vocab_size <= 272 else "v2"
+    ds_comp = isoformDataHyena(db_path, mode="train", gff_vocab_version=gff_vocab_version)
     dl_comp = DataLoader(
         ds_comp,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=2,
+        num_workers=4,
         pin_memory=True,
         collate_fn=hyena_collate_fn,
         prefetch_factor=2
