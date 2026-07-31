@@ -21,6 +21,11 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import sys as _sys
+_sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import figstyle as _figstyle
+_figstyle.apply(7)
 import numpy as np
 
 BASE = Path("/data/gpfs/assoc/pgl/data/Transgenic")

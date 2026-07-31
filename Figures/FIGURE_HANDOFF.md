@@ -43,8 +43,76 @@ Applied by every script. Keep them if you add a figure.
 | Resolution | `dpi=300` on save |
 | Bounding box | `bbox_inches="tight"` |
 | Background | `facecolor="white"` (Figure 1 uses `"none"` — it is a schematic meant to sit on the page) |
-| Font | matplotlib sans-serif default, `rcParams["font.size"]` 7 or 8 depending on panel density |
+| Font | Arial, via `figstyle.py` — see below |
+| PDF fonts | Type 42 (embedded TrueType), set by `figstyle.py` |
 | Width | 7.0–7.6 in single column; the Figure 4 sheet widens to `FIG_W * 1.65` for two columns |
+
+### Typography — `Figures/figstyle.py`
+
+Every script calls it immediately after importing matplotlib:
+
+```python
+import figstyle
+figstyle.apply(8)      # base point size; scripts pass 7 for denser panels
+```
+
+It does two things that are easy to get wrong silently.
+
+**Arial.** The cluster has neither Arial nor Helvetica, so matplotlib was quietly falling back
+to DejaVu Sans — a different face with different metrics, which only surfaces when a reviewer
+compares figures. Liberation Sans is metric-compatible with Arial and openly licensed; the
+TTFs live in `/data/gpfs/assoc/pgl/tools/fonts/` and are registered at import. `font.sans-serif`
+still lists Arial first, so a machine with the real font uses it. Verify rather than assume:
+
+```bash
+python3 Figures/figstyle.py     # prints the resolved family; exits non-zero if it is neither
+```
+
+**Type 42 PDF fonts.** matplotlib defaults to Type 3, which several publishers reject and
+which cannot be edited in Illustrator. `figstyle` sets `pdf.fonttype = 42`, embedding the
+TrueType outlines and keeping text selectable.
+
+**Neither Arial nor Liberation Sans contains U+2713 `✓`.** Figure 4 originally used a tick to
+mark chain confirmation and it fell back to a last-resort face. It now uses `=`, which states
+the actual relation (identical CDS intron chain) and is symmetric, so both the prediction and
+the AtRTD3 row can carry it: `pred 3 = AT1G44575.2` ↔ `AT1G44575.2 = pred 3`. Before adding any
+glyph beyond ASCII, check it:
+
+```python
+from fontTools.ttLib import TTFont
+cmap = TTFont("/data/gpfs/assoc/pgl/tools/fonts/LiberationSans-Regular.ttf").getBestCmap()
+ord("−") in cmap    # minus, en dash, em dash, middle dot, ≥ are all present
+```
+
+Confirm no fallback crept into a PDF:
+
+```bash
+python3 - <<'PY'
+import re, pathlib
+for f in list(pathlib.Path("Figures").glob("figure*.pdf")) + \
+         list(pathlib.Path("revision/figures").glob("figure*.pdf")):
+    fonts = {b.decode().split("+")[-1] for b in
+             re.findall(rb"/BaseFont\s*/([A-Za-z0-9+\-]+)", f.read_bytes())}
+    extra = {x for x in fonts if not x.startswith("Liberation")}
+    if extra:
+        print(f.name, sorted(extra))
+PY
+```
+
+### Legends must not sit on the data
+
+Wherever bars reach the top of the axes, an in-axes legend lands on them. Three panels had
+this (Figure 6C, 6D, Figure S2). The fix used throughout is to put the legend above the axes
+and give the title room:
+
+```python
+ax.legend(frameon=False, fontsize=6, ncol=3, loc="lower left",
+          bbox_to_anchor=(0, 1.005), borderaxespad=0)
+ax.set_title("D  ORF self-consistency", loc="left", fontweight="bold", pad=18)
+```
+
+Avoid `loc="best"`: it picks a spot from the current data, so a legend that clears the bars
+today can land on them after a rerun with new numbers.
 
 ### Palette — Okabe-Ito, colour-vision safe
 

@@ -54,6 +54,11 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import sys as _sys
+_sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import figstyle as _figstyle
+_figstyle.apply(8)
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
@@ -338,25 +343,30 @@ def build_rows(a: dict) -> tuple[list, list]:
         # one row per distinct predicted chain, so six identical predictions of the
         # same isoform do not become six rows
         pred_rows, seen_p = [], set()
+        pred_name = {}
         for t in sorted(a["pred"], key=suffix):
             c = chain(a["pred"][t]["cds"])
             if c in seen_p:
                 continue
             seen_p.add(c)
             conf = a["confirms"].get(t)
-            lbl = f"pred {len(pred_rows) + 1}"
+            short = f"pred {len(pred_rows) + 1}"
+            pred_name[t] = short
+            lbl = short
             if conf:
-                lbl += f"  ✓ {conf[0]}" + (f" +{len(conf) - 1}" if len(conf) > 1 else "")
+                lbl += f" = {conf[0]}" + (f" +{len(conf) - 1}" if len(conf) > 1 else "")
             pred_rows.append((lbl, a["pred"][t], BLUE, bool(conf)))
     else:
+        pred_name = {a["novel_tx"]: "novel"}
         conf = a["confirms"].get(a["novel_tx"])
-        nlbl = "novel" + (f"  ✓ {conf[0]}" + (f" +{len(conf) - 1}" if len(conf) > 1 else "")
+        nlbl = "novel" + (f" = {conf[0]}" + (f" +{len(conf) - 1}" if len(conf) > 1 else "")
                           if conf else "")
         pred_rows = [(nlbl, a["pred"][a["novel_tx"]], ORANGE, True)]
         for t in sorted(a["pred"], key=suffix):
             if t != a["novel_tx"]:
                 c2 = a["confirms"].get(t)
-                pred_rows.append(("reproduced" + (f"  ✓ {c2[0]}" if c2 else ""),
+                pred_name[t] = "reproduced"
+                pred_rows.append(("reproduced" + (f" = {c2[0]}" if c2 else ""),
                                   a["pred"][t], BLUE, False))
     rows += pred_rows
     bands.append((len(pred_rows), "TransGenic"))
@@ -368,9 +378,15 @@ def build_rows(a: dict) -> tuple[list, list]:
     # twice when it falls into two categories (e.g. the chain match is also the
     # only non-supporting isoform at a two-transcript locus).
     placed = {a["novel_match"]} if a["novel_match"] else set()
-    confirmed_art = {t for v in a["confirms"].values() for t in v}
+    # reciprocal label: which prediction this AtRTD3 transcript confirms
+    art_to_pred = {}
+    for pt, hits in a["confirms"].items():
+        for h in hits:
+            art_to_pred.setdefault(h, pt)
+
     def art_label(t):
-        return f"{t}  ✓" if t in confirmed_art else t
+        pt = art_to_pred.get(t)
+        return f"{t} = {pred_name[pt]}" if pt and pt in pred_name else t
     art_rows = ([(art_label(a["novel_match"]), a["art"][a["novel_match"]],
                   GREEN if a["novel_tx"] is None else DGREEN, a["novel_tx"] is not None)]
                 if a["novel_match"] else [])

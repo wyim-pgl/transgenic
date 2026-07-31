@@ -14,6 +14,11 @@ Outputs: transgenic/Figures/figure2_datasets.{pdf,png} (300 dpi)
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import sys as _sys
+_sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import figstyle as _figstyle
+_figstyle.apply(8)
 from matplotlib.patches import FancyBboxPatch, Rectangle
 from pathlib import Path
 

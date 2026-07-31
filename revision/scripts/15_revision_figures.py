@@ -18,6 +18,11 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import sys as _sys
+_sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[2] / "Figures"))
+import figstyle as _figstyle
+_figstyle.apply(8)
 import numpy as np
 
 BASE = Path("/data/gpfs/assoc/pgl/data/Transgenic")
@@ -244,12 +249,14 @@ def figure6():
     ax.set_xticklabels(events)
     ax.set_ylabel("Event rate (%)")
     ax.set_ylim(0, 105)
-    ax.legend(frameon=False, fontsize=5.8, ncol=2)
+    ax.legend(frameon=False, fontsize=5.8, ncol=2, loc="lower left",
+              bbox_to_anchor=(0, 1.005), borderaxespad=0, columnspacing=1.4,
+              handlelength=1.4)
     ax.grid(axis="y", color="#DDDDDD", linewidth=0.4)
     ax.set_axisbelow(True)
     ax.spines[["top", "right"]].set_visible(False)
     ax.set_title("C  AS event recovery (prompted)",
-                 loc="left", fontweight="bold", fontsize=8)
+                 loc="left", fontweight="bold", fontsize=8, pad=18)
 
     # --- D: structural self-consistency -----------------------------------
     ax = fig.add_subplot(gs[1, 1])
@@ -276,13 +283,15 @@ def figure6():
     ax.set_xticklabels([SP_LABEL[s] for s in SPECIES], rotation=38,
                        ha="right", style="italic", fontsize=5.8)
     ax.set_ylabel("Fully consistent\ntranscripts (%)")
-    ax.set_ylim(0, 109)
-    ax.legend(frameon=False, loc="upper left", fontsize=6)
+    ax.set_ylim(0, 105)
+    ax.legend(frameon=False, fontsize=6, ncol=3, loc="lower left",
+              bbox_to_anchor=(0, 1.005), borderaxespad=0, columnspacing=1.4,
+              handlelength=1.4)
     ax.grid(axis="y", color="#DDDDDD", linewidth=0.4)
     ax.set_axisbelow(True)
     ax.spines[["top", "right"]].set_visible(False)
     ax.set_title("D  ORF self-consistency",
-                 loc="left", fontweight="bold", fontsize=8)
+                 loc="left", fontweight="bold", fontsize=8, pad=18)
 
     for ext in ("pdf", "png"):
         fig.savefig(OUT / f"figure6_as_evaluation.{ext}")

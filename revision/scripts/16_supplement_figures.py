@@ -7,6 +7,11 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import sys as _sys
+_sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[2] / "Figures"))
+import figstyle as _figstyle
+_figstyle.apply(8)
 import numpy as np
 
 BASE = Path("/data/gpfs/assoc/pgl/data/Transgenic")
@@ -56,8 +61,10 @@ def figure_s2():
         ax.grid(axis="y", color="#DDDDDD", linewidth=0.4)
         ax.set_axisbelow(True)
         ax.spines[["top", "right"]].set_visible(False)
-        ax.set_title(title, loc="left", fontweight="bold", fontsize=8)
-    axes[0].legend(frameon=False, fontsize=5.8, loc="upper left")
+        ax.set_title(title, loc="left", fontweight="bold", fontsize=8, pad=20)
+    axes[0].legend(frameon=False, fontsize=5.8, ncol=2, loc="lower left",
+                   bbox_to_anchor=(0, 1.005), borderaxespad=0, columnspacing=1.4,
+                   handlelength=1.4)
     fig.tight_layout(w_pad=2.2)
     for ext in ("pdf", "png"):
         fig.savefig(OUT / f"figureS2_tss_tes.{ext}")
@@ -96,8 +103,10 @@ def figure_s3():
         ax.grid(axis="y", color="#DDDDDD", linewidth=0.4)
         ax.set_axisbelow(True)
         ax.spines[["top", "right"]].set_visible(False)
-        ax.set_title(title, loc="left", fontweight="bold", fontsize=8)
-    axes[0].legend(frameon=False, fontsize=5.8, loc="lower right")
+        ax.set_title(title, loc="left", fontweight="bold", fontsize=8, pad=20)
+    axes[0].legend(frameon=False, fontsize=5.8, ncol=2, loc="lower left",
+                   bbox_to_anchor=(0, 1.005), borderaxespad=0, columnspacing=1.4,
+                   handlelength=1.4)
     fig.tight_layout(w_pad=2.2)
     for ext in ("pdf", "png"):
         fig.savefig(OUT / f"figureS3_vocabulary_coverage.{ext}")
