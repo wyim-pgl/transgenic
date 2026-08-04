@@ -325,6 +325,76 @@ r = gmap[("Z_mays", "transgenic400M")]
 check("Z. mays 400M de novo base F1 (Table S2)", 70.6,
       f1(float(r["Base_Sensitivity"]), float(r["Base_Precision"])), src)
 
+# --------------------------------------------------- Figure 4 panels -----
+# The Figure 4 loci are named in the legend with their support counts, so those
+# counts are claims like any other. They are re-derived from the per-locus extracts
+# of the original prompted prediction, which is the evaluation the submitted figure
+# was drawn from - not from the second inference behind Figure S4, whose loci differ.
+FIG4 = RES / "fig4_forensics" / "panelC_examples" / "original"
+
+
+def _chains(path: Path, gtf: bool) -> dict[str, tuple]:
+    """{transcript: CDS intron chain} for one locus extract."""
+    cds: dict[str, list[tuple[int, int]]] = {}
+    key = re.compile(r'transcript_id "([^"]+)"' if gtf else r"Parent=([^;]+)")
+    for line in path.read_text().splitlines():
+        f = line.split("\t")
+        if len(f) < 9 or f[2] != "CDS":
+            continue
+        m = key.search(f[8])
+        if m:
+            cds.setdefault(m.group(1), []).append((int(f[3]), int(f[4])))
+    out = {}
+    for tx, segs in cds.items():
+        s = sorted(segs)
+        out[tx] = tuple((s[i][1], s[i + 1][0]) for i in range(len(s) - 1))
+    return out
+
+
+def panel_counts(locus: str) -> dict:
+    """Distinct-chain bookkeeping for one Figure 4 locus."""
+    tair = _chains(FIG4 / f"{locus}_tair.gff3", gtf=False)
+    pred = _chains(FIG4 / f"{locus}_pred.gff3", gtf=False)
+    art = _chains(FIG4 / f"{locus}_atrtd.gtf", gtf=True)
+    tset, pset = set(tair.values()), set(pred.values())
+    return {
+        "tair_chains": len(tset),
+        "reproduced": len(pset & tset),
+        "outside": len(pset - tset),
+        "art_tx": len(art),
+        # AtRTD3 transcripts whose whole chain is one the model returned
+        "art_supporting": sum(1 for c in art.values() if c in pset),
+        "novel_match": sorted(t for t, c in art.items() if c in pset - tset),
+        "tair_with_novel": sum(1 for c in tair.values() if c in pset - tset),
+    }
+
+
+for locus, chains, art_sup, art_tx in (("AT4G10840", 2, 2, 4), ("AT3G50550", 2, 4, 5)):
+    p = panel_counts(locus)
+    src = f"panelC_examples/original/{locus}_*"
+    check(f"{locus} distinct TAIR10 chains (Fig. 4)", chains, p["tair_chains"], src)
+    check(f"{locus} chains reproduced (Fig. 4)", chains, p["reproduced"], src)
+    check(f"{locus} predicted outside TAIR10 (Fig. 4)", 0, p["outside"], src)
+    check(f"{locus} AtRTD3 transcripts supporting (Fig. 4)", art_sup, p["art_supporting"], src)
+    check(f"{locus} AtRTD3 transcripts at locus (Fig. 4)", art_tx, p["art_tx"], src)
+
+p = panel_counts("AT1G19650")
+src = "panelC_examples/original/AT1G19650_*"
+check("AT1G19650 distinct TAIR10 chains (Fig. 4C)", 2, p["tair_chains"], src)
+check("AT1G19650 TAIR10 transcripts with the novel chain (Fig. 4C)", 0, p["tair_with_novel"], src)
+check("AT1G19650 AtRTD3 transcripts at locus (Fig. 4C)", 14, p["art_tx"], src)
+check("AT1G19650 AtRTD3 exact chain match (Fig. 4C)", "AT1G19650.13",
+      p["novel_match"][0] if p["novel_match"] else "-", src)
+
+# Panel classification over the original evaluation, as stated in Methods.
+rows = [r.split("\t") for r in
+        (FIG4 / "panels_original.tsv").read_text().splitlines()[1:] if r.strip()]
+panels = [r[1] for r in rows]
+src = "panelC_examples/original/panels_original.tsv"
+check("Fig. 4 panel A/B loci recovering two chains (Methods)", 25, panels.count("A"), src)
+check("Fig. 4 panel A/B loci recovering three or more (Methods)", 2, panels.count("B"), src)
+check("Fig. 4 panel C qualifying loci (Methods)", 1, panels.count("C"), src)
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2

@@ -66,6 +66,11 @@ from matplotlib.patches import Rectangle
 # path it was written in.
 REPO = Path(__file__).resolve().parents[1]
 DATA = REPO / "revision" / "results" / "fig4_forensics" / "panelC_examples"
+# Extracts taken from the recovered original test split, kept apart from the ones in
+# DATA, which come from the regenerated split. The two share only 657 of their loci and
+# disagree about how many TAIR10 chains a locus has, so a panel drawn from one and a
+# support count derived from the other would be comparing two different experiments.
+DATA_ORIGINAL = DATA / "original"
 OUT = REPO / "Figures"
 
 # Ordered so the combined sheet reads strongest-evidence first.
@@ -74,11 +79,19 @@ LOCI = ["AT2G37450", "AT4G22540", "AT3G56730", "AT1G78940", "AT3G29185", "AT3G13
 # junction no TAIR10 isoform uses). The other three differ only in chain
 # combination or in UTR splicing, so they go to the supplement, not the figure.
 STRONG = ["AT2G37450", "AT4G22540", "AT3G56730"]
-# The rebuilt Figure 4. (A) is the locus recovered forensically from the published
-# model's plot-prep file; (B) is the only locus in the test set where every distinct
-# TAIR10 chain came back; (C)-(E) are the Panel-C loci with a directly visible novel
-# feature. See fig4_forensics/FIG4_LOCUS_FORENSICS.md and panelC_examples/README.md.
-FIGURE4 = ["AT1G43770", "AT1G44575", "AT2G37450", "AT4G22540", "AT3G56730"]
+# The manuscript Figure 4, restored to the loci of the submitted figure. J. Lomas
+# supplied them on 2026-08-04 as (TAIR10, TransGenic, AtRTD3) triples, and all three
+# were confirmed against the recovered original prediction: the hex in each TransGenic
+# ID is the tail of that locus's prediction UUID -
+#   (A) AT4G10840  9f6af336-6811-473b-81bc-614ed78268b7  2 TAIR10 chains, both returned
+#   (B) AT3G50550  c7f99571-2448-4f14-9289-884f69210f1f  2 TAIR10 chains, both returned
+#   (C) AT1G19650  72446b59-6667-49ca-a6b8-11e52f9e2918  1 returned + 1 novel, in AtRTD3
+# which matches the submitted legend: (A-B) reproduce isoforms held by both references,
+# (C) predicts one AtRTD3 supports and TAIR10 lacks. AT1G19650 is the only Panel-C locus
+# in the original split. These read from DATA_ORIGINAL, not DATA.
+# Supersedes the five-panel set drawn from the regenerated split, in which none of these
+# three could be found. See fig4_forensics/FIG4_LOCUS_FORENSICS.md.
+FIGURE4 = ["AT4G10840", "AT3G50550", "AT1G19650"]
 
 # Okabe-Ito derived, colour-vision-safe.
 GREY = "#8C8C8C"
@@ -163,11 +176,24 @@ def suffix(tx: str) -> int:
 
 # --------------------------------------------------------------------------- analysis
 
+def source_dir(locus: str) -> Path:
+    """The extract directory a locus is read from.
+
+    Figure 4's loci come from the original test split and everything else from the
+    regenerated one. The two are kept in separate directories because the same locus
+    can carry a different number of TAIR10 chains in each, so silently falling back
+    from one to the other would draw a panel whose support counts describe the other
+    experiment.
+    """
+    return DATA_ORIGINAL if locus in FIGURE4 else DATA
+
+
 def analyse(locus: str) -> dict:
     """Resolve the novel isoform, its AtRTD3 match, and what to highlight."""
-    pred = parse(DATA / f"{locus}_pred.gff3", gtf=False)
-    tair = parse(DATA / f"{locus}_tair.gff3", gtf=False)
-    art = parse(DATA / f"{locus}_atrtd.gtf", gtf=True)
+    src = source_dir(locus)
+    pred = parse(src / f"{locus}_pred.gff3", gtf=False)
+    tair = parse(src / f"{locus}_tair.gff3", gtf=False)
+    art = parse(src / f"{locus}_atrtd.gtf", gtf=True)
 
     tair_chains = {chain(r["cds"]) for r in tair.values()}
     tair_junctions = {j for c in tair_chains for j in c}
@@ -630,9 +656,9 @@ if __name__ == "__main__":
         draw_locus(loc)
     if not sys.argv[1:]:
         print()
-        # the rebuilt manuscript Figure 4
-        draw_sheet(FIGURE4, name="figure4_example_loci_rebuilt", ncol=2, prefix="",
-                   panel_labels=["(A)", "(B)", "(C)", "(D)", "(E)"])
+        # the manuscript Figure 4, on the loci of the submitted figure
+        draw_sheet(FIGURE4, name="figure4_example_loci_original", ncol=1, prefix="",
+                   panel_labels=["(A)", "(B)", "(C)"])
         # manuscript Figure 4C-E only, if a three-panel version is wanted
         draw_sheet(STRONG, name="strong3", ncol=1, panel_labels=["(C)", "(D)", "(E)"])
         # supplementary: every Panel-C candidate, including the three weak ones

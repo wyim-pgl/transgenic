@@ -92,6 +92,25 @@ freshly verified alternatives if a new or replacement example is wanted.
 
 ---
 
+## ⛔ 2026-08-04 — the scan below describes a different inference than Figure 4
+
+J. Lomas supplied the loci of the submitted Figure 4 (AT4G10840, AT3G50550, AT1G19650),
+verified by transcript UUID against `fig3_original/prompted/`. That prediction covers
+**3,328** loci and shares only **657** with the `raw_TAIR10_…` file the scan below ran on
+(4,875). The two disagree about individual loci: AT1G44575 carries **four** TAIR10 chains in
+the scanned file and **two** in the original, so the "only locus in the test set" claim below
+was true of a file the manuscript does not report, and has been removed from the manuscript.
+
+The original inference was scanned separately with the same script; its output is
+`original/panels_original.tsv` — **A 25 / B 2 / C 1**, the single Panel-C locus being
+AT1G19650, which is Figure 4C. Per-locus extracts for the three Figure 4 loci are in
+`original/`, kept apart from the extracts in this directory. `make_figure4_panelC.py` reads
+each locus from the directory its panel belongs to (`source_dir()`); the two sets must never
+be merged.
+
+Everything below stands as a description of the second inference, which is what Figure S4
+now draws — its legend says so.
+
 ## Genome-wide panel scan (2026-07-30) — `scan_panels.py`
 
 All 4,875 prompted A. thaliana loci were classified on CDS intron chains against TAIR10 and

@@ -1,5 +1,44 @@
 # Figure 4 example loci — reverse-engineered from J. Lomas's account
 
+> ## ⛔ RESOLVED 2026-08-04 — the loci are known, and this document's conclusion was wrong
+>
+> J. Lomas supplied the three panels directly, as (TAIR10, TransGenic, AtRTD3) triples:
+>
+> | Panel | TAIR10 | TransGenic | AtRTD3 |
+> |---|---|---|---|
+> | A | AT4G10840 | `614ed78268b7` | AT4G10840 |
+> | B | AT3G50550 | `884f69210f1f` | AT3G50550 |
+> | C | AT1G19650 | `11e52f9e2918` | AT1G19650 |
+>
+> All three were confirmed against `fig3_original/prompted/TAIR10_hyenaTest_prediction_noPost.gff3`
+> — the hex is the tail of each locus's prediction UUID (e.g. AT4G10840 =
+> `9f6af336-6811-473b-81bc-614ed78268b7`), and the row counts match exactly. The panel types
+> re-derived from that file reproduce the submitted legend: A and B recover both TAIR10 chains
+> and predict nothing outside them, C carries a chain held by no TAIR10 transcript and matched
+> exactly by AtRTD3 `AT1G19650.13`. AT1G19650 is the **only** Panel-C locus in that evaluation.
+>
+> **Two conclusions below are superseded:**
+>
+> 1. **"AT1G43770: high confidence — almost certainly one of the three Figure 4 panels."**
+>    Wrong. AT1G43770 does not occur in the original prediction at all. The `grep AT1G43770
+>    TAIR10_hyenaTest_prediction_noPost.gff3` in the shell history therefore ran against a
+>    *different* file of the same name; a plot-prep artefact proves a locus was examined, not
+>    that it was published.
+> 2. **The data-driven scan below, and the five-panel figure built on it.** It ran over
+>    `raw_TAIR10_hyenaTest_prediction_noPost.gff3` (4,875 loci), which shares only **657** loci
+>    with the original prediction (3,328). Its panels were internally verified but describe a
+>    different inference — AT1G44575 has four TAIR10 chains there and two in the original, so
+>    "the only locus in the test set at which every TAIR10 chain was recovered" was true of a
+>    file the manuscript does not report. That claim has been removed from the manuscript.
+>
+> **Still open**: what `raw_TAIR10_hyenaTest_prediction_noPost.gff3` actually is. It was copied
+> here 2026-07-29 12:25, is prompted-like in shape (1.23 transcripts per locus), and matches
+> neither the original prediction nor the Figure 3 regeneration (`fig3_regen`, 4,896 loci,
+> 19% locus overlap). Figure S4 rests on it, so its provenance needs an answer from J. Lomas.
+>
+> The scan itself is kept: the Panel-C loci it found are Figure S4, whose legend now states
+> that they come from a different inference than Figure 4.
+
 **2026-07-29.** The original Figure 4 loci were not recorded in any manuscript file, so the
 recreation (`transgenic/Figures/make_figure4.py`) guessed three loci from the revision tmap
 data: AT1G02630, AT1G19350, AT1G01080. Access to J. Lomas's pgl-gpu account

@@ -1,0 +1,14 @@
+Chr4	transgenic	gene	6656516	6659265	.	+	.	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e;GM=AT4G10840.TAIR10
+Chr4	transgenic	mRNA	6656516	6659256	.	+	.	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e;GM=AT4G10840.TAIR10
+Chr4	transgenic	CDS	6656614	6657299	.	+	0	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1.CDS1;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1;GM=AT4G10840.TAIR10
+Chr4	transgenic	CDS	6657407	6658020	.	+	1	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1.CDS2;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1;GM=AT4G10840.TAIR10
+Chr4	transgenic	CDS	6658407	6658702	.	+	2	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1.CDS3;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1;GM=AT4G10840.TAIR10
+Chr4	transgenic	five_prime_UTR	6656516	6656613	.	+	.	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1.five_prime_UTR1;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1;GM=AT4G10840.TAIR10
+Chr4	transgenic	three_prime_UTR	6658703	6659256	.	+	.	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1.three_prime_UTR1;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t1;GM=AT4G10840.TAIR10
+Chr4	transgenic	mRNA	6656516	6659265	.	+	.	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e;GM=AT4G10840.TAIR10
+Chr4	transgenic	CDS	6656614	6657299	.	+	0	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2.CDS1;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2;GM=AT4G10840.TAIR10
+Chr4	transgenic	CDS	6657407	6658020	.	+	1	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2.CDS2;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2;GM=AT4G10840.TAIR10
+Chr4	transgenic	CDS	6658407	6658698	.	+	2	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2.CDS4;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2;GM=AT4G10840.TAIR10
+Chr4	transgenic	CDS	6658796	6659033	.	+	1	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2.CDS5;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2;GM=AT4G10840.TAIR10
+Chr4	transgenic	five_prime_UTR	6656516	6656613	.	+	.	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2.five_prime_UTR1;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2;GM=AT4G10840.TAIR10
+Chr4	transgenic	three_prime_UTR	6659034	6659265	.	+	.	ID=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2.three_prime_UTR2;Parent=bf53d445-3c78-43a7-9c2c-6dc241eeeb7e.t2;GM=AT4G10840.TAIR10

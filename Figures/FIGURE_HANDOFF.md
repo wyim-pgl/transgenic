@@ -18,7 +18,7 @@ siblings that must not be submitted — see §5.
 | 1 | `figure1_architecture` | `Figures/make_figure1.py` | `Figures/` |
 | 2 | `figure2_datasets` | `Figures/make_figure2.py` | `Figures/` |
 | 3 | `figure3_performance_original` | `Figures/make_figure3_original.py` | `Figures/` |
-| 4 | `figure4_example_loci_rebuilt` | `Figures/make_figure4_panelC.py` | `Figures/` |
+| 4 | `figure4_example_loci_original` | `Figures/make_figure4_panelC.py` | `Figures/` |
 | 5 | `figure5_gffcompare_f1` | `revision/scripts/15_revision_figures.py` | `revision/figures/` |
 | 6 | `figure6_as_evaluation` | `revision/scripts/15_revision_figures.py` | `revision/figures/` |
 | S1 | `figureS_busco` | `revision/scripts/15_revision_figures.py` | `revision/figures/` |
@@ -198,16 +198,41 @@ Never report a bare overlap count. AtRTD3 support is split into disjoint categor
 63 bp interval is not the same cassette exon. Conflating them once turned 1 supporting
 transcript into a claimed 8.
 
+### ⚠️ Two predictions exist, and they are not interchangeable
+
+There are two prompted A. thaliana predictions in this repository. They draw **different
+evaluation loci** — 4,875 and 3,328, sharing only 657 — so the same gene can carry a
+different number of TAIR10 chains in each.
+
+| File | Loci | Used for |
+|---|---|---|
+| `fig3_original/prompted/TAIR10_hyenaTest_prediction_noPost.gff3` | 3,328 | **Figure 4** — the inference the submitted figure was drawn from, recovered from the published model's own artefacts |
+| `fig4_forensics/raw_TAIR10_hyenaTest_prediction_noPost.gff3` | 4,875 | **Figure S4** — a second inference; provenance not fully established |
+
+Extracts are kept in separate directories (`panelC_examples/` and
+`panelC_examples/original/`) and `make_figure4_panelC.py` picks one per locus in
+`source_dir()`: anything in `FIGURE4` reads from `original/`, everything else from the
+regenerated set. **Never merge the two directories.** A panel drawn from one file with
+support counts derived from the other describes an experiment that was never run — which
+is exactly how the five-panel Figure 4 of 2026-07-30 came to claim "all four distinct
+TAIR10 chains" for a locus that has two in the evaluation the manuscript reports.
+
 ### Adding or swapping a locus
 
 ```bash
 cd revision/results/fig4_forensics
-D=panelC_examples
 ATRTD=../../data/AtRTD3/atRTD3_TS_21Feb22_transfix.gtf
+
+# Figure 4 (original inference) -> D=panelC_examples/original, SRC as below
+D=panelC_examples/original
+SRC=../fig3_original/prompted/TAIR10_hyenaTest
+
+# Figure S4 (second inference)  -> D=panelC_examples, SRC=./raw_TAIR10_hyenaTest
+
 for L in AT1G12345; do
-  grep "GM=$L" raw_TAIR10_hyenaTest_prediction_noPost.gff3 > $D/${L}_pred.gff3
-  grep "GM=$L" raw_TAIR10_hyenaTest_labels.gff3            > $D/${L}_tair.gff3
-  grep "gene_id \"$L\"" $ATRTD                             > $D/${L}_atrtd.gtf
+  grep "GM=$L" ${SRC}_prediction_noPost.gff3 > $D/${L}_pred.gff3
+  grep "GM=$L" ${SRC}_labels.gff3            > $D/${L}_tair.gff3
+  grep "gene_id \"$L\"" $ATRTD               > $D/${L}_atrtd.gtf
 done
 python3 ../../../Figures/make_figure4_panelC.py AT1G12345    # single locus
 ```
@@ -215,8 +240,12 @@ python3 ../../../Figures/make_figure4_panelC.py AT1G12345    # single locus
 Then add it to `FIGURE4` (manuscript figure), `STRONG`, or `LOCI` (supplementary sheet) at the
 top of the script, and **update the manuscript legend**, which names each panel's locus.
 
-To find candidates rather than guess: `panelC_examples/scan_panels.py` classifies all 4,875
-prompted A. thaliana loci into panel types A / B / C and writes `panels.tsv`.
+To find candidates rather than guess: `panelC_examples/scan_panels.py <labels> <prediction>
+<AtRTD3.gtf>` classifies every prompted A. thaliana locus into panel types A / B / C. Run it
+on whichever prediction the panel belongs to, and keep the outputs apart — `panels.tsv`
+(second inference, 4,875 loci: A 29 / B 3 / C 10) and
+`original/panels_original.tsv` (original inference, 3,328 loci: **A 25 / B 2 / C 1**). The
+Methods counts come from the second file; `19_verify_manuscript_numbers.py` re-derives them.
 
 ---
 
@@ -255,7 +284,8 @@ a README explaining why:
 | Do not submit | Submit instead | Why |
 |---|---|---|
 | `figure3_performance.*` | `figure3_performance_original.*` | the former is the reconstruction; the latter is regenerated from the preserved original outputs and reproduces the presented anchors (A. thaliana 92.2, Z. mays 71.2) |
-| `figure4_example_loci.*` | `figure4_example_loci_rebuilt.*` | the former was drawn from three **guessed** loci that appear nowhere in the authors' records |
+| `figure4_example_loci.*` | `figure4_example_loci_original.*` | drawn from three **guessed** loci that appear nowhere in the authors' records |
+| `figure4_example_loci_rebuilt.*` | `figure4_example_loci_original.*` | five sound panels drawn from the **wrong inference**: none of the loci J. Lomas confirmed on 2026-08-04 can be drawn from the file it used, and one of its panels claimed four TAIR10 chains for a locus that has two in the evaluation the manuscript reports |
 
 **`revision/figures/` is gitignored** (`revision/.gitignore:8`). Figures 5, 6 and S1–S3 are
 written there and were invisible in the repository until force-added on 2026-07-30. The ten

@@ -1,0 +1,15 @@
+Chr3	transgenic	gene	18759463	18760510	.	+	.	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e;GM=AT3G50550.TAIR10
+Chr3	transgenic	mRNA	18759463	18760439	.	+	.	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e;GM=AT3G50550.TAIR10
+Chr3	transgenic	CDS	18759486	18759546	.	+	0	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1.CDS1;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1;GM=AT3G50550.TAIR10
+Chr3	transgenic	CDS	18759776	18759844	.	+	2	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1.CDS2;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1;GM=AT3G50550.TAIR10
+Chr3	transgenic	CDS	18760082	18760095	.	+	2	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1.CDS3;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1;GM=AT3G50550.TAIR10
+Chr3	transgenic	five_prime_UTR	18759463	18759485	.	+	.	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1.five_prime_UTR1;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1;GM=AT3G50550.TAIR10
+Chr3	transgenic	three_prime_UTR	18760096	18760132	.	+	.	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1.three_prime_UTR1;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1;GM=AT3G50550.TAIR10
+Chr3	transgenic	three_prime_UTR	18760265	18760439	.	+	.	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1.three_prime_UTR2;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t1;GM=AT3G50550.TAIR10
+Chr3	transgenic	mRNA	18759465	18760510	.	+	.	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e;GM=AT3G50550.TAIR10
+Chr3	transgenic	CDS	18759486	18759616	.	+	0	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2.CDS4;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2;GM=AT3G50550.TAIR10
+Chr3	transgenic	CDS	18759702	18759844	.	+	1	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2.CDS5;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2;GM=AT3G50550.TAIR10
+Chr3	transgenic	CDS	18760082	18760095	.	+	2	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2.CDS3;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2;GM=AT3G50550.TAIR10
+Chr3	transgenic	five_prime_UTR	18759465	18759485	.	+	.	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2.five_prime_UTR2;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2;GM=AT3G50550.TAIR10
+Chr3	transgenic	three_prime_UTR	18760096	18760132	.	+	.	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2.three_prime_UTR1;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2;GM=AT3G50550.TAIR10
+Chr3	transgenic	three_prime_UTR	18760265	18760510	.	+	.	ID=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2.three_prime_UTR3;Parent=d3fa9bf8-c7d1-494b-a6f2-c740613d6f3e.t2;GM=AT3G50550.TAIR10
