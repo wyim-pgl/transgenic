@@ -544,6 +544,15 @@ check("AUGUSTUS splice-event precision, % (Results)", 4.4, _aug_p, src5)
 check("completion-mode splice events predicted (Results)", 3033, _cmp_n, src5)
 check("completion-mode splice-event precision, % (Results)", 37.5, _cmp_p, src5)
 
+
+def _matched(pred_key: str) -> int:
+    return sum(int(r["Matched events (n)"]) for r in _s4c
+               if r.get("Reference", "").startswith("TAIR10") and pred_key in r.get("Prediction set", ""))
+
+
+check("AUGUSTUS splice events matched (Results)", 1855, _matched("AUGUSTUS"), src5)
+check("completion-mode splice events matched (Results)", 1137, _matched("reference-prompted"), src5)
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2
