@@ -640,8 +640,25 @@ def test_provenance_is_recorded(tmp_path):
     _gff(out, [("Chr1", "CDS", 100, 200, "A", "A.o")])
     r = score_mod.score(inp, out, ref, tool="gemoma")
     assert r["provenance"] == {
-        "input": str(inp), "output": str(out), "reference": str(ref), "tool": "gemoma",
+        "input": str(inp), "output": str(out), "reference": str(ref),
+        "primary_ids": str(score_mod.PRIMARY_IDS), "tool": "gemoma",
     }
+
+
+def test_provenance_records_the_primary_ids_path_actually_passed(tmp_path):
+    """R4: with --primary-ids overridden, provenance and primary_source must both name
+    the file actually used, not the module's default constant."""
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    out = tmp_path / "out.gff3"
+    custom_primary = tmp_path / "custom_primary.txt"
+    custom_primary.write_text("A.1\n")
+    _gff(ref, [("Chr1", "CDS", 100, 200, "A", "A.1")])
+    _gff(inp, [("Chr1", "CDS", 100, 200, "A", "A.i")])
+    _gff(out, [("Chr1", "CDS", 100, 200, "A", "A.o")])
+    r = score_mod.score(inp, out, ref, primary_ids_path=custom_primary)
+    assert r["provenance"]["primary_ids"] == str(custom_primary)
+    assert r["cds_level_primary"]["primary_source"] == str(custom_primary)
 
 
 # -- M6: the 2-level fallback is counted, not just silently used -------------------
@@ -658,3 +675,271 @@ def test_undeclared_parent_fallback_is_counted(tmp_path):
     assert r["undeclared_parent_fallback"]["input"] == 1
     assert r["undeclared_parent_fallback"]["output"] == 1
     assert r["undeclared_parent_fallback"]["reference"] == 1
+
+
+# ===================================================================================
+# Fix round 2 (task-2-findings-round2.md)
+# ===================================================================================
+
+
+# -- R1: split_predictions/ties_broken_by_structure must reach utr_level too --------
+
+
+def test_utr_level_split_predictions_is_reported(tmp_path):
+    """split_predictions/ties_broken_by_structure were computed once per matched
+    feature level but only ever attached to cds_level — even though on the real
+    TAIR10 self-test they are 0 at CDS level and non-zero (40 splits, 5 ties) at
+    exon level, exactly where they matter. Here A2's CDS does not overlap the
+    reference gene's CDS at all (clean at cds_level), but its UTR-extended exon does
+    overlap the same reference gene's exon (a split, only visible at utr_level)."""
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    out = tmp_path / "out.gff3"
+    ref.write_text(_gff3_lines([
+        ("Chr1", "gene", 400, 700, "R", None, None),
+        ("Chr1", "mRNA", 400, 700, "R.1", "R", None),
+        ("Chr1", "CDS", 500, 600, "R.1.cds", "R.1", None),
+        ("Chr1", "exon", 400, 700, "R.1.exon", "R.1", None),
+    ]))
+    inp.write_text(_gff3_lines([
+        ("Chr1", "gene", 400, 700, "A1", None, None),
+        ("Chr1", "mRNA", 400, 700, "A1.i", "A1", None),
+        ("Chr1", "CDS", 500, 600, "A1.i.cds", "A1.i", None),
+        ("Chr1", "exon", 400, 700, "A1.i.exon", "A1.i", None),
+        ("Chr1", "gene", 600, 750, "A2", None, None),
+        ("Chr1", "mRNA", 600, 750, "A2.i", "A2", None),
+        ("Chr1", "CDS", 650, 690, "A2.i.cds", "A2.i", None),      # outside R's CDS
+        ("Chr1", "exon", 600, 750, "A2.i.exon", "A2.i", None),    # overlaps R's exon
+    ]))
+    out.write_text(_gff3_lines([
+        ("Chr1", "gene", 400, 700, "outA1", None, "GM=A1"),
+        ("Chr1", "mRNA", 400, 700, "outA1.t1", "outA1", "GM=A1"),
+        ("Chr1", "CDS", 500, 600, "outA1.t1.cds", "outA1.t1", "GM=A1"),
+        ("Chr1", "exon", 400, 700, "outA1.t1.exon", "outA1.t1", "GM=A1"),
+        ("Chr1", "gene", 600, 750, "outA2", None, "GM=A2"),
+        ("Chr1", "mRNA", 600, 750, "outA2.t1", "outA2", "GM=A2"),
+        ("Chr1", "CDS", 650, 690, "outA2.t1.cds", "outA2.t1", "GM=A2"),
+        ("Chr1", "exon", 600, 750, "outA2.t1.exon", "outA2.t1", "GM=A2"),
+    ]))
+    r = score_mod.score(inp, out, ref)
+    assert r["cds_level"]["split_predictions"] == 0     # A2's CDS never overlaps R's
+    assert r["utr_level"]["split_predictions"] == 1      # but its exon does
+    assert r["utr_level_primary"]["split_predictions"] == 1
+
+
+def test_utr_level_ties_broken_by_structure_is_reported(tmp_path):
+    """Same wiring gap as above, for ties_broken_by_structure. Reuses the CDS-level
+    tie-break fixture's reversed-gene-order trick, extended with exon rows that carry
+    real UTR signal, so the identical-span tie exists at both levels simultaneously —
+    letting this test also re-confirm cds_level's count as a side effect."""
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    out = tmp_path / "out.gff3"
+    ref.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 200, "R", None, None),
+        ("Chr1", "mRNA", 100, 200, "R.1", "R", None),
+        ("Chr1", "CDS", 100, 200, "R.1.cds", "R.1", None),
+        ("Chr1", "exon", 90, 210, "R.1.exon", "R.1", None),
+        ("Chr1", "gene", 100, 200, "Q", None, None),
+        ("Chr1", "mRNA", 100, 200, "Q.1", "Q", None),
+        ("Chr1", "CDS", 100, 150, "Q.1.cds1", "Q.1", None),
+        ("Chr1", "CDS", 180, 200, "Q.1.cds2", "Q.1", None),
+        ("Chr1", "exon", 90, 150, "Q.1.exon1", "Q.1", None),
+        ("Chr1", "exon", 180, 210, "Q.1.exon2", "Q.1", None),
+    ]))
+    inp.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 200, "Q", None, None),
+        ("Chr1", "mRNA", 100, 200, "Q.i", "Q", None),
+        ("Chr1", "CDS", 100, 150, "Q.i.cds1", "Q.i", None),
+        ("Chr1", "CDS", 180, 200, "Q.i.cds2", "Q.i", None),
+        ("Chr1", "exon", 90, 150, "Q.i.exon1", "Q.i", None),
+        ("Chr1", "exon", 180, 210, "Q.i.exon2", "Q.i", None),
+        ("Chr1", "gene", 100, 200, "R", None, None),
+        ("Chr1", "mRNA", 100, 200, "R.i", "R", None),
+        ("Chr1", "CDS", 100, 200, "R.i.cds", "R.i", None),
+        ("Chr1", "exon", 90, 210, "R.i.exon", "R.i", None),
+    ]))
+    out.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 200, "Q", None, None),
+        ("Chr1", "mRNA", 100, 200, "Q.o", "Q", None),
+        ("Chr1", "CDS", 100, 150, "Q.o.cds1", "Q.o", None),
+        ("Chr1", "CDS", 180, 200, "Q.o.cds2", "Q.o", None),
+        ("Chr1", "exon", 90, 150, "Q.o.exon1", "Q.o", None),
+        ("Chr1", "exon", 180, 210, "Q.o.exon2", "Q.o", None),
+        ("Chr1", "gene", 100, 200, "R", None, None),
+        ("Chr1", "mRNA", 100, 200, "R.o", "R", None),
+        ("Chr1", "CDS", 100, 200, "R.o.cds", "R.o", None),
+        ("Chr1", "exon", 90, 210, "R.o.exon", "R.o", None),
+    ]))
+    r = score_mod.score(inp, out, ref)
+    assert r["cds_level"]["ties_broken_by_structure"] == 1
+    assert r["utr_level"]["ties_broken_by_structure"] == 1
+    assert r["utr_level_primary"]["ties_broken_by_structure"] == 1
+
+
+# -- R2: the overlap fallback must not steal an output already claimed via GM= ------
+
+
+def test_overlap_fallback_excludes_outputs_already_claimed_via_gm(tmp_path):
+    """Before the fix, the fallback searched the FULL output set, so a locus already
+    cleanly claimed via GM= could also be claimed by a second, unrelated input locus
+    falling back to position — silently double-scoring one output against two
+    different inputs while output_merged read 0. Y has no GM= match; the only output
+    locus that exists is tagged GM=X and physically sits where Y is, drifted there by
+    "damage" — Y must not also claim it."""
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    out = tmp_path / "out.gff3"
+    ref.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 200, "RX", None, None),
+        ("Chr1", "mRNA", 100, 200, "RX.1", "RX", None),
+        ("Chr1", "CDS", 100, 200, "RX.1.cds", "RX.1", None),
+        ("Chr1", "gene", 300, 400, "RY", None, None),
+        ("Chr1", "mRNA", 300, 400, "RY.1", "RY", None),
+        ("Chr1", "CDS", 300, 400, "RY.1.cds", "RY.1", None),
+    ]))
+    inp.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 200, "X", None, None),
+        ("Chr1", "mRNA", 100, 200, "X.i", "X", None),
+        ("Chr1", "CDS", 100, 200, "X.i.cds", "X.i", None),
+        ("Chr1", "gene", 300, 400, "Y", None, None),   # no GM= match for this one
+        ("Chr1", "mRNA", 300, 400, "Y.i", "Y", None),
+        ("Chr1", "CDS", 300, 400, "Y.i.cds", "Y.i", None),
+    ]))
+    out.write_text(_gff3_lines([
+        ("Chr1", "gene", 300, 400, "O", None, "GM=X"),
+        ("Chr1", "mRNA", 300, 400, "O.t1", "O", "GM=X"),
+        ("Chr1", "CDS", 300, 400, "O.t1.cds", "O.t1", "GM=X"),
+    ]))
+    r = score_mod.score(inp, out, ref)
+    assert r["pairing"]["gm_paired"] == 1
+    assert r["pairing"]["overlap_fallback"] == 0      # Y must not also claim O
+    assert r["cds_level"]["loci_compared"] == 1        # only X, not X and Y both against O
+
+
+def test_overlap_fallback_collisions_are_folded_into_output_merged(tmp_path):
+    """Two different input loci, neither with a usable GM= match, both fall back to
+    the same unclaimed output locus by position — this must be reported as
+    output_merged and excluded from scoring, not silently kept as two pairs to the
+    same output. Z is cleanly GM-paired so the run does not trip the total-mismatch
+    guard, isolating the X/Y collision."""
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    out = tmp_path / "out.gff3"
+    ref.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 200, "RX", None, None),
+        ("Chr1", "mRNA", 100, 200, "RX.1", "RX", None),
+        ("Chr1", "CDS", 100, 200, "RX.1.cds", "RX.1", None),
+        ("Chr1", "gene", 210, 300, "RY", None, None),
+        ("Chr1", "mRNA", 210, 300, "RY.1", "RY", None),
+        ("Chr1", "CDS", 210, 300, "RY.1.cds", "RY.1", None),
+        ("Chr1", "gene", 1000, 1100, "RZ", None, None),
+        ("Chr1", "mRNA", 1000, 1100, "RZ.1", "RZ", None),
+        ("Chr1", "CDS", 1000, 1100, "RZ.1.cds", "RZ.1", None),
+    ]))
+    inp.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 200, "X", None, None),
+        ("Chr1", "mRNA", 100, 200, "X.i", "X", None),
+        ("Chr1", "CDS", 100, 200, "X.i.cds", "X.i", None),
+        ("Chr1", "gene", 210, 300, "Y", None, None),
+        ("Chr1", "mRNA", 210, 300, "Y.i", "Y", None),
+        ("Chr1", "CDS", 210, 300, "Y.i.cds", "Y.i", None),
+        ("Chr1", "gene", 1000, 1100, "Z", None, None),
+        ("Chr1", "mRNA", 1000, 1100, "Z.i", "Z", None),
+        ("Chr1", "CDS", 1000, 1100, "Z.i.cds", "Z.i", None),
+    ]))
+    out.write_text(_gff3_lines([
+        # X and Y both overlap this single, GM=-less output locus positionally
+        ("Chr1", "gene", 100, 300, "O", None, None),
+        ("Chr1", "mRNA", 100, 300, "O.t1", "O", None),
+        ("Chr1", "CDS", 100, 300, "O.t1.cds", "O.t1", None),
+        # Z is cleanly GM-paired, keeping the run from tripping the total-mismatch guard
+        ("Chr1", "gene", 1000, 1100, "outZ", None, "GM=Z"),
+        ("Chr1", "mRNA", 1000, 1100, "outZ.t1", "outZ", "GM=Z"),
+        ("Chr1", "CDS", 1000, 1100, "outZ.t1.cds", "outZ.t1", "GM=Z"),
+    ]))
+    r = score_mod.score(inp, out, ref)
+    assert r["pairing"]["gm_paired"] == 1        # Z only
+    assert r["pairing"]["output_merged"] == 2    # X and Y both collided on O
+    assert r["pairing"]["overlap_fallback"] == 0
+    assert r["cds_level"]["loci_compared"] == 1  # Z only; X and Y excluded, not double-scored
+
+
+# -- R4: primary_source/provenance report the path actually used -------------------
+
+
+def test_provenance_records_the_primary_ids_path_actually_passed(tmp_path):
+    """With --primary-ids overridden, provenance and primary_source must both name
+    the file actually used, not the module's default constant."""
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    out = tmp_path / "out.gff3"
+    custom_primary = tmp_path / "custom_primary.txt"
+    custom_primary.write_text("A.1\n")
+    _gff(ref, [("Chr1", "CDS", 100, 200, "A", "A.1")])
+    _gff(inp, [("Chr1", "CDS", 100, 200, "A", "A.i")])
+    _gff(out, [("Chr1", "CDS", 100, 200, "A", "A.o")])
+    r = score_mod.score(inp, out, ref, primary_ids_path=custom_primary)
+    assert r["provenance"]["primary_ids"] == str(custom_primary)
+    assert r["cds_level_primary"]["primary_source"] == str(custom_primary)
+
+
+# -- R5: the tie-break override flag must reset when a later, outright winner appears --
+
+
+def test_ties_broken_by_structure_resets_when_a_later_candidate_wins_outright():
+    """A tie broken by the structural bonus must not keep counting once a later,
+    strictly-better-scoring candidate wins the match outright — the final answer had
+    nothing to do with the earlier tie. Before the fix, `overridden_by_bonus` was
+    never reset, so the counter over-attributed C's outright win to B's earlier,
+    irrelevant tie-break."""
+    p_span = ("Chr1", 100, 300)
+    pred = {p_span: {"p.i": ((999, 999),)}}
+    a_span = ("Chr1", 100, 200)   # ties with b_span on Jaccard, wrong structure
+    b_span = ("Chr1", 150, 250)   # ties with a_span on Jaccard, right structure -> wins the tie
+    c_span = ("Chr1", 160, 300)   # strictly better Jaccard, wrong structure -> wins outright
+    ref = {
+        a_span: {"a.1": ((1, 1),)},
+        b_span: {"b.1": ((999, 999),)},
+        c_span: {"c.1": ((2, 2),)},
+    }
+    stats: dict = {}
+    pairs = score_mod.match_by_overlap(pred, ref, stats)
+    assert pairs[p_span] == c_span
+    assert stats.get("ties_broken_by_structure", 0) == 0
+
+
+# -- R6: a negative "genes without CDS" is reported as undefined, not negative ------
+
+
+def test_genes_without_cds_is_none_not_negative_when_gene_rows_undercounts(tmp_path):
+    """On this module's own flattened fixtures (no explicit "gene" rows at all),
+    gene_rows - coding_loci goes negative; that is gene_rows undercounting, not a real
+    "genes without CDS" figure, so it must report None rather than a negative number."""
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    out = tmp_path / "out.gff3"
+    _gff(ref, [("Chr1", "CDS", 100, 200, "A", "A.1")])
+    _gff(inp, [("Chr1", "CDS", 100, 200, "A", "A.i")])   # no "gene" row at all
+    _gff(out, [("Chr1", "CDS", 100, 200, "A", "A.o")])
+    r = score_mod.score(inp, out, ref)
+    assert r["input_gene_rows"] == 0
+    assert r["input_coding_loci"] == 1
+    assert r["input_genes_without_cds"] is None
+
+
+# -- R7: a row with no Parent at all gets its own message, not the noncoding one ----
+
+
+def test_row_with_no_parent_at_all_raises_a_distinct_message(tmp_path):
+    bad = tmp_path / "bad.gff3"
+    bad.write_text("Chr1\tx\tCDS\t100\t200\t.\t+\t0\tID=orphan.cds\n")   # no Parent=
+    with pytest.raises(RuntimeError, match="no Parent attribute"):
+        score_mod.cds_structures(bad)
+
+
+# -- R9: attribute parsing tolerates a space after the semicolon --------------------
+
+
+def test_attr_tolerates_space_after_semicolon():
+    assert score_mod._attr("a=1; ID=x", "ID") == "x"

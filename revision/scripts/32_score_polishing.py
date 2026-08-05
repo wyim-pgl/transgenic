@@ -21,13 +21,18 @@ design, not by accident:
     cds_level_primary   the representative equals the reference's PRIMARY transcript only,
                          resolved via revision/data/TAIR10/primary_transcript_ids.txt
 
-TAIR10's GFF3 is coordinate-sorted, so "first transcript in file order" is the
-leftmost-starting isoform at a locus, not the biological primary — of TAIR10's 5,804
-multi-isoform loci, 2,496 resolve to something other than ".1". `cds_level` sidesteps
-that entirely (any transcript matching is "correct"); `cds_level_primary` answers the
-stricter question by reading the curated primary-transcript list instead of guessing
-from file order. The equivalent split (`utr_level`/`utr_level_primary`) is computed the
-same way for CDS+UTR (exon-chain) structures, when the input supports it (see below).
+These are genuinely different questions, not two routes to the same number: `cds_level`
+asks whether the model's structure matches ANY annotated transcript at the locus;
+`cds_level_primary` asks whether it matches the curated primary specifically. On
+`Athaliana_167_TAIR10.gene.clean.gff3` the two happen to coincide at the CDS level —
+verified directly, the first mRNA in file order is the curated primary for all 27,416
+genes, zero mismatches — but they diverge at the exon level (`utr_level.damaged` is 293
+against `utr_level_primary.damaged` at 305), because a locus can match some non-primary
+reference transcript exactly while missing the primary's specific UTR extent. The split
+exists for that divergence, not because file order was assumed to disagree with the
+primary — it does not, on this reference. The equivalent split
+(`utr_level`/`utr_level_primary`) is computed the same way for CDS+UTR (exon-chain)
+structures, when the input supports it (see below).
 
 "The input/output model" for a locus is still singular either way: GeMoMa, BRAKER3 and
 EGAPx already carry alternative isoforms of their own (mRNA count exceeds gene count in
@@ -111,10 +116,12 @@ def _attr(attributes: str, key: str) -> str | None:
     Unanchored `key=` would match inside a *different* attribute whose name happens to
     end in `key` (e.g. looking for `ID=` matching inside `GeneID=`). GeMoMa writes
     `Name=` before `ID=` on the same line, so attribute ordering is no safeguard either.
+    Tolerates a space after `;` (`key1=val1; key2=val2`) — not strict GFF3, but a common
+    enough dialect variant that it should parse rather than misdiagnose as malformed.
     """
     pattern = _ATTR_RE_CACHE.get(key)
     if pattern is None:
-        pattern = _ATTR_RE_CACHE[key] = re.compile(rf"(?:^|;){key}=([^;\n]+)")
+        pattern = _ATTR_RE_CACHE[key] = re.compile(rf"(?:^|;)\s*{key}=([^;\n]+)")
     m = pattern.search(attributes)
     return m.group(1) if m else None
 
@@ -173,10 +180,13 @@ def _tx_and_gene(fparent: str | None, fid: str | None,
     3-level file this fallback should never fire; `was_fallback=True` lets the caller
     count how often it did.
 
-    status is "excluded" when the row is parented to a declared non-coding feature.
+    status is "excluded" when the row is parented to a declared non-coding feature, or
+    "no_parent" when the row has no Parent attribute at all — a different, more basic
+    problem (a malformed/orphaned row, not a non-coding exclusion) that the caller
+    reports with its own message rather than conflating the two.
     """
     if fparent is None:
-        return "excluded", None, None, False
+        return "no_parent", None, None, False
     ptype = id_type.get(fparent)
     if _is_noncoding(ptype, id_gbkey.get(fparent)):
         return "excluded", None, None, False
@@ -198,6 +208,10 @@ def _transcript_structures(path: Path, feature: str) -> tuple[dict, dict, dict, 
     The same situation for exon rows is routine (EGAPx's lnc_RNA/pseudogene/misc_RNA loci
     legitimately have exon structure — 7,274/1,221/480 such rows in the staged file) and
     is only counted, never raised.
+
+    Also raises, for either feature, if any row has no Parent attribute at all — that is
+    a malformed/orphaned row regardless of coding status, and gets its own message so it
+    is never mistaken for the non-coding-exclusion case above.
     """
     id_type, id_parent, id_gbkey, _gene_gm, lines = _parse_hierarchy(path)
     tx_segs: dict[str, list] = defaultdict(list)
@@ -205,6 +219,7 @@ def _transcript_structures(path: Path, feature: str) -> tuple[dict, dict, dict, 
     tx_seq: dict[str, str] = {}
     fallback_count = 0
     excluded_count = 0
+    no_parent_count = 0
     for line in lines:
         f = line.split("\t")
         if len(f) < 9 or f[2] != feature:
@@ -212,6 +227,9 @@ def _transcript_structures(path: Path, feature: str) -> tuple[dict, dict, dict, 
         fid = _attr(f[8], "ID")
         fparent = _attr(f[8], "Parent")
         status, tx, gene, fallback = _tx_and_gene(fparent, fid, id_type, id_parent, id_gbkey)
+        if status == "no_parent":
+            no_parent_count += 1
+            continue
         if status == "excluded":
             excluded_count += 1
             continue
@@ -220,6 +238,11 @@ def _transcript_structures(path: Path, feature: str) -> tuple[dict, dict, dict, 
         tx_segs[tx].append((int(f[3]), int(f[4])))
         tx_gene[tx] = gene
         tx_seq[tx] = f[0]
+    if no_parent_count:
+        raise RuntimeError(
+            f"{no_parent_count} {feature} row(s) in {path} have no Parent attribute at "
+            "all — malformed GFF3, not a non-coding exclusion"
+        )
     if feature == "CDS" and excluded_count:
         raise RuntimeError(
             f"{excluded_count} CDS row(s) in {path} are parented to a declared "
@@ -348,9 +371,12 @@ def match_by_overlap(pred: dict, ref: dict, stats: dict | None = None) -> dict:
                 key = (score, bonus)
                 if key > best_key:
                     # A strictly-better key that ties on raw score with the previous
-                    # best means the bonus, not position, decided the winner.
-                    if best is not None and score == best_key[0]:
-                        overridden_by_bonus = True
+                    # best means the bonus, not position, decided the winner. A win on
+                    # raw score alone supersedes any earlier tie-break, so the flag is
+                    # reset — otherwise a later, unrelated positional winner would still
+                    # be reported as "broken by structure" because of a tie earlier in
+                    # the scan that no longer has anything to do with the final answer.
+                    overridden_by_bonus = best is not None and score == best_key[0]
                     best, best_key = r, key
         if best:
             pairs[p] = best
@@ -359,7 +385,7 @@ def match_by_overlap(pred: dict, ref: dict, stats: dict | None = None) -> dict:
     return pairs
 
 
-def _resolve_one_to_one(raw_pairs: dict, pred: dict, ref: dict) -> tuple[dict, int]:
+def _resolve_one_to_one(raw_pairs: dict) -> tuple[dict, int]:
     """Keep the single best-scoring pred locus per reference locus.
 
     GeMoMa/BRAKER3/EGAPx can split one TAIR10 gene into several of their own predicted
@@ -395,6 +421,13 @@ def pair_input_to_output(inp: dict, out: dict, output_gff: Path) -> tuple[dict, 
     likely it drifts positionally toward a neighbour, and a position-only pairing would
     silently lose exactly the loci this metric exists to catch. Falls back to positional
     overlap only for input loci with no usable GM= match.
+
+    The fallback candidate pool excludes every output locus already claimed by a clean
+    GM= pairing, and a collision *among* fallback pairs (two input loci both landing on
+    the same unclaimed output locus) is folded into `output_merged` rather than left to
+    silently double-score one output against two different input loci. This matters
+    precisely where GM= is least reliable — the GeMoMa/BRAKER3/EGAPx runs this was
+    written for but that do not exist yet to test against directly.
     """
     out_gm = _gene_gm_values(output_gff)
     gm_to_out: dict[str, list] = defaultdict(list)
@@ -425,10 +458,16 @@ def pair_input_to_output(inp: dict, out: dict, output_gff: Path) -> tuple[dict, 
         stats["gm_paired"] += 1
 
     if needs_overlap:
-        fallback = match_by_overlap({i: inp[i] for i in needs_overlap}, out)
-        for i, o in fallback.items():
+        claimed = set(pairs.values())
+        available_out = {o: txs for o, txs in out.items() if o not in claimed}
+        fallback_raw = match_by_overlap({i: inp[i] for i in needs_overlap}, available_out)
+        fallback_usage = Counter(fallback_raw.values())
+        for i, o in fallback_raw.items():
+            if fallback_usage[o] > 1:
+                stats["output_merged"] += 1  # two fallback inputs collided on one output
+                continue
             pairs[i] = o
-        stats["overlap_fallback"] = len(fallback)
+            stats["overlap_fallback"] += 1
 
     return pairs, stats
 
@@ -460,7 +499,7 @@ def _finalize_table(table: dict) -> None:
 
 
 def _score_one_level(inp: dict, out: dict, ref: dict, input_gff: Path, output_gff: Path,
-                      primary_ids: set[str] | None) -> dict:
+                      primary_ids: set[str] | None, primary_ids_path: Path | None) -> dict:
     """Score one feature level (CDS or exon), returning both the `headline` (any
     reference transcript matches) and `primary` (primary-transcript-only) tables, plus
     the pairing diagnostics (`split_predictions`, `ties_broken_by_structure`,
@@ -475,7 +514,7 @@ def _score_one_level(inp: dict, out: dict, ref: dict, input_gff: Path, output_gf
             f"(input seqs={sorted({s[0] for s in inp})}, "
             f"reference seqs={sorted({s[0] for s in ref})})"
         )
-    in_to_ref, split_predictions = _resolve_one_to_one(in_to_ref_raw, inp, ref)
+    in_to_ref, split_predictions = _resolve_one_to_one(in_to_ref_raw)
 
     io_pairs, io_stats = pair_input_to_output(inp, out, output_gff)
     if inp and out and not io_pairs:
@@ -523,7 +562,7 @@ def _score_one_level(inp: dict, out: dict, ref: dict, input_gff: Path, output_gf
                                "transcript at this locus")
     primary["definition"] = ("correct = representative transcript equals the reference's "
                               "PRIMARY transcript only")
-    primary["primary_source"] = str(PRIMARY_IDS) if primary_ids else None
+    primary["primary_source"] = str(primary_ids_path) if primary_ids_path else None
     primary["primary_fallback_to_file_order"] = primary_fallback
 
     return dict(headline=headline, primary=primary, split_predictions=split_predictions,
@@ -620,33 +659,51 @@ def score(input_gff: Path, output_gff: Path, ref_gff: Path = REFERENCE,
                               "refusing to score, this would silently report all zeros")
 
     primary_ids = _load_primary_ids(primary_ids_path)
-    cds_result = _score_one_level(inp, out, ref, input_gff, output_gff, primary_ids)
+
+    def _with_pairing_diagnostics(level_result: dict, table_key: str) -> dict:
+        """Attach split_predictions/ties_broken_by_structure to a table — these are
+        properties of the input<->reference matching done once per feature level, so
+        both the headline and primary table at that level share the same values."""
+        table = level_result[table_key]
+        table["split_predictions"] = level_result["split_predictions"]
+        table["ties_broken_by_structure"] = level_result["ties_broken_by_structure"]
+        return table
+
+    cds_result = _score_one_level(inp, out, ref, input_gff, output_gff,
+                                   primary_ids, primary_ids_path)
+    cds_level = _with_pairing_diagnostics(cds_result, "headline")
+    cds_level_primary = _with_pairing_diagnostics(cds_result, "primary")
 
     has_utr, reason = _utr_signal(input_gff, output_gff)
     if has_utr:
         inp_u = _group_by_gene(*_transcript_structures(input_gff, "exon")[:3])
         out_u = _group_by_gene(*_transcript_structures(output_gff, "exon")[:3])
         ref_u = _group_by_gene(*_transcript_structures(ref_gff, "exon")[:3])
-        utr_result = _score_one_level(inp_u, out_u, ref_u, input_gff, output_gff, primary_ids)
-        utr_level = utr_result["headline"]
-        utr_level_primary = utr_result["primary"]
+        utr_result = _score_one_level(inp_u, out_u, ref_u, input_gff, output_gff,
+                                       primary_ids, primary_ids_path)
+        utr_level = _with_pairing_diagnostics(utr_result, "headline")
+        utr_level_primary = _with_pairing_diagnostics(utr_result, "primary")
     else:
         utr_level = {"status": "N/A", "reason": reason}
         utr_level_primary = {"status": "N/A", "reason": reason}
-
-    cds_level = cds_result["headline"]
-    cds_level["split_predictions"] = cds_result["split_predictions"]
-    cds_level["ties_broken_by_structure"] = cds_result["ties_broken_by_structure"]
-    cds_level_primary = cds_result["primary"]
 
     _, _, _, input_fallback = _transcript_structures(input_gff, "CDS")
     _, _, _, output_fallback = _transcript_structures(output_gff, "CDS")
     _, _, _, reference_fallback = _transcript_structures(ref_gff, "CDS")
 
     gene_rows = _gene_row_count(input_gff)
+    genes_without_cds = gene_rows - len(inp)
+    if genes_without_cds < 0:
+        # gene_rows undercounts coding loci — only seen on this module's own flattened
+        # test fixtures, which have no explicit "gene" rows at all; not meaningful on any
+        # real file, so report it as undefined rather than a nonsensical negative count.
+        genes_without_cds = None
+
     return {
         "provenance": {"input": str(input_gff), "output": str(output_gff),
-                       "reference": str(ref_gff), "tool": tool},
+                       "reference": str(ref_gff),
+                       "primary_ids": str(primary_ids_path) if primary_ids_path else None,
+                       "tool": tool},
         "pairing": cds_result["pairing"],
         "cds_level": cds_level,
         "cds_level_primary": cds_level_primary,
@@ -654,7 +711,7 @@ def score(input_gff: Path, output_gff: Path, ref_gff: Path = REFERENCE,
         "utr_level_primary": utr_level_primary,
         "input_gene_rows": gene_rows,
         "input_coding_loci": len(inp),
-        "input_genes_without_cds": gene_rows - len(inp),
+        "input_genes_without_cds": genes_without_cds,
         "input_noncoding_features_excluded": _noncoding_feature_counts(input_gff),
         "undeclared_parent_fallback": {
             "input": input_fallback, "output": output_fallback, "reference": reference_fallback,
