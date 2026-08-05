@@ -597,6 +597,24 @@ with (CMP / "standardized_results" / "A_thaliana_transgenic400Mprompt_beam1.gff3
 check("organellar loci receiving predictions (Results)", 209, _org_pred,
       "standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3")
 
+# --------------------------- self-prompted transcript counts (Fig. 5 legend) --
+# The legend quotes 93,690 and points the reader at Table S5, which reports 93,063
+# because it excludes organellar transcripts. Assert the relationship, don't assume it.
+_sp = CMP / "standardized_results" / "A_thaliana_transgenic400M_prompt_denovo.gff3"
+_sp_total = _sp_org = 0
+with _sp.open() as fh:
+    for line in fh:
+        if line.startswith("#"):
+            continue
+        f = line.split("\t")
+        if len(f) > 2 and f[2] == "mRNA":
+            _sp_total += 1
+            if f[0] in ("ChrM", "ChrC"):
+                _sp_org += 1
+src7 = "standardized_results/A_thaliana_transgenic400M_prompt_denovo.gff3"
+check("self-prompted transcripts, all loci (Fig. 5 legend)", 93690, _sp_total, src7)
+check("self-prompted transcripts, nuclear only (Table S5)", 93063, _sp_total - _sp_org, src7)
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2

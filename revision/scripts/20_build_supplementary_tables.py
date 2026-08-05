@@ -313,7 +313,7 @@ def build(out: Out) -> None:
         t = jload(p)["transcript_level_metrics"]
         rows.append([
             ref, label,
-            t["total_reference"], t["total_predicted"], t["exact_matches"],
+            t["total_reference"], predicted_transcripts(d), t["exact_matches"],
             t["duplicate_exact_matches"], t["distinct_ref_matched"],
             f"{t['isoform_recall'] * 100:.1f}",
             f"{t['isoform_precision'] * 100:.1f}",
@@ -562,6 +562,33 @@ def build(out: Out) -> None:
         ["Tool", "Version", "Use", "Command line"],
         s10,
     )
+
+
+# `summary_report.json`'s total_predicted counts the tmap header as a record, so every
+# value is one too high. Count mRNA rows in the prediction file instead — the same source
+# 19_verify_manuscript_numbers.py uses, and the one the main text quotes.
+PRED_FILE = {
+    "denovo400M": "A_thaliana_transgenic400M.gff3",
+    "prompted400Mbeam1": "A_thaliana_transgenic400Mprompt_beam1.gff3",
+    "augustusSampling": "A_thaliana_augustusSampling.gff3",
+}
+
+
+def predicted_transcripts(result_dir: str) -> int:
+    stem = result_dir.split("_vs_")[0]
+    fn = PRED_FILE.get(stem)
+    if not fn:
+        raise KeyError(f"no prediction file mapped for {result_dir}")
+    path = CMP / "standardized_results" / fn
+    n = 0
+    with path.open() as fh:
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            f = line.split("\t")
+            if len(f) > 2 and f[2] == "mRNA":
+                n += 1
+    return n
 
 
 def main() -> int:
