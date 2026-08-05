@@ -468,13 +468,25 @@ _supplied = sum(1 for g, txs in _pred.items()
 src = "standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3"
 check("completed annotation, total transcripts (Results)", 29922, _total, src)
 check("of those, reproducing the supplied model (Results)", 28536, _supplied, src)
-check("of those, added by TransGenic (Results)", 1386, _total - _supplied, src)
+check("of those, added by TransGenic, distinct structures (Results)", 1103,
+      sum(len({s for s in txs.values() if s != _tair.get(g, {}).get(_prim.get(g))})
+          for g, txs in _pred.items()), src)
+
+# The added isoforms scored on their own, with the supplied transcript removed from both
+# the prediction and the reference (28_score_added_isoforms.py).
+_added = jload(RES / "added_isoforms_A_thaliana.json")
+src2 = "added_isoforms_A_thaliana.json"
+check("added isoforms matching a TAIR10 alternative, % (Results, Abstract)", 18.1,
+      _added["precision_vs_TAIR10_alternatives_pct"], src2)
+check("added isoforms matching an AtRTD3 transcript, % (Results)", 18.5,
+      _added["precision_vs_AtRTD3_pct"], src2)
+check("TAIR10 alternative transcripts recovered by additions, % (Results)", 3.6,
+      _added["recall_of_TAIR10_alternatives_pct"], src2)
+check("loci receiving an addition (Results)", 1076,
+      _added["loci_with_at_least_one_addition"], src2)
 check("supplied share of the returned annotation, % (Results)", 95.4,
       round(100 * _supplied / _total, 1), src, tol=0.051)
-_multi = sum(1 for txs in _pred.values() if len(set(txs.values())) > 1)
-check("loci receiving an added isoform (Results)", 1064, _multi, src)
-check("loci receiving an added isoform, % (Results)", 3.9,
-      round(100 * _multi / len(_pred), 1), src)
+
 
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]

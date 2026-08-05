@@ -59,23 +59,7 @@ TSS/TES positional accuracy; Table S7, per-gene feature counts and GSF vocabular
 Table S8, alternative splicing content of the reference annotations; Table S9, whole-chromosome
 pilot on A. thaliana chromosome 4; Table S10, software versions and command lines.
 
-## Data and code availability
-
-TransGenic source code, trained model weights (160M and 400M), example inputs and outputs,
-and the complete evaluation pipeline used for every analysis reported here are publicly
-available at https://github.com/wyim-pgl/transgenic. Pretrained models are additionally
-hosted at https://huggingface.co/jlomas (HyenaTransgenic-768L12A6-400M and
-HyenaTransgenic-512L9A4-160M). All genomes and annotations analysed in this study are
-publicly available from the sources listed in Table S1; the AtRTD3 transcriptome
-(atRTD3_TS_21Feb22_transfix) is available at https://ics.hutton.ac.uk/atRTD/RTD3/. The
-summary tables underlying Figures 5, 6, and S1–S3 are provided as Supplemental Tables and
-as machine-readable CSV files in the repository. A minimal command-line example is:
-
-```bash
-python src/run_genome_annotation.py genome.fa genes.gff3 -o output.gff3 --device cuda
-```
-
-Exact versions and command lines for every tool used are given in Table S10.
+{availability}
 
 {author_sections}
 """
@@ -111,10 +95,9 @@ def main() -> int:
         print(f"  citation: {old} -> {new}  ({n} occurrence{'s' if n != 1 else ''})")
 
     # ---- move the availability statement out of Methods ----------------
-    m = re.search(
-        r"### Data and code availability\n\n.*?(?=\n## Funding)", text, re.S
-    )
+    m = re.search(r"### Data and code availability\n\n(.*?)(?=\n## Funding)", text, re.S)
     assert m, "could not locate the Methods availability subsection"
+    availability = "## Data and code availability\n\n" + m.group(1).strip()
     text = text[: m.start()] + text[m.end():]
 
     # ---- replace the placeholder back matter ---------------------------
@@ -131,7 +114,7 @@ def main() -> int:
     author_sections = author_sections.replace(
         "## Declaration of competing interests", "## Declaration of interests")
     text = (text[: m.start()]
-            + BACK_MATTER.format(author_sections=author_sections)
+            + BACK_MATTER.format(availability=availability, author_sections=author_sections)
             + "\n" + text[m.end():])
 
     # ---- swap in the curated reference list -----------------------------
