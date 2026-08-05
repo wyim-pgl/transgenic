@@ -193,11 +193,14 @@ def build(out: Out) -> None:
     out.table(
         "TableS2_gffcompare_benchmark",
         "Table S2. GFFCompare benchmark across 13 plant species",
-        "Source: `transgenic_comparison/gffcompare_summary.csv` (GFFCompare v0.12.10); the "
-        "*TransGenic 400M, reference-prompted* rows were re-scored from the top-ranked beam by "
-        "`revision/scripts/27_rescore_prompted_topbeam.py`, because the source GFF3 for that "
-        "configuration exported both beam hypotheses as separate gene records (54,826 gene "
-        "records for 27,413 A. thaliana loci), so every row of this table now reports the top beam. "
+        "Source: `transgenic_comparison/gffcompare_summary.csv`, produced by "
+        "`revision/scripts/29_rescore_benchmark_v0126.py` with **GFFCompare v0.12.6**, the same "
+        "release used for the isoform analyses in Table S4 and Figure 6, so the two are directly "
+        "comparable. An earlier version of this table used v0.12.10, which scores transcript-level "
+        "matches more permissively; base-level values are identical between the releases. The "
+        "*TransGenic 400M, reference-prompted* rows are additionally filtered to the top-ranked "
+        "beam, because the source GFF3 for that configuration exported both beam hypotheses as "
+        "separate gene records (54,826 gene records for 27,413 A. thaliana loci). "
         "ANNEVO, Helixer, and Tiberius were run on whole-genome sequences; TransGenic was "
         "run on individual reference-annotated single-gene loci, a setting that does not "
         "require gene-boundary resolution and therefore favours TransGenic (see Discussion). "
@@ -505,7 +508,7 @@ def build(out: Out) -> None:
 
     # ----------------------------------------------------- Table S10 ----
     s10 = [
-        ["GFFCompare", "v0.12.10", "13-species benchmark (Table S2, Figure 5)",
+        ["GFFCompare", "v0.12.6", "13-species benchmark (Table S2, Figure 5)",
          "`gffcompare -r <reference.gff3> -o <prefix> <prediction.gff3>`"],
         ["GFFCompare", "v0.12.6", "Isoform, alternative-transcript-only, and splice-event analyses (Tables S4a–c)",
          "`gffcompare -r <reference.gtf> -o <prefix> <prediction.gff3>`"],
@@ -538,10 +541,11 @@ def build(out: Out) -> None:
     out.table(
         "TableS10_software_versions",
         "Table S10. Software versions and command lines",
-        "Every tool that produced a number reported in the manuscript. Two GFFCompare "
-        "versions were used: v0.12.10 for the cross-species benchmark and v0.12.6 for the "
-        "isoform analyses; because GFFCompare accuracy definitions differ slightly between "
-        "releases, values from the two sets of analyses should not be pooled.",
+        "Every tool that produced a number reported in the manuscript. All GFFCompare scoring "
+        "in the main analyses uses v0.12.6; the chromosome-4 pilot (Table S9) was run earlier "
+        "with v0.12.10 and is reported separately. Transcript-level definitions differ between "
+        "the two releases — v0.12.10 is the more permissive — while base-level values are "
+        "identical, so values from the pilot should not be pooled with the rest.",
         ["Tool", "Version", "Use", "Command line"],
         s10,
     )
