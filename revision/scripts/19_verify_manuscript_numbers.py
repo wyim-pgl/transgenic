@@ -643,6 +643,7 @@ for sp in _species:
 src8 = "gffcompare_summary.csv"
 check("species where de novo 400M matches/exceeds others at base level (Results)", 8, _wins, src8)
 check("species within 2 base-F1 points of the best (Results)", 3, _within2, src8)
+check("wins and within-2 are disjoint and bounded (Results)", True, _wins + _within2 <= 13, src8)
 
 _margins = []
 for sp in _species:
@@ -658,18 +659,25 @@ check("species where completion beats the best de novo (Results)", 13,
 
 _leader = {"tiberius": 0, "helixer": 0, "annevo": 0}
 _tib_soft = 0
+_tib_unmasked: list[str] = []
 for sp in _species:
     cand = {t: _f1(sp, t, "Transcript") for t in _DE_NOVO_OTHER}
-    cand = {k: v for k, v in cand.items() if v is not None}
+    # The Z. mays soft-masked run scores 0.0 and is disclosed as not a performance
+    # measurement in three places; it must not count as a leader candidate.
+    cand = {k: v for k, v in cand.items() if v is not None and v > 0}
     top = max(cand, key=cand.get)
     if top.startswith("tiberius"):
         _leader["tiberius"] += 1
         if top == "tiberius_softmasked":
             _tib_soft += 1
+        else:
+            _tib_unmasked.append(sp)
     else:
         _leader[top] += 1
 check("species led by Tiberius at transcript level (Results)", 10, _leader["tiberius"], src8)
 check("of those, with soft-masked input (Results)", 9, _tib_soft, src8)
+check("unmasked-Tiberius leader species (Results)", "V_vinifera",
+      ",".join(_tib_unmasked), src8)
 check("species led by Helixer at transcript level (Results)", 2, _leader["helixer"], src8)
 check("species led by ANNEVO at transcript level (Results)", 1, _leader["annevo"], src8)
 
@@ -682,24 +690,45 @@ for _sp, _label, _claim in (("TAIR10", "A. thaliana", 92.2), ("Zm0", "Z. mays", 
     _m = re.search(r"Base level:\s*([\d.]+)\s*\|\s*([\d.]+)",
                    (_fig3 / f"{_sp}_noPost.stats").read_text())
     _sn, _pr = float(_m.group(1)), float(_m.group(2))
-    check(f"{_label} de novo base F1, Figure 3 anchor (Abstract, Results)", _claim,
-          2 * _sn * _pr / (_sn + _pr), "fig3_original/denovo/" + f"{_sp}_noPost.stats", tol=0.11)
+    # Sn/Pr are printed to one decimal, so the true F1 lies in a computable interval.
+    # Asserting the interval is stricter than a flat tolerance and says why it exists.
+    _lo = 2 * (_sn - 0.05) * (_pr - 0.05) / ((_sn - 0.05) + (_pr - 0.05))
+    _hi = 2 * (_sn + 0.05) * (_pr + 0.05) / ((_sn + 0.05) + (_pr + 0.05))
+    check(f"{_label} anchor {_claim} within Sn/Pr rounding [{_lo:.2f}, {_hi:.2f}]",
+          "yes", "yes" if _lo - 0.05 <= _claim <= _hi + 0.05 else f"NO ({_claim})",
+          f"fig3_original/denovo/{_sp}_noPost.stats")
 
 
-def _spearman(xs: list[float], ys: list[float]) -> float:
-    def rank(v):
+def _spearman(x: list[float], y: list[float]) -> float:
+    """Spearman's rho as Pearson on ranks, with averaged ranks for ties.
+
+    The d-squared shortcut is only valid when every rank is distinct. These inputs are
+    base-level F1 carried to one decimal over dozens of bins, where ties are common.
+    """
+    def _ranks(v: list[float]) -> list[float]:
         order = sorted(range(len(v)), key=lambda i: v[i])
-        r = [0] * len(v)
-        for pos, i in enumerate(order):
-            r[i] = pos + 1
+        r = [0.0] * len(v)
+        i = 0
+        while i < len(order):
+            j = i
+            while j + 1 < len(order) and v[order[j + 1]] == v[order[i]]:
+                j += 1
+            avg = (i + j) / 2 + 1
+            for k in range(i, j + 1):
+                r[order[k]] = avg
+            i = j + 1
         return r
-    rx, ry, n = rank(xs), rank(ys), len(xs)
-    return 1 - 6 * sum((rx[i] - ry[i]) ** 2 for i in range(n)) / (n * (n * n - 1))
+
+    rx, ry = _ranks(x), _ranks(y)
+    mx, my = sum(rx) / len(rx), sum(ry) / len(ry)
+    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    den = (sum((a - mx) ** 2 for a in rx) * sum((b - my) ** 2 for b in ry)) ** 0.5
+    return 0.0 if den == 0 else num / den
 
 
 for _sub, _label, _rho, _nbins in (("binByLength", "gene length", -0.11, 27),
-                                   ("binByCDS", "CDS count", -0.81, 44)):
-    _xs, _ys = [], []
+                                   ("binByCDS", "CDS count", -0.88, 44)):
+    _xs, _ys, _with_query = [], [], 0
     for _f in sorted((_fig3 / _sub).glob("TAIR10-*.stats"),
                      key=lambda p: int(re.search(r"TAIR10-(\d+)", p.name).group(1))):
         _txt = _f.read_text()
@@ -708,11 +737,18 @@ for _sub, _label, _rho, _nbins in (("binByLength", "gene length", -0.11, 27),
         if not _m or not _n or int(_n.group(1)) == 0:
             continue
         _s, _p = float(_m.group(1)), float(_m.group(2))
+        _q = re.search(r"Query mRNAs :\s*(\d+)", _txt)
+        if _q and int(_q.group(1)) > 0:
+            _with_query += 1
         _xs.append(int(re.search(r"TAIR10-(\d+)", _f.name).group(1)))
         _ys.append(0.0 if _s + _p == 0 else 2 * _s * _p / (_s + _p))
     check(f"Spearman rho, base F1 vs {_label} (Results)", _rho, _spearman(_xs, _ys),
           f"fig3_original/denovo/{_sub}/", tol=0.006)
     check(f"populated bins, {_label} (Results)", _nbins, len(_xs), f"fig3_original/denovo/{_sub}/")
+    # A bin scoring F1 = 0 is a real result only if predictions were made there; if the
+    # run produced nothing, the decline would be missing data rather than accuracy.
+    check(f"bins with predictions, {_label} (Results)", _nbins, _with_query,
+          f"fig3_original/denovo/{_sub}/")
 
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
