@@ -395,6 +395,44 @@ check("Fig. 4 panel A/B loci recovering two chains (Methods)", 25, panels.count(
 check("Fig. 4 panel A/B loci recovering three or more (Methods)", 2, panels.count("B"), src)
 check("Fig. 4 panel C qualifying loci (Methods)", 1, panels.count("C"), src)
 
+# --------------------------------------------------- Figure S4 panels ----
+# Figure S4 comes from the prompted run over every evaluation locus, so its counts sit
+# in the same file the transcript-level metrics do and can be checked the same way.
+FIGS4 = RES / "fig4_forensics" / "panelC_examples" / "prompted_full"
+scan = load_csv_tsv = [r.split("\t") for r in
+                       (FIGS4 / "panelC_prompted.tsv").read_text().splitlines() if r.strip()]
+hdr, rows = scan[0], scan[1:]
+cat = hdr.index("category")
+src = "panelC_examples/prompted_full/panelC_prompted.tsv"
+check("Panel-C qualifying loci, full prompted run (Results, Methods)", 45, len(rows), src)
+check("of those, chain uses a junction absent from TAIR10 (Results)", 13,
+      sum(1 for r in rows if r[cat] == "junction"), src)
+check("of those, novel only in chain combination (Fig. S4 legend)", 32,
+      sum(1 for r in rows if r[cat] == "combination"), src)
+
+by_locus = {r[0]: dict(zip(hdr, r)) for r in rows}
+# AT4G30510 is quoted in the Results with both kinds of support, which are different
+# numbers: seven transcripts use the junction, two reproduce the whole chain.
+r = by_locus["AT4G30510"]
+check("AT4G30510 AtRTD3 transcripts at locus (Results)", 9, int(r["atrtd_transcripts"]), src)
+check("AT4G30510 AtRTD3 using the novel junction (Results)", 7,
+      int(r["atrtd_carrying_novel_junction"]), src)
+check("AT4G30510 AtRTD3 reproducing the full chain (Results)", 2,
+      int(r["atrtd_sharing_chain"]), src)
+check("AT4G30510 TAIR10 isoforms using the junction (Results)", 0,
+      0 if r["category"] == "junction" else -1, src)
+
+# The AT2G37450 cassette exon is quoted with its coordinates in the Results.
+ex = [ln.split("\t") for ln in (FIGS4 / "AT2G37450_pred.gff3").read_text().splitlines()
+      if ln and ln.split("\t")[2] == "CDS"]
+cassette = [(int(f[3]), int(f[4])) for f in ex if int(f[4]) - int(f[3]) + 1 == 63]
+check("AT2G37450 cassette exon length (Results)", 63,
+      cassette[0][1] - cassette[0][0] + 1 if cassette else 0,
+      "panelC_examples/prompted_full/AT2G37450_pred.gff3")
+check("AT2G37450 cassette exon start (Results)", 15724032,
+      cassette[0][0] if cassette else 0,
+      "panelC_examples/prompted_full/AT2G37450_pred.gff3")
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2

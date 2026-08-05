@@ -71,14 +71,18 @@ DATA = REPO / "revision" / "results" / "fig4_forensics" / "panelC_examples"
 # disagree about how many TAIR10 chains a locus has, so a panel drawn from one and a
 # support count derived from the other would be comparing two different experiments.
 DATA_ORIGINAL = DATA / "original"
+# Figure S4's loci, extracted from the prompted run the manuscript's isoform numbers
+# come from (all 27,413 A. thaliana evaluation loci). Its predecessor came from a file
+# whose provenance could not be established; see revision/scripts/25_scan_panelC_prompted.py.
+DATA_PROMPTED = DATA / "prompted_full"
 OUT = REPO / "Figures"
 
-# Ordered so the combined sheet reads strongest-evidence first.
-LOCI = ["AT2G37450", "AT4G22540", "AT3G56730", "AT1G78940", "AT3G29185", "AT3G13740"]
-# The three loci whose novel feature is directly visible (a cassette exon or a
-# junction no TAIR10 isoform uses). The other three differ only in chain
-# combination or in UTR splicing, so they go to the supplement, not the figure.
-STRONG = ["AT2G37450", "AT4G22540", "AT3G56730"]
+# Figure S4. The six loci of `25_scan_panelC_prompted.py`'s 45 whose novel feature is a
+# splice junction no TAIR10 isoform uses — the ones a reader can point at. Ordered by
+# how much of the chain is new, then by chain length.
+LOCI = ["AT4G30510", "AT4G12610", "AT2G37450", "AT1G52500", "AT4G22540", "AT3G61390"]
+# The three with two novel junctions each, if a shorter sheet is ever wanted.
+STRONG = ["AT4G30510", "AT4G12610", "AT2G37450"]
 # The manuscript Figure 4, restored to the loci of the submitted figure. J. Lomas
 # supplied them on 2026-08-04 as (TAIR10, TransGenic, AtRTD3) triples, and all three
 # were confirmed against the recovered original prediction: the hex in each TransGenic
@@ -179,20 +183,24 @@ def suffix(tx: str) -> int:
 def source_dir(locus: str) -> Path:
     """The extract directory a locus is read from.
 
-    Figure 4's loci come from the original test split and everything else from the
-    regenerated one. The two are kept in separate directories because the same locus
-    can carry a different number of TAIR10 chains in each, so silently falling back
-    from one to the other would draw a panel whose support counts describe the other
-    experiment.
+    Figure 4 comes from the prediction the submitted figure was drawn from; Figure S4
+    from the prompted run over all evaluation loci, which is where the manuscript's
+    isoform numbers come from. They are separate directories because the same locus can
+    carry a different number of TAIR10 chains in each evaluation, so falling back from
+    one to the other would draw a panel whose support counts describe another experiment.
     """
-    return DATA_ORIGINAL if locus in FIGURE4 else DATA
+    return DATA_ORIGINAL if locus in FIGURE4 else DATA_PROMPTED
 
 
 def analyse(locus: str) -> dict:
     """Resolve the novel isoform, its AtRTD3 match, and what to highlight."""
     src = source_dir(locus)
     pred = parse(src / f"{locus}_pred.gff3", gtf=False)
-    tair = parse(src / f"{locus}_tair.gff3", gtf=False)
+    # TAIR10 arrives as GFF3 in the original extracts and as GTF in the full-evaluation
+    # ones, because the two were cut from different reference files.
+    tair_gff3 = src / f"{locus}_tair.gff3"
+    tair_path = tair_gff3 if tair_gff3.exists() else src / f"{locus}_tair.gtf"
+    tair = parse(tair_path, gtf=tair_path.suffix == ".gtf")
     art = parse(src / f"{locus}_atrtd.gtf", gtf=True)
 
     tair_chains = {chain(r["cds"]) for r in tair.values()}

@@ -92,6 +92,30 @@ freshly verified alternatives if a new or replacement example is wanted.
 
 ---
 
+## ⛔ 2026-08-04 (later) — the manuscript no longer uses anything in this directory
+
+Both figures now read from subdirectories, and the extracts sitting here at the top level
+are **unused by the manuscript**:
+
+| Figure | Extracts | Prediction |
+|---|---|---|
+| Figure 4 | `original/` | `fig3_original/prompted/…` — the run the submitted figure was drawn from, confirmed by J. Lomas |
+| Figure S4 | `prompted_full/` | `transgenic_comparison/standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3` — the run the manuscript's isoform metrics come from |
+| *(nothing)* | this directory | `raw_TAIR10_hyenaTest_prediction_noPost.gff3` — **provenance never established** |
+
+`25_scan_panelC_prompted.py` re-ran the Panel-C scan over the full prompted evaluation
+(27,413 loci) and found **45** qualifying loci — **13** whose chain uses a junction absent
+from every TAIR10 isoform at the locus, **32** novel only in how known junctions combine.
+Figure 4C's AT1G19650 is among the 45, so Figure 4 and Figure S4 are now two views of one
+scan rather than two experiments. Figure S4 draws the six with the most novel structure:
+AT4G30510, AT4G12610, AT2G37450, AT1G52500, AT4G22540, AT3G61390 — five junctions and one
+63-bp cassette exon, all of them directly visible, where the previous set had three loci
+whose difference could not be pointed at.
+
+The files here are **kept, not deleted**: if the origin of `raw_TAIR10_…` is ever
+established they become interpretable again, and the record of what was drawn from them
+matters. Nothing in the manuscript depends on them.
+
 ## ⛔ 2026-08-04 — the scan below describes a different inference than Figure 4
 
 J. Lomas supplied the loci of the submitted Figure 4 (AT4G10840, AT3G50550, AT1G19650),

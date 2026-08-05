@@ -4,7 +4,7 @@ Everything needed to regenerate, edit, or re-style any figure in the manuscript 
 re-deriving the decisions. Written for whoever picks this up next, including a fresh
 session with no memory of how these were built.
 
-Last verified 2026-07-30 against commit `4d4b0da`.
+Last verified 2026-08-04 against commit `abdbc6d` and the Figure S4 rebuild that followed it.
 
 ---
 
@@ -151,10 +151,11 @@ TransGenic predicts an isoform; AtRTD3 long reads confirm it. That relationship 
 in text on the tracks, not left to colour:
 
 - a prediction is labelled with the AtRTD3 transcript whose CDS intron-chain it matches
-  exactly — `pred 3 ✓ AT1G44575.2`, with `+n` when more AtRTD3 transcripts share that chain
-- each AtRTD3 row that confirms a prediction carries a trailing `✓`
-- **a prediction with no tick has no exact long-read match**, and that absence is meant to be
-  as visible as a match
+  exactly — `novel = AT4G30510.2 +1`, with `+n` when more AtRTD3 transcripts share that chain
+- each AtRTD3 row that confirms a prediction is labelled with the prediction it confirms
+  (`AT4G30510.2 = novel`), so the equals sign reads in both directions
+- **a prediction with no such label has no exact long-read match**, and that absence is meant
+  to be as visible as a match
 
 ### Layout rules
 
@@ -207,12 +208,13 @@ different number of TAIR10 chains in each.
 | File | Loci | Used for |
 |---|---|---|
 | `fig3_original/prompted/TAIR10_hyenaTest_prediction_noPost.gff3` | 3,328 | **Figure 4** — the inference the submitted figure was drawn from, recovered from the published model's own artefacts |
-| `fig4_forensics/raw_TAIR10_hyenaTest_prediction_noPost.gff3` | 4,875 | **Figure S4** — a second inference; provenance not fully established |
+| `transgenic_comparison/standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3` | 27,413 | **Figure S4** — the prompted run the manuscript's isoform metrics come from |
+| `fig4_forensics/raw_TAIR10_hyenaTest_prediction_noPost.gff3` | 4,875 | **nothing** — provenance never established; no figure reads it any more |
 
-Extracts are kept in separate directories (`panelC_examples/` and
-`panelC_examples/original/`) and `make_figure4_panelC.py` picks one per locus in
-`source_dir()`: anything in `FIGURE4` reads from `original/`, everything else from the
-regenerated set. **Never merge the two directories.** A panel drawn from one file with
+Extracts are kept in separate directories (`panelC_examples/original/` for Figure 4,
+`panelC_examples/prompted_full/` for Figure S4) and `make_figure4_panelC.py` picks one per
+locus in `source_dir()`: anything in `FIGURE4` reads from `original/`, everything else from
+`prompted_full/`. **Never merge the two directories.** A panel drawn from one file with
 support counts derived from the other describes an experiment that was never run — which
 is exactly how the five-panel Figure 4 of 2026-07-30 came to claim "all four distinct
 TAIR10 chains" for a locus that has two in the evaluation the manuscript reports.
@@ -243,9 +245,12 @@ top of the script, and **update the manuscript legend**, which names each panel'
 To find candidates rather than guess: `panelC_examples/scan_panels.py <labels> <prediction>
 <AtRTD3.gtf>` classifies every prompted A. thaliana locus into panel types A / B / C. Run it
 on whichever prediction the panel belongs to, and keep the outputs apart — `panels.tsv`
-(second inference, 4,875 loci: A 29 / B 3 / C 10) and
-`original/panels_original.tsv` (original inference, 3,328 loci: **A 25 / B 2 / C 1**). The
-Methods counts come from the second file; `19_verify_manuscript_numbers.py` re-derives them.
+(the unattributed 4,875-locus file: A 29 / B 3 / C 10),
+`original/panels_original.tsv` (original inference, 3,328 loci: **A 25 / B 2 / C 1**) and
+`prompted_full/panelC_prompted.tsv` (full prompted run, 27,413 loci: **45 Panel-C loci,
+13 junction / 32 combination**, written by `revision/scripts/25_scan_panelC_prompted.py`).
+The Methods counts come from the second and third files; `19_verify_manuscript_numbers.py`
+re-derives them.
 
 ---
 
