@@ -91,6 +91,55 @@ def top_beam(src: Path, dst: Path) -> None:
                 out.write(line)
 
 
+def seqids(path: Path, limit: int = 200000) -> set[str]:
+    """Sequence names used by a GFF3/GTF, sampled from the first `limit` feature rows."""
+    out: set[str] = set()
+    with path.open() as fh:
+        for i, line in enumerate(fh):
+            if i > limit:
+                break
+            if line.startswith("#"):
+                continue
+            f = line.split("\t", 1)
+            if f[0]:
+                out.add(f[0])
+    return out
+
+
+def harmonise_seqids(query: Path, ref: Path, dst: Path) -> Path:
+    """Make the query's sequence names match the reference's, or fail loudly.
+
+    S. lycopersicum ships its de novo predictions on `Chr0…Chr12` and its reference on
+    `0…12`; GFFCompare silently scores every level at 0.0 when the names do not meet,
+    which reads as a result rather than as a failure. Rather than special-case that one
+    species, try the two transformations that can differ here and verify the overlap.
+    """
+    q, r = seqids(query), seqids(ref)
+    if q & r:
+        return query
+    strip = {s[3:] for s in q if s.lower().startswith("chr")}
+    add = {"Chr" + s for s in q}
+    if strip & r:
+        fn = lambda s: s[3:] if s.lower().startswith("chr") else s
+    elif add & r:
+        fn = lambda s: "Chr" + s
+    else:
+        raise SystemExit(
+            f"sequence names in {query.name} and {ref.name} do not overlap and no simple "
+            f"Chr-prefix transformation reconciles them: {sorted(q)[:4]} vs {sorted(r)[:4]}"
+        )
+    with query.open() as src, dst.open("w") as out:
+        for line in src:
+            if line.startswith("#"):
+                out.write(line)
+                continue
+            f = line.split("\t")
+            if len(f) > 1:
+                f[0] = fn(f[0])
+                out.write("\t".join(f))
+    return dst
+
+
 def parse_stats(path: Path) -> dict[str, float]:
     out: dict[str, float] = {}
     pat = re.compile(r"^\s*([A-Za-z ]+?) level:\s*([\d.-]+)\s*\|\s*([\d.-]+)")
@@ -113,6 +162,7 @@ def score(job: tuple[str, str, Path]) -> dict | None:
     if tool in TOP_BEAM_TOOLS:
         query = tmp / f"{species}_{tool}_top.gff3"
         top_beam(src, query)
+    query = harmonise_seqids(query, ref, tmp / f"{species}_{tool}_seqfix.gff3")
     prefix = tmp / f"{species}_{tool}"
     try:
         subprocess.run([str(GFFCOMPARE), "-r", str(ref), "-o", str(prefix), str(query)],

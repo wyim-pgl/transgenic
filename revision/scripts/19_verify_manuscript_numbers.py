@@ -512,6 +512,16 @@ check("BUSCO completeness, both beams (Table S3)", 97.6, _bp["both"]["complete"]
 check("BUSCO single-copy, top beam (Table S3)", 88.5, _bp["top"]["single"], src4)
 check("BUSCO duplicated, both beams (Table S3)", 97.6, _bp["both"]["duplicated"], src4)
 
+# ------------------------------------------- Table S2 sanity (Figure 5) ----
+# A sequence-name mismatch makes GFFCompare score every level at 0.0, which reads as a
+# result rather than as a failure; it silently zeroed two S. lycopersicum rows once.
+_gc = load_csv(CMP / "gffcompare_summary.csv")
+_zero = [f"{r['Species']}/{r['Tool']}" for r in _gc
+         if float(r["Base_Sensitivity"]) == 0 and float(r["Base_Precision"]) == 0]
+check("Table S2 rows scoring 0.0 at base level", 0, len(_zero),
+      "gffcompare_summary.csv" + (f" ({', '.join(_zero[:3])})" if _zero else ""))
+check("Table S2 rows total", 128, len(_gc), "gffcompare_summary.csv")
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2
