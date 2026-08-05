@@ -78,20 +78,45 @@ def stage(tool: str, src: Path, dst: Path) -> dict:
     }
 
 
+def validate(tool: str, meta: dict) -> None:
+    """Raise if `meta` (as returned by `stage`) fails the staging safety checks.
+
+    Enforces the module docstring's claim that TAIR10 overlap is asserted, not
+    assumed: the staged seqid set must be exactly the seven TAIR10 names (no
+    missing chromosome, no leftover unrecognised name) and nothing may have been
+    silently dropped during normalisation. The gene floor is kept as a second,
+    independent guard.
+    """
+    seqids = set(meta["seqids"])
+    missing = sorted(TAIR_SEQIDS - seqids)
+    extra = sorted(seqids - TAIR_SEQIDS)
+    assert seqids == TAIR_SEQIDS, (
+        f"{tool}: staged seqids {sorted(seqids)} do not exactly match TAIR10 "
+        f"{sorted(TAIR_SEQIDS)} (missing={missing}, extra={extra})"
+    )
+    assert not meta["dropped_seqids"], (
+        f"{tool}: {len(meta['dropped_seqids'])} sequence name(s) dropped during "
+        f"normalisation and never staged: {meta['dropped_seqids']}"
+    )
+    assert meta["genes"] > 20000, f"{tool}: only {meta['genes']} genes staged"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=ROOT / "polishing_benchmark" / "inputs")
     args = ap.parse_args()
 
+    missing_sources = {tool: src for tool, src in SOURCES.items() if not src.exists()}
+    if missing_sources:
+        for tool, src in missing_sources.items():
+            print(f"  MISSING {tool}: {src}", file=sys.stderr)
+        return 1
+
     meta = []
     for tool, src in SOURCES.items():
-        if not src.exists():
-            print(f"  MISSING {tool}: {src}", file=sys.stderr)
-            return 1
         dst = args.out / f"{tool}_Athaliana.gff3"
         m = stage(tool, src, dst)
-        assert m["genes"] > 20000, f"{tool}: only {m['genes']} genes staged"
-        assert set(m["seqids"]) & TAIR_SEQIDS, f"{tool}: no TAIR10 sequence names after normalisation"
+        validate(tool, m)
         meta.append(m)
         print(f"  {tool:<8} {m['genes']:>6,} genes  {m['transcripts']:>6,} transcripts  "
               f"seqids={','.join(m['seqids'][:3])}…  dropped={len(m['dropped_seqids'])}",
