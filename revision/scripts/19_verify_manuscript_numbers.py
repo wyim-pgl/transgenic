@@ -101,7 +101,13 @@ check("prompted vs TAIR10 isoform precision %", 74.4, t["isoform_precision"] * 1
 check("prompted vs TAIR10 isoform F1 %", 67.6, t["isoform_f1"] * 100, src)
 check("prompted vs TAIR10 distinct ref matched", 21919, t["distinct_ref_matched"], src)
 check("prompted vs TAIR10 total reference", 35386, t["total_reference"], src)
-check("prompted vs TAIR10 total predicted", 29923, t["total_predicted"], src)
+# summary_report.json's total_predicted is 29,923: the tmap header counted as a record.
+# The manuscript quotes the true count, so derive it from the prediction file.
+_n_mrna = sum(1 for line in (CMP / "standardized_results"
+              / "A_thaliana_transgenic400Mprompt_beam1.gff3").open()
+              if not line.startswith("#") and line.split("\t")[2:3] == ["mRNA"])
+check("prompted vs TAIR10 total predicted (Methods)", 29922, _n_mrna,
+      "standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3")
 check("prompted vs TAIR10 exact matches", 22260, t["exact_matches"], src)
 check("prompted vs TAIR10 duplicate queries", 341, t["duplicate_exact_matches"], src)
 
