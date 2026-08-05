@@ -522,6 +522,28 @@ check("Table S2 rows scoring 0.0 at base level", 0, len(_zero),
       "gffcompare_summary.csv" + (f" ({', '.join(_zero[:3])})" if _zero else ""))
 check("Table S2 rows total", 128, len(_gc), "gffcompare_summary.csv")
 
+# ------------------------------- AUGUSTUS splice events (Results) ----------
+# Quoted in the Results from Table S4c; pinned so the pair cannot drift apart.
+_s4c = load_csv(ROOT / "supplementary" / "TableS4c_splice_events.csv")
+
+
+def _events(pred_key: str) -> tuple[int, float]:
+    tot = matched = 0
+    for r in _s4c:
+        if r.get("Reference", "").startswith("TAIR10") and pred_key in r.get("Prediction set", ""):
+            tot += int(r["Predicted events (n)"])
+            matched += int(r["Matched events (n)"])
+    return tot, round(100 * matched / tot, 1) if tot else 0.0
+
+
+_aug_n, _aug_p = _events("AUGUSTUS")
+_cmp_n, _cmp_p = _events("reference-prompted")
+src5 = "TableS4c_splice_events.csv"
+check("AUGUSTUS splice events predicted (Results)", 41917, _aug_n, src5)
+check("AUGUSTUS splice-event precision, % (Results)", 4.4, _aug_p, src5)
+check("completion-mode splice events predicted (Results)", 3033, _cmp_n, src5)
+check("completion-mode splice-event precision, % (Results)", 37.5, _cmp_p, src5)
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2
