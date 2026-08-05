@@ -1,0 +1,19 @@
+{
+ "top": {
+  "complete": 97.6,
+  "single": 88.5,
+  "duplicated": 9.2,
+  "fragmented": 2.1,
+  "missing": 0.2,
+  "n": 425.0
+ },
+ "both": {
+  "complete": 97.6,
+  "single": 0.0,
+  "duplicated": 97.6,
+  "fragmented": 2.1,
+  "missing": 0.2,
+  "n": 425.0
+ },
+ "note": "A. thaliana, reference-prompted 400M, proteins via gffread, BUSCO 5.8.3 viridiplantae_odb10 offline. Establishes that filtering to the top beam leaves BUSCO completeness unchanged and only redistributes single-copy vs duplicated. Table S3 itself was produced with BUSCO 6.0.0 on the unfiltered export."
+}

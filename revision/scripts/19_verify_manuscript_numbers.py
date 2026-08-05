@@ -502,6 +502,16 @@ check("supplied share of the returned annotation, % (Results)", 95.4,
       round(100 * _supplied / _total, 1), src, tol=0.051)
 
 
+# --------------------------------------- BUSCO beam invariance (Table S3) ----
+# Table S3 states that filtering to the top beam leaves completeness unchanged. That is a
+# claim about a measurement, so it is pinned here rather than asserted.
+_bp = jload(RES / "busco_beam_pilot.json")
+src4 = "busco_beam_pilot.json"
+check("BUSCO completeness, top beam (Table S3)", 97.6, _bp["top"]["complete"], src4)
+check("BUSCO completeness, both beams (Table S3)", 97.6, _bp["both"]["complete"], src4)
+check("BUSCO single-copy, top beam (Table S3)", 88.5, _bp["top"]["single"], src4)
+check("BUSCO duplicated, both beams (Table S3)", 97.6, _bp["both"]["duplicated"], src4)
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2
