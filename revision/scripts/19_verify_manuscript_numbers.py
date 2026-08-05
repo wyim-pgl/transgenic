@@ -576,6 +576,21 @@ check("TAIR10 transcripts, full annotation (Results)", 35386, _tx, src6)
 check("TAIR10 genes, full annotation", 27416, len(_genes), src6)
 check("TAIR10 nuclear genes (Table S8)", 27206, len(_genes) - _org_g, src6)
 
+# The Results state that organellar loci stay in the evaluation and 209 received
+# predictions — a claim about the prediction file, not the reference.
+_org_pred = 0
+with (CMP / "standardized_results" / "A_thaliana_transgenic400Mprompt_beam1.gff3").open() as fh:
+    for line in fh:
+        if line.startswith("#"):
+            continue
+        f = line.split("\t")
+        if len(f) < 9 or f[2] != "gene":
+            continue
+        if f[0] in ("ChrM", "ChrC"):
+            _org_pred += 1
+check("organellar loci receiving predictions (Results)", 209, _org_pred,
+      "standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3")
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2
