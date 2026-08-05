@@ -63,11 +63,36 @@ def chain(struct: tuple) -> tuple:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--species", default="A_thaliana")
+    ap.add_argument("--augustus", action="store_true",
+                    help="score the AUGUSTUS posterior-sampling baseline the same way, "
+                         "dropping its own first prediction per locus in place of the prompt")
     ap.add_argument("--json", type=Path)
     args = ap.parse_args()
 
-    pred = cds_by_transcript(
-        CMP / "standardized_results" / f"{args.species}_transgenic400Mprompt_beam1.gff3", True)
+    if args.augustus:
+        # AUGUSTUS carries no GM= on CDS rows and no supplied transcript; its own first
+        # prediction per locus stands in for the prompt so both tools are scored on what
+        # they propose beyond one primary structure.
+        pred = defaultdict(dict)
+        raw: dict = defaultdict(lambda: defaultdict(list))
+        src = CMP / "standardized_results" / f"{args.species}_augustusSampling.gff3"
+        with src.open() as fh:
+            for line in fh:
+                if line.startswith("#"):
+                    continue
+                f = line.rstrip("\n").split("\t")
+                if len(f) < 9 or f[2] != "CDS":
+                    continue
+                m = re.search(r"Parent=([^;]+)", f[8])
+                if not m:
+                    continue
+                tx = m.group(1)
+                raw[tx.split(".t")[0].replace("augSmp_", "")][tx].append((int(f[3]), int(f[4])))
+        for locus, txs in raw.items():
+            pred[locus] = {k: tuple(sorted(v)) for k, v in txs.items()}
+    else:
+        pred = cds_by_transcript(
+            CMP / "standardized_results" / f"{args.species}_transgenic400Mprompt_beam1.gff3", True)
     ref = cds_by_transcript(DATA / "TAIR10" / "TAIR10.gtf", False)
     art = cds_by_transcript(DATA / "AtRTD3" / "atRTD3_TS_21Feb22_transfix.gtf", False)
     primary = {}
@@ -79,11 +104,20 @@ def main() -> int:
     alt_total = alt_recovered = 0
     loci_with_addition = 0
     for locus, txs in pred.items():
-        supplied = ref.get(locus, {}).get(primary.get(locus))
+        if args.augustus:
+            order = sorted(txs, key=lambda k: int(re.search(r"\.t(\d+)$", k).group(1))
+                           if re.search(r"\.t(\d+)$", k) else 0)
+            supplied = txs[order[0]] if order else None
+        else:
+            supplied = ref.get(locus, {}).get(primary.get(locus))
         additions = [s for s in txs.values() if s != supplied]
         # De-duplicate: two beams or two identical emissions are one proposed structure.
         additions = list({s for s in additions})
-        alt_ref = {s for t, s in ref.get(locus, {}).items() if s != supplied}
+        # The reference side always drops TAIR10's own primary, whichever tool is being
+        # scored: otherwise the AUGUSTUS run would be credited for recovering the primary
+        # transcript, which is not an alternative isoform.
+        ref_primary = ref.get(locus, {}).get(primary.get(locus))
+        alt_ref = {s for t, s in ref.get(locus, {}).items() if s != ref_primary}
         art_here = set(art.get(locus, {}).values())
         alt_total += len(alt_ref)
         if additions:
@@ -97,6 +131,7 @@ def main() -> int:
 
     out = {
         "species": args.species,
+        "tool": "augustusSampling" if args.augustus else "transgenic400Mprompt_beam1",
         "loci_scored": len(pred),
         "loci_with_at_least_one_addition": loci_with_addition,
         "added_transcripts": added,

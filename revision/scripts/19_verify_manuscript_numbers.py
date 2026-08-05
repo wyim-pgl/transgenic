@@ -468,7 +468,8 @@ _supplied = sum(1 for g, txs in _pred.items()
 src = "standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3"
 check("completed annotation, total transcripts (Results)", 29922, _total, src)
 check("of those, reproducing the supplied model (Results)", 28536, _supplied, src)
-check("of those, added by TransGenic, distinct structures (Results)", 1103,
+check("of those, not the supplied model (Results)", 1386, _total - _supplied, src)
+check("of those, distinct added structures (Results)", 1103,
       sum(len({s for s in txs.values() if s != _tair.get(g, {}).get(_prim.get(g))})
           for g, txs in _pred.items()), src)
 
@@ -484,6 +485,19 @@ check("TAIR10 alternative transcripts recovered by additions, % (Results)", 3.6,
       _added["recall_of_TAIR10_alternatives_pct"], src2)
 check("loci receiving an addition (Results)", 1076,
       _added["loci_with_at_least_one_addition"], src2)
+
+# The AUGUSTUS baseline scored the same way (28_score_added_isoforms.py --augustus).
+_aug = jload(RES / "added_isoforms_augustus.json")
+src3 = "added_isoforms_augustus.json"
+check("AUGUSTUS additions matching a TAIR10 alternative, % (Results)", 1.3,
+      _aug["precision_vs_TAIR10_alternatives_pct"], src3)
+check("AUGUSTUS additions matching an AtRTD3 transcript, % (Results)", 10.2,
+      _aug["precision_vs_AtRTD3_pct"], src3)
+check("AUGUSTUS TAIR10 alternatives recovered, % (Results)", 10.3,
+      _aug["recall_of_TAIR10_alternatives_pct"], src3)
+check("AUGUSTUS added structures (Results)", 43433, _aug["added_transcripts"], src3)
+check("added-structure ratio, AUGUSTUS to TransGenic (Results)", 39,
+      round(_aug["added_transcripts"] / _added["added_transcripts"]), src3)
 check("supplied share of the returned annotation, % (Results)", 95.4,
       round(100 * _supplied / _total, 1), src, tol=0.051)
 

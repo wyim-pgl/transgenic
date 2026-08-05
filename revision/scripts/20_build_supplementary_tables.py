@@ -193,7 +193,11 @@ def build(out: Out) -> None:
     out.table(
         "TableS2_gffcompare_benchmark",
         "Table S2. GFFCompare benchmark across 13 plant species",
-        "Source: `transgenic_comparison/gffcompare_summary.csv` (GFFCompare v0.12.10). "
+        "Source: `transgenic_comparison/gffcompare_summary.csv` (GFFCompare v0.12.10); the "
+        "*TransGenic 400M, reference-prompted* rows were re-scored from the top-ranked beam by "
+        "`revision/scripts/27_rescore_prompted_topbeam.py`, because the source GFF3 for that "
+        "configuration exported both beam hypotheses as separate gene records (54,826 gene "
+        "records for 27,413 A. thaliana loci), so every row of this table now reports the top beam. "
         "ANNEVO, Helixer, and Tiberius were run on whole-genome sequences; TransGenic was "
         "run on individual reference-annotated single-gene loci, a setting that does not "
         "require gene-boundary resolution and therefore favours TransGenic (see Discussion). "
@@ -229,10 +233,11 @@ def build(out: Out) -> None:
         "Source: `transgenic_comparison/busco_summary_final.csv`, normalized by "
         "`18_normalize_busco_summary.py` (BUSCO v6.0.0, viridiplantae_odb10, n = 425, "
         "protein mode; proteins extracted with PASA v2.5.3 `gff3_file_to_proteins.pl`). "
-        "Complete (%) = (single-copy + duplicated) / 425. Because reference-prompted "
-        "predictions retain both beam-search hypotheses per locus, most conserved genes are "
-        "recovered as duplicated rather than single-copy; this affects the S/D split but not "
-        "the completeness percentage. Two cells are absent: *L. sativa* TransGenic 400M "
+        "Complete (%) = (single-copy + duplicated) / 425. The reference-prompted rows here were scored on the unfiltered "
+        "export, which retains both beam-search hypotheses per locus, so most conserved genes "
+        "appear as duplicated rather than single-copy. Table S2 and Figure 5 report the "
+        "top-ranked beam for the same configuration, so the two are scored on different files "
+        "and these completeness percentages should not be read as beam-invariant. Two cells are absent: *L. sativa* TransGenic 400M "
         "self-prompted (invalidated — its de novo prompt source terminated after 1,792 of "
         "38,910 loci; all affected artefacts are quarantined under "
         "`transgenic_comparison/invalidated_stall/`) and *V. vinifera* Tiberius with "

@@ -1,5 +1,6 @@
 {
  "species": "A_thaliana",
+ "tool": "transgenic400Mprompt_beam1",
  "loci_scored": 27413,
  "loci_with_at_least_one_addition": 1076,
  "added_transcripts": 1103,

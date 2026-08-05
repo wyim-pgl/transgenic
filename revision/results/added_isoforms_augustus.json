@@ -1,0 +1,14 @@
+{
+ "species": "A_thaliana",
+ "tool": "augustusSampling",
+ "loci_scored": 25597,
+ "loci_with_at_least_one_addition": 12681,
+ "added_transcripts": 43433,
+ "reference_alternative_transcripts": 5554,
+ "added_matching_TAIR10_alternative_exact_CDS": 574,
+ "added_matching_TAIR10_alternative_intron_chain": 1088,
+ "added_matching_any_AtRTD3_transcript": 4409,
+ "precision_vs_TAIR10_alternatives_pct": 1.3,
+ "precision_vs_AtRTD3_pct": 10.2,
+ "recall_of_TAIR10_alternatives_pct": 10.3
+}
