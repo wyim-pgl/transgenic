@@ -943,3 +943,67 @@ def test_row_with_no_parent_at_all_raises_a_distinct_message(tmp_path):
 
 def test_attr_tolerates_space_after_semicolon():
     assert score_mod._attr("a=1; ID=x", "ID") == "x"
+
+
+# -- Task 3: baseline mode reports how far the input already is from the reference,
+#    before any model touches it (no output file involved) --------------------------
+
+
+def test_baseline_counts_correct_and_wrong_loci(tmp_path):
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    _gff(ref, [("Chr1", "CDS", 100, 200, "A", "A.1"),
+               ("Chr1", "CDS", 500, 600, "B", "B.1")])
+    _gff(inp, [("Chr1", "CDS", 100, 200, "A", "A.i"),      # correct
+               ("Chr1", "CDS", 500, 590, "B", "B.i")])     # wrong
+    b = score_mod.baseline(inp, ref)
+    assert b["loci_matched"] == 2
+    assert b["loci_correct"] == 1
+    assert b["loci_wrong"] == 1
+    assert b["correct_pct"] == 50.0
+    assert b["wrong_pct"] == 50.0
+
+
+def test_baseline_resolves_split_predictions_like_score_does(tmp_path):
+    """Same split scenario as test_split_predictions_are_counted_not_double_scored,
+    but scored with no output at all. A locus one tool splits into two of its own
+    predictions must still be counted once here, via the same _resolve_one_to_one
+    machinery score() uses -- not once per splitting prediction."""
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    ref.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 300, "A", None, None),
+        ("Chr1", "mRNA", 100, 300, "A.1", "A", None),
+        ("Chr1", "CDS", 100, 300, "A.1.cds", "A.1", None),
+    ]))
+    inp.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 300, "A1", None, None),   # perfect match to ref A
+        ("Chr1", "mRNA", 100, 300, "A1.i", "A1", None),
+        ("Chr1", "CDS", 100, 300, "A1.i.cds", "A1.i", None),
+        ("Chr1", "gene", 100, 250, "A2", None, None),   # partial overlap only
+        ("Chr1", "mRNA", 100, 250, "A2.i", "A2", None),
+        ("Chr1", "CDS", 100, 250, "A2.i.cds", "A2.i", None),
+    ]))
+    b = score_mod.baseline(inp, ref)
+    assert b["loci_matched"] == 1
+    assert b["split_predictions"] == 1
+    assert b["loci_correct"] == 1   # the winning (perfect) match, A1
+    assert b["loci_wrong"] == 0
+
+
+def test_baseline_raises_on_empty_input_instead_of_reporting_zeros(tmp_path):
+    ref = tmp_path / "ref.gff3"
+    empty = tmp_path / "empty.gff3"
+    _gff(ref, [("Chr1", "CDS", 100, 200, "A", "A.1")])
+    empty.write_text("")
+    with pytest.raises(ValueError, match="no CDS-bearing transcripts"):
+        score_mod.baseline(empty, ref)
+
+
+def test_baseline_raises_on_total_seqid_mismatch(tmp_path):
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    _gff(ref, [("Chr1", "CDS", 100, 200, "A", "A.1")])
+    _gff(inp, [("ChrX", "CDS", 100, 200, "A", "A.i")])
+    with pytest.raises(RuntimeError, match="sequence-name-mismatch"):
+        score_mod.baseline(inp, ref)

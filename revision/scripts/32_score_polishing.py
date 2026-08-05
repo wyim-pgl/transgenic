@@ -73,9 +73,20 @@ silent unless reported, so `input_gene_rows`, `input_coding_loci`,
 output JSON so the three tools' denominators reconcile instead of just differing
 unexplained.
 
+`--baseline` mode answers a different, prior question: before any model touches an
+input, how far is it already from TAIR10? "Repaired 300 loci" has no scale without
+knowing how many loci actually started wrong, so `baseline()` reports `loci_matched`,
+`loci_correct` and `loci_wrong` for the input alone against the reference -- no output
+file, no completion mode involved. It reuses the same `cds_structures`/
+`match_by_overlap`/`_resolve_one_to_one` machinery `score()` uses for its CDS-level
+table, so a locus counted "wrong" here is the same locus that would land in `damaged`
+or `still_wrong` in a `score()` run over the same input/reference pair.
+
 Usage:
     python 32_score_polishing.py --input <staged.gff3> --output <completed.gff3> \\
         [--reference <tair10.gff3>] [--tool <name>] [--json out.json]
+    python 32_score_polishing.py --input <staged.gff3> --baseline \\
+        [--reference <tair10.gff3>] [--json out.json]
 """
 
 from __future__ import annotations
@@ -647,6 +658,62 @@ def _gene_row_count(path: Path) -> int:
     return n
 
 
+def baseline(input_gff: Path, ref_gff: Path = REFERENCE) -> dict:
+    """How far the supplied annotation already is from the reference, before any model
+    has touched it -- the denominator Task 5 quotes for a repair rate. "Repaired 300
+    loci" is meaningless without knowing how many loci actually started wrong.
+
+    A locus is "correct" if its representative structure (first mRNA/CDS-parent for
+    that gene in file order, same convention as `_representative`) exactly equals ANY
+    reference transcript's CDS structure at that locus -- the `cds_level` ("any
+    transcript") convention, not the primary-only one, since a baseline run has no
+    per-tool reason to prefer one specific reference isoform.
+
+    Reuses `_resolve_one_to_one` (not the raw `match_by_overlap` pairing) so a TAIR10
+    locus split across several of the tool's own predictions is counted once here too --
+    the same one-to-one convention `score()`'s CDS-level table uses -- rather than being
+    scored (and potentially miscounted as both correct and wrong) once per splitting
+    prediction. `split_predictions` reports how many extra input loci that resolution
+    set aside; `loci_unmatched` counts input loci with no overlapping reference locus
+    at all, kept distinct from `split_predictions` so the two failure modes are not
+    conflated into one bucket.
+    """
+    inp = cds_structures(input_gff)
+    ref = cds_structures(ref_gff)
+    for name, d, p in (("input", inp, input_gff), ("reference", ref, ref_gff)):
+        if not d:
+            raise ValueError(f"no CDS-bearing transcripts found in {name} file {p} — "
+                              "refusing to score, this would silently report all zeros")
+
+    raw_pairs = match_by_overlap(inp, ref)
+    if inp and ref and not raw_pairs:
+        raise RuntimeError(
+            "no input locus overlaps any reference locus on the same sequence — this "
+            "is the sequence-name-mismatch failure mode, check seqids match exactly "
+            f"(input seqs={sorted({s[0] for s in inp})}, "
+            f"reference seqs={sorted({s[0] for s in ref})})"
+        )
+    pairs, split_predictions = _resolve_one_to_one(raw_pairs)
+
+    correct = sum(1 for i, r in pairs.items()
+                  if set(inp[i].values()) & set(ref[r].values()))
+    wrong = len(pairs) - correct
+    n = len(pairs)
+    return {
+        "loci_in_input": len(inp),
+        "loci_in_reference": len(ref),
+        "loci_matched": n,
+        "loci_correct": correct,
+        "loci_wrong": wrong,
+        "loci_unmatched": len(inp) - len(raw_pairs),
+        "split_predictions": split_predictions,
+        "correct_pct": round(100 * correct / n, 2) if n else None,
+        "wrong_pct": round(100 * wrong / n, 2) if n else None,
+        "definition": ("correct = representative transcript equals ANY reference "
+                        "transcript at this locus (same convention as cds_level)"),
+    }
+
+
 def score(input_gff: Path, output_gff: Path, ref_gff: Path = REFERENCE,
           primary_ids_path: Path | None = PRIMARY_IDS, tool: str | None = None) -> dict:
     inp = cds_structures(input_gff)
@@ -731,20 +798,31 @@ def _print_result(res: dict, indent: str = "  ") -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", type=Path, required=True)
-    ap.add_argument("--output", type=Path, required=True)
+    ap.add_argument("--output", type=Path)
     ap.add_argument("--reference", type=Path, default=REFERENCE)
     ap.add_argument("--primary-ids", type=Path, default=PRIMARY_IDS)
     ap.add_argument("--tool", default=None)
+    ap.add_argument("--baseline", action="store_true",
+                    help="report only how far the input already is from the reference, "
+                         "before any model touches it -- no --output needed")
     ap.add_argument("--json", type=Path)
     args = ap.parse_args()
 
-    for label, p in (("--input", args.input), ("--output", args.output),
-                      ("--reference", args.reference)):
+    if not args.baseline and not args.output:
+        ap.error("--output is required unless --baseline is given")
+
+    checks = [("--input", args.input), ("--reference", args.reference)]
+    if not args.baseline:
+        checks.append(("--output", args.output))
+    for label, p in checks:
         if not p.exists():
             print(f"MISSING {label}: {p}", file=sys.stderr)
             return 1
 
-    res = score(args.input, args.output, args.reference, args.primary_ids, args.tool)
+    if args.baseline:
+        res = baseline(args.input, args.reference)
+    else:
+        res = score(args.input, args.output, args.reference, args.primary_ids, args.tool)
     _print_result(res)
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)
