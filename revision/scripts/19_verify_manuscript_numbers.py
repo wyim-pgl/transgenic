@@ -553,6 +553,29 @@ def _matched(pred_key: str) -> int:
 check("AUGUSTUS splice events matched (Results)", 1855, _matched("AUGUSTUS"), src5)
 check("completion-mode splice events matched (Results)", 1137, _matched("reference-prompted"), src5)
 
+# ------------------------------- TAIR10 nuclear vs total (Table S8) --------
+# Table S8 counts nuclear genes only while the Results quote the full annotation; the two
+# were unreconciled and read as a contradiction. Both are re-derived here.
+import collections as _c2
+_genes: dict = {}
+_tx = 0
+with (ROOT / "transgenic" / "revision" / "data" / "TAIR10" / "TAIR10.gtf").open() as fh:
+    for line in fh:
+        if line.startswith("#"):
+            continue
+        f = line.split("\t")
+        if len(f) < 9 or f[2] != "transcript":
+            continue
+        g = re.search(r'gene_id "([^"]+)"', f[8])
+        if g:
+            _genes[g.group(1)] = f[0]
+            _tx += 1
+_org_g = sum(1 for c in _genes.values() if c in ("ChrM", "ChrC"))
+src6 = "TAIR10.gtf"
+check("TAIR10 transcripts, full annotation (Results)", 35386, _tx, src6)
+check("TAIR10 genes, full annotation", 27416, len(_genes), src6)
+check("TAIR10 nuclear genes (Table S8)", 27206, len(_genes) - _org_g, src6)
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2

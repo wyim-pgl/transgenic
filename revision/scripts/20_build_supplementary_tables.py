@@ -487,7 +487,10 @@ def build(out: Out) -> None:
     out.table(
         "TableS8_as_statistics",
         "Table S8. Alternative splicing content of the reference annotations",
-        "Source: `transgenic/revision/results/asstats_summary.csv`. The nine training "
+        "Source: `transgenic/revision/results/asstats_summary.csv`. Counts here are nuclear "
+        "only: the *A. thaliana* row gives 27,206 genes and 35,176 transcripts, against the "
+        "27,416 and 35,386 of the full TAIR10 annotation, the difference being 210 organellar "
+        "genes excluded because RNA editing invalidates genomic translation checks. The nine training "
         "annotations are *A. thaliana*, *B. distachyon*, *G. max*, *O. sativa*, "
         "*P. patens*, *P. trichocarpa*, *S. bicolor*, *S. italica*, and *V. vinifera*; among "
         "these the maximum number of annotated transcripts at any single gene is 26 "
