@@ -964,6 +964,33 @@ def test_baseline_counts_correct_and_wrong_loci(tmp_path):
     assert b["wrong_pct"] == 50.0
 
 
+def test_baseline_classifies_on_representative_not_any_isoform(tmp_path):
+    """baseline() analogue of test_representative_is_first_mrna_in_file_order (I5):
+    the input already carries two isoforms of gene A; the first (file order) is what
+    was actually supplied to the model/tool, even though the second happens to already
+    match the reference exactly. baseline() must classify on the first, same as
+    score()'s cds_level table does -- not credit the locus as correct just because
+    SOME isoform of it happens to match."""
+    ref = tmp_path / "ref.gff3"
+    inp = tmp_path / "in.gff3"
+    ref.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 200, "A", None, None),
+        ("Chr1", "mRNA", 100, 200, "A.1", "A", None),
+        ("Chr1", "CDS", 100, 200, "A.1.cds", "A.1", None),
+    ]))
+    inp.write_text(_gff3_lines([
+        ("Chr1", "gene", 100, 200, "A", None, None),
+        ("Chr1", "mRNA", 100, 190, "A.i1", "A", None),   # first in file order: wrong
+        ("Chr1", "CDS", 100, 190, "A.i1.cds", "A.i1", None),
+        ("Chr1", "mRNA", 100, 200, "A.i2", "A", None),   # second: already correct
+        ("Chr1", "CDS", 100, 200, "A.i2.cds", "A.i2", None),
+    ]))
+    b = score_mod.baseline(inp, ref)
+    assert b["loci_matched"] == 1
+    assert b["loci_correct"] == 0
+    assert b["loci_wrong"] == 1
+
+
 def test_baseline_resolves_split_predictions_like_score_does(tmp_path):
     """Same split scenario as test_split_predictions_are_counted_not_double_scored,
     but scored with no output at all. A locus one tool splits into two of its own

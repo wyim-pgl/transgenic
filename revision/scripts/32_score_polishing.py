@@ -663,11 +663,16 @@ def baseline(input_gff: Path, ref_gff: Path = REFERENCE) -> dict:
     has touched it -- the denominator Task 5 quotes for a repair rate. "Repaired 300
     loci" is meaningless without knowing how many loci actually started wrong.
 
-    A locus is "correct" if its representative structure (first mRNA/CDS-parent for
-    that gene in file order, same convention as `_representative`) exactly equals ANY
-    reference transcript's CDS structure at that locus -- the `cds_level` ("any
-    transcript") convention, not the primary-only one, since a baseline run has no
-    per-tool reason to prefer one specific reference isoform.
+    A locus is "correct" if its representative structure -- the first mRNA/CDS-parent
+    for that gene in file order, same convention `_representative`/`score()` use, NOT
+    "any of the locus's isoforms" -- exactly equals ANY reference transcript's CDS
+    structure at that locus. This is exactly `cds_level`'s own test
+    (`in_repr in ref_all` in `_score_one_level`): representative-vs-any-reference, not
+    any-input-isoform-vs-any-reference. A locus whose first-in-file-order transcript is
+    wrong must count as wrong even if some other isoform of the same locus happens to
+    already match -- ruling 1 binds the representative on the input/prediction side,
+    and `test_representative_is_first_mrna_in_file_order` already locks in that a
+    locus in this situation is `still_wrong` under `score()`, not correct.
 
     Reuses `_resolve_one_to_one` (not the raw `match_by_overlap` pairing) so a TAIR10
     locus split across several of the tool's own predictions is counted once here too --
@@ -696,7 +701,7 @@ def baseline(input_gff: Path, ref_gff: Path = REFERENCE) -> dict:
     pairs, split_predictions = _resolve_one_to_one(raw_pairs)
 
     correct = sum(1 for i, r in pairs.items()
-                  if set(inp[i].values()) & set(ref[r].values()))
+                  if _representative(inp[i]) in set(ref[r].values()))
     wrong = len(pairs) - correct
     n = len(pairs)
     return {
@@ -711,6 +716,20 @@ def baseline(input_gff: Path, ref_gff: Path = REFERENCE) -> dict:
         "wrong_pct": round(100 * wrong / n, 2) if n else None,
         "definition": ("correct = representative transcript equals ANY reference "
                         "transcript at this locus (same convention as cds_level)"),
+        # Ruling 3's cross-tool denominator disclosure: score() reports this so a
+        # reader of the JSON alone can reconcile loci_in_input against the tool's raw
+        # gene count without re-deriving it; baseline() reports the same thing for the
+        # same reason.
+        "input_noncoding_features_excluded": _noncoding_feature_counts(input_gff),
+        # baseline() is a CDS-level-only measure (the brief's own interface contract
+        # names only loci_matched/loci_correct/loci_wrong); this key exists purely so
+        # the JSON is self-explaining about that scope, the same way score() always
+        # emits a utr_level key even when N/A -- not a computed UTR-level baseline.
+        "utr_level": {
+            "status": "N/A",
+            "reason": ("baseline() computes a CDS-level comparison only; see "
+                       "score()'s utr_level for the UTR-level (exon-chain) table"),
+        },
     }
 
 
