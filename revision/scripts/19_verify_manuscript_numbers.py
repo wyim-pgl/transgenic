@@ -615,6 +615,105 @@ src7 = "standardized_results/A_thaliana_transgenic400M_prompt_denovo.gff3"
 check("self-prompted transcripts, all loci (Fig. 5 legend)", 93690, _sp_total, src7)
 check("self-prompted transcripts, nuclear only (Table S5)", 93063, _sp_total - _sp_org, src7)
 
+# ------------------- claims aggregated over Table S2 (Results l.40) --------
+# These four are rankings and counts computed across all 128 benchmark rows. They were
+# checked by hand once each; one of them was wrong for two rounds. They also change
+# wholesale whenever the benchmark is re-scored, so they are derived here, not asserted.
+_bench = {(r["Species"], r["Tool"]): r for r in load_csv(CMP / "gffcompare_summary.csv")}
+_species = sorted({s for s, _ in _bench})
+_DE_NOVO_OTHER = ("annevo", "helixer", "tiberius", "tiberius_softmasked")
+
+
+def _f1(species: str, tool: str, level: str) -> float | None:
+    r = _bench.get((species, tool))
+    if not r:
+        return None
+    sn, pr = float(r[f"{level}_Sensitivity"]), float(r[f"{level}_Precision"])
+    return None if sn + pr == 0 else 2 * sn * pr / (sn + pr)
+
+
+_wins = _within2 = 0
+for sp in _species:
+    tg = _f1(sp, "transgenic400M", "Base")
+    best = max(v for v in (_f1(sp, t, "Base") for t in _DE_NOVO_OTHER) if v is not None)
+    if tg >= best:
+        _wins += 1
+    elif best - tg <= 2.0:
+        _within2 += 1
+src8 = "gffcompare_summary.csv"
+check("species where de novo 400M matches/exceeds others at base level (Results)", 8, _wins, src8)
+check("species within 2 base-F1 points of the best (Results)", 3, _within2, src8)
+
+_margins = []
+for sp in _species:
+    comp = _f1(sp, "transgenic400Mprompt", "Transcript")
+    best_dn = max(v for v in (_f1(sp, t, "Transcript")
+                              for t in _DE_NOVO_OTHER + ("transgenic400M", "transgenic160M"))
+                  if v is not None)
+    _margins.append(comp - best_dn)
+check("completion-mode margin over best de novo, minimum (Results)", 17.1, min(_margins), src8)
+check("completion-mode margin over best de novo, maximum (Results)", 47.8, max(_margins), src8)
+check("species where completion beats the best de novo (Results)", 13,
+      sum(1 for m in _margins if m > 0), src8)
+
+_leader = {"tiberius": 0, "helixer": 0, "annevo": 0}
+_tib_soft = 0
+for sp in _species:
+    cand = {t: _f1(sp, t, "Transcript") for t in _DE_NOVO_OTHER}
+    cand = {k: v for k, v in cand.items() if v is not None}
+    top = max(cand, key=cand.get)
+    if top.startswith("tiberius"):
+        _leader["tiberius"] += 1
+        if top == "tiberius_softmasked":
+            _tib_soft += 1
+    else:
+        _leader[top] += 1
+check("species led by Tiberius at transcript level (Results)", 10, _leader["tiberius"], src8)
+check("of those, with soft-masked input (Results)", 9, _tib_soft, src8)
+check("species led by Helixer at transcript level (Results)", 2, _leader["helixer"], src8)
+check("species led by ANNEVO at transcript level (Results)", 1, _leader["annevo"], src8)
+
+# ------------------------ Figure 3 anchors and trends (Results l.34) -------
+# Sourced outside revision/results/, so nothing else checks them. The .stats files carry
+# Sn/Pr to one decimal, which is why the recomputed Z. mays F1 is 71.2 against the
+# published 71.1 — inside the rounding of its own inputs. Tolerance reflects that.
+_fig3 = RES / "fig3_original" / "denovo"
+for _sp, _label, _claim in (("TAIR10", "A. thaliana", 92.2), ("Zm0", "Z. mays", 71.1)):
+    _m = re.search(r"Base level:\s*([\d.]+)\s*\|\s*([\d.]+)",
+                   (_fig3 / f"{_sp}_noPost.stats").read_text())
+    _sn, _pr = float(_m.group(1)), float(_m.group(2))
+    check(f"{_label} de novo base F1, Figure 3 anchor (Abstract, Results)", _claim,
+          2 * _sn * _pr / (_sn + _pr), "fig3_original/denovo/" + f"{_sp}_noPost.stats", tol=0.11)
+
+
+def _spearman(xs: list[float], ys: list[float]) -> float:
+    def rank(v):
+        order = sorted(range(len(v)), key=lambda i: v[i])
+        r = [0] * len(v)
+        for pos, i in enumerate(order):
+            r[i] = pos + 1
+        return r
+    rx, ry, n = rank(xs), rank(ys), len(xs)
+    return 1 - 6 * sum((rx[i] - ry[i]) ** 2 for i in range(n)) / (n * (n * n - 1))
+
+
+for _sub, _label, _rho, _nbins in (("binByLength", "gene length", -0.11, 27),
+                                   ("binByCDS", "CDS count", -0.81, 44)):
+    _xs, _ys = [], []
+    for _f in sorted((_fig3 / _sub).glob("TAIR10-*.stats"),
+                     key=lambda p: int(re.search(r"TAIR10-(\d+)", p.name).group(1))):
+        _txt = _f.read_text()
+        _m = re.search(r"Base level:\s*([\d.]+)\s*\|\s*([\d.]+)", _txt)
+        _n = re.search(r"Reference mRNAs :\s*(\d+)", _txt)
+        if not _m or not _n or int(_n.group(1)) == 0:
+            continue
+        _s, _p = float(_m.group(1)), float(_m.group(2))
+        _xs.append(int(re.search(r"TAIR10-(\d+)", _f.name).group(1)))
+        _ys.append(0.0 if _s + _p == 0 else 2 * _s * _p / (_s + _p))
+    check(f"Spearman rho, base F1 vs {_label} (Results)", _rho, _spearman(_xs, _ys),
+          f"fig3_original/denovo/{_sub}/", tol=0.006)
+    check(f"populated bins, {_label} (Results)", _nbins, len(_xs), f"fig3_original/denovo/{_sub}/")
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2

@@ -322,7 +322,11 @@ def build(out: Out) -> None:
     out.table(
         "TableS4b_transcript_level",
         "Table S4b. Transcript-level isoform accuracy against the complete references",
-        "Source: `transgenic/revision/results/*/summary_report.json`. A transcript counts as "
+        "Source: `transgenic/revision/results/*/summary_report.json`, except the *Predicted "
+        "transcripts* column, which counts mRNA records in each prediction file directly; "
+        "`summary_report.json` reports one more per prediction set, a header row counted as "
+        "a record. A transcript counts as an exact match when its intron chain is identical to a "
+        "reference transcript (GFFCompare class code '='). "
         "recovered only on an exact intron-chain match (GFFCompare class code '='). Isoform "
         "recall = distinct reference transcripts matched / reference transcripts; isoform "
         "precision = predicted transcripts with class code '=' / predicted transcripts "
