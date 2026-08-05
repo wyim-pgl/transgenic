@@ -433,6 +433,49 @@ check("AT2G37450 cassette exon start (Results)", 15724032,
       cassette[0][0] if cassette else 0,
       "panelC_examples/prompted_full/AT2G37450_pred.gff3")
 
+# ------------------------------------- prompt composition (Results) ------
+# The Results now state what the scored prediction set contains, because the returned
+# annotation retains the transcript it was given. Both numbers are re-derived here.
+import collections as _c
+
+def _cds_by_tx(path, gff3=True):
+    d = _c.defaultdict(lambda: _c.defaultdict(list))
+    lr = re.compile(r"GM=([^;\s]+)") if gff3 else re.compile(r'gene_id "([^"]+)"')
+    tr = re.compile(r"Parent=([^;]+)") if gff3 else re.compile(r'transcript_id "([^"]+)"')
+    with open(path) as fh:
+        for ln in fh:
+            if ln.startswith("#"):
+                continue
+            f = ln.rstrip("\n").split("\t")
+            if len(f) < 9 or f[2] != "CDS":
+                continue
+            g, tx = lr.search(f[8]), tr.search(f[8])
+            if g and tx:
+                d[g.group(1).replace(".TAIR10", "")][tx.group(1)].append((int(f[3]), int(f[4])))
+    return {g: {k: tuple(sorted(v)) for k, v in txs.items()} for g, txs in d.items()}
+
+_pred = _cds_by_tx(CMP / "standardized_results" / "A_thaliana_transgenic400Mprompt_beam1.gff3")
+_tair = _cds_by_tx(ROOT / "transgenic" / "revision" / "data" / "TAIR10" / "TAIR10.gtf", gff3=False)
+_prim = {}
+for _ln in (ROOT / "transgenic" / "revision" / "data" / "TAIR10"
+            / "primary_transcript_ids.txt").read_text().splitlines():
+    if _ln.strip():
+        _prim[_ln.strip().split(".")[0]] = _ln.strip()
+_total = sum(len(v) for v in _pred.values())
+_supplied = sum(1 for g, txs in _pred.items()
+                for s in txs.values()
+                if s == _tair.get(g, {}).get(_prim.get(g)))
+src = "standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3"
+check("completed annotation, total transcripts (Results)", 29922, _total, src)
+check("of those, reproducing the supplied model (Results)", 28536, _supplied, src)
+check("of those, added by TransGenic (Results)", 1386, _total - _supplied, src)
+check("supplied share of the returned annotation, % (Results)", 95.4,
+      round(100 * _supplied / _total, 1), src, tol=0.051)
+_multi = sum(1 for txs in _pred.values() if len(set(txs.values())) > 1)
+check("loci receiving an added isoform (Results)", 1064, _multi, src)
+check("loci receiving an added isoform, % (Results)", 3.9,
+      round(100 * _multi / len(_pred), 1), src)
+
 # ------------------------------------------------------------- report ----
 fails = [r for r in results if not r[0]]
 width = max(len(r[1]) for r in results) + 2

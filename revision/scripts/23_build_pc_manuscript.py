@@ -32,30 +32,6 @@ SRC = ROOT / "manuscript_v2.md"
 REFS = ROOT / "references_plant_communications.md"
 DST = ROOT / "manuscript_v3_plant_communications.md"
 
-ABSTRACT = (
-    "Accurate genome annotation is essential for deciphering biological systems, yet "
-    "existing approaches frequently fail to detect the mRNA transcript isoforms generated "
-    "by alternative splicing. Here we introduce TransGenic, a transformer-based framework "
-    "that translates DNA sequence directly into standard gene annotation, including "
-    "alternatively spliced isoforms. TransGenic was trained on nine diverse plant genomes "
-    "and achieves a base-level F1 of 92.2% on held-out Arabidopsis thaliana gene models. In "
-    "an extended benchmark across 13 plant species, de novo TransGenic predictions reached "
-    "base-level accuracy comparable to recent deep-learning annotators (ANNEVO, Helixer, and "
-    "Tiberius) when scored on single-gene loci, a per-locus setting that does not require "
-    "gene-boundary resolution and therefore favors TransGenic; BUSCO analysis confirmed that "
-    "prompted predictions recover 78.1–100% of conserved plant genes per species. When "
-    "prompted with a primary transcript, TransGenic completed alternative isoforms with a "
-    "transcript-level (exact intron-chain) recall of 61.9% and precision of 74.4% against "
-    "TAIR10; against the AtRTD3 long-read transcriptome, base-level recall and precision for "
-    "alternative transcripts were 59.4% and 77.3%. Structural validation showed that 85–98% "
-    "of prompted transcripts across 13 species encode complete open reading frames, whereas "
-    "unconstrained de novo output remains structurally inconsistent for most transcripts "
-    "(8.9–27.4% valid ORFs), delimiting current use to locus annotation and prompt-based "
-    "isoform completion. TransGenic thus combines the sequence representation of language "
-    "models with generative prediction, providing a practical tool for isoform-aware gene "
-    "model refinement in species for which transcript evidence is sparse."
-)
-
 KEYWORDS = (
     "**Key words:** genome annotation; alternative splicing; transcript isoform; "
     "transformer; deep learning; gene structure prediction"
@@ -73,7 +49,7 @@ Supplemental information is available at *Plant Communications* Online.
 
 **Supplemental figures.** Figure S1, functional completeness (BUSCO) across 13 species;
 Figure S2, TSS and TES positional accuracy; Figure S3, GSF vocabulary coverage;
-Figure S4, all loci at which a prompted isoform matches AtRTD3 but not TAIR10.
+Figure S4, six representative loci at which a prompted isoform matches AtRTD3 but not TAIR10.
 
 **Supplemental tables.** Table S1, genome assemblies and annotations; Table S2, GFFCompare
 benchmark across 13 species; Table S3, BUSCO completeness; Table S4, alternative-transcript-only
@@ -101,36 +77,7 @@ python src/run_genome_annotation.py genome.fa genes.gff3 -o output.gff3 --device
 
 Exact versions and command lines for every tool used are given in Table S10.
 
-## Funding
-
-*[TO BE COMPLETED BY THE AUTHORS — the submitted manuscript carried no funding statement.
-Plant Communications requires the funding bodies and grant numbers that supported this work,
-including any support for the GPU hardware and HPC allocation used for training and
-inference.]*
-
-## Author contributions
-
-*[DRAFT — to be confirmed by all authors before submission.]* J.S.L. designed the model
-architecture, implemented the training and inference code, and trained the models. F.R.
-performed the cross-species benchmark and all evaluation analyses, including BUSCO,
-GFFCompare, transcript- and splice-event-level isoform evaluation, structural
-self-consistency, TSS/TES accuracy, and the AUGUSTUS posterior-sampling baseline. J.C.C. and
-H.T. contributed to the interpretation of the results and revised the manuscript. W.C.Y.
-conceived and supervised the study, acquired funding, and wrote the manuscript. All authors
-read and approved the final manuscript.
-
-## Acknowledgments
-
-*[DRAFT — to be confirmed by the authors.]* We thank the three anonymous reviewers, whose
-comments prompted the transcript- and event-level evaluation, the structural
-self-consistency audit, and the AUGUSTUS sampling baseline reported here. Model training and
-inference were performed on GPU workstations at the University of Nevada, Reno; genome
-annotation benchmarks were run on the Pronghorn High-Performance Computing cluster at the
-University of Nevada, Reno.
-
-## Declaration of interests
-
-The authors declare no competing interests.
+{author_sections}
 """
 
 
@@ -138,15 +85,21 @@ def main() -> int:
     text = SRC.read_text()
 
     # ---- abstract -------------------------------------------------------
+    # The abstract comes from manuscript_v2.md. It used to be a constant in this file,
+    # which meant every edit to v2's abstract was silently discarded — found 2026-08-04,
+    # after a tone pass and a back-matter rewrite had both gone missing from the built
+    # manuscript without a single check failing.
     m = re.search(r"## Abstract\n\n(.+?)\n\n## Introduction", text, re.S)
     assert m, "could not locate the abstract block in manuscript_v2.md"
-    old_abstract = m.group(1)
-    assert len(old_abstract.split()) > 250, (
-        "the source abstract is already within the limit; check whether this step is needed"
+    abstract = m.group(1).strip()
+    n_words = len(abstract.split())
+    assert n_words <= 250, (
+        f"the abstract in manuscript_v2.md is {n_words} words; Plant Communications allows "
+        f"250. Shorten it in v2 - this script no longer carries a separate copy."
     )
     text = text.replace(
-        f"## Abstract\n\n{old_abstract}\n\n## Introduction",
-        f"## Abstract\n\n{ABSTRACT}\n\n{KEYWORDS}\n\n## Introduction",
+        f"## Abstract\n\n{m.group(1)}\n\n## Introduction",
+        f"## Abstract\n\n{abstract}\n\n{KEYWORDS}\n\n## Introduction",
         1,
     )
 
@@ -159,15 +112,27 @@ def main() -> int:
 
     # ---- move the availability statement out of Methods ----------------
     m = re.search(
-        r"### Data and code availability\n\n.*?(?=\n## Author contributions)", text, re.S
+        r"### Data and code availability\n\n.*?(?=\n## Funding)", text, re.S
     )
     assert m, "could not locate the Methods availability subsection"
     text = text[: m.start()] + text[m.end():]
 
     # ---- replace the placeholder back matter ---------------------------
-    m = re.search(r"## Author contributions\n\n.*?(?=\n## Figures & Tables)", text, re.S)
-    assert m, "could not locate the placeholder back-matter block"
-    text = text[: m.start()] + BACK_MATTER + "\n" + text[m.end():]
+    # Everything the authors write - funding, contributions, acknowledgments, competing
+    # interests - is carried through from v2. Only the journal-specific blocks with no v2
+    # counterpart (supplemental-item lists, the relocated availability statement) live in
+    # BACK_MATTER.
+    m = re.search(r"(## Funding\n\n.*?)(?=\n## Figures & Tables)", text, re.S)
+    assert m, ("could not locate the author-written back matter in manuscript_v2.md; "
+               "it must run from '## Funding' to '## Figures & Tables'")
+    author_sections = m.group(1).rstrip()
+    for heading in ("## Funding", "## Author contributions", "## Acknowledgments"):
+        assert heading in author_sections, f"{heading} missing from manuscript_v2.md"
+    author_sections = author_sections.replace(
+        "## Declaration of competing interests", "## Declaration of interests")
+    text = (text[: m.start()]
+            + BACK_MATTER.format(author_sections=author_sections)
+            + "\n" + text[m.end():])
 
     # ---- swap in the curated reference list -----------------------------
     ref_text = REFS.read_text()
@@ -221,7 +186,7 @@ def main() -> int:
 
     DST.write_text(text)
 
-    abstract_words = len(ABSTRACT.split())
+    abstract_words = n_words
     main_text = re.search(
         r"## Introduction\n(.*?)\n## Supplemental information", text, re.S
     )
