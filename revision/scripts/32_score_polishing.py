@@ -75,12 +75,15 @@ partner), i.e. the identity-anchored protection described above did NOT apply to
 with the second-highest damage rate. The impact was measured rather than assumed, by
 re-scoring with the correct key. It moves the whole table, not one cell:
 
-    loci_compared 25,517 -> 25,522   preserved_correct 14,194 -> 14,195
-    repaired      84     -> 84       damaged           6,218  -> 6,219
-    still_wrong   5,021  -> 5,024
+    loci_compared    25,517 -> 25,522   preserved_correct 14,194 -> 14,195
+    repaired         84     -> 84       damaged            6,218 ->  6,219
+    still_wrong       5,021 ->  5,024   added_structures  21,739 -> 21,744
+    input already correct    20,412 -> 20,414
 
 so the damage rate goes 30.46% -> 30.46% and the repair rate 1.65% -> 1.64%
-(84/5,105 -> 84/5,108). Those five moved loci are exactly the 5 of 34 booked into
+(84/5,105 -> 84/5,108). EVERY cell moves, including the two gain-side ones — quoting only
+`damaged` here would repeat the one-directional reporting this note exists to document.
+Those five moved loci are exactly the 5 of 34 booked into
 `loci_without_output` that in fact have output (pairing failures, not missing
 generations — still correctly excluded from the denominator, just mislabelled). BRAKER3
 and EGAPx are unaffected: their gene rows lead with `ID=`, so GM= pairing works and an
