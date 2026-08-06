@@ -247,23 +247,6 @@ def count_gff3_features(path: Path, feature: str = "gene") -> int:
     return n
 
 
-def count_genes_for_chromosome(path: Path, chrom: str) -> int:
-    """Count `gene` rows on one seqid, without needing the remote per-chromosome subset
-    file at all — the staged input is byte-identical on GPFS and on the host (Task 1),
-    so this is computed once, locally, against the canonical staged copy."""
-    if not path.exists():
-        return 0
-    n = 0
-    with path.open() as fh:
-        for line in fh:
-            if line.startswith("#"):
-                continue
-            cols = line.rstrip("\n").split("\t")
-            if len(cols) >= 3 and cols[0] == chrom and cols[2] == "gene":
-                n += 1
-    return n
-
-
 def md5_file(path: Path) -> str:
     h = hashlib.md5()
     with path.open("rb") as fh:
@@ -316,11 +299,16 @@ def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Pat
     This replaced a remote `awk '$1==c'` one-liner that forwarded *every* row for the
     chromosome — including EGAPx's `lnc_RNA`/`pseudogene` rows and their children —
     into the host's `genome2GSFDataset`. That preprocessing step does not filter by
-    feature type the way `count_genes_for_chromosome` does, so the database the host
-    built could contain more loci than this script's own denominator, and the two
-    numbers could never reconcile with Task 2/3's convention of excluding these types
-    entirely. Filtering here, in local, unit-testable Python, closes that gap and
-    removes an SSH-only code path with no test coverage of its own.
+    feature type, so the database the host built could contain more loci than this
+    script's own denominator, and the two numbers could never reconcile with Task 2/3's
+    convention of excluding these types entirely. Filtering here, in local,
+    unit-testable Python, closes that gap and removes an SSH-only code path with no test
+    coverage of its own. (R4-1: this function's own "genes" count is now also the single
+    source of truth `ensure_chunk` uses to decide whether a chunk needs to be re-run —
+    an earlier, separate raw-count function used for that check disagreed with this
+    one for every EGAPx chromosome, permanently defeating resume for that tool; it has
+    been removed rather than reconciled, so there is exactly one definition of "how many
+    genes are in this chunk" from now on.)
 
     Three passes:
     1. Exclude explicit non-coding top-level loci (`lnc_RNA`/`pseudogene`) and
@@ -607,6 +595,14 @@ def chunk_is_done(tool: str, chrom: str, expected_genes_in: int) -> bool:
         return False
     if prov.get("genes_in") != expected_genes_in:
         return False
+    # R4-2: a provenance record written before round 3 has no reachable_genes_in /
+    # structurally_unreachable_locus — run_tool_pipeline now assumes every "ok" chunk
+    # result has them (summing r["reachable_genes_in"] directly) and would crash with a
+    # KeyError on a stale record rather than failing loudly the way every other
+    # incompatibility here does. Treat their absence as not-done, the same as a
+    # genes_in mismatch or a missing subset file below.
+    if "reachable_genes_in" not in prov or "structurally_unreachable_locus" not in prov:
+        return False
     out_path = chunk_output_path(tool, chrom)
     if not out_path.exists():
         return False
@@ -773,8 +769,25 @@ def ensure_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
 
     A resumed chunk makes no SSH calls at all — it returns the exact record written the
     last time this chunk actually ran.
+
+    R4-1: the "has the staged input changed" fingerprint is now computed the same way
+    `run_remote_chunk` computes `genes_in` — via `build_local_subset`'s own post-filter
+    count. It previously came from a separate helper that counted raw, unfiltered gene
+    rows, which disagreed with the filtered count for any chromosome with excluded
+    non-coding or childless rows: always for EGAPx (lnc_RNA/pseudogene/childless-shell
+    exclusions are never zero there), never for GeMoMa or BRAKER3 (which have none). A
+    completed EGAPx chunk's provenance `genes_in` (the filtered count) could therefore
+    never match that fingerprint (the raw count), so `chunk_is_done` always reported it
+    as not-done and `ensure_chunk` re-ran every EGAPx chunk from scratch on every
+    invocation — silently defeating resumability for the one tool where a ~6-hour re-run
+    is most costly. The old helper is removed rather than reconciled, so there is now
+    exactly one definition of "how many genes are in this chunk". Building the subset
+    here (idempotent, local, no network) also keeps `_chunks/*_subset.gff3` fresh even
+    on a pure resume.
     """
-    genes_in = count_genes_for_chromosome(LOCAL_INPUTS / f"{tool}_Athaliana.gff3", chrom)
+    local_subset = LOCAL_CHUNKS / f"{tool}_{chrom}_subset.gff3"
+    subset_info = build_local_subset(tool, chrom, LOCAL_INPUTS / f"{tool}_Athaliana.gff3", local_subset)
+    genes_in = subset_info["genes"]
     if not force and chunk_is_done(tool, chrom, genes_in):
         prov = dict(load_json(chunk_provenance_path(tool, chrom)))
         prov["resumed"] = True
@@ -1198,6 +1211,26 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
     # file that will never become canonical would itself be a misleading artifact.)
     missing_loci_path = LOCAL_PREDICTIONS / f"{stub}_missing_loci.txt"
     missing_loci = write_missing_loci_manifest(chunk_results, final_partial, missing_loci_path)
+
+    # R4-3: reachable_genes_in_total shrinks the ratio check_loss gates on by exactly
+    # the known structural loss per chunk — correct, but it narrows the band in which a
+    # *real* additional generation failure on a small chromosome still trips the ratio
+    # (e.g. one genuine miss alongside the known one used to read as 2/n against the
+    # old, larger denominator; it can now read as 1/(n-1), which may no longer exceed
+    # max_loss_fraction). write_missing_loci_manifest already tells the two apart
+    # correctly — this is the gate that actually acts on that distinction, so a real,
+    # unexplained miss is never treated as complete just because the ratio alone looked
+    # fine. This still leaves final_partial and the manifest on disk as diagnostics
+    # (matching C1's own choice for the ratio gate), but installs nothing canonical.
+    if missing_loci["unexplained"] > 0:
+        raise LossTooHigh(
+            f"{tool}: {missing_loci['unexplained']} locus/loci went missing for a "
+            f"reason other than the known per-chunk structural loss (see "
+            f"{missing_loci_path}) — stopping rather than writing a result that looks "
+            f"complete. check_loss's ratio alone cannot be trusted to catch this on a "
+            f"small chromosome once the known structural loss is excluded from its "
+            f"denominator (R4-3)."
+        )
 
     finished_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     provenance = {
