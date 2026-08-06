@@ -69,12 +69,19 @@ KNOWN LIMITATION of that GM= pairing, measured on the 2026-08-06 benchmark run: 
 module matches the output's `GM=` value against the input gene's `ID=`, but the pinned
 `preprocess.py` (:314) derives `GM=` as the FIRST attribute value on the gene row
 whatever its key — and every GeMoMa gene row leads with `Name=`, not `ID=`. So for
-GeMoMa `GM=` is present on all 29,525 output loci and matches nothing: `gm_paired` is 0
-and every locus falls back to positional overlap, i.e. the identity-anchored protection
-described above did NOT apply to the tool with the second-highest damage rate. The
-impact was measured rather than assumed, by re-scoring with the correct key: `damaged`
-moves 6,218 -> 6,219 and the damage rate 30.46% -> 30.46%, and 5 of the 34 loci booked
-into `loci_without_output` in fact have output (they are pairing failures, not missing
+GeMoMa `GM=` is present on every output gene row and matches nothing: `gm_paired` is 0,
+so all 29,561 input loci fall through to the positional-overlap path (where 29,507 find a
+partner), i.e. the identity-anchored protection described above did NOT apply to the tool
+with the second-highest damage rate. The impact was measured rather than assumed, by
+re-scoring with the correct key. It moves the whole table, not one cell:
+
+    loci_compared 25,517 -> 25,522   preserved_correct 14,194 -> 14,195
+    repaired      84     -> 84       damaged           6,218  -> 6,219
+    still_wrong   5,021  -> 5,024
+
+so the damage rate goes 30.46% -> 30.46% and the repair rate 1.65% -> 1.64%
+(84/5,105 -> 84/5,108). Those five moved loci are exactly the 5 of 34 booked into
+`loci_without_output` that in fact have output (pairing failures, not missing
 generations — still correctly excluded from the denominator, just mislabelled). BRAKER3
 and EGAPx are unaffected: their gene rows lead with `ID=`, so GM= pairing works and an
 independent reimplementation reproduces this module exactly on all eight table fields.
