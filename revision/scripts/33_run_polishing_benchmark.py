@@ -41,6 +41,21 @@ by actually running the pipeline on the GPU host, and is recorded in
    kept because it is free insurance against a future checkpoint/invocation that does
    export both beams, but Task 5 must not assume two records per locus from this
    pipeline's output.
+6. **(Round 3) `genome2GSFDataset` (`src/transgenic/datasets/preprocess.py`) drops the
+   last gene of every file it processes, silently.** It finalizes and inserts a gene
+   into the database only when it encounters the *next* `gene` line; the file loop ends
+   and `con.close()` runs with no final flush, so the last gene in file order is never
+   inserted, with zero parse errors, before generation is ever reached. Deterministic
+   and content-independent — confirmed against two real runs (GeMoMa's and EGAPx's
+   last ChrM gene were each exactly the locus found missing). This script accounts for
+   it (see `build_local_subset`'s `structurally_unreachable_locus` and
+   `run_remote_chunk`'s `reachable_genes_in`) rather than patching `preprocess.py` on
+   the pinned host, which would break comparability with the published predictions.
+
+This is the third defect this benchmark has surfaced in `prompt_mode.py` and its
+dependencies, alongside point 1 (the batch-32 default that silently zeroes all output)
+and point 3 (the `cache_dir="./HFmodels"` working-directory trap) — all three are worth
+reporting upstream on their own, independent of this benchmark.
 
 Pipeline (per tool): prompt_mode (remote, GPU) -> standardize_gff -> top-beam filter.
 Each tool runs one chromosome at a time (Chr1-5, ChrC, ChrM) so that a run that dies
@@ -322,9 +337,19 @@ def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Pat
        are exactly this shell, enough on its own to trip a 5% loss gate before a
        single locus is generated.
 
-    Returns `{"genes": <int>, "excluded_feature_counts": {type: count}}` — a dropped
-    childless gene is folded into `excluded_feature_counts["gene"]` alongside any other
-    excluded row type, not tracked separately, since it is counted the same way.
+    Returns `{"genes": <int>, "excluded_feature_counts": {type: count}, "
+    structurally_unreachable_locus": <str | None>}`. A dropped childless gene is folded
+    into `excluded_feature_counts["gene"]` alongside any other excluded row type, not
+    tracked separately, since it is counted the same way.
+
+    `structurally_unreachable_locus` (N6, round 3) is the identifier of the *last* kept
+    `gene` row in this subset, in file order — the one locus `genome2GSFDataset` will
+    silently drop before generation regardless of content (see the inline comment at
+    the write loop below). This is not excluded from the subset itself (the host still
+    needs to see it, in case a future fix changes this) — callers use it to adjust the
+    denominator `check_loss` gates on and to annotate the missing-loci manifest with a
+    reason, rather than surprise a perfect run with a "1 locus lost" result on every
+    single chromosome.
     """
     assert_not_scratch(input_path)
     assert_not_scratch(subset_path)
@@ -390,6 +415,7 @@ def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Pat
 
     excluded_feature_counts: dict = {}
     genes = 0
+    last_gene_locus: str | None = None
     subset_path.parent.mkdir(parents=True, exist_ok=True)
     with subset_path.open("w") as out:
         for cols in rows:
@@ -403,9 +429,25 @@ def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Pat
                 continue
             if cols[2] == "gene":
                 genes += 1
+                # N6 (round 3): genome2GSFDataset (preprocess.py) only inserts a gene
+                # into the database when it encounters the *next* gene line ("finalize
+                # the previous gene and start a new one"); the file loop ends and
+                # con.close() runs with no final flush, so the last gene of every file
+                # it processes is silently dropped, with zero parse errors, before
+                # generation is ever reached. Deterministic and content-independent —
+                # confirmed against two real smoke-test runs (GeMoMa ChrM's last gene
+                # was exactly the one found missing; so was EGAPx ChrM's). Since this
+                # subset file preserves the staged input's row order, the last kept
+                # `gene` row here IS the one genome2GSFDataset will drop — knowable
+                # before the run, not just after.
+                last_gene_locus = _first_attribute_value(cols[8])
             out.write("\t".join(cols) + "\n")
 
-    return {"genes": genes, "excluded_feature_counts": excluded_feature_counts}
+    return {
+        "genes": genes,
+        "excluded_feature_counts": excluded_feature_counts,
+        "structurally_unreachable_locus": last_gene_locus,
+    }
 
 
 def build_prompt_mode_command(remote_gff: str, remote_output: str, remote_db: str, remote_log: str) -> str:
@@ -611,7 +653,8 @@ def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
         "tool": tool, "chromosome": chrom,
         "started_at": started_at, "finished_at": None, "wall_seconds": None,
         "status": "failed", "reason": None,
-        "genes_in": None, "genes_out": None, "noncoding_features_excluded": None,
+        "genes_in": None, "reachable_genes_in": None, "genes_out": None,
+        "structurally_unreachable_locus": None, "noncoding_features_excluded": None,
         "host_git_commit": None,
         "parsing_errors_found": None, "parsing_errors_skipped": None, "parsing_errors_total": None,
         "output_written": None,
@@ -635,6 +678,15 @@ def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
     subset_info = build_local_subset(tool, chrom, LOCAL_INPUTS / f"{tool}_Athaliana.gff3", local_subset)
     result["genes_in"] = subset_info["genes"]
     result["noncoding_features_excluded"] = subset_info["excluded_feature_counts"]
+    # N6 (round 3): the last gene in file order is structurally unreachable regardless
+    # of content (preprocess.py's genome2GSFDataset never flushes it — see
+    # build_local_subset's docstring). "Do not patch preprocess.py; account for the bug,
+    # don't fix it" — so this chunk's own loss gate is computed against the genes it
+    # could actually produce, not the raw count Task 2/3 reconciliation still uses.
+    result["structurally_unreachable_locus"] = subset_info["structurally_unreachable_locus"]
+    result["reachable_genes_in"] = subset_info["genes"] - (
+        1 if subset_info["structurally_unreachable_locus"] else 0
+    )
 
     paths = build_chunk_remote_command(tool, chrom)
     result["remote_subset"] = paths["remote_subset"]
@@ -700,10 +752,16 @@ def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
     genes_out = count_gff3_features(local_out, "gene")
     result["genes_out"] = genes_out
 
-    try:
-        check_loss(result["genes_in"], genes_out, max_loss_fraction, context=f"{tool}/{chrom}")
-    except LossTooHigh as e:
-        return _finish("failed", str(e))
+    if result["reachable_genes_in"] > 0:
+        try:
+            check_loss(result["reachable_genes_in"], genes_out, max_loss_fraction, context=f"{tool}/{chrom}")
+        except LossTooHigh as e:
+            return _finish("failed", str(e))
+    # else: a chunk with exactly one gene has, by construction, nothing reachable at
+    # all (its only gene is the structurally-unreachable last one) — there is no loss
+    # rate to measure, so this is a vacuous pass rather than a "genes_in is 0" error.
+    # Real chromosomes have thousands (or, for the smallest, dozens) of genes, so this
+    # only ever matters for a minimal test fixture, not a real run.
 
     return _finish("ok")
 
@@ -879,7 +937,16 @@ def _gff_gm_values(path: Path) -> set[str]:
     return values
 
 
-def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out_path: Path) -> int:
+STRUCTURALLY_UNREACHABLE_REASON = (
+    "structurally unreachable: last gene in this chromosome chunk's preprocessing "
+    "input, never inserted by genome2GSFDataset (preprocess.py finalizes a gene only "
+    "when the *next* gene line is seen; the file loop ends and con.close() runs with "
+    "no final flush) — not a generation failure, known and predictable before the run"
+)
+UNEXPLAINED_MISSING_REASON = "never generated (unexplained)"
+
+
+def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out_path: Path) -> dict:
     """Write every locus the input subset carried but the final output does not — a
     locus the pipeline never emitted at all (I3).
 
@@ -900,15 +967,23 @@ def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out
     without its subset present, so this should only ever fire on a genuinely broken
     on-disk state.
 
+    N6 (round 3): each chunk's `structurally_unreachable_locus` (see
+    `build_local_subset`/`run_remote_chunk`) is a *known*, content-independent loss —
+    the last gene in file order, which `genome2GSFDataset` never flushes — not a real
+    generation failure. Every line written here carries a reason distinguishing that
+    predictable case from a genuinely unexplained miss, which is the whole point of
+    this file: Task 5 must not fold the two together into "still wrong".
+
     Also raises if every input locus comes back "missing" — overwhelmingly more likely
-    to be exactly this key-derivation class of bug than a real 100% loss (which
+    to be exactly the N2 key-derivation class of bug than a real 100% loss (which
     `check_loss` would already have caught well before this point), so this is treated
     as its own error rather than written out as if it were a real, if bad, result.
 
-    Returns the number of missing loci written.
+    Returns `{"total": int, "structurally_unreachable": int, "unexplained": int}`.
     """
     input_keys: set[str] = set()
     input_ids: set[str] = set()  # cross-check only, never used to decide "missing"
+    known_unreachable: set[str] = set()
     for r in chunk_results:
         subset = LOCAL_CHUNKS / f"{r['tool']}_{r['chromosome']}_subset.gff3"
         if not subset.exists():
@@ -918,6 +993,9 @@ def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out
             )
         input_keys |= _gff_first_attr_values(subset, "gene")
         input_ids |= _gff_ids(subset, "gene")
+        locus = r.get("structurally_unreachable_locus")
+        if locus:
+            known_unreachable.add(locus)
 
     output_gms = _gff_gm_values(final_path)
     missing = sorted(input_keys - output_gms)
@@ -931,9 +1009,21 @@ def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out
             f"write a manifest this implausible"
         )
 
+    structurally_unreachable_count = sum(1 for m in missing if m in known_unreachable)
+    unexplained_count = len(missing) - structurally_unreachable_count
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text("".join(f"{m}\n" for m in missing))
-    return len(missing)
+    with out_path.open("w") as out:
+        out.write("locus\treason\n")
+        for m in missing:
+            reason = STRUCTURALLY_UNREACHABLE_REASON if m in known_unreachable else UNEXPLAINED_MISSING_REASON
+            out.write(f"{m}\t{reason}\n")
+
+    return {
+        "total": len(missing),
+        "structurally_unreachable": structurally_unreachable_count,
+        "unexplained": unexplained_count,
+    }
 
 
 # --------------------------------------------------------------------------------------
@@ -1087,9 +1177,19 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
     final_partial = LOCAL_PREDICTIONS / f"{stub}_completed.gff3.partial"
     filter_top_beam(standardized_path, final_partial)
 
+    # N6 (round 3): genes_in_total is the true candidate-locus count (what Task 2/3's
+    # own denominator reconciles against); reachable_genes_in_total additionally
+    # excludes the one structurally-unreachable locus per chunk (see build_local_subset)
+    # so the gate is not tripped, and a perfect run does not read as "1 lost", by a loss
+    # this runner cannot avoid regardless of model quality.
     genes_in_total = sum(r["genes_in"] for r in chunk_results)
+    reachable_genes_in_total = sum(r["reachable_genes_in"] for r in chunk_results)
     genes_out_total = count_gff3_features(final_partial, "gene")
-    check_loss(genes_in_total, genes_out_total, max_loss_fraction, context=f"{tool} (final, post-filter)")
+    if reachable_genes_in_total > 0:
+        check_loss(reachable_genes_in_total, genes_out_total, max_loss_fraction,
+                   context=f"{tool} (final, post-filter)")
+    # else: every chunk was a single, structurally-unreachable gene — nothing to
+    # measure a loss rate against; see the identical rationale in run_remote_chunk.
 
     # N3: the manifest is built from final_partial, not final_path — install happens
     # last. (Deliberate: a failed run — check_loss raised above — never reaches this
@@ -1097,7 +1197,7 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
     # "final" result yet to describe one against, and writing one against a partial
     # file that will never become canonical would itself be a misleading artifact.)
     missing_loci_path = LOCAL_PREDICTIONS / f"{stub}_missing_loci.txt"
-    missing_loci_count = write_missing_loci_manifest(chunk_results, final_partial, missing_loci_path)
+    missing_loci = write_missing_loci_manifest(chunk_results, final_partial, missing_loci_path)
 
     finished_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     provenance = {
@@ -1118,10 +1218,15 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
         "chromosomes": list(chromosomes),
         "chunks": chunk_results,
         "genes_in_total": genes_in_total,
+        "reachable_genes_in_total": reachable_genes_in_total,
         "genes_raw_merged": genes_raw_merged,
         "genes_standardized": genes_standardized,
         "genes_out_total": genes_out_total,
-        "missing_loci_count": missing_loci_count,
+        # N6: split so a reader never has to reparse the manifest file to tell a known,
+        # predictable loss from a genuinely unexplained one.
+        "missing_loci_count": missing_loci["total"],
+        "missing_loci_structurally_unreachable": missing_loci["structurally_unreachable"],
+        "missing_loci_unexplained": missing_loci["unexplained"],
         "missing_loci_path": str(missing_loci_path),
         "started_at": started_at, "finished_at": finished_at,
         "wall_seconds": time.time() - t0,

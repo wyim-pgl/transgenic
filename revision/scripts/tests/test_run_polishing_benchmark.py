@@ -527,9 +527,11 @@ def test_write_missing_loci_manifest_lists_gm_values_absent_from_output(tmp_path
     final = tmp_path / "final.gff3"
     _write_gff(final, [("Chr1", "gene", 1, 100, "ID=g1out;GM=g1")])  # g2 never emitted
     out = tmp_path / "missing.txt"
-    n = run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
-    assert n == 1
-    assert out.read_text().strip() == "g2"
+    result = run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
+    assert result == {"total": 1, "structurally_unreachable": 0, "unexplained": 1}
+    lines = out.read_text().splitlines()
+    assert lines[0] == "locus\treason"
+    assert lines[1] == f"g2\t{run_bench.UNEXPLAINED_MISSING_REASON}"
 
 
 def test_write_missing_loci_manifest_empty_when_nothing_missing(tmp_path):
@@ -538,9 +540,29 @@ def test_write_missing_loci_manifest_empty_when_nothing_missing(tmp_path):
     final = tmp_path / "final.gff3"
     _write_gff(final, [("Chr1", "gene", 1, 100, "ID=g1out;GM=g1")])
     out = tmp_path / "missing.txt"
-    n = run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
-    assert n == 0
-    assert out.read_text() == ""
+    result = run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
+    assert result == {"total": 0, "structurally_unreachable": 0, "unexplained": 0}
+    assert out.read_text().splitlines() == ["locus\treason"]
+
+
+def test_write_missing_loci_manifest_labels_the_known_structurally_unreachable_locus(tmp_path):
+    """N6 (round 3): a locus flagged by run_remote_chunk as the last gene in its chunk's
+    file order (structurally unreachable per genome2GSFDataset's no-final-flush bug)
+    must be labeled differently from a genuinely unexplained miss — that distinction is
+    the whole point of the manifest, per the reviewer."""
+    subset1 = run_bench.LOCAL_CHUNKS / "gemoma_Chr1_subset.gff3"
+    _write_gff(subset1, [
+        ("Chr1", "gene", 1, 100, "ID=g1"),
+        ("Chr1", "gene", 200, 300, "ID=g2"),  # last in file order -> structurally unreachable
+    ])
+    final = tmp_path / "final.gff3"
+    _write_gff(final, [("Chr1", "gene", 1, 100, "ID=g1out;GM=g1")])  # only g1 emitted
+    out = tmp_path / "missing.txt"
+    chunk_results = [{"tool": "gemoma", "chromosome": "Chr1", "structurally_unreachable_locus": "g2"}]
+    result = run_bench.write_missing_loci_manifest(chunk_results, final, out)
+    assert result == {"total": 1, "structurally_unreachable": 1, "unexplained": 0}
+    lines = out.read_text().splitlines()
+    assert lines[1] == f"g2\t{run_bench.STRUCTURALLY_UNREACHABLE_REASON}"
 
 
 def test_write_missing_loci_manifest_uses_first_attribute_not_id_for_gemoma_row_shape(tmp_path):
@@ -562,9 +584,9 @@ def test_write_missing_loci_manifest_uses_first_attribute_not_id_for_gemoma_row_
         ("Chr1", "gene", 7017, 7202, "ID=A_thaliana_g2;GM=Ath_00002"),
     ])
     out = tmp_path / "missing.txt"
-    n = run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
-    assert n == 0
-    assert out.read_text() == ""
+    result = run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
+    assert result["total"] == 0
+    assert out.read_text().splitlines() == ["locus\treason"]
 
 
 def test_write_missing_loci_manifest_raises_if_every_locus_is_missing(tmp_path):
@@ -712,6 +734,30 @@ def test_run_remote_chunk_success_path(tmp_path):
     assert result["genes_out"] == 2
     assert result["host_git_commit"] == run_bench.EXPECTED_HOST_COMMIT
     assert result["output_written"] is True
+    # N6 (round 3): g2, last in file order, is the one genome2GSFDataset will never
+    # flush — reachable_genes_in excludes it from the denominator this chunk's own
+    # check_loss gates on.
+    assert result["structurally_unreachable_locus"] == "g2"
+    assert result["reachable_genes_in"] == 1
+
+
+def test_run_remote_chunk_treats_a_single_gene_chunk_as_a_vacuous_pass(tmp_path):
+    """N6: a chunk with exactly one gene has, by construction, nothing reachable at all
+    (its only gene is the structurally-unreachable last one) — this must not be
+    reported as a "genes_in is 0" error, since real chromosomes never hit this (they
+    have dozens to thousands of genes); it only matters for a minimal fixture, and
+    should read as an unmeasurable-but-not-failed chunk."""
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
+        "Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1\t100\t.\t+\t.\tID=g1.1;Parent=g1\n"
+    )
+    remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1")]})
+    result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
+                                         ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
+    assert result["status"] == "ok"
+    assert result["genes_in"] == 1
+    assert result["reachable_genes_in"] == 0
+    assert result["structurally_unreachable_locus"] == "g1"
 
 
 def test_run_remote_chunk_records_noncoding_features_excluded(tmp_path):
@@ -998,12 +1044,17 @@ def test_run_tool_pipeline_end_to_end_and_then_resumes(tmp_path, monkeypatch):
     assert summary["genes_standardized"] == 2  # I1: second loss channel
     assert summary["genes_out_total"] == 2
     assert summary["missing_loci_count"] == 0
+    assert summary["missing_loci_structurally_unreachable"] == 0
+    assert summary["missing_loci_unexplained"] == 0
+    # Each chunk here has exactly one gene, which is therefore its own last-in-file-order
+    # (structurally unreachable) locus — a vacuous 0/0, not an error (see N6).
+    assert summary["reachable_genes_in_total"] == 0
     final = Path(summary["final_path"])
     assert final.name == "gemoma_completed.gff3"
     assert final.exists()
     assert run_bench.count_gff3_features(final, "gene") == 2
     assert (run_bench.LOCAL_PREDICTIONS / "gemoma_provenance.json").exists()
-    assert Path(summary["missing_loci_path"]).read_text() == ""
+    assert Path(summary["missing_loci_path"]).read_text().splitlines() == ["locus\treason"]
 
     # Re-run: every chunk is already "ok", so a poisoned ssh/fetch/push must never fire.
     def poison(*args, **kwargs):
@@ -1071,6 +1122,48 @@ def test_run_tool_pipeline_rejects_unknown_tool():
                                      ssh_run=lambda a: FakeCompletedProcess(), fetch=lambda *a, **k: None)
 
 
+def test_run_tool_pipeline_reports_a_clean_run_despite_the_structurally_unreachable_locus(tmp_path):
+    """N6 end to end: a realistic chunk (3 genes) whose last locus, g3, is correctly
+    never in the (fake, but here realistic) raw output — exactly what genome2GSFDataset
+    does in reality — must read as a clean, complete run (0% loss), not "1 of 3 lost",
+    and the manifest must label g3 with the structurally-unreachable reason rather than
+    lumping it in with an unexplained miss."""
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
+        "Chr1\tx\tgene\t1000\t2000\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1000\t2000\t.\t+\t.\tID=g1.1;Parent=g1\n"
+        "Chr1\tx\tCDS\t1000\t2000\t.\t+\t0\tID=g1.1.cds;Parent=g1.1\n"
+        "Chr1\tx\tgene\t3000\t4000\t.\t+\t.\tID=g2\n"
+        "Chr1\tx\tmRNA\t3000\t4000\t.\t+\t.\tID=g2.1;Parent=g2\n"
+        "Chr1\tx\tCDS\t3000\t4000\t.\t+\t0\tID=g2.1.cds;Parent=g2.1\n"
+        "Chr1\tx\tgene\t5000\t6000\t.\t+\t.\tID=g3\n"
+        "Chr1\tx\tmRNA\t5000\t6000\t.\t+\t.\tID=g3.1;Parent=g3\n"
+        "Chr1\tx\tCDS\t5000\t6000\t.\t+\t0\tID=g3.1.cds;Parent=g3.1\n"
+    )
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": [
+        ("Chr1", "gene", 1000, 2000, "ID=g1;GM=g1"),
+        ("Chr1", "mRNA", 1000, 2000, "ID=g1.1;Parent=g1"),
+        ("Chr1", "CDS", 1000, 2000, "ID=g1.1.cds;Parent=g1.1"),
+        ("Chr1", "gene", 3000, 4000, "ID=g2;GM=g2"),
+        ("Chr1", "mRNA", 3000, 4000, "ID=g2.1;Parent=g2"),
+        ("Chr1", "CDS", 3000, 4000, "ID=g2.1.cds;Parent=g2.1"),
+        # g3 deliberately absent, matching what genome2GSFDataset actually does to the
+        # last gene of every file it processes.
+    ]})
+    summary = run_bench.run_tool_pipeline(
+        "gemoma", chromosomes=("Chr1",), max_loss_fraction=0.05,
+        ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push, skip_preflight=True,
+    )
+    assert summary["status"] == "ok"
+    assert summary["genes_in_total"] == 3
+    assert summary["reachable_genes_in_total"] == 2
+    assert summary["genes_out_total"] == 2
+    assert summary["missing_loci_count"] == 1
+    assert summary["missing_loci_structurally_unreachable"] == 1
+    assert summary["missing_loci_unexplained"] == 0
+    manifest_lines = Path(summary["missing_loci_path"]).read_text().splitlines()
+    assert manifest_lines[1] == f"g3\t{run_bench.STRUCTURALLY_UNREACHABLE_REASON}"
+
+
 def test_run_tool_pipeline_standardizes_away_inverted_coordinates(tmp_path):
     """I9: the original end-to-end fixture was clean enough that deleting the
     standardize_output() call and running filter_top_beam directly on the raw merge
@@ -1110,16 +1203,22 @@ def test_run_tool_pipeline_standardizes_away_inverted_coordinates(tmp_path):
 
 def test_run_tool_pipeline_atomic_write_leaves_no_completed_file_when_final_gate_fails(tmp_path):
     """C1: the handoff file must never be written before the gate that validates it.
-    Both loci come back with a full gene/mRNA/CDS row, so the *per-chunk* gate (2/2,
-    checked against the raw fetched output) passes; g2's 2 bp CDS is then legitimately
-    dropped by standardize_gff() as non-translatable ("Removed mRNAs with CDS length <
-    3 bp", then "Removed genes with no valid mRNAs") — a loss the chunk-level check
-    cannot see, which is exactly what should trip the *final* gate."""
+
+    Three loci, so the N6 structurally-unreachable exclusion (always the *last* gene in
+    file order — g3 here) lands on a gene distinct from the one this test wants
+    standardize_gff to drop for a genuinely different, content-based reason (g2's 2 bp
+    CDS — "Removed mRNAs with CDS length < 3 bp", then "Removed genes with no valid
+    mRNAs"). g3 is correctly never in the fake's raw output at all (a real run could
+    never generate it either), so the per-chunk gate sees 2 reachable / 2 produced (g1,
+    g2) and passes; only the final gate, after g2 is dropped by standardize_gff, catches
+    the real loss standardize_gff (not N6) causes."""
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1000\t2000\t.\t+\t.\tID=g1\n"
         "Chr1\tx\tmRNA\t1000\t2000\t.\t+\t.\tID=g1.1;Parent=g1\n"
         "Chr1\tx\tgene\t3000\t4000\t.\t+\t.\tID=g2\n"
         "Chr1\tx\tmRNA\t3000\t4000\t.\t+\t.\tID=g2.1;Parent=g2\n"
+        "Chr1\tx\tgene\t5000\t6000\t.\t+\t.\tID=g3\n"
+        "Chr1\tx\tmRNA\t5000\t6000\t.\t+\t.\tID=g3.1;Parent=g3\n"
     )
     remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": [
         ("Chr1", "gene", 1000, 2000, "ID=g1;GM=g1"),
@@ -1128,6 +1227,8 @@ def test_run_tool_pipeline_atomic_write_leaves_no_completed_file_when_final_gate
         ("Chr1", "gene", 3000, 4000, "ID=g2;GM=g2"),
         ("Chr1", "mRNA", 3000, 4000, "ID=g2.1;Parent=g2"),
         ("Chr1", "CDS", 3000, 3001, "ID=g2.1.cds;Parent=g2.1"),  # 2 bp: non-translatable
+        # g3 deliberately absent: it's last in file order, so N6 says a real run could
+        # never have produced it either.
     ]})
     with pytest.raises(run_bench.LossTooHigh):
         run_bench.run_tool_pipeline(
