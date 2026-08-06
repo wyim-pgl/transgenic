@@ -536,7 +536,7 @@ def test_write_missing_loci_manifest_lists_gm_values_absent_from_output(tmp_path
     _write_gff(final, [("Chr1", "gene", 1, 100, "ID=g1out;GM=g1")])  # g2 never emitted
     out = tmp_path / "missing.txt"
     result = run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
-    assert result == {"total": 1, "structurally_unreachable": 0, "unexplained": 1}
+    assert result == {"total": 1, "structurally_unreachable": 0, "oversized": 0, "unexplained": 1}
     lines = out.read_text().splitlines()
     assert lines[0] == "locus\treason"
     assert lines[1] == f"g2\t{run_bench.UNEXPLAINED_MISSING_REASON}"
@@ -549,7 +549,7 @@ def test_write_missing_loci_manifest_empty_when_nothing_missing(tmp_path):
     _write_gff(final, [("Chr1", "gene", 1, 100, "ID=g1out;GM=g1")])
     out = tmp_path / "missing.txt"
     result = run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
-    assert result == {"total": 0, "structurally_unreachable": 0, "unexplained": 0}
+    assert result == {"total": 0, "structurally_unreachable": 0, "oversized": 0, "unexplained": 0}
     assert out.read_text().splitlines() == ["locus\treason"]
 
 
@@ -568,7 +568,7 @@ def test_write_missing_loci_manifest_labels_the_known_structurally_unreachable_l
     out = tmp_path / "missing.txt"
     chunk_results = [{"tool": "gemoma", "chromosome": "Chr1", "structurally_unreachable_locus": "g2"}]
     result = run_bench.write_missing_loci_manifest(chunk_results, final, out)
-    assert result == {"total": 1, "structurally_unreachable": 1, "unexplained": 0}
+    assert result == {"total": 1, "structurally_unreachable": 1, "oversized": 0, "unexplained": 0}
     lines = out.read_text().splitlines()
     assert lines[1] == f"g2\t{run_bench.STRUCTURALLY_UNREACHABLE_REASON}"
 
@@ -638,7 +638,8 @@ def test_chunk_is_done_true_when_ok_and_genes_in_matches(tmp_path):
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 1,
                            "reachable_genes_in": 4, "structurally_unreachable_locus": "g1",
-                           "missing_loci_unexplained": 0})
+                           "missing_loci_unexplained": 0, "oversized_loci": [],
+                           "tool": "gemoma", "chromosome": "Chr1"})
     assert run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
 
 
@@ -658,7 +659,8 @@ def test_chunk_is_done_false_when_genes_in_has_drifted(tmp_path):
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 1,
                            "reachable_genes_in": 4, "structurally_unreachable_locus": "g1",
-                           "missing_loci_unexplained": 0})
+                           "missing_loci_unexplained": 0, "oversized_loci": [],
+                           "tool": "gemoma", "chromosome": "Chr1"})
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=6)
 
 
@@ -723,7 +725,8 @@ def test_chunk_is_done_false_when_output_file_missing(tmp_path):
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 1,
                            "reachable_genes_in": 4, "structurally_unreachable_locus": "g1",
-                           "missing_loci_unexplained": 0})
+                           "missing_loci_unexplained": 0, "oversized_loci": [],
+                           "tool": "gemoma", "chromosome": "Chr1"})
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
 
 
@@ -736,7 +739,8 @@ def test_chunk_is_done_false_when_output_file_truncated_after_provenance_written
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 2,  # recorded 2
                            "reachable_genes_in": 4, "structurally_unreachable_locus": "g1",
-                           "missing_loci_unexplained": 0})
+                           "missing_loci_unexplained": 0, "oversized_loci": [],
+                           "tool": "gemoma", "chromosome": "Chr1"})
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
 
 
@@ -750,7 +754,8 @@ def test_chunk_is_done_false_when_subset_file_missing(tmp_path):
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 1,
                            "reachable_genes_in": 4, "structurally_unreachable_locus": "g1",
-                           "missing_loci_unexplained": 0})
+                           "missing_loci_unexplained": 0, "oversized_loci": [],
+                           "tool": "gemoma", "chromosome": "Chr1"})
     # Deliberately no gemoma_Chr1_subset.gff3 written.
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
 
@@ -954,6 +959,122 @@ def test_run_remote_chunk_fails_when_output_covers_far_fewer_loci(tmp_path):
     assert "lost" in result["reason"]
 
 
+def test_preprocess_skips_as_oversized_matches_the_pinned_arithmetic_on_real_loci(tmp_path):
+    """C-1: the boundary, and four loci measured in the real staged inputs.
+
+    The threshold is on the *padded* region, not the gene span. A 49,151 bp gene pads to
+    exactly 49,152 and survives; a 49,152 bp gene — exactly maxLen — is skipped, because
+    padding is added unconditionally and takes it to 55,296. So "gene length > 49152",
+    which is what preprocess.py's own message says, is off by one against what it does.
+    The real loci below were measured against the staged files, and one of them,
+    Ath_15973, was confirmed on the GPU host: preprocess.py itself logged
+    "Skipping Ath_15973 because gene length > 49152".
+    """
+    start = 1_000_000  # away from the chromosome-start clamp
+    assert not run_bench.preprocess_skips_as_oversized(start, start + 49_151 - 1)
+    assert run_bench.preprocess_skips_as_oversized(start, start + 49_152 - 1)
+
+    # (start, fin) straight out of the staged GFF3s.
+    assert run_bench.preprocess_skips_as_oversized(13_157_215, 13_216_637)   # Ath_15973
+    assert run_bench.preprocess_skips_as_oversized(11_479_953, 11_533_355)   # Ath_25800
+    assert run_bench.preprocess_skips_as_oversized(28_847_867, 28_947_721)   # egapxtmp_003111
+    # A perfectly ordinary A. thaliana gene is nowhere near it.
+    assert not run_bench.preprocess_skips_as_oversized(3_631, 5_899)
+
+
+def test_build_local_subset_reports_oversized_loci(tmp_path):
+    """C-1: the second structural loss is content-dependent, so it is per locus, not the
+    one-per-chunk the N6 drop is."""
+    inp = tmp_path / "gemoma_Athaliana.gff3"
+    _write_gff(inp, [
+        ("Chr1", "gene", 1000, 2000, "ID=small"),
+        ("Chr1", "mRNA", 1000, 2000, "ID=small.1;Parent=small"),
+        ("Chr1", "gene", 10_000, 110_000, "ID=huge"),
+        ("Chr1", "mRNA", 10_000, 110_000, "ID=huge.1;Parent=huge"),
+        ("Chr1", "gene", 200_000, 201_000, "ID=last"),
+        ("Chr1", "mRNA", 200_000, 201_000, "ID=last.1;Parent=last"),
+    ])
+    info = run_bench.build_local_subset("gemoma", "Chr1", inp, tmp_path / "sub.gff3")
+    assert info["genes"] == 3
+    assert info["oversized_loci"] == ["huge"]
+    assert info["structurally_unreachable_locus"] == "last"
+
+
+def test_run_remote_chunk_does_not_count_an_oversized_locus_as_unexplained(tmp_path):
+    """C-1: before round 5 these landed in `unexplained` — 4 for GeMoMa, 11 for EGAPx —
+    so a predictable, computable loss read as a model failure and stopped the run."""
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(_gff_lines([
+        ("Chr1", "gene", 1000, 2000, "ID=g1;GM=g1"),
+        ("Chr1", "mRNA", 1000, 2000, "ID=g1.1;Parent=g1"),
+        ("Chr1", "gene", 10_000, 110_000, "ID=huge;GM=huge"),   # oversized: never inserted
+        ("Chr1", "mRNA", 10_000, 110_000, "ID=huge.1;Parent=huge"),
+        ("Chr1", "gene", 200_000, 201_000, "ID=g3;GM=g3"),
+        ("Chr1", "mRNA", 200_000, 201_000, "ID=g3.1;Parent=g3"),
+        ("Chr1", "gene", 300_000, 301_000, "ID=last;GM=last"),  # N6: never flushed
+        ("Chr1", "mRNA", 300_000, 301_000, "ID=last.1;Parent=last"),
+    ]))
+    # What a correct run really produces: everything except the two structural losses.
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": [
+        ("Chr1", "gene", 1000, 2000, "ID=g1o;GM=g1"),
+        ("Chr1", "gene", 200_000, 201_000, "ID=g3o;GM=g3"),
+    ]})
+    result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
+                                         ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
+    assert result["status"] == "ok"
+    assert result["genes_in"] == 4
+    assert result["oversized_loci"] == ["huge"]
+    assert result["structurally_lost_loci"] == ["huge", "last"]
+    assert result["reachable_genes_in"] == 2          # 4 - 2 structural losses
+    assert result["missing_loci_unexplained"] == 0    # neither is a model failure
+
+
+def test_run_remote_chunk_counts_coincident_structural_losses_once(tmp_path):
+    """C-1: if the last gene in the chunk is also the oversized one, preprocess.py skips
+    it outright, so it never becomes the pending gene the missing final flush would have
+    dropped. The two losses are the same locus and counting both would understate
+    reachable_genes_in by one — which is why this is a set union, not a sum."""
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(_gff_lines([
+        ("Chr1", "gene", 1000, 2000, "ID=g1;GM=g1"),
+        ("Chr1", "mRNA", 1000, 2000, "ID=g1.1;Parent=g1"),
+        ("Chr1", "gene", 10_000, 110_000, "ID=huge;GM=huge"),  # oversized AND last
+        ("Chr1", "mRNA", 10_000, 110_000, "ID=huge.1;Parent=huge"),
+    ]))
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": [
+        ("Chr1", "gene", 1000, 2000, "ID=g1o;GM=g1"),
+    ]})
+    result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
+                                         ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
+    assert result["status"] == "ok"
+    assert result["structurally_unreachable_locus"] == "huge"
+    assert result["oversized_loci"] == ["huge"]
+    assert result["structurally_lost_loci"] == ["huge"]  # one locus, not two
+    assert result["reachable_genes_in"] == 1            # 2 - 1, not 2 - 2
+    assert result["missing_loci_unexplained"] == 0
+
+
+def test_write_missing_loci_manifest_labels_an_oversized_locus_by_its_own_reason(tmp_path):
+    """C-1: an oversized locus is as structural as the N6 case and must not be filed
+    under "never generated (unexplained)" — that is what Task 5 reads to decide a locus
+    was not the model's fault."""
+    _write_gff(run_bench.LOCAL_CHUNKS / "gemoma_Chr1_subset.gff3", [
+        ("Chr1", "gene", 1000, 2000, "ID=g1"),
+        ("Chr1", "gene", 10_000, 110_000, "ID=huge"),
+        ("Chr1", "gene", 300_000, 301_000, "ID=last"),
+    ])
+    final = tmp_path / "final.gff3"
+    _write_gff(final, [("Chr1", "gene", 1000, 2000, "ID=g1o;GM=g1")])
+    out = tmp_path / "missing.txt"
+    result = run_bench.write_missing_loci_manifest(
+        [{"tool": "gemoma", "chromosome": "Chr1",
+          "structurally_unreachable_locus": "last", "oversized_loci": ["huge"]}],
+        final, out)
+    assert result == {"total": 2, "structurally_unreachable": 1, "oversized": 1, "unexplained": 0}
+    text = out.read_text()
+    assert f"huge\t{run_bench.OVERSIZED_LOCUS_REASON}" in text
+    assert f"last\t{run_bench.STRUCTURALLY_UNREACHABLE_REASON}" in text
+    assert run_bench.UNEXPLAINED_MISSING_REASON not in text
+
+
 def test_build_prompt_mode_command_deletes_the_stale_remote_db_before_running(tmp_path):
     """R4-4: `genome2GSFDataset` appends to an existing DuckDB, so a re-run against a
     leftover `.db` regenerates every locus on top of the ones already in it. Measured on
@@ -1041,7 +1162,8 @@ def test_ensure_chunk_skips_remote_call_when_already_done(tmp_path):
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 1, "genes_out": 1,
                            "reachable_genes_in": 0, "structurally_unreachable_locus": "g1",
-                           "missing_loci_unexplained": 0})
+                           "missing_loci_unexplained": 0, "oversized_loci": [],
+                           "tool": "gemoma", "chromosome": "Chr1"})
 
     def poison(*args, **kwargs):
         raise AssertionError("should not have called ssh/fetch/push for an already-done chunk")
@@ -1391,6 +1513,106 @@ def test_run_tool_pipeline_gates_on_a_miss_only_standardization_causes(tmp_path)
     chunk_prov = run_bench.load_json(run_bench.chunk_provenance_path("gemoma", "Chr1"))
     assert chunk_prov["status"] == "ok"
     assert chunk_prov["missing_loci_unexplained"] == 0
+
+
+def test_run_tool_pipeline_rejects_a_final_gene_row_with_no_gm(tmp_path):
+    """I-3: R4-4's row-count/distinct-locus check covered the raw chunk only. A GM-less
+    row entering later — standardize_gff()'s synthetic `gene_for_<mrna_id>` parent, which
+    13_beam1_filter.py:36 keeps by falling back to the row ID — inflates genes_out_total,
+    offsets an equal amount of real loss in check_loss, and reaches Task 5 unpairable.
+
+    Injected directly at the standardize stage, since provoking it through
+    standardize_gff's own 500 kb/100 kb geometry would test that script rather than this
+    gate.
+    """
+    ids = [f"g{i}" for i in range(1, 6)]
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(_gff_lines(_make_gene_triples("Chr1", ids)))
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": _make_gene_triples("Chr1", ids[:-1])})
+
+    real_standardize = run_bench.standardize_output
+
+    def standardize_then_orphan(raw_path, out_path, tool, **kwargs):
+        real_standardize(raw_path, out_path, tool, **kwargs)
+        with open(out_path, "a") as fh:  # a gene row carrying ID= but no GM=
+            fh.write("Chr1\tx\tgene\t900000\t901000\t.\t+\t.\tID=gene_for_orphan_mrna\n")
+
+    run_bench.standardize_output = standardize_then_orphan
+    try:
+        with pytest.raises(run_bench.LossTooHigh, match="I-3"):
+            run_bench.run_tool_pipeline(
+                "gemoma", chromosomes=("Chr1",), max_loss_fraction=0.05,
+                ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push, skip_preflight=True,
+            )
+    finally:
+        run_bench.standardize_output = real_standardize
+    stub = run_bench.output_stub("gemoma", ("Chr1",))
+    assert not (run_bench.LOCAL_PREDICTIONS / f"{stub}_completed.gff3").exists()
+
+
+def test_write_missing_loci_manifest_rejects_output_loci_absent_from_every_input(tmp_path):
+    """I-4: nothing computed `output_gms - input_keys`. A chunk carrying another
+    chromosome's records, or a subset pushed to the wrong path, produces exactly this and
+    every other check here measures the opposite direction."""
+    _write_gff(run_bench.LOCAL_CHUNKS / "gemoma_Chr1_subset.gff3", [
+        ("Chr1", "gene", 1000, 2000, "ID=g1"),
+        ("Chr1", "gene", 3000, 4000, "ID=g2"),
+    ])
+    final = tmp_path / "final.gff3"
+    _write_gff(final, [
+        ("Chr1", "gene", 1000, 2000, "ID=g1o;GM=g1"),
+        ("Chr1", "gene", 5000, 6000, "ID=x;GM=from_another_chromosome"),
+    ])
+    with pytest.raises(RuntimeError, match="I-4"):
+        run_bench.write_missing_loci_manifest(
+            [{"tool": "gemoma", "chromosome": "Chr1",
+              "structurally_unreachable_locus": "g2", "oversized_loci": []}],
+            final, tmp_path / "missing.txt")
+
+
+def test_run_tool_pipeline_removes_a_previous_runs_completed_file_when_it_then_fails(tmp_path):
+    """Minor (round 5): the manifest is rewritten before the gates, so a failing re-run
+    used to leave an earlier `_completed.gff3` and `_provenance.json` claiming success
+    beside a manifest describing the failed run. Whatever survives must describe one run.
+
+    The loss here has to happen at the tool level, not in a chunk: a run that dies in the
+    chunk loop never reaches the manifest, so there is no inconsistency to create and
+    nothing to clean up. g1 is generated (the chunk passes) and then dropped by
+    standardize_gff for a 2 bp CDS.
+    """
+    ids = [f"g{i}" for i in range(1, 26)]
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(_gff_lines(_make_gene_triples("Chr1", ids)))
+    stub = run_bench.output_stub("gemoma", ("Chr1",))
+    final_path = run_bench.LOCAL_PREDICTIONS / f"{stub}_completed.gff3"
+    prov_path = run_bench.LOCAL_PREDICTIONS / f"{stub}_provenance.json"
+    final_path.parent.mkdir(parents=True, exist_ok=True)
+    final_path.write_text("##gff-version 3\n")           # a previous, successful run
+    run_bench.write_json(prov_path, {"status": "ok", "genes_out_total": 999})
+
+    raw_rows = [(seq, feat, s, s + 1, attrs) if feat == "CDS" and "g1.1.cds" in attrs
+                else (seq, feat, s, e, attrs)
+                for seq, feat, s, e, attrs in _make_gene_triples("Chr1", ids[:-1])]
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": raw_rows})
+    with pytest.raises(run_bench.LossTooHigh):
+        run_bench.run_tool_pipeline(
+            "gemoma", chromosomes=("Chr1",), max_loss_fraction=0.05,
+            ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push, skip_preflight=True,
+        )
+    assert not final_path.exists()
+    assert not prov_path.exists()
+
+
+def test_main_rejects_an_unknown_or_repeated_chromosome(tmp_path, monkeypatch):
+    """I-5: a repeated chromosome is generated once but counted twice in the provenance
+    Task 5 reads, while filter_top_beam dedupes the final file back to correct — and at
+    0.35% for ChrM it sits under the ratio gate. The ratio is least sensitive exactly
+    where the mistake is easiest to make."""
+    monkeypatch.setattr(run_bench, "run_tool_pipeline",
+                         lambda tool, **kw: {"tool": tool, "status": "ok", "chunks": []})
+    with pytest.raises(SystemExit):
+        run_bench.main(["--tool", "gemoma", "--chromosomes", "Chr1", "Chr1"])
+    with pytest.raises(SystemExit):
+        run_bench.main(["--tool", "gemoma", "--chromosomes", "Chr9"])
+    assert run_bench.main(["--tool", "gemoma", "--chromosomes", "Chr1", "ChrM"]) == 0
 
 
 def test_run_tool_pipeline_records_an_acknowledged_unexplained_miss_instead_of_stopping(tmp_path):

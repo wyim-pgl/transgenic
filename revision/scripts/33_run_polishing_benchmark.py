@@ -64,11 +64,25 @@ by actually running the pipeline on the GPU host, and is recorded in
    `run_remote_chunk` fails a chunk whose gene-row count differs from its distinct
    `GM=` count.
 
-This is the fourth defect this benchmark has surfaced in `prompt_mode.py` and its
+8. **(Round 5) `genome2GSFDataset` also skips any gene whose padded region exceeds
+   `maxLen=49152`,** and `prompt_mode.py` exposes no way to raise it. This is the
+   *second* structural loss, and the larger one: measured over the 21 subsets this
+   script builds, GeMoMa loses 4 loci and EGAPx 11, while BRAKER3 loses none. TAIR10 has
+   zero such loci, so no published run has ever exposed it — these are the fused
+   mega-loci GeMoMa and EGAPx emit (up to 99,855 bp). Unlike point 6 it is
+   content-dependent, so it is computed per locus, not assumed to be one per chunk. The
+   two losses can be the same locus — an oversized last gene is skipped outright and so
+   never becomes the pending gene the missing flush would have dropped — which is why
+   `run_remote_chunk` takes their union rather than their sum. Note the message
+   preprocess.py prints, "gene length > 49152", is off by one against what it does: a
+   gene of exactly 49,152 bp is skipped too, because padding is unconditional and takes
+   its region to 55,296.
+
+This is the fifth defect this benchmark has surfaced in `prompt_mode.py` and its
 dependencies, alongside point 1 (the batch-32 default that silently zeroes all output),
-point 3 (the `cache_dir="./HFmodels"` working-directory trap) and point 6 (the silently
-dropped last gene) — all four are worth reporting upstream on their own, independent of
-this benchmark.
+point 3 (the `cache_dir="./HFmodels"` working-directory trap), point 6 (the silently
+dropped last gene) and point 7 (the appending database) — all five are worth reporting
+upstream on their own, independent of this benchmark.
 
 Pipeline (per tool): prompt_mode (remote, GPU) -> standardize_gff -> top-beam filter.
 Each tool runs one chromosome at a time (Chr1-5, ChrC, ChrM) so that a run that dies
@@ -146,12 +160,26 @@ DEFAULT_MAX_LOSS_FRACTION = 0.05  # published run lost 3/27,416 = 0.01%; 5% is a
 # (point 6 above), so two are genuinely unexplained. A run of similar quality trips this
 # on whichever chromosome those loci fall in.
 #
-# That is the intended behaviour, and it is cheap precisely because R4-1 made resume
-# work: on re-invocation every completed chunk resumes from cache and only merge ->
-# standardize -> filter -> gate re-runs, which is minutes, not the 19 hours the run
-# itself takes. The cost of stopping is one re-invocation; what it buys is a human
-# opening {tool}_missing_loci.txt and looking at the named loci before deciding they are
-# acceptable, rather than a tolerance absorbing them silently.
+# That is the intended behaviour, and at the *tool* level it is cheap precisely because
+# R4-1 made resume work: on re-invocation every completed chunk resumes from cache and
+# only merge -> standardize -> filter -> gate re-runs, which is minutes, not the 19 hours
+# the run itself takes. What it buys is a human opening {tool}_missing_loci.txt and
+# looking at the named loci before deciding they are acceptable, rather than a tolerance
+# absorbing them silently.
+#
+# I-1 (round 5): the same is NOT true of the chunk-level gate. A chunk that trips it is
+# recorded status="failed", and chunk_is_done accepts only "ok", so raising the threshold
+# re-runs that chromosome on the GPU — 49-105 min for a nuclear one — even though its
+# output was fetched and checksum-verified. That asymmetry is tolerable because C-1
+# removed the only known cause of the chunk gate firing on a correct run: with both
+# structural losses accounted for, a chunk that trips this has lost a locus for a reason
+# nobody has an explanation for, which is worth a regeneration to look at.
+#
+# I-2 (round 5): one flag, applied at two granularities — per chunk in run_remote_chunk
+# and to the per-tool total here. The tool-level application is the binding one: N
+# tolerated per chunk cannot smuggle 7N past the run, because the tool-level gate sees
+# the genome-wide sum against the same N. The per-chunk application is an early tripwire,
+# deliberately stricter than the budget it shares.
 #
 # So the normal override, after that look, is to pass the number actually observed:
 #     --max-unexplained-missing-loci 2 --acknowledge-high-loss-threshold
@@ -159,6 +187,24 @@ DEFAULT_MAX_LOSS_FRACTION = 0.05  # published run lost 3/27,416 = 0.01%; 5% is a
 # either way, gate or no gate — Task 5's guarantee that a never-generated locus is not
 # scored as damage rests on the manifest and that field, never on this threshold.
 DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI = 0
+
+# C-1 (round 5): the *second* structural loss, and the larger of the two.
+# `preprocess.py:329-334` at the pinned commit skips any gene whose padded region exceeds
+# maxLen, printing "Skipping <locus> because gene length > 49152" to stderr and continuing
+# — no insert, no generation, no parse error. `prompt_mode.py` calls
+# `genome2GSFDataset(..., mode="train")` with no overrides, so these are the values in
+# force. Like the last-gene drop (point 6), it is deterministic and knowable before the
+# run; unlike it, it is content-dependent, so it must be computed per locus rather than
+# assumed to be one per chunk.
+#
+# TAIR10 has zero such loci, which is why every published run is blind to this — it is
+# specific to the fused mega-loci GeMoMa and EGAPx emit. Measured over the 21 subsets
+# build_local_subset actually produces: gemoma 4 (Chr3, Chr5), braker3 0, egapx 11
+# (Chr1-Chr5). Ground-truthed against the pinned implementation itself, not just this
+# transcription of it: a real GPU chunk of 11 gemoma Chr3 loci logged exactly
+# "Skipping Ath_15973 because gene length > 49152", the one locus this arithmetic predicts.
+PREPROCESS_MAX_LEN = 49152
+PREPROCESS_STATIC_SIZE = 6144
 
 # I10/N5: top-level feature types that are never protein-coding gene loci (EGAPx carries
 # 2,048 lnc_RNA + 378 pseudogene rows in the staged A. thaliana file), and the gbkey
@@ -262,6 +308,42 @@ def parse_output_written(text: str) -> str | None:
     """
     m = _OUTPUT_WRITTEN_RE.search(text)
     return m.group(1) if m else None
+
+
+# --------------------------------------------------------------------------------------
+# C-1: preprocess.py's oversized-gene skip, replicated
+# --------------------------------------------------------------------------------------
+
+def preprocess_skips_as_oversized(start: int, fin: int) -> bool:
+    """True if `genome2GSFDataset` will skip this gene for exceeding `maxLen`.
+
+    A line-for-line transcription of the pinned host's `preprocess.py:293-334` (read off
+    the host at `5d9929e`, not paraphrased): pad the gene to the next multiple of
+    `staticSize`, split the padding between the flanks with the odd base going 5', clamp
+    the 5' flank at the chromosome start, then enforce a `staticSize` floor on the total
+    region. The gene is skipped when the resulting region exceeds `maxLen`.
+
+    `start`/`fin` are the GFF3 1-indexed inclusive gene coordinates. `addExtra` is 0 here
+    (and takes no part in this arithmetic at any value — it is applied at insert time),
+    so this is exact rather than approximate for the invocation this script uses.
+    """
+    gene_length = fin - start + 1
+    if gene_length <= PREPROCESS_STATIC_SIZE:
+        additional_sequence = PREPROCESS_STATIC_SIZE - (gene_length % PREPROCESS_STATIC_SIZE)
+    else:
+        additional_sequence = ((gene_length // PREPROCESS_STATIC_SIZE) + 1) * PREPROCESS_STATIC_SIZE - gene_length
+    three_prime_buffer = additional_sequence // 2
+    if not (additional_sequence % 2):
+        five_prime_buffer = additional_sequence // 2
+    else:
+        five_prime_buffer = additional_sequence // 2 + 1
+    if (start - five_prime_buffer - 1) < 0:
+        five_prime_buffer = start - 1
+    region_start = start - five_prime_buffer - 1
+    if (five_prime_buffer + gene_length + three_prime_buffer) <= PREPROCESS_STATIC_SIZE:
+        three_prime_buffer = PREPROCESS_STATIC_SIZE - (five_prime_buffer + gene_length)
+    region_end = fin + three_prime_buffer
+    return (region_end - region_start) > PREPROCESS_MAX_LEN
 
 
 # --------------------------------------------------------------------------------------
@@ -440,6 +522,7 @@ def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Pat
     excluded_feature_counts: dict = {}
     genes = 0
     last_gene_locus: str | None = None
+    oversized_loci: list[str] = []
     subset_path.parent.mkdir(parents=True, exist_ok=True)
     with subset_path.open("w") as out:
         for cols in rows:
@@ -465,12 +548,18 @@ def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Pat
                 # `gene` row here IS the one genome2GSFDataset will drop — knowable
                 # before the run, not just after.
                 last_gene_locus = _first_attribute_value(cols[8])
+                # C-1 (round 5): the second structural loss. Unlike N6 this one is
+                # content-dependent — it depends on the gene's own span — so it is
+                # computed per locus here rather than assumed to be one per chunk.
+                if preprocess_skips_as_oversized(int(cols[3]), int(cols[4])):
+                    oversized_loci.append(last_gene_locus)
             out.write("\t".join(cols) + "\n")
 
     return {
         "genes": genes,
         "excluded_feature_counts": excluded_feature_counts,
         "structurally_unreachable_locus": last_gene_locus,
+        "oversized_loci": oversized_loci,
     }
 
 
@@ -627,10 +716,13 @@ def load_json(path: Path) -> dict | None:
 # chunk_is_done. Register new fields here when adding them, or a future resume crashes
 # with a KeyError instead of failing loudly.
 REQUIRED_CHUNK_PROVENANCE_KEYS = (
+    "tool",
+    "chromosome",
     "genes_in",
     "genes_out",
     "reachable_genes_in",
     "structurally_unreachable_locus",
+    "oversized_loci",
     "missing_loci_unexplained",
 )
 
@@ -751,9 +843,18 @@ def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
     # don't fix it" — so this chunk's own loss gate is computed against the genes it
     # could actually produce, not the raw count Task 2/3 reconciliation still uses.
     result["structurally_unreachable_locus"] = subset_info["structurally_unreachable_locus"]
-    result["reachable_genes_in"] = subset_info["genes"] - (
-        1 if subset_info["structurally_unreachable_locus"] else 0
-    )
+    result["oversized_loci"] = subset_info["oversized_loci"]
+    # C-1 (round 5): there are *two* structural losses, and they can be the same locus, so
+    # this is a union rather than a sum. If the last gene in the chunk is also oversized,
+    # preprocess.py skips it outright — it never becomes the pending gene that the missing
+    # final flush would have dropped, so the N6 loss simply does not happen and counting
+    # both would overstate the loss by one. Everything downstream (the loss gate, the
+    # unexplained-miss gate, the manifest) keys off this one set.
+    structurally_lost = set(subset_info["oversized_loci"])
+    if subset_info["structurally_unreachable_locus"]:
+        structurally_lost.add(subset_info["structurally_unreachable_locus"])
+    result["structurally_lost_loci"] = sorted(structurally_lost)
+    result["reachable_genes_in"] = subset_info["genes"] - len(structurally_lost)
 
     paths = build_chunk_remote_command(tool, chrom)
     result["remote_subset"] = paths["remote_subset"]
@@ -865,16 +966,18 @@ def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
             f"downstream would flag, since every other gate here only measures loss."
         )
 
-    unreachable = result["structurally_unreachable_locus"]
-    unexplained = sorted(locus for locus in (prompted_loci - emitted_loci) if locus != unreachable)
+    # C-1: `structurally_lost` is both known losses, not just N6's. Before round 5 the
+    # oversized loci landed here as "unexplained", which is how a predictable, computable
+    # loss came to look like a model failure — 4 of them for GeMoMa, 11 for EGAPx.
+    unexplained = sorted(prompted_loci - emitted_loci - structurally_lost)
     result["missing_loci_unexplained"] = len(unexplained)
     result["missing_loci_unexplained_examples"] = unexplained[:10]
     if len(unexplained) > max_unexplained_missing_loci:
         return _finish(
             "failed",
             f"{tool}/{chrom}: {len(unexplained)} locus/loci were prompted but never "
-            f"emitted, for a reason other than the known structural loss "
-            f"({unreachable!r}) — e.g. {unexplained[:5]}. The {max_loss_fraction:.1%} "
+            f"emitted, for a reason other than the {len(structurally_lost)} known "
+            f"structural loss(es) — e.g. {unexplained[:5]}. The {max_loss_fraction:.1%} "
             f"ratio gate passed this chunk; an exact per-locus check does not. Raising "
             f"--max-unexplained-missing-loci (with --acknowledge-high-loss-threshold) "
             f"records the decision in provenance and re-runs this chunk (R4-3)."
@@ -1079,6 +1182,13 @@ STRUCTURALLY_UNREACHABLE_REASON = (
     "when the *next* gene line is seen; the file loop ends and con.close() runs with "
     "no final flush) — not a generation failure, known and predictable before the run"
 )
+OVERSIZED_LOCUS_REASON = (
+    f"structurally unreachable: padded region exceeds genome2GSFDataset's "
+    f"maxLen={PREPROCESS_MAX_LEN} (preprocess.py logs 'Skipping <locus> because gene "
+    f"length > {PREPROCESS_MAX_LEN}' and continues), so the locus is never inserted and "
+    f"never generated — not a generation failure, computed before the run from the gene's "
+    f"own span; TAIR10 has none, these are the fused mega-loci GeMoMa and EGAPx emit"
+)
 UNEXPLAINED_MISSING_REASON = "never generated (unexplained)"
 
 
@@ -1120,6 +1230,7 @@ def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out
     input_keys: set[str] = set()
     input_ids: set[str] = set()  # cross-check only, never used to decide "missing"
     known_unreachable: set[str] = set()
+    known_oversized: set[str] = set()
     for r in chunk_results:
         subset = LOCAL_CHUNKS / f"{r['tool']}_{r['chromosome']}_subset.gff3"
         if not subset.exists():
@@ -1132,10 +1243,14 @@ def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out
         locus = r.get("structurally_unreachable_locus")
         if locus:
             known_unreachable.add(locus)
+        known_oversized |= set(r.get("oversized_loci") or ())
 
     output_gms = _gff_gm_values(final_path)
     missing = sorted(input_keys - output_gms)
 
+    # Checked before I-4 below, deliberately: a total key-derivation mismatch makes
+    # *every* output locus look "extra" as well as every input locus look missing, and
+    # this message names the actual cause where I-4's would only describe a symptom.
     if input_keys and len(missing) == len(input_keys):
         raise RuntimeError(
             f"missing-loci manifest reports all {len(input_keys)} input loci as never "
@@ -1145,19 +1260,44 @@ def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out
             f"write a manifest this implausible"
         )
 
-    structurally_unreachable_count = sum(1 for m in missing if m in known_unreachable)
-    unexplained_count = len(missing) - structurally_unreachable_count
+    # I-4 (round 5): the other direction, which nothing computed. A locus in the output
+    # that was never in any input subset cannot have been prompted from one — it means a
+    # chunk carried another chromosome's records, a subset was pushed to the wrong path,
+    # or a GM= was rewritten downstream. Every other check here measures what went
+    # missing, so this class could only ever have arrived silently.
+    extra = sorted(output_gms - input_keys)
+    if extra:
+        raise RuntimeError(
+            f"final output contains {len(extra)} GM= locus/loci that appear in no input "
+            f"subset — e.g. {extra[:5]}. Nothing could have prompted them, so this is a "
+            f"mis-routed chunk, a mis-pushed subset, or a rewritten GM=, not a result "
+            f"(I-4)."
+        )
+
+    # C-1: oversize takes precedence when a locus is both — it is the reason the locus
+    # never reached the database at all, so the N6 pending-flush drop never applied to it.
+    def _reason(locus: str) -> str:
+        if locus in known_oversized:
+            return OVERSIZED_LOCUS_REASON
+        if locus in known_unreachable:
+            return STRUCTURALLY_UNREACHABLE_REASON
+        return UNEXPLAINED_MISSING_REASON
+
+    oversized_count = sum(1 for m in missing if m in known_oversized)
+    structurally_unreachable_count = sum(
+        1 for m in missing if m in known_unreachable and m not in known_oversized)
+    unexplained_count = len(missing) - oversized_count - structurally_unreachable_count
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w") as out:
         out.write("locus\treason\n")
         for m in missing:
-            reason = STRUCTURALLY_UNREACHABLE_REASON if m in known_unreachable else UNEXPLAINED_MISSING_REASON
-            out.write(f"{m}\t{reason}\n")
+            out.write(f"{m}\t{_reason(m)}\n")
 
     return {
         "total": len(missing),
         "structurally_unreachable": structurally_unreachable_count,
+        "oversized": oversized_count,
         "unexplained": unexplained_count,
     }
 
@@ -1308,6 +1448,17 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
         host_commit = f"N/A (chunks disagree or are missing a recorded commit: {commits})"
 
     stub = output_stub(tool, chromosomes)
+    # Minor (round 5): a previous run's canonical outputs are removed the moment this one
+    # commits to producing new ones. Otherwise a run that fails a gate below overwrites
+    # the manifest (which is written before the gates) while leaving the earlier
+    # `_completed.gff3` and `_provenance.json` in place — a provenance saying "ok" beside
+    # a manifest describing a different, failed run, which is precisely the "looks
+    # complete" artifact this script exists to never produce. Losing the earlier result is
+    # acceptable and cheap: every chunk resumes from cache, so re-running restores it in
+    # minutes without touching the GPU.
+    for stale in (LOCAL_PREDICTIONS / f"{stub}_completed.gff3",
+                  LOCAL_PREDICTIONS / f"{stub}_provenance.json"):
+        stale.unlink(missing_ok=True)
     chunk_paths = [chunk_output_path(tool, c) for c in chromosomes]
     raw_path = LOCAL_PREDICTIONS / f"{stub}_raw.gff3"
     genes_raw_merged = merge_gff3_files(chunk_paths, raw_path)  # I1: the first of two loss channels
@@ -1334,6 +1485,26 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
     genes_in_total = sum(r["genes_in"] for r in chunk_results)
     reachable_genes_in_total = sum(r["reachable_genes_in"] for r in chunk_results)
     genes_out_total = count_gff3_features(final_partial, "gene")
+
+    # I-3 (round 5): R4-4's "did we gain something" check covered the raw chunk only —
+    # merge, standardize and filter were all downstream of it and unchecked. This closes
+    # all three at once, and it is not vacuous: `standardize_gff.py:359-376` invents a
+    # `gene_for_<mrna_id>` parent for an orphan mRNA whose attributes are `{'ID': ...}`
+    # with **no GM=**, reachable whenever a degenerate output yields a gene span over its
+    # 500 kb cap with a child mRNA under 100 kb; `13_beam1_filter.py:36` then falls back
+    # to the row's ID when GM= is absent, so those synthetic genes survive into the final
+    # file. Each one inflates genes_out_total, masks an equal amount of real loss from
+    # check_loss above, and reaches Task 5 as a gene record pairable to no input locus.
+    final_gm_values = _gff_gm_values(final_partial)
+    if genes_out_total != len(final_gm_values):
+        raise LossTooHigh(
+            f"{tool}: the final file has {genes_out_total} gene rows but only "
+            f"{len(final_gm_values)} distinct GM= loci. Rows without a GM= cannot be "
+            f"paired to any input locus and silently offset real loss in the count "
+            f"check_loss just used — most likely standardize_gff()'s synthetic "
+            f"gene_for_<mrna_id> parents for orphan mRNAs (I-3)."
+        )
+
     if reachable_genes_in_total > 0:
         check_loss(reachable_genes_in_total, genes_out_total, max_loss_fraction,
                    context=f"{tool} (final, post-filter)")
@@ -1400,6 +1571,9 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
         # predictable loss from a genuinely unexplained one.
         "missing_loci_count": missing_loci["total"],
         "missing_loci_structurally_unreachable": missing_loci["structurally_unreachable"],
+        # C-1: reported separately from the N6 drop because it is a different mechanism
+        # with a different scale — one per chunk versus 0-4 per chunk, content-dependent.
+        "missing_loci_oversized": missing_loci["oversized"],
         "missing_loci_unexplained": missing_loci["unexplained"],
         "missing_loci_path": str(missing_loci_path),
         "started_at": started_at, "finished_at": finished_at,
@@ -1445,6 +1619,26 @@ def main(argv: list[str] | None = None) -> int:
                      help="Skip the genome/input checksum preflight (for offline dry runs/tests). "
                           "Does not affect the host git-commit check, which is never skippable.")
     args = ap.parse_args(argv)
+
+    # I-5 (round 5): --chromosomes had neither `choices` nor a duplicate check, and both
+    # failure modes corrupt the provenance Task 5 reads while leaving the final file
+    # looking right. A duplicated ChrM still produces the canonical stub (_is_full_genome
+    # compares sets), merges ChrM twice, and filter_top_beam dedupes it back out — so
+    # genes_in_total and reachable_genes_in_total double-count and `chunks` gains an
+    # eighth entry, at 0.35% and therefore under the ratio gate. Duplicating Chr1 instead
+    # would trip it at 20%: the existing check is exactly inverted in sensitivity, most
+    # forgiving where the error is easiest to make. A typo, meanwhile, yields an empty
+    # subset whose genes_in=0 skips check_loss entirely.
+    unknown = [c for c in args.chromosomes if c not in CHROMOSOMES]
+    if unknown:
+        ap.error(f"unknown chromosome(s) {unknown}; expected a subset of {list(CHROMOSOMES)}")
+    duplicated = sorted({c for c in args.chromosomes if args.chromosomes.count(c) > 1})
+    if duplicated:
+        ap.error(
+            f"--chromosomes repeats {duplicated}; a repeated chromosome is generated once "
+            f"but counted twice in genes_in_total/reachable_genes_in_total while the final "
+            f"file stays correct, so nothing downstream would notice (I-5)"
+        )
 
     # C3: the full parsed CLI invocation goes into every tool's provenance verbatim, not
     # just the hardcoded model-invocation constants — so a run's exact arguments are
