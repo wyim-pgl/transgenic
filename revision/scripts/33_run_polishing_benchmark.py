@@ -52,10 +52,23 @@ by actually running the pipeline on the GPU host, and is recorded in
    `run_remote_chunk`'s `reachable_genes_in`) rather than patching `preprocess.py` on
    the pinned host, which would break comparability with the published predictions.
 
-This is the third defect this benchmark has surfaced in `prompt_mode.py` and its
-dependencies, alongside point 1 (the batch-32 default that silently zeroes all output)
-and point 3 (the `cache_dir="./HFmodels"` working-directory trap) — all three are worth
-reporting upstream on their own, independent of this benchmark.
+7. **(Round 4) `genome2GSFDataset` appends to an existing DuckDB.** Pointing `--db` at
+   a path that already exists adds the new loci alongside the ones already there,
+   silently, and generation then runs over the union. Measured on the real host while
+   verifying the resume fix: a second run of the `egapx/ChrM` chunk emitted 22 gene rows
+   for 11 loci — exactly 2 per `GM=` — and its log reads `Generating predictions... 22`
+   for a 12-gene chunk. Every gate in this script measures *loss*, so an inflated count
+   passes all of them, and a re-run that genuinely produced only half its loci would be
+   topped back up to a passing number by the stale half. `build_prompt_mode_command`
+   therefore deletes the remote `.db` and raw output before each run, and
+   `run_remote_chunk` fails a chunk whose gene-row count differs from its distinct
+   `GM=` count.
+
+This is the fourth defect this benchmark has surfaced in `prompt_mode.py` and its
+dependencies, alongside point 1 (the batch-32 default that silently zeroes all output),
+point 3 (the `cache_dir="./HFmodels"` working-directory trap) and point 6 (the silently
+dropped last gene) — all four are worth reporting upstream on their own, independent of
+this benchmark.
 
 Pipeline (per tool): prompt_mode (remote, GPU) -> standardize_gff -> top-beam filter.
 Each tool runs one chromosome at a time (Chr1-5, ChrC, ChrM) so that a run that dies
@@ -123,6 +136,23 @@ DEFAULT_MAX_LOSS_FRACTION = 0.05  # published run lost 3/27,416 = 0.01%; 5% is a
                                   # "something is clearly wrong" trigger, not a target.
                                   # Raising it above this default requires an explicit,
                                   # provenance-recorded acknowledgement (C3) — see main().
+# R4-3: the ratio gate above cannot see a single genuinely-missing locus on any but the
+# smallest chromosome, so the exact per-locus count is gated separately, and its default
+# is zero: every locus prompted must come back, except the one per chunk known to be
+# structurally unreachable. Raising it needs the same acknowledgement C3 requires, for
+# the same reason — a loosened gate must never be invisible to a future reader.
+DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI = 0
+
+# R4-3: unexplained loss is a different quantity from total loss and needs its own,
+# much tighter scale. `reachable_genes_in` already excludes the one locus per chunk that
+# genome2GSFDataset structurally cannot emit, so anything still missing is either a real
+# generation failure or something we do not understand — and the published run shows what
+# "normal" looks like there: 3 of 27,416 loci absent, one of them the structural drop, so
+# 2 genuinely unexplained, 0.007%. A gate at 0.05 would never fire on that scale; a gate
+# at zero would abort a *correct* 19-hour run at the very end with no way forward short of
+# editing this file. 0.001 sits between: it tolerates ~27 unexplained loci genome-wide,
+# roughly thirteen times the published rate, while still catching a systematic failure.
+DEFAULT_MAX_UNEXPLAINED_FRACTION = 0.001
 
 # I10/N5: top-level feature types that are never protein-coding gene loci (EGAPx carries
 # 2,048 lnc_RNA + 378 pseudogene rows in the staged A. thaliana file), and the gbkey
@@ -443,11 +473,24 @@ def build_prompt_mode_command(remote_gff: str, remote_output: str, remote_db: st
 
     `--batch-size 1` and `--num-beams 2` are literal constants in this string, not
     interpolated from any caller-supplied value — see the module docstring.
+
+    R4-4 (round 4, found while verifying R4-1 on the real host): the stale remote
+    DuckDB is deleted first, because `genome2GSFDataset` *appends* to an existing one.
+    Re-running a chunk against a leftover `.db` therefore generates every locus again on
+    top of the ones already there — measured on the real GPU, a second run of
+    `egapx/ChrM` produced 22 gene rows for 11 loci, exactly 2 per `GM=`, and the log
+    confirms the cause ("Generating predictions... 22" where the chunk has 12 genes).
+    Nothing downstream would have called that wrong: `check_loss` only ever looks for
+    *loss*, so an inflated count sails through, and a re-run that genuinely produced
+    only half its loci would be masked by the stale half back to a passing number. The
+    raw output is removed for the same reason — so a re-run is a re-run, not an
+    accumulation, which is the premise `ensure_chunk` is built on.
     """
     for value in (remote_gff, remote_output, remote_db, remote_log):
         assert_not_scratch(value)
     return (
         f"{build_remote_env_setup()} && cd {REMOTE_TRANSGENIC_DIR} && "
+        f"rm -f {remote_db} {remote_output} && "
         f"python3 examples/prompt_mode.py "
         f"--genome {REMOTE_GENOME} --gff {remote_gff} --output {remote_output} "
         f"--db {remote_db} --model {MODEL} --batch-size {BATCH_SIZE} "
@@ -573,6 +616,19 @@ def load_json(path: Path) -> dict | None:
         return None
 
 
+# R4-2: every chunk-provenance field `run_tool_pipeline` reads unconditionally off an
+# "ok" chunk result. A record predating any of them must not resume as done — see
+# chunk_is_done. Register new fields here when adding them, or a future resume crashes
+# with a KeyError instead of failing loudly.
+REQUIRED_CHUNK_PROVENANCE_KEYS = (
+    "genes_in",
+    "genes_out",
+    "reachable_genes_in",
+    "structurally_unreachable_locus",
+    "missing_loci_unexplained",
+)
+
+
 def chunk_provenance_path(tool: str, chrom: str) -> Path:
     return LOCAL_CHUNKS / f"{tool}_{chrom}_raw.provenance.json"
 
@@ -595,13 +651,16 @@ def chunk_is_done(tool: str, chrom: str, expected_genes_in: int) -> bool:
         return False
     if prov.get("genes_in") != expected_genes_in:
         return False
-    # R4-2: a provenance record written before round 3 has no reachable_genes_in /
-    # structurally_unreachable_locus — run_tool_pipeline now assumes every "ok" chunk
-    # result has them (summing r["reachable_genes_in"] directly) and would crash with a
-    # KeyError on a stale record rather than failing loudly the way every other
-    # incompatibility here does. Treat their absence as not-done, the same as a
-    # genes_in mismatch or a missing subset file below.
-    if "reachable_genes_in" not in prov or "structurally_unreachable_locus" not in prov:
+    # R4-2: a provenance record written by an older revision of this script can be
+    # missing fields that `run_tool_pipeline` now reads unconditionally — round 3's
+    # `reachable_genes_in` (summed directly, `KeyError` on a stale record) and round 4's
+    # `missing_loci_unexplained`. A latent hard crash on resume is exactly what a script
+    # whose purpose is surviving interruption must not have, so an incomplete record is
+    # not-done, the same as a genes_in mismatch or a missing subset file below.
+    # REQUIRED_CHUNK_PROVENANCE_KEYS is the contract, not a list of the two fields that
+    # happened to break first: every field a later round teaches run_tool_pipeline to
+    # read must be registered there, or this check silently stops covering it.
+    if any(key not in prov for key in REQUIRED_CHUNK_PROVENANCE_KEYS):
         return False
     out_path = chunk_output_path(tool, chrom)
     if not out_path.exists():
@@ -625,7 +684,8 @@ def chunk_is_done(tool: str, chrom: str, expected_genes_in: int) -> bool:
 
 def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
                       ssh_run=default_ssh_run, fetch=default_rsync_fetch, push=default_rsync_push,
-                      host: str = HOST) -> dict:
+                      host: str = HOST,
+                      max_unexplained_missing_loci: int = DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI) -> dict:
     """Run one (tool, chromosome) chunk on the GPU host and fetch its output back.
 
     Never raises for an ordinary loss violation or remote failure — those are recorded
@@ -651,6 +711,11 @@ def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
         "status": "failed", "reason": None,
         "genes_in": None, "reachable_genes_in": None, "genes_out": None,
         "structurally_unreachable_locus": None, "noncoding_features_excluded": None,
+        # R4-3: an exact per-locus accounting, not a ratio — see the gate below. Stays
+        # None (never 0) for a chunk that failed before its output could be compared,
+        # so "no unexplained misses" is never confused with "never measured".
+        "missing_loci_unexplained": None, "missing_loci_unexplained_examples": None,
+        "distinct_loci_out": None,
         "host_git_commit": None,
         "parsing_errors_found": None, "parsing_errors_skipped": None, "parsing_errors_total": None,
         "output_written": None,
@@ -759,12 +824,63 @@ def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
     # Real chromosomes have thousands (or, for the smallest, dozens) of genes, so this
     # only ever matters for a minimal test fixture, not a real run.
 
+    # R4-3 (chunk level): which loci this chunk was asked about and never answered for,
+    # named — not a rate. `check_loss` above is a ratio against a denominator round 3
+    # deliberately shrank by the known structural loss, and a ratio cannot see a single
+    # real miss on anything but a tiny chromosome: at the 5% default it tolerates ~309
+    # lost loci on EGAPx Chr1 (6,194 filtered). This compares the subset actually pushed
+    # against the GM= values actually emitted, so one genuinely-never-generated locus is
+    # caught on the chromosome that produced it rather than ~6 GPU-hours later at the
+    # tool-level manifest gate. The tool-level check is the strict superset of this one
+    # (raw chunk output ⊇ the standardized, top-beam-filtered final file), so this adds
+    # no failure that the end of the run would not have reached anyway — only an earlier,
+    # better-attributed one.
+    prompted_loci = _gff_first_attr_values(local_subset, "gene")
+    emitted_loci = _gff_gm_values(local_out)
+    result["distinct_loci_out"] = len(emitted_loci)
+
+    # R4-4: every gate here counts loss, so a chunk that came back with *more* gene rows
+    # than distinct loci had no check at all. That is the observable signature of the
+    # stale-remote-DB accumulation `build_prompt_mode_command`'s `rm -f` now prevents
+    # (22 rows / 11 GM= values, measured), and it is worth failing on independently of
+    # that fix: it is also what a future invocation exporting both beam hypotheses would
+    # produce, and gpu-environment.md is explicit that this pipeline emits exactly one
+    # record per locus (`num_return_sequences=1`; 18 rows for 18 loci, verified twice).
+    # If that ever stops being true, this must be a loud stop, not a silently doubled
+    # denominator downstream.
+    if genes_out != len(emitted_loci):
+        return _finish(
+            "failed",
+            f"{tool}/{chrom}: output has {genes_out} gene rows for "
+            f"{len(emitted_loci)} distinct GM= loci — this invocation emits exactly one "
+            f"record per locus, so a mismatch means duplicated records (a stale remote "
+            f"database accumulating across runs) or an invocation change that exports "
+            f"more than one hypothesis per locus. Refusing to record a count nothing "
+            f"downstream would flag, since every other gate here only measures loss."
+        )
+
+    unreachable = result["structurally_unreachable_locus"]
+    unexplained = sorted(locus for locus in (prompted_loci - emitted_loci) if locus != unreachable)
+    result["missing_loci_unexplained"] = len(unexplained)
+    result["missing_loci_unexplained_examples"] = unexplained[:10]
+    if len(unexplained) > max_unexplained_missing_loci:
+        return _finish(
+            "failed",
+            f"{tool}/{chrom}: {len(unexplained)} locus/loci were prompted but never "
+            f"emitted, for a reason other than the known structural loss "
+            f"({unreachable!r}) — e.g. {unexplained[:5]}. The {max_loss_fraction:.1%} "
+            f"ratio gate passed this chunk; an exact per-locus check does not. Raising "
+            f"--max-unexplained-missing-loci (with --acknowledge-high-loss-threshold) "
+            f"records the decision in provenance and re-runs this chunk (R4-3)."
+        )
+
     return _finish("ok")
 
 
 def ensure_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
                   ssh_run=default_ssh_run, fetch=default_rsync_fetch, push=default_rsync_push,
-                  host: str = HOST, force: bool = False) -> dict:
+                  host: str = HOST, force: bool = False,
+                  max_unexplained_missing_loci: int = DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI) -> dict:
     """Run a chunk, or return its already-recorded result if it previously succeeded.
 
     A resumed chunk makes no SSH calls at all — it returns the exact record written the
@@ -792,7 +908,8 @@ def ensure_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
         prov = dict(load_json(chunk_provenance_path(tool, chrom)))
         prov["resumed"] = True
         return prov
-    result = run_remote_chunk(tool, chrom, max_loss_fraction, ssh_run=ssh_run, fetch=fetch, push=push, host=host)
+    result = run_remote_chunk(tool, chrom, max_loss_fraction, ssh_run=ssh_run, fetch=fetch, push=push,
+                               host=host, max_unexplained_missing_loci=max_unexplained_missing_loci)
     result["resumed"] = False
     write_json(chunk_provenance_path(tool, chrom), result)
     return result
@@ -1127,6 +1244,7 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
                        ssh_run=default_ssh_run, fetch=default_rsync_fetch, push=default_rsync_push,
                        host: str = HOST, force: bool = False, skip_preflight: bool = False,
                        acknowledge_high_loss_threshold: bool = False,
+                       max_unexplained_missing_loci: int = DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI,
                        invocation_args: dict | None = None) -> dict:
     if tool not in TOOLS:
         raise ValueError(f"unknown tool {tool!r}, expected one of {TOOLS}")
@@ -1139,6 +1257,17 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
             f"max_loss_fraction={max_loss_fraction} exceeds the default "
             f"{DEFAULT_MAX_LOSS_FRACTION} and acknowledge_high_loss_threshold was not "
             f"set — see task-4-findings-round1.md C3"
+        )
+    if (max_unexplained_missing_loci > DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI
+            and not acknowledge_high_loss_threshold):
+        # R4-3 rides C3's mechanism rather than inventing a second one: tolerating a
+        # locus that was prompted and never came back is exactly as much of a loosened
+        # gate as raising the ratio, and must be exactly as visible afterwards.
+        raise ValueError(
+            f"max_unexplained_missing_loci={max_unexplained_missing_loci} exceeds the "
+            f"default {DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI} and "
+            f"acknowledge_high_loss_threshold was not set — see "
+            f"task-4-findings-round4.md R4-3"
         )
 
     started_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -1153,7 +1282,8 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
     chunk_results = []
     for chrom in chromosomes:
         result = ensure_chunk(tool, chrom, max_loss_fraction, ssh_run=ssh_run, fetch=fetch, push=push,
-                               host=host, force=force)
+                               host=host, force=force,
+                               max_unexplained_missing_loci=max_unexplained_missing_loci)
         chunk_results.append(result)
         if result.get("status") != "ok":
             raise LossTooHigh(
@@ -1222,7 +1352,12 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
     # unexplained miss is never treated as complete just because the ratio alone looked
     # fine. This still leaves final_partial and the manifest on disk as diagnostics
     # (matching C1's own choice for the ratio gate), but installs nothing canonical.
-    if missing_loci["unexplained"] > 0:
+    # The chunk-level gate in run_remote_chunk already applies this same threshold to
+    # each chunk's *raw* output; this one applies it to what actually survives
+    # standardisation and the top-beam filter, which is the file Task 5 scores. A locus
+    # dropped by standardize_gff() (invalid coordinates, an implausible span) reaches
+    # only this gate, so the two are not redundant.
+    if missing_loci["unexplained"] > max_unexplained_missing_loci:
         raise LossTooHigh(
             f"{tool}: {missing_loci['unexplained']} locus/loci went missing for a "
             f"reason other than the known per-chunk structural loss (see "
@@ -1288,8 +1423,16 @@ def main(argv: list[str] | None = None) -> int:
                           "A non-full set writes {tool}_{chromosomes}_completed.gff3, "
                           "never the canonical {tool}_completed.gff3 (C2).")
     ap.add_argument("--max-loss-fraction", type=float, default=DEFAULT_MAX_LOSS_FRACTION)
+    ap.add_argument("--max-unexplained-missing-loci", type=int,
+                     default=DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI,
+                     help="How many prompted loci may come back missing for a reason "
+                          "other than the known per-chunk structural loss before the "
+                          "run stops (default 0, at both chunk and tool level). Raising "
+                          "it requires --acknowledge-high-loss-threshold and re-runs any "
+                          "chunk that already failed on it (R4-3).")
     ap.add_argument("--acknowledge-high-loss-threshold", action="store_true",
-                     help="Required to use --max-loss-fraction above the default; the "
+                     help="Required to use --max-loss-fraction or "
+                          "--max-unexplained-missing-loci above their defaults; the "
                           "acknowledgement itself is recorded in provenance (C3).")
     ap.add_argument("--force", action="store_true", help="Ignore prior chunk provenance and redo everything.")
     ap.add_argument("--skip-preflight", action="store_true",
@@ -1315,6 +1458,7 @@ def main(argv: list[str] | None = None) -> int:
                 tool, chromosomes=tuple(args.chromosomes), max_loss_fraction=args.max_loss_fraction,
                 force=args.force, skip_preflight=args.skip_preflight,
                 acknowledge_high_loss_threshold=args.acknowledge_high_loss_threshold,
+                max_unexplained_missing_loci=args.max_unexplained_missing_loci,
                 invocation_args=invocation_args,
             )
         except Exception as e:  # noqa: BLE001 - report and move on to the next tool

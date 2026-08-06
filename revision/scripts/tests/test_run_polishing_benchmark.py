@@ -42,6 +42,22 @@ def _write_gff(path: Path, rows) -> None:
     path.write_text(_gff_lines(rows))
 
 
+def _make_gene_triples(seq, ids, start=1000, step=2000):
+    """(gene, mRNA, CDS) rows for each id in `ids`, non-overlapping, in file order.
+
+    Gene rows carry `GM=`, as real prompt_mode.py output does, so fixtures built from
+    this are usable on both sides of the input/output pairing the R4-3 gates do.
+    """
+    rows = []
+    for i, gid in enumerate(ids):
+        s = start + i * step
+        e = s + 500
+        rows.append((seq, "gene", s, e, f"ID={gid};GM={gid}"))
+        rows.append((seq, "mRNA", s, e, f"ID={gid}.1;Parent={gid}"))
+        rows.append((seq, "CDS", s, e, f"ID={gid}.1.cds;Parent={gid}.1"))
+    return rows
+
+
 class FakeCompletedProcess:
     def __init__(self, returncode=0, stdout="", stderr=""):
         self.returncode = returncode
@@ -617,7 +633,8 @@ def test_chunk_is_done_true_when_ok_and_genes_in_matches(tmp_path):
     _write_gff(run_bench.LOCAL_CHUNKS / "gemoma_Chr1_subset.gff3", [("Chr1", "gene", 1, 100, "ID=g1")])
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 1,
-                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1"})
+                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1",
+                           "missing_loci_unexplained": 0})
     assert run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
 
 
@@ -636,7 +653,8 @@ def test_chunk_is_done_false_when_genes_in_has_drifted(tmp_path):
     out.write_text("Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n")
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 1,
-                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1"})
+                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1",
+                           "missing_loci_unexplained": 0})
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=6)
 
 
@@ -654,10 +672,29 @@ def test_chunk_is_done_false_when_reachable_genes_in_field_missing(tmp_path):
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
 
 
+def test_chunk_is_done_false_when_a_round_3_record_lacks_a_round_4_field(tmp_path):
+    """R4-2, generalised: the round-3 record shape is the one actually on disk from a
+    prior run, and it satisfies the two fields that broke first while still lacking
+    `missing_loci_unexplained`, which run_tool_pipeline's chunk loop now relies on. The
+    check has to be the whole REQUIRED_CHUNK_PROVENANCE_KEYS contract for that to be
+    caught, not a hardcoded pair of names — a test naming the pair would pass here while
+    the crash it was written to prevent still happened."""
+    assert "missing_loci_unexplained" in run_bench.REQUIRED_CHUNK_PROVENANCE_KEYS
+    out = run_bench.chunk_output_path("gemoma", "Chr1")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n")
+    _write_gff(run_bench.LOCAL_CHUNKS / "gemoma_Chr1_subset.gff3", [("Chr1", "gene", 1, 100, "ID=g1")])
+    run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
+                          {"status": "ok", "genes_in": 5, "genes_out": 1,  # round-3 shape
+                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1"})
+    assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
+
+
 def test_chunk_is_done_false_when_output_file_missing(tmp_path):
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 1,
-                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1"})
+                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1",
+                           "missing_loci_unexplained": 0})
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
 
 
@@ -669,7 +706,8 @@ def test_chunk_is_done_false_when_output_file_truncated_after_provenance_written
     out.write_text("Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n")  # 1 gene on disk now
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 2,  # recorded 2
-                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1"})
+                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1",
+                           "missing_loci_unexplained": 0})
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
 
 
@@ -682,7 +720,8 @@ def test_chunk_is_done_false_when_subset_file_missing(tmp_path):
     out.write_text("Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n")
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 1,
-                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1"})
+                           "reachable_genes_in": 4, "structurally_unreachable_locus": "g1",
+                           "missing_loci_unexplained": 0})
     # Deliberately no gemoma_Chr1_subset.gff3 written.
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
 
@@ -731,8 +770,12 @@ def test_run_remote_chunk_success_path(tmp_path):
         "Chr1\tx\tgene\t200\t300\t.\t+\t.\tID=g2\n"
         "Chr1\tx\tmRNA\t200\t300\t.\t+\t.\tID=g2.1;Parent=g2\n"
     )
+    # GM= on every gene row, as real prompt_mode.py output carries it (it passes
+    # f"GM={gene_models[i]}" to gffString2GFF3, which appends the extra attributes to
+    # every emitted feature line) — the chunk-level R4-3 gate pairs input loci to output
+    # on exactly that attribute.
     remote = FakeRemote(gff_rows_by_hint={
-        "Chr1": [("Chr1", "gene", 1, 100, "ID=g1"), ("Chr1", "gene", 200, 300, "ID=g2")],
+        "Chr1": [("Chr1", "gene", 1, 100, "ID=g1;GM=g1"), ("Chr1", "gene", 200, 300, "ID=g2;GM=g2")],
     })
     result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
                                          ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
@@ -746,6 +789,9 @@ def test_run_remote_chunk_success_path(tmp_path):
     # check_loss gates on.
     assert result["structurally_unreachable_locus"] == "g2"
     assert result["reachable_genes_in"] == 1
+    # R4-3: g1 was prompted and came back; g2 is the known structural loss, not an
+    # unexplained one. So nothing is owed an explanation here.
+    assert result["missing_loci_unexplained"] == 0
 
 
 def test_run_remote_chunk_treats_a_single_gene_chunk_as_a_vacuous_pass(tmp_path):
@@ -758,7 +804,7 @@ def test_run_remote_chunk_treats_a_single_gene_chunk_as_a_vacuous_pass(tmp_path)
         "Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n"
         "Chr1\tx\tmRNA\t1\t100\t.\t+\t.\tID=g1.1;Parent=g1\n"
     )
-    remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1")]})
+    remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1;GM=g1")]})
     result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
                                          ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
     assert result["status"] == "ok"
@@ -790,7 +836,7 @@ def test_run_remote_chunk_reports_na_parsing_errors_when_summary_line_absent(tmp
         "Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n"
         "Chr1\tx\tmRNA\t1\t100\t.\t+\t.\tID=g1.1;Parent=g1\n"
     )
-    remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1")]},
+    remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1;GM=g1")]},
                          log_text="Output written to: out.gff3\n")
     result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
                                          ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
@@ -806,7 +852,7 @@ def test_run_remote_chunk_records_real_parsing_errors_when_summary_line_present(
         "Chr1\tx\tmRNA\t1\t100\t.\t+\t.\tID=g1.1;Parent=g1\n"
     )
     remote = FakeRemote(
-        gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1")]},
+        gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1;GM=g1")]},
         log_text="Output written to: out.gff3\nParsing errors: 0/1 sequences skipped\n",
     )
     result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
@@ -851,7 +897,7 @@ def test_run_remote_chunk_fails_when_host_commit_does_not_match_pinned(tmp_path)
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n"
     )
-    remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1")]},
+    remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1;GM=g1")]},
                          host_commit="deadbeefdeadbeefdeadbeefdeadbeefdeadbeef")
     result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
                                          ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
@@ -879,6 +925,75 @@ def test_run_remote_chunk_fails_when_output_covers_far_fewer_loci(tmp_path):
     assert "lost" in result["reason"]
 
 
+def test_build_prompt_mode_command_deletes_the_stale_remote_db_before_running(tmp_path):
+    """R4-4: `genome2GSFDataset` appends to an existing DuckDB, so a re-run against a
+    leftover `.db` regenerates every locus on top of the ones already in it. Measured on
+    the real GPU host at 520c64f: a second `ensure_chunk("egapx", "ChrM")` produced 22
+    gene rows for 11 distinct `GM=` values. The deletion must happen before
+    prompt_mode.py is invoked, or the accumulation has already happened."""
+    cmd = run_bench.build_prompt_mode_command(
+        "/r/in.gff3", "/r/out.gff3", "/r/chunk.db", "/r/run.log")
+    assert "rm -f /r/chunk.db /r/out.gff3" in cmd
+    assert cmd.index("rm -f") < cmd.index("prompt_mode.py")
+
+
+def test_run_remote_chunk_fails_when_output_has_more_rows_than_distinct_loci(tmp_path):
+    """R4-4: the signature of that accumulation — more gene rows than loci — passes
+    every other gate here, because they all measure loss and this is the opposite."""
+    ids = [f"g{i}" for i in range(1, 6)]
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(_gff_lines(_make_gene_triples("Chr1", ids)))
+    doubled = _make_gene_triples("Chr1", ids[:-1]) + _make_gene_triples("Chr1", ids[:-1], start=90000)
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": doubled})
+    result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
+                                         ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
+    assert result["status"] == "failed"
+    assert "8 gene rows" in result["reason"] and "4 distinct" in result["reason"]
+    # Nothing else here would have objected: no locus is missing and none was lost.
+    run_bench.check_loss(result["reachable_genes_in"], result["genes_out"], 0.05, context="control")
+
+
+def test_run_remote_chunk_gates_on_a_prompted_locus_that_never_came_back(tmp_path):
+    """R4-3 at chunk level: one locus prompted and never emitted, on a chromosome large
+    enough that the ratio gate cannot see it.
+
+    24 reachable loci, 23 emitted: 1/24 = 4.17%, under the 5% default, so `check_loss`
+    passes this chunk — which is the point. A ratio is blind to single-locus losses on
+    anything but a tiny chromosome (on EGAPx Chr1's 6,194 filtered loci it tolerates
+    ~309), so the exact per-locus comparison is the only thing standing between a real
+    generation failure and a merged result that looks complete.
+    """
+    ids = [f"g{i}" for i in range(1, 26)]  # g25 is last in file order -> N6 unreachable
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(_gff_lines(_make_gene_triples("Chr1", ids)))
+    # Emitted: g2..g24. g1 is a genuine, unexplained miss; g25 was never reachable.
+    remote = FakeRemote(gff_rows_by_hint={
+        "gemoma_Chr1_raw": _make_gene_triples("Chr1", ids[1:-1]),
+    })
+    result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
+                                         ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
+    assert result["status"] == "failed"
+    assert result["missing_loci_unexplained"] == 1
+    assert result["missing_loci_unexplained_examples"] == ["g1"]
+    assert "g1" in result["reason"]
+    # The ratio really did pass: 23 of 24 reachable survived, and check_loss raises
+    # nothing at that rate. Without this assertion the test could not distinguish "the
+    # new gate caught it" from "check_loss caught it first".
+    run_bench.check_loss(result["reachable_genes_in"], result["genes_out"], 0.05, context="control")
+
+
+def test_run_remote_chunk_records_zero_unexplained_misses_rather_than_omitting_them(tmp_path):
+    """A number that was computed must be recorded as a number. `missing_loci_unexplained`
+    stays None only when the chunk failed before its output could be compared — a clean
+    chunk records 0, which is what chunk_is_done's required-key contract relies on."""
+    ids = [f"g{i}" for i in range(1, 6)]
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(_gff_lines(_make_gene_triples("Chr1", ids)))
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": _make_gene_triples("Chr1", ids[:-1])})
+    result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
+                                         ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
+    assert result["status"] == "ok"
+    assert result["missing_loci_unexplained"] == 0
+    assert result["missing_loci_unexplained_examples"] == []
+
+
 def test_ensure_chunk_skips_remote_call_when_already_done(tmp_path):
     # R4-1: ensure_chunk's own fingerprint is now build_local_subset's post-filter
     # count, so this fixture needs an mRNA child (otherwise g1 is a childless shell,
@@ -896,7 +1011,8 @@ def test_ensure_chunk_skips_remote_call_when_already_done(tmp_path):
     _write_gff(run_bench.LOCAL_CHUNKS / "gemoma_Chr1_subset.gff3", [("Chr1", "gene", 1, 100, "ID=g1")])
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 1, "genes_out": 1,
-                           "reachable_genes_in": 0, "structurally_unreachable_locus": "g1"})
+                           "reachable_genes_in": 0, "structurally_unreachable_locus": "g1",
+                           "missing_loci_unexplained": 0})
 
     def poison(*args, **kwargs):
         raise AssertionError("should not have called ssh/fetch/push for an already-done chunk")
@@ -912,7 +1028,7 @@ def test_ensure_chunk_runs_when_not_done(tmp_path):
         "Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n"
         "Chr1\tx\tmRNA\t1\t100\t.\t+\t.\tID=g1.1;Parent=g1\n"
     )
-    remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1")]})
+    remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1;GM=g1")]})
     result = run_bench.ensure_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
                                      ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
     assert result["resumed"] is False
@@ -1209,36 +1325,28 @@ def test_run_tool_pipeline_reports_a_clean_run_despite_the_structurally_unreacha
     assert manifest_lines[1] == f"g3\t{run_bench.STRUCTURALLY_UNREACHABLE_REASON}"
 
 
-def _make_gene_triples(seq, ids, start=1000, step=2000):
-    """(gene, mRNA, CDS) rows for each id in `ids`, non-overlapping, in file order."""
-    rows = []
-    for i, gid in enumerate(ids):
-        s = start + i * step
-        e = s + 500
-        rows.append((seq, "gene", s, e, f"ID={gid};GM={gid}"))
-        rows.append((seq, "mRNA", s, e, f"ID={gid}.1;Parent={gid}"))
-        rows.append((seq, "CDS", s, e, f"ID={gid}.1.cds;Parent={gid}.1"))
-    return rows
+def test_run_tool_pipeline_gates_on_a_miss_only_standardization_causes(tmp_path):
+    """R4-3 at tool level, and the reason it is not redundant with the chunk-level gate.
 
+    Every reachable locus IS generated here, so the chunk-level check passes: this loss
+    happens later, when standardize_gff() drops g1 for a 2 bp CDS ("Removed mRNAs with
+    CDS length < 3 bp", then "Removed genes with no valid mRNAs"). Only the manifest,
+    computed from the final scored file, can see it.
 
-def test_run_tool_pipeline_gates_on_an_unexplained_miss_the_ratio_alone_would_pass(tmp_path):
-    """R4-3: reachable_genes_in shrinks check_loss's denominator by exactly the known
-    structural loss — correct, but on a chromosome large enough, one *additional*,
-    genuinely unexplained miss no longer moves the ratio past max_loss_fraction on its
-    own (1/24 = 4.17%, under the 5% default), where it would have under the old,
-    unadjusted denominator. write_missing_loci_manifest already classifies this miss
-    correctly as unexplained; this confirms run_tool_pipeline actually acts on that
-    classification instead of only recording it."""
-    ids = [f"g{i}" for i in range(1, 26)]  # g1..g25; g25 is last -> structurally unreachable
+    The ratio cannot: 23 of 24 reachable loci survive, 1/24 = 4.17%, under the 5%
+    default. So without this gate the run would install a `_completed.gff3` that is
+    quietly missing a locus, and Task 5 would score it as damage the model never did.
+    """
+    ids = [f"g{i}" for i in range(1, 26)]  # g25 is last in file order -> N6 unreachable
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(_gff_lines(_make_gene_triples("Chr1", ids)))
 
-    # Output covers every locus except g1 (a genuine, unexplained miss) and g25 (never
-    # reachable at all, matching reality) — 23 of 24 reachable loci, comfortably under
-    # the 5% ratio gate, but the manifest still owes an explanation for g1 specifically.
-    output_ids = ids[1:-1]
-    remote = FakeRemote(gff_rows_by_hint={
-        "gemoma_Chr1_raw": _make_gene_triples("Chr1", output_ids),
-    })
+    raw_rows = _make_gene_triples("Chr1", ids[:-1])  # g1..g24: every reachable locus
+    # Truncate g1's CDS to 2 bp so standardize_gff drops that gene and only that gene.
+    raw_rows = [(seq, feat, s, s + 1, attrs) if feat == "CDS" and "g1.1.cds" in attrs
+                else (seq, feat, s, e, attrs)
+                for seq, feat, s, e, attrs in raw_rows]
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": raw_rows})
+
     with pytest.raises(run_bench.LossTooHigh, match="R4-3"):
         run_bench.run_tool_pipeline(
             "gemoma", chromosomes=("Chr1",), max_loss_fraction=0.05,
@@ -1250,6 +1358,40 @@ def test_run_tool_pipeline_gates_on_an_unexplained_miss_the_ratio_alone_would_pa
     manifest_text = (run_bench.LOCAL_PREDICTIONS / f"{stub}_missing_loci.txt").read_text()
     assert f"g1\t{run_bench.UNEXPLAINED_MISSING_REASON}" in manifest_text
     assert f"g25\t{run_bench.STRUCTURALLY_UNREACHABLE_REASON}" in manifest_text
+    # The chunk really did pass its own gate — this loss is reachable only here.
+    chunk_prov = run_bench.load_json(run_bench.chunk_provenance_path("gemoma", "Chr1"))
+    assert chunk_prov["status"] == "ok"
+    assert chunk_prov["missing_loci_unexplained"] == 0
+
+
+def test_run_tool_pipeline_records_an_acknowledged_unexplained_miss_instead_of_stopping(tmp_path):
+    """The escape hatch, and the fact that using it leaves a trace.
+
+    A run that stops at hour 18 with no way forward except editing source is its own
+    failure mode, so the threshold is raisable — but only with the same acknowledgement
+    C3 already requires for --max-loss-fraction, and the manifest still names the locus
+    and still calls it unexplained. Nothing is silently reclassified as acceptable."""
+    ids = [f"g{i}" for i in range(1, 26)]
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(_gff_lines(_make_gene_triples("Chr1", ids)))
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": _make_gene_triples("Chr1", ids[1:-1])})
+
+    with pytest.raises(ValueError, match="acknowledge"):
+        run_bench.run_tool_pipeline(
+            "gemoma", chromosomes=("Chr1",), max_loss_fraction=0.05, max_unexplained_missing_loci=1,
+            ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push, skip_preflight=True,
+        )
+
+    summary = run_bench.run_tool_pipeline(
+        "gemoma", chromosomes=("Chr1",), max_loss_fraction=0.05, max_unexplained_missing_loci=1,
+        acknowledge_high_loss_threshold=True,
+        ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push, skip_preflight=True,
+        invocation_args={"max_unexplained_missing_loci": 1, "acknowledge_high_loss_threshold": True},
+    )
+    assert summary["status"] == "ok"
+    assert summary["missing_loci_unexplained"] == 1
+    assert summary["invocation_args"]["max_unexplained_missing_loci"] == 1
+    manifest_text = Path(summary["missing_loci_path"]).read_text()
+    assert f"g1\t{run_bench.UNEXPLAINED_MISSING_REASON}" in manifest_text
 
 
 def test_run_tool_pipeline_standardizes_away_inverted_coordinates(tmp_path):
@@ -1474,3 +1616,23 @@ def test_main_passes_acknowledge_flag_and_invocation_args_through(monkeypatch):
     assert rc == 0
     assert captured["gemoma"]["acknowledge_high_loss_threshold"] is True
     assert captured["gemoma"]["invocation_args"]["max_loss_fraction"] == 0.5
+
+
+def test_main_defaults_unexplained_missing_loci_to_zero_and_passes_an_override_through(monkeypatch):
+    """R4-3: the CLI must not be able to loosen the exact per-locus gate by omission,
+    and an override must reach both the pipeline and the recorded invocation_args."""
+    captured = {}
+
+    def fake_run_tool_pipeline(tool, **kwargs):
+        captured[tool] = kwargs
+        return {"tool": tool, "status": "ok", "chunks": []}
+
+    monkeypatch.setattr(run_bench, "run_tool_pipeline", fake_run_tool_pipeline)
+
+    run_bench.main(["--tool", "gemoma", "--skip-preflight"])
+    assert captured["gemoma"]["max_unexplained_missing_loci"] == 0
+
+    run_bench.main(["--tool", "braker3", "--skip-preflight",
+                     "--max-unexplained-missing-loci", "3", "--acknowledge-high-loss-threshold"])
+    assert captured["braker3"]["max_unexplained_missing_loci"] == 3
+    assert captured["braker3"]["invocation_args"]["max_unexplained_missing_loci"] == 3
