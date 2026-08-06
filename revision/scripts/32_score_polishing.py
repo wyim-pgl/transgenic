@@ -65,6 +65,23 @@ their own predictions, only the best-overlapping one is scored against it, and t
 are counted in `split_predictions` instead of each contributing (and each getting scored)
 as if it were a distinct comparable locus.
 
+KNOWN LIMITATION of that GM= pairing, measured on the 2026-08-06 benchmark run: this
+module matches the output's `GM=` value against the input gene's `ID=`, but the pinned
+`preprocess.py` (:314) derives `GM=` as the FIRST attribute value on the gene row
+whatever its key — and every GeMoMa gene row leads with `Name=`, not `ID=`. So for
+GeMoMa `GM=` is present on all 29,525 output loci and matches nothing: `gm_paired` is 0
+and every locus falls back to positional overlap, i.e. the identity-anchored protection
+described above did NOT apply to the tool with the second-highest damage rate. The
+impact was measured rather than assumed, by re-scoring with the correct key: `damaged`
+moves 6,218 -> 6,219 and the damage rate 30.46% -> 30.46%, and 5 of the 34 loci booked
+into `loci_without_output` in fact have output (they are pairing failures, not missing
+generations — still correctly excluded from the denominator, just mislabelled). BRAKER3
+and EGAPx are unaffected: their gene rows lead with `ID=`, so GM= pairing works and an
+independent reimplementation reproduces this module exactly on all eight table fields.
+`33_run_polishing_benchmark.py` already replicates the real rule in
+`_first_attribute_value()`; this module has not been changed to match, because doing so
+would alter published numbers and needs its own review round.
+
 EGAPx also carries non-coding loci (lnc_RNA, pseudogene, misc_RNA-flavoured "transcript"
 rows) that have no CDS at all. These are excluded from the locus counts automatically,
 because loci are only ever discovered by walking up from CDS rows — but that exclusion is
