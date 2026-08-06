@@ -136,7 +136,12 @@ NUM_BEAMS = 2  # Methods: num_beams=2, do_sample=False
 MAX_LENGTH = 2048
 DEVICE = "cuda"
 
-TOOLS = ("gemoma", "braker3", "egapx")
+# helixer and annevo are the two tools the Discussion named by name — "primary-transcript
+# annotations such as those produced by Helixer or ANNEVO" — so they test the manuscript's
+# own claim rather than a proxy for it. Both come from the 13-species benchmark's own
+# standardized_results, already on TAIR10 sequence names, and both emit exactly one
+# transcript per locus (27,039 and 25,181), which is the case the claim describes.
+TOOLS = ("gemoma", "braker3", "egapx", "helixer", "annevo")
 CHROMOSOMES = ("Chr1", "Chr2", "Chr3", "Chr4", "Chr5", "ChrC", "ChrM")
 SCRATCH_PREFIXES = ("_smoke", "_bs")  # the team lead's GPU-host scratch files
 

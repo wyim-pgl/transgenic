@@ -1844,7 +1844,9 @@ def test_main_returns_1_and_still_attempts_other_tools_when_one_fails(monkeypatc
     monkeypatch.setattr(run_bench, "run_tool_pipeline", fake_run_tool_pipeline)
     rc = run_bench.main(["--tool", "all", "--skip-preflight"])
     assert rc == 1
-    assert set(attempted) == {"gemoma", "braker3", "egapx"}
+    # Track the constant rather than duplicating it: the behaviour under test is that a
+    # failure in one tool does not stop the others, whatever the tool list happens to be.
+    assert set(attempted) == set(run_bench.TOOLS)
 
 
 def test_main_returns_0_when_all_tools_succeed(monkeypatch):
