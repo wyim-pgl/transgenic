@@ -47,10 +47,12 @@ reference's other transcripts at that locus, so a tool's own pre-existing extra 
 are never credited to the output as something it "added".
 
 `added_structures` is NOT a measure of isoform generation, and must not be read as one.
-Measured on the 2026-08-06 benchmark run, 84-89% of it is replacement, not addition: an
-added structure usually sits at a locus where the prompted structure was destroyed, so the
-same event is booked as damage here and as a gain there. Split by whether the prompted
-structure survived at the locus:
+Measured on the 2026-08-06 benchmark run, 84-89% of it sits at loci where the prompted
+structure was destroyed, so the same event is booked as damage here and as a gain there.
+(For BRAKER3 that is exactly 1.00 addition per destroyed locus, so those additions are
+demonstrably the replacements; GeMoMa and EGAPx place ~2.75 per destroyed locus, so only
+the LOCATION is established for them, not that each addition is a replacement.) Split by
+whether the prompted structure survived at the locus:
 
     GeMoMa   21,739 added   18,336 at destroyed loci (84.3%)   3,403 genuine, 2,717 loci
     BRAKER3     128 added      114 at destroyed loci (89.1%)      14 genuine,     9 loci
@@ -62,6 +64,15 @@ Cross-tool comparisons of the raw `added_structures` totals are therefore mislea
 way that systematically flatters whichever input the model damages least — BRAKER3 looks
 like it generates 128 structures when it genuinely generates 14, at 9 of 23,756 loci. Use
 the decomposition, not the total.
+
+`added_matching_reference / added_structures` (the `added_precision_pct` field) inherits the
+same inflated denominator. On genuine additions only it is 22/3,403 = 0.65% for GeMoMa and
+19/2,912 = 0.65% for EGAPx, against the 0.41% and 0.14% the raw ratio reports — so this
+field understates precision by roughly 1.6x and 4.6x respectively. Note also that the field
+is structurally meaningless for a run prompted with the reference itself: `added` is
+`output - input`, so when the input IS the reference, `added & reference` is empty by
+construction (measured: 0 of the control's 881 genuine additions). A 0% there means "not
+measurable", not "all wrong".
 
 Two of the three staged inputs cannot support a UTR-level comparison: GeMoMa emits no
 exon rows at all, and BRAKER3's exon coordinates equal its CDS coordinates everywhere (no
