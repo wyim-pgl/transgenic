@@ -46,6 +46,23 @@ already had (not just its representative) are counted separately and scored agai
 reference's other transcripts at that locus, so a tool's own pre-existing extra isoforms
 are never credited to the output as something it "added".
 
+`added_structures` is NOT a measure of isoform generation, and must not be read as one.
+Measured on the 2026-08-06 benchmark run, 84-89% of it is replacement, not addition: an
+added structure usually sits at a locus where the prompted structure was destroyed, so the
+same event is booked as damage here and as a gain there. Split by whether the prompted
+structure survived at the locus:
+
+    GeMoMa   21,739 added   18,336 at destroyed loci (84.3%)   3,403 genuine, 2,717 loci
+    BRAKER3     128 added      114 at destroyed loci (89.1%)      14 genuine,     9 loci
+    EGAPx    22,711 added   19,799 at destroyed loci (87.2%)   2,912 genuine, 2,404 loci
+    TAIR10*     903 added       22 at destroyed loci ( 2.4%)     881 genuine,   864 loci
+    (* the published TAIR10-prompted run, as an in-distribution control)
+
+Cross-tool comparisons of the raw `added_structures` totals are therefore misleading in a
+way that systematically flatters whichever input the model damages least — BRAKER3 looks
+like it generates 128 structures when it genuinely generates 14, at 9 of 23,756 loci. Use
+the decomposition, not the total.
+
 Two of the three staged inputs cannot support a UTR-level comparison: GeMoMa emits no
 exon rows at all, and BRAKER3's exon coordinates equal its CDS coordinates everywhere (no
 UTR was predicted). This is detected from both the input AND the output file (whichever
