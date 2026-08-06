@@ -174,6 +174,17 @@ def test_gff_attr_returns_none_when_key_absent():
     assert run_bench._gff_attr("ID=g1", "GM") is None
 
 
+def test_first_attribute_value_matches_the_pinned_hosts_own_gm_derivation():
+    """N2: preprocess.py:314 derives GM= from the *first* attribute, whatever key it
+    is — GeMoMa's real gene rows lead with Name=, not ID=."""
+    assert run_bench._first_attribute_value("Name=Ath_00001;ID=gene_0;transcripts=1") == "Ath_00001"
+    assert run_bench._first_attribute_value("ID=gene_0;Name=Ath_00001") == "gene_0"
+
+
+def test_first_attribute_value_returns_none_for_a_malformed_leading_attribute():
+    assert run_bench._first_attribute_value("not_a_key_value_pair;ID=g1") is None
+
+
 # ----------------------------------------------------------------------------
 # stderr/stdout parsing
 # ----------------------------------------------------------------------------
@@ -339,11 +350,57 @@ def test_build_local_subset_excludes_noncoding_top_level_and_descendants(tmp_pat
     assert kept_ids == {"g1", "g1.1", "g1.1.cds"}
 
 
+def test_build_local_subset_drops_gene_shells_left_childless_by_exclusion(tmp_path):
+    """N1: EGAPx nests gene(gbkey=lncRNA) -> lnc_RNA -> exon. Once the lnc_RNA is
+    excluded, g1 (the gene) is a childless shell the model can never be prompted from —
+    it must not be counted into genes_in, or the denominator itself guarantees loss
+    before inference starts. g2 (a real protein-coding gene) must be unaffected."""
+    inp = tmp_path / "egapx_Athaliana.gff3"
+    _write_gff(inp, [
+        ("ChrM", "gene", 100, 200, "ID=g1;gbkey=Gene;gene_biotype=lncRNA"),
+        ("ChrM", "lnc_RNA", 100, 200, "ID=g1.rna;Parent=g1"),
+        ("ChrM", "exon", 100, 200, "ID=g1.rna.exon;Parent=g1.rna"),
+        ("ChrM", "gene", 300, 400, "ID=g2"),
+        ("ChrM", "mRNA", 300, 400, "ID=g2.1;Parent=g2"),
+        ("ChrM", "CDS", 300, 400, "ID=g2.1.cds;Parent=g2.1"),
+    ])
+    subset = tmp_path / "subset.gff3"
+    info = run_bench.build_local_subset("egapx", "ChrM", inp, subset)
+    assert info["genes"] == 1
+    assert info["excluded_feature_counts"]["gene"] == 1
+    kept_ids = {run_bench._gff_attr(line.split("\t")[8], "ID")
+                for line in subset.read_text().splitlines() if line.strip()}
+    assert kept_ids == {"g2", "g2.1", "g2.1.cds"}
+
+
+def test_build_local_subset_drops_transcript_rows_flagged_noncoding_by_gbkey(tmp_path):
+    """N5: a bare "transcript"-typed row with gbkey=misc_RNA is non-coding by Task 2/3's
+    own NONCODING_GBKEYS convention, even though its type string alone ("transcript")
+    is not in NONCODING_TOP_LEVEL_TYPES."""
+    inp = tmp_path / "egapx_Athaliana.gff3"
+    _write_gff(inp, [
+        ("ChrM", "gene", 100, 200, "ID=g1"),
+        ("ChrM", "transcript", 100, 200, "ID=g1.t1;Parent=g1;gbkey=misc_RNA"),
+        ("ChrM", "exon", 100, 200, "ID=g1.t1.exon;Parent=g1.t1"),
+        ("ChrM", "gene", 300, 400, "ID=g2"),
+        ("ChrM", "mRNA", 300, 400, "ID=g2.1;Parent=g2"),
+        ("ChrM", "CDS", 300, 400, "ID=g2.1.cds;Parent=g2.1"),
+    ])
+    subset = tmp_path / "subset.gff3"
+    info = run_bench.build_local_subset("egapx", "ChrM", inp, subset)
+    # g1's only transcript is excluded by gbkey, leaving g1 itself childless too.
+    assert info["genes"] == 1
+    assert info["excluded_feature_counts"]["transcript"] == 1
+    assert info["excluded_feature_counts"]["gene"] == 1
+
+
 def test_build_local_subset_only_includes_requested_chromosome(tmp_path):
     inp = tmp_path / "gemoma_Athaliana.gff3"
     _write_gff(inp, [
         ("Chr1", "gene", 1, 100, "ID=g1"),
+        ("Chr1", "mRNA", 1, 100, "ID=g1.1;Parent=g1"),
         ("Chr2", "gene", 1, 100, "ID=g2"),
+        ("Chr2", "mRNA", 1, 100, "ID=g2.1;Parent=g2"),
     ])
     subset = tmp_path / "subset.gff3"
     info = run_bench.build_local_subset("gemoma", "Chr1", inp, subset)
@@ -486,6 +543,54 @@ def test_write_missing_loci_manifest_empty_when_nothing_missing(tmp_path):
     assert out.read_text() == ""
 
 
+def test_write_missing_loci_manifest_uses_first_attribute_not_id_for_gemoma_row_shape(tmp_path):
+    """N2: the pinned host derives GM= as the *first* attribute value on the gene line
+    (preprocess.py:314), not specifically ID=. GeMoMa's real gene rows lead with Name=
+    (`Name=Ath_00001;ID=gene_0;...`), so GM=Ath_00001 while the old ID-keyed manifest
+    looked up gene_0 and never found it — a perfect run reported 100% missing. This
+    fixture reproduces GeMoMa's real attribute order exactly."""
+    subset1 = run_bench.LOCAL_CHUNKS / "gemoma_Chr1_subset.gff3"
+    _write_gff(subset1, [
+        ("Chr1", "gene", 383, 1444, "Name=Ath_00001;ID=gene_0;transcripts=1"),
+        ("Chr1", "gene", 7017, 7202, "Name=Ath_00002;ID=gene_53;transcripts=1"),
+    ])
+    final = tmp_path / "final.gff3"
+    # A genuinely complete run: the model was prompted from both loci and emitted both,
+    # GM= carrying the host's real first-attribute-value derivation (Name=, not ID=).
+    _write_gff(final, [
+        ("Chr1", "gene", 383, 1444, "ID=A_thaliana_g1;GM=Ath_00001"),
+        ("Chr1", "gene", 7017, 7202, "ID=A_thaliana_g2;GM=Ath_00002"),
+    ])
+    out = tmp_path / "missing.txt"
+    n = run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
+    assert n == 0
+    assert out.read_text() == ""
+
+
+def test_write_missing_loci_manifest_raises_if_every_locus_is_missing(tmp_path):
+    """The general guard N2 also asks for: a manifest reporting 100% of loci missing is
+    far more likely to be a key-derivation bug than a real total loss — check_loss would
+    already have stopped the run for the latter — so this refuses to write one."""
+    subset1 = run_bench.LOCAL_CHUNKS / "gemoma_Chr1_subset.gff3"
+    _write_gff(subset1, [("Chr1", "gene", 383, 1444, "Name=Ath_00001;ID=gene_0")])
+    final = tmp_path / "final.gff3"
+    # Output keyed on ID (wrong, or from a mismatched run) — GM= never matches Name=.
+    _write_gff(final, [("Chr1", "gene", 383, 1444, "ID=out1;GM=gene_0")])
+    out = tmp_path / "missing.txt"
+    with pytest.raises(RuntimeError, match="key-derivation mismatch"):
+        run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
+
+
+def test_write_missing_loci_manifest_raises_on_missing_subset_file(tmp_path):
+    """N4: a resumed run whose _chunks/ was cleaned must not silently degrade to an
+    empty (misleadingly-clean) manifest — the missing input subset is an error."""
+    final = tmp_path / "final.gff3"
+    _write_gff(final, [("Chr1", "gene", 1, 100, "ID=g1out;GM=g1")])
+    out = tmp_path / "missing.txt"
+    with pytest.raises(FileNotFoundError):
+        run_bench.write_missing_loci_manifest([{"tool": "gemoma", "chromosome": "Chr1"}], final, out)
+
+
 # ----------------------------------------------------------------------------
 # chunk provenance / resume
 # ----------------------------------------------------------------------------
@@ -498,6 +603,8 @@ def test_chunk_is_done_true_when_ok_and_genes_in_matches(tmp_path):
     out = run_bench.chunk_output_path("gemoma", "Chr1")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n")
+    # N4: chunk_is_done now also requires the chunk's input subset to still be present.
+    _write_gff(run_bench.LOCAL_CHUNKS / "gemoma_Chr1_subset.gff3", [("Chr1", "gene", 1, 100, "ID=g1")])
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 1})
     assert run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
@@ -535,6 +642,19 @@ def test_chunk_is_done_false_when_output_file_truncated_after_provenance_written
     out.write_text("Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n")  # 1 gene on disk now
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 5, "genes_out": 2})  # recorded 2
+    assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
+
+
+def test_chunk_is_done_false_when_subset_file_missing(tmp_path):
+    """N4: a resumed run whose _chunks/ was cleaned must not treat a chunk as done just
+    because its output and provenance survived — the missing-loci manifest needs the
+    subset file too, and chunk_is_done is the single place that decides "done"."""
+    out = run_bench.chunk_output_path("gemoma", "Chr1")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n")
+    run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
+                          {"status": "ok", "genes_in": 5, "genes_out": 1})
+    # Deliberately no gemoma_Chr1_subset.gff3 written.
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
 
 
@@ -578,7 +698,9 @@ def test_get_host_git_commit_returns_sha_on_success():
 def test_run_remote_chunk_success_path(tmp_path):
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1\t100\t.\t+\t.\tID=g1.1;Parent=g1\n"
         "Chr1\tx\tgene\t200\t300\t.\t+\t.\tID=g2\n"
+        "Chr1\tx\tmRNA\t200\t300\t.\t+\t.\tID=g2.1;Parent=g2\n"
     )
     remote = FakeRemote(gff_rows_by_hint={
         "Chr1": [("Chr1", "gene", 1, 100, "ID=g1"), ("Chr1", "gene", 200, 300, "ID=g2")],
@@ -595,6 +717,7 @@ def test_run_remote_chunk_success_path(tmp_path):
 def test_run_remote_chunk_records_noncoding_features_excluded(tmp_path):
     (run_bench.LOCAL_INPUTS / "egapx_Athaliana.gff3").write_text(
         "ChrM\tx\tgene\t100\t200\t.\t+\t.\tID=g1\n"
+        "ChrM\tx\tmRNA\t100\t200\t.\t+\t.\tID=g1.1;Parent=g1\n"
         "ChrM\tx\tpseudogene\t300\t400\t.\t+\t.\tID=p1\n"
     )
     remote = FakeRemote(gff_rows_by_hint={"egapx_ChrM_raw": [("ChrM", "gene", 100, 200, "ID=g1;GM=g1")]})
@@ -612,6 +735,7 @@ def test_run_remote_chunk_reports_na_parsing_errors_when_summary_line_absent(tmp
     anything at all — this checks the found flag and the explicit N/A string instead."""
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1\t100\t.\t+\t.\tID=g1.1;Parent=g1\n"
     )
     remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1")]},
                          log_text="Output written to: out.gff3\n")
@@ -626,6 +750,7 @@ def test_run_remote_chunk_reports_na_parsing_errors_when_summary_line_absent(tmp
 def test_run_remote_chunk_records_real_parsing_errors_when_summary_line_present(tmp_path):
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1\t100\t.\t+\t.\tID=g1.1;Parent=g1\n"
     )
     remote = FakeRemote(
         gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1")]},
@@ -684,9 +809,13 @@ def test_run_remote_chunk_fails_when_host_commit_does_not_match_pinned(tmp_path)
 def test_run_remote_chunk_fails_when_output_covers_far_fewer_loci(tmp_path):
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1\t100\t.\t+\t.\tID=g1.1;Parent=g1\n"
         "Chr1\tx\tgene\t200\t300\t.\t+\t.\tID=g2\n"
+        "Chr1\tx\tmRNA\t200\t300\t.\t+\t.\tID=g2.1;Parent=g2\n"
         "Chr1\tx\tgene\t400\t500\t.\t+\t.\tID=g3\n"
+        "Chr1\tx\tmRNA\t400\t500\t.\t+\t.\tID=g3.1;Parent=g3\n"
         "Chr1\tx\tgene\t600\t700\t.\t+\t.\tID=g4\n"
+        "Chr1\tx\tmRNA\t600\t700\t.\t+\t.\tID=g4.1;Parent=g4\n"
     )
     # This mirrors the bs32 defect: exits 0, prints "Output written to", but the file
     # covers almost none of the input.
@@ -704,6 +833,8 @@ def test_ensure_chunk_skips_remote_call_when_already_done(tmp_path):
     out = run_bench.chunk_output_path("gemoma", "Chr1")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n")
+    # N4: chunk_is_done now also requires the chunk's input subset to still be present.
+    _write_gff(run_bench.LOCAL_CHUNKS / "gemoma_Chr1_subset.gff3", [("Chr1", "gene", 1, 100, "ID=g1")])
     run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"),
                           {"status": "ok", "genes_in": 1, "genes_out": 1})
 
@@ -719,6 +850,7 @@ def test_ensure_chunk_skips_remote_call_when_already_done(tmp_path):
 def test_ensure_chunk_runs_when_not_done(tmp_path):
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1\t100\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1\t100\t.\t+\t.\tID=g1.1;Parent=g1\n"
     )
     remote = FakeRemote(gff_rows_by_hint={"Chr1": [("Chr1", "gene", 1, 100, "ID=g1")]})
     result = run_bench.ensure_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
@@ -888,7 +1020,9 @@ def test_run_tool_pipeline_end_to_end_and_then_resumes(tmp_path, monkeypatch):
 def test_run_tool_pipeline_stops_on_a_failing_chunk_without_rerunning_the_good_one(tmp_path):
     (run_bench.LOCAL_INPUTS / "braker3_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1000\t2000\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1000\t2000\t.\t+\t.\tID=g1.1;Parent=g1\n"
         "ChrM\tx\tgene\t1000\t2000\t.\t+\t.\tID=g2\n"
+        "ChrM\tx\tmRNA\t1000\t2000\t.\t+\t.\tID=g2.1;Parent=g2\n"
     )
     # Chr1 succeeds, ChrM "crashes" (nonzero exit) — fail_hints matches the ChrM
     # remote command specifically, leaving Chr1 unaffected. Each fixture needs a full
@@ -945,7 +1079,9 @@ def test_run_tool_pipeline_standardizes_away_inverted_coordinates(tmp_path):
     only standardize_gff()'s coordinate-swap fixes it."""
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1000\t2000\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1000\t2000\t.\t+\t.\tID=g1.1;Parent=g1\n"
         "Chr1\tx\tgene\t5000\t5300\t.\t+\t.\tID=g2\n"
+        "Chr1\tx\tmRNA\t5000\t5300\t.\t+\t.\tID=g2.1;Parent=g2\n"
     )
     remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": [
         ("Chr1", "gene", 1000, 2000, "ID=g1;GM=g1"),
@@ -981,7 +1117,9 @@ def test_run_tool_pipeline_atomic_write_leaves_no_completed_file_when_final_gate
     cannot see, which is exactly what should trip the *final* gate."""
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1000\t2000\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1000\t2000\t.\t+\t.\tID=g1.1;Parent=g1\n"
         "Chr1\tx\tgene\t3000\t4000\t.\t+\t.\tID=g2\n"
+        "Chr1\tx\tmRNA\t3000\t4000\t.\t+\t.\tID=g2.1;Parent=g2\n"
     )
     remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": [
         ("Chr1", "gene", 1000, 2000, "ID=g1;GM=g1"),
@@ -1001,6 +1139,37 @@ def test_run_tool_pipeline_atomic_write_leaves_no_completed_file_when_final_gate
     partial_path = run_bench.LOCAL_PREDICTIONS / f"{stub}_completed.gff3.partial"
     assert not final_path.exists()
     assert partial_path.exists()  # left behind as a diagnostic artifact, per C1's design
+
+
+def test_run_tool_pipeline_installs_nothing_when_the_manifest_step_fails(tmp_path):
+    """N3: the manifest (and provenance) must be built before the canonical file is
+    installed, not after — a failure in *that* step (not just check_loss) must also
+    leave no canonical {tool}_completed.gff3. Provokes the manifest's own 100%-missing
+    guard (a real key-derivation regression, not the ordinary check_loss path) to prove
+    the reordering actually protects this window and not just the one C1 already
+    covered."""
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
+        "Chr1\tx\tgene\t1000\t2000\t.\t+\t.\tName=Ath_00001;ID=g1\n"
+        "Chr1\tx\tmRNA\t1000\t2000\t.\t+\t.\tID=g1.1;Parent=g1\n"
+        "Chr1\tx\tCDS\t1000\t2000\t.\t+\t0\tID=g1.1.cds;Parent=g1.1\n"
+    )
+    # check_loss passes cleanly (1 gene in, 1 out) — but GM= doesn't match the input's
+    # first-attribute value (Ath_00001), simulating a hypothetical regression in how
+    # prompt_mode stamps GM=, which the manifest's guard must catch on its own.
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": [
+        ("Chr1", "gene", 1000, 2000, "ID=g1out;GM=g1"),
+        ("Chr1", "mRNA", 1000, 2000, "ID=g1out.1;Parent=g1out"),
+        ("Chr1", "CDS", 1000, 2000, "ID=g1out.1.cds;Parent=g1out.1"),
+    ]})
+    with pytest.raises(RuntimeError, match="key-derivation mismatch"):
+        run_bench.run_tool_pipeline(
+            "gemoma", chromosomes=("Chr1",), max_loss_fraction=0.05,
+            ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push, skip_preflight=True,
+        )
+    stub = run_bench.output_stub("gemoma", ("Chr1",))
+    final_path = run_bench.LOCAL_PREDICTIONS / f"{stub}_completed.gff3"
+    assert not final_path.exists()
+    assert not (run_bench.LOCAL_PREDICTIONS / f"{stub}_provenance.json").exists()
 
 
 def test_run_tool_pipeline_with_chromosome_subset_does_not_overwrite_full_genome_result(tmp_path, monkeypatch):
@@ -1060,6 +1229,7 @@ def test_run_tool_pipeline_refuses_high_loss_threshold_without_acknowledgement()
 def test_run_tool_pipeline_records_invocation_args_and_high_loss_acknowledgement(tmp_path):
     (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(
         "Chr1\tx\tgene\t1000\t2000\t.\t+\t.\tID=g1\n"
+        "Chr1\tx\tmRNA\t1000\t2000\t.\t+\t.\tID=g1.1;Parent=g1\n"
     )
     remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": [
         ("Chr1", "gene", 1000, 2000, "ID=g1;GM=g1"),

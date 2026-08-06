@@ -109,14 +109,14 @@ DEFAULT_MAX_LOSS_FRACTION = 0.05  # published run lost 3/27,416 = 0.01%; 5% is a
                                   # Raising it above this default requires an explicit,
                                   # provenance-recorded acknowledgement (C3) — see main().
 
-# I10: top-level feature types that are never protein-coding gene loci (EGAPx carries
-# 2,048 lnc_RNA + 378 pseudogene rows in the staged A. thaliana file). These, and all of
-# their descendant rows, are excluded from what gets shipped to the host's
-# genome2GSFDataset — see build_local_subset() — so the DB the host builds from is
-# counted the same way count_genes_for_chromosome() counts it, matching the convention
-# Tasks 2/3 already use (32_score_polishing.py's NONCODING_TYPES) instead of silently
-# diverging from it.
+# I10/N5: top-level feature types that are never protein-coding gene loci (EGAPx carries
+# 2,048 lnc_RNA + 378 pseudogene rows in the staged A. thaliana file), and the gbkey
+# values that flag an otherwise-generic "transcript"-typed row as non-coding (77 such
+# rows, all misc_RNA). Both match 32_score_polishing.py's own NONCODING_TYPES/
+# NONCODING_GBKEYS exactly — see build_local_subset() — so the denominator this script
+# counts reconciles with what Tasks 2/3 already count, instead of silently diverging.
 NONCODING_TOP_LEVEL_TYPES = frozenset({"lnc_RNA", "pseudogene"})
+NONCODING_GBKEYS = frozenset({"misc_RNA", "ncRNA"})
 
 ROOT = Path(__file__).resolve().parents[3]  # /data/gpfs/assoc/pgl/data/Transgenic
 BENCH = ROOT / "polishing_benchmark"
@@ -307,11 +307,24 @@ def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Pat
     entirely. Filtering here, in local, unit-testable Python, closes that gap and
     removes an SSH-only code path with no test coverage of its own.
 
-    A fixed-point pass pulls in descendants of an excluded top-level locus (e.g. an
-    mRNA under a pseudogene, then CDS/exon under that mRNA) — real GFF3 hierarchies are
-    only 2-3 levels deep, so this converges in at most a few iterations.
+    Three passes:
+    1. Exclude explicit non-coding top-level loci (`lnc_RNA`/`pseudogene`) and
+       `transcript`-typed rows flagged non-coding by `gbkey` (N5) — matching
+       `32_score_polishing.py`'s `NONCODING_TYPES`/`NONCODING_GBKEYS` exactly.
+    2. Transitively pull in descendants of anything excluded in pass 1 (a fixed point
+       over `Parent` chains — real GFF3 hierarchies are only 2-3 levels deep).
+    3. (N1) Drop a `gene` row that has no surviving `mRNA`/`transcript` child after
+       passes 1-2. EGAPx nests `gene(gbkey=lncRNA) -> lnc_RNA -> exon`: once the
+       `lnc_RNA` is excluded in pass 1, the gene becomes a childless shell the model
+       can never be prompted from — counting it into `genes_in` would bake a
+       guaranteed, unmeasured loss into the denominator before inference even starts.
+       Measured on the real staged EGAPx file: 6-7% of nuclear-chromosome gene rows
+       are exactly this shell, enough on its own to trip a 5% loss gate before a
+       single locus is generated.
 
-    Returns `{"genes": <int>, "excluded_feature_counts": {type: count}}`.
+    Returns `{"genes": <int>, "excluded_feature_counts": {type: count}}` — a dropped
+    childless gene is folded into `excluded_feature_counts["gene"]` alongside any other
+    excluded row type, not tracked separately, since it is counted the same way.
     """
     assert_not_scratch(input_path)
     assert_not_scratch(subset_path)
@@ -325,24 +338,55 @@ def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Pat
                 continue
             rows.append(cols)
 
+    def _expand_to_descendants(excluded: set[str]) -> None:
+        changed = True
+        while changed:
+            changed = False
+            for cols in rows:
+                parent = _gff_attr(cols[8], "Parent")
+                if not parent or parent not in excluded:
+                    continue
+                fid = _gff_attr(cols[8], "ID")
+                if fid and fid not in excluded:
+                    excluded.add(fid)
+                    changed = True
+
+    # Pass 1: explicit non-coding top-level loci + gbkey-flagged "transcript" rows.
+    id_gbkey: dict[str, str] = {}
+    for cols in rows:
+        fid = _gff_attr(cols[8], "ID")
+        if fid:
+            gbkey = _gff_attr(cols[8], "gbkey")
+            if gbkey:
+                id_gbkey[fid] = gbkey
+
     excluded_ids: set[str] = set()
     for cols in rows:
-        if cols[2] in NONCODING_TOP_LEVEL_TYPES:
-            fid = _gff_attr(cols[8], "ID")
-            if fid:
-                excluded_ids.add(fid)
+        fid = _gff_attr(cols[8], "ID")
+        noncoding_type = cols[2] in NONCODING_TOP_LEVEL_TYPES
+        noncoding_gbkey = cols[2] == "transcript" and id_gbkey.get(fid) in NONCODING_GBKEYS
+        if fid and (noncoding_type or noncoding_gbkey):
+            excluded_ids.add(fid)
 
-    changed = True
-    while changed:
-        changed = False
-        for cols in rows:
-            parent = _gff_attr(cols[8], "Parent")
-            if not parent or parent not in excluded_ids:
-                continue
-            fid = _gff_attr(cols[8], "ID")
-            if fid and fid not in excluded_ids:
-                excluded_ids.add(fid)
-                changed = True
+    # Pass 2: descendants of anything pass 1 excluded.
+    _expand_to_descendants(excluded_ids)
+
+    # Pass 3 (N1): genes left with no surviving mRNA/transcript child.
+    gene_ids = {_gff_attr(cols[8], "ID") for cols in rows if cols[2] == "gene"}
+    gene_ids.discard(None)
+    genes_with_transcript: set[str] = set()
+    for cols in rows:
+        if cols[2] not in ("mRNA", "transcript"):
+            continue
+        fid = _gff_attr(cols[8], "ID")
+        if fid in excluded_ids:
+            continue
+        parent = _gff_attr(cols[8], "Parent")
+        if parent in gene_ids:
+            genes_with_transcript.add(parent)
+    childless_genes = gene_ids - genes_with_transcript - excluded_ids
+    excluded_ids |= childless_genes
+    _expand_to_descendants(excluded_ids)  # nothing coding should be left, but re-check
 
     excluded_feature_counts: dict = {}
     genes = 0
@@ -525,6 +569,14 @@ def chunk_is_done(tool: str, chrom: str, expected_genes_in: int) -> bool:
     if not out_path.exists():
         return False
     if count_gff3_features(out_path, "gene") != prov.get("genes_out"):
+        return False
+    # N4: the missing-loci manifest is built from this chunk's *subset* file, not its
+    # output — a resumed run whose _chunks/ got cleaned would otherwise "succeed" with
+    # the output/provenance intact but no subset to compute the manifest's input side
+    # from. Treat that as not-done too, so re-running rebuilds the subset instead of
+    # silently degrading the manifest.
+    subset_path = LOCAL_CHUNKS / f"{tool}_{chrom}_subset.gff3"
+    if not subset_path.exists():
         return False
     return True
 
@@ -755,6 +807,21 @@ def filter_top_beam(in_path: Path, out_path: Path, script_path: Path = BEAM1_FIL
 # Missing-loci manifest (I3)
 # --------------------------------------------------------------------------------------
 
+def _first_attribute_value(attributes: str) -> str | None:
+    """Replicate the pinned host's own `GM=` derivation exactly
+    (`preprocess.py:314`: `attributes.split(';')[0].split('=')[1]`) — the value of
+    whichever attribute comes *first* on the line, not necessarily `ID=`.
+
+    This matters because GeMoMa's gene rows lead with `Name=` (`Name=Ath_00001;
+    ID=gene_0;...`), so its real `GM=` is the Name value, not the ID — BRAKER3 and
+    EGAPx both lead with `ID=` and are unaffected (see N2).
+    """
+    first = attributes.split(";", 1)[0]
+    if "=" not in first:
+        return None
+    return first.split("=", 1)[1].strip()
+
+
 def _gff_ids(path: Path, feature: str) -> set[str]:
     """Every `ID=` value on rows of the given feature type in a GFF3 file."""
     ids: set[str] = set()
@@ -771,6 +838,25 @@ def _gff_ids(path: Path, feature: str) -> set[str]:
             if fid:
                 ids.add(fid)
     return ids
+
+
+def _gff_first_attr_values(path: Path, feature: str) -> set[str]:
+    """Every row's first-attribute value (the host's own `GM=` derivation rule, see
+    `_first_attribute_value`) for rows of the given feature type."""
+    values: set[str] = set()
+    if not path.exists():
+        return values
+    with path.open() as fh:
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            cols = line.rstrip("\n").split("\t")
+            if len(cols) < 9 or cols[2] != feature:
+                continue
+            v = _first_attribute_value(cols[8])
+            if v:
+                values.add(v)
+    return values
 
 
 def _gff_gm_values(path: Path) -> set[str]:
@@ -799,16 +885,52 @@ def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out
 
     This is the artifact that makes it impossible for a never-generated locus to be
     scored as "still wrong": Task 5 can check a locus against this file before scoring
-    it as damage, rather than that guarantee living only in good intentions. Pairing is
-    on `GM=`, the same identity tag `32_score_polishing.py` already anchors its own
-    pairing on. Returns the number of missing loci written.
+    it as damage, rather than that guarantee living only in good intentions.
+
+    N2: pairing is on `GM=`, but `GM=` is not the input `ID=` — the pinned host derives
+    it as the *first* attribute value on the gene line, whatever key that is
+    (`_first_attribute_value`). GeMoMa's gene rows lead with `Name=`, so a perfect run
+    used to report every GeMoMa locus as "missing" (`GM=Ath_00001` looked up as
+    `gene_0`) while passing every synthetic test fixture, where `GM=g1` happens to equal
+    `ID=g1`. Fixed by deriving the input key the same way the host derives `GM=`, with
+    the `ID=` set kept only as a cross-check (recorded, not used for matching).
+
+    N4: a missing subset file (e.g. a cleaned `_chunks/` on a resumed run) is an error
+    here, not a silent empty set — `chunk_is_done` also refuses to call a chunk done
+    without its subset present, so this should only ever fire on a genuinely broken
+    on-disk state.
+
+    Also raises if every input locus comes back "missing" — overwhelmingly more likely
+    to be exactly this key-derivation class of bug than a real 100% loss (which
+    `check_loss` would already have caught well before this point), so this is treated
+    as its own error rather than written out as if it were a real, if bad, result.
+
+    Returns the number of missing loci written.
     """
-    input_ids: set[str] = set()
+    input_keys: set[str] = set()
+    input_ids: set[str] = set()  # cross-check only, never used to decide "missing"
     for r in chunk_results:
         subset = LOCAL_CHUNKS / f"{r['tool']}_{r['chromosome']}_subset.gff3"
+        if not subset.exists():
+            raise FileNotFoundError(
+                f"missing-loci manifest needs the input subset that produced "
+                f"{r['tool']}/{r['chromosome']}, not found: {subset}"
+            )
+        input_keys |= _gff_first_attr_values(subset, "gene")
         input_ids |= _gff_ids(subset, "gene")
+
     output_gms = _gff_gm_values(final_path)
-    missing = sorted(input_ids - output_gms)
+    missing = sorted(input_keys - output_gms)
+
+    if input_keys and len(missing) == len(input_keys):
+        raise RuntimeError(
+            f"missing-loci manifest reports all {len(input_keys)} input loci as never "
+            f"generated (ID-based cross-check set was {len(input_ids)}) — almost "
+            f"certainly a GM= key-derivation mismatch (N2), not a real 100% loss "
+            f"(check_loss would already have stopped the run for that); refusing to "
+            f"write a manifest this implausible"
+        )
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("".join(f"{m}\n" for m in missing))
     return len(missing)
@@ -956,9 +1078,11 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
     genes_standardized = count_gff3_features(standardized_path, "gene")  # I1: the second
 
     # C1: the handoff file must never be written before the gate that validates it. It
-    # is built as `.partial`, gated by check_loss, and only then atomically renamed into
-    # place — so a chunk/run that fails partway through never leaves a `_completed.gff3`
-    # that looks complete and is not.
+    # is built as `.partial`, gated by check_loss, and only atomically renamed into
+    # place as the very last statement of this function (N3) — so a crash or walltime
+    # kill anywhere between here and the end leaves no canonical `_completed.gff3` at
+    # all, rather than one with no manifest or provenance beside it (C1's exact failure
+    # mode, otherwise still reachable out-of-band through this window).
     final_path = LOCAL_PREDICTIONS / f"{stub}_completed.gff3"
     final_partial = LOCAL_PREDICTIONS / f"{stub}_completed.gff3.partial"
     filter_top_beam(standardized_path, final_partial)
@@ -966,10 +1090,14 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
     genes_in_total = sum(r["genes_in"] for r in chunk_results)
     genes_out_total = count_gff3_features(final_partial, "gene")
     check_loss(genes_in_total, genes_out_total, max_loss_fraction, context=f"{tool} (final, post-filter)")
-    os.replace(final_partial, final_path)
 
+    # N3: the manifest is built from final_partial, not final_path — install happens
+    # last. (Deliberate: a failed run — check_loss raised above — never reaches this
+    # point at all, so no manifest is written for a failed run either; there is no
+    # "final" result yet to describe one against, and writing one against a partial
+    # file that will never become canonical would itself be a misleading artifact.)
     missing_loci_path = LOCAL_PREDICTIONS / f"{stub}_missing_loci.txt"
-    missing_loci_count = write_missing_loci_manifest(chunk_results, final_path, missing_loci_path)
+    missing_loci_count = write_missing_loci_manifest(chunk_results, final_partial, missing_loci_path)
 
     finished_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     provenance = {
@@ -1001,7 +1129,12 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
         "final_path": str(final_path),
         "status": "ok",
     }
+    # N3: provenance is written before the canonical file is installed, for the same
+    # reason the manifest is built from final_partial above — os.replace() below is the
+    # single statement that makes this run's result visible as "the answer" at all, and
+    # it happens only once everything else it should be found next to already exists.
     write_json(LOCAL_PREDICTIONS / f"{stub}_provenance.json", provenance)
+    os.replace(final_partial, final_path)
     return provenance
 
 
