@@ -67,12 +67,23 @@ the decomposition, not the total.
 
 `added_matching_reference / added_structures` (the `added_precision_pct` field) inherits the
 same inflated denominator. On genuine additions only it is 22/3,403 = 0.65% for GeMoMa and
-19/2,912 = 0.65% for EGAPx, against the 0.41% and 0.14% the raw ratio reports — so this
-field understates precision by roughly 1.6x and 4.6x respectively. Note also that the field
-is structurally meaningless for a run prompted with the reference itself: `added` is
-`output - input`, so when the input IS the reference, `added & reference` is empty by
-construction (measured: 0 of the control's 881 genuine additions). A 0% there means "not
-measurable", not "all wrong".
+19/2,912 = 0.65% for EGAPx, against the 0.41% and 0.1365% the raw ratio reports — so this
+field understates precision by 1.6x and 4.78x respectively.
+
+Two further cautions on this field, both measured on the same run:
+
+- It is exact-CDS-equality only, and the quantity is NOT criterion-stable. Scored on intron
+  chains the same genuine additions match at 31.4% (GeMoMa) and 33.0% (EGAPx) rather than
+  0.65% - a 48x swing. That looser number is misleading: 1,050 of GeMoMa's 1,069 and 942 of
+  EGAPx's 961 chain matches reuse the PROMPTED transcript's own intron chain, i.e. they are
+  terminus variants of the supplied model, not new splice structures. Requiring a chain
+  distinct from the prompted one returns 19 (0.56%) and 19 (0.65%).
+- It is structurally meaningless for a run prompted with the reference itself: `added` is
+  `output - input`, so when the input IS the reference, `added & reference` is empty by
+  construction (measured: 0 of the control's 881 genuine additions). A 0% there means "not
+  measurable", not "all wrong". The mirror-image artifact applies to any "dropped structures
+  that matched the reference" statistic: dropped is a subset of the input, so against a
+  reference-prompted run that count is 100% by definition.
 
 Two of the three staged inputs cannot support a UTR-level comparison: GeMoMa emits no
 exon rows at all, and BRAKER3's exon coordinates equal its CDS coordinates everywhere (no
