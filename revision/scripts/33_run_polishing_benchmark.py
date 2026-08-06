@@ -32,10 +32,15 @@ by actually running the pipeline on the GPU host, and is recorded in
    `standardized_results/` went through `transgenic_comparison/standardize_gff.py`
    (coordinate validation against the genome's `.fai`, 500 kb gene / 100 kb mRNA span
    caps, interval merge) — step 2 below.
-5. `--num-beams 2` (the published Methods setting) exports both beam hypotheses as
-   separate gene records; step 3 below filters to the top beam per locus, the same
-   rule as `13_beam1_filter.py` / `27_rescore_prompted_topbeam.py`. Scoring an
-   unfiltered two-beam file halves precision.
+5. `--num-beams 2` is the published Methods setting (`num_beams=2, do_sample=False`).
+   **Correction (fix round 1):** the pinned host's `prompt_mode.py` calls
+   `model.generate(..., num_return_sequences=1)`, so it does *not* export both beam
+   hypotheses as separate gene records the way an earlier draft of this file assumed —
+   a clean 18-locus run produced 18 gene rows, not 36. The top-beam filter (step 3
+   below) is therefore a no-op safety net on this invocation, not a load-bearing step;
+   kept because it is free insurance against a future checkpoint/invocation that does
+   export both beams, but Task 5 must not assume two records per locus from this
+   pipeline's output.
 
 Pipeline (per tool): prompt_mode (remote, GPU) -> standardize_gff -> top-beam filter.
 Each tool runs one chromosome at a time (Chr1-5, ChrC, ChrM) so that a run that dies
@@ -61,6 +66,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -93,15 +99,34 @@ CHROMOSOMES = ("Chr1", "Chr2", "Chr3", "Chr4", "Chr5", "ChrC", "ChrM")
 SCRATCH_PREFIXES = ("_smoke", "_bs")  # the team lead's GPU-host scratch files
 
 EXPECTED_GENOME_MD5 = "ac1d3ca8af4f02bca3d750a339b65fec"
+# Constraint #2 (gpu-environment.md): the host must stay at this exact commit. Syncing
+# forward to GPFS HEAD was measured to produce zero output on every input (both GeMoMa
+# and TAIR10 smoke runs); this commit is the one verified to reproduce the published
+# prediction. Enforced, not just recorded — see get_and_verify_host_commit (I4).
+EXPECTED_HOST_COMMIT = "5d9929ea2189e653aac5fc7e2fef234651e96ae3"
 DEFAULT_MAX_LOSS_FRACTION = 0.05  # published run lost 3/27,416 = 0.01%; 5% is a generous
                                   # "something is clearly wrong" trigger, not a target.
+                                  # Raising it above this default requires an explicit,
+                                  # provenance-recorded acknowledgement (C3) — see main().
+
+# I10: top-level feature types that are never protein-coding gene loci (EGAPx carries
+# 2,048 lnc_RNA + 378 pseudogene rows in the staged A. thaliana file). These, and all of
+# their descendant rows, are excluded from what gets shipped to the host's
+# genome2GSFDataset — see build_local_subset() — so the DB the host builds from is
+# counted the same way count_genes_for_chromosome() counts it, matching the convention
+# Tasks 2/3 already use (32_score_polishing.py's NONCODING_TYPES) instead of silently
+# diverging from it.
+NONCODING_TOP_LEVEL_TYPES = frozenset({"lnc_RNA", "pseudogene"})
 
 ROOT = Path(__file__).resolve().parents[3]  # /data/gpfs/assoc/pgl/data/Transgenic
 BENCH = ROOT / "polishing_benchmark"
 LOCAL_INPUTS = BENCH / "inputs"
 LOCAL_PREDICTIONS = BENCH / "predictions"
 LOCAL_CHUNKS = LOCAL_PREDICTIONS / "_chunks"
-LOCAL_GENOME_DIR = ROOT / "genomes"  # Athaliana_167_TAIR10.fa.fai lives here
+# I8: gpu-environment.md specifies transgenic_comparison/genomes specifically (not the
+# top-level genomes/ directory) — the two .fai files are identical today, but pointing
+# at the one actually named in the spec removes a "true today, not asserted" dependency.
+LOCAL_GENOME_DIR = ROOT / "transgenic_comparison" / "genomes"
 STANDARDIZE_SCRIPT = ROOT / "transgenic_comparison" / "standardize_gff.py"
 BEAM1_FILTER_SCRIPT = Path(__file__).resolve().parent / "13_beam1_filter.py"
 
@@ -123,6 +148,25 @@ def is_scratch_name(name: str) -> bool:
 def assert_not_scratch(path: object) -> None:
     if is_scratch_name(str(path)):
         raise ValueError(f"refusing to treat a scratch file as a pipeline path: {path}")
+
+
+# --------------------------------------------------------------------------------------
+# GFF3 attribute parsing — a small, self-contained helper (not imported from
+# 32_score_polishing.py, to keep this script's only dependency on that module at the
+# CLI/subprocess boundary, not a Python import boundary).
+# --------------------------------------------------------------------------------------
+
+_ATTR_RE_CACHE: dict[str, re.Pattern] = {}
+
+
+def _gff_attr(attributes: str, key: str) -> str | None:
+    """Read `key=value` out of a GFF3 attributes column, anchored on the key itself so
+    it never matches inside a different attribute name that happens to end in `key`."""
+    pattern = _ATTR_RE_CACHE.get(key)
+    if pattern is None:
+        pattern = _ATTR_RE_CACHE[key] = re.compile(rf"(?:^|;)\s*{key}=([^;\n]+)")
+    m = pattern.search(attributes)
+    return m.group(1) if m else None
 
 
 # --------------------------------------------------------------------------------------
@@ -250,10 +294,74 @@ def build_remote_env_setup() -> str:
     )
 
 
-def build_chromosome_subset_command(remote_input_gff: str, chrom: str, remote_subset_path: str) -> str:
-    assert_not_scratch(remote_input_gff)
-    assert_not_scratch(remote_subset_path)
-    return f"awk -F'\\t' -v c={chrom} '$1==c' {remote_input_gff} > {remote_subset_path}"
+def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Path) -> dict:
+    """Build the per-(tool, chromosome) input subset locally, before ever touching the
+    GPU host (I10).
+
+    This replaced a remote `awk '$1==c'` one-liner that forwarded *every* row for the
+    chromosome — including EGAPx's `lnc_RNA`/`pseudogene` rows and their children —
+    into the host's `genome2GSFDataset`. That preprocessing step does not filter by
+    feature type the way `count_genes_for_chromosome` does, so the database the host
+    built could contain more loci than this script's own denominator, and the two
+    numbers could never reconcile with Task 2/3's convention of excluding these types
+    entirely. Filtering here, in local, unit-testable Python, closes that gap and
+    removes an SSH-only code path with no test coverage of its own.
+
+    A fixed-point pass pulls in descendants of an excluded top-level locus (e.g. an
+    mRNA under a pseudogene, then CDS/exon under that mRNA) — real GFF3 hierarchies are
+    only 2-3 levels deep, so this converges in at most a few iterations.
+
+    Returns `{"genes": <int>, "excluded_feature_counts": {type: count}}`.
+    """
+    assert_not_scratch(input_path)
+    assert_not_scratch(subset_path)
+    rows: list[list[str]] = []
+    with input_path.open() as fh:
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            cols = line.rstrip("\n").split("\t")
+            if len(cols) < 9 or cols[0] != chrom:
+                continue
+            rows.append(cols)
+
+    excluded_ids: set[str] = set()
+    for cols in rows:
+        if cols[2] in NONCODING_TOP_LEVEL_TYPES:
+            fid = _gff_attr(cols[8], "ID")
+            if fid:
+                excluded_ids.add(fid)
+
+    changed = True
+    while changed:
+        changed = False
+        for cols in rows:
+            parent = _gff_attr(cols[8], "Parent")
+            if not parent or parent not in excluded_ids:
+                continue
+            fid = _gff_attr(cols[8], "ID")
+            if fid and fid not in excluded_ids:
+                excluded_ids.add(fid)
+                changed = True
+
+    excluded_feature_counts: dict = {}
+    genes = 0
+    subset_path.parent.mkdir(parents=True, exist_ok=True)
+    with subset_path.open("w") as out:
+        for cols in rows:
+            fid = _gff_attr(cols[8], "ID")
+            parent = _gff_attr(cols[8], "Parent")
+            is_excluded = (cols[2] in NONCODING_TOP_LEVEL_TYPES
+                           or (fid is not None and fid in excluded_ids)
+                           or (parent is not None and parent in excluded_ids))
+            if is_excluded:
+                excluded_feature_counts[cols[2]] = excluded_feature_counts.get(cols[2], 0) + 1
+                continue
+            if cols[2] == "gene":
+                genes += 1
+            out.write("\t".join(cols) + "\n")
+
+    return {"genes": genes, "excluded_feature_counts": excluded_feature_counts}
 
 
 def build_prompt_mode_command(remote_gff: str, remote_output: str, remote_db: str, remote_log: str) -> str:
@@ -275,21 +383,21 @@ def build_prompt_mode_command(remote_gff: str, remote_output: str, remote_db: st
 
 
 def build_chunk_remote_command(tool: str, chrom: str) -> dict:
-    """All remote paths + the combined subset-then-infer command for one chunk."""
-    remote_input = f"{REMOTE_INPUTS_DIR}/{tool}_Athaliana.gff3"
+    """Remote paths + the inference-only command for one chunk.
+
+    The input subset is built locally and pushed separately (build_local_subset /
+    push_and_verify below) — this no longer includes a remote subsetting step (I10).
+    """
     remote_subset = f"{REMOTE_PREDICTIONS_DIR}/{tool}_{chrom}_subset.gff3"
     remote_output = f"{REMOTE_PREDICTIONS_DIR}/{tool}_{chrom}_raw.gff3"
     remote_db = f"{REMOTE_PREDICTIONS_DIR}/{tool}_{chrom}.db"
     remote_log = f"{REMOTE_PREDICTIONS_DIR}/{tool}_{chrom}_raw.log"
-    subset_cmd = build_chromosome_subset_command(remote_input, chrom, remote_subset)
-    infer_cmd = build_prompt_mode_command(remote_subset, remote_output, remote_db, remote_log)
     return {
-        "remote_input": remote_input,
         "remote_subset": remote_subset,
         "remote_output": remote_output,
         "remote_db": remote_db,
         "remote_log": remote_log,
-        "command": f"{subset_cmd} && {infer_cmd}",
+        "command": build_prompt_mode_command(remote_subset, remote_output, remote_db, remote_log),
     }
 
 
@@ -299,6 +407,10 @@ def build_ssh_argv(remote_command: str, host: str = HOST) -> list[str]:
 
 def build_rsync_fetch_argv(remote_path: str, local_path: Path, host: str = HOST) -> list[str]:
     return ["rsync", "-az", f"{host}:{remote_path}", str(local_path)]
+
+
+def build_rsync_push_argv(local_path: Path, remote_path: str, host: str = HOST) -> list[str]:
+    return ["rsync", "-az", str(local_path), f"{host}:{remote_path}"]
 
 
 # --------------------------------------------------------------------------------------
@@ -319,6 +431,21 @@ def default_rsync_fetch(remote_path: str, local_path: Path, host: str = HOST) ->
         raise RuntimeError(f"rsync fetch failed ({remote_path} -> {local_path}): {proc.stderr}")
 
 
+def default_rsync_push(local_path: Path, remote_path: str, host: str = HOST) -> None:
+    proc = subprocess.run(build_rsync_push_argv(local_path, remote_path, host=host),
+                           capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(f"rsync push failed ({local_path} -> {remote_path}): {proc.stderr}")
+
+
+def _read_remote_md5(remote_path: str, *, ssh_run, host: str) -> str:
+    proc = ssh_run(build_ssh_argv(f"md5sum {remote_path}", host=host))
+    remote_md5 = (proc.stdout or "").split()[0] if proc.returncode == 0 and (proc.stdout or "").strip() else None
+    if remote_md5 is None:
+        raise RuntimeError(f"could not read remote checksum for {remote_path}: {proc.stderr}")
+    return remote_md5
+
+
 def fetch_and_verify(remote_path: str, local_path: Path, *,
                       ssh_run=default_ssh_run, fetch=default_rsync_fetch, host: str = HOST) -> str:
     """Fetch a remote file and verify it by checksum. Returns the verified md5.
@@ -330,14 +457,26 @@ def fetch_and_verify(remote_path: str, local_path: Path, *,
     fetch(remote_path, local_path, host=host)
     if not local_path.exists():
         raise RuntimeError(f"fetch reported success but local file is missing: {local_path}")
-    proc = ssh_run(build_ssh_argv(f"md5sum {remote_path}", host=host))
-    remote_md5 = (proc.stdout or "").split()[0] if proc.returncode == 0 and (proc.stdout or "").strip() else None
-    if remote_md5 is None:
-        raise RuntimeError(f"could not read remote checksum for {remote_path}: {proc.stderr}")
+    remote_md5 = _read_remote_md5(remote_path, ssh_run=ssh_run, host=host)
     local_md5 = md5_file(local_path)
     if remote_md5 != local_md5:
         raise RuntimeError(
             f"checksum mismatch after fetch: {remote_path} ({remote_md5}) != {local_path} ({local_md5})"
+        )
+    return local_md5
+
+
+def push_and_verify(local_path: Path, remote_path: str, *,
+                     ssh_run=default_ssh_run, push=default_rsync_push, host: str = HOST) -> str:
+    """Push a local file to the host and verify it by checksum (the push-side mirror of
+    `fetch_and_verify`) — used to ship the locally-built, filtered input subset (I10)
+    without trusting rsync's own exit code alone."""
+    local_md5 = md5_file(local_path)
+    push(local_path, remote_path, host=host)
+    remote_md5 = _read_remote_md5(remote_path, ssh_run=ssh_run, host=host)
+    if remote_md5 != local_md5:
+        raise RuntimeError(
+            f"checksum mismatch after push: {local_path} ({local_md5}) != {remote_path} ({remote_md5})"
         )
     return local_md5
 
@@ -369,16 +508,25 @@ def chunk_output_path(tool: str, chrom: str) -> Path:
 
 
 def chunk_is_done(tool: str, chrom: str, expected_genes_in: int) -> bool:
-    """A chunk is done only if its provenance says "ok" AND was computed against the
-    same genes_in we would compute today — guards against a stale marker surviving a
-    change to the staged input.
+    """A chunk is done only if its provenance says "ok", was computed against the same
+    genes_in we would compute today (guards against a stale marker surviving a change to
+    the staged input), and the output file on disk still has the gene count that was
+    recorded when the chunk actually finished (I7: a chunk truncated on disk after its
+    provenance was written — e.g. a filesystem fault, a killed process after the
+    provenance write — must not resume as "done"; it must be noticed here, not only if
+    and when the loss happens to clear the final 5% gate).
     """
     prov = load_json(chunk_provenance_path(tool, chrom))
     if not prov or prov.get("status") != "ok":
         return False
     if prov.get("genes_in") != expected_genes_in:
         return False
-    return chunk_output_path(tool, chrom).exists()
+    out_path = chunk_output_path(tool, chrom)
+    if not out_path.exists():
+        return False
+    if count_gff3_features(out_path, "gene") != prov.get("genes_out"):
+        return False
+    return True
 
 
 # --------------------------------------------------------------------------------------
@@ -386,8 +534,8 @@ def chunk_is_done(tool: str, chrom: str, expected_genes_in: int) -> bool:
 # --------------------------------------------------------------------------------------
 
 def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
-                      ssh_run=default_ssh_run, fetch=default_rsync_fetch, host: str = HOST,
-                      skip_preflight: bool = False) -> dict:
+                      ssh_run=default_ssh_run, fetch=default_rsync_fetch, push=default_rsync_push,
+                      host: str = HOST) -> dict:
     """Run one (tool, chromosome) chunk on the GPU host and fetch its output back.
 
     Never raises for an ordinary loss violation or remote failure — those are recorded
@@ -396,75 +544,121 @@ def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
     Only truly unexpected local errors (e.g. a filesystem error writing the provenance
     file) propagate.
 
-    The host's git commit is captured here, per chunk, at the moment this chunk actually
-    runs — not once for the whole tool's invocation — so that a resumed run (which may
-    span days) records what the host was actually running for *each* prediction, not
-    just whatever commit happened to be checked out when the last chunk finished. A
-    chunk loaded from a prior "ok" provenance record keeps its own recorded commit
-    unchanged; this function is only called for a chunk that is actually executing.
+    The host's git commit is captured and *enforced* here, per chunk, at the moment this
+    chunk actually runs (I4) — not once for the whole tool's invocation, since a resumed
+    run can span days and a single "commit as of now" would misrepresent chromosomes
+    that ran earlier. There is no way to skip this check: constraint #2 ("the host must
+    stay at the pinned commit") is exactly the kind of silent drift this script exists
+    to catch, so — unlike the genome/input staging checksums — it is never gated behind
+    `--skip-preflight`.
     """
-    genes_in = count_genes_for_chromosome(LOCAL_INPUTS / f"{tool}_Athaliana.gff3", chrom)
-    host_commit = ("N/A (preflight skipped)" if skip_preflight
-                   else get_host_git_commit(ssh_run=ssh_run, host=host))
-    paths = build_chunk_remote_command(tool, chrom)
     started_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     t0 = time.time()
-    proc = ssh_run(build_ssh_argv(paths["command"], host=host))
-    wall_seconds = time.time() - t0
-    finished_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
-    result = {
+    result: dict = {
         "tool": tool, "chromosome": chrom,
-        "genes_in": genes_in,
-        "host_git_commit": host_commit,
-        "remote_output": paths["remote_output"], "remote_log": paths["remote_log"],
-        "ssh_returncode": proc.returncode,
-        "started_at": started_at, "finished_at": finished_at, "wall_seconds": wall_seconds,
+        "started_at": started_at, "finished_at": None, "wall_seconds": None,
         "status": "failed", "reason": None,
-        "genes_out": None, "parsing_errors_skipped": None, "parsing_errors_total": None,
+        "genes_in": None, "genes_out": None, "noncoding_features_excluded": None,
+        "host_git_commit": None,
+        "parsing_errors_found": None, "parsing_errors_skipped": None, "parsing_errors_total": None,
         "output_written": None,
+        "remote_subset": None, "remote_output": None, "remote_log": None,
+        "ssh_returncode": None,
     }
 
-    if proc.returncode != 0:
-        result["reason"] = f"remote command exited {proc.returncode}: {(proc.stderr or '')[:500]}"
+    def _finish(status: str, reason: str | None = None) -> dict:
+        result["status"] = status
+        result["reason"] = reason
+        result["finished_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        result["wall_seconds"] = time.time() - t0
         return result
+
+    try:
+        result["host_git_commit"] = get_and_verify_host_commit(ssh_run=ssh_run, host=host)
+    except Exception as e:  # noqa: BLE001 - a pinned-commit failure is a chunk failure, not a crash
+        return _finish("failed", f"host commit check failed: {e}")
+
+    local_subset = LOCAL_CHUNKS / f"{tool}_{chrom}_subset.gff3"
+    subset_info = build_local_subset(tool, chrom, LOCAL_INPUTS / f"{tool}_Athaliana.gff3", local_subset)
+    result["genes_in"] = subset_info["genes"]
+    result["noncoding_features_excluded"] = subset_info["excluded_feature_counts"]
+
+    paths = build_chunk_remote_command(tool, chrom)
+    result["remote_subset"] = paths["remote_subset"]
+    result["remote_output"] = paths["remote_output"]
+    result["remote_log"] = paths["remote_log"]
+
+    try:
+        push_and_verify(local_subset, paths["remote_subset"], ssh_run=ssh_run, push=push, host=host)
+    except Exception as e:  # noqa: BLE001
+        return _finish("failed", f"push/verify of input subset failed: {e}")
+
+    proc = ssh_run(build_ssh_argv(paths["command"], host=host))
+    result["ssh_returncode"] = proc.returncode
 
     local_out = chunk_output_path(tool, chrom)
     local_log = LOCAL_CHUNKS / f"{tool}_{chrom}_raw.log"
+
+    if proc.returncode != 0:
+        # I5: fetch the log even on failure. All of prompt_mode.py's own stdout/stderr
+        # was redirected into the remote log file, so `proc.stderr` here (the SSH
+        # command's own stderr) is typically empty — without fetching the log itself,
+        # the only diagnostic left would be "remote command exited 1" with nothing
+        # after the colon.
+        log_excerpt = "(remote log not fetched)"
+        try:
+            fetch(paths["remote_log"], local_log, host=host)
+            if local_log.exists():
+                log_excerpt = local_log.read_text()[-2000:]
+        except Exception as log_err:  # noqa: BLE001 - best-effort diagnostic, never masks the real failure
+            log_excerpt = f"(could not fetch remote log: {log_err})"
+        return _finish(
+            "failed",
+            f"remote command exited {proc.returncode}; ssh stderr: {(proc.stderr or '')[:500]!r}; "
+            f"remote log tail: {log_excerpt}",
+        )
+
     try:
         fetch_and_verify(paths["remote_output"], local_out, ssh_run=ssh_run, fetch=fetch, host=host)
         # Best-effort: the log is diagnostic, not load-bearing for scoring, so its
-        # absence downgrades to "N/A" rather than failing the chunk.
+        # absence downgrades to a recorded field rather than failing the chunk.
         try:
             fetch_and_verify(paths["remote_log"], local_log, ssh_run=ssh_run, fetch=fetch, host=host)
         except Exception as log_err:  # noqa: BLE001 - deliberately broad, see comment above
             result["log_fetch_error"] = str(log_err)
     except Exception as fetch_err:  # noqa: BLE001
-        result["reason"] = f"fetch/verify of remote output failed: {fetch_err}"
-        return result
+        return _finish("failed", f"fetch/verify of remote output failed: {fetch_err}")
 
     combined_text = local_log.read_text() if local_log.exists() else ""
     perr = parse_parsing_errors(combined_text)
-    result["parsing_errors_skipped"] = perr.skipped
-    result["parsing_errors_total"] = perr.total
+    result["parsing_errors_found"] = perr.found
+    if perr.found:
+        # prompt_mode.py only prints this line when error_count > 0, so a genuinely
+        # clean chunk (0 errors) legitimately also has found=False — genes_in/genes_out
+        # (always numeric, checked below) are the authoritative signal either way; this
+        # field is diagnostic detail, not the primary loss check.
+        result["parsing_errors_skipped"] = perr.skipped
+        result["parsing_errors_total"] = perr.total
+    else:
+        result["parsing_errors_skipped"] = "N/A (summary line absent)"
+        result["parsing_errors_total"] = "N/A (summary line absent)"
     result["output_written"] = parse_output_written(combined_text) is not None
 
     genes_out = count_gff3_features(local_out, "gene")
     result["genes_out"] = genes_out
 
     try:
-        check_loss(genes_in, genes_out, max_loss_fraction, context=f"{tool}/{chrom}")
+        check_loss(result["genes_in"], genes_out, max_loss_fraction, context=f"{tool}/{chrom}")
     except LossTooHigh as e:
-        result["reason"] = str(e)
-        return result
+        return _finish("failed", str(e))
 
-    result["status"] = "ok"
-    return result
+    return _finish("ok")
 
 
 def ensure_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
-                  ssh_run=default_ssh_run, fetch=default_rsync_fetch, host: str = HOST,
-                  force: bool = False, skip_preflight: bool = False) -> dict:
+                  ssh_run=default_ssh_run, fetch=default_rsync_fetch, push=default_rsync_push,
+                  host: str = HOST, force: bool = False) -> dict:
     """Run a chunk, or return its already-recorded result if it previously succeeded.
 
     A resumed chunk makes no SSH calls at all — it returns the exact record written the
@@ -472,12 +666,10 @@ def ensure_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
     """
     genes_in = count_genes_for_chromosome(LOCAL_INPUTS / f"{tool}_Athaliana.gff3", chrom)
     if not force and chunk_is_done(tool, chrom, genes_in):
-        prov = load_json(chunk_provenance_path(tool, chrom))
-        prov = dict(prov)
+        prov = dict(load_json(chunk_provenance_path(tool, chrom)))
         prov["resumed"] = True
         return prov
-    result = run_remote_chunk(tool, chrom, max_loss_fraction, ssh_run=ssh_run, fetch=fetch, host=host,
-                               skip_preflight=skip_preflight)
+    result = run_remote_chunk(tool, chrom, max_loss_fraction, ssh_run=ssh_run, fetch=fetch, push=push, host=host)
     result["resumed"] = False
     write_json(chunk_provenance_path(tool, chrom), result)
     return result
@@ -526,16 +718,100 @@ def standardize_output(raw_path: Path, out_path: Path, tool: str,
     class of silent-degradation bug this whole script exists to avoid. Calling the
     function directly with an explicit `species_prefix="A_thaliana"` and `genome_dir`
     sidesteps that entirely.
+
+    I8: asserts the `.fai` this coordinate validation depends on actually exists, rather
+    than letting `standardize_gff()`'s own `load_chrom_lengths()` fail silently — it
+    returns `{}` for a missing file, prints a `[WARN]` this script never captures, and
+    falls back to a 500,000,000 bp `MAX_COORDINATE` ceiling: no meaningful validation at
+    all for a ~30 Mb chromosome.
     """
+    fai_path = Path(genome_dir) / "Athaliana_167_TAIR10.fa.fai"
+    if not fai_path.exists():
+        raise FileNotFoundError(
+            f"standardize_output requires a live .fai for coordinate validation against "
+            f"real chromosome lengths, found none at {fai_path} — without it, "
+            f"standardize_gff() silently degrades to a 500,000,000 bp MAX_COORDINATE "
+            f"fallback and validates nothing meaningful for a ~30 Mb chromosome"
+        )
     mod = _load_module("standardize_gff", script_path)
     mod.standardize_gff(str(raw_path), str(out_path), "A_thaliana", tool, genome_dir=str(genome_dir))
 
 
 def filter_top_beam(in_path: Path, out_path: Path, script_path: Path = BEAM1_FILTER_SCRIPT) -> None:
     """Filter to the first gene record per GM= value (beam rank 1), reusing
-    `13_beam1_filter.py`'s own `main()` rather than reimplementing the rule."""
+    `13_beam1_filter.py`'s own `main()` rather than reimplementing the rule.
+
+    On this invocation (fixed round 1 correction), `prompt_mode.py` calls
+    `model.generate(..., num_return_sequences=1)`, so it does not actually export two
+    beam hypotheses per locus — this filter is a no-op safety net here, not a
+    load-bearing step. Kept anyway: free insurance against a future checkpoint or
+    invocation that does export both beams, at negligible cost.
+    """
     mod = _load_module("beam1_filter", script_path)
     mod.main(str(in_path), str(out_path))
+
+
+# --------------------------------------------------------------------------------------
+# Missing-loci manifest (I3)
+# --------------------------------------------------------------------------------------
+
+def _gff_ids(path: Path, feature: str) -> set[str]:
+    """Every `ID=` value on rows of the given feature type in a GFF3 file."""
+    ids: set[str] = set()
+    if not path.exists():
+        return ids
+    with path.open() as fh:
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            cols = line.rstrip("\n").split("\t")
+            if len(cols) < 9 or cols[2] != feature:
+                continue
+            fid = _gff_attr(cols[8], "ID")
+            if fid:
+                ids.add(fid)
+    return ids
+
+
+def _gff_gm_values(path: Path) -> set[str]:
+    """Every `GM=` value on `gene` rows of a completion-mode output file — the exact
+    gene id string of the input locus it was prompted from (see `prompt_mode.py`'s
+    `gm_id` and `32_score_polishing.py`'s own docstring on this same convention)."""
+    values: set[str] = set()
+    if not path.exists():
+        return values
+    with path.open() as fh:
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            cols = line.rstrip("\n").split("\t")
+            if len(cols) < 9 or cols[2] != "gene":
+                continue
+            gm = _gff_attr(cols[8], "GM")
+            if gm:
+                values.add(gm)
+    return values
+
+
+def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out_path: Path) -> int:
+    """Write every locus the input subset carried but the final output does not — a
+    locus the pipeline never emitted at all (I3).
+
+    This is the artifact that makes it impossible for a never-generated locus to be
+    scored as "still wrong": Task 5 can check a locus against this file before scoring
+    it as damage, rather than that guarantee living only in good intentions. Pairing is
+    on `GM=`, the same identity tag `32_score_polishing.py` already anchors its own
+    pairing on. Returns the number of missing loci written.
+    """
+    input_ids: set[str] = set()
+    for r in chunk_results:
+        subset = LOCAL_CHUNKS / f"{r['tool']}_{r['chromosome']}_subset.gff3"
+        input_ids |= _gff_ids(subset, "gene")
+    output_gms = _gff_gm_values(final_path)
+    missing = sorted(input_ids - output_gms)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text("".join(f"{m}\n" for m in missing))
+    return len(missing)
 
 
 # --------------------------------------------------------------------------------------
@@ -550,13 +826,31 @@ def get_host_git_commit(*, ssh_run=default_ssh_run, host: str = HOST) -> str:
     return commit
 
 
+def get_and_verify_host_commit(*, ssh_run=default_ssh_run, host: str = HOST) -> str:
+    """I4: constraint #2 ("the host must stay at the pinned commit") was recorded but
+    never enforced — `verify_host_genome` below hard-fails on md5 drift, but nothing
+    compared the host's git commit to `EXPECTED_HOST_COMMIT`, even though syncing
+    forward was measured to produce zero output on every input. This raises instead of
+    just recording, and — unlike the genome/input checksum preflight — is never skipped.
+    """
+    commit = get_host_git_commit(ssh_run=ssh_run, host=host)
+    if commit.startswith("N/A"):
+        raise RuntimeError(f"could not establish host git commit: {commit}")
+    if commit != EXPECTED_HOST_COMMIT:
+        raise RuntimeError(
+            f"host git commit drifted: {commit} != expected {EXPECTED_HOST_COMMIT} — "
+            f"gpu-environment.md: this exact commit reproduces the published benchmark "
+            f"(15/15 shared loci structurally identical); a newer checkout was measured "
+            f"to produce zero output on every input. Reproduce the published result on "
+            f"the new commit before trusting any prediction made against it."
+        )
+    return commit
+
+
 def verify_host_genome(*, ssh_run=default_ssh_run, host: str = HOST) -> str:
     """Preflight: the host's staged genome must match the md5 gpu-environment.md
     recorded. Returns the verified md5, or raises if it has drifted."""
-    proc = ssh_run(build_ssh_argv(f"md5sum {REMOTE_GENOME}", host=host))
-    remote_md5 = (proc.stdout or "").split()[0] if proc.returncode == 0 and (proc.stdout or "").strip() else None
-    if remote_md5 is None:
-        raise RuntimeError(f"could not read host genome checksum: {proc.stderr}")
+    remote_md5 = _read_remote_md5(REMOTE_GENOME, ssh_run=ssh_run, host=host)
     if remote_md5 != EXPECTED_GENOME_MD5:
         raise RuntimeError(
             f"host genome checksum drifted: {remote_md5} != expected {EXPECTED_GENOME_MD5} "
@@ -572,10 +866,7 @@ def verify_host_input(tool: str, *, ssh_run=default_ssh_run, host: str = HOST) -
     assert_not_scratch(local_path)
     local_md5 = md5_file(local_path)
     remote_path = f"{REMOTE_INPUTS_DIR}/{tool}_Athaliana.gff3"
-    proc = ssh_run(build_ssh_argv(f"md5sum {remote_path}", host=host))
-    remote_md5 = (proc.stdout or "").split()[0] if proc.returncode == 0 and (proc.stdout or "").strip() else None
-    if remote_md5 is None:
-        raise RuntimeError(f"could not read host input checksum for {tool}: {proc.stderr}")
+    remote_md5 = _read_remote_md5(remote_path, ssh_run=ssh_run, host=host)
     if remote_md5 != local_md5:
         raise RuntimeError(
             f"host input for {tool} does not match the GPFS-staged copy: "
@@ -588,12 +879,42 @@ def verify_host_input(tool: str, *, ssh_run=default_ssh_run, host: str = HOST) -
 # Whole-tool pipeline
 # --------------------------------------------------------------------------------------
 
+def _is_full_genome(chromosomes: tuple[str, ...]) -> bool:
+    return set(chromosomes) == set(CHROMOSOMES)
+
+
+def output_stub(tool: str, chromosomes: tuple[str, ...]) -> str:
+    """`{tool}` for the canonical full-genome run, `{tool}_{chr...}` otherwise (C2).
+
+    Without this, a `--chromosomes ChrM` invocation run after a completed full-genome
+    run would overwrite `{tool}_completed.gff3` (27k loci) with a 12-gene file under the
+    exact same name, and if that invocation then tripped the loss gate, the stale
+    provenance claiming 27,416 loci would be left next to a 12-gene prediction with no
+    signal anything was wrong.
+    """
+    if _is_full_genome(chromosomes):
+        return tool
+    return f"{tool}_{'-'.join(chromosomes)}"
+
+
 def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
                        max_loss_fraction: float = DEFAULT_MAX_LOSS_FRACTION,
-                       ssh_run=default_ssh_run, fetch=default_rsync_fetch, host: str = HOST,
-                       force: bool = False, skip_preflight: bool = False) -> dict:
+                       ssh_run=default_ssh_run, fetch=default_rsync_fetch, push=default_rsync_push,
+                       host: str = HOST, force: bool = False, skip_preflight: bool = False,
+                       acknowledge_high_loss_threshold: bool = False,
+                       invocation_args: dict | None = None) -> dict:
     if tool not in TOOLS:
         raise ValueError(f"unknown tool {tool!r}, expected one of {TOOLS}")
+    if max_loss_fraction > DEFAULT_MAX_LOSS_FRACTION and not acknowledge_high_loss_threshold:
+        # C3: --max-loss-fraction was a live escape hatch that left no trace in
+        # provenance — a run at 50% looked byte-for-byte like a run at 5%. Refusing to
+        # proceed above the default without an explicit, *recorded* acknowledgement
+        # means a loosened gate can never be invisible to a future reader.
+        raise ValueError(
+            f"max_loss_fraction={max_loss_fraction} exceeds the default "
+            f"{DEFAULT_MAX_LOSS_FRACTION} and acknowledge_high_loss_threshold was not "
+            f"set — see task-4-findings-round1.md C3"
+        )
 
     started_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     t0 = time.time()
@@ -606,8 +927,8 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
 
     chunk_results = []
     for chrom in chromosomes:
-        result = ensure_chunk(tool, chrom, max_loss_fraction, ssh_run=ssh_run, fetch=fetch,
-                               host=host, force=force, skip_preflight=skip_preflight)
+        result = ensure_chunk(tool, chrom, max_loss_fraction, ssh_run=ssh_run, fetch=fetch, push=push,
+                               host=host, force=force)
         chunk_results.append(result)
         if result.get("status") != "ok":
             raise LossTooHigh(
@@ -615,28 +936,40 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
                 f"re-run the same command to resume — completed chromosomes are skipped"
             )
 
-    # host_git_commit is captured per chunk, at the moment each one actually ran (see
-    # run_remote_chunk) — not once for this invocation — because a resumed run can span
-    # days and a single "commit as of now" would misrepresent chunks that ran earlier.
+    # host_git_commit is captured and enforced per chunk, at the moment each one
+    # actually ran (see run_remote_chunk/get_and_verify_host_commit) — not once for this
+    # invocation — because a resumed run can span days and a single "commit as of now"
+    # would misrepresent chunks that ran earlier.
     commits = sorted({r.get("host_git_commit") for r in chunk_results if r.get("host_git_commit")})
     if len(commits) == 1:
         host_commit = commits[0]
     else:
         host_commit = f"N/A (chunks disagree or are missing a recorded commit: {commits})"
 
+    stub = output_stub(tool, chromosomes)
     chunk_paths = [chunk_output_path(tool, c) for c in chromosomes]
-    raw_path = LOCAL_PREDICTIONS / f"{tool}_raw.gff3"
-    merge_gff3_files(chunk_paths, raw_path)
+    raw_path = LOCAL_PREDICTIONS / f"{stub}_raw.gff3"
+    genes_raw_merged = merge_gff3_files(chunk_paths, raw_path)  # I1: the first of two loss channels
 
-    standardized_path = LOCAL_PREDICTIONS / f"{tool}_standardized.gff3"
+    standardized_path = LOCAL_PREDICTIONS / f"{stub}_standardized.gff3"
     standardize_output(raw_path, standardized_path, tool)
+    genes_standardized = count_gff3_features(standardized_path, "gene")  # I1: the second
 
-    final_path = LOCAL_PREDICTIONS / f"{tool}_completed.gff3"
-    filter_top_beam(standardized_path, final_path)
+    # C1: the handoff file must never be written before the gate that validates it. It
+    # is built as `.partial`, gated by check_loss, and only then atomically renamed into
+    # place — so a chunk/run that fails partway through never leaves a `_completed.gff3`
+    # that looks complete and is not.
+    final_path = LOCAL_PREDICTIONS / f"{stub}_completed.gff3"
+    final_partial = LOCAL_PREDICTIONS / f"{stub}_completed.gff3.partial"
+    filter_top_beam(standardized_path, final_partial)
 
     genes_in_total = sum(r["genes_in"] for r in chunk_results)
-    genes_out_total = count_gff3_features(final_path, "gene")
+    genes_out_total = count_gff3_features(final_partial, "gene")
     check_loss(genes_in_total, genes_out_total, max_loss_fraction, context=f"{tool} (final, post-filter)")
+    os.replace(final_partial, final_path)
+
+    missing_loci_path = LOCAL_PREDICTIONS / f"{stub}_missing_loci.txt"
+    missing_loci_count = write_missing_loci_manifest(chunk_results, final_path, missing_loci_path)
 
     finished_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     provenance = {
@@ -644,23 +977,31 @@ def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES,
         "host": host,
         "host_git_commit": host_commit,
         "model": MODEL,
-        "cli_args": {
+        "model_invocation": {
             "batch_size": BATCH_SIZE, "num_beams": NUM_BEAMS,
             "max_length": MAX_LENGTH, "device": DEVICE,
         },
+        # C3: every CLI argument the invocation actually used, not just the hardcoded
+        # model-invocation constants above — so --max-loss-fraction, --force,
+        # --acknowledge-high-loss-threshold etc. are never invisible in provenance.
+        "invocation_args": invocation_args or {},
         "genome_md5": genome_md5,
         "input_md5": input_md5,
         "chromosomes": list(chromosomes),
         "chunks": chunk_results,
         "genes_in_total": genes_in_total,
+        "genes_raw_merged": genes_raw_merged,
+        "genes_standardized": genes_standardized,
         "genes_out_total": genes_out_total,
+        "missing_loci_count": missing_loci_count,
+        "missing_loci_path": str(missing_loci_path),
         "started_at": started_at, "finished_at": finished_at,
         "wall_seconds": time.time() - t0,
         "raw_path": str(raw_path), "standardized_path": str(standardized_path),
         "final_path": str(final_path),
         "status": "ok",
     }
-    write_json(LOCAL_PREDICTIONS / f"{tool}_provenance.json", provenance)
+    write_json(LOCAL_PREDICTIONS / f"{stub}_provenance.json", provenance)
     return provenance
 
 
@@ -672,12 +1013,23 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--tool", nargs="+", choices=list(TOOLS) + ["all"], default=["all"])
     ap.add_argument("--chromosomes", nargs="+", default=list(CHROMOSOMES),
-                     help="Restrict to specific chromosomes (e.g. for a smoke test).")
+                     help="Restrict to specific chromosomes (e.g. for a smoke test). "
+                          "A non-full set writes {tool}_{chromosomes}_completed.gff3, "
+                          "never the canonical {tool}_completed.gff3 (C2).")
     ap.add_argument("--max-loss-fraction", type=float, default=DEFAULT_MAX_LOSS_FRACTION)
+    ap.add_argument("--acknowledge-high-loss-threshold", action="store_true",
+                     help="Required to use --max-loss-fraction above the default; the "
+                          "acknowledgement itself is recorded in provenance (C3).")
     ap.add_argument("--force", action="store_true", help="Ignore prior chunk provenance and redo everything.")
     ap.add_argument("--skip-preflight", action="store_true",
-                     help="Skip the genome/input checksum preflight (for offline dry runs/tests).")
+                     help="Skip the genome/input checksum preflight (for offline dry runs/tests). "
+                          "Does not affect the host git-commit check, which is never skippable.")
     args = ap.parse_args(argv)
+
+    # C3: the full parsed CLI invocation goes into every tool's provenance verbatim, not
+    # just the hardcoded model-invocation constants — so a run's exact arguments are
+    # never invisible to a future reader.
+    invocation_args = vars(args)
 
     tools = TOOLS if "all" in args.tool else tuple(args.tool)
     # Tools are independent: one tool's failure (or an overnight crash partway through
@@ -691,6 +1043,8 @@ def main(argv: list[str] | None = None) -> int:
             summary = run_tool_pipeline(
                 tool, chromosomes=tuple(args.chromosomes), max_loss_fraction=args.max_loss_fraction,
                 force=args.force, skip_preflight=args.skip_preflight,
+                acknowledge_high_loss_threshold=args.acknowledge_high_loss_threshold,
+                invocation_args=invocation_args,
             )
         except Exception as e:  # noqa: BLE001 - report and move on to the next tool
             print(f"FAILED: {tool}: {e}", file=sys.stderr)
