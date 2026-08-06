@@ -69,11 +69,23 @@ in the direction that flatters it, and each is reported rather than assumed away
         `added_structures_vs_all_input_transcripts_at_reference_matched_loci`: `32` counts
         only at loci matched one-to-one to the reference, and only structures absent from
         the whole input locus. Measured on the 2026-08-06 polishing predictions, that field
-        reproduces `32` exactly — GeMoMa 21,739, BRAKER3 128, EGAPx 22,711 — while the
-        headline here is larger because it also counts additions at loci with no TAIR10
-        gene and re-emissions of the input's non-prompted isoforms. Neither number is
-        "the" answer; quoting either without the other is how the two analyses would
-        appear to disagree when they do not.
+        reproduces `32` exactly on BRAKER3 (128) and EGAPx (22,711). On GeMoMa it reports
+        21,744 where `32` reports 21,739, and that gap is the expected result rather than a
+        discrepancy to reconcile: `32` matches `GM=` against the input gene's `ID=`, but
+        every GeMoMa gene row leads with `Name=`, so `32` pairs no GeMoMa locus by identity
+        (`gm_paired: 0`) and falls through to positional overlap for all of them, while this
+        module applies the real rule via `_first_attribute_value`. `32`'s own docstring
+        measured what its key mismatch costs and published the corrected total in advance —
+        "added_structures 21,739 -> 21,744", the five loci being pairing failures misbooked
+        into `loci_without_output`, not missing generations — then deliberately left itself
+        unchanged, because the fix would move already-published numbers and needs its own
+        review round. Agreement at 21,744, reached here through an independent
+        implementation of the correct pairing, is therefore the pass condition on GeMoMa;
+        agreement at 21,739 would mean this module had inherited the same bug. The
+        headline above all three is larger still because it also counts additions at loci
+        with no TAIR10 gene and re-emissions of the input's non-prompted isoforms.
+        Neither number is "the" answer; quoting either without the other is how the two
+        analyses would appear to disagree when they do not.
 
     intron chain, reusing the prompt's own chain vs distinct from it
         Intron-chain precision ran 48x higher than exact-CDS precision on the polishing run,
