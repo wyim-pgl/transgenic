@@ -85,6 +85,18 @@ Two further cautions on this field, both measured on the same run:
   that matched the reference" statistic: dropped is a subset of the input, so against a
   reference-prompted run that count is 100% by definition.
 
+Which quantities in this module are criterion-stable, measured on the same run — worth
+knowing before quoting any of them:
+
+- NOT stable: added-precision (0.65% exact-CDS vs 31-33% intron-chain, a 48x swing, though
+  the swing is almost entirely terminus variants of the prompted transcript), and dropped-
+  structure counts (GeMoMa 13,855 -> 12,550, BRAKER3's TAIR10-matching drops 1,531 -> 1,122).
+- STABLE: destruction of the PROMPTED structure. Loosening exact-CDS to intron-chain equality
+  leaves it exactly unchanged (BRAKER3 114 -> 114, the TAIR10-prompted control 14 -> 14).
+  When this model discards what it was prompted with, the splice chain goes too, not just a
+  terminus. Any headline built on the prompted-structure axis therefore does not depend on
+  the equality criterion; one built on `added_structures` does.
+
 Two of the three staged inputs cannot support a UTR-level comparison: GeMoMa emits no
 exon rows at all, and BRAKER3's exon coordinates equal its CDS coordinates everywhere (no
 UTR was predicted). This is detected from both the input AND the output file (whichever
