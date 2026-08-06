@@ -137,22 +137,28 @@ DEFAULT_MAX_LOSS_FRACTION = 0.05  # published run lost 3/27,416 = 0.01%; 5% is a
                                   # Raising it above this default requires an explicit,
                                   # provenance-recorded acknowledgement (C3) — see main().
 # R4-3: the ratio gate above cannot see a single genuinely-missing locus on any but the
-# smallest chromosome, so the exact per-locus count is gated separately, and its default
-# is zero: every locus prompted must come back, except the one per chunk known to be
-# structurally unreachable. Raising it needs the same acknowledgement C3 requires, for
-# the same reason — a loosened gate must never be invisible to a future reader.
+# smallest chromosome — at 0.05 it tolerates ~309 lost loci on EGAPx Chr1's 6,194 — so
+# the exact per-locus count is gated separately, and its default is zero: every locus
+# prompted must come back, except the one per chunk known to be structurally unreachable.
+#
+# Expect to hit this gate on a run that is *correct*. The published prediction covers
+# 27,413 of 27,416 loci: one of the three absences is the structural last-gene drop
+# (point 6 above), so two are genuinely unexplained. A run of similar quality trips this
+# on whichever chromosome those loci fall in.
+#
+# That is the intended behaviour, and it is cheap precisely because R4-1 made resume
+# work: on re-invocation every completed chunk resumes from cache and only merge ->
+# standardize -> filter -> gate re-runs, which is minutes, not the 19 hours the run
+# itself takes. The cost of stopping is one re-invocation; what it buys is a human
+# opening {tool}_missing_loci.txt and looking at the named loci before deciding they are
+# acceptable, rather than a tolerance absorbing them silently.
+#
+# So the normal override, after that look, is to pass the number actually observed:
+#     --max-unexplained-missing-loci 2 --acknowledge-high-loss-threshold
+# which lands in invocation_args in provenance. The count itself reaches provenance
+# either way, gate or no gate — Task 5's guarantee that a never-generated locus is not
+# scored as damage rests on the manifest and that field, never on this threshold.
 DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI = 0
-
-# R4-3: unexplained loss is a different quantity from total loss and needs its own,
-# much tighter scale. `reachable_genes_in` already excludes the one locus per chunk that
-# genome2GSFDataset structurally cannot emit, so anything still missing is either a real
-# generation failure or something we do not understand — and the published run shows what
-# "normal" looks like there: 3 of 27,416 loci absent, one of them the structural drop, so
-# 2 genuinely unexplained, 0.007%. A gate at 0.05 would never fire on that scale; a gate
-# at zero would abort a *correct* 19-hour run at the very end with no way forward short of
-# editing this file. 0.001 sits between: it tolerates ~27 unexplained loci genome-wide,
-# roughly thirteen times the published rate, while still catching a systematic failure.
-DEFAULT_MAX_UNEXPLAINED_FRACTION = 0.001
 
 # I10/N5: top-level feature types that are never protein-coding gene loci (EGAPx carries
 # 2,048 lnc_RNA + 378 pseudogene rows in the staged A. thaliana file), and the gbkey

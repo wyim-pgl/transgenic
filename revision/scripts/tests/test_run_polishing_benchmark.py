@@ -329,7 +329,11 @@ def test_build_rsync_push_argv_shape(tmp_path):
 # ----------------------------------------------------------------------------
 # build_local_subset (I10): filters non-coding top-level loci and their descendants
 # before anything is shipped to the host, so the DB the host builds reconciles with
-# count_genes_for_chromosome's own definition and with Task 2/3's NONCODING_TYPES.
+# Task 2/3's NONCODING_TYPES. Since R4-1 its "genes" count is also the *only* definition
+# of how many genes a chunk has: both run_remote_chunk (recording genes_in) and
+# ensure_chunk (deciding whether the chunk needs re-running) call this same function
+# with the same arguments, so the two can no longer disagree the way the deleted
+# raw-counting helper did.
 # ----------------------------------------------------------------------------
 
 def test_build_local_subset_excludes_noncoding_top_level_and_descendants(tmp_path):
@@ -688,6 +692,31 @@ def test_chunk_is_done_false_when_a_round_3_record_lacks_a_round_4_field(tmp_pat
                           {"status": "ok", "genes_in": 5, "genes_out": 1,  # round-3 shape
                            "reachable_genes_in": 4, "structurally_unreachable_locus": "g1"})
     assert not run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=5)
+
+
+def test_every_required_provenance_key_is_actually_written_by_a_successful_chunk(tmp_path):
+    """The inverse of R4-2, and the more dangerous direction.
+
+    REQUIRED_CHUNK_PROVENANCE_KEYS makes a record without one of these keys not-done. A
+    key listed there that `run_remote_chunk` never writes would therefore make *every*
+    chunk permanently not-done — a silent, total loss of resume, i.e. re-running the
+    whole 19-hour benchmark on every invocation, with each run looking perfectly healthy.
+    R4-1 was that failure for one tool; this ties the contract to what is really written
+    so it cannot become that failure for all three.
+    """
+    ids = [f"g{i}" for i in range(1, 6)]
+    (run_bench.LOCAL_INPUTS / "gemoma_Athaliana.gff3").write_text(_gff_lines(_make_gene_triples("Chr1", ids)))
+    remote = FakeRemote(gff_rows_by_hint={"gemoma_Chr1_raw": _make_gene_triples("Chr1", ids[:-1])})
+    result = run_bench.run_remote_chunk("gemoma", "Chr1", max_loss_fraction=0.05,
+                                         ssh_run=remote.ssh_run, fetch=remote.fetch, push=remote.push)
+    assert result["status"] == "ok"
+    missing = [k for k in run_bench.REQUIRED_CHUNK_PROVENANCE_KEYS if k not in result]
+    assert not missing, f"required by chunk_is_done but never written: {missing}"
+
+    # And the full round trip: a record this code really produced must be accepted as
+    # done by the check that reads it back.
+    run_bench.write_json(run_bench.chunk_provenance_path("gemoma", "Chr1"), result)
+    assert run_bench.chunk_is_done("gemoma", "Chr1", expected_genes_in=result["genes_in"])
 
 
 def test_chunk_is_done_false_when_output_file_missing(tmp_path):
