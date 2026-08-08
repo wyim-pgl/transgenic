@@ -394,6 +394,16 @@ def standardize_gff(input_file, output_file, species_prefix, tool_name, genome_d
         else:
             # Create parent gene for orphan mRNA
             new_gene_id = f"gene_for_{mrna_id}"
+            # Carry the child's provenance onto the synthetic parent. GM= records which
+            # input locus a completion-mode prediction was prompted from, and this invented
+            # gene row covers exactly the same locus as the mRNA beneath it. Dropping the
+            # tag emits a gene that no downstream step can pair to an input, which inflates
+            # gene counts and hides an equal amount of real loss from any check comparing
+            # genes in against genes out — `33_run_polishing_benchmark.py`'s I-3 gate
+            # caught this on the 2026-08-06 run.
+            new_attributes = {'ID': new_gene_id}
+            if 'GM' in mrna['attributes']:
+                new_attributes['GM'] = mrna['attributes']['GM']
             new_gene = {
                 'seqid': mrna['seqid'],
                 'source': mrna['source'],
@@ -403,7 +413,7 @@ def standardize_gff(input_file, output_file, species_prefix, tool_name, genome_d
                 'score': '.',
                 'strand': mrna['strand'],
                 'phase': '.',
-                'attributes': {'ID': new_gene_id},
+                'attributes': new_attributes,
                 'children': [mrna],
             }
             genes[new_gene_id] = new_gene
