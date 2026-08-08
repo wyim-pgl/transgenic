@@ -346,6 +346,15 @@ def _reference_context(ref: dict, ref_strand: dict, art_by_gene: dict,
             "alt_chains": {chain(s) for s in alternatives},
             "strand": ref_strand.get(span[3], "?"),
             "art": set(art.values()) if art is not None else None,
+            # Kept so the primary can be scored SEPARATELY, never folded into `alt`. An
+            # addition equal to TAIR10's primary is not an alternative isoform — it is the
+            # model proposing the reference's main transcript where the prompting tool
+            # supplied a different one. That is a real event with its own interpretation,
+            # and the headline denominator must not absorb it silently in either
+            # direction: counting it as an alternative hit would inflate the number the
+            # manuscript's 18.1% is compared against, and leaving it unmeasured would hide
+            # a capability the additions might actually have.
+            "primary": primary_struct,
         }
     return context, fallback, genome_wide
 
@@ -400,6 +409,37 @@ def _tally(inp: dict, out: dict, io_pairs: dict, in_to_ref: dict, context: dict,
         exact = additions & ctx["alt"]
         t["added_matching_TAIR10_alternative_exact_CDS"] += len(exact)
         t["alt_recovered"] += len(ctx["alt"] & additions)
+
+        # The primary, scored apart from the alternatives. `primary` is one structure, so
+        # this is 0 or 1 per locus; `_representative` already collapsed identical
+        # emissions, and an addition equal to the PROMPT was excluded upstream, so a hit
+        # here means the model emitted TAIR10's main transcript at a locus where the
+        # prompting tool had supplied something else.
+        primary_struct = ctx["primary"]
+        if primary_struct is not None and primary_struct in additions:
+            t["added_matching_TAIR10_primary"] += 1
+            if survived:
+                t["added_matching_TAIR10_primary_at_prompt_survived_loci"] += 1
+        # Union, not a sum: a structure cannot be both, but stating it as a set operation
+        # keeps the field correct if `alt` ever stops excluding the primary.
+        reference_any = ctx["alt"] | ({primary_struct} if primary_struct is not None else set())
+        t["added_matching_TAIR10_any_transcript"] += len(additions & reference_any)
+
+        # The locus subset that isolates WHAT the prompt is from HOW GOOD it is.
+        #
+        # A tool's annotation can be wrong at a locus, and a wrong prompt cannot be
+        # expected to lead anywhere. Restricting to loci where the supplied structure
+        # already equals a real TAIR10 transcript removes that excuse: here the model was
+        # handed a correct gene structure, differing from the manuscript's own 18.1%
+        # experiment only in WHICH file the coordinates came from. If precision stays flat
+        # on this subset, prompt quality is not what separates the two experiments.
+        if supplied in reference_any:
+            t["loci_where_prompt_equals_a_reference_transcript"] += 1
+            t["added_at_loci_where_prompt_is_correct"] += len(additions)
+            t["added_matching_TAIR10_alternative_at_loci_where_prompt_is_correct"] += len(
+                exact)
+            t["added_matching_TAIR10_any_at_loci_where_prompt_is_correct"] += len(
+                additions & reference_any)
         if survived:
             t["added_matching_TAIR10_alternative_exact_CDS_at_prompt_survived_loci"] += len(
                 exact)
@@ -517,6 +557,17 @@ def score(input_gff: Path, output_gff: Path, tair10_gtf: Path = TAIR10_GTF,
             _pct(t["added_matching_TAIR10_alternative_intron_chain"], added),
         "precision_vs_AtRTD3_pct": _pct(t["added_matching_any_AtRTD3_transcript"], added),
         "recall_of_TAIR10_alternatives_pct": _pct(t["alt_recovered"], alt_total),
+        # TAIR10's primary, scored apart from its alternatives. An addition matching it is
+        # the model proposing the reference's main transcript at a locus where the
+        # prompting tool supplied a different one — not an alternative isoform, so it is
+        # reported beside the headline rather than inside it. `..._any_transcript` is the
+        # union, for readers who want one number against all of TAIR10; it is NOT the
+        # quantity the manuscript's 18.1% refers to, which is alternatives only.
+        "added_matching_TAIR10_primary": t["added_matching_TAIR10_primary"],
+        "precision_vs_TAIR10_primary_pct": _pct(t["added_matching_TAIR10_primary"], added),
+        "added_matching_TAIR10_any_transcript": t["added_matching_TAIR10_any_transcript"],
+        "precision_vs_TAIR10_any_transcript_pct":
+            _pct(t["added_matching_TAIR10_any_transcript"], added),
         "decomposition": {
             "added_structures_vs_all_input_transcripts":
                 t["added_structures_vs_all_input_transcripts"],
@@ -530,6 +581,22 @@ def score(input_gff: Path, output_gff: Path, tair10_gtf: Path = TAIR10_GTF,
             "precision_vs_TAIR10_alternatives_at_prompt_survived_loci_pct":
                 _pct(t["added_matching_TAIR10_alternative_exact_CDS_at_prompt_survived_loci"],
                      added_survived),
+            "added_matching_TAIR10_primary_at_prompt_survived_loci":
+                t["added_matching_TAIR10_primary_at_prompt_survived_loci"],
+            # Loci where the prompt was already a real TAIR10 transcript — the closest
+            # this benchmark gets to the manuscript's TAIR10-prompted experiment.
+            "loci_where_prompt_equals_a_reference_transcript":
+                t["loci_where_prompt_equals_a_reference_transcript"],
+            "added_at_loci_where_prompt_is_correct":
+                t["added_at_loci_where_prompt_is_correct"],
+            "added_matching_TAIR10_alternative_at_loci_where_prompt_is_correct":
+                t["added_matching_TAIR10_alternative_at_loci_where_prompt_is_correct"],
+            "precision_vs_TAIR10_alternatives_at_loci_where_prompt_is_correct_pct":
+                _pct(t["added_matching_TAIR10_alternative_at_loci_where_prompt_is_correct"],
+                     t["added_at_loci_where_prompt_is_correct"]),
+            "precision_vs_TAIR10_any_at_loci_where_prompt_is_correct_pct":
+                _pct(t["added_matching_TAIR10_any_at_loci_where_prompt_is_correct"],
+                     t["added_at_loci_where_prompt_is_correct"]),
             "added_matching_TAIR10_alternative_intron_chain_reusing_prompt_chain":
                 t["intron_chain_reusing_prompt_chain"],
             "added_matching_TAIR10_alternative_intron_chain_distinct_from_prompt":

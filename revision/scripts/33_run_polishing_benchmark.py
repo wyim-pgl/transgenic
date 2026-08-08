@@ -141,9 +141,55 @@ DEVICE = "cuda"
 # own claim rather than a proxy for it. Both come from the 13-species benchmark's own
 # standardized_results, already on TAIR10 sequence names, and both emit exactly one
 # transcript per locus (27,039 and 25,181), which is the case the claim describes.
-TOOLS = ("gemoma", "braker3", "egapx", "helixer", "annevo")
+TOOLS = ("gemoma", "braker3", "egapx", "helixer", "annevo",
+         "helixer_locked", "annevo_locked",
+         # The frame test — see `35_build_frame_shift_prompts.py`. Same CDS in both, only
+         # the gene row (and so the encoder window and the GSF coordinate origin) differs.
+         "tair10self", "tair10helixerframe",
+         # The same pair carrying UTRs. The CDS-only arms score 4.6% where the manuscript's
+         # own prediction scores 18.6% under this scorer, so a frame effect measured on
+         # them is measured in a regime the manuscript never ran in. GSF has dedicated UTR
+         # tokens, so dropping UTR rows changes the prompt itself rather than thinning it.
+         "tair10selfutr", "tair10helixerframeutr",
+         # Diagnostic: Helixer's own CDS carrying TAIR10's UTR. Uses the answer to build
+         # the input, so it can never ship; it exists to decide whether UTR correction
+         # alone would close the gap, or whether the CDS blocks it too.
+         "helixertairutr", "annevotairutr",
+         # Helixer's own CDS re-framed the way training framed TAIR10. Unlike
+         # `tair10helixerframe` this uses no reference knowledge, so if the frame is what
+         # matters, this is the arm that could actually be shipped.
+         "helixer_reframed")
 CHROMOSOMES = ("Chr1", "Chr2", "Chr3", "Chr4", "Chr5", "ChrC", "ChrM")
-SCRATCH_PREFIXES = ("_smoke", "_bs")  # the team lead's GPU-host scratch files
+SCRATCH_PREFIXES = ("_smoke", "_bs", "_locksmoke")  # the team lead's GPU-host scratch files
+
+# The `_locked` arms answer a different question with the same pipeline. Stock completion
+# mode is prompted with a locus's first-transcript FEATURES but not its transcripts
+# section, so it regenerates that transcript and may overwrite it — measured at 743/27,031
+# Helixer loci and 21,481/29,525 GeMoMa loci on the 2026-08-06 run. A structure that
+# replaces the prompt is not an addition, so "does completion mode add correct
+# alternatives" cannot be read off a run that allows the replacement. These arms pin the
+# prompted chain during decoding and leave everything after it free; see
+# `examples/prompt_mode_primary_locked.py` and `examples/primary_lock.py` on the host.
+#
+# The arm is chosen by tool name rather than a flag, so no invocation can silently pair a
+# locked script with an unlocked label or the reverse — the output paths, which are built
+# from the tool name, always say which arm produced them.
+PROMPT_SCRIPT = "examples/prompt_mode.py"
+LOCKED_PROMPT_SCRIPT = "examples/prompt_mode_primary_locked.py"
+LOCKED_SUFFIX = "_locked"
+
+
+def is_locked_arm(tool: str) -> bool:
+    return tool.endswith(LOCKED_SUFFIX)
+
+
+def base_tool(tool: str) -> str:
+    """The tool whose annotation this arm is prompted with (`helixer_locked` -> `helixer`)."""
+    return tool[: -len(LOCKED_SUFFIX)] if is_locked_arm(tool) else tool
+
+
+def prompt_script_for(tool: str) -> str:
+    return LOCKED_PROMPT_SCRIPT if is_locked_arm(tool) else PROMPT_SCRIPT
 
 EXPECTED_GENOME_MD5 = "ac1d3ca8af4f02bca3d750a339b65fec"
 # Constraint #2 (gpu-environment.md): the host must stay at this exact commit. Syncing
@@ -568,11 +614,16 @@ def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Pat
     }
 
 
-def build_prompt_mode_command(remote_gff: str, remote_output: str, remote_db: str, remote_log: str) -> str:
+def build_prompt_mode_command(remote_gff: str, remote_output: str, remote_db: str, remote_log: str,
+                              tool: str = "") -> str:
     """The exact remote command for one (tool, chromosome) chunk.
 
     `--batch-size 1` and `--num-beams 2` are literal constants in this string, not
     interpolated from any caller-supplied value — see the module docstring.
+
+    `tool` selects the decoding script and nothing else: a `_locked` arm runs
+    `prompt_mode_primary_locked.py`, every other arm runs the pinned `prompt_mode.py`.
+    The two differ only in whether the prompted transcript is pinned during decoding.
 
     R4-4 (round 4, found while verifying R4-1 on the real host): the stale remote
     DuckDB is deleted first, because `genome2GSFDataset` *appends* to an existing one.
@@ -591,7 +642,7 @@ def build_prompt_mode_command(remote_gff: str, remote_output: str, remote_db: st
     return (
         f"{build_remote_env_setup()} && cd {REMOTE_TRANSGENIC_DIR} && "
         f"rm -f {remote_db} {remote_output} && "
-        f"python3 examples/prompt_mode.py "
+        f"python3 {prompt_script_for(tool)} "
         f"--genome {REMOTE_GENOME} --gff {remote_gff} --output {remote_output} "
         f"--db {remote_db} --model {MODEL} --batch-size {BATCH_SIZE} "
         f"--num-beams {NUM_BEAMS} --max-length {MAX_LENGTH} --device {DEVICE} "
@@ -614,7 +665,7 @@ def build_chunk_remote_command(tool: str, chrom: str) -> dict:
         "remote_output": remote_output,
         "remote_db": remote_db,
         "remote_log": remote_log,
-        "command": build_prompt_mode_command(remote_subset, remote_output, remote_db, remote_log),
+        "command": build_prompt_mode_command(remote_subset, remote_output, remote_db, remote_log, tool),
     }
 
 
@@ -839,7 +890,7 @@ def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
         return _finish("failed", f"host commit check failed: {e}")
 
     local_subset = LOCAL_CHUNKS / f"{tool}_{chrom}_subset.gff3"
-    subset_info = build_local_subset(tool, chrom, LOCAL_INPUTS / f"{tool}_Athaliana.gff3", local_subset)
+    subset_info = build_local_subset(tool, chrom, LOCAL_INPUTS / f"{base_tool(tool)}_Athaliana.gff3", local_subset)
     result["genes_in"] = subset_info["genes"]
     result["noncoding_features_excluded"] = subset_info["excluded_feature_counts"]
     # N6 (round 3): the last gene in file order is structurally unreachable regardless
@@ -1016,7 +1067,7 @@ def ensure_chunk(tool: str, chrom: str, max_loss_fraction: float, *,
     on a pure resume.
     """
     local_subset = LOCAL_CHUNKS / f"{tool}_{chrom}_subset.gff3"
-    subset_info = build_local_subset(tool, chrom, LOCAL_INPUTS / f"{tool}_Athaliana.gff3", local_subset)
+    subset_info = build_local_subset(tool, chrom, LOCAL_INPUTS / f"{base_tool(tool)}_Athaliana.gff3", local_subset)
     genes_in = subset_info["genes"]
     if not force and chunk_is_done(tool, chrom, genes_in):
         prov = dict(load_json(chunk_provenance_path(tool, chrom)))
@@ -1355,10 +1406,10 @@ def verify_host_genome(*, ssh_run=default_ssh_run, host: str = HOST) -> str:
 def verify_host_input(tool: str, *, ssh_run=default_ssh_run, host: str = HOST) -> str:
     """Preflight: the host's staged input for `tool` must be byte-identical to the
     GPFS-staged copy Task 1 produced (both are supposed to be the same file, copied)."""
-    local_path = LOCAL_INPUTS / f"{tool}_Athaliana.gff3"
+    local_path = LOCAL_INPUTS / f"{base_tool(tool)}_Athaliana.gff3"
     assert_not_scratch(local_path)
     local_md5 = md5_file(local_path)
-    remote_path = f"{REMOTE_INPUTS_DIR}/{tool}_Athaliana.gff3"
+    remote_path = f"{REMOTE_INPUTS_DIR}/{base_tool(tool)}_Athaliana.gff3"
     remote_md5 = _read_remote_md5(remote_path, ssh_run=ssh_run, host=host)
     if remote_md5 != local_md5:
         raise RuntimeError(

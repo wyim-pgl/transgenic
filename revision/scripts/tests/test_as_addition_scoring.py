@@ -502,3 +502,129 @@ def test_empty_side_raises_rather_than_reporting_zeros(tmp_path, refs):
     out.write_text("##gff-version 3\n")
     with pytest.raises(ValueError):
         mod.score(inp, out, refs["tair10"], refs["atrtd3"], refs["primary_ids"])
+
+
+# ------------------------------------- TAIR10's primary, scored apart from its alternatives
+
+# A structure that is neither TAIR10's primary nor either of its alternatives. Used as the
+# prompt so that an addition CAN equal the primary — when the prompt already is the
+# primary, an emission of it is excluded as "equal to the prompt" and never reaches this
+# code path at all.
+TOOL_ONLY = [(100, 200), (360, 400)]
+
+
+def test_addition_equal_to_the_tair10_primary_is_counted_as_primary_not_alternative(
+        tmp_path, refs):
+    r = _score(tmp_path, refs,
+               [{"gene": "G1", "transcripts": [("G1.t1", TOOL_ONLY)]}],
+               [{"gene": "O1", "gm": "G1",
+                 "transcripts": [("O1.t1", TOOL_ONLY), ("O1.t2", PRIMARY)]}])
+    assert r["added_structures"] == 1
+    assert r["added_matching_TAIR10_primary"] == 1
+    # It must NOT leak into the alternatives headline the manuscript's 18.1% compares to.
+    assert r["added_matching_TAIR10_alternative_exact_CDS"] == 0
+    assert r["precision_vs_TAIR10_alternatives_pct"] == 0.0
+    assert r["precision_vs_TAIR10_primary_pct"] == 100.0
+
+
+def test_any_transcript_is_the_union_of_primary_and_alternative_hits(tmp_path, refs):
+    r = _score(tmp_path, refs,
+               [{"gene": "G1", "transcripts": [("G1.t1", TOOL_ONLY)]}],
+               [{"gene": "O1", "gm": "G1",
+                 "transcripts": [("O1.t1", TOOL_ONLY), ("O1.t2", PRIMARY),
+                                 ("O1.t3", ALT1)]}])
+    assert r["added_structures"] == 2
+    assert r["added_matching_TAIR10_primary"] == 1
+    assert r["added_matching_TAIR10_alternative_exact_CDS"] == 1
+    assert r["added_matching_TAIR10_any_transcript"] == 2
+    assert r["precision_vs_TAIR10_any_transcript_pct"] == 100.0
+
+
+def test_primary_hit_is_zero_when_only_alternatives_are_added(tmp_path, refs):
+    r = _score(tmp_path, refs,
+               [{"gene": "G1", "transcripts": [("G1.t1", PRIMARY)]}],
+               [{"gene": "O1", "gm": "G1",
+                 "transcripts": [("O1.t1", PRIMARY), ("O1.t2", ALT1)]}])
+    assert r["added_matching_TAIR10_primary"] == 0
+    assert r["added_matching_TAIR10_any_transcript"] == 1
+    assert r["precision_vs_TAIR10_primary_pct"] == 0.0
+
+
+def test_re_emitting_the_prompt_never_counts_as_a_primary_hit(tmp_path, refs):
+    """The prompt IS TAIR10's primary here; re-emitting it is not an addition at all."""
+    r = _score(tmp_path, refs,
+               [{"gene": "G1", "transcripts": [("G1.t1", PRIMARY)]}],
+               [{"gene": "O1", "gm": "G1", "transcripts": [("O1.t1", PRIMARY)]}])
+    assert r["added_structures"] == 0
+    assert r["added_matching_TAIR10_primary"] == 0
+    assert r["precision_vs_TAIR10_primary_pct"] is None
+
+
+def test_primary_hit_at_a_locus_that_kept_its_prompt_is_attributed_there(tmp_path, refs):
+    r = _score(tmp_path, refs,
+               [{"gene": "G1", "transcripts": [("G1.t1", TOOL_ONLY)]}],
+               [{"gene": "O1", "gm": "G1",
+                 "transcripts": [("O1.t1", TOOL_ONLY), ("O1.t2", PRIMARY)]}])
+    assert r["added_matching_TAIR10_primary"] == 1
+    assert r["decomposition"]["prompt_survived_loci"] == 1
+    assert r["decomposition"]["added_matching_TAIR10_primary_at_prompt_survived_loci"] == 1
+
+
+def test_primary_hit_that_replaced_the_prompt_is_not_attributed_to_survival(tmp_path, refs):
+    """The prompt is gone and TAIR10's primary stands in its place — a replacement."""
+    r = _score(tmp_path, refs,
+               [{"gene": "G1", "transcripts": [("G1.t1", TOOL_ONLY)]}],
+               [{"gene": "O1", "gm": "G1", "transcripts": [("O1.t1", PRIMARY)]}])
+    assert r["added_matching_TAIR10_primary"] == 1
+    assert r["decomposition"]["prompt_destroyed_loci"] == 1
+    assert r["decomposition"]["added_matching_TAIR10_primary_at_prompt_survived_loci"] == 0
+
+
+# ------------------------- the subset where the prompt was already a real TAIR10 transcript
+
+def test_locus_whose_prompt_equals_a_reference_transcript_is_isolated(tmp_path, refs):
+    r = _score(tmp_path, refs,
+               [{"gene": "G1", "transcripts": [("G1.t1", PRIMARY)]}],
+               [{"gene": "O1", "gm": "G1",
+                 "transcripts": [("O1.t1", PRIMARY), ("O1.t2", ALT1)]}])
+    d = r["decomposition"]
+    assert d["loci_where_prompt_equals_a_reference_transcript"] == 1
+    assert d["added_at_loci_where_prompt_is_correct"] == 1
+    assert d["added_matching_TAIR10_alternative_at_loci_where_prompt_is_correct"] == 1
+    assert d["precision_vs_TAIR10_alternatives_at_loci_where_prompt_is_correct_pct"] == 100.0
+
+
+def test_a_prompt_matching_an_alternative_also_counts_as_correct(tmp_path, refs):
+    """"Correct" means it equals ANY TAIR10 transcript, not specifically the primary."""
+    r = _score(tmp_path, refs,
+               [{"gene": "G1", "transcripts": [("G1.t1", ALT1)]}],
+               [{"gene": "O1", "gm": "G1",
+                 "transcripts": [("O1.t1", ALT1), ("O1.t2", ALT2)]}])
+    d = r["decomposition"]
+    assert d["loci_where_prompt_equals_a_reference_transcript"] == 1
+    assert d["added_matching_TAIR10_alternative_at_loci_where_prompt_is_correct"] == 1
+
+
+def test_locus_with_a_wrong_prompt_is_excluded_from_the_subset(tmp_path, refs):
+    r = _score(tmp_path, refs,
+               [{"gene": "G1", "transcripts": [("G1.t1", TOOL_ONLY)]}],
+               [{"gene": "O1", "gm": "G1",
+                 "transcripts": [("O1.t1", TOOL_ONLY), ("O1.t2", ALT1)]}])
+    d = r["decomposition"]
+    assert d["loci_where_prompt_equals_a_reference_transcript"] == 0
+    assert d["added_at_loci_where_prompt_is_correct"] == 0
+    # N/A rather than 0.0 — nothing was measured on an empty subset.
+    assert d["precision_vs_TAIR10_alternatives_at_loci_where_prompt_is_correct_pct"] is None
+    # ...while the headline still counts the addition.
+    assert r["added_matching_TAIR10_alternative_exact_CDS"] == 1
+
+
+def test_any_transcript_precision_on_the_subset_includes_primary_hits(tmp_path, refs):
+    r = _score(tmp_path, refs,
+               [{"gene": "G1", "transcripts": [("G1.t1", ALT1)]}],
+               [{"gene": "O1", "gm": "G1",
+                 "transcripts": [("O1.t1", ALT1), ("O1.t2", PRIMARY)]}])
+    d = r["decomposition"]
+    assert d["added_at_loci_where_prompt_is_correct"] == 1
+    assert d["added_matching_TAIR10_alternative_at_loci_where_prompt_is_correct"] == 0
+    assert d["precision_vs_TAIR10_any_at_loci_where_prompt_is_correct_pct"] == 100.0
