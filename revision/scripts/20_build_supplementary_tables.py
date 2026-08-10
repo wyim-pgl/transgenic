@@ -34,6 +34,7 @@ PROMPT_TRANSFER_ARMS = [
     ("tair10helixerframe", "Reference CDS, no UTR, predicted frame", "TAIR10", "none", "Helixer"),
     ("helixertairutr", "Predicted CDS, reference UTR", "Helixer", "TAIR10", "CDS+UTR span"),
     ("annevotairutr", "Predicted CDS, reference UTR", "ANNEVO", "TAIR10", "CDS+UTR span"),
+    ("helixer_reframed", "Predicted CDS reframed, no reference input", "Helixer", "none", "CDS span"),
     ("helixer", "Helixer output as supplied", "Helixer", "Helixer", "Helixer"),
     ("annevo", "ANNEVO output as supplied", "ANNEVO", "none", "ANNEVO"),
     ("braker3", "BRAKER3 output as supplied", "BRAKER3", "BRAKER3", "BRAKER3"),
@@ -218,9 +219,10 @@ def build(out: Out) -> None:
         "release used for the isoform analyses in Table S4 and Figure 6, so the two are directly "
         "comparable. An earlier version of this table used v0.12.10, which scores transcript-level "
         "matches more permissively; base-level values are identical between the releases. The "
-        "*TransGenic 400M, reference-prompted* rows are additionally filtered to the top-ranked "
-        "beam, because the source GFF3 for that configuration exported both beam hypotheses as "
-        "separate gene records (54,826 gene records for 27,413 A. thaliana loci). The "
+        "*TransGenic 400M, reference-prompted* rows are additionally deduplicated to the first "
+        "record per locus, because the source GFF3 for that configuration exported each locus "
+        "twice (54,826 gene records for 27,413 A. thaliana loci) — a write-time artifact of the "
+        "prediction database rather than a second beam hypothesis (see Methods). The "
         "*V. vinifera* Tiberius soft-masked row is absent because that run did not complete "
         "(see Table S3). "
         "ANNEVO, Helixer, and Tiberius were run on whole-genome sequences; TransGenic was "
@@ -230,7 +232,7 @@ def build(out: Out) -> None:
         "transcript and are not de novo performance. The *L. sativa* TransGenic 400M "
         "self-prompted cell is absent: it was seeded by a de novo run that terminated early "
         "and was therefore invalidated and withdrawn (see Table S3 footnote). "
-        "Figure 5 displays the seven primary configurations from this table.",
+        "Figure 5 displays the eight primary configurations from this table.",
         ["Species", "Tool / mode",
          "Base Sn (%)", "Base Pr (%)", "Base F1 (%)",
          "Exon Sn (%)", "Exon Pr (%)", "Exon F1 (%)",
@@ -258,8 +260,9 @@ def build(out: Out) -> None:
         "Source: `transgenic_comparison/busco_summary_final.csv`, normalized by "
         "`18_normalize_busco_summary.py` (BUSCO v6.0.0, viridiplantae_odb10, n = 425, "
         "protein mode; proteins extracted with PASA v2.5.3 `gff3_file_to_proteins.pl`). "
-        "Complete (%) = (single-copy + duplicated) / 425. The reference-prompted rows here were scored on the unfiltered "
-        "export, which holds every locus twice (see Methods), so most conserved genes "
+        "Complete (%) = (single-copy + duplicated) / 425. The 400M reference-prompted rows for "
+        "*A. thaliana*, *P. trichocarpa*, and *Z. mays* were scored on the unfiltered "
+        "export, which holds every locus twice (see Methods), so in those rows most conserved genes "
         "appear as duplicated rather than single-copy. Table S2 and Figure 5 report the "
         "deduplicated file for the same configuration; scoring it alone for A. thaliana "
         "returns the identical completeness (C 97.6% either way, F 2.1%, M 0.2%) and changes only "
@@ -406,6 +409,8 @@ def build(out: Out) -> None:
             sp, var = split_variant(r["species_variant"])
         except ValueError:
             continue
+        if sp == "L_sativa" and var in ("transgenic400M", "transgenic400M_prompt_denovo"):
+            continue  # stalled/invalidated run; quarantined (see Table S3 footnote)
         parsed.append((sp, var, r))
     parsed.sort(key=lambda x: (SPECIES_ORDER.index(x[0]), order.get(x[1], 99)))
     label_of = dict(TOOL_NAME)
@@ -426,7 +431,12 @@ def build(out: Out) -> None:
         "for divisibility by three, an ATG start, a terminal stop codon, and the absence of "
         "internal stop codons. Organellar genes were excluded because RNA editing invalidates "
         "genomic translation checks. Duplicate transcripts are identical exon chains within "
-        "the same locus.",
+        "the same locus. The *L. sativa* TransGenic 400M de novo and self-prompted rows are "
+        "absent: they derive from the stalled run that was invalidated and quarantined "
+        "(see Table S3 footnote); Tables S2 and S3 report the complete rerun. Completion-mode "
+        "rows other than the *A. thaliana* deduplicated row are scored on the unfiltered "
+        "export, so transcript and duplicate counts are inflated where the file-level "
+        "duplication occurs, while percentages are unaffected.",
         ["Species", "Prediction set", "Transcripts (n)", "Checked (n)",
          "Frame failure (n)", "No ATG start (n)", "No terminal stop (n)",
          "Internal stop (n)", "Fully consistent (n)", "Fully consistent (%)",
@@ -444,6 +454,8 @@ def build(out: Out) -> None:
             continue
         if r["transcripts_compared"] in ("0", ""):
             continue
+        if sp == "L_sativa" and var in ("transgenic400M", "transgenic400M_prompt_denovo"):
+            continue  # stalled/invalidated run; quarantined (see Table S3 footnote)
         parsed.append((sp, var, r))
     parsed.sort(key=lambda x: (SPECIES_ORDER.index(x[0]), order.get(x[1], 99)))
     rows = [[
@@ -459,7 +471,8 @@ def build(out: Out) -> None:
         "transcript the distance to the nearest same-strand reference transcript terminus at "
         "the matched locus was measured; median offsets are in nucleotides. Self-prompted "
         "rows are omitted because their transcripts could not be linked to reference loci by "
-        "identifier.",
+        "identifier. The *L. sativa* TransGenic 400M de novo row is absent: it derives from "
+        "the stalled run that was invalidated (see Table S3 footnote).",
         ["Species", "Prediction set", "Transcripts compared (n)",
          "TSS exact (%)", "TSS ±50 nt (%)", "TSS ±100 nt (%)", "TSS median offset (nt)",
          "TES exact (%)", "TES ±50 nt (%)", "TES ±100 nt (%)", "TES median offset (nt)"],
@@ -600,6 +613,7 @@ def build(out: Out) -> None:
         d = jload(PB / f"{stem}_as_additions.json")
         rows.append([
             prompt, cds, utr, boundary,
+            f"{d['loci_scored']:,}",
             f"{d['added_structures']:,}",
             f"{d['added_matching_TAIR10_alternative_exact_CDS']:,}",
             f"{d['precision_vs_TAIR10_alternatives_pct']:.1f}",
@@ -612,23 +626,32 @@ def build(out: Out) -> None:
     out.table(
         "TableS11_prompt_transfer",
         "Table S11. Accuracy of added structures as a function of the supplied prompt",
-        f"Source: `polishing_benchmark/results/*_as_additions.json`, scored with "
-        f"`34_score_as_additions.py`, the script used for the AUGUSTUS comparison in Table S4. "
+        f"Source: `polishing_benchmark/results/*_as_additions.json` (archived in the "
+        f"repository under `revision/results/prompt_transfer/`), scored with "
+        f"`34_score_as_additions.py`, a re-implementation of the additions scoring of "
+        f"`28_score_added_isoforms.py` (the script behind the AUGUSTUS comparison in Table S4); "
+        f"the two differ in locus filtering. "
         f"Additions are scored with each tool's own primary structure removed, against TAIR10 "
         f"alternative transcripts (exact CDS match) and against the AtRTD3 long-read "
-        f"transcriptome; all conditions use the same A. thaliana loci. The first row is the "
-        f"condition under which every completion-mode figure in the manuscript was obtained. "
+        f"transcriptome; all conditions draw on the same A. thaliana genome and TAIR10 gene set, "
+        f"but the locus framing differs by row (Gene boundary column) and the number of loci "
+        f"scored varies accordingly. Recall denominators are the distinct alternative CDS "
+        f"structures at the scored loci. The first row is an independent re-run of the "
+        f"manuscript's headline condition in this pipeline; the manuscript's completion-mode "
+        f"figures come from a separate scoring over 27,413 loci (`28_score_added_isoforms.py`: "
+        f"1,103 added structures, 18.1% versus TAIR10 alternatives), and the two agree within "
+        f"rounding. "
         f"The structural filter (`36_filter_additions_structurally.py`) keeps only additions "
         f"encoding a complete open reading frame whose introns all carry canonical GT..AG "
         f"termini, discarding {filt['additions_discarded_pct']:.1f}% of them "
         f"({filt['failed_orf']:,} for the reading frame and {filt['failed_splice']:,} for the "
         f"splice sites); it reads the genome and the predicted coordinates alone and does not "
         f"consult any reference annotation. Both criteria were checked against TAIR10's own "
-        f"prompt transcripts before use: {audit['complete_orf_pct']:.1f}% encode a complete "
-        f"reading frame and {audit['both_pct']:.1f}% satisfy both criteria "
-        f"({audit['transcripts_scored']:,} transcripts), consistent with the reference "
-        f"consistency reported in Table S5.",
-        ["Prompt", "CDS source", "UTR source", "Gene boundary", "Added", "Matched",
+        f"prompt transcripts before use: of the {audit['transcripts_scored']:,} prompt "
+        f"transcripts scored, {audit['complete_orf_pct']:.1f}% encode a complete reading "
+        f"frame and {audit['both_pct']:.1f}% satisfy both criteria, consistent with the "
+        f"reference consistency reported in Table S5.",
+        ["Prompt", "CDS source", "UTR source", "Gene boundary", "Loci scored", "Added", "Matched",
          "Precision vs TAIR10 alt (%)", "Precision vs AtRTD3 (%)", "Recall of TAIR10 alt (%)"],
         rows,
     )

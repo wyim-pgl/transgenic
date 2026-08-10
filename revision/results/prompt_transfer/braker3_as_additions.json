@@ -1,0 +1,97 @@
+{
+ "provenance": {
+  "input": "polishing_benchmark/inputs/braker3_Athaliana.gff3",
+  "output": "polishing_benchmark/predictions/braker3_completed.gff3",
+  "reference_TAIR10": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/TAIR10.gtf",
+  "reference_AtRTD3": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/atRTD3_TS_21Feb22_transfix.gtf",
+  "primary_ids": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/primary_transcript_ids.txt",
+  "tool": "braker3",
+  "argv": [
+   "--input",
+   "polishing_benchmark/inputs/braker3_Athaliana.gff3",
+   "--output",
+   "polishing_benchmark/predictions/braker3_completed.gff3",
+   "--tool",
+   "braker3",
+   "--json",
+   "polishing_benchmark/results/braker3_as_additions.json"
+  ],
+  "cli_args": {
+   "input": "polishing_benchmark/inputs/braker3_Athaliana.gff3",
+   "output": "polishing_benchmark/predictions/braker3_completed.gff3",
+   "tair10": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/TAIR10.gtf",
+   "atrtd3": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/atRTD3_TS_21Feb22_transfix.gtf",
+   "primary_ids": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/primary_transcript_ids.txt",
+   "tool": "braker3",
+   "json": "polishing_benchmark/results/braker3_as_additions.json"
+  }
+ },
+ "definitions": {
+  "added_structure": "a distinct CDS structure in the output that differs from the structure supplied for that locus (the input's first mRNA in file order), identical emissions collapsed to one",
+  "TAIR10_alternative": "any TAIR10 transcript at the matched locus other than the curated primary from primary_transcript_ids.txt",
+  "AtRTD3_match": "equality with ANY AtRTD3 transcript at the matched locus"
+ },
+ "loci_scored": 26628,
+ "loci_with_at_least_one_addition": 140,
+ "added_structures": 145,
+ "reference_alternative_transcripts": 5300,
+ "added_matching_TAIR10_alternative_exact_CDS": 0,
+ "added_matching_TAIR10_alternative_intron_chain": 3,
+ "added_matching_any_AtRTD3_transcript": 1,
+ "precision_vs_TAIR10_alternatives_pct": 0.0,
+ "precision_vs_TAIR10_alternatives_intron_chain_pct": 2.1,
+ "precision_vs_AtRTD3_pct": 0.7,
+ "recall_of_TAIR10_alternatives_pct": 0.0,
+ "decomposition": {
+  "added_structures_vs_all_input_transcripts": 140,
+  "input_loci_with_multiple_transcripts": 2811,
+  "prompt_survived_loci": 26502,
+  "prompt_destroyed_loci": 126,
+  "added_at_loci_where_prompt_survived": 19,
+  "added_at_loci_where_prompt_destroyed": 126,
+  "added_matching_TAIR10_alternative_exact_CDS_at_prompt_survived_loci": 0,
+  "precision_vs_TAIR10_alternatives_at_prompt_survived_loci_pct": 0.0,
+  "added_matching_TAIR10_alternative_intron_chain_reusing_prompt_chain": 1,
+  "added_matching_TAIR10_alternative_intron_chain_distinct_from_prompt": 2,
+  "added_structures_at_reference_matched_loci": 129,
+  "added_structures_vs_all_input_transcripts_at_reference_matched_loci": 128,
+  "precision_vs_TAIR10_alternatives_at_reference_matched_loci_pct": 0.0,
+  "added_structures_at_AtRTD3_covered_loci": 129,
+  "precision_vs_AtRTD3_at_covered_loci_pct": 0.8
+ },
+ "diagnostics": {
+  "input_loci": 26635,
+  "input_loci_matched_to_reference": 23761,
+  "input_loci_without_reference_match": 2872,
+  "split_predictions": 394,
+  "loci_without_output": 7,
+  "reference_alternative_transcripts_at_loci_without_output": 0,
+  "output_loci": 26628,
+  "output_loci_without_input_partner": 0,
+  "reference_loci": 27416,
+  "reference_alternative_transcripts_genome_wide": 5580,
+  "reference_primary_fallback_to_file_order": 0,
+  "reference_loci_without_AtRTD3_counterpart": 29,
+  "added_matching_TAIR10_alternative_exact_CDS_opposite_strand": 0,
+  "input_gene_rows": 26635,
+  "input_coding_loci": 26635,
+  "input_genes_without_cds": 0,
+  "input_noncoding_features_excluded": {},
+  "ambiguous_input_gm_keys": 0,
+  "pairing": {
+   "gm_paired": 26628,
+   "overlap_fallback": 0,
+   "output_split": 0,
+   "output_merged": 0,
+   "input_without_gm_key": 0
+  },
+  "without_one_to_one_resolution": {
+   "note": "the same tally with split predictions left in \u2014 bounds how much the one-to-one reference resolution removes from the numerator",
+   "added_structures_at_reference_matched_loci": 133,
+   "added_matching_TAIR10_alternative_exact_CDS": 0,
+   "added_matching_TAIR10_alternative_intron_chain": 3,
+   "added_matching_any_AtRTD3_transcript": 1,
+   "reference_alternative_transcripts": 5414
+  }
+ }
+}

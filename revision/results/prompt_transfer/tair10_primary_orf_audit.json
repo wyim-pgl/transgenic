@@ -1,0 +1,11 @@
+{
+  "annotation": "/data/gpfs/assoc/pgl/data/Transgenic/polishing_benchmark/inputs/tair10selfutr_Athaliana.gff3",
+  "transcripts_scored": 24210,
+  "transcripts_skipped_unknown_seqid": 0,
+  "complete_orf": 24175,
+  "complete_orf_pct": 99.9,
+  "canonical_introns": 23147,
+  "canonical_introns_pct": 95.6,
+  "both": 23118,
+  "both_pct": 95.5
+}
