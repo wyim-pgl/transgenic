@@ -259,9 +259,9 @@ def build(out: Out) -> None:
         "`18_normalize_busco_summary.py` (BUSCO v6.0.0, viridiplantae_odb10, n = 425, "
         "protein mode; proteins extracted with PASA v2.5.3 `gff3_file_to_proteins.pl`). "
         "Complete (%) = (single-copy + duplicated) / 425. The reference-prompted rows here were scored on the unfiltered "
-        "export, which retains both beam-search hypotheses per locus, so most conserved genes "
+        "export, which holds every locus twice (see Methods), so most conserved genes "
         "appear as duplicated rather than single-copy. Table S2 and Figure 5 report the "
-        "top-ranked beam for the same configuration; scoring the top beam alone for A. thaliana "
+        "deduplicated file for the same configuration; scoring it alone for A. thaliana "
         "returns the identical completeness (C 97.6% either way, F 2.1%, M 0.2%) and changes only "
         "the single-copy/duplicated split, from S 0.0/D 97.6 to S 88.5/D 9.2, so the completeness "
         "percentages in this table are comparable with Table S2 "
@@ -284,10 +284,10 @@ def build(out: Out) -> None:
     alt = RES / "altonly"
     alt_cfg = [
         ("A_thaliana_transgenic400M_vs_TAIR10", "TransGenic 400M, de novo", "TAIR10"),
-        ("A_thaliana_transgenic400Mprompt_beam1_vs_TAIR10", "TransGenic 400M, reference-prompted (top beam)", "TAIR10"),
+        ("A_thaliana_transgenic400Mprompt_beam1_vs_TAIR10", "TransGenic 400M, reference-prompted (deduplicated)", "TAIR10"),
         ("A_thaliana_augustusSampling_vs_TAIR10", "AUGUSTUS v3.5.0 posterior sampling", "TAIR10"),
         ("A_thaliana_transgenic400M_vs_AtRTD3", "TransGenic 400M, de novo", "AtRTD3"),
-        ("A_thaliana_transgenic400Mprompt_beam1_vs_AtRTD3", "TransGenic 400M, reference-prompted (top beam)", "AtRTD3"),
+        ("A_thaliana_transgenic400Mprompt_beam1_vs_AtRTD3", "TransGenic 400M, reference-prompted (deduplicated)", "AtRTD3"),
         ("A_thaliana_augustusSampling_vs_AtRTD3", "AUGUSTUS v3.5.0 posterior sampling", "AtRTD3"),
     ]
     levels = ["Base", "Exon", "Intron", "Intron chain", "Transcript", "Locus"]
@@ -319,10 +319,10 @@ def build(out: Out) -> None:
 
     full_cfg = [
         ("denovo400M_vs_TAIR10", "TransGenic 400M, de novo", "TAIR10"),
-        ("prompted400Mbeam1_vs_TAIR10", "TransGenic 400M, reference-prompted (top beam)", "TAIR10"),
+        ("prompted400Mbeam1_vs_TAIR10", "TransGenic 400M, reference-prompted (deduplicated)", "TAIR10"),
         ("augustusSampling_vs_TAIR10", "AUGUSTUS v3.5.0 posterior sampling", "TAIR10"),
         ("denovo400M_vs_AtRTD3", "TransGenic 400M, de novo", "AtRTD3"),
-        ("prompted400Mbeam1_vs_AtRTD3", "TransGenic 400M, reference-prompted (top beam)", "AtRTD3"),
+        ("prompted400Mbeam1_vs_AtRTD3", "TransGenic 400M, reference-prompted (deduplicated)", "AtRTD3"),
         ("augustusSampling_vs_AtRTD3", "AUGUSTUS v3.5.0 posterior sampling", "AtRTD3"),
     ]
     rows = []
@@ -410,7 +410,7 @@ def build(out: Out) -> None:
     parsed.sort(key=lambda x: (SPECIES_ORDER.index(x[0]), order.get(x[1], 99)))
     label_of = dict(TOOL_NAME)
     label_of["REF"] = "Reference annotation"
-    label_of["transgenic400Mprompt_beam1"] = "TransGenic 400M, reference-prompted (top beam only)"
+    label_of["transgenic400Mprompt_beam1"] = "TransGenic 400M, reference-prompted (deduplicated)"
     rows = [[
         SPECIES_NAME[sp], label_of.get(var, var), r["n_transcripts"], r["checked"],
         r["frame_fail"], r["no_start_atg"], r["no_terminal_stop"], r["internal_stop"],

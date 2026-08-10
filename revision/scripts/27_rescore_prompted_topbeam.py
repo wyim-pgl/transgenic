@@ -1,22 +1,32 @@
 #!/usr/bin/env python3
-"""Re-score the reference-prompted 400M predictions on the top beam only.
+"""Re-score the reference-prompted 400M predictions on one record per locus.
 
 Why this exists. `gffcompare_summary.csv` — the source of Table S2 and Figure 5 — scored
-`*_transgenic400Mprompt.gff3`, which exports **both** beam hypotheses per locus as separate
-gene records: 54,826 genes for 27,413 A. thaliana loci. Every second-beam transcript is a
-false positive against the reference, so the 400M completion row carries roughly half the
-precision it should, while the 160M row (a single-beam file, 27,411 genes) does not. The two
-were compared as if scored alike, and the Methods say results are reported for the
-top-ranked beam, which for this row they were not.
+`*_transgenic400Mprompt.gff3`, which holds every locus twice as separate gene records:
+54,826 genes for 27,413 A. thaliana loci. Each extra record is a false positive against the
+reference, so the 400M completion row carries roughly half the precision it should, while
+the 160M row (27,411 genes, one record per locus) does not. The two were compared as if
+scored alike.
 
-The direction matters: the error understates the 400M model. A. thaliana transcript
-precision is 46.8% in Table S2 and 74.4% in the Results, which score the same predictions
-with and without the duplicated beam.
+CORRECTED 2026-08-10 — what the second record is. This docstring said the file "exports
+both beam hypotheses per locus", and the manuscript Methods said the same. It does not.
+Generation requests one sequence per locus (`examples/prompt_mode.py` passes
+`num_return_sequences=1`), the per-locus transcript count is even at every one of the
+27,413 loci, and all 25,252 loci holding exactly two transcripts hold two structurally
+identical copies — CDS, exon and both UTRs. Two beam hypotheses would differ from each
+other; an exactly doubled, wholly identical, all-even set is the same prediction written
+twice, which is what an append to an existing prediction database produces on a re-run.
+
+Nothing below changes as a result. A duplicate scores against GFFCompare exactly as a
+rival beam would, so the filter and every number it produces stand; only the stated reason
+was wrong. The direction also stands: the error understates the 400M model. A. thaliana
+transcript precision is 46.8% in Table S2 and 74.4% in the Results, which score the same
+predictions with and without the duplicate.
 
 What this does: filters each species' prompted GFF3 to the first gene record per GM value
-(file order is beam rank — the same rule as `13_beam1_filter.py`), runs GFFCompare v0.12.10
-against the same reference annotation used for the rest of the benchmark, and writes a
-replacement row set. It does not touch any other tool or mode.
+(the same rule as `13_beam1_filter.py`), runs GFFCompare v0.12.10 against the same
+reference annotation used for the rest of the benchmark, and writes a replacement row set.
+It does not touch any other tool or mode.
 
 Usage:
     python 27_rescore_prompted_topbeam.py [--out rescored_topbeam.csv] [--keep-tmp]
