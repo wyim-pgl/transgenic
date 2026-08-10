@@ -20,6 +20,26 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 RES = ROOT / "transgenic" / "revision" / "results"
 CMP = ROOT / "transgenic_comparison"
+PB = ROOT / "polishing_benchmark" / "results"
+
+# Table S11. (json stem, prompt label, CDS source, UTR source, gene boundary). The filtered
+# row reuses the arm above it, so its stem carries the `_filtered` suffix rather than naming
+# a separate run.
+PROMPT_TRANSFER_ARMS = [
+    ("tair10selfutr", "Reference annotation", "TAIR10", "TAIR10", "TAIR10"),
+    ("tair10helixerframeutr", "Reference features, predicted frame", "TAIR10", "TAIR10", "Helixer"),
+    ("tair10helixerframeutr_filtered", "Reference features, predicted frame, after ORF and "
+     "splice-site filter", "TAIR10", "TAIR10", "Helixer"),
+    ("tair10self", "Reference CDS, no UTR", "TAIR10", "none", "TAIR10"),
+    ("tair10helixerframe", "Reference CDS, no UTR, predicted frame", "TAIR10", "none", "Helixer"),
+    ("helixertairutr", "Predicted CDS, reference UTR", "Helixer", "TAIR10", "CDS+UTR span"),
+    ("annevotairutr", "Predicted CDS, reference UTR", "ANNEVO", "TAIR10", "CDS+UTR span"),
+    ("helixer", "Helixer output as supplied", "Helixer", "Helixer", "Helixer"),
+    ("annevo", "ANNEVO output as supplied", "ANNEVO", "none", "ANNEVO"),
+    ("braker3", "BRAKER3 output as supplied", "BRAKER3", "BRAKER3", "BRAKER3"),
+    ("gemoma", "GeMoMa output as supplied", "GeMoMa", "GeMoMa", "GeMoMa"),
+    ("egapx", "EGAPx output as supplied", "EGAPx", "EGAPx", "EGAPx"),
+]
 
 SPECIES_NAME = {
     "A_thaliana": "Arabidopsis thaliana",
@@ -565,6 +585,52 @@ def build(out: Out) -> None:
         "identical, so values from the pilot should not be pooled with the rest.",
         ["Tool", "Version", "Use", "Command line"],
         s10,
+    )
+
+    # ----------------------------------------------------- Table S11 ----
+    # Every completion-mode figure in the manuscript comes from prompting with TAIR10's own
+    # primary transcripts. This table is what happens when the prompt comes from somewhere
+    # else, and it exists because the submitted Discussion used to say the question was not
+    # addressed. Rows are ordered as an argument rather than by name: the manuscript's own
+    # condition, then the same features inside a predicted gene boundary with and without
+    # the post-hoc filter, then the two-factor breakdown, then each external annotator's
+    # output supplied unchanged.
+    rows = []
+    for stem, prompt, cds, utr, boundary in PROMPT_TRANSFER_ARMS:
+        d = jload(PB / f"{stem}_as_additions.json")
+        rows.append([
+            prompt, cds, utr, boundary,
+            f"{d['added_structures']:,}",
+            f"{d['added_matching_TAIR10_alternative_exact_CDS']:,}",
+            f"{d['precision_vs_TAIR10_alternatives_pct']:.1f}",
+            f"{d['precision_vs_AtRTD3_pct']:.1f}",
+            f"{d['recall_of_TAIR10_alternatives_pct']:.1f}",
+        ])
+
+    filt = jload(PB / "tair10helixerframeutr_filter.json")
+    audit = jload(PB / "tair10_primary_orf_audit.json")
+    out.table(
+        "TableS11_prompt_transfer",
+        "Table S11. Accuracy of added structures as a function of the supplied prompt",
+        f"Source: `polishing_benchmark/results/*_as_additions.json`, scored with "
+        f"`34_score_as_additions.py`, the script used for the AUGUSTUS comparison in Table S4. "
+        f"Additions are scored with each tool's own primary structure removed, against TAIR10 "
+        f"alternative transcripts (exact CDS match) and against the AtRTD3 long-read "
+        f"transcriptome; all conditions use the same A. thaliana loci. The first row is the "
+        f"condition under which every completion-mode figure in the manuscript was obtained. "
+        f"The structural filter (`36_filter_additions_structurally.py`) keeps only additions "
+        f"encoding a complete open reading frame whose introns all carry canonical GT..AG "
+        f"termini, discarding {filt['additions_discarded_pct']:.1f}% of them "
+        f"({filt['failed_orf']:,} for the reading frame and {filt['failed_splice']:,} for the "
+        f"splice sites); it reads the genome and the predicted coordinates alone and does not "
+        f"consult any reference annotation. Both criteria were checked against TAIR10's own "
+        f"prompt transcripts before use: {audit['complete_orf_pct']:.1f}% encode a complete "
+        f"reading frame and {audit['both_pct']:.1f}% satisfy both criteria "
+        f"({audit['transcripts_scored']:,} transcripts), consistent with the reference "
+        f"consistency reported in Table S5.",
+        ["Prompt", "CDS source", "UTR source", "Gene boundary", "Added", "Matched",
+         "Precision vs TAIR10 alt (%)", "Precision vs AtRTD3 (%)", "Recall of TAIR10 alt (%)"],
+        rows,
     )
 
 

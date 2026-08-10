@@ -248,3 +248,43 @@ def test_written_file_keeps_only_surviving_transcripts(tmp_path, genome):
     text = out.read_text()
     assert "O1.t1" in text
     assert "O1.t2" not in text
+
+
+# ------------------------------------------------------------------------- ORF audit
+#
+# The audit exists to catch the failure that produced no exception: a genome whose sequence
+# names do not join to the annotation's, which makes every predicate return False. So the
+# tests below check that a sound annotation scores high, an unsound one scores low, and a
+# non-joining genome is reported as skipped rather than as zero percent.
+
+def test_audit_scores_a_sound_annotation_at_100_percent(tmp_path, genome):
+    path = tmp_path / "sound.gff3"
+    _gff3(path, [{"gene": "G1", "transcripts": [("G1.t1", SINGLE_EXON_ORF),
+                                                ("G1.t2", SPLICED_CANONICAL)]}])
+    stats = mod.orf_audit(path, genome)
+    assert stats["transcripts_scored"] == 2
+    assert stats["complete_orf_pct"] == 100.0
+    assert stats["canonical_introns_pct"] == 100.0
+    assert stats["both_pct"] == 100.0
+
+
+def test_audit_separates_the_two_criteria(tmp_path, genome):
+    """A transcript can have a complete ORF and a non-canonical intron, and vice versa."""
+    path = tmp_path / "mixed.gff3"
+    _gff3(path, [{"gene": "G1", "transcripts": [("G1.t1", SPLICED_NON_CANONICAL),
+                                                ("G1.t2", NO_START_CODON)]}])
+    stats = mod.orf_audit(path, genome)
+    assert stats["complete_orf"] == 1        # the non-canonical one still reads ATG..TAA
+    assert stats["canonical_introns"] == 1   # the single-exon one has no intron to fail
+    assert stats["both"] == 0
+
+
+def test_audit_reports_a_non_joining_genome_as_skipped_not_as_zero(tmp_path, genome):
+    """The bug this exists for: names that do not match must not read as 'all invalid'."""
+    path = tmp_path / "elsewhere.gff3"
+    _gff3(path, [{"gene": "G1", "seq": "scaffold_99",
+                  "transcripts": [("G1.t1", SINGLE_EXON_ORF)]}])
+    stats = mod.orf_audit(path, genome)
+    assert stats["transcripts_scored"] == 0
+    assert stats["transcripts_skipped_unknown_seqid"] == 1
+    assert stats["complete_orf_pct"] == 0.0

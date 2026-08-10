@@ -268,16 +268,70 @@ def write_filtered(completed_gff: Path, keep: set, out_gff: Path) -> None:
                     dst.write(line)
 
 
+def orf_audit(annotation_gff: Path, genome_path: Path) -> dict:
+    """Fraction of an annotation's transcripts that pass the two filter criteria.
+
+    The filter's own control. Both predicates are cheap to get wrong in a way that returns
+    zero for everything rather than raising: the first run of this filter reported no
+    complete ORFs at all, because the genome FASTA used Ensembl sequence names (`1`, `2`,
+    `Mt`) while the annotation used TAIR names (`Chr1`, `ChrM`), so every lookup missed.
+    Nothing in the output distinguished that from a genuinely terrible prediction set.
+
+    Running the same predicates over a curated annotation is what separates the two: on
+    TAIR10 the complete-ORF fraction must land near the 92.9-100% the manuscript reports
+    for reference annotations (Table S5). A number far below that means the checker is
+    broken, not the annotation. Report a filtered set's numbers only alongside this.
+    """
+    genome = load_genome(genome_path)
+    segments, _, meta = read_cds_by_transcript(annotation_gff)
+
+    total = orf_ok = introns_ok = both_ok = missing_seqid = 0
+    for tx, segs in segments.items():
+        seqid, strand = meta[tx]
+        chromosome = genome.get(seqid)
+        if chromosome is None:
+            missing_seqid += 1
+            continue
+        total += 1
+        orf = has_complete_orf(spliced_cds(chromosome, segs, strand))
+        introns = has_canonical_introns(chromosome, segs, strand)
+        orf_ok += orf
+        introns_ok += introns
+        both_ok += orf and introns
+
+    pct = lambda n: round(100 * n / total, 1) if total else 0.0
+    return {
+        "annotation": str(annotation_gff),
+        "transcripts_scored": total,
+        "transcripts_skipped_unknown_seqid": missing_seqid,
+        "complete_orf": orf_ok,
+        "complete_orf_pct": pct(orf_ok),
+        "canonical_introns": introns_ok,
+        "canonical_introns_pct": pct(introns_ok),
+        "both": both_ok,
+        "both_pct": pct(both_ok),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--input", type=Path, required=True, help="the prompt annotation")
-    ap.add_argument("--output", type=Path, required=True, help="completion-mode output")
+    ap.add_argument("--input", type=Path, help="the prompt annotation")
+    ap.add_argument("--output", type=Path, help="completion-mode output")
     ap.add_argument("--genome", type=Path, default=DEFAULT_GENOME)
     ap.add_argument("--filtered", type=Path, default=None, help="where to write the kept GFF3")
     ap.add_argument("--json", type=Path, default=None)
+    ap.add_argument("--orf-audit", type=Path, default=None, metavar="ANNOTATION.gff3",
+                    help="score one annotation against both criteria and stop; the control "
+                         "that shows the checker works before any filtered result is quoted")
     args = ap.parse_args(argv)
 
-    stats = filter_predictions(args.input, args.output, args.genome, args.filtered)
+    if args.orf_audit:
+        stats = orf_audit(args.orf_audit, args.genome)
+    else:
+        if not args.input or not args.output:
+            ap.error("--input and --output are required unless --orf-audit is given")
+        stats = filter_predictions(args.input, args.output, args.genome, args.filtered)
+
     width = max(len(k) for k in stats)
     for key, value in stats.items():
         print(f"  {key:<{width}}  {value}")
