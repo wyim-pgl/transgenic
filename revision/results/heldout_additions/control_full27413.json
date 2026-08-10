@@ -1,0 +1,22 @@
+{
+ "name": "CONTROL_full_27413",
+ "prediction_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3",
+ "labels_file": null,
+ "scorings": [
+  {
+   "definition_of_supplied_prompt": "TAIR10 primary_transcript_ids.txt (script 28)",
+   "loci_scored": 27413,
+   "loci_with_supplied_prompt_defined": 27413,
+   "loci_where_supplied_structure_is_among_predictions": 27399,
+   "loci_with_at_least_one_addition": 1076,
+   "added_transcripts": 1103,
+   "reference_alternative_transcripts": 5580,
+   "added_matching_TAIR10_alternative_exact_CDS": 200,
+   "added_matching_TAIR10_alternative_intron_chain": 343,
+   "added_matching_any_AtRTD3_transcript": 204,
+   "precision_vs_TAIR10_alternatives_pct": 18.1,
+   "precision_vs_AtRTD3_pct": 18.5,
+   "recall_of_TAIR10_alternatives_pct": 3.6
+  }
+ ]
+}

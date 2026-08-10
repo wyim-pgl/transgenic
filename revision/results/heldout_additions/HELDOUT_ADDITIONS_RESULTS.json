@@ -1,0 +1,210 @@
+{
+ "generated": "2026-08-10",
+ "purpose": "additions-only precision on the held-out test split, for a train/eval-overlap disclosure sentence",
+ "definition": "identical to revision/scripts/28_score_added_isoforms.py: an addition is a predicted transcript whose sorted CDS coordinate tuple differs from the TAIR10 primary supplied as the prompt; identical emissions are collapsed to one structure; a hit is an exact CDS coordinate match to a TAIR10 alternative transcript (primary removed from the reference); loci whose GM ends in -rc are skipped on both sides",
+ "control_reproduction": {
+  "file": "transgenic_comparison/standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3",
+  "expected_from_revision/results/added_isoforms_A_thaliana.json": {
+   "loci": 27413,
+   "added": 1103,
+   "matched": 200,
+   "precision_pct": 18.1
+  },
+  "reproduced": {
+   "definition_of_supplied_prompt": "TAIR10 primary_transcript_ids.txt (script 28)",
+   "loci_scored": 27413,
+   "loci_with_supplied_prompt_defined": 27413,
+   "loci_where_supplied_structure_is_among_predictions": 27399,
+   "loci_with_at_least_one_addition": 1076,
+   "added_transcripts": 1103,
+   "reference_alternative_transcripts": 5580,
+   "added_matching_TAIR10_alternative_exact_CDS": 200,
+   "added_matching_TAIR10_alternative_intron_chain": 343,
+   "added_matching_any_AtRTD3_transcript": 204,
+   "precision_vs_TAIR10_alternatives_pct": 18.1,
+   "precision_vs_AtRTD3_pct": 18.5,
+   "recall_of_TAIR10_alternatives_pct": 3.6
+  },
+  "status": "EXACT MATCH on every field"
+ },
+ "heldout_scorings": {
+  "fig3_original_prompted_TAIR10 (the 3,328-locus original held-out prediction)": {
+   "name": "HELDOUT_fig3_original_3328",
+   "prediction_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_original/prompted/TAIR10_hyenaTest_prediction_noPost.gff3",
+   "labels_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_original/prompted/TAIR10_hyenaTest_labels.gff3",
+   "scorings": [
+    {
+     "definition_of_supplied_prompt": "TAIR10 primary_transcript_ids.txt (script 28)",
+     "loci_scored": 2780,
+     "loci_with_supplied_prompt_defined": 2780,
+     "loci_where_supplied_structure_is_among_predictions": 2778,
+     "loci_with_at_least_one_addition": 112,
+     "added_transcripts": 114,
+     "reference_alternative_transcripts": 575,
+     "added_matching_TAIR10_alternative_exact_CDS": 21,
+     "added_matching_TAIR10_alternative_intron_chain": 43,
+     "added_matching_any_AtRTD3_transcript": 17,
+     "precision_vs_TAIR10_alternatives_pct": 18.4,
+     "precision_vs_AtRTD3_pct": 14.9,
+     "recall_of_TAIR10_alternatives_pct": 3.7
+    },
+    {
+     "definition_of_supplied_prompt": "first transcript of the labels GFF3 for the same locus",
+     "loci_scored": 2780,
+     "loci_with_supplied_prompt_defined": 2780,
+     "loci_where_supplied_structure_is_among_predictions": 2778,
+     "loci_with_at_least_one_addition": 112,
+     "added_transcripts": 114,
+     "reference_alternative_transcripts": 575,
+     "added_matching_TAIR10_alternative_exact_CDS": 21,
+     "added_matching_TAIR10_alternative_intron_chain": 43,
+     "added_matching_any_AtRTD3_transcript": 17,
+     "precision_vs_TAIR10_alternatives_pct": 18.4,
+     "precision_vs_AtRTD3_pct": 14.9,
+     "recall_of_TAIR10_alternatives_pct": 3.7,
+     "loci_where_labels_first_tx_equals_TAIR10_primary": 2780
+    }
+   ]
+  },
+  "fig4_forensics raw_TAIR10 (4,875-locus file of unresolved provenance)": {
+   "name": "RAW_fig4forensics_4875",
+   "prediction_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig4_forensics/raw_TAIR10_hyenaTest_prediction_noPost.gff3",
+   "labels_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig4_forensics/raw_TAIR10_hyenaTest_labels.gff3",
+   "scorings": [
+    {
+     "definition_of_supplied_prompt": "TAIR10 primary_transcript_ids.txt (script 28)",
+     "loci_scored": 4145,
+     "loci_with_supplied_prompt_defined": 4145,
+     "loci_where_supplied_structure_is_among_predictions": 4144,
+     "loci_with_at_least_one_addition": 192,
+     "added_transcripts": 198,
+     "reference_alternative_transcripts": 856,
+     "added_matching_TAIR10_alternative_exact_CDS": 28,
+     "added_matching_TAIR10_alternative_intron_chain": 52,
+     "added_matching_any_AtRTD3_transcript": 31,
+     "precision_vs_TAIR10_alternatives_pct": 14.1,
+     "precision_vs_AtRTD3_pct": 15.7,
+     "recall_of_TAIR10_alternatives_pct": 3.3
+    },
+    {
+     "definition_of_supplied_prompt": "first transcript of the labels GFF3 for the same locus",
+     "loci_scored": 4145,
+     "loci_with_supplied_prompt_defined": 4145,
+     "loci_where_supplied_structure_is_among_predictions": 4144,
+     "loci_with_at_least_one_addition": 192,
+     "added_transcripts": 198,
+     "reference_alternative_transcripts": 856,
+     "added_matching_TAIR10_alternative_exact_CDS": 28,
+     "added_matching_TAIR10_alternative_intron_chain": 52,
+     "added_matching_any_AtRTD3_transcript": 31,
+     "precision_vs_TAIR10_alternatives_pct": 14.1,
+     "precision_vs_AtRTD3_pct": 15.7,
+     "recall_of_TAIR10_alternatives_pct": 3.3,
+     "loci_where_labels_first_tx_equals_TAIR10_primary": 4145
+    }
+   ]
+  }
+ },
+ "headline_run_split_by_heldout_membership": {
+  "note": "same inference run as the 18.1% headline, partitioned by whether the locus is in the held-out test split (locus list from fig3_original/prompted/TAIR10_hyenaTest_labels.gff3, non-rc, 2,781 loci)",
+  "held_out_loci": {
+   "definition_of_supplied_prompt": "TAIR10 primary_transcript_ids.txt (script 28)",
+   "loci_scored": 2781,
+   "loci_with_supplied_prompt_defined": 2781,
+   "loci_where_supplied_structure_is_among_predictions": 2779,
+   "loci_with_at_least_one_addition": 113,
+   "added_transcripts": 116,
+   "reference_alternative_transcripts": 578,
+   "added_matching_TAIR10_alternative_exact_CDS": 25,
+   "added_matching_TAIR10_alternative_intron_chain": 46,
+   "added_matching_any_AtRTD3_transcript": 21,
+   "precision_vs_TAIR10_alternatives_pct": 21.6,
+   "precision_vs_AtRTD3_pct": 18.1,
+   "recall_of_TAIR10_alternatives_pct": 4.3
+  },
+  "training_seen_loci": {
+   "definition_of_supplied_prompt": "TAIR10 primary_transcript_ids.txt (script 28)",
+   "loci_scored": 24632,
+   "loci_with_supplied_prompt_defined": 24632,
+   "loci_where_supplied_structure_is_among_predictions": 24620,
+   "loci_with_at_least_one_addition": 963,
+   "added_transcripts": 987,
+   "reference_alternative_transcripts": 5002,
+   "added_matching_TAIR10_alternative_exact_CDS": 175,
+   "added_matching_TAIR10_alternative_intron_chain": 297,
+   "added_matching_any_AtRTD3_transcript": 183,
+   "precision_vs_TAIR10_alternatives_pct": 17.7,
+   "precision_vs_AtRTD3_pct": 18.5,
+   "recall_of_TAIR10_alternatives_pct": 3.5
+  }
+ },
+ "precision_with_confidence_intervals": {
+  "headline_all_27413_loci": {
+   "matched": 200,
+   "added": 1103,
+   "precision_pct": 18.1,
+   "wilson95_ci_pct": [
+    16.0,
+    20.5
+   ]
+  },
+  "headline_run_restricted_to_heldout": {
+   "matched": 25,
+   "added": 116,
+   "precision_pct": 21.6,
+   "wilson95_ci_pct": [
+    15.0,
+    29.9
+   ]
+  },
+  "headline_run_training_seen_loci": {
+   "matched": 175,
+   "added": 987,
+   "precision_pct": 17.7,
+   "wilson95_ci_pct": [
+    15.5,
+    20.2
+   ]
+  },
+  "fig3_original_heldout_prompted_run": {
+   "matched": 21,
+   "added": 114,
+   "precision_pct": 18.4,
+   "wilson95_ci_pct": [
+    12.4,
+    26.5
+   ]
+  },
+  "fig4_forensics_raw_run": {
+   "matched": 28,
+   "added": 198,
+   "precision_pct": 14.1,
+   "wilson95_ci_pct": [
+    10.0,
+    19.7
+   ]
+  },
+  "fisher_heldout_vs_trainingseen_same_run": {
+   "odds_ratio": 1.275,
+   "p_value": 0.3095
+  },
+  "fisher_fig3original_vs_headline": {
+   "odds_ratio": 1.02,
+   "p_value": 0.899
+  }
+ },
+ "locus_counts": {
+  "fig3_original prediction: unique GM": 3381,
+  "fig3_original prediction: unique GM with -rc suffix stripped": 3328,
+  "fig3_original prediction: non-rc loci with CDS (what is scored)": 2780,
+  "fig3_original labels: non-rc loci (test-split membership)": 2781,
+  "fig4_forensics raw prediction: unique GM with -rc stripped": 4875,
+  "fig4_forensics raw prediction: non-rc loci with CDS (what is scored)": 4145
+ },
+ "caveats": [
+  "The task named revision/results/fig4_forensics/raw_TAIR10_hyenaTest_prediction_noPost.gff3 as the held-out file, but FIG4_LOCUS_FORENSICS.md records that this file has 4,875 loci and shares only 657 loci with the original held-out prediction (3,328). Its provenance is explicitly unresolved. The 3,328-locus file is fig3_original/prompted/TAIR10_hyenaTest_prediction_noPost.gff3.",
+  "The 3,328 count is unique GM values after stripping the -rc suffix; script 28 skips -rc loci, so the scored locus count is 2,780.",
+  "The two candidate definitions of the supplied prompt (TAIR10 primary_transcript_ids.txt vs the first transcript of the labels GFF3) agree at every locus in both files, so the choice does not affect any number.",
+  "fig3_original and the 27,413-locus headline file are two different inference runs (different beam settings/pipeline), so the cleanest overlap comparison is the within-run partition, not a cross-file one."
+ ]
+}

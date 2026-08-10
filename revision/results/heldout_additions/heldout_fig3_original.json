@@ -1,0 +1,38 @@
+{
+ "name": "HELDOUT_fig3_original_3328",
+ "prediction_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_original/prompted/TAIR10_hyenaTest_prediction_noPost.gff3",
+ "labels_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_original/prompted/TAIR10_hyenaTest_labels.gff3",
+ "scorings": [
+  {
+   "definition_of_supplied_prompt": "TAIR10 primary_transcript_ids.txt (script 28)",
+   "loci_scored": 2780,
+   "loci_with_supplied_prompt_defined": 2780,
+   "loci_where_supplied_structure_is_among_predictions": 2778,
+   "loci_with_at_least_one_addition": 112,
+   "added_transcripts": 114,
+   "reference_alternative_transcripts": 575,
+   "added_matching_TAIR10_alternative_exact_CDS": 21,
+   "added_matching_TAIR10_alternative_intron_chain": 43,
+   "added_matching_any_AtRTD3_transcript": 17,
+   "precision_vs_TAIR10_alternatives_pct": 18.4,
+   "precision_vs_AtRTD3_pct": 14.9,
+   "recall_of_TAIR10_alternatives_pct": 3.7
+  },
+  {
+   "definition_of_supplied_prompt": "first transcript of the labels GFF3 for the same locus",
+   "loci_scored": 2780,
+   "loci_with_supplied_prompt_defined": 2780,
+   "loci_where_supplied_structure_is_among_predictions": 2778,
+   "loci_with_at_least_one_addition": 112,
+   "added_transcripts": 114,
+   "reference_alternative_transcripts": 575,
+   "added_matching_TAIR10_alternative_exact_CDS": 21,
+   "added_matching_TAIR10_alternative_intron_chain": 43,
+   "added_matching_any_AtRTD3_transcript": 17,
+   "precision_vs_TAIR10_alternatives_pct": 18.4,
+   "precision_vs_AtRTD3_pct": 14.9,
+   "recall_of_TAIR10_alternatives_pct": 3.7,
+   "loci_where_labels_first_tx_equals_TAIR10_primary": 2780
+  }
+ ]
+}
