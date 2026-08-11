@@ -646,8 +646,14 @@ def build(out: Out) -> None:
         ["rMATS-style event classifier", "this study (`03_splice_event_detection.py`)",
          "Splice-event classification (Table S4c)",
          "`python 03_splice_event_detection.py --reference <ref.gtf> --prediction <pred.gff3>`"],
-        ["TransGenic", "this study (400M and 160M checkpoints)", "De novo and prompted annotation",
-         "`python src/run_genome_annotation.py <genome.fa> <loci.gff3> -o <out.gff3> --device cuda`"],
+        ["TransGenic", "this study (400M and 160M checkpoints)", "De novo annotation",
+         "`python src/run_genome_annotation.py <genome.fa> <loci.gff3> -o <out.gff3> --device cuda` "
+         "(`num_beams=2, do_sample=True`)"],
+        ["TransGenic", "this study (400M and 160M checkpoints)", "Prompt-based completion",
+         "`python examples/prompt_mode.py --genome <genome.fa> --gff <primaries.gff3> "
+         "--output <completed.gff3> --batch-size 1 --num-beams 2 --max-length 2048 --device cuda` "
+         "(`--batch-size 1` is required: batched decoding pads GSF prefixes of unequal length "
+         "and silently empties the output; see Methods)"],
         ["AtRTD3", "atRTD3_TS_21Feb22_transfix", "Long-read reference transcriptome",
          "https://ics.hutton.ac.uk/atRTD/RTD3/"],
     ]
