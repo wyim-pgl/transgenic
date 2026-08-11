@@ -320,7 +320,11 @@ def build(out: Out) -> None:
         "build removed transcripts matching TAIR10 primary identifiers instead, which left "
         "every transcript of 14,065 AtRTD3 genes in the reference and wrongly removed 2,454 "
         "true alternatives; the TAIR10 side was verified unaffected "
-        "(`41_audit_altonly_atrtd3.py`). All three prediction sets were scored "
+        "(`41_audit_altonly_atrtd3.py`). Reference transcript counts are as loaded by "
+        "GFFCompare, which discards duplicate reference transcripts on loading (4,827 for "
+        "the rebuilt AtRTD3 alternative-only reference of 128,570; none for the TAIR10 "
+        "alternative-only reference), and sensitivities are quoted as GFFCompare reports "
+        "them. All three prediction sets were scored "
         "with identical commands. AUGUSTUS parameters for *A. thaliana* are estimated from "
         "TAIR annotations, so agreement with the TAIR10-derived reference is partly circular; "
         "AtRTD3 provides independent long-read evidence.",
