@@ -1,0 +1,360 @@
+{
+ "generated": "2026-08-11",
+ "question": "How do the 27,413 A. thaliana evaluation loci distribute over the training dataset's train / validation / held-out test splits, and how many never entered the database?",
+ "method": {
+  "db_membership": "genome2GSFDataset (src/transgenic/datasets/preprocess.py) was re-run on the real TAIR10 FASTA + GFF3 with the parameters encoded in the training DB filename (mode=train, staticSize=6144, addExtra=200, addRC+addRCIsoOnly, clean, maxLen=49152); duckdb and torch were replaced by shims that record each INSERT, so the gene set is exact.",
+  "split": "torch.manual_seed(123) + random_split(75/10/15) was reproduced without torch by re-implementing MT19937 (init_genrand) and the CPU randperm Fisher-Yates kernel.",
+  "validation": "the reconstructed A. thaliana test-split gene set matches revision/results/fig3_regen/fig3_test_genes.tsv EXACTLY (4,899 of 4,899 genes), and the reconstructed 9-species row total plus the 176 legacy GRMZM maize rows equals 403,659, the figure implied by the 60,550 test rows stated in revision/scripts/fig3_infer.py.",
+  "additions_scoring": "identical to revision/scripts/28_score_added_isoforms.py; verified by reproducing the published control exactly (fig3_original held-out 25/116 = 21.6% vs remainder 175/987 = 17.7%, Fisher OR 1.275, p = 0.3095)."
+ },
+ "database_membership_A_thaliana": {
+  "genes_in_TAIR10_annotation": 27416,
+  "distinct_genes_entering_DB": 27328,
+  "rows_entering_DB": 33107,
+  "rows_forward": 27328,
+  "rows_reverse_complement_multi_isoform_only": 5779,
+  "genes_absent_from_DB": 88,
+  "absence_reasons": {
+   "clean_stop_codon_missing": 38,
+   "clean_start_codon_missing": 24,
+   "clean_not_multiple_of_3": 25,
+   "never_flushed_last_gene_in_file": 1
+  },
+  "note": "the 49,152 nt maxLen filter excludes ZERO A. thaliana genes; every exclusion is the clean=True CDS validation (missing start codon, missing stop codon, or CDS length not a multiple of 3), plus one gene lost to preprocess.py never flushing the last gene in file order."
+ },
+ "dataset_and_split": {
+  "rows_per_species_replicated": {
+   "TAIR10": 33107,
+   "MSUv7": 48499,
+   "Glyma": 62327,
+   "Sobic": 38296,
+   "Potri": 43644,
+   "Bradi": 40804,
+   "Vitvi": 44953,
+   "Seita": 38939,
+   "Pp3": 52914
+  },
+  "rows_9_training_species": 403483,
+  "legacy_GRMZM_maize_rows_surviving_exclude_prefix_Zm": 176,
+  "total_rows": 403659,
+  "split_sizes_rows": {
+   "train": 302744,
+   "validation": 40365,
+   "test": 60550
+  },
+  "A_thaliana_row_split_counts": {
+   "train": 24691,
+   "validation": 3382,
+   "test": 5034
+  },
+  "A_thaliana_gene_categories": {
+   "validation": 2397,
+   "test": 3430,
+   "train": 21501
+  },
+  "exact_match_against_fig3_regen": {
+   "reconstructed_genes_with_test_row": 4899,
+   "fig3_regen_test_genes": 4899,
+   "exact_set_match": true
+  }
+ },
+ "composition_of_the_27413_evaluation_loci": {
+  "train": 21501,
+  "validation": 2397,
+  "held_out_test": 3429,
+  "not_in_database": 86,
+  "total": 27413,
+  "pct_seen_in_training": 78.4,
+  "pct_never_in_database": 0.31
+ },
+ "additions_precision_by_category": {
+  "ALL": {
+   "loci_scored": 27413,
+   "loci_with_at_least_one_addition": 1076,
+   "added_transcripts": 1103,
+   "reference_alternative_transcripts": 5580,
+   "added_matching_TAIR10_alternative_exact_CDS": 200,
+   "added_matching_TAIR10_alternative_intron_chain": 343,
+   "added_matching_any_AtRTD3_transcript": 204,
+   "precision_vs_TAIR10_alternatives_pct": 18.1,
+   "wilson95_ci_pct": [
+    16.0,
+    20.5
+   ],
+   "precision_vs_AtRTD3_pct": 18.5,
+   "recall_of_TAIR10_alternatives_pct": 3.6
+  },
+  "fig3_original_heldout": {
+   "loci_scored": 2781,
+   "loci_with_at_least_one_addition": 113,
+   "added_transcripts": 116,
+   "reference_alternative_transcripts": 578,
+   "added_matching_TAIR10_alternative_exact_CDS": 25,
+   "added_matching_TAIR10_alternative_intron_chain": 46,
+   "added_matching_any_AtRTD3_transcript": 21,
+   "precision_vs_TAIR10_alternatives_pct": 21.6,
+   "wilson95_ci_pct": [
+    15.0,
+    29.9
+   ],
+   "precision_vs_AtRTD3_pct": 18.1,
+   "recall_of_TAIR10_alternatives_pct": 4.3
+  },
+  "fig3_original_remainder": {
+   "loci_scored": 24632,
+   "loci_with_at_least_one_addition": 963,
+   "added_transcripts": 987,
+   "reference_alternative_transcripts": 5002,
+   "added_matching_TAIR10_alternative_exact_CDS": 175,
+   "added_matching_TAIR10_alternative_intron_chain": 297,
+   "added_matching_any_AtRTD3_transcript": 183,
+   "precision_vs_TAIR10_alternatives_pct": 17.7,
+   "wilson95_ci_pct": [
+    15.5,
+    20.2
+   ],
+   "precision_vs_AtRTD3_pct": 18.5,
+   "recall_of_TAIR10_alternatives_pct": 3.5
+  },
+  "not_in_db": {
+   "loci_scored": 86,
+   "loci_with_at_least_one_addition": 8,
+   "added_transcripts": 8,
+   "reference_alternative_transcripts": 35,
+   "added_matching_TAIR10_alternative_exact_CDS": 0,
+   "added_matching_TAIR10_alternative_intron_chain": 1,
+   "added_matching_any_AtRTD3_transcript": 0,
+   "precision_vs_TAIR10_alternatives_pct": 0.0,
+   "wilson95_ci_pct": [
+    0.0,
+    32.4
+   ],
+   "precision_vs_AtRTD3_pct": 0.0,
+   "recall_of_TAIR10_alternatives_pct": 0.0
+  },
+  "test": {
+   "loci_scored": 3429,
+   "loci_with_at_least_one_addition": 31,
+   "added_transcripts": 32,
+   "reference_alternative_transcripts": 124,
+   "added_matching_TAIR10_alternative_exact_CDS": 5,
+   "added_matching_TAIR10_alternative_intron_chain": 13,
+   "added_matching_any_AtRTD3_transcript": 6,
+   "precision_vs_TAIR10_alternatives_pct": 15.6,
+   "wilson95_ci_pct": [
+    6.9,
+    31.8
+   ],
+   "precision_vs_AtRTD3_pct": 18.8,
+   "recall_of_TAIR10_alternatives_pct": 4.0
+  },
+  "train": {
+   "loci_scored": 21501,
+   "loci_with_at_least_one_addition": 991,
+   "added_transcripts": 1016,
+   "reference_alternative_transcripts": 5182,
+   "added_matching_TAIR10_alternative_exact_CDS": 182,
+   "added_matching_TAIR10_alternative_intron_chain": 313,
+   "added_matching_any_AtRTD3_transcript": 187,
+   "precision_vs_TAIR10_alternatives_pct": 17.9,
+   "wilson95_ci_pct": [
+    15.7,
+    20.4
+   ],
+   "precision_vs_AtRTD3_pct": 18.4,
+   "recall_of_TAIR10_alternatives_pct": 3.5
+  },
+  "train_plus_validation": {
+   "loci_scored": 23898,
+   "loci_with_at_least_one_addition": 1037,
+   "added_transcripts": 1063,
+   "reference_alternative_transcripts": 5421,
+   "added_matching_TAIR10_alternative_exact_CDS": 195,
+   "added_matching_TAIR10_alternative_intron_chain": 329,
+   "added_matching_any_AtRTD3_transcript": 198,
+   "precision_vs_TAIR10_alternatives_pct": 18.3,
+   "wilson95_ci_pct": [
+    16.1,
+    20.8
+   ],
+   "precision_vs_AtRTD3_pct": 18.6,
+   "recall_of_TAIR10_alternatives_pct": 3.6
+  },
+  "validation": {
+   "loci_scored": 2397,
+   "loci_with_at_least_one_addition": 46,
+   "added_transcripts": 47,
+   "reference_alternative_transcripts": 239,
+   "added_matching_TAIR10_alternative_exact_CDS": 13,
+   "added_matching_TAIR10_alternative_intron_chain": 16,
+   "added_matching_any_AtRTD3_transcript": 11,
+   "precision_vs_TAIR10_alternatives_pct": 27.7,
+   "wilson95_ci_pct": [
+    16.9,
+    41.8
+   ],
+   "precision_vs_AtRTD3_pct": 23.4,
+   "recall_of_TAIR10_alternatives_pct": 5.4
+  }
+ },
+ "fisher_tests": {
+  "heldout_test_vs_train_plus_validation": {
+   "groups": [
+    "test",
+    "train_plus_validation"
+   ],
+   "table_hit_miss": [
+    [
+     5,
+     27
+    ],
+    [
+     195,
+     868
+    ]
+   ],
+   "odds_ratio": 0.824,
+   "p_value": 0.8197
+  },
+  "heldout_test_vs_train": {
+   "groups": [
+    "test",
+    "train"
+   ],
+   "table_hit_miss": [
+    [
+     5,
+     27
+    ],
+    [
+     182,
+     834
+    ]
+   ],
+   "odds_ratio": 0.849,
+   "p_value": 1.0
+  },
+  "not_in_db_vs_train_plus_validation": {
+   "groups": [
+    "not_in_db",
+    "train_plus_validation"
+   ],
+   "table_hit_miss": [
+    [
+     0,
+     8
+    ],
+    [
+     195,
+     868
+    ]
+   ],
+   "odds_ratio": 0.0,
+   "p_value": 0.3635
+  },
+  "not_in_db_vs_train": {
+   "groups": [
+    "not_in_db",
+    "train"
+   ],
+   "table_hit_miss": [
+    [
+     0,
+     8
+    ],
+    [
+     182,
+     834
+    ]
+   ],
+   "odds_ratio": 0.0,
+   "p_value": 0.3633
+  },
+  "validation_vs_train": {
+   "groups": [
+    "validation",
+    "train"
+   ],
+   "table_hit_miss": [
+    [
+     13,
+     34
+    ],
+    [
+     182,
+     834
+    ]
+   ],
+   "odds_ratio": 1.752,
+   "p_value": 0.12
+  },
+  "fig3_original_heldout_vs_remainder_reproduction": {
+   "groups": [
+    "fig3_original_heldout",
+    "fig3_original_remainder"
+   ],
+   "table_hit_miss": [
+    [
+     25,
+     91
+    ],
+    [
+     175,
+     812
+    ]
+   ],
+   "odds_ratio": 1.275,
+   "p_value": 0.3095
+  }
+ },
+ "identity_of_the_fig3_original_heldout_set": {
+  "what_the_manuscript_currently_calls_held_out": {
+   "fig3_original_TAIR10_label_rows": 3383,
+   "vs_train": {
+    "slice_rows": 24691,
+    "overlap_with_labels": 2563,
+    "pct_of_labels_in_slice": 75.76,
+    "pct_of_slice_covered": 10.38
+   },
+   "vs_validation": {
+    "slice_rows": 3382,
+    "overlap_with_labels": 354,
+    "pct_of_labels_in_slice": 10.46,
+    "pct_of_slice_covered": 10.47
+   },
+   "vs_test": {
+    "slice_rows": 5034,
+    "overlap_with_labels": 466,
+    "pct_of_labels_in_slice": 13.77,
+    "pct_of_slice_covered": 9.26
+   },
+   "labels_not_in_any_A_thaliana_row": 0
+  },
+  "tested_against_the_older_453090_row_split": {
+   "fig3_original_TAIR10_label_rows": 3383,
+   "hypothesis": "split over full 453,090-row DB (Z. mays included), seed 123",
+   "train_339817": {
+    "A_thaliana_rows_in_slice": 24899,
+    "overlap_with_labels": 2566,
+    "pct_of_labels": 75.85,
+    "pct_of_slice": 10.31,
+    "exact_match": false
+   },
+   "eval_45309": {
+    "A_thaliana_rows_in_slice": 3262,
+    "overlap_with_labels": 306,
+    "pct_of_labels": 9.05,
+    "pct_of_slice": 9.38,
+    "exact_match": false
+   },
+   "test_67964": {
+    "A_thaliana_rows_in_slice": 4946,
+    "overlap_with_labels": 511,
+    "pct_of_labels": 15.1,
+    "pct_of_slice": 10.33,
+    "exact_match": false
+   }
+  },
+  "reading": "the 3,383 A. thaliana rows of fig3_original/prompted/TAIR10_hyenaTest_labels.gff3 are ~10% of A. thaliana's 33,107 database rows and fall 75.8% / 10.5% / 13.8% across the train / validation / test slices of the split that train_HyenaTransgenic.py defines \u2014 the proportions of a random sample, i.e. they carry no held-out status with respect to that split. They also match neither slice of the 453,090-row split hard-coded in test/testingHyenaPostnoPost.py, so they come from a third, unreproduced split."
+ }
+}

@@ -635,7 +635,12 @@ def build(out: Out) -> None:
          "Whole-genome ab initio benchmark",
          "`Helixer.py --lineage land_plant --subsequence-length 64152 --fasta-path <genome.fa> --gff-output-path <out.gff3>`"],
         ["Tiberius", "v1.1.7", "Whole-genome ab initio benchmark, with and without soft-masked input",
-         "`tiberius --genome <genome.fa> --out <out.gtf>` (soft-masked run uses the soft-masked assembly)"],
+         "`tiberius --genome <genome.fa> --out <out.gtf>`; the runs were performed by a "
+         "co-author on external hardware and the full invocation — model/clade selection "
+         "and soft-masking control flags — was not preserved in this repository. The "
+         "soft-masked and unmasked rows used the corresponding assemblies (verified from "
+         "the distinct outputs); the exact flags are being reconstructed with the "
+         "co-author"],
         ["AUGUSTUS", "v3.5.0", "Posterior-sampling isoform baseline (Table S4)",
          "`augustus --species=arabidopsis --sample=100 --alternatives-from-sampling=true --noInFrameStop=true <locus.fa>`"],
         ["AGAT", "v1.6.1", "Annotation cleaning, sorting, intron addition",
