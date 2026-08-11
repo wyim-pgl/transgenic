@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/altonly_fixed/AtRTD3.altonly_firsttx.gtf -o A_thaliana_augustusSampling_vs_AtRTD3altfix ./A_thaliana_augustusSampling.gff3
+#
+
+#= Summary for dataset: ./A_thaliana_augustusSampling.gff3 
+#     Query mRNAs :   69049 in   25641 loci  (62542 multi-exon transcripts)
+#            (12312 multi-transcript loci, ~2.7 transcripts per locus)
+# Reference mRNAs :  123743 in   19780 loci  (116616 multi-exon)
+# Super-loci w/ reference transcripts:    18113
+#-----------------| Sensitivity | Precision  |
+        Base level:    73.0     |    76.8    |
+        Exon level:    53.4     |    68.2    |
+      Intron level:    62.6     |    74.0    |
+Intron chain level:     9.6     |    18.0    |
+  Transcript level:     9.1     |    16.3    |
+       Locus level:    49.8     |    38.6    |
+
+     Matching intron chains:   11228
+       Matching transcripts:   11228
+              Matching loci:    9841
+
+          Missed exons:   25839/307346	(  8.4%)
+           Novel exons:   24584/170920	( 14.4%)
+        Missed introns:   20169/155490	( 13.0%)
+         Novel introns:   15874/131423	( 12.1%)
+           Missed loci:    1642/19780	(  8.3%)
+            Novel loci:    7189/25641	( 28.0%)
+
+ Total union super-loci across all input datasets: 25302 
+69049 out of 69049 consensus transcripts written in A_thaliana_augustusSampling_vs_AtRTD3altfix.annotated.gtf (0 discarded as redundant)

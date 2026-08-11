@@ -265,11 +265,12 @@ def build(out: Out) -> None:
         "*A. thaliana*, *P. trichocarpa*, and *Z. mays* were scored on the unfiltered "
         "export, which holds every locus twice (see Methods), so in those rows most conserved genes "
         "appear as duplicated rather than single-copy. Table S2 and Figure 5 report the "
-        "deduplicated file for the same configuration; scoring it alone for A. thaliana "
-        "returns the identical completeness (C 97.6% either way, F 2.1%, M 0.2%) and changes only "
-        "the single-copy/duplicated split, from S 0.0/D 97.6 to S 88.5/D 9.2, so the completeness "
+        "deduplicated file for the same configuration; re-scoring it alone for A. thaliana "
+        "under this table's own conditions (BUSCO v6.0.0, PASA-extracted proteins) returns "
+        "the identical completeness (C 97.9% either way, F 1.9%, M 0.2%) and changes only "
+        "the single-copy/duplicated split, from S 0.0/D 97.9 to S 88.5/D 9.4, so the completeness "
         "percentages in this table are comparable with Table S2 "
-        "(`revision/results/busco_beam_pilot.json`). As in Table S2, TransGenic was scored on "
+        "(`revision/results/busco_beam_pilot_v6.json`). As in Table S2, TransGenic was scored on "
         "individual reference-annotated single-gene loci whereas the other tools were run on "
         "whole genomes, a setting that favours TransGenic. The *Z. mays* Tiberius soft-masked row is "
         "present but reflects a run that produced almost no output overlapping the reference, "
@@ -286,19 +287,19 @@ def build(out: Out) -> None:
 
     # ------------------------------------------------------ Table S4 ----
     alt = RES / "altonly"
+    altfix = RES / "altonly_fixed"
     alt_cfg = [
-        ("A_thaliana_transgenic400M_vs_TAIR10", "TransGenic 400M, de novo", "TAIR10"),
-        ("A_thaliana_transgenic400Mprompt_beam1_vs_TAIR10", "TransGenic 400M, reference-prompted (deduplicated)", "TAIR10"),
-        ("A_thaliana_augustusSampling_vs_TAIR10", "AUGUSTUS v3.5.0 posterior sampling", "TAIR10"),
-        ("A_thaliana_transgenic400M_vs_AtRTD3", "TransGenic 400M, de novo", "AtRTD3"),
-        ("A_thaliana_transgenic400Mprompt_beam1_vs_AtRTD3", "TransGenic 400M, reference-prompted (deduplicated)", "AtRTD3"),
-        ("A_thaliana_augustusSampling_vs_AtRTD3", "AUGUSTUS v3.5.0 posterior sampling", "AtRTD3"),
+        (alt / "A_thaliana_transgenic400M_vs_TAIR10.stats", "TransGenic 400M, de novo", "TAIR10"),
+        (alt / "A_thaliana_transgenic400Mprompt_beam1_vs_TAIR10.stats", "TransGenic 400M, reference-prompted (deduplicated)", "TAIR10"),
+        (alt / "A_thaliana_augustusSampling_vs_TAIR10.stats", "AUGUSTUS v3.5.0 posterior sampling", "TAIR10"),
+        (altfix / "A_thaliana_transgenic400M_vs_AtRTD3altfix.stats", "TransGenic 400M, de novo", "AtRTD3"),
+        (altfix / "A_thaliana_transgenic400Mprompt_beam1_vs_AtRTD3altfix.stats", "TransGenic 400M, reference-prompted (deduplicated)", "AtRTD3"),
+        (altfix / "A_thaliana_augustusSampling_vs_AtRTD3altfix.stats", "AUGUSTUS v3.5.0 posterior sampling", "AtRTD3"),
     ]
     levels = ["Base", "Exon", "Intron", "Intron chain", "Transcript", "Locus"]
     rows = []
-    for stem, label, ref in alt_cfg:
-        p = alt / f"{stem}.stats"
-        m, c = stats_metrics(p), stats_counts(p)
+    for statsfile, label, ref in alt_cfg:
+        m, c = stats_metrics(statsfile), stats_counts(statsfile)
         row = [ref, label, c.get("query_mrna"), c.get("ref_mrna")]
         for lv in levels:
             sn, pr = m[lv]
@@ -311,9 +312,15 @@ def build(out: Out) -> None:
     out.table(
         "TableS4a_altonly_gffcompare",
         "Table S4a. Alternative-transcript-only evaluation (GFFCompare v0.12.6)",
-        "Source: `transgenic/revision/results/altonly/*.stats`. The primary (first annotated) "
+        "Source: `transgenic/revision/results/altonly/*.stats` (TAIR10 rows) and "
+        "`altonly_fixed/*.stats` (AtRTD3 rows). The primary (first annotated) "
         "transcript of every gene was removed from the reference before comparison, so these "
-        "metrics score only the alternative isoforms. All three prediction sets were scored "
+        "metrics score only the alternative isoforms. The AtRTD3 alternative-only reference "
+        "was rebuilt with this per-gene rule (`40_rebuild_altonly_atrtd3.py`): an earlier "
+        "build removed transcripts matching TAIR10 primary identifiers instead, which left "
+        "every transcript of 14,065 AtRTD3 genes in the reference and wrongly removed 2,454 "
+        "true alternatives; the TAIR10 side was verified unaffected "
+        "(`41_audit_altonly_atrtd3.py`). All three prediction sets were scored "
         "with identical commands. AUGUSTUS parameters for *A. thaliana* are estimated from "
         "TAIR annotations, so agreement with the TAIR10-derived reference is partly circular; "
         "AtRTD3 provides independent long-read evidence.",

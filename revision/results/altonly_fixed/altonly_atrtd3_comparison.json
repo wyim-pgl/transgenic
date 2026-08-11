@@ -1,0 +1,277 @@
+{
+ "audit": {
+  "atrtd3_full": {
+   "genes": 40929,
+   "transcripts": 169499
+  },
+  "old_reference": {
+   "path": "revision/data/AtRTD3/AtRTD3.altonly.gtf",
+   "rule": "drop transcripts whose ID matches the TAIR10 first-transcript set",
+   "genes": 32465,
+   "transcripts": 142635,
+   "removed": 26864,
+   "genes_retaining_their_primary": 14065,
+   "genes_whose_first_transcript_survives": 16519,
+   "single_transcript_genes_retained_intact": 12071,
+   "genuine_alternatives_wrongly_removed": 2454
+  },
+  "new_reference": {
+   "path": "revision/results/altonly_fixed/AtRTD3.altonly_firsttx.gtf",
+   "rule": "drop the first transcript of each gene (file order), as Methods states",
+   "genes": 20394,
+   "transcripts": 128570,
+   "removed": 40929,
+   "genes_retaining_their_primary": 0,
+   "removed_ids_ending_in_dot1": 40901
+  },
+  "tair10_altonly_control": {
+   "path": "revision/data/TAIR10/TAIR10.altonly.gtf",
+   "genes": 5804,
+   "transcripts": 7970,
+   "removed_per_gene": 1,
+   "genes_retaining_their_primary": 0,
+   "verdict": "correct, unchanged"
+  }
+ },
+ "gffcompare": {
+  "binary": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare",
+  "version": "v0.12.6",
+  "command": "gffcompare -r <AtRTD3.altonly_firsttx.gtf> -o <prefix> <prediction.gff3>"
+ },
+ "runs": {
+  "transgenic400M_prompted_beam1": {
+   "old": {
+    "reference_mrnas": 137559,
+    "reference_loci": 30383,
+    "query_mrnas": 29922,
+    "query_loci": 27213,
+    "base": {
+     "sn": 59.4,
+     "pr": 77.3,
+     "f1": 67.2
+    },
+    "exon": {
+     "sn": 54.4,
+     "pr": 79.8,
+     "f1": 64.7
+    },
+    "intron": {
+     "sn": 63.8,
+     "pr": 86.9,
+     "f1": 73.6
+    },
+    "intron_chain": {
+     "sn": 11.8,
+     "pr": 59.5,
+     "f1": 19.7
+    },
+    "transcript": {
+     "sn": 10.3,
+     "pr": 47.3,
+     "f1": 16.9
+    },
+    "locus": {
+     "sn": 43.9,
+     "pr": 49.7,
+     "f1": 46.6
+    },
+    "matching_transcripts": 14145
+   },
+   "new": {
+    "reference_mrnas": 123743,
+    "reference_loci": 19780,
+    "query_mrnas": 29922,
+    "query_loci": 27213,
+    "base": {
+     "sn": 76.0,
+     "pr": 76.2,
+     "f1": 76.1
+    },
+    "exon": {
+     "sn": 57.4,
+     "pr": 78.7,
+     "f1": 66.4
+    },
+    "intron": {
+     "sn": 65.9,
+     "pr": 86.0,
+     "f1": 74.6
+    },
+    "intron_chain": {
+     "sn": 11.8,
+     "pr": 57.8,
+     "f1": 19.6
+    },
+    "transcript": {
+     "sn": 11.1,
+     "pr": 45.9,
+     "f1": 17.9
+    },
+    "locus": {
+     "sn": 66.0,
+     "pr": 48.3,
+     "f1": 55.8
+    },
+    "matching_transcripts": 13728
+   },
+   "old_stats": "altonly/A_thaliana_transgenic400Mprompt_beam1_vs_AtRTD3.stats",
+   "new_stats": "altonly_fixed/A_thaliana_transgenic400Mprompt_beam1_vs_AtRTD3altfix.stats"
+  },
+  "transgenic400M_denovo": {
+   "old": {
+    "reference_mrnas": 137559,
+    "reference_loci": 30383,
+    "query_mrnas": 27633,
+    "query_loci": 26932,
+    "base": {
+     "sn": 56.9,
+     "pr": 75.5,
+     "f1": 64.9
+    },
+    "exon": {
+     "sn": 47.5,
+     "pr": 73.4,
+     "f1": 57.7
+    },
+    "intron": {
+     "sn": 56.9,
+     "pr": 81.8,
+     "f1": 67.1
+    },
+    "intron_chain": {
+     "sn": 7.3,
+     "pr": 42.3,
+     "f1": 12.5
+    },
+    "transcript": {
+     "sn": 6.4,
+     "pr": 31.6,
+     "f1": 10.6
+    },
+    "locus": {
+     "sn": 28.4,
+     "pr": 32.4,
+     "f1": 30.3
+    },
+    "matching_transcripts": 8742
+   },
+   "new": {
+    "reference_mrnas": 123743,
+    "reference_loci": 19780,
+    "query_mrnas": 27633,
+    "query_loci": 26932,
+    "base": {
+     "sn": 72.9,
+     "pr": 74.4,
+     "f1": 73.6
+    },
+    "exon": {
+     "sn": 50.4,
+     "pr": 72.9,
+     "f1": 59.6
+    },
+    "intron": {
+     "sn": 59.1,
+     "pr": 81.4,
+     "f1": 68.5
+    },
+    "intron_chain": {
+     "sn": 7.5,
+     "pr": 42.4,
+     "f1": 12.7
+    },
+    "transcript": {
+     "sn": 7.1,
+     "pr": 31.7,
+     "f1": 11.6
+    },
+    "locus": {
+     "sn": 44.0,
+     "pr": 32.4,
+     "f1": 37.3
+    },
+    "matching_transcripts": 8764
+   },
+   "old_stats": "altonly/A_thaliana_transgenic400M_vs_AtRTD3.stats",
+   "new_stats": "altonly_fixed/A_thaliana_transgenic400M_vs_AtRTD3altfix.stats"
+  },
+  "augustus_sampling": {
+   "old": {
+    "reference_mrnas": 137559,
+    "reference_loci": 30383,
+    "query_mrnas": 69049,
+    "query_loci": 25641,
+    "base": {
+     "sn": 57.0,
+     "pr": 77.7,
+     "f1": 65.8
+    },
+    "exon": {
+     "sn": 50.3,
+     "pr": 68.6,
+     "f1": 58.0
+    },
+    "intron": {
+     "sn": 60.3,
+     "pr": 74.5,
+     "f1": 66.7
+    },
+    "intron_chain": {
+     "sn": 9.3,
+     "pr": 18.0,
+     "f1": 12.3
+    },
+    "transcript": {
+     "sn": 8.2,
+     "pr": 16.3,
+     "f1": 10.9
+    },
+    "locus": {
+     "sn": 32.3,
+     "pr": 38.6,
+     "f1": 35.2
+    },
+    "matching_transcripts": 11237
+   },
+   "new": {
+    "reference_mrnas": 123743,
+    "reference_loci": 19780,
+    "query_mrnas": 69049,
+    "query_loci": 25641,
+    "base": {
+     "sn": 73.0,
+     "pr": 76.8,
+     "f1": 74.9
+    },
+    "exon": {
+     "sn": 53.4,
+     "pr": 68.2,
+     "f1": 59.9
+    },
+    "intron": {
+     "sn": 62.6,
+     "pr": 74.0,
+     "f1": 67.8
+    },
+    "intron_chain": {
+     "sn": 9.6,
+     "pr": 18.0,
+     "f1": 12.5
+    },
+    "transcript": {
+     "sn": 9.1,
+     "pr": 16.3,
+     "f1": 11.7
+    },
+    "locus": {
+     "sn": 49.8,
+     "pr": 38.6,
+     "f1": 43.5
+    },
+    "matching_transcripts": 11228
+   },
+   "old_stats": "altonly/A_thaliana_augustusSampling_vs_AtRTD3.stats",
+   "new_stats": "altonly_fixed/A_thaliana_augustusSampling_vs_AtRTD3altfix.stats"
+  }
+ }
+}
