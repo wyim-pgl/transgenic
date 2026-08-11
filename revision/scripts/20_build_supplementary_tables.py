@@ -391,6 +391,45 @@ def build(out: Out) -> None:
         rows,
     )
 
+    # ----------------------------------------------------- Table S4d ----
+    # The additions-only comparison every headline figure rests on (18.1% vs 1.3%).
+    s4d_rows = []
+    for fname, label in (
+        ("added_isoforms_A_thaliana.json", "TransGenic 400M, reference-prompted (additions only)"),
+        ("added_isoforms_augustus.json", "AUGUSTUS v3.5.0 posterior sampling (additions only)"),
+    ):
+        d = jload(RES / fname)
+        s4d_rows.append([
+            label,
+            f"{d['loci_scored']:,}",
+            f"{d['added_transcripts']:,}",
+            f"{d['added_matching_TAIR10_alternative_exact_CDS']:,}",
+            f"{d['precision_vs_TAIR10_alternatives_pct']:.1f}",
+            f"{d['added_matching_any_AtRTD3_transcript']:,}",
+            f"{d['precision_vs_AtRTD3_pct']:.1f}",
+            f"{d['reference_alternative_transcripts']:,}",
+            f"{d['recall_of_TAIR10_alternatives_pct']:.1f}",
+        ])
+    out.table(
+        "TableS4d_additions_only",
+        "Table S4d. Additions-only comparison of prompt completion and AUGUSTUS posterior sampling",
+        "Source: `transgenic/revision/results/added_isoforms_A_thaliana.json` and "
+        "`added_isoforms_augustus.json`, scored with `revision/scripts/28_score_added_isoforms.py`. "
+        "This is the comparison behind the abstract's 18.1% versus 1.3%: each tool's own primary "
+        "structure is removed (TransGenic: the supplied reference primary; AUGUSTUS: its first "
+        "prediction per locus), identical emissions are collapsed to one structure, and additions "
+        "are matched on exact CDS coordinates against TAIR10 alternative transcripts (primary "
+        "removed) and against AtRTD3. The two rows score different locus sets — 27,413 versus the "
+        "25,597 loci at which AUGUSTUS predictions paired with a reference locus — so the recall "
+        "denominators (distinct alternative CDS structures at the scored loci) differ, 5,580 "
+        "versus 5,554; the 10.3% versus 3.6% recall contrast in the text carries that caveat.",
+        ["Prediction set", "Loci scored", "Added structures",
+         "Matched TAIR10 alt (n)", "Precision vs TAIR10 alt (%)",
+         "Matched AtRTD3 (n)", "Precision vs AtRTD3 (%)",
+         "TAIR10 alt structures (n)", "Recall of TAIR10 alt (%)"],
+        s4d_rows,
+    )
+
     # ------------------------------------------------------ Table S5 ----
     sc = load_csv(RES / "selfconsistency_summary.csv")
     order = {v: i for i, v in enumerate(
