@@ -190,7 +190,7 @@ def build(out: Out) -> None:
         ["Setaria italica", "v2", "Bennetzen et al., 2012", "Training"],
         ["Oryza sativa", "MSU v7.0", "Ouyang et al., 2007", "Training"],
         ["Physcomitrium patens", "v3", "Lang et al., 2018", "Training"],
-        ["Zea mays", "RefGen_V4", "Jiao et al., 2017", "Held-out test"],
+        ["Zea mays", "RefGen_V4", "Jiao et al., 2017", "Held-out test (near-complete; see note)"],
         ["Brassica rapa", "BrapaO_302V_711 v1.1", "Wang et al., 2011", "Extended benchmark"],
         ["Lactuca sativa", "v5 (Lsativa_467)", "Reyes-Chin-Wo et al., 2017", "Extended benchmark"],
         ["Solanum lycopersicum", "ITAG5.0 (SL5.0)", "The Tomato Genome Consortium, 2012", "Extended benchmark"],
@@ -200,7 +200,9 @@ def build(out: Out) -> None:
         "Table S1. Genome assemblies and annotations used for training, testing, and the extended benchmark",
         "All genomes and annotations were obtained from Phytozome (Goodstein et al., 2012) "
         "except *S. lycopersicum* (ITAG5.0) and *L. sativa* v5. *Zea mays* was withheld from "
-        "training entirely. The moss species is given under its current accepted name, "
+        "training by a Zm-prefix identifier filter; 176 legacy GRMZM gene models lack that "
+        "prefix and entered the split pool (0.4% of maize models; see Methods), so the "
+        "withholding is near-complete rather than absolute. The moss species is given under its current accepted name, "
         "*Physcomitrium patens*; the assembly and its describing publication use the earlier "
         "name *Physcomitrella patens*.",
         ["Species", "Assembly / annotation version", "Reference", "Role"],
@@ -594,7 +596,7 @@ def build(out: Out) -> None:
         "annotations are *A. thaliana*, *B. distachyon*, *G. max*, *O. sativa*, "
         "*P. patens*, *P. trichocarpa*, *S. bicolor*, *S. italica*, and *V. vinifera*; among "
         "these the maximum number of annotated transcripts at any single gene is 26 "
-        "(*P. patens*). *Z. mays* was withheld from training.",
+        "(*P. patens*). *Z. mays* was withheld from training (near-complete; see the Table S1 note).",
         ["Annotation", "Genes (n)", "Transcripts (n)", "Multi-transcript genes (n)",
          "Multi-transcript genes (%)", "Mean transcripts per gene",
          "Max transcripts per gene"],
