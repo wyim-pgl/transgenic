@@ -200,7 +200,7 @@ def build(out: Out) -> None:
         "Table S1. Genome assemblies and annotations used for training, testing, and the extended benchmark",
         "All genomes and annotations were obtained from Phytozome (Goodstein et al., 2012) "
         "except *S. lycopersicum* (ITAG5.0) and *L. sativa* v5. *Zea mays* was withheld from "
-        "training by a Zm-prefix identifier filter; 176 legacy GRMZM gene models lack that "
+        "training by a Zm-prefix identifier filter; 174 legacy GRMZM gene models (176 dataset rows) lack that "
         "prefix and entered the split pool (0.4% of maize models; see Methods), so the "
         "withholding is near-complete rather than absolute. The moss species is given under its current accepted name, "
         "*Physcomitrium patens*; the assembly and its describing publication use the earlier "

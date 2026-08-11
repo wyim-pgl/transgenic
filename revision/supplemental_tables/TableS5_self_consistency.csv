@@ -5,7 +5,7 @@ Arabidopsis thaliana,"TransGenic 160M, reference-prompted",30068,30068,485,221,2
 Arabidopsis thaliana,"TransGenic 160M, self-prompted",91592,91592,54509,35958,66889,69660,5922,6.47,3965,1.251
 Arabidopsis thaliana,"TransGenic 400M, de novo",27422,27422,13478,2696,8081,15838,6814,24.85,62,1.008
 Arabidopsis thaliana,"TransGenic 400M, reference-prompted",59426,59426,1616,210,540,1566,57484,96.73,622,1.092
-Arabidopsis thaliana,"TransGenic 400M, reference-prompted (top beam only)",29713,29713,808,105,270,783,28742,96.73,311,1.092
+Arabidopsis thaliana,"TransGenic 400M, reference-prompted (deduplicated)",29713,29713,808,105,270,783,28742,96.73,311,1.092
 Arabidopsis thaliana,"TransGenic 400M, self-prompted",93063,93063,46575,10257,28404,52953,22068,23.71,2145,1.141
 Brachypodium distachyon,Reference annotation,52972,52972,1,1039,465,0,51518,97.26,5,1.544
 Brachypodium distachyon,"TransGenic 160M, de novo",35965,35965,20704,16121,26557,28516,2836,7.89,922,1.049
@@ -32,9 +32,7 @@ Lactuca sativa,Reference annotation,62656,62656,0,1547,1626,0,59939,95.66,698,1.
 Lactuca sativa,"TransGenic 160M, de novo",41103,41103,22631,22704,33277,34835,1579,3.84,1232,1.058
 Lactuca sativa,"TransGenic 160M, reference-prompted",47741,47741,3875,3902,3230,4588,39740,83.24,5031,1.226
 Lactuca sativa,"TransGenic 160M, self-prompted",49243,49243,27442,27936,39833,40524,1692,3.44,3019,1.268
-Lactuca sativa,"TransGenic 400M, de novo",1816,1816,939,311,818,1308,230,12.67,3,1.013
 Lactuca sativa,"TransGenic 400M, reference-prompted",45628,45628,3731,2597,1881,4425,38976,85.42,2600,1.173
-Lactuca sativa,"TransGenic 400M, self-prompted",2033,2033,1076,383,924,1432,240,11.81,43,1.136
 Oryza sativa,Reference annotation,52398,52398,7,0,7,7,52391,99.99,2,1.242
 Oryza sativa,"TransGenic 160M, de novo",43032,43032,23639,20815,32063,33749,3718,8.64,496,1.021
 Oryza sativa,"TransGenic 160M, reference-prompted",46115,46115,540,228,295,587,45382,98.41,1847,1.093

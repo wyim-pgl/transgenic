@@ -1,7 +1,7 @@
 Reference,Prediction set,Reference transcripts (n),Predicted transcripts (n),Exact matches (n),Duplicate matches (n),Distinct reference transcripts matched (n),Isoform recall (%),Isoform precision (%),Isoform F1 (%)
-TAIR10,"TransGenic 400M, de novo",35386,27634,11718,37,11681,33.0,42.4,37.1
-TAIR10,"TransGenic 400M, reference-prompted (top beam)",35386,29923,22260,341,21919,61.9,74.4,67.6
-TAIR10,AUGUSTUS v3.5.0 posterior sampling,35386,69050,17777,4445,13332,37.7,25.7,30.6
-AtRTD3,"TransGenic 400M, de novo",169499,27634,13090,43,13047,7.7,47.4,13.2
-AtRTD3,"TransGenic 400M, reference-prompted (top beam)",169499,29923,21694,442,21252,12.5,72.5,21.4
-AtRTD3,AUGUSTUS v3.5.0 posterior sampling,169499,69050,20605,4964,15641,9.2,29.8,14.1
+TAIR10,"TransGenic 400M, de novo",35386,27633,11718,37,11681,33.0,42.4,37.1
+TAIR10,"TransGenic 400M, reference-prompted (deduplicated)",35386,29922,22260,341,21919,61.9,74.4,67.6
+TAIR10,AUGUSTUS v3.5.0 posterior sampling,35386,69049,17777,4445,13332,37.7,25.7,30.6
+AtRTD3,"TransGenic 400M, de novo",169499,27633,13090,43,13047,7.7,47.4,13.2
+AtRTD3,"TransGenic 400M, reference-prompted (deduplicated)",169499,29922,21694,442,21252,12.5,72.5,21.4
+AtRTD3,AUGUSTUS v3.5.0 posterior sampling,169499,69049,20605,4964,15641,9.2,29.8,14.1

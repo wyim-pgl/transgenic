@@ -8,7 +8,7 @@ Brachypodium distachyon,v3,"The International Brachypodium Initiative, 2010",Tra
 Setaria italica,v2,"Bennetzen et al., 2012",Training
 Oryza sativa,MSU v7.0,"Ouyang et al., 2007",Training
 Physcomitrium patens,v3,"Lang et al., 2018",Training
-Zea mays,RefGen_V4,"Jiao et al., 2017",Held-out test
+Zea mays,RefGen_V4,"Jiao et al., 2017",Held-out test (near-complete; see note)
 Brassica rapa,BrapaO_302V_711 v1.1,"Wang et al., 2011",Extended benchmark
 Lactuca sativa,v5 (Lsativa_467),"Reyes-Chin-Wo et al., 2017",Extended benchmark
 Solanum lycopersicum,ITAG5.0 (SL5.0),"The Tomato Genome Consortium, 2012",Extended benchmark
