@@ -36,6 +36,7 @@ PROMPT_TRANSFER_ARMS = [
     ("annevotairutr", "Predicted CDS, reference UTR", "ANNEVO", "TAIR10", "CDS+UTR span"),
     ("helixer_reframed", "Predicted CDS reframed, no reference input", "Helixer", "none", "CDS span"),
     ("helixer", "Helixer output as supplied", "Helixer", "Helixer", "Helixer"),
+    ("helixer_filtered", "Helixer output as supplied, after ORF and splice-site filter", "Helixer", "Helixer", "Helixer"),
     ("annevo", "ANNEVO output as supplied", "ANNEVO", "none", "ANNEVO"),
     ("braker3", "BRAKER3 output as supplied", "BRAKER3", "BRAKER3", "BRAKER3"),
     ("gemoma", "GeMoMa output as supplied", "GeMoMa", "GeMoMa", "GeMoMa"),

@@ -1,0 +1,14 @@
+{
+  "utr_correct": {
+    "loci": 0,
+    "additions": 0,
+    "correct": 0,
+    "precision_pct": null
+  },
+  "utr_wrong": {
+    "loci": 17830,
+    "additions": 1174,
+    "correct": 1,
+    "precision_pct": 0.1
+  }
+}

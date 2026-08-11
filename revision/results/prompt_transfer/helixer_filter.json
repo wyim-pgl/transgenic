@@ -1,0 +1,10 @@
+{
+  "transcripts": 34168,
+  "prompt_re_emissions": 31550,
+  "additions": 2462,
+  "additions_kept": 178,
+  "failed_orf": 2238,
+  "failed_splice": 46,
+  "unknown_seqid": 0,
+  "additions_discarded_pct": 92.8
+}

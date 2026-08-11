@@ -1,0 +1,46 @@
+{
+  "annotations": [
+    {
+      "annotation": "/data/gpfs/assoc/pgl/data/Transgenic/polishing_benchmark/inputs/helixer_Athaliana.gff3",
+      "rows": {
+        "CDS": 142963,
+        "exon": 211520,
+        "five_prime_UTR": 32484,
+        "gene": 27039,
+        "mRNA": 27039,
+        "three_prime_UTR": 28734
+      },
+      "loci": 27039,
+      "transcripts": 27039,
+      "utr_rows": 61218,
+      "loci_emitting_utr": 27039,
+      "loci_emitting_utr_pct": 100.0,
+      "prompted_transcripts_with_utr": 27039,
+      "prompted_transcripts_with_utr_pct": 100.0,
+      "transcripts_with_exon_rows_identical_to_cds": 0,
+      "rows_where_exon_equals_cds": 0,
+      "exon_rows_extending_beyond_cds": 109109,
+      "carries_no_untranslated_evidence": false
+    },
+    {
+      "annotation": "/data/gpfs/assoc/pgl/data/Transgenic/polishing_benchmark/inputs/annevo_Athaliana.gff3",
+      "rows": {
+        "CDS": 138151,
+        "exon": 138151,
+        "gene": 25181,
+        "mRNA": 25181
+      },
+      "loci": 25181,
+      "transcripts": 25181,
+      "utr_rows": 0,
+      "loci_emitting_utr": 0,
+      "loci_emitting_utr_pct": 0.0,
+      "prompted_transcripts_with_utr": 0,
+      "prompted_transcripts_with_utr_pct": 0.0,
+      "transcripts_with_exon_rows_identical_to_cds": 25181,
+      "rows_where_exon_equals_cds": 138151,
+      "exon_rows_extending_beyond_cds": 0,
+      "carries_no_untranslated_evidence": true
+    }
+  ]
+}

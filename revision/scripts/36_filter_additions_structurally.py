@@ -28,8 +28,10 @@ WHAT IT DOES NOT FIX
 
 Precision recovers only where correct structures exist to be kept. On Helixer's own
 annotation the same filter takes 2,462 additions down to 178 and the correct count stays at
-0 — the additions were not diluted, they were wrong to begin with, because the prompt's UTR
-was wrong (0 of 17,830 Helixer UTRs match TAIR10 exactly). Filtering is worth applying when
+1 (1/2,462 = 0.0% before, 1/178 = 0.6% after; helixer_filter.json,
+helixer_filtered_as_additions.json) — the additions were not diluted, they were wrong to
+begin with, because the prompt's UTR was wrong (at the 17,830 loci where Helixer's CDS
+equals TAIR10's primary, 0 supplied UTRs match TAIR10 exactly). Filtering is worth applying when
 the prompt is trustworthy and the coordinate frame is not; it is not a substitute for a
 trustworthy prompt.
 
