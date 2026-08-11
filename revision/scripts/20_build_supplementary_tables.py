@@ -148,14 +148,26 @@ def supplemental_figure_legends() -> str:
     text = (ROOT / "manuscript_v2.md").read_text()
     start = text.index("**Figure S1.")
     end = text.index("**Table S1.")
-    return text[start:end].rstrip()
+    legends = text[start:end].rstrip()
+    # The S1 legend in the source lacks the failed-run warning the Figure 5 and
+    # Table S2/S3 legends carry; append it so the figure cannot be read as
+    # Tiberius performance, and point out the two absent configurations.
+    s1_anchor = "Solid bars, complete (single-copy plus duplicated); hatched extensions, fragmented."
+    s1_add = (" The Tiberius soft-masked bar for *Z. mays* reflects a run that produced "
+              "almost no output overlapping the reference and is not a performance "
+              "measurement (Table S3). Two configurations are absent: *L. sativa* "
+              "TransGenic 400M self-prompted (invalidated; see Table S3) and "
+              "*V. vinifera* Tiberius with soft-masked input (run not completed).")
+    assert s1_anchor in legends, "Figure S1 legend anchor not found"
+    legends = legends.replace(s1_anchor, s1_anchor + s1_add, 1)
+    return legends
 
 
 def build(out: Out) -> None:
     out.text("# Supplemental Information\n")
     out.text(
-        "**TransGenic: a transformer-based framework for direct DNA-to-annotation "
-        "translation.** Lomas, Ramazan, Cushman, Tang, and Yim.\n\n"
+        "**TransGenic: a transformer-based framework for completing gene annotations "
+        "with alternatively spliced isoforms.** Lomas, Ramazan, Cushman, Tang, and Yim.\n\n"
         "All values in the tables below are generated directly from the analysis outputs "
         "deposited with the software repository by "
         "`transgenic/revision/scripts/20_build_supplementary_tables.py`, and each table is "
@@ -484,7 +496,7 @@ def build(out: Out) -> None:
         "genomic translation checks. Duplicate transcripts are identical exon chains within "
         "the same locus. The *L. sativa* TransGenic 400M de novo and self-prompted rows are "
         "absent: they derive from the stalled run that was invalidated and quarantined "
-        "(see Table S3 footnote); Tables S2 and S3 report the complete rerun. Completion-mode "
+        "(see Table S3 footnote); Tables S2 and S3 report the complete rerun, whose structural-consistency statistics were not recomputed. Completion-mode "
         "rows other than the *A. thaliana* deduplicated row are scored on the unfiltered "
         "export, so transcript and duplicate counts are inflated where the file-level "
         "duplication occurs, while percentages are unaffected.",
