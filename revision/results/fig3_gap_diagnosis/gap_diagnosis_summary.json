@@ -1,0 +1,314 @@
+{
+ "generated": "2026-08-17",
+ "question": "cause of the 92.2% (original) vs 82.0% (fig3_regen) A. thaliana de novo base-F1 gap",
+ "verdict": "hypothesis A (re-run bug) confirmed; hypothesis B (train-exposure inflation) refuted",
+ "bug": {
+  "file": "revision/scripts/fig3_infer.py",
+  "lines": "114-125 (flip_rc), applied at 131-132",
+  "mechanism": "gffString2GFF3(pred, ch, st, ...) already converts local GSF offsets to absolute genomic coordinates (utils/gsf.py:347, region_start += 1). flip_rc(lines, fin) then computes fin-e+1, which is the flip of a LOCAL coordinate, so every -rc row's prediction is short by exactly region_start and lands in [1, region_length].",
+  "correct_formula": "genomic = region_end - p = (fin - e + 1) + region_start",
+  "verification": "region_start is deterministic from the reference gene span (datasets/preprocess.py:305-329); adding it back makes 5179 predicted A. thaliana CDS features match reference CDS intervals exactly, and 0 match at a +/-1 shift.",
+  "blast_radius": "all 10 species in fig3_regen; 24,750 -rc rows total (903 of 5031 for A. thaliana)"
+ },
+ "A_thaliana": {
+  "baseline_v0126": {
+   "base_sn": 74.0,
+   "base_pr": 91.9,
+   "base_f1": 82.0,
+   "missed_exon_pct": 28.2,
+   "missed_loci": "914/4893"
+  },
+  "all_repaired": {
+   "base_sn": 90.6,
+   "base_pr": 93.5,
+   "base_f1": 92.0,
+   "missed_exon_pct": 4.6,
+   "missed_loci": "165/4893"
+  },
+  "forward": {
+   "base_sn": 91.0,
+   "base_pr": 93.4,
+   "base_f1": 92.2,
+   "missed_exon_pct": 4.4,
+   "missed_loci": "151/4124"
+  },
+  "rc_raw": {
+   "base_sn": 0.0,
+   "base_pr": 0.0,
+   "base_f1": 0,
+   "missed_exon_pct": 100.0,
+   "missed_loci": "903/903"
+  },
+  "rc_repaired": {
+   "base_sn": 88.8,
+   "base_pr": 94.0,
+   "base_f1": 91.3,
+   "missed_exon_pct": 4.9,
+   "missed_loci": "13/903"
+  },
+  "repaired_heldout": {
+   "base_sn": 91.8,
+   "base_pr": 92.8,
+   "base_f1": 92.3,
+   "missed_exon_pct": 4.4,
+   "missed_loci": "144/3427"
+  },
+  "repaired_exposed": {
+   "base_sn": 88.5,
+   "base_pr": 94.7,
+   "base_f1": 91.5,
+   "missed_exon_pct": 4.9,
+   "missed_loci": "23/1468"
+  },
+  "fwd_heldout": {
+   "base_sn": 91.9,
+   "base_pr": 93.0,
+   "base_f1": 92.4,
+   "missed_exon_pct": 4.1,
+   "missed_loci": "142/3425"
+  },
+  "fwd_exposed": {
+   "base_sn": 87.9,
+   "base_pr": 95.1,
+   "base_f1": 91.4,
+   "missed_exon_pct": 5.2,
+   "missed_loci": "10/700"
+  }
+ },
+ "A_thaliana_rc_only_repaired": {
+  "base_sn": 89.1,
+  "base_pr": 94.2,
+  "base_f1": 91.6,
+  "missed_exon_pct": 4.6,
+  "missed_loci": "12/768"
+ },
+ "manuscript_original_TAIR10_noPost": {
+  "base_sn": 90.6,
+  "base_pr": 93.8,
+  "base_f1": 92.2,
+  "missed_exon_pct": 5.0
+ },
+ "gap_decomposition_points": {
+  "total_gap": 10.2,
+  "explained_by_flip_rc_bug": 10.0,
+  "residual": 0.2,
+  "train_exposure_effect": -0.9,
+  "note": "exposure effect is negative: pure held-out genes score HIGHER than train/val-exposed ones"
+ },
+ "gene_partition_A_thaliana": {
+  "test_genes": 4899,
+  "forward_rows": 4128,
+  "rc_rows": 903,
+  "genes_covered_only_by_an_rc_row": 768,
+  "genes_with_both": 135,
+  "all_768_rc_only_genes_are_train_or_val_exposed": true
+ },
+ "gffcompare": "v0.12.6 (/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare); fig3_regen originals were scored with v0.12.10 - base/exon/intron levels agree exactly, transcript/locus levels differ by version",
+ "allspecies": [
+  {
+   "species": "A_thaliana",
+   "regen_buggy": [
+    74.0,
+    91.9,
+    81.98432790837855,
+    28.2
+   ],
+   "regen_repaired": [
+    90.6,
+    93.5,
+    92.02715915263444,
+    4.6
+   ],
+   "manuscript_original": [
+    90.6,
+    93.8,
+    92.17223427331886,
+    5.0
+   ]
+  },
+  {
+   "species": "B_distachyon",
+   "regen_buggy": [
+    60.0,
+    85.1,
+    70.3790489317712,
+    36.5
+   ],
+   "regen_repaired": [
+    77.2,
+    87.0,
+    81.80755176613887,
+    13.0
+   ],
+   "manuscript_original": [
+    76.7,
+    84.7,
+    80.50173482032218,
+    13.8
+   ]
+  },
+  {
+   "species": "G_max",
+   "regen_buggy": [
+    60.9,
+    84.3,
+    70.71446280991736,
+    38.2
+   ],
+   "regen_repaired": [
+    80.5,
+    87.9,
+    84.03741092636581,
+    10.2
+   ],
+   "manuscript_original": [
+    80.1,
+    66.0,
+    72.36960985626283,
+    9.6
+   ]
+  },
+  {
+   "species": "O_sativa",
+   "regen_buggy": [
+    68.4,
+    84.1,
+    75.44183606557378,
+    30.1
+   ],
+   "regen_repaired": [
+    81.6,
+    87.3,
+    84.35381882770871,
+    11.0
+   ],
+   "manuscript_original": [
+    81.5,
+    86.7,
+    84.01961950059454,
+    11.3
+   ]
+  },
+  {
+   "species": "P_patens",
+   "regen_buggy": [
+    42.6,
+    80.3,
+    55.667697314890155,
+    50.6
+   ],
+   "regen_repaired": [
+    77.2,
+    87.7,
+    82.11570648878109,
+    10.0
+   ],
+   "manuscript_original": [
+    76.2,
+    88.3,
+    81.8049848024316,
+    11.0
+   ]
+  },
+  {
+   "species": "P_trichocarpa",
+   "regen_buggy": [
+    61.7,
+    84.2,
+    71.21507882111035,
+    35.3
+   ],
+   "regen_repaired": [
+    82.9,
+    76.1,
+    79.35459119496855,
+    7.5
+   ],
+   "manuscript_original": [
+    81.9,
+    72.4,
+    76.85755022683087,
+    8.2
+   ]
+  },
+  {
+   "species": "S_bicolor",
+   "regen_buggy": [
+    64.0,
+    69.8,
+    66.7742899850523,
+    33.9
+   ],
+   "regen_repaired": [
+    80.2,
+    75.2,
+    77.61956241956243,
+    10.0
+   ],
+   "manuscript_original": [
+    79.6,
+    90.6,
+    84.74453584018801,
+    10.8
+   ]
+  },
+  {
+   "species": "S_italica",
+   "regen_buggy": [
+    70.4,
+    85.0,
+    77.01415701415702,
+    27.6
+   ],
+   "regen_repaired": [
+    81.7,
+    87.5,
+    84.50059101654847,
+    11.5
+   ],
+   "manuscript_original": [
+    82.0,
+    85.7,
+    83.80918306499703,
+    10.0
+   ]
+  },
+  {
+   "species": "V_vinifera",
+   "regen_buggy": [
+    51.8,
+    76.6,
+    61.80498442367602,
+    43.2
+   ],
+   "regen_repaired": [
+    60.4,
+    80.1,
+    68.86889679715303,
+    28.9
+   ],
+   "manuscript_original": [
+    64.8,
+    78.1,
+    70.83107067879637,
+    21.8
+   ]
+  },
+  {
+   "species": "Z_mays",
+   "regen_buggy": [
+    65.7,
+    80.7,
+    72.43155737704919,
+    19.6
+   ],
+   "regen_repaired": [
+    69.3,
+    79.3,
+    73.96352624495289,
+    15.6
+   ],
+   "manuscript_original": null
+  }
+ ]
+}

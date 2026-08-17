@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r ref_forward_heldout.gff3 -o gc_fwd_heldout pred_forward_heldout.gff3
+#
+
+#= Summary for dataset: pred_forward_heldout.gff3 
+#     Query mRNAs :    3440 in    3423 loci  (2410 multi-exon transcripts)
+#            (16 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    3604 in    3425 loci  (2654 multi-exon)
+# Super-loci w/ reference transcripts:     3283
+#-----------------| Sensitivity | Precision  |
+        Base level:    91.9     |    93.0    |
+        Exon level:    79.1     |    82.3    |
+      Intron level:    84.3     |    87.8    |
+Intron chain level:    53.1     |    58.4    |
+  Transcript level:    39.1     |    40.9    |
+       Locus level:    41.1     |    41.1    |
+
+     Matching intron chains:    1408
+       Matching transcripts:    1408
+              Matching loci:    1407
+
+          Missed exons:     668/16437	(  4.1%)
+           Novel exons:     453/15741	(  2.9%)
+        Missed introns:     722/12820	(  5.6%)
+         Novel introns:     311/12306	(  2.5%)
+           Missed loci:     142/3425	(  4.1%)
+            Novel loci:     140/3423	(  4.1%)
+
+ Total union super-loci across all input datasets: 3423 
+3440 out of 3440 consensus transcripts written in gc_fwd_heldout.annotated.gtf (0 discarded as redundant)

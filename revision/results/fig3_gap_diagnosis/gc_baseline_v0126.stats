@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_regen/refs/A_thaliana.testset.gff3 -o gc_baseline_v0126 /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_regen/preds/A_thaliana_test400M.gff3
+#
+
+#= Summary for dataset: /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_regen/preds/A_thaliana_test400M.gff3 
+#     Query mRNAs :    5078 in    4129 loci  (3970 multi-exon transcripts)
+#            (34 multi-transcript loci, ~1.2 transcripts per locus)
+# Reference mRNAs :    7129 in    4893 loci  (6084 multi-exon)
+# Super-loci w/ reference transcripts:     3977
+#-----------------| Sensitivity | Precision  |
+        Base level:    74.0     |    91.9    |
+        Exon level:    56.7     |    62.9    |
+      Intron level:    60.8     |    65.6    |
+Intron chain level:    28.9     |    44.3    |
+  Transcript level:    24.7     |    34.7    |
+       Locus level:    35.9     |    42.6    |
+
+     Matching intron chains:    1760
+       Matching transcripts:    1760
+              Matching loci:    1759
+
+          Missed exons:    8938/31688	( 28.2%)
+           Novel exons:    6398/27903	( 22.9%)
+        Missed introns:    7291/24665	( 29.6%)
+         Novel introns:    5279/22844	( 23.1%)
+           Missed loci:     914/4893	( 18.7%)
+            Novel loci:     152/4129	(  3.7%)
+
+ Total union super-loci across all input datasets: 4129 
+5078 out of 5078 consensus transcripts written in gc_baseline_v0126.annotated.gtf (0 discarded as redundant)

@@ -111,14 +111,20 @@ out_fh = {sp: open(os.path.join(OUTDIR, f"{sp}_test400M.gff3"), "a") for _, sp i
 out_fh[UNASSIGNED] = open(os.path.join(OUTDIR, f"{UNASSIGNED}_test400M.gff3"), "a")
 done_fh = open(DONE, "a")
 
-def flip_rc(lines, fin):
+def flip_rc(lines, st, fin):
+    # gffString2GFF3 has already shifted features to absolute genome coordinates
+    # (region_start + 1 + local offset), so the mirror must be taken over the
+    # absolute window [st+1, fin]: mirroring with `fin - x + 1` alone treats the
+    # coordinates as window-local and drops every -rc prediction near the
+    # chromosome start, exactly region_start short (see
+    # revision/results/fig3_gap_diagnosis/gap_diagnosis_summary.json).
     out = []
     for ln in lines:
         if not ln or ln.startswith("#"):
             continue
         f = ln.split("\t")
         s, e = int(f[3]), int(f[4])
-        ns, ne = fin - e + 1, fin - s + 1
+        ns, ne = fin - e + 1 + st, fin - s + 1 + st
         f[3], f[4] = str(ns), str(ne)
         f[6] = "+" if f[6] == "-" else "-" if f[6] == "+" else f[6]
         out.append("\t".join(f))
@@ -129,7 +135,7 @@ def write_pred(rn, out_row):
     gm, st, fin, strand, ch, seq = rows[rn]
     lines = gffString2GFF3(pred, ch, st, f"GM={gm}")
     if gm.endswith("-rc"):
-        lines = flip_rc(lines, fin)
+        lines = flip_rc(lines, st, fin)
     sp = species_of(gm)
     if sp is None:
         print(f"WARNING: no species prefix for gene model {gm!r} (rn {rn}); "
