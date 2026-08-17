@@ -309,6 +309,22 @@ def detect_exon_skipping(gene_transcripts: List[Transcript]) -> Set[SpliceEvent]
     return events
 
 
+def donor_site(intron: Intron) -> int:
+    """Genomic coordinate of the intron's 5' splice site (donor).
+
+    On the plus strand transcription runs left to right, so the donor is the
+    intron's left (start) coordinate; on the minus strand it is the right (end)
+    coordinate. Assigning donor/acceptor by genomic position alone inverts the
+    A5SS and A3SS labels on every minus-strand gene.
+    """
+    return intron.end if intron.strand == '-' else intron.start
+
+
+def acceptor_site(intron: Intron) -> int:
+    """Genomic coordinate of the intron's 3' splice site (acceptor)."""
+    return intron.start if intron.strand == '-' else intron.end
+
+
 def detect_alternative_5ss(gene_transcripts: List[Transcript]) -> Set[SpliceEvent]:
     """
     Detect alternative 5' splice site (A5SS) events.
@@ -320,27 +336,28 @@ def detect_alternative_5ss(gene_transcripts: List[Transcript]) -> Set[SpliceEven
     if len(gene_transcripts) < 2:
         return events
 
-    # Group introns by their 3' end (acceptor site)
+    # Group introns by their 3' end (acceptor site), strand-aware
     acceptor_groups = defaultdict(list)
 
     for transcript in gene_transcripts:
         for intron in transcript.introns:
-            key = (intron.chrom, intron.end, intron.strand)
+            key = (intron.chrom, acceptor_site(intron), intron.strand)
             acceptor_groups[key].append(intron)
 
     # Find groups with multiple different 5' sites
     for key, introns in acceptor_groups.items():
-        donor_sites = set(intron.start for intron in introns)
+        donor_sites = set(donor_site(intron) for intron in introns)
 
         if len(donor_sites) > 1:
-            chrom, acceptor, strand = key
-            for donor in donor_sites:
+            for intron in introns:
+                # Coordinates stay in genomic order so that event identity and
+                # the BED export are strand-independent.
                 event = SpliceEvent(
                     event_type='A5SS',
-                    chrom=chrom,
-                    strand=strand,
+                    chrom=intron.chrom,
+                    strand=intron.strand,
                     gene_id=gene_transcripts[0].gene_id,
-                    coordinates=(donor, acceptor)
+                    coordinates=(intron.start, intron.end)
                 )
                 events.add(event)
 
@@ -358,27 +375,26 @@ def detect_alternative_3ss(gene_transcripts: List[Transcript]) -> Set[SpliceEven
     if len(gene_transcripts) < 2:
         return events
 
-    # Group introns by their 5' start (donor site)
+    # Group introns by their 5' start (donor site), strand-aware
     donor_groups = defaultdict(list)
 
     for transcript in gene_transcripts:
         for intron in transcript.introns:
-            key = (intron.chrom, intron.start, intron.strand)
+            key = (intron.chrom, donor_site(intron), intron.strand)
             donor_groups[key].append(intron)
 
     # Find groups with multiple different 3' sites
     for key, introns in donor_groups.items():
-        acceptor_sites = set(intron.end for intron in introns)
+        acceptor_sites = set(acceptor_site(intron) for intron in introns)
 
         if len(acceptor_sites) > 1:
-            chrom, donor, strand = key
-            for acceptor in acceptor_sites:
+            for intron in introns:
                 event = SpliceEvent(
                     event_type='A3SS',
-                    chrom=chrom,
-                    strand=strand,
+                    chrom=intron.chrom,
+                    strand=intron.strand,
                     gene_id=gene_transcripts[0].gene_id,
-                    coordinates=(donor, acceptor)
+                    coordinates=(intron.start, intron.end)
                 )
                 events.add(event)
 

@@ -5,7 +5,7 @@ BUSCO,v6.0.0,"Functional completeness (Table S3, Figure S1)",`busco -i <proteins
 PASA,v2.5.3,Protein extraction for BUSCO,`gff3_file_to_proteins.pl <annotation.gff3> <genome.fa> prot`
 ANNEVO,v2.2,Whole-genome ab initio benchmark,`annevo predict --genome <genome.fa> --lineage plant`
 Helixer,land_plant_v0.3 checkpoint (`land_plant_v0.3_a_0080.h5`),Whole-genome ab initio benchmark,`Helixer.py --lineage land_plant --subsequence-length 64152 --fasta-path <genome.fa> --gff-output-path <out.gff3>`
-Tiberius,v1.1.7,"Whole-genome ab initio benchmark, with and without soft-masked input",`tiberius --genome <genome.fa> --out <out.gtf>`; the runs were performed by a co-author on external hardware and the full invocation — model/clade selection and soft-masking control flags — was not preserved in this repository. The soft-masked and unmasked rows used the corresponding assemblies (verified from the distinct outputs); the exact flags are being reconstructed with the co-author
+Tiberius,v1.1.7,"Whole-genome ab initio benchmark, with and without soft-masked input",`tiberius --genome <genome.fa> --out <out.gtf>` — run with Tiberius's default plant model and no additional flags (author confirmation; the runs were performed by a co-author on external hardware). The soft-masked and unmasked rows differ only in the input assembly
 AUGUSTUS,v3.5.0,Posterior-sampling isoform baseline (Table S4),`augustus --species=arabidopsis --sample=100 --alternatives-from-sampling=true --noInFrameStop=true <locus.fa>`
 AGAT,v1.6.1,"Annotation cleaning, sorting, intron addition",`agat_convert_sp_gxf2gxf.pl`; `agat_sp_add_introns.pl`
 HISAT2 (modified extraction script),—,Intron-interval records added during dataset construction,`hisat2_extract_splice_sites_gff3.py <annotation.gff3>`

@@ -1,0 +1,110 @@
+{
+ "analysis": "identity (echo-the-prompt) transcript-level baseline",
+ "date": "2026-08-17",
+ "gffcompare": "v0.12.6",
+ "gffcompare_binary": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare",
+ "prediction_is": "the TAIR10 primary transcript of each evaluation locus, verbatim",
+ "evaluation_loci": 27413,
+ "echoed_transcripts": 27413,
+ "scoring_convention": "precision = queries with class code '=' / all queries; recall = distinct reference transcripts matched / released reference total (35,386 TAIR10; 169,499 AtRTD3); F1 = harmonic mean. Identical to 02_gffcompare_analysis.py and to the Methods definition.",
+ "identity_baseline": {
+  "TAIR10": {
+   "total_reference_released": 35386,
+   "total_predicted": 27413,
+   "matching_queries_exact": 21313,
+   "duplicate_exact_matches": 32,
+   "distinct_ref_matched": 21281,
+   "recall_pct": 60.1,
+   "precision_pct": 77.7,
+   "f1_pct": 67.8,
+   "gffcompare_raw": {
+    "Base_Sn": 98.2,
+    "Base_Pr": 100.0,
+    "Exon_Sn": 92.8,
+    "Exon_Pr": 100.0,
+    "Intron_Sn": 94.1,
+    "Intron_Pr": 100.0,
+    "Intron chain_Sn": 73.3,
+    "Intron chain_Pr": 99.8,
+    "Transcript_Sn": 60.2,
+    "Transcript_Pr": 77.6,
+    "Locus_Sn": 77.8,
+    "Locus_Pr": 77.8
+   }
+  },
+  "AtRTD3": {
+   "total_reference_released": 169499,
+   "total_predicted": 27413,
+   "matching_queries_exact": 20466,
+   "duplicate_exact_matches": 32,
+   "distinct_ref_matched": 20434,
+   "recall_pct": 12.1,
+   "precision_pct": 74.7,
+   "f1_pct": 20.8,
+   "gffcompare_raw": {
+    "Base_Sn": 62.9,
+    "Base_Pr": 98.5,
+    "Exon_Sn": 54.5,
+    "Exon_Pr": 95.4,
+    "Intron_Sn": 63.7,
+    "Intron_Pr": 99.8,
+    "Intron chain_Sn": 14.6,
+    "Intron chain_Pr": 95.9,
+    "Transcript_Sn": 12.5,
+    "Transcript_Pr": 74.6,
+    "Locus_Sn": 52.2,
+    "Locus_Pr": 74.8
+   }
+  }
+ },
+ "completion_mode_published": {
+  "TAIR10": {
+   "predicted": 29922,
+   "matching_queries": 22260,
+   "duplicates": 341,
+   "distinct_ref_matched": 21919,
+   "recall_pct": 61.9,
+   "precision_pct": 74.4,
+   "f1_pct": 67.6
+  },
+  "AtRTD3": {
+   "predicted": 29922,
+   "matching_queries": 21694,
+   "duplicates": 442,
+   "distinct_ref_matched": 21252,
+   "recall_pct": 12.5,
+   "precision_pct": 72.5,
+   "f1_pct": 21.4
+  }
+ },
+ "identity_vs_completion": {
+  "TAIR10": {
+   "identity_recall_pct": 60.1,
+   "completion_recall_pct": 61.9,
+   "delta_recall_pp": 1.8,
+   "identity_precision_pct": 77.7,
+   "completion_precision_pct": 74.4,
+   "delta_precision_pp": -3.3,
+   "identity_f1_pct": 67.8,
+   "completion_f1_pct": 67.6,
+   "delta_f1_pp": -0.2
+  },
+  "AtRTD3": {
+   "identity_recall_pct": 12.1,
+   "completion_recall_pct": 12.5,
+   "delta_recall_pp": 0.4,
+   "identity_precision_pct": 74.7,
+   "completion_precision_pct": 72.5,
+   "delta_precision_pp": -2.2,
+   "identity_f1_pct": 20.8,
+   "completion_f1_pct": 21.4,
+   "delta_f1_pp": 0.6
+  }
+ },
+ "inputs": {
+  "prediction_source_for_locus_set": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3",
+  "primary_transcript_ids": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/primary_transcript_ids.txt",
+  "TAIR10": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/TAIR10.gtf",
+  "AtRTD3": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/atRTD3_TS_21Feb22_transfix.gtf"
+ }
+}

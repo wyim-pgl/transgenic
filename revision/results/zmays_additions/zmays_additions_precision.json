@@ -1,0 +1,210 @@
+{
+ "generated": "2026-08-17",
+ "question": "Does TransGenic's completion-mode additions precision hold up on a species that was excluded from training? Z. mays is that control: the 'Zm' prefix filter kept all but 174 legacy GRMZM gene models out of the database.",
+ "inputs": {
+  "prediction": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/Z_mays_transgenic400Mprompt.gff3",
+  "reference": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Zmays_493_RefGen_V4.gene_exons.exon.gff3",
+  "prediction_note": "no Z_mays_transgenic400Mprompt_beam1.gff3 exists; unlike A. thaliana (2 records/locus, deduplicated by script 13), the maize export writes 3 records per locus, so this script keeps the first gene record per GM itself",
+  "reference_note": "RefGen_V4 is the TAIR10 analogue; maize has no long-read AtRTD3 counterpart, so no second reference is scored",
+  "definitions": "revision/scripts/28_score_added_isoforms.py, unchanged"
+ },
+ "prediction_file_structure": {
+  "gene_records_total": 117522,
+  "distinct_GM_loci": 39174,
+  "gene_records_without_GM_tag": 6,
+  "records_per_locus_histogram": {
+   "3": 39174
+  },
+  "duplicate_records_discarded": 78348,
+  "duplicate_records_disagreeing_with_kept_record": 0
+ },
+ "reference_file_structure": {
+  "reference_genes": 39498,
+  "reference_transcripts": 131496,
+  "reference_transcripts_with_CDS": 131496,
+  "reference_genes_with_CDS": 39498
+ },
+ "prompt_identity_check": {
+  "loci_tested": 39174,
+  "retains_reference_FIRST_transcript_structure": 39102,
+  "retains_reference_FIRST_transcript_pct": 99.8,
+  "retains_reference_longest_flag_structure": 31720,
+  "retains_reference_longest_flag_pct": 81.0,
+  "retains_no_reference_structure": 72,
+  "reading": "the prompt is the first transcript in reference file order, not the Phytozome longest=1 transcript; this matches the rule 14_make_altonly_references.py used for TAIR10"
+ },
+ "athaliana_reproduction_check": {
+  "stratum": "A. thaliana, all evaluation loci",
+  "loci_scored": 27413,
+  "loci_with_a_reference_alternative": 4483,
+  "loci_whose_supplied_primary_has_no_reference_CDS": 0,
+  "loci_with_at_least_one_addition": 1076,
+  "added_transcripts": 1103,
+  "reference_alternative_transcripts": 5851,
+  "reference_distinct_alternative_CDS_structures": 5580,
+  "added_matching_TAIR10_alternative_exact_CDS": 200,
+  "added_matching_TAIR10_alternative_intron_chain": 343,
+  "precision_exact_CDS_pct": 18.1,
+  "wilson95_ci_pct": [
+   16.0,
+   20.5
+  ],
+  "precision_intron_chain_pct": 31.1,
+  "recall_of_reference_alternatives_pct": 3.58,
+  "alternative_structures_per_locus": 0.204,
+  "additions_at_loci_that_have_a_reference_alternative": 981,
+  "precision_restricted_to_those_loci_pct": 20.4,
+  "reproduces_script_28": true,
+  "expected_from_script_28": {
+   "added_transcripts": 1103,
+   "exact_CDS_hits": 200,
+   "precision_pct": 18.1
+  }
+ },
+ "coverage": {
+  "predicted_loci": 39174,
+  "predicted_loci_absent_from_RefGenV4": 0,
+  "predicted_loci_legacy_GRMZM": 172,
+  "legacy_GRMZM_gene_models_in_training": 174,
+  "note": "174 legacy GRMZM gene models (176 dataset rows) survived the Zm-prefix filter; 172 of them carry a prediction here and are excluded in the sensitivity stratum"
+ },
+ "strata": {
+  "ALL": {
+   "stratum": "all predicted loci",
+   "loci_scored": 39174,
+   "loci_with_a_reference_alternative": 13577,
+   "loci_whose_supplied_primary_has_no_reference_CDS": 0,
+   "loci_with_at_least_one_addition": 3182,
+   "added_transcripts": 3363,
+   "reference_alternative_transcripts": 68405,
+   "reference_distinct_alternative_CDS_structures": 53478,
+   "added_matching_RefGenV4_alternative_exact_CDS": 266,
+   "added_matching_RefGenV4_alternative_intron_chain": 483,
+   "precision_exact_CDS_pct": 7.9,
+   "wilson95_ci_pct": [
+    7.0,
+    8.9
+   ],
+   "precision_intron_chain_pct": 14.4,
+   "recall_of_reference_alternatives_pct": 0.5,
+   "alternative_structures_per_locus": 1.365,
+   "additions_at_loci_that_have_a_reference_alternative": 3219,
+   "precision_restricted_to_those_loci_pct": 8.3
+  },
+  "EXCLUDING_GRMZM": {
+   "stratum": "legacy GRMZM loci removed (leakage-free)",
+   "loci_scored": 39002,
+   "loci_with_a_reference_alternative": 13573,
+   "loci_whose_supplied_primary_has_no_reference_CDS": 0,
+   "loci_with_at_least_one_addition": 3182,
+   "added_transcripts": 3363,
+   "reference_alternative_transcripts": 68401,
+   "reference_distinct_alternative_CDS_structures": 53474,
+   "added_matching_RefGenV4_alternative_exact_CDS": 266,
+   "added_matching_RefGenV4_alternative_intron_chain": 483,
+   "precision_exact_CDS_pct": 7.9,
+   "wilson95_ci_pct": [
+    7.0,
+    8.9
+   ],
+   "precision_intron_chain_pct": 14.4,
+   "recall_of_reference_alternatives_pct": 0.5,
+   "alternative_structures_per_locus": 1.371,
+   "additions_at_loci_that_have_a_reference_alternative": 3219,
+   "precision_restricted_to_those_loci_pct": 8.3
+  },
+  "GRMZM_ONLY": {
+   "stratum": "legacy GRMZM loci only (these DID enter training)",
+   "loci_scored": 172,
+   "loci_with_a_reference_alternative": 4,
+   "loci_whose_supplied_primary_has_no_reference_CDS": 0,
+   "loci_with_at_least_one_addition": 0,
+   "added_transcripts": 0,
+   "reference_alternative_transcripts": 4,
+   "reference_distinct_alternative_CDS_structures": 4,
+   "added_matching_RefGenV4_alternative_exact_CDS": 0,
+   "added_matching_RefGenV4_alternative_intron_chain": 0,
+   "precision_exact_CDS_pct": null,
+   "wilson95_ci_pct": null,
+   "precision_intron_chain_pct": null,
+   "recall_of_reference_alternatives_pct": 0.0,
+   "alternative_structures_per_locus": 0.023,
+   "additions_at_loci_that_have_a_reference_alternative": 0,
+   "precision_restricted_to_those_loci_pct": null
+  }
+ },
+ "comparison_with_A_thaliana": {
+  "source": "revision/results/heldout_additions/split_composition_and_precision_20260811.json",
+  "A_thaliana_all_27413_loci": {
+   "added_transcripts": 1103,
+   "exact_CDS_hits": 200,
+   "precision_pct": 18.1,
+   "wilson95_ci_pct": [
+    16.0,
+    20.5
+   ],
+   "leakage": "78.4% of loci seen in training"
+  },
+  "A_thaliana_validation_arm": {
+   "added_transcripts": 47,
+   "exact_CDS_hits": 13,
+   "precision_pct": 27.7,
+   "wilson95_ci_pct": [
+    16.9,
+    41.8
+   ],
+   "note": "quoted, not recomputed"
+  },
+  "Z_mays_excluding_GRMZM": {
+   "added_transcripts": 3363,
+   "exact_CDS_hits": 266,
+   "precision_pct": 7.9,
+   "wilson95_ci_pct": [
+    7.0,
+    8.9
+   ],
+   "leakage": "none (species excluded from the training database)"
+  },
+  "test_Zmays_exGRMZM_vs_A_thaliana_all": {
+   "pct": [
+    7.9,
+    18.1
+   ],
+   "counts": [
+    [
+     266,
+     3363
+    ],
+    [
+     200,
+     1103
+    ]
+   ],
+   "z": -9.637,
+   "p_value": 5.56e-22
+  },
+  "test_Zmays_exGRMZM_vs_A_thaliana_validation": {
+   "pct": [
+    7.9,
+    27.7
+   ],
+   "counts": [
+    [
+     266,
+     3363
+    ],
+    [
+     13,
+     47
+    ]
+   ],
+   "z": -4.906,
+   "p_value": 9.3e-07
+  },
+  "alternative_structure_density": {
+   "A_thaliana_TAIR10_alt_structures_per_locus": 0.204,
+   "Z_mays_RefGenV4_alt_structures_per_locus": 1.371,
+   "why_it_matters": "recall denominators are not comparable across the two species; precision numerators are"
+  }
+ }
+}

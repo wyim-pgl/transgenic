@@ -146,7 +146,7 @@ check("de novo vs TAIR10 distinct ref matched", 11681, t["distinct_ref_matched"]
 p = RES / "prompted400Mbeam1_vs_TAIR10" / "splice_events_report.json"
 ev = jload(p)["per_event_type"]
 src = "prompted400Mbeam1_vs_TAIR10/splice_events_report.json"
-for etype, rec, prec in [("SE", 6.9, 52.5), ("A5SS", 6.8, 28.3), ("A3SS", 6.6, 43.9), ("IR", 12.2, 41.8)]:
+for etype, rec, prec in [("SE", 6.9, 52.5), ("A5SS", 7.1, 39.5), ("A3SS", 6.4, 30.9), ("IR", 12.2, 41.8)]:
     check(f"prompted {etype} recall %", rec, ev[etype]["recall"] * 100, src)
     check(f"prompted {etype} precision %", prec, ev[etype]["precision"] * 100, src)
 
@@ -155,7 +155,7 @@ ev = jload(p)["per_event_type"]
 src = "prompted400Mbeam1_vs_AtRTD3/splice_events_report.json"
 precs = [ev[e]["precision"] * 100 for e in ("SE", "A5SS", "A3SS", "IR")]
 recs = [ev[e]["recall"] * 100 for e in ("SE", "A5SS", "A3SS", "IR")]
-check("AtRTD3 event precision min %", 36.5, min(precs), src)
+check("AtRTD3 event precision min %", 38.6, min(precs), src)
 check("AtRTD3 event precision max %", 55.4, max(precs), src)
 check("AtRTD3 event recall min %", 0.5, min(recs), src)
 check("AtRTD3 event recall max %", 1.0, max(recs), src)

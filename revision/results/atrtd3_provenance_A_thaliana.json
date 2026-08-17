@@ -1,0 +1,21 @@
+{
+ "species": "A_thaliana",
+ "tool": "transgenic400Mprompt_beam1",
+ "provenance_source": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/atiso/atRTD3_07082020.bed",
+ "added_transcripts": 1103,
+ "added_matching_any_AtRTD3_transcript": 204,
+ "additions_with_an_IsoSeq_supporting_transcript": 189,
+ "additions_where_all_supporting_transcripts_are_IsoSeq": 179,
+ "pct_of_AtRTD3_supported_additions_with_IsoSeq": 92.6,
+ "pct_of_all_additions_with_IsoSeq_support": 17.1,
+ "matched_transcript_origin_counts": {
+  "Isoseq": 313,
+  "atRTD2": 28,
+  "Araport": 2
+ },
+ "non_IsoSeq_addition_origin_labels": {
+  "atRTD2": 13,
+  "Araport": 2
+ },
+ "unmapped_transcript_ids": []
+}

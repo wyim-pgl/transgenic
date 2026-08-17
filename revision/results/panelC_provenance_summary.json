@@ -1,0 +1,13 @@
+{
+ "loci": 45,
+ "loci_with_an_IsoSeq_transcript_sharing_the_chain": 39,
+ "loci_where_all_chain_sharing_transcripts_are_IsoSeq": 38,
+ "pct_loci_with_IsoSeq_chain_support": 86.7,
+ "junction_category_loci": 13,
+ "junction_category_loci_with_IsoSeq_chain_support": 10,
+ "sharing_origin_label_counts": {
+  "Isoseq": 39,
+  "atRTD2": 7
+ },
+ "unmapped_transcript_ids": []
+}

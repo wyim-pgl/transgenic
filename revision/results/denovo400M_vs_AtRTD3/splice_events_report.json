@@ -1,0 +1,43 @@
+{
+  "summary": {
+    "total_reference_events": 180166,
+    "total_predicted_events": 342,
+    "total_matched_events": 40,
+    "overall_recall": 0.0002220174727751074,
+    "overall_precision": 0.11695906432748537
+  },
+  "per_event_type": {
+    "SE": {
+      "reference_count": 16234,
+      "predicted_count": 18,
+      "matched_count": 2,
+      "recall": 0.00012319822594554638,
+      "precision": 0.1111111111111111,
+      "f1": 0.0002461235540241201
+    },
+    "A5SS": {
+      "reference_count": 35559,
+      "predicted_count": 92,
+      "matched_count": 9,
+      "recall": 0.0002531004808909137,
+      "precision": 0.09782608695652174,
+      "f1": 0.0005048946733611961
+    },
+    "A3SS": {
+      "reference_count": 57135,
+      "predicted_count": 151,
+      "matched_count": 13,
+      "recall": 0.00022753128555176336,
+      "precision": 0.08609271523178808,
+      "f1": 0.0004538630730021296
+    },
+    "IR": {
+      "reference_count": 71238,
+      "predicted_count": 81,
+      "matched_count": 16,
+      "recall": 0.0002245992307476347,
+      "precision": 0.19753086419753085,
+      "f1": 0.00044868828783353667
+    }
+  }
+}

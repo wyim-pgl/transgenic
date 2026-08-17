@@ -1,0 +1,5 @@
+Reference,Prediction set,Reference transcripts (n),Predicted transcripts (n),Exact matches (n),Duplicate matches (n),Distinct reference transcripts matched (n),Isoform recall (%),Isoform precision (%),Isoform F1 (%)
+TAIR10,Identity baseline (supplied primary returned unchanged),35386,27413,21313,32,21281,60.1,77.7,67.8
+TAIR10,"TransGenic 400M, reference-prompted (deduplicated)",35386,29922,22260,341,21919,61.9,74.4,67.6
+AtRTD3,Identity baseline (supplied primary returned unchanged),169499,27413,20466,32,20434,12.1,74.7,20.8
+AtRTD3,"TransGenic 400M, reference-prompted (deduplicated)",169499,29922,21694,442,21252,12.5,72.5,21.4

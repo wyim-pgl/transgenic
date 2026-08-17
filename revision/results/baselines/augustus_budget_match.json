@@ -1,0 +1,250 @@
+{
+ "analysis": "AUGUSTUS posterior-ranked additions at a matched candidate budget",
+ "date": "2026-08-17",
+ "definitions": "script 28 unchanged (addition = distinct CDS structure differing from the locus's first prediction; TAIR10 primary removed from the reference; exact CDS match), plus a ranking on the posterior in GFF column 6 of each mRNA row",
+ "structure_posterior_rule": "maximum posterior over the emissions sharing that CDS structure",
+ "tie_handling": "budget cuts break posterior ties by locus then coordinates; the posterior threshold sweep is tie-free and is the check on this",
+ "recall_denominator": "distinct TAIR10 alternative CDS structures across all scored loci, held constant across budgets",
+ "additions_with_posterior": 43433,
+ "budget_sweep": [
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 1092,
+   "added_structures": 1103,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 7,
+   "matched_TAIR10_alt_intron_chain": 27,
+   "matched_AtRTD3": 264,
+   "precision_vs_TAIR10_alt_pct": 0.6,
+   "precision_vs_AtRTD3_pct": 23.9,
+   "recall_of_TAIR10_alt_pct": 0.1,
+   "budget": 1103,
+   "posterior_at_cut": 0.26,
+   "candidates_tied_at_cut": 123,
+   "candidates_strictly_above_cut": 1029,
+   "tie_sensitivity": {
+    "precision_vs_TAIR10_alt_pct": [
+     0.6,
+     0.6
+    ],
+    "precision_vs_AtRTD3_pct": [
+     23.2,
+     25.0
+    ]
+   }
+  },
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 1941,
+   "added_structures": 2000,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 18,
+   "matched_TAIR10_alt_intron_chain": 52,
+   "matched_AtRTD3": 424,
+   "precision_vs_TAIR10_alt_pct": 0.9,
+   "precision_vs_AtRTD3_pct": 21.2,
+   "recall_of_TAIR10_alt_pct": 0.3,
+   "budget": 2000,
+   "posterior_at_cut": 0.2,
+   "candidates_tied_at_cut": 209,
+   "candidates_strictly_above_cut": 1896,
+   "tie_sensitivity": {
+    "precision_vs_TAIR10_alt_pct": [
+     0.8,
+     1.0
+    ],
+    "precision_vs_AtRTD3_pct": [
+     20.4,
+     22.1
+    ]
+   }
+  },
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 4440,
+   "added_structures": 5000,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 75,
+   "matched_TAIR10_alt_intron_chain": 170,
+   "matched_AtRTD3": 940,
+   "precision_vs_TAIR10_alt_pct": 1.5,
+   "precision_vs_AtRTD3_pct": 18.8,
+   "recall_of_TAIR10_alt_pct": 1.4,
+   "budget": 5000,
+   "posterior_at_cut": 0.11,
+   "candidates_tied_at_cut": 652,
+   "candidates_strictly_above_cut": 4997,
+   "tie_sensitivity": {
+    "precision_vs_TAIR10_alt_pct": [
+     1.5,
+     1.6
+    ],
+    "precision_vs_AtRTD3_pct": [
+     18.8,
+     18.9
+    ]
+   }
+  },
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 7440,
+   "added_structures": 10000,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 156,
+   "matched_TAIR10_alt_intron_chain": 343,
+   "matched_AtRTD3": 1630,
+   "precision_vs_TAIR10_alt_pct": 1.6,
+   "precision_vs_AtRTD3_pct": 16.3,
+   "recall_of_TAIR10_alt_pct": 2.8,
+   "budget": 10000,
+   "posterior_at_cut": 0.06,
+   "candidates_tied_at_cut": 1556,
+   "candidates_strictly_above_cut": 9917,
+   "tie_sensitivity": {
+    "precision_vs_TAIR10_alt_pct": [
+     1.5,
+     1.8
+    ],
+    "precision_vs_AtRTD3_pct": [
+     16.2,
+     17.0
+    ]
+   }
+  },
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 10790,
+   "added_structures": 20000,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 330,
+   "matched_TAIR10_alt_intron_chain": 681,
+   "matched_AtRTD3": 2845,
+   "precision_vs_TAIR10_alt_pct": 1.6,
+   "precision_vs_AtRTD3_pct": 14.2,
+   "recall_of_TAIR10_alt_pct": 5.9,
+   "budget": 20000,
+   "posterior_at_cut": 0.02,
+   "candidates_tied_at_cut": 5675,
+   "candidates_strictly_above_cut": 19227,
+   "tie_sensitivity": {
+    "precision_vs_TAIR10_alt_pct": [
+     1.6,
+     2.0
+    ],
+    "precision_vs_AtRTD3_pct": [
+     13.9,
+     16.6
+    ]
+   }
+  },
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 12681,
+   "added_structures": 43433,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 574,
+   "matched_TAIR10_alt_intron_chain": 1088,
+   "matched_AtRTD3": 4409,
+   "precision_vs_TAIR10_alt_pct": 1.3,
+   "precision_vs_AtRTD3_pct": 10.2,
+   "recall_of_TAIR10_alt_pct": 10.3,
+   "budget": 43433,
+   "posterior_at_cut": 0.01,
+   "candidates_tied_at_cut": null,
+   "candidates_strictly_above_cut": null,
+   "note": "as published (Table S4d)"
+  }
+ ],
+ "posterior_threshold_sweep": [
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 67,
+   "added_structures": 67,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 1,
+   "matched_TAIR10_alt_intron_chain": 1,
+   "matched_AtRTD3": 15,
+   "precision_vs_TAIR10_alt_pct": 1.5,
+   "precision_vs_AtRTD3_pct": 22.4,
+   "recall_of_TAIR10_alt_pct": 0.0,
+   "posterior_threshold": 0.5
+  },
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 269,
+   "added_structures": 269,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 1,
+   "matched_TAIR10_alt_intron_chain": 4,
+   "matched_AtRTD3": 74,
+   "precision_vs_TAIR10_alt_pct": 0.4,
+   "precision_vs_AtRTD3_pct": 27.5,
+   "recall_of_TAIR10_alt_pct": 0.0,
+   "posterior_threshold": 0.4
+  },
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 768,
+   "added_structures": 772,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 7,
+   "matched_TAIR10_alt_intron_chain": 21,
+   "matched_AtRTD3": 200,
+   "precision_vs_TAIR10_alt_pct": 0.9,
+   "precision_vs_AtRTD3_pct": 25.9,
+   "recall_of_TAIR10_alt_pct": 0.1,
+   "posterior_threshold": 0.3
+  },
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 2042,
+   "added_structures": 2105,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 20,
+   "matched_TAIR10_alt_intron_chain": 55,
+   "matched_AtRTD3": 441,
+   "precision_vs_TAIR10_alt_pct": 1.0,
+   "precision_vs_AtRTD3_pct": 21.0,
+   "recall_of_TAIR10_alt_pct": 0.4,
+   "posterior_threshold": 0.2
+  },
+  {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 5433,
+   "added_structures": 6461,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 96,
+   "matched_TAIR10_alt_intron_chain": 216,
+   "matched_AtRTD3": 1142,
+   "precision_vs_TAIR10_alt_pct": 1.5,
+   "precision_vs_AtRTD3_pct": 17.7,
+   "recall_of_TAIR10_alt_pct": 1.7,
+   "posterior_threshold": 0.1
+  }
+ ],
+ "transgenic_completion_additions_only": {
+  "loci_scored": 27413,
+  "added_structures": 1103,
+  "matched_TAIR10_alt": 200,
+  "precision_vs_TAIR10_alt_pct": 18.1,
+  "matched_AtRTD3": 204,
+  "precision_vs_AtRTD3_pct": 18.5,
+  "TAIR10_alt_structures": 5580,
+  "recall_of_TAIR10_alt_pct": 3.6
+ },
+ "full_set_reproduces_TableS4d": true,
+ "full_set_published_values": {
+  "matched_TAIR10_alt_exact_CDS": 574,
+  "matched_TAIR10_alt_intron_chain": 1088,
+  "matched_AtRTD3": 4409,
+  "added_structures": 43433,
+  "loci_scored": 25597,
+  "reference_alternative_structures": 5554
+ },
+ "inputs": {
+  "augustus": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/A_thaliana_augustusSampling.gff3",
+  "TAIR10": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/TAIR10.gtf",
+  "AtRTD3": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/atRTD3_TS_21Feb22_transfix.gtf",
+  "primary_transcript_ids": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/primary_transcript_ids.txt"
+ }
+}

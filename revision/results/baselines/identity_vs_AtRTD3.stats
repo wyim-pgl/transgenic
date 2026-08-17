@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/atRTD3_TS_21Feb22_transfix.gtf -o /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/baselines/identity_vs_AtRTD3 /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/baselines/identity_baseline_primaries.gtf
+#
+
+#= Summary for dataset: /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/baselines/identity_baseline_primaries.gtf 
+#     Query mRNAs :   27413 in   27237 loci  (21313 multi-exon transcripts)
+#            (147 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :  162974 in   38269 loci  (140061 multi-exon)
+# Super-loci w/ reference transcripts:    26292
+#-----------------| Sensitivity | Precision  |
+        Base level:    62.9     |    98.5    |
+        Exon level:    54.5     |    95.4    |
+      Intron level:    63.7     |    99.8    |
+Intron chain level:    14.6     |    95.9    |
+  Transcript level:    12.5     |    74.6    |
+       Locus level:    52.2     |    74.8    |
+
+     Matching intron chains:   20437
+       Matching transcripts:   20437
+              Matching loci:   19991
+
+          Missed exons:   36500/379159	(  9.6%)
+           Novel exons:     394/144592	(  0.3%)
+        Missed introns:   20900/183733	( 11.4%)
+         Novel introns:      83/117200	(  0.1%)
+           Missed loci:   11908/38269	( 31.1%)
+            Novel loci:     345/27237	(  1.3%)
+
+ Total union super-loci across all input datasets: 26637 
+27413 out of 27413 consensus transcripts written in /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/baselines/identity_vs_AtRTD3.annotated.gtf (0 discarded as redundant)

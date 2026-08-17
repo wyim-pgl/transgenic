@@ -341,7 +341,7 @@ def build(out: Out) -> None:
         "them. All three prediction sets were scored "
         "with identical commands. AUGUSTUS parameters for *A. thaliana* are estimated from "
         "TAIR annotations, so agreement with the TAIR10-derived reference is partly circular; "
-        "AtRTD3 provides independent long-read evidence.",
+        "AtRTD3 provides evidence external to the TAIR10 annotation, built primarily from Iso-Seq long reads (78.0% of transcripts) with AtRTD2 short-read (14.7%) and Araport11 (7.4%) fractions, the last sharing the TAIR lineage.",
         header,
         rows,
     )
@@ -447,7 +447,10 @@ def build(out: Out) -> None:
         "removed) and against AtRTD3. The two rows score different locus sets — 27,413 versus the "
         "25,597 loci at which AUGUSTUS predictions paired with a reference locus — so the recall "
         "denominators (distinct alternative CDS structures at the scored loci) differ, 5,580 "
-        "versus 5,554; the 10.3% versus 3.6% recall contrast in the text carries that caveat.",
+        "versus 5,554; the 10.3% versus 3.6% recall contrast in the text carries that caveat. "
+        "At a matched candidate budget (AUGUSTUS truncated to its 1,103 highest-posterior "
+        "additions) AUGUSTUS reaches 23.9% precision against AtRTD3 while remaining at 0.6% "
+        "against TAIR10 alternatives (`revision/results/baselines/augustus_budget_sweep.csv`).",
         ["Prediction set", "Loci scored", "Added structures",
          "Matched TAIR10 alt (n)", "Precision vs TAIR10 alt (%)",
          "Matched AtRTD3 (n)", "Precision vs AtRTD3 (%)",
@@ -637,12 +640,10 @@ def build(out: Out) -> None:
          "Whole-genome ab initio benchmark",
          "`Helixer.py --lineage land_plant --subsequence-length 64152 --fasta-path <genome.fa> --gff-output-path <out.gff3>`"],
         ["Tiberius", "v1.1.7", "Whole-genome ab initio benchmark, with and without soft-masked input",
-         "`tiberius --genome <genome.fa> --out <out.gtf>`; the runs were performed by a "
-         "co-author on external hardware and the full invocation — model/clade selection "
-         "and soft-masking control flags — was not preserved in this repository. The "
-         "soft-masked and unmasked rows used the corresponding assemblies (verified from "
-         "the distinct outputs); the exact flags are being reconstructed with the "
-         "co-author"],
+         "`tiberius --genome <genome.fa> --out <out.gtf>` — run with Tiberius's default "
+         "plant model and no additional flags (author confirmation; the runs were "
+         "performed by a co-author on external hardware). The soft-masked and unmasked "
+         "rows differ only in the input assembly"],
         ["AUGUSTUS", "v3.5.0", "Posterior-sampling isoform baseline (Table S4)",
          "`augustus --species=arabidopsis --sample=100 --alternatives-from-sampling=true --noInFrameStop=true <locus.fa>`"],
         ["AGAT", "v1.6.1", "Annotation cleaning, sorting, intron addition",
