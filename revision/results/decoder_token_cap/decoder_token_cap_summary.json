@@ -1,0 +1,1186 @@
+{
+  "generated": "2026-08-17",
+  "script": "52_decoder_token_cap_audit.py",
+  "decoder_max_positions": 2048,
+  "static_size": 6144,
+  "max_region_len": 49152,
+  "vocab_limits": {
+    "cds": 150,
+    "utr5": 50,
+    "utr3": 50
+  },
+  "tokenizer_source": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/src/transgenic/model/tokenization_transgenic.py",
+  "percentile_convention": "nearest-rank, identical to 08_feature_tss_stats.py",
+  "species": [
+    {
+      "species": "A_thaliana",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Athaliana_167_TAIR10.gene.clean.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 27206,
+      "genes_organelle_excluded": 210,
+      "genes_skipped_region_over_maxlen": 0,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 27206,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 0,
+      "v2_max_abs_length_diff": 0,
+      "token_length": {
+        "n": 27206,
+        "mean": 102.9,
+        "p50": 81,
+        "p90": 211,
+        "p95": 262,
+        "p99": 384,
+        "p999": 652,
+        "max": 1195
+      },
+      "token_length_excluded_genes": {
+        "n": 0,
+        "mean": 0.0,
+        "p50": 0,
+        "p90": 0,
+        "p95": 0,
+        "p99": 0,
+        "p999": 0,
+        "max": 0
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 27206
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_A_thaliana.tsv"
+    },
+    {
+      "species": "B_distachyon",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Bdistachyon_314_v3.1.gene_exons.clean.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 34310,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 0,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 34310,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 43,
+      "v2_max_abs_length_diff": 10,
+      "token_length": {
+        "n": 34310,
+        "mean": 103.9,
+        "p50": 68,
+        "p90": 219,
+        "p95": 289,
+        "p99": 472,
+        "p999": 846,
+        "max": 1731
+      },
+      "token_length_excluded_genes": {
+        "n": 0,
+        "mean": 0.0,
+        "p50": 0,
+        "p90": 0,
+        "p95": 0,
+        "p99": 0,
+        "p999": 0,
+        "max": 0
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 34310
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_B_distachyon.tsv"
+    },
+    {
+      "species": "B_rapa",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/BrapaO_302V_711_v1.1.gene.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 38746,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 3,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 38743,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 21,
+      "v2_max_abs_length_diff": 5,
+      "token_length": {
+        "n": 38743,
+        "mean": 115.9,
+        "p50": 81,
+        "p90": 224,
+        "p95": 301,
+        "p99": 552,
+        "p999": 1137,
+        "max": 2140
+      },
+      "token_length_excluded_genes": {
+        "n": 3,
+        "mean": 157.0,
+        "p50": 91,
+        "p90": 304,
+        "p95": 304,
+        "p99": 304,
+        "p999": 304,
+        "max": 304
+      },
+      "genes_over_token_cap": 2,
+      "pct_over_token_cap": 0.005,
+      "pct_over_token_cap_of_nuclear": 0.005,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 2,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 38741
+      },
+      "binding_constraint": "token_cap",
+      "over_cap_examples": [
+        {
+          "gene": "BrO_302V.07G153100.v1.1",
+          "n_tokens": 2140,
+          "n_cds": 65,
+          "n_utr5": 21,
+          "n_utr3": 14,
+          "n_transcripts": 18
+        },
+        {
+          "gene": "BrO_302V.09G554200.v1.1",
+          "n_tokens": 2134,
+          "n_cds": 65,
+          "n_utr5": 21,
+          "n_utr3": 16,
+          "n_transcripts": 17
+        }
+      ],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_B_rapa.tsv"
+    },
+    {
+      "species": "G_max",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 48387,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 66,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 48321,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 85,
+      "v2_max_abs_length_diff": 6,
+      "token_length": {
+        "n": 48321,
+        "mean": 126.4,
+        "p50": 93,
+        "p90": 259,
+        "p95": 343,
+        "p99": 572,
+        "p999": 921,
+        "max": 1926
+      },
+      "token_length_excluded_genes": {
+        "n": 66,
+        "mean": 595.5,
+        "p50": 494,
+        "p90": 938,
+        "p95": 1248,
+        "p99": 2433,
+        "p999": 2433,
+        "max": 2433
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 48321
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_G_max.tsv"
+    },
+    {
+      "species": "L_sativa",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Lsativa_467_v5.gene_exons.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 38910,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 11,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 38899,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 0,
+      "v2_max_abs_length_diff": 0,
+      "token_length": {
+        "n": 38899,
+        "mean": 102.8,
+        "p50": 81,
+        "p90": 216,
+        "p95": 271,
+        "p99": 409,
+        "p999": 692,
+        "max": 1418
+      },
+      "token_length_excluded_genes": {
+        "n": 11,
+        "mean": 495.0,
+        "p50": 380,
+        "p90": 889,
+        "p95": 1545,
+        "p99": 1545,
+        "p999": 1545,
+        "max": 1545
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 38899
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_L_sativa.tsv"
+    },
+    {
+      "species": "O_sativa",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Osativa_323_v7.0.gene_exons.exon.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 42189,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 1,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 42188,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 0,
+      "v2_max_abs_length_diff": 0,
+      "token_length": {
+        "n": 42188,
+        "mean": 83.8,
+        "p50": 55,
+        "p90": 183,
+        "p95": 238,
+        "p99": 362,
+        "p999": 538,
+        "max": 1268
+      },
+      "token_length_excluded_genes": {
+        "n": 1,
+        "mean": 427.0,
+        "p50": 427,
+        "p90": 427,
+        "p95": 427,
+        "p99": 427,
+        "p999": 427,
+        "max": 427
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 42188
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_O_sativa.tsv"
+    },
+    {
+      "species": "P_patens",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Ppatens_318_v3.3.gene_exons.clean.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 32926,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 0,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 32926,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 161,
+      "v2_max_abs_length_diff": 11,
+      "token_length": {
+        "n": 32926,
+        "mean": 143.9,
+        "p50": 101,
+        "p90": 314,
+        "p95": 401,
+        "p99": 626,
+        "p999": 997,
+        "max": 1831
+      },
+      "token_length_excluded_genes": {
+        "n": 0,
+        "mean": 0.0,
+        "p50": 0,
+        "p90": 0,
+        "p95": 0,
+        "p99": 0,
+        "p999": 0,
+        "max": 0
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 32926
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_P_patens.tsv"
+    },
+    {
+      "species": "P_trichocarpa",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 34699,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 1,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 34698,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 28,
+      "v2_max_abs_length_diff": 6,
+      "token_length": {
+        "n": 34698,
+        "mean": 117.3,
+        "p50": 83,
+        "p90": 236,
+        "p95": 313,
+        "p99": 513,
+        "p999": 836,
+        "max": 1826
+      },
+      "token_length_excluded_genes": {
+        "n": 1,
+        "mean": 2996.0,
+        "p50": 2996,
+        "p90": 2996,
+        "p95": 2996,
+        "p99": 2996,
+        "p999": 2996,
+        "max": 2996
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 34698
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_P_trichocarpa.tsv"
+    },
+    {
+      "species": "S_bicolor",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Sbicolor_730_v5.1.gene_exons.clean.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 32160,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 18,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 32142,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 16,
+      "v2_max_abs_length_diff": 6,
+      "token_length": {
+        "n": 32142,
+        "mean": 104.3,
+        "p50": 68,
+        "p90": 211,
+        "p95": 276,
+        "p99": 451,
+        "p999": 780,
+        "max": 2036
+      },
+      "token_length_excluded_genes": {
+        "n": 18,
+        "mean": 738.7,
+        "p50": 576,
+        "p90": 2121,
+        "p95": 2599,
+        "p99": 2599,
+        "p999": 2599,
+        "max": 2599
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 32142
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_S_bicolor.tsv"
+    },
+    {
+      "species": "S_italica",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Sitalica_312_v2.2.gene_exons.clean.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 34584,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 0,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 34584,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 4,
+      "v2_max_abs_length_diff": 10,
+      "token_length": {
+        "n": 34584,
+        "mean": 92.7,
+        "p50": 68,
+        "p90": 191,
+        "p95": 244,
+        "p99": 375,
+        "p999": 646,
+        "max": 1617
+      },
+      "token_length_excluded_genes": {
+        "n": 0,
+        "mean": 0.0,
+        "p50": 0,
+        "p90": 0,
+        "p95": 0,
+        "p99": 0,
+        "p999": 0,
+        "max": 0
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 34584
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_S_italica.tsv"
+    },
+    {
+      "species": "S_lycopersicum",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Slycopersicum_796_ITAG5.0.gene.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 36648,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 85,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 36563,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 3,
+      "v2_max_abs_length_diff": 3,
+      "token_length": {
+        "n": 36563,
+        "mean": 91.0,
+        "p50": 66,
+        "p90": 191,
+        "p95": 261,
+        "p99": 466,
+        "p999": 818,
+        "max": 1601
+      },
+      "token_length_excluded_genes": {
+        "n": 85,
+        "mean": 449.9,
+        "p50": 372,
+        "p90": 928,
+        "p95": 1034,
+        "p99": 2964,
+        "p999": 2964,
+        "max": 2964
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 1,
+        "over_50_utr5": 0,
+        "over_50_utr3": 1,
+        "over_any": 2,
+        "pct_over_any": 0.005
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 36563
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_S_lycopersicum.tsv"
+    },
+    {
+      "species": "V_vinifera",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Vvinifera_PN40024_5.1_on_T2T_ref.exon.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 47971,
+      "genes_organelle_excluded": 0,
+      "genes_skipped_region_over_maxlen": 325,
+      "genes_skipped_lncRNA": 7836,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 39810,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 0,
+      "v2_max_abs_length_diff": 0,
+      "token_length": {
+        "n": 39810,
+        "mean": 78.3,
+        "p50": 55,
+        "p90": 171,
+        "p95": 219,
+        "p99": 343,
+        "p999": 553,
+        "max": 1121
+      },
+      "token_length_excluded_genes": {
+        "n": 1956,
+        "mean": 118.8,
+        "p50": 55,
+        "p90": 317,
+        "p95": 420,
+        "p99": 729,
+        "p999": 1270,
+        "max": 1554
+      },
+      "genes_over_token_cap": 0,
+      "pct_over_token_cap": 0.0,
+      "pct_over_token_cap_of_nuclear": 0.0,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 0,
+        "over_50_utr3": 0,
+        "over_any": 0,
+        "pct_over_any": 0.0
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 0,
+        "over_vocab_limit_only": 0,
+        "over_both": 0,
+        "over_neither": 39810
+      },
+      "binding_constraint": "tie",
+      "over_cap_examples": [],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_V_vinifera.tsv"
+    },
+    {
+      "species": "Z_mays",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Zmays_493_RefGen_V4.gene_exons.exon.gff3",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 39324,
+      "genes_organelle_excluded": 174,
+      "genes_skipped_region_over_maxlen": 67,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 0,
+      "genes_tokenized": 39257,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 1428,
+      "v2_max_abs_length_diff": 351,
+      "token_length": {
+        "n": 39257,
+        "mean": 213.1,
+        "p50": 81,
+        "p90": 499,
+        "p95": 814,
+        "p99": 2026,
+        "p999": 4716,
+        "max": 14609
+      },
+      "token_length_excluded_genes": {
+        "n": 67,
+        "mean": 1818.2,
+        "p50": 1350,
+        "p90": 4330,
+        "p95": 5361,
+        "p99": 6930,
+        "p999": 6930,
+        "max": 6930
+      },
+      "genes_over_token_cap": 383,
+      "pct_over_token_cap": 0.976,
+      "pct_over_token_cap_of_nuclear": 0.974,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 280,
+        "over_50_utr3": 222,
+        "over_any": 360,
+        "pct_over_any": 0.915
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 92,
+        "over_vocab_limit_only": 54,
+        "over_both": 291,
+        "over_neither": 38820
+      },
+      "binding_constraint": "token_cap",
+      "over_cap_examples": [
+        {
+          "gene": "Zm00001d027259.RefGen_V4",
+          "n_tokens": 4072,
+          "n_cds": 68,
+          "n_utr5": 75,
+          "n_utr3": 70,
+          "n_transcripts": 42
+        },
+        {
+          "gene": "Zm00001d027278.RefGen_V4",
+          "n_tokens": 6270,
+          "n_cds": 106,
+          "n_utr5": 92,
+          "n_utr3": 51,
+          "n_transcripts": 68
+        },
+        {
+          "gene": "Zm00001d027333.RefGen_V4",
+          "n_tokens": 3425,
+          "n_cds": 69,
+          "n_utr5": 78,
+          "n_utr3": 41,
+          "n_transcripts": 36
+        },
+        {
+          "gene": "Zm00001d027412.RefGen_V4",
+          "n_tokens": 3086,
+          "n_cds": 36,
+          "n_utr5": 78,
+          "n_utr3": 55,
+          "n_transcripts": 44
+        },
+        {
+          "gene": "Zm00001d027487.RefGen_V4",
+          "n_tokens": 2313,
+          "n_cds": 46,
+          "n_utr5": 40,
+          "n_utr3": 57,
+          "n_transcripts": 23
+        },
+        {
+          "gene": "Zm00001d027752.RefGen_V4",
+          "n_tokens": 2385,
+          "n_cds": 42,
+          "n_utr5": 59,
+          "n_utr3": 52,
+          "n_transcripts": 32
+        },
+        {
+          "gene": "Zm00001d027788.RefGen_V4",
+          "n_tokens": 2588,
+          "n_cds": 25,
+          "n_utr5": 48,
+          "n_utr3": 91,
+          "n_transcripts": 46
+        },
+        {
+          "gene": "Zm00001d028262.RefGen_V4",
+          "n_tokens": 3210,
+          "n_cds": 58,
+          "n_utr5": 59,
+          "n_utr3": 57,
+          "n_transcripts": 60
+        },
+        {
+          "gene": "Zm00001d028330.RefGen_V4",
+          "n_tokens": 9947,
+          "n_cds": 60,
+          "n_utr5": 144,
+          "n_utr3": 298,
+          "n_transcripts": 242
+        },
+        {
+          "gene": "Zm00001d028332.RefGen_V4",
+          "n_tokens": 2062,
+          "n_cds": 36,
+          "n_utr5": 44,
+          "n_utr3": 47,
+          "n_transcripts": 28
+        },
+        {
+          "gene": "Zm00001d028511.RefGen_V4",
+          "n_tokens": 2442,
+          "n_cds": 47,
+          "n_utr5": 27,
+          "n_utr3": 62,
+          "n_transcripts": 33
+        },
+        {
+          "gene": "Zm00001d028699.RefGen_V4",
+          "n_tokens": 2847,
+          "n_cds": 53,
+          "n_utr5": 66,
+          "n_utr3": 52,
+          "n_transcripts": 38
+        },
+        {
+          "gene": "Zm00001d028818.RefGen_V4",
+          "n_tokens": 3077,
+          "n_cds": 57,
+          "n_utr5": 40,
+          "n_utr3": 50,
+          "n_transcripts": 43
+        },
+        {
+          "gene": "Zm00001d029004.RefGen_V4",
+          "n_tokens": 5326,
+          "n_cds": 80,
+          "n_utr5": 104,
+          "n_utr3": 52,
+          "n_transcripts": 69
+        },
+        {
+          "gene": "Zm00001d029120.RefGen_V4",
+          "n_tokens": 2838,
+          "n_cds": 60,
+          "n_utr5": 44,
+          "n_utr3": 51,
+          "n_transcripts": 32
+        },
+        {
+          "gene": "Zm00001d029646.RefGen_V4",
+          "n_tokens": 4223,
+          "n_cds": 30,
+          "n_utr5": 59,
+          "n_utr3": 162,
+          "n_transcripts": 133
+        },
+        {
+          "gene": "Zm00001d029705.RefGen_V4",
+          "n_tokens": 3463,
+          "n_cds": 43,
+          "n_utr5": 95,
+          "n_utr3": 87,
+          "n_transcripts": 64
+        },
+        {
+          "gene": "Zm00001d029889.RefGen_V4",
+          "n_tokens": 2129,
+          "n_cds": 51,
+          "n_utr5": 37,
+          "n_utr3": 42,
+          "n_transcripts": 31
+        },
+        {
+          "gene": "Zm00001d030026.RefGen_V4",
+          "n_tokens": 2556,
+          "n_cds": 55,
+          "n_utr5": 48,
+          "n_utr3": 34,
+          "n_transcripts": 35
+        },
+        {
+          "gene": "Zm00001d030106.RefGen_V4",
+          "n_tokens": 4576,
+          "n_cds": 28,
+          "n_utr5": 86,
+          "n_utr3": 167,
+          "n_transcripts": 107
+        },
+        {
+          "gene": "Zm00001d030164.RefGen_V4",
+          "n_tokens": 4515,
+          "n_cds": 79,
+          "n_utr5": 75,
+          "n_utr3": 58,
+          "n_transcripts": 66
+        },
+        {
+          "gene": "Zm00001d030518.RefGen_V4",
+          "n_tokens": 2421,
+          "n_cds": 38,
+          "n_utr5": 78,
+          "n_utr3": 35,
+          "n_transcripts": 43
+        },
+        {
+          "gene": "Zm00001d030666.RefGen_V4",
+          "n_tokens": 3540,
+          "n_cds": 59,
+          "n_utr5": 71,
+          "n_utr3": 95,
+          "n_transcripts": 73
+        },
+        {
+          "gene": "Zm00001d031232.RefGen_V4",
+          "n_tokens": 4046,
+          "n_cds": 55,
+          "n_utr5": 112,
+          "n_utr3": 28,
+          "n_transcripts": 58
+        },
+        {
+          "gene": "Zm00001d031632.RefGen_V4",
+          "n_tokens": 4201,
+          "n_cds": 41,
+          "n_utr5": 54,
+          "n_utr3": 135,
+          "n_transcripts": 87
+        }
+      ],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_Z_mays.tsv"
+    },
+    {
+      "species": "AtRTD3",
+      "annotation_file": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/AtRTD3.gtf",
+      "decoder_max_positions": 2048,
+      "genes_nuclear": 40571,
+      "genes_organelle_excluded": 358,
+      "genes_skipped_region_over_maxlen": 1,
+      "genes_skipped_lncRNA": 0,
+      "genes_skipped_no_cds_or_utr": 3488,
+      "genes_tokenized": 37082,
+      "tokenizer_vocab_version_reported": "v1",
+      "genes_where_v2_length_differs": 2087,
+      "v2_max_abs_length_diff": 119,
+      "token_length": {
+        "n": 37082,
+        "mean": 237.8,
+        "p50": 98,
+        "p90": 642,
+        "p95": 900,
+        "p99": 1485,
+        "p999": 2404,
+        "max": 4744
+      },
+      "token_length_excluded_genes": {
+        "n": 0,
+        "mean": 0.0,
+        "p50": 0,
+        "p90": 0,
+        "p95": 0,
+        "p99": 0,
+        "p999": 0,
+        "max": 0
+      },
+      "genes_over_token_cap": 99,
+      "pct_over_token_cap": 0.267,
+      "pct_over_token_cap_of_nuclear": 0.244,
+      "vocab_limit_all_nuclear_genes": {
+        "over_150_cds": 0,
+        "over_50_utr5": 3,
+        "over_50_utr3": 182,
+        "over_any": 183,
+        "pct_over_any": 0.451
+      },
+      "constraint_contingency": {
+        "over_token_cap_only": 3,
+        "over_vocab_limit_only": 87,
+        "over_both": 96,
+        "over_neither": 36896
+      },
+      "binding_constraint": "vocabulary",
+      "over_cap_examples": [
+        {
+          "gene": "AT1G01650-AT1G04027",
+          "n_tokens": 3529,
+          "n_cds": 49,
+          "n_utr5": 30,
+          "n_utr3": 96,
+          "n_transcripts": 89
+        },
+        {
+          "gene": "AT1G01710",
+          "n_tokens": 2093,
+          "n_cds": 37,
+          "n_utr5": 11,
+          "n_utr3": 63,
+          "n_transcripts": 40
+        },
+        {
+          "gene": "AT1G02120",
+          "n_tokens": 2404,
+          "n_cds": 47,
+          "n_utr5": 14,
+          "n_utr3": 64,
+          "n_transcripts": 46
+        },
+        {
+          "gene": "AT1G02145",
+          "n_tokens": 2287,
+          "n_cds": 38,
+          "n_utr5": 29,
+          "n_utr3": 60,
+          "n_transcripts": 36
+        },
+        {
+          "gene": "AT1G02850",
+          "n_tokens": 2180,
+          "n_cds": 41,
+          "n_utr5": 9,
+          "n_utr3": 66,
+          "n_transcripts": 52
+        },
+        {
+          "gene": "AT1G03090",
+          "n_tokens": 2284,
+          "n_cds": 27,
+          "n_utr5": 15,
+          "n_utr3": 70,
+          "n_transcripts": 56
+        },
+        {
+          "gene": "AT1G07110",
+          "n_tokens": 2293,
+          "n_cds": 37,
+          "n_utr5": 19,
+          "n_utr3": 57,
+          "n_transcripts": 40
+        },
+        {
+          "gene": "AT1G09140",
+          "n_tokens": 2060,
+          "n_cds": 31,
+          "n_utr5": 23,
+          "n_utr3": 56,
+          "n_transcripts": 51
+        },
+        {
+          "gene": "AT1G10070",
+          "n_tokens": 2336,
+          "n_cds": 32,
+          "n_utr5": 23,
+          "n_utr3": 75,
+          "n_transcripts": 67
+        },
+        {
+          "gene": "AT1G10290",
+          "n_tokens": 2405,
+          "n_cds": 49,
+          "n_utr5": 8,
+          "n_utr3": 68,
+          "n_transcripts": 37
+        },
+        {
+          "gene": "AT1G15740",
+          "n_tokens": 2532,
+          "n_cds": 42,
+          "n_utr5": 14,
+          "n_utr3": 68,
+          "n_transcripts": 58
+        },
+        {
+          "gene": "AT1G18070",
+          "n_tokens": 3367,
+          "n_cds": 57,
+          "n_utr5": 7,
+          "n_utr3": 87,
+          "n_transcripts": 72
+        },
+        {
+          "gene": "AT1G23310",
+          "n_tokens": 4388,
+          "n_cds": 68,
+          "n_utr5": 33,
+          "n_utr3": 102,
+          "n_transcripts": 120
+        },
+        {
+          "gene": "AT1G42970",
+          "n_tokens": 2396,
+          "n_cds": 45,
+          "n_utr5": 17,
+          "n_utr3": 74,
+          "n_transcripts": 69
+        },
+        {
+          "gene": "AT1G48090",
+          "n_tokens": 2247,
+          "n_cds": 68,
+          "n_utr5": 5,
+          "n_utr3": 59,
+          "n_transcripts": 7
+        },
+        {
+          "gene": "AT1G48430",
+          "n_tokens": 2386,
+          "n_cds": 39,
+          "n_utr5": 19,
+          "n_utr3": 62,
+          "n_transcripts": 44
+        },
+        {
+          "gene": "AT1G48920",
+          "n_tokens": 2267,
+          "n_cds": 54,
+          "n_utr5": 7,
+          "n_utr3": 60,
+          "n_transcripts": 47
+        },
+        {
+          "gene": "AT1G51270",
+          "n_tokens": 2199,
+          "n_cds": 28,
+          "n_utr5": 28,
+          "n_utr3": 65,
+          "n_transcripts": 54
+        },
+        {
+          "gene": "AT1G54370",
+          "n_tokens": 2203,
+          "n_cds": 37,
+          "n_utr5": 19,
+          "n_utr3": 60,
+          "n_transcripts": 37
+        },
+        {
+          "gene": "AT1G55810",
+          "n_tokens": 3834,
+          "n_cds": 43,
+          "n_utr5": 55,
+          "n_utr3": 75,
+          "n_transcripts": 109
+        },
+        {
+          "gene": "AT1G60260",
+          "n_tokens": 3790,
+          "n_cds": 37,
+          "n_utr5": 31,
+          "n_utr3": 123,
+          "n_transcripts": 134
+        },
+        {
+          "gene": "AT1G60900",
+          "n_tokens": 2055,
+          "n_cds": 34,
+          "n_utr5": 9,
+          "n_utr3": 61,
+          "n_transcripts": 49
+        },
+        {
+          "gene": "AT1G63940",
+          "n_tokens": 2657,
+          "n_cds": 47,
+          "n_utr5": 18,
+          "n_utr3": 77,
+          "n_transcripts": 51
+        },
+        {
+          "gene": "AT1G65930",
+          "n_tokens": 2295,
+          "n_cds": 49,
+          "n_utr5": 7,
+          "n_utr3": 71,
+          "n_transcripts": 45
+        },
+        {
+          "gene": "AT1G67140",
+          "n_tokens": 2159,
+          "n_cds": 57,
+          "n_utr5": 6,
+          "n_utr3": 57,
+          "n_transcripts": 13
+        }
+      ],
+      "per_gene_tsv": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/per_gene_token_lengths_AtRTD3.tsv"
+    }
+  ],
+  "window_validation": {
+    "status": "ok",
+    "database": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/reference_annotations/Zmays_493_APGv4.fa.transgenic.db",
+    "genes_in_database": 39430,
+    "genes_checked": 39430,
+    "windows_matched": 39430,
+    "pct_matched": 100.0,
+    "example_mismatches": []
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "arm_G_pairing": {
+    "tair10_genes": 27416,
+    "no_overlap": 1993,
+    "not_containing": 1213,
+    "paired": 24210,
+    "ambiguous_resolved_by_overlap": 34
+  },
+  "arm_G": {
+    "helixer_loci": 27039,
+    "paired_to_tair10": 23961,
+    "written": 23961,
+    "no_tair10_partner": 3078,
+    "partner_has_no_utr": 4030,
+    "loci_by_strand": {
+      "+": 11972,
+      "-": 11989
+    },
+    "loci_with_utr_by_strand": {
+      "+": 10009,
+      "-": 9922
+    }
+  },
+  "arm_G_path": "/data/gpfs/assoc/pgl/data/Transgenic/polishing_benchmark/inputs/helixertairutr_fixed_Athaliana.gff3",
+  "arm_H_pairing": {
+    "tair10_genes": 27416,
+    "no_overlap": 2886,
+    "not_containing": 3618,
+    "paired": 20912,
+    "ambiguous_resolved_by_overlap": 3
+  },
+  "arm_H": {
+    "helixer_loci": 25181,
+    "paired_to_tair10": 20843,
+    "written": 20843,
+    "no_tair10_partner": 4338,
+    "partner_has_no_utr": 3263,
+    "loci_by_strand": {
+      "+": 10431,
+      "-": 10412
+    },
+    "loci_with_utr_by_strand": {
+      "+": 8810,
+      "-": 8770
+    }
+  },
+  "arm_H_path": "/data/gpfs/assoc/pgl/data/Transgenic/polishing_benchmark/inputs/annevotairutr_fixed_Athaliana.gff3"
+}

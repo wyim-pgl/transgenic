@@ -1,0 +1,33 @@
+{
+  "arm": "tair10cdshelixerutr",
+  "pairing": {
+    "tair10_genes": 27416,
+    "no_overlap": 1993,
+    "not_containing": 1213,
+    "paired": 24210,
+    "ambiguous_resolved_by_overlap": 34
+  },
+  "loci_dropped_for_missing_exons": 0,
+  "loci_dropped_no_helixer_partner_record": 0,
+  "helixer_loci_with_any_utr": 27039,
+  "helixer_loci": 27039,
+  "loci_written": 24210,
+  "loci_with_donated_utr": 24210,
+  "loci_without_donated_utr": 0,
+  "loci_with_five_prime": 24210,
+  "loci_with_three_prime": 24210,
+  "loci_gene_row_widened": 21509,
+  "widened_bp_total": 4508027,
+  "widened_bp_max": 15463,
+  "donated_utr_intervals": 54680,
+  "donated_utr_bp": 8939474,
+  "loci_by_strand": {
+    "+": 12085,
+    "-": 12125
+  },
+  "loci_with_donated_utr_by_strand": {
+    "+": 12085,
+    "-": 12125
+  },
+  "path": "/data/gpfs/assoc/pgl/data/Transgenic/polishing_benchmark/inputs/tair10cdshelixerutr_Athaliana.gff3"
+}

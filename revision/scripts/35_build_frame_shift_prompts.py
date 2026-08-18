@@ -265,6 +265,58 @@ def write_arm_with_utr(rows: list, path: Path, frame: str) -> int:
     return len(rows)
 
 
+def _merge(intervals: list) -> list:
+    """Coalesce overlapping or abutting intervals so no two rows describe the same base."""
+    merged: list = []
+    for start, end in sorted(intervals):
+        if merged and start <= merged[-1][1] + 1:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+
+def place_donated_utr(cds: list, donor: list, strand: str) -> tuple[list, list]:
+    """Place donated UTR intervals around `cds`, returning (five_prime, three_prime).
+
+    Intervals overlapping the CDS span are clipped to the part outside it, so a donation can
+    never overlap or alter the CDS it is attached to. Which side is 5' and which is 3' is
+    then decided by coordinate AND strand, exactly as `utr_segments` decides it for the
+    reference arms.
+
+    That last point is the whole reason this helper exists. `write_helixer_with_tair_utr`
+    used to take the strand-labelled `five`/`three` lists straight from `utr_segments` and
+    filter them by raw coordinate (`five` kept only where `s < lo`, `three` only where
+    `e > hi`). On the minus strand `utr_segments` puts the 5' UTR on the HIGH-coordinate
+    side, so both tests rejected every interval and the locus silently received no UTR at
+    all: 35 of 11,989 minus-strand loci got a donated UTR in `helixertairutr`, and 2 of
+    10,412 in `annevotairutr`. Both arms therefore measured a ~50:50 mixture of the cell
+    they were built to measure and the no-UTR cell, which understated them — rescoring the
+    plus-strand half alone gives 2.2% and 3.5% against the 0.9% and 1.2% first reported,
+    with the `tair10selfutr` control flat across the same split (18.1% / 18.4%).
+
+    Donor labels are deliberately pooled and re-derived rather than carried over: a 5'/3'
+    label is only meaningful relative to the CDS an interval flanks, and after donation that
+    CDS is not the one the label was written against.
+    """
+    lo, hi = cds[0][0], cds[-1][1]
+    low_side, high_side = [], []
+    for start, end in donor:
+        if end < lo:
+            low_side.append((start, end))
+        elif start > hi:
+            high_side.append((start, end))
+        else:
+            if start < lo:
+                low_side.append((start, lo - 1))
+            if end > hi:
+                high_side.append((hi + 1, end))
+    low_side, high_side = _merge(low_side), _merge(high_side)
+    if strand == "-":
+        return high_side, low_side
+    return low_side, high_side
+
+
 def load_helixer_first_cds(gff: Path) -> dict:
     """gene -> {seq, strand, cds} for Helixer's FIRST mRNA — the transcript that is the
     prompt. Only CDS is kept: exon and UTR rows are dropped so this arm carries the same
@@ -345,10 +397,18 @@ def write_helixer_with_tair_utr(helixer: dict, tair_utr: dict, path: Path) -> di
     alone would not have paid off.
 
     A TAIR10 UTR interval is kept only where it falls outside the supplied CDS span, so the
-    two never overlap and the CDS is never altered.
+    two never overlap and the CDS is never altered. Placement is delegated to
+    `place_donated_utr`, whose docstring records the minus-strand bug this function carried
+    until 2026-08-17 and the corrected numbers it produced.
+
+    `loci_with_utr_by_strand` is reported for exactly that reason: the bug was invisible in
+    every aggregate the original stats block emitted, because a locus that received no UTR
+    was still counted as written. A donation that works on one strand and not the other is
+    now visible in the stats without anyone having to think to look for it.
     """
     stats = {"helixer_loci": len(helixer), "paired_to_tair10": 0, "written": 0,
-             "no_tair10_partner": 0, "partner_has_no_utr": 0}
+             "no_tair10_partner": 0, "partner_has_no_utr": 0,
+             "loci_by_strand": defaultdict(int), "loci_with_utr_by_strand": defaultdict(int)}
     lines = ["##gff-version 3"]
     for gene in sorted(helixer):
         info = helixer[gene]
@@ -359,11 +419,12 @@ def write_helixer_with_tair_utr(helixer: dict, tair_utr: dict, path: Path) -> di
         stats["paired_to_tair10"] += 1
         cds = info["cds"]
         lo, hi = cds[0][0], cds[-1][1]
-        five = [(s, min(e, lo - 1)) for s, e in partner["five"] if s < lo]
-        three = [(max(s, hi + 1), e) for s, e in partner["three"] if e > hi]
-        five = [(s, e) for s, e in five if s <= e]
-        three = [(s, e) for s, e in three if s <= e]
-        if not five and not three:
+        five, three = place_donated_utr(
+            cds, list(partner["five"]) + list(partner["three"]), info["strand"])
+        stats["loci_by_strand"][info["strand"]] += 1
+        if five or three:
+            stats["loci_with_utr_by_strand"][info["strand"]] += 1
+        else:
             stats["partner_has_no_utr"] += 1
         starts = [lo] + [s for s, _ in five + three]
         ends = [hi] + [e for _, e in five + three]
@@ -381,6 +442,8 @@ def write_helixer_with_tair_utr(helixer: dict, tair_utr: dict, path: Path) -> di
                              f"ID={tx}.{label}{n};Parent={tx}")
         stats["written"] += 1
     path.write_text("\n".join(lines) + "\n")
+    stats["loci_by_strand"] = dict(stats["loci_by_strand"])
+    stats["loci_with_utr_by_strand"] = dict(stats["loci_with_utr_by_strand"])
     return stats
 
 
@@ -395,7 +458,25 @@ def main(argv: list[str] | None = None) -> int:
                          "so the UTR-donation arm is a different experiment on it.")
     ap.add_argument("--out-dir", type=Path, default=BENCH / "inputs")
     ap.add_argument("--json", type=Path, default=None)
+    ap.add_argument("--force", action="store_true",
+                    help="overwrite arm inputs that already exist (see the guard below)")
     args = ap.parse_args(argv)
+
+    # Every arm this script writes has already been generated on the GPU, and each
+    # prediction's provenance pins the md5 of the input it was made from. Rewriting an input
+    # in place therefore invalidates a result that still looks valid — and the minus-strand
+    # UTR fix means a re-run does NOT reproduce the staged files byte-for-byte. Re-runs are
+    # opt-in for that reason; to regenerate the donation arms under new names instead, use
+    # `56_rebuild_donation_arms_fixed.py`.
+    arm_files = ["tair10self", "tair10helixerframe", "helixer_reframed",
+                 "tair10selfutr", "tair10helixerframeutr", "helixertairutr", "annevotairutr"]
+    existing = [p for p in (args.out_dir / f"{a}_Athaliana.gff3" for a in arm_files) if p.exists()]
+    if existing and not args.force:
+        raise SystemExit(
+            "refusing to overwrite staged benchmark inputs that existing predictions were "
+            "made from:\n  " + "\n  ".join(str(p) for p in existing) +
+            "\npass --force if that is genuinely what you want"
+        )
 
     primary_ids = load_primary_ids(args.primary_ids)
     tair = load_tair10(args.tair10_gtf, primary_ids)

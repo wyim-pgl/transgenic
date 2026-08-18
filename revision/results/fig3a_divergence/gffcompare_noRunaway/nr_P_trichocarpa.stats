@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_regen/refs/P_trichocarpa.testset.gff3 -o gffcompare_noRunaway/nr_P_trichocarpa preds_noRunaway/P_trichocarpa.noRunaway.gff3
+#
+
+#= Summary for dataset: preds_noRunaway/P_trichocarpa.noRunaway.gff3 
+#     Query mRNAs :    6956 in    6320 loci  (5638 multi-exon transcripts)
+#            (430 multi-transcript loci, ~1.1 transcripts per locus)
+# Reference mRNAs :   11148 in    6331 loci  (9772 multi-exon)
+# Super-loci w/ reference transcripts:     6070
+#-----------------| Sensitivity | Precision  |
+        Base level:    82.8     |    89.3    |
+        Exon level:    62.6     |    72.2    |
+      Intron level:    70.4     |    75.8    |
+Intron chain level:    22.8     |    39.5    |
+  Transcript level:    20.0     |    32.0    |
+       Locus level:    34.9     |    35.0    |
+
+     Matching intron chains:    2226
+       Matching transcripts:    2226
+              Matching loci:    2211
+
+          Missed exons:    3586/46507	(  7.7%)
+           Novel exons:    2507/38185	(  6.6%)
+        Missed introns:    3108/33533	(  9.3%)
+         Novel introns:    1387/31144	(  4.5%)
+           Missed loci:     256/6331	(  4.0%)
+            Novel loci:     245/6320	(  3.9%)
+
+ Total union super-loci across all input datasets: 6315 
+6956 out of 6956 consensus transcripts written in gffcompare_noRunaway/nr_P_trichocarpa.annotated.gtf (0 discarded as redundant)

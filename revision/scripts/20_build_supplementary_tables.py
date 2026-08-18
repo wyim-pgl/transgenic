@@ -27,13 +27,18 @@ PB = ROOT / "polishing_benchmark" / "results"
 # a separate run.
 PROMPT_TRANSFER_ARMS = [
     ("tair10selfutr", "Reference annotation", "TAIR10", "TAIR10", "TAIR10"),
+    ("tair10selfutr_filtered", "Reference annotation, after ORF and splice-site filter", "TAIR10", "TAIR10", "TAIR10"),
     ("tair10helixerframeutr", "Reference features, predicted frame", "TAIR10", "TAIR10", "Helixer"),
     ("tair10helixerframeutr_filtered", "Reference features, predicted frame, after ORF and "
      "splice-site filter", "TAIR10", "TAIR10", "Helixer"),
     ("tair10self", "Reference CDS, no UTR", "TAIR10", "none", "TAIR10"),
     ("tair10helixerframe", "Reference CDS, no UTR, predicted frame", "TAIR10", "none", "Helixer"),
-    ("helixertairutr", "Predicted CDS, reference UTR", "Helixer", "TAIR10", "CDS+UTR span"),
-    ("annevotairutr", "Predicted CDS, reference UTR", "ANNEVO", "TAIR10", "CDS+UTR span"),
+    ("tair10cdshelixerutr", "Reference CDS, predicted UTR", "TAIR10", "Helixer",
+     "TAIR10, minimally extended"),
+    ("tair10cdshelixerutr_filtered", "Reference CDS, predicted UTR, after ORF and "
+     "splice-site filter", "TAIR10", "Helixer", "TAIR10, minimally extended"),
+    ("helixertairutr_fixed", "Predicted CDS, reference UTR", "Helixer", "TAIR10", "CDS+UTR span"),
+    ("annevotairutr_fixed", "Predicted CDS, reference UTR", "ANNEVO", "TAIR10", "CDS+UTR span"),
     ("helixer_reframed", "Predicted CDS reframed, no reference input", "Helixer", "none", "CDS span"),
     ("helixer", "Helixer output as supplied", "Helixer", "Helixer", "Helixer"),
     ("helixer_filtered", "Helixer output as supplied, after ORF and splice-site filter", "Helixer", "Helixer", "Helixer"),
@@ -550,30 +555,51 @@ def build(out: Out) -> None:
     # ------------------------------------------------------ Table S7 ----
     fs = load_csv(RES / "feature_stats_summary.csv")
     fs_by = {r["species"]: r for r in fs}
+    tc = load_csv(RES / "decoder_token_cap" / "decoder_token_cap_summary.csv")
+    tc_by = {r["species"]: r for r in tc}
     rows = []
     for sp in SPECIES_ORDER + ["AtRTD3"]:
         r = fs_by.get(sp)
         if r is None:
             continue
+        t = tc_by.get(sp, {})
         rows.append([
             SPECIES_NAME[sp], r["n_genes"], r["cds_max"], r["cds_p99"],
             r["utr5_max"], r["utr5_p99"], r["utr3_max"], r["utr3_p99"],
             r["over_150_cds"], r["over_50_utr5"], r["over_50_utr3"],
             r["over_any"], r["pct_within_limits"],
+            t.get("token_median", ""), t.get("token_p99", ""),
+            t.get("token_max", ""), t.get("genes_over_2048", ""),
+            t.get("pct_over_2048", ""),
         ])
     out.table(
         "TableS7_vocabulary_coverage",
-        "Table S7. Per-gene feature counts and GSF vocabulary coverage",
-        "Source: `transgenic/revision/results/feature_stats_summary.csv`. Counts are unique "
+        "Table S7. Per-gene feature counts, GSF vocabulary coverage, and GSF token length",
+        "Source: `transgenic/revision/results/feature_stats_summary.csv` (feature counts) and "
+        "`transgenic/revision/results/decoder_token_cap/decoder_token_cap_summary.csv` (token "
+        "lengths; script `revision/scripts/52_decoder_token_cap_audit.py`). Counts are unique "
         "feature segments per gene, pooled over all annotated transcripts of that gene. The "
         "GSF vocabulary allows 150 CDS, 50 five-prime UTR, and 50 three-prime UTR segments "
         "per gene. p99 is the 99th percentile. Genes over any limit is not the sum of the "
-        "three preceding columns because a gene may exceed more than one limit.",
+        "three preceding columns because a gene may exceed more than one limit. The five "
+        "token-length columns give the length of each gene's full GSF label under the "
+        "released 272-token GFFTokenizer against the decoder's 2,048-position budget; they "
+        "are measured over the genes that reach tokenization, which excludes genes whose "
+        "padded region exceeds the 49,152 nt encoder window, lncRNA-only genes, and genes "
+        "without CDS or UTR features (largest exclusions: *V. vinifera*, 7,836 lncRNA-only "
+        "and 325 over-window genes; *S. lycopersicum*, 85 over-window genes, among them "
+        "both genes this table reports over the vocabulary limits — including the 201-CDS "
+        "gene — so neither is ever presented to the model). Vocabulary and token limits "
+        "bind different genes: in *Z. mays* 92 genes are within every vocabulary limit but "
+        "exceed 2,048 tokens, and 54 exceed a vocabulary limit while fitting the token "
+        "budget.",
         ["Annotation", "Genes (n)", "Max CDS segments", "CDS p99",
          "Max 5′-UTR segments", "5′-UTR p99", "Max 3′-UTR segments", "3′-UTR p99",
          "Genes over 150 CDS (n)", "Genes over 50 5′-UTR (n)",
          "Genes over 50 3′-UTR (n)", "Genes over any limit (n)",
-         "Genes within all limits (%)"],
+         "Genes within all limits (%)",
+         "Token length median", "Token length p99", "Token length max",
+         "Genes over 2,048 tokens (n)", "Genes over 2,048 tokens (%)"],
         rows,
     )
 
@@ -727,7 +753,16 @@ def build(out: Out) -> None:
         f"prompt transcripts before use: of the {audit['transcripts_scored']:,} prompt "
         f"transcripts scored, {audit['complete_orf_pct']:.1f}% encode a complete reading "
         f"frame and {audit['both_pct']:.1f}% satisfy both criteria, consistent with the "
-        f"reference consistency reported in Table S5.",
+        f"reference consistency reported in Table S5. "
+        f"The two donation rows (Predicted CDS, reference UTR) report a corrected re-run: "
+        f"the first build filtered donated untranslated regions by coordinate rather than "
+        f"strand, leaving minus-strand loci essentially without donations (35 of 11,989 "
+        f"Helixer and 2 of 10,412 ANNEVO loci) and yielding 0.9% and 1.2%; the "
+        f"strand-corrected rebuild balanced the donation (9,922 and 8,770 minus-strand "
+        f"loci) and reduced the added structures (350 to 288, 345 to 223) without changing "
+        f"the correct-addition counts (3 and 4 in both builds) "
+        f"(`revision/results/prompt_transfer/donation_arms_buggy_strand_audit.json`, "
+        f"`donation_arms_fixed_build_stats.json`).",
         ["Prompt", "CDS source", "UTR source", "Gene boundary", "Loci scored", "Added", "Matched",
          "Precision vs TAIR10 alt (%)", "Precision vs AtRTD3 (%)", "Recall of TAIR10 alt (%)"],
         rows,

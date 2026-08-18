@@ -1,0 +1,123 @@
+{
+ "A_thaliana": {
+  "ref_max_mRNA_span": 25965,
+  "n_pred_tx": 5078,
+  "n_runaway_tx": 0,
+  "n_runaway_genes": 0,
+  "pred_exonic_bp_total": 7860858,
+  "runaway_exonic_bp": 0,
+  "runaway_exonic_pct": 0.0,
+  "runaway_ids": [],
+  "n_kept_tx": 5078
+ },
+ "B_distachyon": {
+  "ref_max_mRNA_span": 45046,
+  "n_pred_tx": 6367,
+  "n_runaway_tx": 0,
+  "n_runaway_genes": 0,
+  "pred_exonic_bp_total": 11719711,
+  "runaway_exonic_bp": 0,
+  "runaway_exonic_pct": 0.0,
+  "runaway_ids": [],
+  "n_kept_tx": 6367
+ },
+ "G_max": {
+  "ref_max_mRNA_span": 47479,
+  "n_pred_tx": 10414,
+  "n_runaway_tx": 2,
+  "n_runaway_genes": 2,
+  "pred_exonic_bp_total": 23860725,
+  "runaway_exonic_bp": 494610,
+  "runaway_exonic_pct": 2.07,
+  "runaway_ids": [
+   "3e65a3ce-cd3c-42b5-bc13-96481fa1f0d2.t3",
+   "ae2c9e43-46a3-4b4f-af6d-f74f43c4b9be.t1"
+  ],
+  "n_kept_tx": 10412
+ },
+ "O_sativa": {
+  "ref_max_mRNA_span": 33199,
+  "n_pred_tx": 7301,
+  "n_runaway_tx": 0,
+  "n_runaway_genes": 0,
+  "pred_exonic_bp_total": 11102850,
+  "runaway_exonic_bp": 0,
+  "runaway_exonic_pct": 0.0,
+  "runaway_ids": [],
+  "n_kept_tx": 7301
+ },
+ "P_patens": {
+  "ref_max_mRNA_span": 34020,
+  "n_pred_tx": 15050,
+  "n_runaway_tx": 1,
+  "n_runaway_genes": 1,
+  "pred_exonic_bp_total": 58482110,
+  "runaway_exonic_bp": 23220129,
+  "runaway_exonic_pct": 39.7,
+  "runaway_ids": [
+   "b98927c8-bf2e-484e-b64c-ca010d23f68a.t1"
+  ],
+  "n_kept_tx": 15049
+ },
+ "P_trichocarpa": {
+  "ref_max_mRNA_span": 31534,
+  "n_pred_tx": 6957,
+  "n_runaway_tx": 1,
+  "n_runaway_genes": 1,
+  "pred_exonic_bp_total": 16712428,
+  "runaway_exonic_bp": 2212999,
+  "runaway_exonic_pct": 13.24,
+  "runaway_ids": [
+   "e884deed-5b17-408c-8e00-491c66d87aa9.t1"
+  ],
+  "n_kept_tx": 6956
+ },
+ "S_bicolor": {
+  "ref_max_mRNA_span": 48199,
+  "n_pred_tx": 5791,
+  "n_runaway_tx": 3,
+  "n_runaway_genes": 1,
+  "pred_exonic_bp_total": 18112359,
+  "runaway_exonic_bp": 6378892,
+  "runaway_exonic_pct": 35.22,
+  "runaway_ids": [
+   "28fd87bb-bada-45ff-b220-85ef8a34ba5d.t1",
+   "28fd87bb-bada-45ff-b220-85ef8a34ba5d.t2",
+   "28fd87bb-bada-45ff-b220-85ef8a34ba5d.t3"
+  ],
+  "n_kept_tx": 5788
+ },
+ "S_italica": {
+  "ref_max_mRNA_span": 34527,
+  "n_pred_tx": 5863,
+  "n_runaway_tx": 0,
+  "n_runaway_genes": 0,
+  "pred_exonic_bp_total": 10320000,
+  "runaway_exonic_bp": 0,
+  "runaway_exonic_pct": 0.0,
+  "runaway_ids": [],
+  "n_kept_tx": 5863
+ },
+ "V_vinifera": {
+  "ref_max_mRNA_span": 49081,
+  "n_pred_tx": 6836,
+  "n_runaway_tx": 0,
+  "n_runaway_genes": 0,
+  "pred_exonic_bp_total": 10781426,
+  "runaway_exonic_bp": 0,
+  "runaway_exonic_pct": 0.0,
+  "runaway_ids": [],
+  "n_kept_tx": 6836
+ },
+ "Z_mays": {
+  "ref_max_mRNA_span": 49061,
+  "n_pred_tx": 49894,
+  "n_runaway_tx": 0,
+  "n_runaway_genes": 0,
+  "pred_exonic_bp_total": 86654735,
+  "runaway_exonic_bp": 0,
+  "runaway_exonic_pct": 0.0,
+  "runaway_ids": [],
+  "n_kept_tx": 49894
+ }
+}

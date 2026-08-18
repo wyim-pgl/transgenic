@@ -1,0 +1,32 @@
+None of PyTorch, TensorFlow >= 2.0, or Flax have been found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[run ] A_thaliana: Athaliana_167_TAIR10.gene.clean.gff3
+       n=27206 median=81 p95=262 p99=384 max=1195 over_2048=0 (0.0%)
+[run ] B_distachyon: Bdistachyon_314_v3.1.gene_exons.clean.gff3
+       n=34310 median=68 p95=289 p99=472 max=1731 over_2048=0 (0.0%)
+[run ] B_rapa: BrapaO_302V_711_v1.1.gene.gff3
+       n=38743 median=81 p95=301 p99=552 max=2140 over_2048=2 (0.005%)
+[run ] G_max: Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3
+       n=48321 median=93 p95=343 p99=572 max=1926 over_2048=0 (0.0%)
+[run ] L_sativa: Lsativa_467_v5.gene_exons.gff3
+       n=38899 median=81 p95=271 p99=409 max=1418 over_2048=0 (0.0%)
+[run ] O_sativa: Osativa_323_v7.0.gene_exons.exon.gff3
+       n=42188 median=55 p95=238 p99=362 max=1268 over_2048=0 (0.0%)
+[run ] P_patens: Ppatens_318_v3.3.gene_exons.clean.gff3
+       n=32926 median=101 p95=401 p99=626 max=1831 over_2048=0 (0.0%)
+[run ] P_trichocarpa: Ptrichocarpa_533_v4.1.gene_exons.clean.gff3
+       n=34698 median=83 p95=313 p99=513 max=1826 over_2048=0 (0.0%)
+[run ] S_bicolor: Sbicolor_730_v5.1.gene_exons.clean.gff3
+       n=32142 median=68 p95=276 p99=451 max=2036 over_2048=0 (0.0%)
+[run ] S_italica: Sitalica_312_v2.2.gene_exons.clean.gff3
+       n=34584 median=68 p95=244 p99=375 max=1617 over_2048=0 (0.0%)
+[run ] S_lycopersicum: Slycopersicum_796_ITAG5.0.gene.gff3
+       n=36563 median=66 p95=261 p99=466 max=1601 over_2048=0 (0.0%)
+[run ] V_vinifera: Vvinifera_PN40024_5.1_on_T2T_ref.exon.gff3
+       n=39810 median=55 p95=219 p99=343 max=1121 over_2048=0 (0.0%)
+[run ] Z_mays: Zmays_493_RefGen_V4.gene_exons.exon.gff3
+       n=39257 median=81 p95=814 p99=2026 max=14609 over_2048=383 (0.976%)
+[run ] AtRTD3: AtRTD3.gtf
+       n=37082 median=98 p95=900 p99=1485 max=4744 over_2048=99 (0.267%)
+
+Wrote /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/decoder_token_cap_summary.json
+Wrote /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/decoder_token_cap/decoder_token_cap_summary.csv

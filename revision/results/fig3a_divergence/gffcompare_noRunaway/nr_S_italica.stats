@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_regen/refs/S_italica.testset.gff3 -o gffcompare_noRunaway/nr_S_italica preds_noRunaway/S_italica.noRunaway.gff3
+#
+
+#= Summary for dataset: preds_noRunaway/S_italica.noRunaway.gff3 
+#     Query mRNAs :    5863 in    5661 loci  (4587 multi-exon transcripts)
+#            (183 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    7910 in    5706 loci  (6984 multi-exon)
+# Super-loci w/ reference transcripts:     5329
+#-----------------| Sensitivity | Precision  |
+        Base level:    81.7     |    87.5    |
+        Exon level:    62.8     |    71.4    |
+      Intron level:    67.9     |    77.1    |
+Intron chain level:    28.3     |    43.1    |
+  Transcript level:    25.0     |    33.7    |
+       Locus level:    34.6     |    34.8    |
+
+     Matching intron chains:    1975
+       Matching transcripts:    1975
+              Matching loci:    1972
+
+          Missed exons:    3803/33046	( 11.5%)
+           Novel exons:    1971/28742	(  6.9%)
+        Missed introns:    3498/25936	( 13.5%)
+         Novel introns:    1440/22848	(  6.3%)
+           Missed loci:     362/5706	(  6.3%)
+            Novel loci:     326/5661	(  5.8%)
+
+ Total union super-loci across all input datasets: 5655 
+5863 out of 5863 consensus transcripts written in gffcompare_noRunaway/nr_S_italica.annotated.gtf (0 discarded as redundant)

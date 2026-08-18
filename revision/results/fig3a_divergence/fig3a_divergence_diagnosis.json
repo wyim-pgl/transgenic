@@ -1,0 +1,718 @@
+{
+ "analysis": "Fig 3A per-species divergence between original manuscript de novo run and RC-repaired re-run",
+ "date": "2026-08-17",
+ "roadmap_item": "R11 / Integrity #14",
+ "root_cause": "Base-level precision in gffcompare is base-MASS weighted and is dominated by a handful of runaway predicted transcripts. gffcompare builds query exon structures from CDS *and* five_prime_UTR/three_prime_UTR features; a single blown-out UTR (or CDS) becomes one multi-Mb pseudo-exon that adds megabases of unmatched predicted bases. Because count-weighted metrics (exon/intron/intron-chain/transcript/locus level) divide by ~30,000-80,000 features, one bad transcript moves them <1 point, while base-level precision moves 13-24 points. The runaway loci differ between the original and the re-run because they are independent stochastic generations, so the divergence is species-specific and bidirectional. This is NOT a reference-version effect and NOT an RC-repair defect: both runaway transcripts examined are present in the pre-repair predictions as well.",
+ "diagnostic_statistic": {
+  "name": "base-mass ratio R",
+  "formula": "base_Sn / base_Pr",
+  "interpretation": "equals predicted exonic base mass / reference exonic base mass inside reference-bearing superloci. For one-transcript-per-locus predictions scored against a multi-isoform reference, R must be <1. R>1 is structurally impossible and flags runaway contamination.",
+  "clean_range_after_filtering": "0.754 - 0.969 across all 10 species"
+ },
+ "runaway_definition": "predicted mRNA whose genomic span exceeds the maximum reference mRNA span in the same species test set (all reference maxima are 25,965-49,081 bp)",
+ "secondary_findings": [
+  "Reference/label sets differ between original and re-run for all 10 species: 9 species by -2.6% to -7.0% reference mRNAs (locus-set/annotation-version drift), Z_mays by +299% (25,123 -> 100,245 ref mRNAs; entirely different test set, tracked separately under R3).",
+  "This reference drift is real but small: A_thaliana has a -4.4% reference difference and reproduces to 0.3 precision points, so reference version cannot account for 15-24 point precision swings. The original hypothesis (reference version / locus set) is NOT the cause.",
+  "V_vinifera shows a genuine sensitivity divergence (base Sn 64.8 -> 60.4, exon Sn 43.3 -> 41.1) not explained by runaways; base-mass ratio is clean in both runs. Cause not determined here.",
+  "gffcompare silently rejected the P_patens runaway (a 23.2 Mb three_prime_UTR whose coordinates are inconsistent with its + strand CDS) at parse time (15,050 mRNA records -> 15,049 query mRNAs), so it never entered the metric. Runaway impact is therefore erratic, not monotone.",
+  "The original de novo input GFF3s are NOT archived. fig3_original/prompted/*.gff3 have the same filenames as the files named in the fig3_original/denovo/*.stats headers but are a DIFFERENT (prompted) generation - e.g. Glyma prompted query=7,986 mRNAs / ref=12,520 vs denovo header query=10,098 / ref=18,892. Only the .stats text survives for the de novo run, so original runaway transcripts can be inferred arithmetically but not enumerated."
+ ],
+ "per_species": [
+  {
+   "species": "A_thaliana",
+   "original_code": "TAIR10",
+   "original_denovo": {
+    "base_Sn": 90.6,
+    "base_Pr": 93.8,
+    "exon_Sn": 72.8,
+    "exon_Pr": 83.8,
+    "intron_Pr": 88.7,
+    "transcript_Pr": 43.0,
+    "query_mRNA": 5073,
+    "query_loci": 4971,
+    "ref_mRNA": 7461,
+    "ref_loci": 4989,
+    "ref_file": "<code>_hyenaTest_labels.gff3 (NOT ARCHIVED)",
+    "query_file": "<code>_hyenaTest_prediction_noPost.gff3 (NOT ARCHIVED)",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_buggy_RC": {
+    "base_Sn": 74.0,
+    "base_Pr": 91.9,
+    "exon_Pr": 62.9,
+    "query_loci": 4129
+   },
+   "rerun_repaired": {
+    "base_Sn": 90.6,
+    "base_Pr": 93.5,
+    "exon_Sn": 73.9,
+    "exon_Pr": 83.3,
+    "intron_Pr": 88.2,
+    "transcript_Pr": 42.7,
+    "query_mRNA": 5078,
+    "query_loci": 4880,
+    "ref_mRNA": 7129,
+    "ref_loci": 4893,
+    "ref_file": "fig3_regen/refs/A_thaliana.testset.gff3",
+    "query_file": "fig3_gap_diagnosis/preds_repaired/A_thaliana_test400M.repaired.gff3",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_noRunaway": {
+    "base_Sn": 90.6,
+    "base_Pr": 93.5,
+    "exon_Sn": 73.9,
+    "exon_Pr": 83.3,
+    "intron_Pr": 88.2,
+    "transcript_Pr": 42.7,
+    "query_mRNA": 5078
+   },
+   "basemass_ratio": {
+    "original": 0.966,
+    "rerun": 0.969,
+    "rerun_noRunaway": 0.969
+   },
+   "runaway": {
+    "ref_max_mRNA_span_bp": 25965,
+    "n_runaway_tx": 0,
+    "runaway_exonic_bp": 0,
+    "runaway_pct_of_pred_exonic": 0.0,
+    "runaway_ids": []
+   },
+   "ref_set_delta_pct": -4.4,
+   "delta_basePr_orig_minus_noRunaway": 0.3,
+   "delta_basePr_rerun_to_noRunaway": 0.0,
+   "verdict": "concordant",
+   "cause": "no runaway contamination in either run",
+   "canonical_recommendation": "rerun_noRunaway",
+   "notes": []
+  },
+  {
+   "species": "B_distachyon",
+   "original_code": "Bradi",
+   "original_denovo": {
+    "base_Sn": 76.7,
+    "base_Pr": 84.7,
+    "exon_Sn": 56.5,
+    "exon_Pr": 68.9,
+    "intron_Pr": 74.2,
+    "transcript_Pr": 30.4,
+    "query_mRNA": 6263,
+    "query_loci": 6081,
+    "ref_mRNA": 11775,
+    "ref_loci": 6125,
+    "ref_file": "<code>_hyenaTest_labels.gff3 (NOT ARCHIVED)",
+    "query_file": "<code>_hyenaTest_prediction_noPost.gff3 (NOT ARCHIVED)",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_buggy_RC": {
+    "base_Sn": 60.0,
+    "base_Pr": 85.1,
+    "exon_Pr": 51.0,
+    "query_loci": 4963
+   },
+   "rerun_repaired": {
+    "base_Sn": 77.2,
+    "base_Pr": 87.0,
+    "exon_Sn": 57.3,
+    "exon_Pr": 69.6,
+    "intron_Pr": 75.7,
+    "transcript_Pr": 31.1,
+    "query_mRNA": 6367,
+    "query_loci": 5950,
+    "ref_mRNA": 11284,
+    "ref_loci": 5993,
+    "ref_file": "fig3_regen/refs/B_distachyon.testset.gff3",
+    "query_file": "fig3_gap_diagnosis/preds_repaired/B_distachyon_test400M.repaired.gff3",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_noRunaway": {
+    "base_Sn": 77.2,
+    "base_Pr": 87.0,
+    "exon_Sn": 57.3,
+    "exon_Pr": 69.6,
+    "intron_Pr": 75.7,
+    "transcript_Pr": 31.1,
+    "query_mRNA": 6367
+   },
+   "basemass_ratio": {
+    "original": 0.906,
+    "rerun": 0.887,
+    "rerun_noRunaway": 0.887
+   },
+   "runaway": {
+    "ref_max_mRNA_span_bp": 45046,
+    "n_runaway_tx": 0,
+    "runaway_exonic_bp": 0,
+    "runaway_pct_of_pred_exonic": 0.0,
+    "runaway_ids": []
+   },
+   "ref_set_delta_pct": -4.2,
+   "delta_basePr_orig_minus_noRunaway": -2.3,
+   "delta_basePr_rerun_to_noRunaway": 0.0,
+   "verdict": "concordant",
+   "cause": "no runaway contamination in either run",
+   "canonical_recommendation": "rerun_noRunaway",
+   "notes": []
+  },
+  {
+   "species": "G_max",
+   "original_code": "Glyma",
+   "original_denovo": {
+    "base_Sn": 80.1,
+    "base_Pr": 66.0,
+    "exon_Sn": 59.3,
+    "exon_Pr": 72.3,
+    "intron_Pr": 75.6,
+    "transcript_Pr": 33.8,
+    "query_mRNA": 10098,
+    "query_loci": 9274,
+    "ref_mRNA": 18892,
+    "ref_loci": 9336,
+    "ref_file": "<code>_hyenaTest_labels.gff3 (NOT ARCHIVED)",
+    "query_file": "<code>_hyenaTest_prediction_noPost.gff3 (NOT ARCHIVED)",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_buggy_RC": {
+    "base_Sn": 60.9,
+    "base_Pr": 84.3,
+    "exon_Pr": 50.1,
+    "query_loci": 7170
+   },
+   "rerun_repaired": {
+    "base_Sn": 80.5,
+    "base_Pr": 87.9,
+    "exon_Sn": 59.2,
+    "exon_Pr": 71.5,
+    "intron_Pr": 74.7,
+    "transcript_Pr": 31.3,
+    "query_mRNA": 10414,
+    "query_loci": 8890,
+    "ref_mRNA": 17590,
+    "ref_loci": 8981,
+    "ref_file": "fig3_regen/refs/G_max.testset.gff3",
+    "query_file": "fig3_gap_diagnosis/preds_repaired/G_max_test400M.repaired.gff3",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_noRunaway": {
+    "base_Sn": 80.5,
+    "base_Pr": 90.2,
+    "exon_Sn": 59.2,
+    "exon_Pr": 71.5,
+    "intron_Pr": 74.7,
+    "transcript_Pr": 31.3,
+    "query_mRNA": 10412
+   },
+   "basemass_ratio": {
+    "original": 1.214,
+    "rerun": 0.916,
+    "rerun_noRunaway": 0.892
+   },
+   "runaway": {
+    "ref_max_mRNA_span_bp": 47479,
+    "n_runaway_tx": 2,
+    "runaway_exonic_bp": 494610,
+    "runaway_pct_of_pred_exonic": 2.07,
+    "runaway_ids": [
+     "3e65a3ce-cd3c-42b5-bc13-96481fa1f0d2.t3",
+     "ae2c9e43-46a3-4b4f-af6d-f74f43c4b9be.t1"
+    ]
+   },
+   "ref_set_delta_pct": -6.9,
+   "delta_basePr_orig_minus_noRunaway": -24.2,
+   "delta_basePr_rerun_to_noRunaway": 2.3,
+   "verdict": "original_artifact",
+   "cause": "runaway predicted transcript(s) in the ORIGINAL de novo run only (R_orig=1.214>1). Published base precision 66.0 is not a valid species-level value; runaway-free value is 90.2",
+   "canonical_recommendation": "rerun_noRunaway",
+   "notes": []
+  },
+  {
+   "species": "O_sativa",
+   "original_code": "MSUv7",
+   "original_denovo": {
+    "base_Sn": 81.5,
+    "base_Pr": 86.7,
+    "exon_Sn": 62.2,
+    "exon_Pr": 71.4,
+    "intron_Pr": 75.2,
+    "transcript_Pr": 28.9,
+    "query_mRNA": 7340,
+    "query_loci": 7213,
+    "ref_mRNA": 10257,
+    "ref_loci": 7232,
+    "ref_file": "<code>_hyenaTest_labels.gff3 (NOT ARCHIVED)",
+    "query_file": "<code>_hyenaTest_prediction_noPost.gff3 (NOT ARCHIVED)",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_buggy_RC": {
+    "base_Sn": 68.4,
+    "base_Pr": 84.1,
+    "exon_Pr": 55.8,
+    "query_loci": 6292
+   },
+   "rerun_repaired": {
+    "base_Sn": 81.6,
+    "base_Pr": 87.3,
+    "exon_Sn": 62.8,
+    "exon_Pr": 72.1,
+    "intron_Pr": 75.9,
+    "transcript_Pr": 29.4,
+    "query_mRNA": 7301,
+    "query_loci": 7055,
+    "ref_mRNA": 9885,
+    "ref_loci": 7079,
+    "ref_file": "fig3_regen/refs/O_sativa.testset.gff3",
+    "query_file": "fig3_gap_diagnosis/preds_repaired/O_sativa_test400M.repaired.gff3",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_noRunaway": {
+    "base_Sn": 81.6,
+    "base_Pr": 87.3,
+    "exon_Sn": 62.8,
+    "exon_Pr": 72.1,
+    "intron_Pr": 75.9,
+    "transcript_Pr": 29.4,
+    "query_mRNA": 7301
+   },
+   "basemass_ratio": {
+    "original": 0.94,
+    "rerun": 0.935,
+    "rerun_noRunaway": 0.935
+   },
+   "runaway": {
+    "ref_max_mRNA_span_bp": 33199,
+    "n_runaway_tx": 0,
+    "runaway_exonic_bp": 0,
+    "runaway_pct_of_pred_exonic": 0.0,
+    "runaway_ids": []
+   },
+   "ref_set_delta_pct": -3.6,
+   "delta_basePr_orig_minus_noRunaway": -0.6,
+   "delta_basePr_rerun_to_noRunaway": 0.0,
+   "verdict": "concordant",
+   "cause": "no runaway contamination in either run",
+   "canonical_recommendation": "rerun_noRunaway",
+   "notes": []
+  },
+  {
+   "species": "P_patens",
+   "original_code": "Pp3",
+   "original_denovo": {
+    "base_Sn": 76.2,
+    "base_Pr": 88.3,
+    "exon_Sn": 48.7,
+    "exon_Pr": 61.3,
+    "intron_Pr": 72.2,
+    "transcript_Pr": 15.7,
+    "query_mRNA": 14406,
+    "query_loci": 7646,
+    "ref_mRNA": 21327,
+    "ref_loci": 7702,
+    "ref_file": "<code>_hyenaTest_labels.gff3 (NOT ARCHIVED)",
+    "query_file": "<code>_hyenaTest_prediction_noPost.gff3 (NOT ARCHIVED)",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_buggy_RC": {
+    "base_Sn": 42.6,
+    "base_Pr": 80.3,
+    "exon_Pr": 31.0,
+    "query_loci": 4612
+   },
+   "rerun_repaired": {
+    "base_Sn": 77.2,
+    "base_Pr": 87.7,
+    "exon_Sn": 50.4,
+    "exon_Pr": 60.6,
+    "intron_Pr": 71.0,
+    "transcript_Pr": 14.1,
+    "query_mRNA": 15049,
+    "query_loci": 7469,
+    "ref_mRNA": 20508,
+    "ref_loci": 7453,
+    "ref_file": "fig3_regen/refs/P_patens.testset.gff3",
+    "query_file": "fig3_gap_diagnosis/preds_repaired/P_patens_test400M.repaired.gff3",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_noRunaway": {
+    "base_Sn": 77.2,
+    "base_Pr": 87.7,
+    "exon_Sn": 50.4,
+    "exon_Pr": 60.6,
+    "intron_Pr": 71.0,
+    "transcript_Pr": 14.1,
+    "query_mRNA": 15049
+   },
+   "basemass_ratio": {
+    "original": 0.863,
+    "rerun": 0.88,
+    "rerun_noRunaway": 0.88
+   },
+   "runaway": {
+    "ref_max_mRNA_span_bp": 34020,
+    "n_runaway_tx": 1,
+    "runaway_exonic_bp": 23220129,
+    "runaway_pct_of_pred_exonic": 39.7,
+    "runaway_ids": [
+     "b98927c8-bf2e-484e-b64c-ca010d23f68a.t1"
+    ]
+   },
+   "ref_set_delta_pct": -3.8,
+   "delta_basePr_orig_minus_noRunaway": 0.6,
+   "delta_basePr_rerun_to_noRunaway": 0.0,
+   "verdict": "concordant",
+   "cause": "no runaway contamination in either run",
+   "canonical_recommendation": "rerun_noRunaway",
+   "notes": []
+  },
+  {
+   "species": "P_trichocarpa",
+   "original_code": "Potri",
+   "original_denovo": {
+    "base_Sn": 81.9,
+    "base_Pr": 72.4,
+    "exon_Sn": 61.8,
+    "exon_Pr": 73.9,
+    "intron_Pr": 78.3,
+    "transcript_Pr": 33.3,
+    "query_mRNA": 6866,
+    "query_loci": 6435,
+    "ref_mRNA": 11708,
+    "ref_loci": 6491,
+    "ref_file": "<code>_hyenaTest_labels.gff3 (NOT ARCHIVED)",
+    "query_file": "<code>_hyenaTest_prediction_noPost.gff3 (NOT ARCHIVED)",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_buggy_RC": {
+    "base_Sn": 61.7,
+    "base_Pr": 84.2,
+    "exon_Pr": 51.8,
+    "query_loci": 5162
+   },
+   "rerun_repaired": {
+    "base_Sn": 82.9,
+    "base_Pr": 76.1,
+    "exon_Sn": 62.6,
+    "exon_Pr": 72.2,
+    "intron_Pr": 75.8,
+    "transcript_Pr": 32.0,
+    "query_mRNA": 6957,
+    "query_loci": 6306,
+    "ref_mRNA": 11148,
+    "ref_loci": 6331,
+    "ref_file": "fig3_regen/refs/P_trichocarpa.testset.gff3",
+    "query_file": "fig3_gap_diagnosis/preds_repaired/P_trichocarpa_test400M.repaired.gff3",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_noRunaway": {
+    "base_Sn": 82.8,
+    "base_Pr": 89.3,
+    "exon_Sn": 62.6,
+    "exon_Pr": 72.2,
+    "intron_Pr": 75.8,
+    "transcript_Pr": 32.0,
+    "query_mRNA": 6956
+   },
+   "basemass_ratio": {
+    "original": 1.131,
+    "rerun": 1.089,
+    "rerun_noRunaway": 0.927
+   },
+   "runaway": {
+    "ref_max_mRNA_span_bp": 31534,
+    "n_runaway_tx": 1,
+    "runaway_exonic_bp": 2212999,
+    "runaway_pct_of_pred_exonic": 13.24,
+    "runaway_ids": [
+     "e884deed-5b17-408c-8e00-491c66d87aa9.t1"
+    ]
+   },
+   "ref_set_delta_pct": -4.8,
+   "delta_basePr_orig_minus_noRunaway": -16.9,
+   "delta_basePr_rerun_to_noRunaway": 13.2,
+   "verdict": "both_contaminated",
+   "cause": "runaway predicted transcript(s) in BOTH runs; original run carried an even larger runaway burden (orig base_Pr 72.4 vs runaway-free 89.3)",
+   "canonical_recommendation": "rerun_noRunaway",
+   "notes": []
+  },
+  {
+   "species": "S_bicolor",
+   "original_code": "Sobic",
+   "original_denovo": {
+    "base_Sn": 79.6,
+    "base_Pr": 90.6,
+    "exon_Sn": 60.4,
+    "exon_Pr": 72.6,
+    "intron_Pr": 76.9,
+    "transcript_Pr": 34.7,
+    "query_mRNA": 5751,
+    "query_loci": 5557,
+    "ref_mRNA": 9230,
+    "ref_loci": 5592,
+    "ref_file": "<code>_hyenaTest_labels.gff3 (NOT ARCHIVED)",
+    "query_file": "<code>_hyenaTest_prediction_noPost.gff3 (NOT ARCHIVED)",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_buggy_RC": {
+    "base_Sn": 64.0,
+    "base_Pr": 69.8,
+    "exon_Pr": 54.3,
+    "query_loci": 4583
+   },
+   "rerun_repaired": {
+    "base_Sn": 80.2,
+    "base_Pr": 75.2,
+    "exon_Sn": 61.7,
+    "exon_Pr": 71.9,
+    "intron_Pr": 76.3,
+    "transcript_Pr": 34.3,
+    "query_mRNA": 5791,
+    "query_loci": 5363,
+    "ref_mRNA": 8580,
+    "ref_loci": 5428,
+    "ref_file": "fig3_regen/refs/S_bicolor.testset.gff3",
+    "query_file": "fig3_gap_diagnosis/preds_repaired/S_bicolor_test400M.repaired.gff3",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_noRunaway": {
+    "base_Sn": 80.1,
+    "base_Pr": 90.4,
+    "exon_Sn": 61.7,
+    "exon_Pr": 72.1,
+    "intron_Pr": 76.5,
+    "transcript_Pr": 34.3,
+    "query_mRNA": 5788
+   },
+   "basemass_ratio": {
+    "original": 0.879,
+    "rerun": 1.066,
+    "rerun_noRunaway": 0.886
+   },
+   "runaway": {
+    "ref_max_mRNA_span_bp": 48199,
+    "n_runaway_tx": 3,
+    "runaway_exonic_bp": 6378892,
+    "runaway_pct_of_pred_exonic": 35.22,
+    "runaway_ids": [
+     "28fd87bb-bada-45ff-b220-85ef8a34ba5d.t1",
+     "28fd87bb-bada-45ff-b220-85ef8a34ba5d.t2",
+     "28fd87bb-bada-45ff-b220-85ef8a34ba5d.t3"
+    ]
+   },
+   "ref_set_delta_pct": -7.0,
+   "delta_basePr_orig_minus_noRunaway": 0.2,
+   "delta_basePr_rerun_to_noRunaway": 15.2,
+   "verdict": "rerun_artifact",
+   "cause": "runaway predicted transcript(s) in the RE-RUN only (R_new=1.066>1). Published value 90.6 is clean and is reproduced by the runaway-free re-run (90.4); the re-run value 75.2 was the artifact",
+   "canonical_recommendation": "rerun_noRunaway (reproduces original to within 0.2 pt)",
+   "notes": []
+  },
+  {
+   "species": "S_italica",
+   "original_code": "Seita",
+   "original_denovo": {
+    "base_Sn": 82.0,
+    "base_Pr": 85.7,
+    "exon_Sn": 63.2,
+    "exon_Pr": 71.6,
+    "intron_Pr": 77.7,
+    "transcript_Pr": 33.0,
+    "query_mRNA": 6038,
+    "query_loci": 5899,
+    "ref_mRNA": 8347,
+    "ref_loci": 5922,
+    "ref_file": "<code>_hyenaTest_labels.gff3 (NOT ARCHIVED)",
+    "query_file": "<code>_hyenaTest_prediction_noPost.gff3 (NOT ARCHIVED)",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_buggy_RC": {
+    "base_Sn": 70.4,
+    "base_Pr": 85.0,
+    "exon_Pr": 58.3,
+    "query_loci": 5082
+   },
+   "rerun_repaired": {
+    "base_Sn": 81.7,
+    "base_Pr": 87.5,
+    "exon_Sn": 62.8,
+    "exon_Pr": 71.4,
+    "intron_Pr": 77.1,
+    "transcript_Pr": 33.7,
+    "query_mRNA": 5863,
+    "query_loci": 5661,
+    "ref_mRNA": 7910,
+    "ref_loci": 5706,
+    "ref_file": "fig3_regen/refs/S_italica.testset.gff3",
+    "query_file": "fig3_gap_diagnosis/preds_repaired/S_italica_test400M.repaired.gff3",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_noRunaway": {
+    "base_Sn": 81.7,
+    "base_Pr": 87.5,
+    "exon_Sn": 62.8,
+    "exon_Pr": 71.4,
+    "intron_Pr": 77.1,
+    "transcript_Pr": 33.7,
+    "query_mRNA": 5863
+   },
+   "basemass_ratio": {
+    "original": 0.957,
+    "rerun": 0.934,
+    "rerun_noRunaway": 0.934
+   },
+   "runaway": {
+    "ref_max_mRNA_span_bp": 34527,
+    "n_runaway_tx": 0,
+    "runaway_exonic_bp": 0,
+    "runaway_pct_of_pred_exonic": 0.0,
+    "runaway_ids": []
+   },
+   "ref_set_delta_pct": -5.2,
+   "delta_basePr_orig_minus_noRunaway": -1.8,
+   "delta_basePr_rerun_to_noRunaway": 0.0,
+   "verdict": "concordant",
+   "cause": "no runaway contamination in either run",
+   "canonical_recommendation": "rerun_noRunaway",
+   "notes": []
+  },
+  {
+   "species": "V_vinifera",
+   "original_code": "Vitvi",
+   "original_denovo": {
+    "base_Sn": 64.8,
+    "base_Pr": 78.1,
+    "exon_Sn": 43.3,
+    "exon_Pr": 49.8,
+    "intron_Pr": 56.5,
+    "transcript_Pr": 16.7,
+    "query_mRNA": 7085,
+    "query_loci": 6647,
+    "ref_mRNA": 8706,
+    "ref_loci": 6758,
+    "ref_file": "<code>_hyenaTest_labels.gff3 (NOT ARCHIVED)",
+    "query_file": "<code>_hyenaTest_prediction_noPost.gff3 (NOT ARCHIVED)",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_buggy_RC": {
+    "base_Sn": 51.8,
+    "base_Pr": 76.6,
+    "exon_Pr": 46.5,
+    "query_loci": 5725
+   },
+   "rerun_repaired": {
+    "base_Sn": 60.4,
+    "base_Pr": 80.1,
+    "exon_Sn": 41.1,
+    "exon_Pr": 56.5,
+    "intron_Pr": 67.9,
+    "transcript_Pr": 17.8,
+    "query_mRNA": 6836,
+    "query_loci": 6394,
+    "ref_mRNA": 8483,
+    "ref_loci": 6691,
+    "ref_file": "fig3_regen/refs/V_vinifera.testset.gff3",
+    "query_file": "fig3_gap_diagnosis/preds_repaired/V_vinifera_test400M.repaired.gff3",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_noRunaway": {
+    "base_Sn": 60.4,
+    "base_Pr": 80.1,
+    "exon_Sn": 41.1,
+    "exon_Pr": 56.5,
+    "intron_Pr": 67.9,
+    "transcript_Pr": 17.8,
+    "query_mRNA": 6836
+   },
+   "basemass_ratio": {
+    "original": 0.83,
+    "rerun": 0.754,
+    "rerun_noRunaway": 0.754
+   },
+   "runaway": {
+    "ref_max_mRNA_span_bp": 49081,
+    "n_runaway_tx": 0,
+    "runaway_exonic_bp": 0,
+    "runaway_pct_of_pred_exonic": 0.0,
+    "runaway_ids": []
+   },
+   "ref_set_delta_pct": -2.6,
+   "delta_basePr_orig_minus_noRunaway": -2.0,
+   "delta_basePr_rerun_to_noRunaway": 0.0,
+   "verdict": "concordant",
+   "cause": "no runaway contamination in either run",
+   "canonical_recommendation": "rerun_noRunaway",
+   "notes": [
+    "SECONDARY: base sensitivity diverges 64.8 -> 60.4 (-4.4); not runaway-driven, cause undetermined"
+   ]
+  },
+  {
+   "species": "Z_mays",
+   "original_code": "Zm0",
+   "original_denovo": {
+    "base_Sn": 63.8,
+    "base_Pr": 80.5,
+    "exon_Sn": 38.4,
+    "exon_Pr": 61.4,
+    "intron_Pr": 62.9,
+    "transcript_Pr": 23.8,
+    "query_mRNA": 7902,
+    "query_loci": 7411,
+    "ref_mRNA": 25123,
+    "ref_loci": 7458,
+    "ref_file": "<code>_hyenaTest_labels.gff3 (NOT ARCHIVED)",
+    "query_file": "<code>_hyenaTest_prediction_noPost.gff3 (NOT ARCHIVED)",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_buggy_RC": {
+    "base_Sn": 65.7,
+    "base_Pr": 80.7,
+    "exon_Pr": 40.3,
+    "query_loci": 35281
+   },
+   "rerun_repaired": {
+    "base_Sn": 69.3,
+    "base_Pr": 79.3,
+    "exon_Sn": 43.9,
+    "exon_Pr": 60.3,
+    "intron_Pr": 61.2,
+    "transcript_Pr": 20.3,
+    "query_mRNA": 49894,
+    "query_loci": 35734,
+    "ref_mRNA": 100245,
+    "ref_loci": 36352,
+    "ref_file": "fig3_regen/refs/Z_mays.testset.gff3",
+    "query_file": "fig3_gap_diagnosis/preds_repaired/Z_mays_test400M.repaired.gff3",
+    "gffcompare_version": "0.12.6"
+   },
+   "rerun_noRunaway": {
+    "base_Sn": 69.3,
+    "base_Pr": 79.3,
+    "exon_Sn": 43.9,
+    "exon_Pr": 60.3,
+    "intron_Pr": 61.2,
+    "transcript_Pr": 20.3,
+    "query_mRNA": 49894
+   },
+   "basemass_ratio": {
+    "original": 0.793,
+    "rerun": 0.874,
+    "rerun_noRunaway": 0.874
+   },
+   "runaway": {
+    "ref_max_mRNA_span_bp": 49061,
+    "n_runaway_tx": 0,
+    "runaway_exonic_bp": 0,
+    "runaway_pct_of_pred_exonic": 0.0,
+    "runaway_ids": []
+   },
+   "ref_set_delta_pct": 299.0,
+   "delta_basePr_orig_minus_noRunaway": 1.2,
+   "delta_basePr_rerun_to_noRunaway": 0.0,
+   "verdict": "concordant",
+   "cause": "no runaway contamination in either run",
+   "canonical_recommendation": "rerun_noRunaway",
+   "notes": [
+    "SECONDARY: base sensitivity diverges 63.8 -> 69.3 (+5.5); not runaway-driven, cause undetermined",
+    "SECONDARY: reference test set differs by 299.0% (25123 -> 100245 ref mRNAs); different test set, not comparable"
+   ]
+  }
+ ]
+}

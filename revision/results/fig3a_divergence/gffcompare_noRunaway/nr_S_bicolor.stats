@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_regen/refs/S_bicolor.testset.gff3 -o gffcompare_noRunaway/nr_S_bicolor preds_noRunaway/S_bicolor.noRunaway.gff3
+#
+
+#= Summary for dataset: preds_noRunaway/S_bicolor.noRunaway.gff3 
+#     Query mRNAs :    5788 in    5391 loci  (4608 multi-exon transcripts)
+#            (267 multi-transcript loci, ~1.1 transcripts per locus)
+# Reference mRNAs :    8580 in    5428 loci  (7313 multi-exon)
+# Super-loci w/ reference transcripts:     5111
+#-----------------| Sensitivity | Precision  |
+        Base level:    80.1     |    90.4    |
+        Exon level:    61.7     |    72.1    |
+      Intron level:    69.0     |    76.5    |
+Intron chain level:    27.2     |    43.1    |
+  Transcript level:    23.1     |    34.3    |
+       Locus level:    36.3     |    36.6    |
+
+     Matching intron chains:    1986
+       Matching transcripts:    1986
+              Matching loci:    1971
+
+          Missed exons:    3564/35651	( 10.0%)
+           Novel exons:    1932/28997	(  6.7%)
+        Missed introns:    2766/25764	( 10.7%)
+         Novel introns:    1277/23261	(  5.5%)
+           Missed loci:     311/5428	(  5.7%)
+            Novel loci:     272/5391	(  5.0%)
+
+ Total union super-loci across all input datasets: 5383 
+5788 out of 5788 consensus transcripts written in gffcompare_noRunaway/nr_S_bicolor.annotated.gtf (0 discarded as redundant)

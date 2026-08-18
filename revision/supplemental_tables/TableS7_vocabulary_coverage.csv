@@ -1,15 +1,15 @@
-Annotation,Genes (n),Max CDS segments,CDS p99,Max 5′-UTR segments,5′-UTR p99,Max 3′-UTR segments,3′-UTR p99,Genes over 150 CDS (n),Genes over 50 5′-UTR (n),Genes over 50 3′-UTR (n),Genes over any limit (n),Genes within all limits (%)
-Arabidopsis thaliana,27206,78,24,14,5,15,4,0,0,0,0,100.0
-Brachypodium distachyon,34310,84,23,24,8,22,8,0,0,0,0,100.0
-Brassica rapa,38746,82,26,37,9,23,7,0,0,0,0,100.0
-Glycine max,48387,84,25,34,10,23,8,0,0,0,0,100.0
-Lactuca sativa,38910,94,26,16,3,12,3,0,0,0,0,100.0
-Oryza sativa,42189,81,21,24,6,36,6,0,0,0,0,100.0
-Physcomitrium patens,32926,81,26,24,11,25,8,0,0,0,0,100.0
-Populus trichocarpa,34699,85,25,24,8,23,7,0,0,0,0,100.0
-Sorghum bicolor,32160,89,23,22,7,21,7,0,0,0,0,100.0
-Setaria italica,34584,83,23,18,5,19,5,0,0,0,0,100.0
-Solanum lycopersicum,36648,201,26,30,6,52,6,1,0,1,2,99.995
-Vitis vinifera,47971,101,22,25,3,20,3,0,0,0,0,100.0
-Zea mays,39324,146,41,232,43,322,40,0,280,222,360,99.085
-AtRTD3 (A. thaliana long-read transcriptome),40571,81,33,133,17,135,43,0,3,182,183,99.549
+Annotation,Genes (n),Max CDS segments,CDS p99,Max 5′-UTR segments,5′-UTR p99,Max 3′-UTR segments,3′-UTR p99,Genes over 150 CDS (n),Genes over 50 5′-UTR (n),Genes over 50 3′-UTR (n),Genes over any limit (n),Genes within all limits (%),Token length median,Token length p99,Token length max,"Genes over 2,048 tokens (n)","Genes over 2,048 tokens (%)"
+Arabidopsis thaliana,27206,78,24,14,5,15,4,0,0,0,0,100.0,81,384,1195,0,0.0
+Brachypodium distachyon,34310,84,23,24,8,22,8,0,0,0,0,100.0,68,472,1731,0,0.0
+Brassica rapa,38746,82,26,37,9,23,7,0,0,0,0,100.0,81,552,2140,2,0.005
+Glycine max,48387,84,25,34,10,23,8,0,0,0,0,100.0,93,572,1926,0,0.0
+Lactuca sativa,38910,94,26,16,3,12,3,0,0,0,0,100.0,81,409,1418,0,0.0
+Oryza sativa,42189,81,21,24,6,36,6,0,0,0,0,100.0,55,362,1268,0,0.0
+Physcomitrium patens,32926,81,26,24,11,25,8,0,0,0,0,100.0,101,626,1831,0,0.0
+Populus trichocarpa,34699,85,25,24,8,23,7,0,0,0,0,100.0,83,513,1826,0,0.0
+Sorghum bicolor,32160,89,23,22,7,21,7,0,0,0,0,100.0,68,451,2036,0,0.0
+Setaria italica,34584,83,23,18,5,19,5,0,0,0,0,100.0,68,375,1617,0,0.0
+Solanum lycopersicum,36648,201,26,30,6,52,6,1,0,1,2,99.995,66,466,1601,0,0.0
+Vitis vinifera,47971,101,22,25,3,20,3,0,0,0,0,100.0,55,343,1121,0,0.0
+Zea mays,39324,146,41,232,43,322,40,0,280,222,360,99.085,81,2026,14609,383,0.976
+AtRTD3 (A. thaliana long-read transcriptome),40571,81,33,133,17,135,43,0,3,182,183,99.549,98,1485,4744,99,0.267

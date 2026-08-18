@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_regen/refs/V_vinifera.testset.gff3 -o gffcompare_noRunaway/nr_V_vinifera preds_noRunaway/V_vinifera.noRunaway.gff3
+#
+
+#= Summary for dataset: preds_noRunaway/V_vinifera.noRunaway.gff3 
+#     Query mRNAs :    6836 in    6394 loci  (3855 multi-exon transcripts)
+#            (230 multi-transcript loci, ~1.1 transcripts per locus)
+# Reference mRNAs :    8483 in    6691 loci  (5680 multi-exon)
+# Super-loci w/ reference transcripts:     5379
+#-----------------| Sensitivity | Precision  |
+        Base level:    60.4     |    80.1    |
+        Exon level:    41.1     |    56.5    |
+      Intron level:    48.4     |    67.9    |
+Intron chain level:    21.5     |    31.6    |
+  Transcript level:    14.4     |    17.8    |
+       Locus level:    18.2     |    19.0    |
+
+     Matching intron chains:    1219
+       Matching transcripts:    1219
+              Matching loci:    1216
+
+          Missed exons:    9523/32997	( 28.9%)
+           Novel exons:    2868/23944	( 12.0%)
+        Missed introns:    7410/24133	( 30.7%)
+         Novel introns:    1415/17192	(  8.2%)
+           Missed loci:    1289/6691	( 19.3%)
+            Novel loci:    1008/6394	( 15.8%)
+
+ Total union super-loci across all input datasets: 6387 
+6836 out of 6836 consensus transcripts written in gffcompare_noRunaway/nr_V_vinifera.annotated.gtf (0 discarded as redundant)

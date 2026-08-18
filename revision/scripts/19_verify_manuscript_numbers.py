@@ -681,7 +681,201 @@ check("unmasked-Tiberius leader species (Results)", "V_vinifera",
 check("species led by Helixer at transcript level (Results)", 2, _leader["helixer"], src8)
 check("species led by ANNEVO at transcript level (Results)", 1, _leader["annevo"], src8)
 
-# ------------------------ Figure 3 anchors and trends (Results l.34) -------
+# ------------------------ Figure 3A canonical re-inference (R11) -----------
+# Figure 3A now plots the repaired-RC re-inference with runaway transcripts excluded
+# (predicted mRNA span > same-species reference maximum). The manuscript quotes the
+# canonical values in the abstract/Results/Methods and keeps the originally computed
+# 92.2 / 71.1 as disclosed history (checked further down against fig3_original).
+_nr = RES / "fig3a_divergence" / "gffcompare_noRunaway"
+for _sp, _label, _f1c, _snc, _prc in (
+    ("A_thaliana", "A. thaliana", 92.0, None, None),
+    ("Z_mays", "Z. mays", 74.0, 69.3, 79.3),
+    ("G_max", "G. max", None, None, 90.2),
+    ("P_trichocarpa", "P. trichocarpa", None, None, 89.3),
+    ("S_bicolor", "S. bicolor", None, None, 90.4),
+    ("V_vinifera", "V. vinifera", None, 60.4, None),
+):
+    _m = re.search(r"Base level:\s*([\d.]+)\s*\|\s*([\d.]+)",
+                   (_nr / f"nr_{_sp}.stats").read_text())
+    _sn, _pr = float(_m.group(1)), float(_m.group(2))
+    _src = f"fig3a_divergence/gffcompare_noRunaway/nr_{_sp}.stats"
+    if _f1c is not None:
+        check(f"{_label} canonical base F1 (Fig. 3A)", _f1c,
+              round(2 * _sn * _pr / (_sn + _pr), 1), _src)
+    if _snc is not None:
+        check(f"{_label} canonical base Sn (Fig. 3A)", _snc, _sn, _src)
+    if _prc is not None:
+        check(f"{_label} canonical base Pr (Fig. 3A)", _prc, _pr, _src)
+
+# Z. mays evaluation-set change disclosed in Methods and the Figure 3 legend.
+_zm_txt = (_nr / "nr_Z_mays.stats").read_text()
+check("Z. mays re-inference reference loci (Methods, legend)", 36352,
+      int(re.search(r"Reference mRNAs\s*:\s*\d+\s+in\s+(\d+)\s+loci", _zm_txt).group(1)),
+      "fig3a_divergence/gffcompare_noRunaway/nr_Z_mays.stats")
+_diag = jload(RES / "fig3a_divergence" / "fig3a_divergence_diagnosis.json")
+_zm_orig = next(s for s in _diag["per_species"] if s["species"] == "Z_mays")
+check("Z. mays original evaluation reference loci (Methods, legend)", 7458,
+      _zm_orig["original_denovo"]["ref_loci"], "fig3a_divergence_diagnosis.json")
+
+# Runaway exclusion rule: counts per species and the reference-maximum range.
+_inv = jload(RES / "fig3a_divergence" / "runaway_inventory.json")
+for _sp, _label, _n in (("G_max", "G. max", 2), ("P_patens", "P. patens", 1),
+                        ("P_trichocarpa", "P. trichocarpa", 1), ("S_bicolor", "S. bicolor", 3)):
+    check(f"runaway transcripts excluded, {_label} (Methods)", _n,
+          _inv[_sp]["n_runaway_tx"], "runaway_inventory.json")
+check("runaway transcripts excluded, total (Methods)", 7,
+      sum(v["n_runaway_tx"] for v in _inv.values()), "runaway_inventory.json")
+check("reference mRNA span maxima, min (Methods)", 25965,
+      min(v["ref_max_mRNA_span"] for v in _inv.values()), "runaway_inventory.json")
+check("reference mRNA span maxima, max (Methods)", 49081,
+      max(v["ref_max_mRNA_span"] for v in _inv.values()), "runaway_inventory.json")
+
+# Superseded original precisions disclosed in Methods.
+for _sp, _label, _claim in (("G_max", "G. max", 66.0), ("P_trichocarpa", "P. trichocarpa", 72.4)):
+    _row = next(s for s in _diag["per_species"] if s["species"] == _sp)
+    check(f"{_label} original (superseded) base Pr (Methods)", _claim,
+          _row["original_denovo"]["base_Pr"], "fig3a_divergence_diagnosis.json")
+_vv = next(s for s in _diag["per_species"] if s["species"] == "V_vinifera")
+check("V. vinifera base Sn divergence (legend footnote)", 4.4,
+      round(_vv["original_denovo"]["base_Sn"] - _vv["rerun_noRunaway"]["base_Sn"], 1),
+      "fig3a_divergence_diagnosis.json")
+
+# ------------------------ Decoder token cap (R13, Results/Methods/S7) ------
+# The GSF-label token-length audit behind the decoder-budget sentences and the five
+# token-length columns of Table S7 (52_decoder_token_cap_audit.py).
+_tcap = jload(RES / "decoder_token_cap" / "decoder_token_cap_summary.json")
+_tsp = {s["species"]: s for s in _tcap["species"]}
+check("Z. mays genes over 2,048 tokens (Results)", 383,
+      _tsp["Z_mays"]["genes_over_token_cap"], "decoder_token_cap_summary.json")
+check("Z. mays % over 2,048 tokens (Results)", 0.976,
+      _tsp["Z_mays"]["pct_over_token_cap"], "decoder_token_cap_summary.json")
+check("Z. mays GSF label p99 tokens (Results)", 2026,
+      _tsp["Z_mays"]["token_length"]["p99"], "decoder_token_cap_summary.json")
+check("Z. mays GSF label max tokens (Results)", 14609,
+      _tsp["Z_mays"]["token_length"]["max"], "decoder_token_cap_summary.json")
+check("AtRTD3 genes over 2,048 tokens (Results)", 99,
+      _tsp["AtRTD3"]["genes_over_token_cap"], "decoder_token_cap_summary.json")
+check("AtRTD3 % over 2,048 tokens (Results)", 0.267,
+      _tsp["AtRTD3"]["pct_over_token_cap"], "decoder_token_cap_summary.json")
+check("B. rapa genes over 2,048 tokens (Results)", 2,
+      _tsp["B_rapa"]["genes_over_token_cap"], "decoder_token_cap_summary.json")
+_rest = [s for k, s in _tsp.items() if k not in ("Z_mays", "AtRTD3", "B_rapa")]
+check("other annotations over 2,048 tokens (Results)", 0,
+      sum(s["genes_over_token_cap"] for s in _rest), "decoder_token_cap_summary.json")
+_p99s = sorted(s["token_length"]["p99"] for k, s in _tsp.items()
+               if k not in ("Z_mays", "AtRTD3", "B_rapa")) + \
+        [_tsp["B_rapa"]["token_length"]["p99"]]
+check("non-binding annotations p99 range low (Results)", 343, min(_p99s),
+      "decoder_token_cap_summary.json")
+check("non-binding annotations p99 range high (Results)", 626, max(_p99s),
+      "decoder_token_cap_summary.json")
+check("Z. mays vocab-legal genes over token cap (Results, S7 note)", 92,
+      _tsp["Z_mays"]["constraint_contingency"]["over_token_cap_only"],
+      "decoder_token_cap_summary.json")
+check("Z. mays vocab-over genes within token cap (S7 note)", 54,
+      _tsp["Z_mays"]["constraint_contingency"]["over_vocab_limit_only"],
+      "decoder_token_cap_summary.json")
+check("Z. mays tokenized genes within token budget % (Results, Methods)", 99.02,
+      round(100 - _tsp["Z_mays"]["pct_over_token_cap"], 2),
+      "decoder_token_cap_summary.json")
+# The two bounds bind different genes, so "within both" needs the union, not the
+# token-only figure (caught by cross-check on 2026-08-17).
+_zc = _tsp["Z_mays"]["constraint_contingency"]
+check("Z. mays genes over either bound, union (Methods basis)", 437,
+      _zc["over_token_cap_only"] + _zc["over_vocab_limit_only"] + _zc["over_both"],
+      "decoder_token_cap_summary.json")
+check("Z. mays tokenized genes within both bounds % (Methods)", 98.89,
+      round(100 * _zc["over_neither"] / _tsp["Z_mays"]["genes_tokenized"], 2),
+      "decoder_token_cap_summary.json")
+# The 366-transcript / 14,609-token locus and the S. lycopersicum 201-CDS gene's
+# over-window region, both quoted in Results.
+_zm_top = max(csv.DictReader(
+    (RES / "decoder_token_cap" / "per_gene_token_lengths_Z_mays.tsv").open(),
+    delimiter="\t"), key=lambda r: int(r["n_tokens"]))
+check("max-token Z. mays locus transcript count (Results)", 366,
+      int(_zm_top["n_transcripts"]), "per_gene_token_lengths_Z_mays.tsv")
+_sl_201 = next(r for r in csv.DictReader(
+    (RES / "decoder_token_cap" / "per_gene_token_lengths_S_lycopersicum.tsv").open(),
+    delimiter="\t") if r["n_cds"] == "201")
+check("201-CDS S. lycopersicum gene padded region nt (Results)", 73728,
+      int(_sl_201["region_length"]), "per_gene_token_lengths_S_lycopersicum.tsv")
+check("201-CDS S. lycopersicum gene excluded pre-tokenization (Results)",
+      "region_over_maxlen", _sl_201["preprocess_status"],
+      "per_gene_token_lengths_S_lycopersicum.tsv")
+
+# ------------------------ Factorial missing cell (R8, Discussion) ----------
+# TAIR10 CDS carrying Helixer's UTR — the cell the Discussion's factorial sentence
+# quotes at 3.1% (221/7,092) unfiltered and 21.6% (983 survivors) filtered.
+_pt = RES / "prompt_transfer"
+_mc = jload(_pt / "tair10cdshelixerutr_as_additions.json")
+check("missing-cell added structures (Discussion)", 7092,
+      _mc["added_structures"], "prompt_transfer/tair10cdshelixerutr_as_additions.json")
+check("missing-cell TAIR10-alt matches (Discussion)", 221,
+      _mc["added_matching_TAIR10_alternative_exact_CDS"],
+      "prompt_transfer/tair10cdshelixerutr_as_additions.json")
+check("missing-cell precision vs TAIR10 alt % (Discussion)", 3.1,
+      _mc["precision_vs_TAIR10_alternatives_pct"],
+      "prompt_transfer/tair10cdshelixerutr_as_additions.json")
+_mcf = jload(_pt / "tair10cdshelixerutr_filtered_as_additions.json")
+check("missing-cell filtered added structures (Discussion)", 983,
+      _mcf["added_structures"],
+      "prompt_transfer/tair10cdshelixerutr_filtered_as_additions.json")
+check("missing-cell filtered precision vs TAIR10 alt % (Discussion)", 21.6,
+      _mcf["precision_vs_TAIR10_alternatives_pct"],
+      "prompt_transfer/tair10cdshelixerutr_filtered_as_additions.json")
+# The comparison anchor in the same sentence: withholding UTRs entirely gives 4.6%.
+_ts = jload(_pt / "tair10self_as_additions.json")
+check("no-UTR comparison anchor % (Discussion)", 4.6,
+      _ts["precision_vs_TAIR10_alternatives_pct"],
+      "prompt_transfer/tair10self_as_additions.json")
+
+# ------------------------ Donation arms, strand-corrected re-run (Discussion, S11)
+# The first build donated UTRs by coordinate rather than strand; the Discussion
+# discloses the bug and quotes the corrected re-run.
+for _stem, _label, _added, _match, _pct, _old_added, _old_pct in (
+    ("helixertairutr", "Helixer", 288, 3, 1.0, 350, 0.9),
+    ("annevotairutr", "ANNEVO", 223, 4, 1.8, 345, 1.2),
+):
+    _fx = jload(_pt / f"{_stem}_fixed_as_additions.json")
+    check(f"donation re-run added, {_label} (Discussion)", _added,
+          _fx["added_structures"], f"prompt_transfer/{_stem}_fixed_as_additions.json")
+    check(f"donation re-run correct additions, {_label} (Discussion)", _match,
+          _fx["added_matching_TAIR10_alternative_exact_CDS"],
+          f"prompt_transfer/{_stem}_fixed_as_additions.json")
+    check(f"donation re-run precision %, {_label} (Discussion)", _pct,
+          _fx["precision_vs_TAIR10_alternatives_pct"],
+          f"prompt_transfer/{_stem}_fixed_as_additions.json")
+    _old = jload(_pt / f"{_stem}_as_additions.json")
+    check(f"donation first-build added, {_label} (S11 note)", _old_added,
+          _old["added_structures"], f"prompt_transfer/{_stem}_as_additions.json")
+    check(f"donation first-build correct additions unchanged, {_label} (Discussion)",
+          _match, _old["added_matching_TAIR10_alternative_exact_CDS"],
+          f"prompt_transfer/{_stem}_as_additions.json")
+    check(f"donation first-build precision %, {_label} (Discussion, S11 note)", _old_pct,
+          _old["precision_vs_TAIR10_alternatives_pct"],
+          f"prompt_transfer/{_stem}_as_additions.json")
+_bug = jload(_pt / "donation_arms_buggy_strand_audit.json")
+_fixstat = jload(_pt / "donation_arms_fixed_build_stats.json")
+check("buggy minus-strand donated loci, Helixer (Discussion)", 35,
+      _bug["helixertairutr_buggy"]["loci_with_donated_utr_by_strand"]["-"],
+      "prompt_transfer/donation_arms_buggy_strand_audit.json")
+check("buggy minus-strand loci total, Helixer (Discussion)", 11989,
+      _bug["helixertairutr_buggy"]["loci_by_strand"]["-"],
+      "prompt_transfer/donation_arms_buggy_strand_audit.json")
+check("buggy minus-strand donated loci, ANNEVO (Discussion)", 2,
+      _bug["annevotairutr_buggy"]["loci_with_donated_utr_by_strand"]["-"],
+      "prompt_transfer/donation_arms_buggy_strand_audit.json")
+check("buggy minus-strand loci total, ANNEVO (Discussion)", 10412,
+      _bug["annevotairutr_buggy"]["loci_by_strand"]["-"],
+      "prompt_transfer/donation_arms_buggy_strand_audit.json")
+check("fixed minus-strand donated loci, Helixer (Discussion)", 9922,
+      _fixstat["arm_G"]["loci_with_utr_by_strand"]["-"],
+      "prompt_transfer/donation_arms_fixed_build_stats.json")
+check("fixed minus-strand donated loci, ANNEVO (Discussion)", 8770,
+      _fixstat["arm_H"]["loci_with_utr_by_strand"]["-"],
+      "prompt_transfer/donation_arms_fixed_build_stats.json")
+
+# ------------------------ Figure 3 original anchors (disclosed history) ----
 # Sourced outside revision/results/, so nothing else checks them. The .stats files carry
 # Sn/Pr to one decimal, which is why the recomputed Z. mays F1 is 71.2 against the
 # published 71.1 — inside the rounding of its own inputs. Tolerance reflects that.

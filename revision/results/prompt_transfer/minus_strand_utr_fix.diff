@@ -1,0 +1,18 @@
+--- 35_build_frame_shift_prompts.py  (before, buggy)
++++ 35_build_frame_shift_prompts.py  (after, minus-strand fix 2026-08-17)
+@@ -1,9 +1,10 @@
+         stats["paired_to_tair10"] += 1
+         cds = info["cds"]
+         lo, hi = cds[0][0], cds[-1][1]
+-        five = [(s, min(e, lo - 1)) for s, e in partner["five"] if s < lo]
+-        three = [(max(s, hi + 1), e) for s, e in partner["three"] if e > hi]
+-        five = [(s, e) for s, e in five if s <= e]
+-        three = [(s, e) for s, e in three if s <= e]
+-        if not five and not three:
++        five, three = place_donated_utr(
++            cds, list(partner["five"]) + list(partner["three"]), info["strand"])
++        stats["loci_by_strand"][info["strand"]] += 1
++        if five or three:
++            stats["loci_with_utr_by_strand"][info["strand"]] += 1
++        else:
+             stats["partner_has_no_utr"] += 1

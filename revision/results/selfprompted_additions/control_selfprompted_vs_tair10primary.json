@@ -1,0 +1,70 @@
+{
+ "provenance": {
+  "prediction": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/A_thaliana_transgenic400M_prompt_denovo.gff3",
+  "reference_TAIR10": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/TAIR10.gtf",
+  "reference_AtRTD3": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/atRTD3_TS_21Feb22_transfix.gtf",
+  "primary_ids": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/primary_transcript_ids.txt",
+  "tool": "selfprompted_upperbound",
+  "locus_key": "overlap",
+  "prompt_source": "tair10-primary",
+  "argv": [
+   "--pred",
+   "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/A_thaliana_transgenic400M_prompt_denovo.gff3",
+   "--locus-key",
+   "overlap",
+   "--prompt-source",
+   "tair10-primary",
+   "--tool",
+   "selfprompted_upperbound",
+   "--json",
+   "results/selfprompted_additions/control_selfprompted_vs_tair10primary.json"
+  ]
+ },
+ "definitions": {
+  "addition": "a distinct CDS structure at a locus that differs from the structure supplied for that locus, identical emissions collapsed",
+  "supplied_structure": "TAIR10's curated primary transcript at the matched locus",
+  "TAIR10_alternative": "any TAIR10 transcript at the matched locus other than the curated primary from primary_transcript_ids.txt",
+  "AtRTD3_match": "equality with ANY AtRTD3 transcript at the matched locus"
+ },
+ "loci_scored": 27398,
+ "loci_with_at_least_one_addition": 21376,
+ "added_transcripts": 22299,
+ "reference_alternative_transcripts": 5555,
+ "added_matching_TAIR10_alternative_exact_CDS": 251,
+ "added_matching_TAIR10_alternative_intron_chain": 933,
+ "added_matching_any_AtRTD3_transcript": 410,
+ "precision_vs_TAIR10_alternatives_pct": 1.1,
+ "precision_vs_AtRTD3_pct": 1.8,
+ "recall_of_TAIR10_alternatives_pct": 4.5,
+ "decomposition": {
+  "precision_vs_TAIR10_alternatives_intron_chain_pct": 4.2,
+  "added_matching_TAIR10_alternative_intron_chain_reusing_prompt_chain": 44,
+  "added_matching_TAIR10_alternative_intron_chain_distinct_from_prompt": 889,
+  "added_matching_TAIR10_primary": 0,
+  "loci_where_prompt_survived": 6069,
+  "additions_at_loci_without_reference_match": 223,
+  "precision_vs_TAIR10_alternatives_at_reference_matched_loci_pct": 1.1
+ },
+ "diagnostics": {
+  "prediction_loci": 27398,
+  "prediction_gene_records": 82194,
+  "prediction_transcripts_before_dedup": 93690,
+  "prediction_transcripts_after_dedup": 31230,
+  "duplicate_export": {
+   "gene_records_per_locus": {
+    "3": 27398
+   },
+   "duplicate_records_all_identical": true,
+   "kept": "first gene record per locus"
+  },
+  "mapping": {
+   "locus_key": "overlap",
+   "loci_matched_to_reference": 27179,
+   "loci_without_reference_match": 219,
+   "split_predictions": 173,
+   "loci_overlapping_before_one_to_one_resolution": 27352
+  },
+  "reference_loci": 27416,
+  "added_matching_TAIR10_alternative_exact_CDS_opposite_strand": 0
+ }
+}

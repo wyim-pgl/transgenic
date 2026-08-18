@@ -288,7 +288,7 @@ a README explaining why:
 
 | Do not submit | Submit instead | Why |
 |---|---|---|
-| `figure3_performance.*` | `figure3_performance_original.*` | the former is the reconstruction; the latter is regenerated from the preserved original outputs and reproduces the presented anchors (A. thaliana 92.2, Z. mays 71.2) |
+| `figure3_performance.*` | `figure3_performance_original.*` | the former is the reconstruction; the latter is the submission figure. Since 2026-08-17 (roadmap R11) its panel A plots the repaired-RC re-inference with runaway transcripts excluded (`revision/results/fig3a_divergence/gffcompare_noRunaway/nr_*.stats`, anchors A. thaliana 92.0 / Z. mays 74.0) and panel B the alt-only AtRTD3 comparison of Table S4a (de novo 72.9/74.4 vs prompted 76.0/76.2); panels C/D still come from the preserved original artifacts, which also remain the source of the disclosed historical anchors 92.2 / 71.2 |
 | `figure4_example_loci.*` | `figure4_example_loci_original.*` | drawn from three **guessed** loci that appear nowhere in the authors' records |
 | `figure4_example_loci_rebuilt.*` | `figure4_example_loci_original.*` | five sound panels drawn from the **wrong inference**: none of the loci J. Lomas confirmed on 2026-08-04 can be drawn from the file it used, and one of its panels claimed four TAIR10 chains for a locus that has two in the evaluation the manuscript reports |
 

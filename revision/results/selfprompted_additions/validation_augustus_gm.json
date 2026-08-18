@@ -1,0 +1,69 @@
+{
+ "provenance": {
+  "prediction": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/A_thaliana_augustusSampling.gff3",
+  "reference_TAIR10": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/TAIR10.gtf",
+  "reference_AtRTD3": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/atRTD3_TS_21Feb22_transfix.gtf",
+  "primary_ids": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/primary_transcript_ids.txt",
+  "tool": "augustusSampling",
+  "locus_key": "gm",
+  "prompt_source": "first-transcript",
+  "argv": [
+   "--pred",
+   "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/A_thaliana_augustusSampling.gff3",
+   "--locus-key",
+   "gm",
+   "--prompt-source",
+   "first-transcript",
+   "--tool",
+   "augustusSampling",
+   "--json",
+   "results/selfprompted_additions/validation_augustus_gm.json"
+  ]
+ },
+ "definitions": {
+  "addition": "a distinct CDS structure at a locus that differs from the structure supplied for that locus, identical emissions collapsed",
+  "supplied_structure": "the locus's own first transcript, the self-prompt",
+  "TAIR10_alternative": "any TAIR10 transcript at the matched locus other than the curated primary from primary_transcript_ids.txt",
+  "AtRTD3_match": "equality with ANY AtRTD3 transcript at the matched locus"
+ },
+ "loci_scored": 25597,
+ "loci_with_at_least_one_addition": 12681,
+ "added_transcripts": 43433,
+ "reference_alternative_transcripts": 5554,
+ "added_matching_TAIR10_alternative_exact_CDS": 574,
+ "added_matching_TAIR10_alternative_intron_chain": 1088,
+ "added_matching_any_AtRTD3_transcript": 4409,
+ "precision_vs_TAIR10_alternatives_pct": 1.3,
+ "precision_vs_AtRTD3_pct": 10.2,
+ "recall_of_TAIR10_alternatives_pct": 10.3,
+ "decomposition": {
+  "precision_vs_TAIR10_alternatives_intron_chain_pct": 2.5,
+  "added_matching_TAIR10_alternative_intron_chain_reusing_prompt_chain": 437,
+  "added_matching_TAIR10_alternative_intron_chain_distinct_from_prompt": 651,
+  "added_matching_TAIR10_primary": 2921,
+  "loci_where_prompt_survived": 25597,
+  "additions_at_loci_without_reference_match": 0,
+  "precision_vs_TAIR10_alternatives_at_reference_matched_loci_pct": 1.3
+ },
+ "diagnostics": {
+  "prediction_loci": 25597,
+  "prediction_gene_records": 25597,
+  "prediction_transcripts_before_dedup": 69049,
+  "prediction_transcripts_after_dedup": 69049,
+  "duplicate_export": {
+   "gene_records_per_locus": {
+    "1": 25597
+   },
+   "duplicate_records_all_identical": true,
+   "kept": "first gene record per locus"
+  },
+  "mapping": {
+   "locus_key": "gm",
+   "loci_matched_to_reference": 25597,
+   "loci_without_reference_match": 0,
+   "split_predictions": null
+  },
+  "reference_loci": 27416,
+  "added_matching_TAIR10_alternative_exact_CDS_opposite_strand": 5
+ }
+}

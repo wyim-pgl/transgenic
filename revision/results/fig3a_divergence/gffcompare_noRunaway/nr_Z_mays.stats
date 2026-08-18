@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_regen/refs/Z_mays.testset.gff3 -o gffcompare_noRunaway/nr_Z_mays preds_noRunaway/Z_mays.noRunaway.gff3
+#
+
+#= Summary for dataset: preds_noRunaway/Z_mays.noRunaway.gff3 
+#     Query mRNAs :   49894 in   35734 loci  (41003 multi-exon transcripts)
+#            (12215 multi-transcript loci, ~1.4 transcripts per locus)
+# Reference mRNAs :  100245 in   36352 loci  (92774 multi-exon)
+# Super-loci w/ reference transcripts:    33539
+#-----------------| Sensitivity | Precision  |
+        Base level:    69.3     |    79.3    |
+        Exon level:    43.9     |    60.3    |
+      Intron level:    49.2     |    61.2    |
+Intron chain level:    10.9     |    24.7    |
+  Transcript level:    10.1     |    20.3    |
+       Locus level:    27.2     |    27.7    |
+
+     Matching intron chains:   10140
+       Matching transcripts:   10140
+              Matching loci:    9901
+
+          Missed exons:   49792/319061	( 15.6%)
+           Novel exons:   24023/216254	( 11.1%)
+        Missed introns:   37316/201318	( 18.5%)
+         Novel introns:   13031/161959	(  8.0%)
+           Missed loci:    2599/36352	(  7.1%)
+            Novel loci:    2116/35734	(  5.9%)
+
+ Total union super-loci across all input datasets: 35655 
+49894 out of 49894 consensus transcripts written in gffcompare_noRunaway/nr_Z_mays.annotated.gtf (0 discarded as redundant)

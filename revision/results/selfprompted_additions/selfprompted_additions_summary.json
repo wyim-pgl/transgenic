@@ -1,0 +1,214 @@
+{
+ "generated": "2026-08-17",
+ "script": "revision/scripts/51_score_selfprompted_additions.py",
+ "question": "Reviewer 2's alternative-isoform precision, with the supplied transcript removed, for the fully ab initio self-prompted mode \u2014 the symmetric comparator to AUGUSTUS that the published 18.1% vs 1.3% contrast lacks.",
+ "reproduction_check": {
+  "requirement": "the same code path must re-derive both published numbers from 28_score_added_isoforms.py before the self-prompted number is credible",
+  "reference_prompted_all_10_fields_identical_to_published": true,
+  "augustus_all_10_fields_identical_to_published": true,
+  "published_reference_prompted": {
+   "loci_scored": 27413,
+   "loci_with_at_least_one_addition": 1076,
+   "added_transcripts": 1103,
+   "reference_alternative_transcripts": 5580,
+   "added_matching_TAIR10_alternative_exact_CDS": 200,
+   "added_matching_TAIR10_alternative_intron_chain": 343,
+   "added_matching_any_AtRTD3_transcript": 204,
+   "precision_vs_TAIR10_alternatives_pct": 18.1,
+   "precision_vs_AtRTD3_pct": 18.5,
+   "recall_of_TAIR10_alternatives_pct": 3.6
+  },
+  "reproduced_reference_prompted": {
+   "loci_scored": 27413,
+   "loci_with_at_least_one_addition": 1076,
+   "added_transcripts": 1103,
+   "reference_alternative_transcripts": 5580,
+   "added_matching_TAIR10_alternative_exact_CDS": 200,
+   "added_matching_TAIR10_alternative_intron_chain": 343,
+   "added_matching_any_AtRTD3_transcript": 204,
+   "precision_vs_TAIR10_alternatives_pct": 18.1,
+   "precision_vs_AtRTD3_pct": 18.5,
+   "recall_of_TAIR10_alternatives_pct": 3.6
+  },
+  "published_augustus": {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 12681,
+   "added_transcripts": 43433,
+   "reference_alternative_transcripts": 5554,
+   "added_matching_TAIR10_alternative_exact_CDS": 574,
+   "added_matching_TAIR10_alternative_intron_chain": 1088,
+   "added_matching_any_AtRTD3_transcript": 4409,
+   "precision_vs_TAIR10_alternatives_pct": 1.3,
+   "precision_vs_AtRTD3_pct": 10.2,
+   "recall_of_TAIR10_alternatives_pct": 10.3
+  },
+  "reproduced_augustus": {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 12681,
+   "added_transcripts": 43433,
+   "reference_alternative_transcripts": 5554,
+   "added_matching_TAIR10_alternative_exact_CDS": 574,
+   "added_matching_TAIR10_alternative_intron_chain": 1088,
+   "added_matching_any_AtRTD3_transcript": 4409,
+   "precision_vs_TAIR10_alternatives_pct": 1.3,
+   "precision_vs_AtRTD3_pct": 10.2,
+   "recall_of_TAIR10_alternatives_pct": 10.3
+  }
+ },
+ "comparison": {
+  "TransGenic_400M_reference_prompted": {
+   "loci_scored": 27413,
+   "loci_with_at_least_one_addition": 1076,
+   "added_transcripts": 1103,
+   "reference_alternative_transcripts": 5580,
+   "added_matching_TAIR10_alternative_exact_CDS": 200,
+   "added_matching_TAIR10_alternative_intron_chain": 343,
+   "added_matching_any_AtRTD3_transcript": 204,
+   "precision_vs_TAIR10_alternatives_pct": 18.1,
+   "precision_vs_AtRTD3_pct": 18.5,
+   "recall_of_TAIR10_alternatives_pct": 3.6,
+   "prompt": "TAIR10 curated primary transcript",
+   "locus_key": "gm"
+  },
+  "AUGUSTUS_posterior_sampling": {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 12681,
+   "added_transcripts": 43433,
+   "reference_alternative_transcripts": 5554,
+   "added_matching_TAIR10_alternative_exact_CDS": 574,
+   "added_matching_TAIR10_alternative_intron_chain": 1088,
+   "added_matching_any_AtRTD3_transcript": 4409,
+   "precision_vs_TAIR10_alternatives_pct": 1.3,
+   "precision_vs_AtRTD3_pct": 10.2,
+   "recall_of_TAIR10_alternatives_pct": 10.3,
+   "prompt": "its own first prediction",
+   "locus_key": "gm"
+  },
+  "TransGenic_400M_self_prompted": {
+   "loci_scored": 27398,
+   "loci_with_at_least_one_addition": 949,
+   "added_transcripts": 970,
+   "reference_alternative_transcripts": 5555,
+   "added_matching_TAIR10_alternative_exact_CDS": 1,
+   "added_matching_TAIR10_alternative_intron_chain": 11,
+   "added_matching_any_AtRTD3_transcript": 6,
+   "precision_vs_TAIR10_alternatives_pct": 0.1,
+   "precision_vs_AtRTD3_pct": 0.6,
+   "recall_of_TAIR10_alternatives_pct": 0.0,
+   "prompt": "its own de novo first transcript",
+   "locus_key": "overlap"
+  }
+ },
+ "controls": {
+  "note": "self-prompted GM= tags are the model's own de novo locus ids and carry no reference identity, so its loci must be paired to TAIR10 by position. These runs put the two published files through that same positional matcher to size what the matcher itself costs \u2014 the answer is nothing on the exact-CDS hits.",
+  "reference_prompted_overlap_key": {
+   "loci_scored": 27413,
+   "loci_with_at_least_one_addition": 1083,
+   "added_transcripts": 1110,
+   "reference_alternative_transcripts": 5576,
+   "added_matching_TAIR10_alternative_exact_CDS": 200,
+   "added_matching_TAIR10_alternative_intron_chain": 343,
+   "added_matching_any_AtRTD3_transcript": 204,
+   "precision_vs_TAIR10_alternatives_pct": 18.0,
+   "precision_vs_AtRTD3_pct": 18.4,
+   "recall_of_TAIR10_alternatives_pct": 3.6
+  },
+  "augustus_overlap_key": {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 12681,
+   "added_transcripts": 43433,
+   "reference_alternative_transcripts": 5553,
+   "added_matching_TAIR10_alternative_exact_CDS": 574,
+   "added_matching_TAIR10_alternative_intron_chain": 1088,
+   "added_matching_any_AtRTD3_transcript": 4402,
+   "precision_vs_TAIR10_alternatives_pct": 1.3,
+   "precision_vs_AtRTD3_pct": 10.1,
+   "recall_of_TAIR10_alternatives_pct": 10.3
+  },
+  "exact_CDS_hits_unchanged_by_locus_key": {
+   "reference_prompted": [
+    200,
+    200
+   ],
+   "augustus": [
+    574,
+    574
+   ]
+  },
+  "locus_free_upper_bound": {
+   "note": "every addition tested against the 5,580 TAIR10 alternative structures genome-wide, ignoring locus assignment entirely \u2014 a hard ceiling on what any pairing scheme could credit",
+   "self_prompted": {
+    "additions": 970,
+    "matches": 1,
+    "pct": 0.1
+   },
+   "reference_prompted": {
+    "additions": 1103,
+    "matches": 200,
+    "pct": 18.1
+   },
+   "augustus": {
+    "additions": 43433,
+    "matches": 580,
+    "pct": 1.3
+   }
+  },
+  "dedup_is_numerically_inert": {
+   "note": "additions are a SET of distinct structures per locus, so a tripled record contributes no new structure; --no-dedup returns the identical headline",
+   "with_dedup": {
+    "added_transcripts": 970,
+    "exact_CDS": 1,
+    "AtRTD3": 6
+   },
+   "without_dedup": {
+    "added_transcripts": 970,
+    "exact_CDS": 1,
+    "AtRTD3": 6
+   }
+  }
+ },
+ "duplicate_export_finding": {
+  "what": "the A. thaliana 400M self-prompted prediction writes every locus THREE times, byte-identical including UTRs, in the RAW model output \u2014 not introduced by standardize_gff.py",
+  "raw_file": "transgenic_comparison/results/transgenic400M_prompt_denovo/A_thaliana_400M_prompted_denovo.gff3",
+  "raw": {
+   "GM_loci": 27401,
+   "gene_records": 82203,
+   "records_per_locus": 3,
+   "all_records_identical": true
+  },
+  "standardized": {
+   "GM_loci": 27398,
+   "gene_records": 82194,
+   "mRNAs": 93690,
+   "unique_mRNAs_after_dedup": 31230,
+   "unique_mRNAs_nuclear_only": 31021
+  },
+  "affects": "Fig. 5's 93,690 and Table S5's 93,063 are each 3x the unique transcript content (31,230 and 31,021). Ratios in Table S5 (23.71, 1.141) are unaffected because the duplication is perfectly uniform; the absolute counts are not.",
+  "other_species": {
+   "note": "the duplication is confined to three species, not global",
+   "400M": {
+    "A_thaliana": "3x",
+    "P_patens": "2x",
+    "S_lycopersicum": "2x (27 loci 3x)",
+    "other_9_species": "1x"
+   },
+   "160M": {
+    "A_thaliana": "3x on 18,834 loci / 2x on 8,565",
+    "P_patens": "2x on 10,168 loci / 1x on 22,639",
+    "S_lycopersicum": "2x (5 loci 3x)",
+    "other_10_species": "1x"
+   }
+  },
+  "does_not_change_this_measurement": true
+ },
+ "interpretation": {
+  "headline": "self-prompted mode proposes 970 additional CDS structures across 27,398 loci and 1 of them matches a TAIR10 alternative transcript (0.1%); 6 match any AtRTD3 transcript (0.6%)",
+  "additions_are_real_structural_variants_not_terminus_noise": {
+   "more_CDS_segments": 522,
+   "fewer_CDS_segments": 345,
+   "same_segment_count_different_intron_chain": 61,
+   "same_intron_chain_terminus_variant_only": 42
+  },
+  "reading": "the 18.1% belongs to the reference prompt, not to the model's isoform generation. Removing the external annotation does not degrade the number toward AUGUSTUS's 1.3% \u2014 it collapses below it, because self-prompted mode both proposes 45x fewer structures than AUGUSTUS and gets essentially none of them right."
+ }
+}

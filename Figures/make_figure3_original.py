@@ -1,25 +1,40 @@
 #!/usr/bin/env python3
-"""Figure 3 rebuilt from the ORIGINAL preserved test-set artifacts.
+"""Figure 3: panels C/D from the ORIGINAL preserved artifacts, panel A from the
+audited re-inference, panel B from the alternative-only AtRTD3 evaluation.
 
-These are the artefacts that produced the published Figure 3, recovered from
-jlomas@pgl-gpu:.../TestSetPerformanceAnalysis/Hyena_Gen9G_6144nt_768L12_E22-* and
-staged under transgenic/revision/results/fig3_original/. Using them reproduces the
-published panels exactly, unlike the 2026-07-28 reconstruction, which used a
-re-seeded split and a per-gene aggregation that did not match the paper.
+Panel A (revised under roadmap R11): the original per-species GFFCompare stats
+are contaminated for some species by "runaway" predicted transcripts — a single
+blown-out UTR/CDS becomes one multi-Mb pseudo-exon that moves base-mass-weighted
+base-level precision 13-24 points while count-weighted levels move <1 point
+(original G. max Pr 66.0 and P. trichocarpa 72.4 are such artifacts). The original
+de novo prediction GFF3s were not archived, so the filter cannot be applied to
+them; panel A therefore reports the repaired-RC re-inference with runaway
+transcripts excluded (predicted mRNA span > same-species reference maximum):
+transgenic/revision/results/fig3a_divergence/gffcompare_noRunaway/nr_*.stats.
+Caveats carried as legend footnotes: V. vinifera base Sn is 4.4 points below the
+original computation (unexplained); the Z. mays evaluation set differs from the
+original (36,352 vs 7,458 reference loci), so its bars are not comparable with
+the originally reported 71.1.
 
-Anchor check (published: A. thaliana 92.2, Z. mays 71.1 base F1):
-  TAIR10 noPost base F1 = 92.2, Zm0 noPost base F1 = 71.2 — exact.
+Panel B (revised, matches the manuscript legend): base-level recall/precision/F1
+of de novo vs reference-prompted predictions scored in A. thaliana against the
+alternative-transcript-only AtRTD3 reference (Table S4a):
+transgenic/revision/results/altonly_fixed/*_vs_AtRTD3altfix.stats.
+
+Anchor check: canonical panel A base F1 — A. thaliana 92.0, Z. mays 74.0
+(original artifacts reproduce 92.2 / 71.2 and remain staged under
+transgenic/revision/results/fig3_original/).
 
 Panels:
-  A  per-species base/exon/intron/intron-chain/transcript/locus F1 (de novo noPost)
-  B  de novo (noPost) vs prompted (completion) base-level Sn/Pr per species
-  C  TAIR10 base F1 vs gene-length bin
-  D  TAIR10 base F1 vs CDS-count bin
+  A  per-species base/exon/intron/intron-chain/transcript/locus F1
+     (de novo, repaired re-inference, runaway-filtered)
+  B  de novo vs prompted base-level Sn/Pr/F1, alt-only AtRTD3 (A. thaliana)
+  C  TAIR10 base F1 vs gene-length bin (original artifacts)
+  D  TAIR10 base F1 vs CDS-count bin (original artifacts)
 
-Definition, now settled: base-level F1 = 2·Sn·Pr/(Sn+Pr) from GFFCompare on the
-noPost prediction against the test-set labels, per organism (panel A) or per
-gene-length / CDS-count bin (panels C/D). Bins come from binLengthGff.py /
-binCDSGFF.py + gffcompare, exactly as in the original pipeline.
+Definition: base-level F1 = 2·Sn·Pr/(Sn+Pr) from GFFCompare, per organism
+(panel A) or per gene-length / CDS-count bin (panels C/D). Bins come from
+binLengthGff.py / binCDSGFF.py + gffcompare, exactly as in the original pipeline.
 
 Output: transgenic/Figures/figure3_performance_original.{pdf,png} (300 dpi)
 """
@@ -42,6 +57,8 @@ import numpy as np
 
 BASE = Path("/data/gpfs/assoc/pgl/data/Transgenic")
 ORIG = BASE / "transgenic/revision/results/fig3_original"
+NR = BASE / "transgenic/revision/results/fig3a_divergence/gffcompare_noRunaway"
+ALTONLY = BASE / "transgenic/revision/results/altonly_fixed"
 OUT = BASE / "transgenic/Figures"
 
 plt.rcParams.update({
@@ -61,6 +78,16 @@ ORG = [
     ("Sobic", "S. bicolor"), ("Seita", "S. italica"), ("Pp3", "P. patens"),
     ("Zm0", "Z. mays"),
 ]
+# panel A canonical source: nr_<species>.stats keyed by species name, same order.
+# Daggers mark the two legend footnotes (V. vinifera Sn divergence; Z. mays
+# evaluation-set change) on the tick labels.
+NR_SP = {
+    "TAIR10": "A_thaliana", "Glyma": "G_max", "Potri": "P_trichocarpa",
+    "Vitvi": "V_vinifera", "Bradi": "B_distachyon", "MSUv7": "O_sativa",
+    "Sobic": "S_bicolor", "Seita": "S_italica", "Pp3": "P_patens",
+    "Zm0": "Z_mays",
+}
+NR_MARK = {"Vitvi": "†", "Zm0": "‡"}  # † / ‡
 LEVELS = ["Base", "Exon", "Intron", "Intron chain", "Transcript", "Locus"]
 LCOL = [BLUE, GREEN, ORANGE, SKY, VERM, PURP]
 
@@ -93,17 +120,17 @@ def f1(sn: float, pr: float) -> float:
 # ------------------------------------------------------------------ figure ----
 fig = plt.figure(figsize=(7.2, 8.6))
 
-# ---- Panel A -----------------------------------------------------------------
+# ---- Panel A: canonical re-inference, runaway-filtered (R11) -----------------
 axA = fig.add_axes([0.07, 0.71, 0.90, 0.22])
 axA.text(-0.065, 1.06, "A", transform=axA.transAxes, fontsize=13, fontweight="bold")
-names = [n for _, n in ORG]
+names = [n + NR_MARK.get(org, "") for org, n in ORG]
 x = np.arange(len(ORG))
 k = len(LEVELS)
 w = 0.8 / k
 for i, lv in enumerate(LEVELS):
     vals = []
     for org, _ in ORG:
-        p = ORIG / "denovo" / f"{org}_noPost.stats"
+        p = NR / f"nr_{NR_SP[org]}.stats"
         vals.append(parse_levels(p).get(lv, 0.0) if p.exists() else 0.0)
     axA.bar(x + (i - k / 2 + 0.5) * w, vals, w * 0.9, color=LCOL[i], label=lv,
             edgecolor="none")
@@ -114,28 +141,32 @@ axA.set_ylim(0, 100)
 axA.legend(ncol=6, frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.02),
            handlelength=1.1, columnspacing=1.2)
 
-# ---- Panel B: de novo vs prompted base Sn/Pr ---------------------------------
-axB = fig.add_axes([0.07, 0.40, 0.90, 0.18])
-axB.text(-0.065, 1.06, "B", transform=axB.transAxes, fontsize=13, fontweight="bold")
-w2 = 0.2
-for j, (label, col) in enumerate([("Recall", BLUE), ("Precision", ORANGE)]):
-    dn, pr = [], []
-    for org, _ in ORG:
-        d = parse_base(ORIG / "denovo" / f"{org}_noPost.stats")
-        p = parse_base(ORIG / "prompted_stats" / f"{org}_prompt.stats")
-        dn.append(d[0] if label == "Recall" else d[1])
-        pr.append(p[0] if label == "Recall" else p[1])
-    off = (j - 0.5) * (2 * w2 + 0.04)
-    axB.bar(x + off, dn, w2, color=col, edgecolor="#333333", linewidth=0.4,
-            linestyle="--", label=f"de novo {label}")
-    axB.bar(x + off + w2, pr, w2, color=col, alpha=0.5, edgecolor="none",
-            label=f"prompted {label}")
-axB.set_xticks(x)
-axB.set_xticklabels(names, rotation=40, ha="right", style="italic")
+# ---- Panel B: de novo vs prompted, alt-only AtRTD3 (matches manuscript legend)
+axB = fig.add_axes([0.30, 0.40, 0.44, 0.18])
+axB.text(-0.14, 1.06, "B", transform=axB.transAxes, fontsize=13, fontweight="bold")
+_dn = parse_base(ALTONLY / "A_thaliana_transgenic400M_vs_AtRTD3altfix.stats")
+_pr = parse_base(ALTONLY / "A_thaliana_transgenic400Mprompt_beam1_vs_AtRTD3altfix.stats")
+metricsB = ["Recall", "Precision", "F1"]
+dn_vals = [_dn[0], _dn[1], f1(_dn[0], _dn[1])]
+pr_vals = [_pr[0], _pr[1], f1(_pr[0], _pr[1])]
+xb = np.arange(len(metricsB))
+w2 = 0.32
+axB.bar(xb - w2 / 2, dn_vals, w2 * 0.92, color="white", edgecolor=BLUE,
+        linewidth=0.9, linestyle="--", label="de novo")
+axB.bar(xb + w2 / 2, pr_vals, w2 * 0.92, color=BLUE, edgecolor="none",
+        label="prompted")
+for xi, v in zip(xb - w2 / 2, dn_vals):
+    axB.text(xi, v + 1.5, f"{v:.1f}", ha="center", va="bottom", fontsize=5.5)
+for xi, v in zip(xb + w2 / 2, pr_vals):
+    axB.text(xi, v + 1.5, f"{v:.1f}", ha="center", va="bottom", fontsize=5.5)
+axB.set_xticks(xb)
+axB.set_xticklabels(metricsB)
 axB.set_ylabel("Base level (%)")
-axB.set_ylim(0, 105)
-axB.legend(ncol=4, frameon=False, fontsize=5.5, loc="lower center",
-           bbox_to_anchor=(0.5, 1.01), handlelength=1.1, columnspacing=1.0)
+axB.set_ylim(0, 95)
+axB.set_title(r"$\it{A.\ thaliana}$ vs alternative-only AtRTD3 (Table S4a)",
+              fontsize=6.5)
+axB.legend(ncol=2, frameon=False, fontsize=6, loc="lower center",
+           bbox_to_anchor=(0.5, 1.10), handlelength=1.3, columnspacing=1.4)
 
 # ---- Panels C/D: TAIR10 length and CDS bins ----------------------------------
 def load_bins(folder: str) -> tuple[list[int], list[float], list[int]]:
@@ -213,10 +244,17 @@ for ext in ("pdf", "png"):
                 bbox_inches="tight", facecolor="white")
 
 # ------------------------------------------------------------- console report -
-print("Figure 3 rebuilt from original artifacts -> figure3_performance_original.{pdf,png}")
-print("\nAnchor check (published A. thaliana 92.2, Z. mays 71.1 base F1):")
+print("Figure 3 rebuilt -> figure3_performance_original.{pdf,png}")
+print("\nPanel A canonical anchors (expected A. thaliana 92.0, Z. mays 74.0 base F1):")
+for org, name in [("TAIR10", "A. thaliana"), ("Zm0", "Z. mays")]:
+    sn, pr, _ = parse_base(NR / f"nr_{NR_SP[org]}.stats")
+    print(f"  {name:14s} noRunaway base F1 = {f1(sn, pr):.1f}")
+print("Original-artifact anchors (expected 92.2 / 71.2, staged, not plotted):")
 for org, name in [("TAIR10", "A. thaliana"), ("Zm0", "Z. mays")]:
     sn, pr, _ = parse_base(ORIG / "denovo" / f"{org}_noPost.stats")
     print(f"  {name:14s} noPost base F1 = {f1(sn, pr):.1f}")
+print("\nPanel B (alt-only AtRTD3): de novo "
+      f"{dn_vals[0]:.1f}/{dn_vals[1]:.1f}/{dn_vals[2]:.1f}, "
+      f"prompted {pr_vals[0]:.1f}/{pr_vals[1]:.1f}/{pr_vals[2]:.1f} (Sn/Pr/F1)")
 print(f"\nPanel C (length):  all-bin ρ = {spearman(lx, ly):+.3f}")
 print(f"Panel D (CDS):     all-bin ρ = {spearman(cx, cy):+.3f}")

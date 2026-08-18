@@ -1,0 +1,30 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/results/fig3_regen/refs/O_sativa.testset.gff3 -o gffcompare_noRunaway/nr_O_sativa preds_noRunaway/O_sativa.noRunaway.gff3
+#
+
+#= Summary for dataset: preds_noRunaway/O_sativa.noRunaway.gff3 
+#     Query mRNAs :    7301 in    7055 loci  (5486 multi-exon transcripts)
+#            (219 multi-transcript loci, ~1.0 transcripts per locus)
+# Reference mRNAs :    9885 in    7079 loci  (8256 multi-exon)
+# Super-loci w/ reference transcripts:     6525
+#-----------------| Sensitivity | Precision  |
+        Base level:    81.6     |    87.3    |
+        Exon level:    62.8     |    72.1    |
+      Intron level:    67.2     |    75.9    |
+Intron chain level:    26.0     |    39.1    |
+  Transcript level:    21.7     |    29.4    |
+       Locus level:    30.2     |    30.3    |
+
+     Matching intron chains:    2143
+       Matching transcripts:    2143
+              Matching loci:    2137
+
+          Missed exons:    4177/37854	( 11.0%)
+           Novel exons:    2288/32628	(  7.0%)
+        Missed introns:    3381/28527	( 11.9%)
+         Novel introns:    1317/25259	(  5.2%)
+           Missed loci:     550/7079	(  7.8%)
+            Novel loci:     530/7055	(  7.5%)
+
+ Total union super-loci across all input datasets: 7055 
+7301 out of 7301 consensus transcripts written in gffcompare_noRunaway/nr_O_sativa.annotated.gtf (0 discarded as redundant)

@@ -1,0 +1,23 @@
+{
+ "note": "Strand audit of the first, strand-buggy donation-arm inputs (35_build_frame_shift_prompts.py before the place_donated_utr fix): UTRs were filtered by coordinate rather than strand, so minus-strand loci received almost no donations. Quoted in the Discussion and the Table S11 note. Fixed-build counts: donation_arms_fixed_build_stats.json.",
+ "helixertairutr_buggy": {
+  "loci_by_strand": {
+   "+": 11972,
+   "-": 11989
+  },
+  "loci_with_donated_utr_by_strand": {
+   "+": 10001,
+   "-": 35
+  }
+ },
+ "annevotairutr_buggy": {
+  "loci_by_strand": {
+   "+": 10431,
+   "-": 10412
+  },
+  "loci_with_donated_utr_by_strand": {
+   "+": 8807,
+   "-": 2
+  }
+ }
+}
