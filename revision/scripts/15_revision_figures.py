@@ -59,8 +59,26 @@ TOOLS = [
 ]
 
 
+# (species, tool) cells whose run failed and whose gffcompare row is therefore
+# not a performance measurement. Figure 5 draws them as missing — no bar, a
+# small "x" at the baseline — rather than as a near-zero value. The Tiberius
+# soft-masked Z. mays run produced almost no output overlapping the reference
+# (base Sn/Pr 0.0/1.5, transcript Sn/Pr 0.0/0.5; Table S2). Note that TOOLS
+# currently plots the unmasked "tiberius" series, so this cell is only drawn
+# (as missing) if the soft-masked series is put into TOOLS.
+FAILED_RUNS = {("Z_mays", "tiberius_softmasked")}
+MISSING_MARK = "×"  # multiplication sign, present in Liberation Sans
+
+
 def f1(sn, pr):
     return 2 * sn * pr / (sn + pr) if (sn + pr) else 0.0
+
+
+def mark_missing(ax, xpos, color):
+    """Small baseline marker for a cell with no bar, in the tool's colour and
+    the tick-label face, so the absence reads as deliberate rather than as 0."""
+    ax.text(xpos, 1.0, MISSING_MARK, ha="center", va="bottom", color=color,
+            fontsize=plt.rcParams["xtick.labelsize"], clip_on=False, zorder=3)
 
 
 # ---------------------------------------------------------------- Figure 5
@@ -78,11 +96,15 @@ def figure5():
     x = np.arange(len(SPECIES))
     for ax, (lvl, snk, prk) in zip(axes, levels):
         for i, (tool, label, color) in enumerate(TOOLS):
-            vals = []
-            for sp in SPECIES:
-                r = rows.get((sp, tool))
-                vals.append(f1(float(r[snk]), float(r[prk])) if r else np.nan)
             off = (i - (len(TOOLS) - 1) / 2) * width
+            vals = []
+            for j, sp in enumerate(SPECIES):
+                r = rows.get((sp, tool))
+                if r is None or (sp, tool) in FAILED_RUNS:
+                    vals.append(np.nan)
+                    mark_missing(ax, x[j] + off, color)
+                else:
+                    vals.append(f1(float(r[snk]), float(r[prk])))
             ax.bar(x + off, vals, width * 0.92, label=label, color=color,
                    edgecolor="#333333", linewidth=0.25)
         ax.set_ylabel(f"{lvl}-level F1 (%)")

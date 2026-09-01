@@ -1,0 +1,138 @@
+{
+ "analysis": "additions scored on the loci at which both TransGenic and AUGUSTUS predicted",
+ "date": "2026-09-01",
+ "definitions": "script 28 unchanged: addition = distinct CDS structure differing from the supplied structure (TAIR10 curated primary for TransGenic; own .t1 prediction for AUGUSTUS); reference = TAIR10 alternative transcripts at the locus with the primary removed, and separately all AtRTD3 transcripts at the locus; exact CDS coordinate match, intron-chain match reported alongside",
+ "locus_key": "TAIR10 gene id (GM= on TransGenic CDS rows; augSmp_<gene> transcript ids for AUGUSTUS)",
+ "recall_denominator": "distinct TAIR10 alternative CDS structures at the shared loci, the same number for every row below",
+ "loci": {
+  "transgenic_predicted": 27413,
+  "augustus_predicted": 25597,
+  "shared": 25594,
+  "transgenic_only": 1819,
+  "augustus_only": 3,
+  "shared_TAIR10_alternative_structures": 5554,
+  "note": "The manuscript's '25,641 of 27,415' for AUGUSTUS is gffcompare's query-locus count (transcript clusters; altonly/A_thaliana_augustusSampling_vs_TAIR10.stats), whereas script 28 keys on gene ids, of which the standardized AUGUSTUS file holds 25,597; 27,415 - 25,597 = 1,818 loci had no AUGUSTUS prediction. TransGenic's file holds 27,413 gene ids."
+ },
+ "shared_loci": {
+  "transgenic400Mprompt_beam1": {
+   "loci_scored": 25594,
+   "loci_with_at_least_one_addition": 1068,
+   "added_structures": 1094,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 200,
+   "matched_TAIR10_alt_intron_chain": 342,
+   "matched_AtRTD3": 204,
+   "precision_vs_TAIR10_alt_pct": 18.3,
+   "precision_vs_AtRTD3_pct": 18.6,
+   "recall_of_TAIR10_alt_pct": 3.6,
+   "TAIR10_alt_recovered": 200
+  },
+  "augustusSampling_all_additions": {
+   "loci_scored": 25594,
+   "loci_with_at_least_one_addition": 12681,
+   "added_structures": 43433,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 574,
+   "matched_TAIR10_alt_intron_chain": 1088,
+   "matched_AtRTD3": 4409,
+   "precision_vs_TAIR10_alt_pct": 1.3,
+   "precision_vs_AtRTD3_pct": 10.2,
+   "recall_of_TAIR10_alt_pct": 10.3,
+   "TAIR10_alt_recovered": 574
+  },
+  "augustusSampling_budget_matched": {
+   "loci_scored": 25594,
+   "loci_with_at_least_one_addition": 1083,
+   "added_structures": 1094,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 7,
+   "matched_TAIR10_alt_intron_chain": 27,
+   "matched_AtRTD3": 264,
+   "precision_vs_TAIR10_alt_pct": 0.6,
+   "precision_vs_AtRTD3_pct": 24.1,
+   "recall_of_TAIR10_alt_pct": 0.1,
+   "budget": 1094,
+   "posterior_at_cut": 0.26,
+   "candidates_tied_at_cut": 123,
+   "candidates_strictly_above_cut": 1029,
+   "tie_sensitivity": {
+    "precision_vs_TAIR10_alt_pct": [
+     0.6,
+     0.6
+    ],
+    "precision_vs_AtRTD3_pct": [
+     23.4,
+     25.2
+    ]
+   }
+  }
+ },
+ "dropped_loci": {
+  "transgenic_only_loci": {
+   "loci_scored": 1819,
+   "loci_with_at_least_one_addition": 8,
+   "added_structures": 9,
+   "reference_alternative_structures": 26,
+   "matched_TAIR10_alt_exact_CDS": 0,
+   "matched_TAIR10_alt_intron_chain": 1,
+   "matched_AtRTD3": 0,
+   "precision_vs_TAIR10_alt_pct": 0.0,
+   "precision_vs_AtRTD3_pct": 0.0,
+   "recall_of_TAIR10_alt_pct": 0.0,
+   "TAIR10_alt_recovered": 0
+  },
+  "augustus_only_loci": {
+   "loci_scored": 3,
+   "loci_with_at_least_one_addition": 0,
+   "added_structures": 0,
+   "reference_alternative_structures": 0,
+   "matched_TAIR10_alt_exact_CDS": 0,
+   "matched_TAIR10_alt_intron_chain": 0,
+   "matched_AtRTD3": 0,
+   "precision_vs_TAIR10_alt_pct": null,
+   "precision_vs_AtRTD3_pct": null,
+   "recall_of_TAIR10_alt_pct": null,
+   "TAIR10_alt_recovered": 0
+  }
+ },
+ "full_sets_as_published": {
+  "transgenic400Mprompt_beam1": {
+   "loci_scored": 27413,
+   "loci_with_at_least_one_addition": 1076,
+   "added_structures": 1103,
+   "reference_alternative_structures": 5580,
+   "matched_TAIR10_alt_exact_CDS": 200,
+   "matched_TAIR10_alt_intron_chain": 343,
+   "matched_AtRTD3": 204,
+   "precision_vs_TAIR10_alt_pct": 18.1,
+   "precision_vs_AtRTD3_pct": 18.5,
+   "recall_of_TAIR10_alt_pct": 3.6,
+   "TAIR10_alt_recovered": 200
+  },
+  "augustusSampling": {
+   "loci_scored": 25597,
+   "loci_with_at_least_one_addition": 12681,
+   "added_structures": 43433,
+   "reference_alternative_structures": 5554,
+   "matched_TAIR10_alt_exact_CDS": 574,
+   "matched_TAIR10_alt_intron_chain": 1088,
+   "matched_AtRTD3": 4409,
+   "precision_vs_TAIR10_alt_pct": 1.3,
+   "precision_vs_AtRTD3_pct": 10.2,
+   "recall_of_TAIR10_alt_pct": 10.3,
+   "TAIR10_alt_recovered": 574
+  }
+ },
+ "sanity": {
+  "transgenic_full_reproduces_TableS4d": true,
+  "augustus_full_reproduces_TableS4d": true,
+  "script47_ranking_agrees_on_shared_loci": true
+ },
+ "inputs": {
+  "transgenic": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3",
+  "augustus": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/A_thaliana_augustusSampling.gff3",
+  "TAIR10": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/TAIR10.gtf",
+  "AtRTD3": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/atRTD3_TS_21Feb22_transfix.gtf",
+  "primary_transcript_ids": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/primary_transcript_ids.txt"
+ }
+}

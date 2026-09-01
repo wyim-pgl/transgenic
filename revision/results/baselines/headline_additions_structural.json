@@ -1,0 +1,240 @@
+{
+ "analysis": "structural filter statistics for the headline 1,103 additions (Table S4d set)",
+ "date": "2026-09-01",
+ "addition_definition": "script 28: distinct CDS structure per TAIR10 locus differing from TAIR10's curated primary transcript; -rc loci dropped",
+ "criteria": {
+  "complete_orf": "ATG start, stop end, length % 3 == 0, no internal stop",
+  "canonical_introns": "every intron GT..AG on the transcribed strand (single-exon structures pass)",
+  "source": "36_filter_additions_structurally.py, functions imported"
+ },
+ "prediction": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic_comparison/standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3",
+ "loci_scored": 27413,
+ "structural": {
+  "additions": 1103,
+  "complete_orf": 441,
+  "complete_orf_pct": 40.0,
+  "canonical_introns": 752,
+  "canonical_introns_pct": 68.2,
+  "both": 266,
+  "both_pct": 24.1,
+  "neither": 176,
+  "failed_orf": 662,
+  "failed_splice_given_orf": 175,
+  "additions_kept": 266,
+  "additions_discarded_pct": 75.9
+ },
+ "unfiltered": {
+  "added_structures": 1103,
+  "loci_with_at_least_one_addition": 1076,
+  "matched_TAIR10_alt_exact_CDS": 200,
+  "matched_TAIR10_alt_intron_chain": 343,
+  "matched_AtRTD3": 204,
+  "precision_vs_TAIR10_alt_pct": 18.1,
+  "precision_vs_AtRTD3_pct": 18.5,
+  "reference_alternative_structures": 5580,
+  "recall_of_TAIR10_alt_pct": 3.6,
+  "loci_scored": 27413
+ },
+ "filtered": {
+  "complete_orf_only": {
+   "added_structures": 441,
+   "loci_with_at_least_one_addition": 439,
+   "matched_TAIR10_alt_exact_CDS": 200,
+   "matched_TAIR10_alt_intron_chain": 204,
+   "matched_AtRTD3": 204,
+   "precision_vs_TAIR10_alt_pct": 45.4,
+   "precision_vs_AtRTD3_pct": 46.3,
+   "reference_alternative_structures": 5580,
+   "recall_of_TAIR10_alt_pct": 3.6
+  },
+  "canonical_introns_only": {
+   "added_structures": 752,
+   "loci_with_at_least_one_addition": 741,
+   "matched_TAIR10_alt_exact_CDS": 189,
+   "matched_TAIR10_alt_intron_chain": 324,
+   "matched_AtRTD3": 192,
+   "precision_vs_TAIR10_alt_pct": 25.1,
+   "precision_vs_AtRTD3_pct": 25.5,
+   "reference_alternative_structures": 5580,
+   "recall_of_TAIR10_alt_pct": 3.4
+  },
+  "both_complete_orf_and_canonical_introns": {
+   "added_structures": 266,
+   "loci_with_at_least_one_addition": 266,
+   "matched_TAIR10_alt_exact_CDS": 189,
+   "matched_TAIR10_alt_intron_chain": 192,
+   "matched_AtRTD3": 192,
+   "precision_vs_TAIR10_alt_pct": 71.1,
+   "precision_vs_AtRTD3_pct": 72.2,
+   "reference_alternative_structures": 5580,
+   "recall_of_TAIR10_alt_pct": 3.4
+  }
+ },
+ "matches_kept": {
+  "TAIR10_alt_matches_kept_by_filter": "189 of 200",
+  "AtRTD3_matches_kept_by_filter": "192 of 204"
+ },
+ "structural_by_correctness": {
+  "matched_TAIR10_alt": {
+   "additions": 200,
+   "complete_orf": 200,
+   "complete_orf_pct": 100.0,
+   "canonical_introns": 189,
+   "canonical_introns_pct": 94.5,
+   "both": 189,
+   "both_pct": 94.5,
+   "neither": 0,
+   "failed_orf": 0,
+   "failed_splice_given_orf": 11,
+   "additions_kept": 189,
+   "additions_discarded_pct": 5.5
+  },
+  "unmatched_TAIR10_alt": {
+   "additions": 903,
+   "complete_orf": 241,
+   "complete_orf_pct": 26.7,
+   "canonical_introns": 563,
+   "canonical_introns_pct": 62.3,
+   "both": 77,
+   "both_pct": 8.5,
+   "neither": 176,
+   "failed_orf": 662,
+   "failed_splice_given_orf": 164,
+   "additions_kept": 77,
+   "additions_discarded_pct": 91.5
+  }
+ },
+ "prompt_transfer_sanity": {
+  "note": "The manuscript's 35.7% complete-ORF figure is the Helixer-boundary arm (tair10helixerframeutr: 4,512 / 12,628); the reference condition (tair10selfutr) is 397 / 1,014 = 39.2%, with 245 / 1,014 passing both criteria.",
+  "arms": {
+   "tair10selfutr": {
+    "tool": "tair10selfutr",
+    "prompt": "/data/gpfs/assoc/pgl/data/Transgenic/polishing_benchmark/inputs/tair10selfutr_Athaliana.gff3",
+    "completed": "/data/gpfs/assoc/pgl/data/Transgenic/polishing_benchmark/predictions/tair10selfutr_completed.gff3",
+    "archived_filter_json": {
+     "transcripts": 26488,
+     "prompt_re_emissions": 25317,
+     "additions": 1014,
+     "additions_kept": 245,
+     "failed_orf": 617,
+     "failed_splice": 152,
+     "unknown_seqid": 0,
+     "additions_discarded_pct": 75.8
+    },
+    "script36_rerun": {
+     "transcripts": 26488,
+     "prompt_re_emissions": 25317,
+     "additions": 1014,
+     "additions_kept": 245,
+     "failed_orf": 617,
+     "failed_splice": 152,
+     "unknown_seqid": 0,
+     "additions_discarded_pct": 75.8
+    },
+    "this_script": {
+     "additions": 1014,
+     "complete_orf": 397,
+     "complete_orf_pct": 39.2,
+     "canonical_introns": 712,
+     "canonical_introns_pct": 70.2,
+     "both": 245,
+     "both_pct": 24.2,
+     "neither": 150,
+     "failed_orf": 617,
+     "failed_splice_given_orf": 152,
+     "additions_kept": 245,
+     "additions_discarded_pct": 75.8
+    },
+    "kept_subset_scored_script28_definitions": {
+     "added_structures": 245,
+     "loci_with_at_least_one_addition": 245,
+     "matched_TAIR10_alt_exact_CDS": 175,
+     "matched_TAIR10_alt_intron_chain": 179,
+     "matched_AtRTD3": 175,
+     "precision_vs_TAIR10_alt_pct": 71.4,
+     "precision_vs_AtRTD3_pct": 71.4,
+     "reference_alternative_structures": 0,
+     "recall_of_TAIR10_alt_pct": null
+    },
+    "all_additions_scored_script28_definitions": {
+     "added_structures": 1014,
+     "loci_with_at_least_one_addition": 1001,
+     "matched_TAIR10_alt_exact_CDS": 185,
+     "matched_TAIR10_alt_intron_chain": 319,
+     "matched_AtRTD3": 186,
+     "precision_vs_TAIR10_alt_pct": 18.2,
+     "precision_vs_AtRTD3_pct": 18.3,
+     "reference_alternative_structures": 0,
+     "recall_of_TAIR10_alt_pct": null
+    }
+   },
+   "tair10helixerframeutr": {
+    "tool": "tair10helixerframeutr",
+    "prompt": "/data/gpfs/assoc/pgl/data/Transgenic/polishing_benchmark/inputs/tair10helixerframeutr_Athaliana.gff3",
+    "completed": "/data/gpfs/assoc/pgl/data/Transgenic/polishing_benchmark/predictions/tair10helixerframeutr_completed.gff3",
+    "archived_filter_json": {
+     "transcripts": 44539,
+     "prompt_re_emissions": 31345,
+     "additions": 12628,
+     "additions_kept": 1547,
+     "failed_orf": 8116,
+     "failed_splice": 2965,
+     "unknown_seqid": 0,
+     "additions_discarded_pct": 87.7
+    },
+    "script36_rerun": {
+     "transcripts": 44539,
+     "prompt_re_emissions": 31345,
+     "additions": 12628,
+     "additions_kept": 1547,
+     "failed_orf": 8116,
+     "failed_splice": 2965,
+     "unknown_seqid": 0,
+     "additions_discarded_pct": 87.7
+    },
+    "this_script": {
+     "additions": 12628,
+     "complete_orf": 4512,
+     "complete_orf_pct": 35.7,
+     "canonical_introns": 7349,
+     "canonical_introns_pct": 58.2,
+     "both": 1547,
+     "both_pct": 12.3,
+     "neither": 2314,
+     "failed_orf": 8116,
+     "failed_splice_given_orf": 2965,
+     "additions_kept": 1547,
+     "additions_discarded_pct": 87.7
+    },
+    "kept_subset_scored_script28_definitions": {
+     "added_structures": 1547,
+     "loci_with_at_least_one_addition": 1546,
+     "matched_TAIR10_alt_exact_CDS": 262,
+     "matched_TAIR10_alt_intron_chain": 257,
+     "matched_AtRTD3": 439,
+     "precision_vs_TAIR10_alt_pct": 16.9,
+     "precision_vs_AtRTD3_pct": 28.4,
+     "reference_alternative_structures": 0,
+     "recall_of_TAIR10_alt_pct": null
+    },
+    "all_additions_scored_script28_definitions": {
+     "added_structures": 12628,
+     "loci_with_at_least_one_addition": 12521,
+     "matched_TAIR10_alt_exact_CDS": 275,
+     "matched_TAIR10_alt_intron_chain": 466,
+     "matched_AtRTD3": 459,
+     "precision_vs_TAIR10_alt_pct": 2.2,
+     "precision_vs_AtRTD3_pct": 3.6,
+     "reference_alternative_structures": 0,
+     "recall_of_TAIR10_alt_pct": null
+    }
+   }
+  }
+ },
+ "inputs": {
+  "genome": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/TAIR10_genome.fa",
+  "TAIR10": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/TAIR10.gtf",
+  "AtRTD3": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/AtRTD3/atRTD3_TS_21Feb22_transfix.gtf",
+  "primary_transcript_ids": "/data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/data/TAIR10/primary_transcript_ids.txt"
+ }
+}

@@ -154,13 +154,15 @@ def supplemental_figure_legends() -> str:
     start = text.index("**Figure S1.")
     end = text.index("**Table S1.")
     legends = text[start:end].rstrip()
-    # The S1 legend in the source lacks the failed-run warning the Figure 5 and
-    # Table S2/S3 legends carry; append it so the figure cannot be read as
-    # Tiberius performance, and point out the two absent configurations.
+    # The S1 legend in the source lacks the Tiberius input note the Figure 5 and
+    # Table S2/S3 legends carry (the figure draws the unmasked series; the failed
+    # soft-masked Z. mays run is tabulated, not drawn); append it and point out the
+    # two absent configurations.
     s1_anchor = "Solid bars, complete (single-copy plus duplicated); hatched extensions, fragmented."
-    s1_add = (" The Tiberius soft-masked bar for *Z. mays* reflects a run that produced "
-              "almost no output overlapping the reference and is not a performance "
-              "measurement (Table S3). Two configurations are absent: *L. sativa* "
+    s1_add = (" Tiberius is shown with unmasked input; its soft-masked runs are reported "
+              "in Table S3, where the *Z. mays* soft-masked run produced almost no output "
+              "overlapping the reference and is not a performance measurement. Two "
+              "configurations are absent: *L. sativa* "
               "TransGenic 400M self-prompted (invalidated; see Table S3) and "
               "*V. vinifera* Tiberius with soft-masked input (run not completed).")
     assert s1_anchor in legends, "Figure S1 legend anchor not found"

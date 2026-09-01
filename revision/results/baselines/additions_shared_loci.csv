@@ -1,0 +1,4 @@
+Prediction set,Loci scored,Added structures (n),Matched TAIR10 alt (n),Precision vs TAIR10 alt (%),Matched AtRTD3 (n),Precision vs AtRTD3 (%),TAIR10 alt structures (denominator),Recall of TAIR10 alt (%)
+"TransGenic 400M, reference-prompted (additions only)",25594,1094,200,18.3,204,18.6,5554,3.6
+"AUGUSTUS v3.5.0 posterior sampling, all additions",25594,43433,574,1.3,4409,10.2,5554,10.3
+"AUGUSTUS v3.5.0 posterior sampling, posterior-ranked top 1094",25594,1094,7,0.6,264,24.1,5554,0.1
