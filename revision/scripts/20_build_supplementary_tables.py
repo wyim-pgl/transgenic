@@ -672,6 +672,18 @@ def build(out: Out) -> None:
          "rows differ only in the input assembly"],
         ["AUGUSTUS", "v3.5.0", "Posterior-sampling isoform baseline (Table S4)",
          "`augustus --species=arabidopsis --sample=100 --alternatives-from-sampling=true --noInFrameStop=true <locus.fa>`"],
+        ["BRAKER3", "v3.0.8", "External primary annotation for the prompt-transfer test (Table S11)",
+         "`braker.pl --genome=<softmasked genome.fa> --prot_seq=<proteins.fa> --bam=<RNA-seq BAMs> "
+         "--softmasking --gff3 --threads 48 --species=Ath_braker3` (protein and RNA-seq evidence; "
+         "staged with `revision/scripts/30_stage_external_annotations.py`)"],
+        ["GeMoMa", "v1.9 (GeMoMaPipeline)", "External primary annotation for the prompt-transfer test (Table S11)",
+         "`GeMoMaPipeline t=<target genome.fa> s=own i=Aly a=<A. lyrata annotation> g=<A. lyrata genome> "
+         "s=own i=Aha a=<A. halleri annotation> g=<A. halleri genome> tblastn=false` (homology-based, "
+         "two reference species, no RNA-seq evidence; staged as above)"],
+        ["EGAPx", "0.3.2-alpha (container `ncbi/egapx:0.3.2-alpha`, Nextflow 24.10.6)",
+         "External primary annotation for the prompt-transfer test (Table S11)",
+         "`egapx.py input.yaml -e slurm -o <outdir>` with `genome: <TAIR10.fa>`, `taxid: 3701`, "
+         "`proteins: <proteins.fasta>` and 118 SRA RNA-seq runs listed under `reads:` (staged as above)"],
         ["AGAT", "v1.6.1", "Annotation cleaning, sorting, intron addition",
          "`agat_convert_sp_gxf2gxf.pl`; `agat_sp_add_introns.pl`"],
         ["HISAT2 (modified extraction script)", "—",
