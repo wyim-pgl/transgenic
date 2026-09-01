@@ -180,4 +180,4 @@ Response-letter wording (frozen): "We agree that isoform-specific RT-PCR would p
 
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
-| 2026-09-01 | pre-download | v1.0 frozen | — |
+| 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
