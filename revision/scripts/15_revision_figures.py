@@ -51,7 +51,7 @@ SP_LABEL = {s: s.replace("_", ". ") for s in SPECIES}  # italic thin space
 TOOLS = [
     ("annevo", "ANNEVO", "#0072B2"),
     ("helixer", "Helixer", "#E69F00"),
-    ("tiberius", "Tiberius", "#009E73"),
+    ("tiberius_softmasked", "Tiberius", "#009E73"),  # soft-masked input; unmasked in Tables S2/S3
     ("transgenic160M", "TransGenic 160M", "#CC79A7"),
     ("transgenic160Mprompt", "TransGenic 160M + prompt", "#EAD0E4"),
     ("transgenic400M", "TransGenic 400M", "#D55E00"),
@@ -59,13 +59,13 @@ TOOLS = [
 ]
 
 
-# (species, tool) cells whose run failed and whose gffcompare row is therefore
-# not a performance measurement. Figure 5 draws them as missing — no bar, a
+# (species, tool) cells whose run failed and whose summary row is therefore not
+# a performance measurement. Figures 5 and S1 draw them as missing — no bar, a
 # small "x" at the baseline — rather than as a near-zero value. The Tiberius
 # soft-masked Z. mays run produced almost no output overlapping the reference
-# (base Sn/Pr 0.0/1.5, transcript Sn/Pr 0.0/0.5; Table S2). Note that TOOLS
-# currently plots the unmasked "tiberius" series, so this cell is only drawn
-# (as missing) if the soft-masked series is put into TOOLS.
+# (gffcompare base Sn/Pr 0.0/1.5, transcript Sn/Pr 0.0/0.5, Table S2; BUSCO
+# 0.2% complete, Table S3). Cells with no summary row at all (V. vinifera
+# Tiberius soft-masked, run not completed) are drawn the same way.
 FAILED_RUNS = {("Z_mays", "tiberius_softmasked")}
 MISSING_MARK = "×"  # multiplication sign, present in Liberation Sans
 
@@ -150,7 +150,8 @@ def figure_busco():
         data = rows.get(sp, {})
         for i, (tool, label, color) in enumerate(tools):
             r = data.get(tool)
-            if not r:
+            if r is None or (sp, tool) in FAILED_RUNS:
+                mark_missing(ax, i, color)
                 continue
             comp = float(r["Complete (%)"])
             total = int(r["Total BUSCOs"])
