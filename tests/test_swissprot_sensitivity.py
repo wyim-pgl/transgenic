@@ -307,6 +307,30 @@ def test_external_id_map_and_ensembl_style_aliases(sp, tmp_path):
     assert ens["GLYMA_01G000100"] == "Glyma.01G000100" and ens["SORBI_3001G000100"] == "Sobic.001G000100"
     assert ens["BRADI_1g00200v3"] == "Bradi1g00200" and ens["SETIT_1G000100"] == "Seita.1G000100"
     assert "LOC_Os01g01010" not in ens                                                   # no rule for MSU ids
+    # real GFFs: the ID carries an assembly suffix and the Name is the bare id -> the alias derives from the Name, maps to the ID
+    real = {"Glyma.01G000100.Wm82.a6.v1": "Glyma.01G000100.Wm82.a6.v1", "Glyma.01G000100": "Glyma.01G000100.Wm82.a6.v1"}
+    assert sp.ensembl_style_aliases(real) == {"GLYMA_01G000100": "Glyma.01G000100.Wm82.a6.v1"}
     merged = dict(genes); merged.update(aliases); merged.update(ens)
     assert sp.gene_of("Os01g0100100", merged, {}) == "LOC_Os01g01010"
     assert sp.gene_of("GLYMA_01G000100", merged, {}) == "Glyma.01G000100"
+
+
+def test_sequence_identity_fallback_maps_entries_without_usable_xrefs(sp, parsed, tmp_path):
+    """Real run 2026-09-02: soybean/Brachypodium/Setaria entries carry only numeric GeneID cross-references. An entry whose
+    curated sequence is identical to the protein of exactly one reference gene is mapped by sequence; it can only be
+    'resolved', never a hard flag. Ambiguous cross-references are narrowed the same way."""
+    _, _, recs = parsed
+    extra = tmp_path / "extra.dat"
+    extra.write_text(_entry("SYN7_ARATH", "P00007", 3702, OC_ATH, SEQ_C, cautions=[("AAF00007.1", "Erroneous initiation")]))   # no DR lines
+    recs = list(recs) + list(sp.parse_dat(str(extra)))
+    gene_ids = {"Athaliana": {"AT1G01010", "AT1G01020", "AT1G01030", "AT1G01040", "AT1G01050"}}
+    proteome = {"Athaliana": {"AT1G01010.1": "MAAAA" + SEQ_A, "AT1G01020.1": SEQ_C, "AT1G01030.1": SEQ_D, "AT1G01050.1": SEQ_B}}
+    rows, summary = sp.species_flags(recs, gene_ids, {"Athaliana": {3702}}, proteome)
+    flags = {(r["gene_id"], r["flag"]) for r in rows}
+    st = summary["Athaliana"]
+    assert st["mapped_by_sequence"] == 2 and st["ambiguous"] == 0 and st["unmapped"] == 0     # P00007 (no xrefs) and P00005 (ambiguous) resolved by sequence
+    assert ("AT1G01020", "swissprot_note_caution_resolved_in_reference") in flags               # P00007 -> AT1G01020, identical -> resolved
+    assert ("AT1G01030", "swissprot_note_caution_resolved_in_reference") in flags               # P00005 -> AT1G01030 (SEQ_D), frameshift caution resolved
+    assert st["hard_flags"] == 1                                                                # only P00001 (AT1G01010, differing N-terminus)
+    rows2, summary2 = sp.species_flags(recs, gene_ids, {"Athaliana": {3702}}, proteome, sequence_fallback=False)
+    assert summary2["Athaliana"]["mapped_by_sequence"] == 0 and summary2["Athaliana"]["unmapped"] == 1 and summary2["Athaliana"]["ambiguous"] == 1

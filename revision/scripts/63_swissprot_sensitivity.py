@@ -268,13 +268,13 @@ _ENSEMBL_RULES = (
 def ensembl_style_aliases(genes) -> Dict[str, str]:
     """Deterministic Ensembl Plants / Gramene identifiers derived from Phytozome gene ids (the Swiss-Prot DR lines of
     soybean, sorghum, Brachypodium and Setaria use the Ensembl form). Returns alias -> canonical gene id."""
-    canon = set(genes.values()) if isinstance(genes, dict) else set(genes)
+    items = genes.items() if isinstance(genes, dict) else ((g, g) for g in genes)
     out: Dict[str, str] = {}
-    for g in canon:
+    for alias, canonical in items:                       # match every alias form (GFF ID and Name), map to the canonical id
         for rx, fmt in _ENSEMBL_RULES:
-            m = rx.match(g)
+            m = rx.match(alias)
             if m:
-                out.setdefault(fmt(m), g)
+                out.setdefault(fmt(m), canonical)
                 break
     return out
 
@@ -309,9 +309,11 @@ def _proteome_by_gene(proteome: Dict[str, str], genes: Set[str], tx2gene: Dict[s
 
 def species_flags(entries: Iterable[Entry], gene_ids: Dict[str, Set[str]], taxids: Dict[str, Set[int]],
                   proteomes: Dict[str, Dict[str, str]], tx2gene: Optional[Dict[str, Dict[str, str]]] = None,
-                  min_proteome_mapped: float = DEFAULT_MIN_PROTEOME_MAPPED) -> Tuple[List[Dict], Dict[str, Dict]]:
+                  min_proteome_mapped: float = DEFAULT_MIN_PROTEOME_MAPPED, sequence_fallback: bool = True) -> Tuple[List[Dict], Dict[str, Dict]]:
     """A22-schema flag rows per training species and a per-species count summary (A30.2). Fails closed when a
-    reference proteome maps to fewer than `min_proteome_mapped` of its records."""
+    reference proteome maps to fewer than `min_proteome_mapped` of its records. With `sequence_fallback`, an entry
+    without a usable cross-reference (or with ambiguous ones) is mapped to the single gene whose reference protein is
+    identical to the curated sequence (`mapped_by_sequence`); such an entry can only be `resolved`, never hard."""
     entries = [e for e in entries if e.viridiplantae]
     rows: List[Dict] = []
     seen = set()
@@ -328,12 +330,23 @@ def species_flags(entries: Iterable[Entry], gene_ids: Dict[str, Set[str]], taxid
             if frac < min_proteome_mapped:
                 raise SystemExit(f"{sp}: only {n_map}/{n_rec} reference proteins map to a gene id (fraction {frac:.3f} < "
                                  f"{min_proteome_mapped}); check --gff/--gene-ids and the FASTA headers, or lower --min-proteome-mapped")
+        seq_index: Dict[str, Set[str]] = defaultdict(set)
+        if sequence_fallback:
+            for g, seqs in prot.items():
+                for s in seqs:
+                    seq_index[s].add(g)
         want = taxids.get(sp, set())
         for e in entries:
             if not (e.taxids & want):
                 continue
             st["entries"] += 1
             targets = {g for g in (gene_of(x, genes, txmap) for x in e.gene_xrefs) if g}
+            if len(targets) != 1 and sequence_fallback:
+                hits = seq_index.get(e.sequence.upper(), set())
+                hits = hits & targets if targets else hits
+                if len(hits) == 1:
+                    targets = hits
+                    st["mapped_by_sequence"] += 1
             if not targets:
                 st["unmapped"] += 1
                 for db in e.xrefs_by_db:
@@ -365,8 +378,8 @@ def species_flags(entries: Iterable[Entry], gene_ids: Dict[str, Set[str]], taxid
                     continue
                 seen.add(key)
                 rows.append({"species_id": sp, "gene_id": gene, "transcript_id": "", "flag": name, "start": 0, "end": 0})
-        for k in ("entries", "mapped", "ambiguous", "unmapped", "hard_flags", "soft_notes", "resolved_in_reference", "unverified",
-                  "proteome_records", "proteome_mapped"):
+        for k in ("entries", "mapped", "mapped_by_sequence", "ambiguous", "unmapped", "hard_flags", "soft_notes", "resolved_in_reference",
+                  "unverified", "proteome_records", "proteome_mapped"):
             st.setdefault(k, 0)
         st["unmapped_by_db"] = dict(sorted(unmapped_by_db.items()))
         summary[sp] = dict(st)
@@ -443,6 +456,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--id-map", action="append", default=[], help="SPECIES=<external id table> (e.g. RAP-MSU for rice; repeatable)")
     ap.add_argument("--ensembl-style-aliases", action="store_true",
                     help="derive Ensembl Plants/Gramene ids from Phytozome gene ids (GLYMA_, SORBI_3, BRADI_...v3, SETIT_)")
+    ap.add_argument("--no-sequence-fallback", action="store_true", help="do not map entries by exact identity with a reference protein")
     a = ap.parse_args(argv)
     os.makedirs(a.out_dir, exist_ok=True)
     entries = list(parse_dat(a.dat))
@@ -489,7 +503,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                     added["id_map"] += 1
         gene_ids[sp] = aliases
         aliases_added[sp] = added
-    rows, per_species = species_flags(kept, gene_ids, taxids, proteomes, tx2gene, a.min_proteome_mapped)
+    rows, per_species = species_flags(kept, gene_ids, taxids, proteomes, tx2gene, a.min_proteome_mapped, not a.no_sequence_fallback)
     for sp, added in aliases_added.items():
         per_species[sp]["aliases_added"] = added
     by_sp: Dict[str, List[Dict]] = defaultdict(list)

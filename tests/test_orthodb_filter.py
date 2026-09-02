@@ -98,3 +98,29 @@ def test_lineage_xml_parsing(od):
            "<Taxon><TaxId>3702</TaxId><LineageEx><Taxon><TaxId>3701</TaxId></Taxon></LineageEx></Taxon></TaxaSet>")
     lin = od.parse_taxonomy_xml(xml)
     assert lin[381124][0] == 381124 and 4577 in lin[381124] and lin[3702] == [3702, 3701]
+
+
+def test_fetch_lineage_resolves_merged_taxids_through_cache(od, tmp_path):
+    """Real run 2026-09-02: taxid 337451 of the partition was absent from the batch answer (merged at NCBI) and the run
+    failed closed. A single-id fetch returns the record under the new id; it is cached under the requested id."""
+    calls = []
+
+    def fake_fetch(ids):
+        calls.append(list(ids))
+        blocks = []
+        for t in ids:
+            if t == 3702:
+                blocks.append("<Taxon><TaxId>3702</TaxId><LineageEx><Taxon><TaxId>3701</TaxId></Taxon></LineageEx></Taxon>")
+            elif t == 337451:                                   # merged into 4577
+                blocks.append("<Taxon><TaxId>4577</TaxId><LineageEx><Taxon><TaxId>4479</TaxId></Taxon><Taxon><TaxId>4575</TaxId></Taxon></LineageEx></Taxon>")
+        return "<TaxaSet>" + "".join(blocks) + "</TaxaSet>"
+
+    cache = tmp_path / "lineage.tsv"
+    lin = od.fetch_lineage([3702, 337451, 999999], str(cache), pause=0, fetch=fake_fetch)
+    assert lin[3702] == [3702, 3701]
+    assert lin[337451] == [337451, 4577, 4575, 4479]             # requested id prepended, then the merged record's lineage
+    assert 999999 not in lin                                     # unknown id stays absent -> excluded_taxids fails closed
+    assert calls[0] == [3702, 337451, 999999] and [337451] in calls and [999999] in calls
+    cached = od.read_lineage(str(cache))
+    assert cached[337451] == [337451, 4577, 4575, 4479]
+    assert od.excluded_taxids({4577}, lin, present={3702, 337451}) == {337451}

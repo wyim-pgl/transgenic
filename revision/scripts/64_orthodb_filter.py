@@ -83,14 +83,28 @@ def parse_taxonomy_xml(xml: str) -> Dict[int, List[int]]:
     return out
 
 
-def fetch_lineage(taxids: Iterable[int], cache_path: str, batch: int = 100, pause: float = 0.4) -> Dict[int, List[int]]:
+def _efetch_taxonomy_xml(ids: List[int]) -> str:
+    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?" + urllib.parse.urlencode(
+        {"db": "taxonomy", "id": ",".join(str(t) for t in ids), "retmode": "xml"})
+    with urllib.request.urlopen(url, timeout=120) as resp:
+        return resp.read().decode()
+
+
+def fetch_lineage(taxids: Iterable[int], cache_path: str, batch: int = 100, pause: float = 0.4, fetch=None) -> Dict[int, List[int]]:
+    """Lineages from NCBI E-utilities, cached in `cache_path`. A taxid that NCBI has merged into another one comes back
+    under the new id; it is then fetched alone and recorded under the requested id (with the requested id prepended) so
+    the partition's header taxid still resolves. Ids NCBI does not know stay absent (the caller fails closed)."""
+    fetch = fetch or _efetch_taxonomy_xml
     known = read_lineage(cache_path) if os.path.exists(cache_path) else {}
     todo = sorted(set(taxids) - set(known))
     for i in range(0, len(todo), batch):
-        ids = ",".join(str(t) for t in todo[i:i + batch])
-        url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?" + urllib.parse.urlencode({"db": "taxonomy", "id": ids, "retmode": "xml"})
-        with urllib.request.urlopen(url, timeout=120) as resp:
-            known.update(parse_taxonomy_xml(resp.read().decode()))
+        known.update(parse_taxonomy_xml(fetch(todo[i:i + batch])))
+        time.sleep(pause)
+    for t in [t for t in todo if t not in known]:               # merged or renamed taxids: resolve one by one
+        got = parse_taxonomy_xml(fetch([t]))
+        if len(got) == 1:
+            lin = next(iter(got.values()))
+            known[t] = lin if lin[0] == t else [t] + lin
         time.sleep(pause)
     with open(cache_path, "w") as fh:
         fh.write("taxid\tlineage\n")
