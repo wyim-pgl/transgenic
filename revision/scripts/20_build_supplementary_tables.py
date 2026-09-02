@@ -191,7 +191,7 @@ def build(out: Out) -> None:
     s1_rows = [
         ["Arabidopsis thaliana", "TAIR10", "Lamesch et al., 2012", "Training / test"],
         ["Vitis vinifera", "PN_T2T", "Shi et al., 2023", "Training"],
-        ["Glycine max", "Wm82 ISU-01 v2.1", "Espina et al., 2024", "Training"],
+        ["Glycine max", "Wm82.a6.v1", "Espina et al., 2024", "Training"],
         ["Populus trichocarpa", "v4", "Tuskan et al., 2006", "Training"],
         ["Sorghum bicolor", "v5", "McCormick et al., 2018", "Training"],
         ["Brachypodium distachyon", "v3", "The International Brachypodium Initiative, 2010", "Training"],
