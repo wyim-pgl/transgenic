@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.8; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.9; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -240,6 +240,35 @@ Implementation items (recorded in `IMPLEMENTATION_ORDER_B5_C0_C2_v1.md` §2a): e
 
 Nothing in §9 changes.
 
+## A19. Amendment v1.9 (2026-09-02; before any protein alignment) — cross-species protein resource and the protein-to-label pipeline
+
+Author decision: the cross-species protein evidence named in A14/A18 is **OrthoDB v12, Viridiplantae partition** (release, file names and md5 recorded in `evidence/DATASET_ROLES.tsv` at download; downloaded on the ACCESS Delta allocation, where alignment runs). No other protein database is used for labels in this revision; Swiss-Prot may be added later only as a separately labelled sensitivity set.
+
+### A19.1 Leakage filter (applied before any alignment, frozen)
+- Remove every sequence whose OrthoDB organism is an evaluated species: *A. thaliana* (taxid 3702), *Z. mays* (4577), *S. lycopersicum* (4081), including subspecies/cultivar taxids under them.
+- For the nine training species, remove sequences that belong to genes in `test` orthogroups of `data/splits/b5_orthogroup_split_v1.tsv` (mapping by the species' own gene IDs where OrthoDB carries them; unmapped sequences of a training species are kept only if the species' reference proteins were not used to build them, otherwise excluded).
+- Record counts per taxid before/after filtering in the provenance table. The filtered FASTA's md5 is frozen in §1.
+
+### A19.2 Alignment and structure calls
+- Tool: **miniprot** (protein-to-genome spliced alignment; version and command recorded), one run per training genome, default splice model for plants, `--outs=0.97 -N 20` style parameters fixed at freeze; DIAMOND blastx is used only for the pre-alignment read triage of A17 (`cds_candidate`), never for labels.
+- A protein alignment is **accepted** when identity ≥ 30 %, protein coverage ≥ 70 %, no frameshift, all introns canonical (GT-AG, GC-AG) and ≤ 200 kb; equal-best multi-locus placements are `mapping_ambiguous` (family-level only).
+- Independent support unit = distinct OrthoDB **organism**; `n` in the A18.4 weight is the number of organisms whose accepted alignments cover the base.
+
+### A19.3 What protein evidence labels (C2) and what it does not
+- Labels **CDS-family classes only** (`protein_coding_gene`, `exon` over aligned CDS blocks, CDS phase from the alignment frame) with `source_weight = 1.0` and the A18.4 genotype/cap rules; splice donor/acceptor and intron classes are labelled from protein alignments **only where ≥ 2 organisms place the same intron boundary exactly**, otherwise weight 0.
+- Protein evidence never produces UTR labels, GSF transcripts, or B1 support counts; it is not a B1 evidence source and does not touch §6–§9.
+- Protocol M candidate pool: accepted miniprot structures (after A19.1) are the protein-derived candidates of Protocol M item N; that remains gated/follow-up.
+- Evidence transcript-model phase 2 (design §4): accepted alignments provide the homology tier for ORF assignment (E ≤ 1e-10, identity ≥ 30 %, coverage ≥ 70 %).
+
+### A19.4 Order of operations
+1. Downloads finish on pronghorn → Delta account active → OrthoDB v12 Viridiplantae downloaded on Delta, filtered (A19.1), md5 frozen.
+2. `data/splits/b5_orthogroup_split_v1.tsv` committed (#14) → training-species held-out orthogroup proteins removed.
+3. miniprot per training genome (parallel with B5 training) → accepted-alignment table (`evidence/protein_alignments/<species>.tsv`) with per-base organism counts.
+4. At the week-3 C2 gate (#32): if go, protein CDS masks + EST/long-read exon/junction masks → C2 labels/weights (#33) → 14-class trainer (#34).
+5. Test-species genomes are never aligned against the resource for training purposes; a maize/tomato alignment is run only inside Protocol M evaluation.
+
+Nothing in §9 changes.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
@@ -381,3 +410,4 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 | 2026-09-01 | no long-read alignment run | v1.6: A16 read completeness codes, chain/terminal orthogonality, non-UMI ONT PCR-equivalence units, completeness QC table | author question on non-full-length long reads; Codex design cross-checked |
 | 2026-09-01 | no long-read alignment run | v1.7: A17 ORF verdict only after alignment on genome-spliced sequence; pre-alignment homology triage is QC-only; ORF-incomplete complete chains are chain-training (C1/C2) evidence, never GSF labels; chain-label weighting | author questions on pre-mapping ORF checks and on chain training with ORF-incomplete reads |
 | 2026-09-02 | no long-read alignment run | v1.8: A18 corrections to A17 (validation-source scope, C1 naming), effective-rule matrix with precedence, dataset-role manifest (Cui → training role, Zhong conversion or unavailable, Wang 2020 B73 selection), frozen C2 weights/class semantics, genotype rule for all species, seed plan, terminology, ingestion hardening | Codex full re-review cross-checked by the author's assistant |
+| 2026-09-02 | no protein alignment run | v1.9: A19 OrthoDB v12 Viridiplantae as the sole cross-species protein resource; leakage filter; miniprot acceptance rules; CDS-family-only labelling; order of operations | author decision on the de novo / C2 protein resource |

@@ -31,3 +31,8 @@ Rules (protocol B1 v1.5): ONT of any chemistry; PacBio only if ENA `instrument_m
 | P. patens | ONT dRNA | PRJNA681088 | 7 / 7.2 Gb | gametophore, protonema (Gransden expected) | Fesenko lab, unpublished |
 
 Estimated total ≈ 430 Gb fastq → ≈ 200–250 GB FASTA.gz. Species without long reads for training: B. distachyon (none), S. bicolor ONT (none), G. max / S. italica / P. patens PacBio (none). Reference-annotation feed: Ptrichocarpa v4.1 used JGI Iso-Seq CCS not deposited; Sbicolor v5.1 mentions full-length transcripts (source unverified); all other references predate long reads.
+
+## Protein resource (added 2026-09-02, protocol A19)
+| resource | role | filter | where |
+|---|---|---|---|
+| OrthoDB v12, Viridiplantae partition | `c2_training_eligible` (CDS-family labels), Protocol M candidate pool, homology tier for ORF assignment | remove evaluated species (3702, 4577, 4081 and sub-taxa) and training-species test-orthogroup proteins (A19.1) | downloaded and aligned (miniprot) on ACCESS Delta |
