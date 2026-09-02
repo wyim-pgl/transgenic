@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.6; v1.0 text unchanged, amendments appended)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.7; v1.0 text unchanged, amendments appended)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -178,6 +178,24 @@ Response-letter wording (frozen): "We agree that isoform-specific RT-PCR would p
 
 ## 12. Amendment log
 
+## A17. Amendment v1.7 (2026-09-01; before any long-read alignment) — ORF completeness is decided after alignment on genome-spliced sequence; ORF-incomplete chains are chain-training evidence
+
+Author questions (2026-09-01): "how is a complete ORF checked before mapping?" and "can ORF-incomplete reads be used for chain training?". Adopted rules:
+- **No ORF verdict before alignment.** Read-level ORF scans are not a judgement of completeness: strand is unknown for ESTs and half of ONT cDNA, ONT indels and single-pass EST errors break frames, and a read cannot show whether an upstream in-frame ATG exists. ORF and CDS assignment (design §4) run only on the **genome sequence spliced through the aligned exon chain**, in the three transcript-oriented frames, never on the read sequence.
+- **Optional pre-alignment triage (QC only, never a label or a filter for scoring).** A read may be tagged `cds_candidate` when a DIAMOND blastx hit to a cross-species proteome covers ≥ 70 % of the protein and reaches within 5 aa of both its first and last residue; the hit strand, an untemplated poly(A) and detected 5′ adapter/primer may be recorded. FLNC/"full-length" library tags mean primer presence, not ORF completeness. These tags feed the completeness QC table (A16) and read prioritisation; they never change eligibility, tiers or denominators.
+- **ORF completeness and chain completeness are separate axes** (extends A16 orthogonality). Chain evidence requires only that one molecule witnessed the full ordered chain (`IC`, 20-nt anchors), independent-molecule support (§A11/A16) and a training-species, non-held-out, non-`validation_only` source. Non-coding transcripts, NMD-like isoforms and UTR-only full-length reads are legitimate chains.
+- **Allowed uses of ORF-incomplete evidence** (adds rows to design §5):
+
+| State | intron-chain training target (Track C1) | C0 junction / partial-chain support | C2 positive mask | GSF label |
+|---|---|---|---|---|
+| chain complete, ends incomplete (`IC` + 5I/3I) | yes | yes | yes | no |
+| chain complete, both ends complete, no complete ORF (incl. `nmd_like`, non-coding) | yes | yes | yes | no — the GSF vocabulary requires CDS features and phases; a non-coding GSF representation is a format change and out of scope for this revision |
+| partial chain (`IP`) | no (sub-chain evidence only, tiers T3/T4) | yes (junctions, blocks) | yes | no |
+| conflicting / ambiguous (`IX`, `mapping_ambiguous`) | no | family-level only | no | no |
+
+- **Chain-label weighting (Track C1 and C2).** Chain and junction labels carry `W = 1 + source_weight·log1p(independent_molecules)` (capped) and require canonical splice sites; retained-intron-like chains supported by fewer than 3 independent molecules are down-weighted, not removed. Rationale: the benchmark is CDS-based (GFFCompare), so non-coding chains must not dominate the chain objective.
+- This revision's scope rule is unchanged: evidence *selects* (B1–B3) and *teaches only the C2 segmentation head*; ORF-incomplete chains as direct training targets belong to Track C1 (`PROTOCOL_M_exploratory_v1.md`, gated) and the follow-up evidence-derived-label work. Nothing in §9 changes.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
@@ -317,3 +335,4 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | no long-read alignment run | v1.6: A16 read completeness codes, chain/terminal orthogonality, non-UMI ONT PCR-equivalence units, completeness QC table | author question on non-full-length long reads; Codex design cross-checked |
+| 2026-09-01 | no long-read alignment run | v1.7: A17 ORF verdict only after alignment on genome-spliced sequence; pre-alignment homology triage is QC-only; ORF-incomplete complete chains are chain-training (C1/C2) evidence, never GSF labels; chain-label weighting | author questions on pre-mapping ORF checks and on chain training with ORF-incomplete reads |

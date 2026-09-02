@@ -1,4 +1,4 @@
-# Evidence-first data layer — design v1.0 (2026-09-01)
+# Evidence-first data layer — design v1.1 (2026-09-01; v1.0 + §4 sequence source, §4a triage, §5a ORF-incomplete chains; protocol A17)
 
 Decision (author, 2026-09-01): a fresh design is acceptable. This document replaces the "patch preprocess.py" approach for the evidence layer with a single-source-of-truth **transcript model** representation from which GSF labels, C2 masks, C0 junction tables and validation metrics are derived. The B5 path (reference annotation → model → GSF → DB) uses the same representation, so the week-1 schedule in `IMPLEMENTATION_ORDER_B5_C0_C2_v1.md` is unchanged; only the module boundaries move. Source: Codex design `codex_fulllength_20260901.md` (tool behaviour verified from IsoQuant/FLAIR/StringTie/Iso-Seq collapse/TAMA documentation), cross-checked against the frozen protocol.
 
@@ -19,7 +19,10 @@ Mandatory invariant: **every emitted exon chain and 5′/3′ endpoint combinati
 Tools: IsoQuant/FLAIR may supply corrected alignments but not their assembled models (IsoQuant restores/moves sites from annotation; FLAIR end policies; StringTie is an assembler; Iso-Seq collapse merges extra 5′ exons by default; TAMA 10-nt defaults) — none guarantees the invariant.
 
 ## 4. ORF, CDS and GSF eligibility
-ORF search in three transcript-oriented frames; complete ORF = ATG…stop, no internal stop, length % 3 == 0; de novo ≥ 100 aa; homology-supported ≥ 30 aa with E ≤ 1e-10, identity ≥ 30%, coverage ≥ 70%, splice-consistent placement; ranking: exact training-species reference CDS (leakage rules) > cross-species homology > longest valid ORF. Eligibility: `5C/3C` de novo; `5C/3I` CDS only if fully contained, GSF-ineligible; `5I/3C` start only with homology/reference support plus upstream in-frame stop or ≥ 30 nt observed 5′ UTR, GSF-ineligible; `5I/3I` partial ORF only; `MP/MX` none. `nmd_like` (stop ≥ 50 nt upstream of last junction) kept for structure but not a coding GSF label unless reference/homology supports the ORF; uORFs recorded, never chosen as main CDS by position alone. Phases recomputed 5′→3′ (`(3 − cumulative mod 3) mod 3`). `gsf_eligible` requires `M.5C.3C.MC` (or qualifying `MM`), witnessed signature, support thresholds, complete CDS, not unsupported `nmd_like`, window fit, feature/token caps, canonical order + round-trip, and no leakage exclusion.
+**Sequence source:** ORF/CDS assignment runs on the genome sequence spliced through the model's aligned exon chain (read errors and unknown strand make read-level ORF scans unreliable; see §4a). ORF search in three transcript-oriented frames; complete ORF = ATG…stop, no internal stop, length % 3 == 0; de novo ≥ 100 aa; homology-supported ≥ 30 aa with E ≤ 1e-10, identity ≥ 30%, coverage ≥ 70%, splice-consistent placement; ranking: exact training-species reference CDS (leakage rules) > cross-species homology > longest valid ORF. Eligibility: `5C/3C` de novo; `5C/3I` CDS only if fully contained, GSF-ineligible; `5I/3C` start only with homology/reference support plus upstream in-frame stop or ≥ 30 nt observed 5′ UTR, GSF-ineligible; `5I/3I` partial ORF only; `MP/MX` none. `nmd_like` (stop ≥ 50 nt upstream of last junction) kept for structure but not a coding GSF label unless reference/homology supports the ORF; uORFs recorded, never chosen as main CDS by position alone. Phases recomputed 5′→3′ (`(3 − cumulative mod 3) mod 3`). `gsf_eligible` requires `M.5C.3C.MC` (or qualifying `MM`), witnessed signature, support thresholds, complete CDS, not unsupported `nmd_like`, window fit, feature/token caps, canonical order + round-trip, and no leakage exclusion.
+
+## 4a. Pre-alignment triage (QC only)
+Before alignment a read may be tagged `cds_candidate` (DIAMOND blastx hit to a cross-species proteome covering ≥ 70 % of the protein and reaching within 5 aa of both termini; hit strand, untemplated poly(A) and 5′ adapter/primer recorded). FLNC tags mean primer presence, not ORF completeness. Tags enter the completeness QC table and read prioritisation only; they never set eligibility, tiers or denominators (protocol A17).
 
 ## 5. Decision table — state → allowed uses
 | State | junction support | chain support | C2 positive mask | UTR endpoint | GSF label |
@@ -32,6 +35,18 @@ ORF search in three transcript-oriented frames; complete ORF = ATG…stop, no in
 | mapping_ambiguous | family-level only | no | no | no | no |
 | M.5C.3C.MC/MM, complete ORF | — | — | yes | yes | **yes** (training species, non-held-out loci) |
 | any model from a test species or an A. thaliana validation-only dataset | validation | validation | no | validation | no (`validation_only`) |
+
+## 5a. ORF-incomplete chains — allowed uses (protocol A17)
+ORF completeness and chain completeness are independent axes. A chain fully witnessed by one molecule (`IC`) from a training-species, non-held-out, non-`validation_only` source is chain evidence regardless of its ORF or terminal state.
+
+| State | intron-chain training target (Track C1) | C0 junction / partial-chain support | C2 positive mask | GSF label |
+|---|---|---|---|---|
+| `IC` + 5I/3I (chain complete, ends incomplete) | yes | yes | yes | no |
+| `M.5C.3C.MC` without complete ORF (incl. `nmd_like`, non-coding) | yes | yes | yes | no (GSF vocabulary requires CDS features/phases; non-coding representation = format change, out of scope) |
+| `IP` (partial chain) | no (sub-chain only, T3/T4) | yes | yes | no |
+| `IX` / `mapping_ambiguous` | no | family-level only | no | no |
+
+Chain and junction labels carry `W = 1 + source_weight·log1p(independent_molecules)` (capped), require canonical splice sites, and down-weight retained-intron-like chains with < 3 independent molecules. Current-revision scope is unchanged: evidence selects (B1–B3) and teaches only the C2 head; chain targets from evidence are Track C1 (gated) and follow-up work.
 
 ## 6. Scope
 **Current revision**: per-dataset completeness QC table (species × protocol × library; 5C/5I, 3C/3I, IC/IP/IM/IX, tail-positive and internal-priming-rejected fractions, PCR-equivalence compression, TSS/TES cluster counts) as supplementary output; C0 records carry the three codes; C2 positive masks from observed blocks/junctions (data artifact, evidence-weighted training only under the C2 gate); B1 validation on observed chains unchanged; protocol-stratified limitation statement. **Follow-up**: observational collapse, transcript-model release, ORF/homology/NMD assignment, evidence-derived GSF labels and their ingestion into orthogroup-aware retraining, collapse-tool benchmark and threshold sensitivity.
