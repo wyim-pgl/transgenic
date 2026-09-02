@@ -35,12 +35,14 @@ def test_feature_numbering_follows_first_use_after_ordering(gsf):
     s = gsf.gene_to_gsf(next(gsf.parse_gff3(text.splitlines())), 0)
     feats, txs = s.split(">")
     # mono-exonic transcript comes first and uses CDS1, which must therefore be the 300-400 feature
+    # (the feature list itself stays coordinate-sorted, §3)
     assert txs.split(";")[0] == "CDS1"
-    assert feats.split(";")[0].split("|")[1] == "CDS1" and feats.split(";")[0].split("|")[0] == "200"
+    by_name = {f.split("|")[1]: f for f in feats.split(";")}
+    assert by_name["CDS1"].split("|")[0] == "299" and feats.split(";")[0].split("|")[1] == "CDS2"
 
 
 def test_rc_canonical_form_is_stable_under_double_rc(gsf):
-    text = gff("Chr1", "g", "-", {"a": [("CDS", 100, 200, 0), ("CDS", 300, 400, 1)], "b": [("CDS", 300, 400, 0)]})
+    text = gff("Chr1", "g", "-", {"a": [("CDS", 100, 200, 1), ("CDS", 300, 400, 0)], "b": [("CDS", 300, 400, 0)]})
     gene = next(gsf.parse_gff3(text.splitlines()))
     ws, we = gsf.pad_window(gene.start0, gene.end0)
     s = gsf.gene_to_gsf(gene, ws)

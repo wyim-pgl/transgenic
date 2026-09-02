@@ -24,12 +24,18 @@ def test_rc_mirrors_coordinates_and_flips_strand(gsf):
 
 
 def test_rc_recomputes_phases_five_to_three_prime(gsf):
-    # CDS lengths 100 and 101: forward phases A (0) then C (2). After RC the transcript reads the
-    # 101-bp piece first: phases A then (3 - 101 mod 3) mod 3 = 1 -> B.
+    # CDS lengths 100 and 101: forward phases A (0) then C (2). RC flips the strand but not the
+    # transcript: the 100-bp piece is still read first (A) and the 101-bp piece keeps phase
+    # (3 - 100 mod 3) mod 3 = 2 (C). In the coordinate-sorted feature list the mirrored 101-bp piece
+    # now comes first, so the list reads C then A; a wrong phase (e.g. 1 -> B) must not appear.
     s, L = _gene_gsf(gsf, {"t1": [("CDS", 100, 199, 0), ("CDS", 300, 400, 2)]})
     r = gsf.reverse_complement(s, L)
     phases = [f.split("|")[4] for f in r.split(">")[0].split(";")]
-    assert phases == ["A", "B"]
+    assert phases == ["C", "A"]
+    # and a deliberately wrong forward phase is corrected by the recomputation
+    s2, L2 = _gene_gsf(gsf, {"t1": [("CDS", 100, 199, 0), ("CDS", 300, 400, 1)]})
+    r2 = gsf.reverse_complement(s2, L2)
+    assert [f.split("|")[4] for f in r2.split(">")[0].split(";")] == ["C", "A"]
 
 
 def test_rc_keeps_utrs_in_transcription_order_and_is_canonical(gsf):
