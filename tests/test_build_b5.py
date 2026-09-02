@@ -198,3 +198,14 @@ def test_validator_catches_corrupted_token_count_and_sequence(tmp_path, b5):
     con.close()
     v = "\n".join(b5.validate_b5_database(str(db))["violations"])
     assert "token count" in v and "sequence length" in v and "reverse complement" in v
+
+
+def test_tiered_policy_build_and_validate(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    db = tmp_path / "t2.db"
+    b5.build_b5_database(str(db), str(manifest), str(split), rc="none", verify_md5=False, window_policy="tier6144-v2", tier_up_prob=0.0)
+    con = duckdb.connect(str(db), read_only=True)
+    rows = con.sql("SELECT geneModel, fin - start, window_policy, length(sequence) FROM geneList").fetchall()
+    assert all(r[1] == 30720 and r[2] == "tier6144-v2" and r[3] == 30720 for r in rows)   # contigs are 20-30 kb -> N-padded
+    con.close()
+    assert b5.validate_b5_database(str(db))["ok"]

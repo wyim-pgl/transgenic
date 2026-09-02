@@ -22,6 +22,14 @@ Example 3 (5′UTR 500–550, CDS 550–650, 700–800, 3′UTR 800–900; windo
 ```
 (The README's `0|CDS1|50` form is off by one at every end coordinate and is superseded.)
 
+### 1a. Window policy `tier6144-v2` (variable context; author decision 2026-09-02, protocol A25)
+The new-version training database uses three window tiers of 30,720 / 61,440 / 129,024 nt (5, 10, 21 chunks of 6,144). A gene
+takes the smallest tier that holds it plus at least 1,000 nt of flank on each side; in training builds the next larger tier is
+chosen with probability 0.3 and the gene is placed at a random (seeded) offset inside the tier, so the model sees the same gene
+with different amounts of context. Genes that do not fit the largest tier with flanks are rejected. GSF coordinates stay
+window-relative; the `window_policy` column records the policy per row and the validator applies the matching cap.
+`sym6144-v1` (≤ 49,152, symmetric padding) remains available for the parity control.
+
 ## 2. Feature and transcript grammar
 `<features> > <transcripts>` where a feature is `start|TYPEn|end|strand|phase`, TYPE ∈ {CDS, five_prime_UTR, three_prime_UTR}, `n` is the feature number by first use after canonical ordering (§3), phase ∈ {A, B, C} = {0, 1, 2} for CDS and `.` for UTRs. Transcripts are `|`-joined feature names separated by `;`. Features shared by several transcripts appear once in the feature list.
 

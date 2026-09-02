@@ -29,7 +29,7 @@ apptainer exec --nv --bind "$WORK":/work "$SIF" bash -lc "
   sha256sum -c /work/db/b5_v1.duckdb.sha256 &&
   mkdir -p $RUN &&
   accelerate launch --num_processes=$GPUS --mixed_precision=bf16 train/train_HyenaTransgenic.py \
-    --config configs/b5_400m_v1.json --db /work/db/b5_v1.duckdb --seed $SEED --output-dir $RUN --resume auto \
+    --config configs/b5_400m_ctx_v2.json --db /work/db/b5_v1.duckdb --seed $SEED --output-dir $RUN --resume auto \
     2>> $RUN/train.err
 "
 [ -f "$RUN_HOST/TRAINING_DONE" ] || echo "WARNING: trainer exited without TRAINING_DONE" >&2

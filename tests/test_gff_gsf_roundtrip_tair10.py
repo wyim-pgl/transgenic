@@ -67,3 +67,21 @@ def test_exact_multiple_padding_adds_no_extra_chunk(gsf, length, expected):
     ws, we = gsf.pad_window(1000, 1000 + length)
     assert we - ws == expected
     assert ws <= 1000 and we >= 1000 + length
+
+
+def test_tiered_window_policy(gsf):
+    import random
+    ws, we, tier = gsf.pad_window_tiered(10000, 15000)          # 5 kb gene -> smallest tier
+    assert tier == 30720 and we - ws == 30720 and ws <= 9000 and we >= 16000
+    ws, we, tier = gsf.pad_window_tiered(10000, 45000)          # 35 kb + flanks -> 61,440
+    assert tier == 61440
+    ws, we, tier = gsf.pad_window_tiered(100000, 200000)        # 100 kb -> 129,024
+    assert tier == 129024
+    ws, we, tier = gsf.pad_window_tiered(100000, 228000)        # too long -> over the cap (rejected downstream)
+    assert tier > gsf.MAX_WINDOW_V2
+    rng = random.Random(1)
+    tiers = {gsf.pad_window_tiered(10000, 15000, rng=rng, tier_up_prob=0.5)[2] for _ in range(50)}
+    assert tiers == {30720, 61440}                                # augmentation picks the next tier sometimes, never two up
+    for _ in range(20):
+        ws, we, tier = gsf.pad_window_tiered(10000, 15000, rng=rng, tier_up_prob=0.0)
+        assert ws + 1000 <= 10000 and 15000 + 1000 <= we and we - ws == 30720

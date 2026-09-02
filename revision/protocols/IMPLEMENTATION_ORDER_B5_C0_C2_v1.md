@@ -59,6 +59,11 @@ Every item below is tracked as a GitHub issue in wyim-pgl/transgenic (#4–#43).
 - Reverse complement: the legacy `utils/gsf.py` RC function stays for inference with the published checkpoints (their outputs are not canonical); training labels use `gsf_contract.reverse_complement` only. This dual path is an internal implementation note and is not stated in the manuscript or public docs.
 - Annotation QC (A22): GeenuFF flags → `train_weight` 0 rows are excluded from train/valid loaders (`datasets.py`) and from C2 weights; hard-flagged transcripts are dropped from labels.
 
+## 2c. New-version recipe (A25, author decision 2026-09-02)
+- B5 database: `scripts/build_b5_database.py --window-policy tier6144-v2 --tier-up-prob 0.3` (default); config `configs/b5_400m_ctx_v2.json` (`max_encoder_seqlen` 129,024). `configs/b5_400m_v1.json` stays for the optional parity control.
+- Compute: seeds 123/456/789 all on NSF ACCESS (Delta A100 80 GB or DeltaAI GH200); 4090 = inference/B7/dev. #18 must benchmark each tier (30,720 / 61,440 / 129,024) for tokens/s and peak memory, and confirm the encoder position-embedding limit (`max_encoder_position_embeddings`) accommodates 129,024-nt inputs after the UNet downsampling.
+- Open design decision (not taken): whole-window multi-gene labels (GSF v3 with a gene separator) versus the current single-target-gene label.
+
 ## 3a. Schedule gates (author decision 2026-09-02)
 - **Adopted — C2 gate:** at the end of week 3 the author checks B5 (full DB built, primary seed training) and B1 (maize alignments and P4/P5 controls done). If either is behind, C2 is deferred to the follow-up paper; C2 label construction does not start before that check. Recorded in the master plan and resume.
 - **Compute:** NSF ACCESS Explore allocation **approved 2026-09-02**; confirmatory seeds 456/789 run on the ACCESS GPU resource after the #18 benchmark, the 4090 keeps the primary seed 123.

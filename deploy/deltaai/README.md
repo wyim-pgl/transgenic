@@ -14,6 +14,8 @@ container runtime on both systems.
 | Container image | NGC `pytorch:<tag>-py3` multi-arch manifest pulls the arm64 build automatically | same tag, amd64 build |
 | Fit for B5 | best: one seed per GPU, 96 GB lets micro-batch grow | good: A100 80 GB; avoid A40 |
 Everything below works on both; only the wheel architecture differs, which the NGC image hides.
+
+**Compute assignment (protocol A25, 2026-09-02):** all three B5 seeds (123 primary, 456/789 confirmatory) run on ACCESS with the variable-context recipe `configs/b5_400m_ctx_v2.json` (windows up to 129,024 nt); the lab RTX 4090 is for inference, B7 and development. `bench_b5.slurm` must be run once per window tier.
 Check the allocation's resource name in the ACCESS portal and record it in issue #18.
 
 ## 2. Build the GPU image (once, on a login node or locally)

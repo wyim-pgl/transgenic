@@ -1,0 +1,55 @@
+{
+  "name": "b5_400m_ctx_v2",
+  "recipe_source": "train/train_HyenaTransgenic.py @ d013418 (released 400M checkpoints); manuscript Methods",
+  "encoder_model": "LongSafari/hyenadna-large-1m-seqlen-hf",
+  "d_model_encoder": 768,
+  "d_model_decoder": 1536,
+  "encoder_layers": 12,
+  "decoder_layers": 12,
+  "encoder_n_layer": 12,
+  "encoder_attention_heads": 6,
+  "decoder_attention_heads": 6,
+  "attention_window": [
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024
+  ],
+  "dropout": 0.1,
+  "do_segment": false,
+  "optimizer": "AdamW",
+  "lr": 5e-05,
+  "weight_decay": 0.02,
+  "effective_batch_size": 96,
+  "lr_schedule": "linear warm-up 5% of total steps, then linear decay",
+  "max_epochs": 22,
+  "checkpoint_rule": "minimum mean validation loss; patience 3 epochs; compare loss to loss (not perplexity)",
+  "split_source": "data/splits/b5_orthogroup_split_v1.tsv (no random_split)",
+  "seeds": {
+    "primary": 123,
+    "confirmatory": [
+      456,
+      789
+    ]
+  },
+  "species_manifest": "data/manifests/b5_species_v1.tsv",
+  "gsf_spec": "docs/gsf_spec_v1.md",
+  "notes": "New-version recipe (author decision 2026-09-02, protocol A25): same architecture and optimisation as the published 400M recipe but variable context windows of 30,720 / 61,440 / 129,024 nt (6,144 x 5/10/21). Not a parity re-training: results are reported as the new version. The published-recipe file configs/b5_400m_v1.json is kept for reference and the optional parity control.",
+  "window_policy": "tier6144-v2",
+  "window_tiers": [
+    30720,
+    61440,
+    129024
+  ],
+  "max_encoder_seqlen": 129024,
+  "tier_up_prob": 0.3,
+  "min_flank": 1000
+}

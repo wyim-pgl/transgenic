@@ -24,6 +24,9 @@ def main():
     ap.add_argument("--only", nargs="*", help="species_id subset (smoke build)")
     ap.add_argument("--overwrite", action="store_true")
     ap.add_argument("--qc-flags", default=None, help="GeenuFF flags TSV from revision/scripts/62_geenuff_qc.py (protocol A22)")
+    ap.add_argument("--window-policy", choices=["sym6144-v1", "tier6144-v2"], default="tier6144-v2",
+                    help="sym6144-v1 = published recipe (<= 49,152); tier6144-v2 = variable context 30,720 / 61,440 / 129,024 (A25)")
+    ap.add_argument("--tier-up-prob", type=float, default=0.3, help="A25 augmentation: probability of the next larger tier (train mode)")
     a = ap.parse_args()
     if os.path.exists(a.db):
         if not a.overwrite:
@@ -35,7 +38,7 @@ def main():
         commit = ""
     res = build_b5_database(a.db, a.species_manifest, a.split_table, rc=a.rc, add_extra=a.add_extra, seed=a.seed, max_len=a.max_len,
                             clean=a.clean, verify_md5=not a.no_verify_md5, only_species=set(a.only) if a.only else None, git_commit=commit,
-                            qc_flags_path=a.qc_flags)
+                            qc_flags_path=a.qc_flags, window_policy=a.window_policy, tier_up_prob=a.tier_up_prob)
     for r in res:
         print(json.dumps({"species_id": r["species_id"], "rows": r["rows"], "rc_rows": r["rc_rows"], "rejected": len(r["rejected"])}))
     with open(a.db + ".rejected.json", "w") as fh:

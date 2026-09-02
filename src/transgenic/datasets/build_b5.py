@@ -122,10 +122,13 @@ def read_split_table(path: str) -> Tuple[Dict[Tuple[str, str], Dict[str, str]], 
     return rows, sha256(path)
 
 
-def _window_for(gene: gc.Gene, chrom_len: int, max_len: int):
+def _window_for(gene: gc.Gene, chrom_len: int, max_len: int, policy: str = gc.WINDOW_POLICY, rng=None, tier_up_prob: float = 0.0):
     """Symmetric window; when the contig is too short the window is shifted, and if the contig is shorter than the
     window it keeps its multiple-of-6144 length by N-padding the sequence on the right (contig_boundary = True)."""
-    ws, we = gc.pad_window(gene.start0, gene.end0)
+    if policy == gc.WINDOW_POLICY_V2:
+        ws, we, _tier = gc.pad_window_tiered(gene.start0, gene.end0, rng=rng, tier_up_prob=tier_up_prob)
+    else:
+        ws, we = gc.pad_window(gene.start0, gene.end0)
     L = we - ws
     boundary = False
     if we > chrom_len:
@@ -178,7 +181,8 @@ def read_qc_flags(path: str) -> Dict[Tuple[str, str], Dict[str, set]]:
 def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[Tuple[str, str], Dict[str, str]], split_sha: str,
                   rc: str = "none", add_extra: int = 0, seed: int = 123, max_len: int = gc.MAX_WINDOW, clean: bool = False,
                   mode: str = "train", git_commit: str = "", fasta_sha: Optional[str] = None, gff_sha: Optional[str] = None,
-                  allow_missing_split: bool = False, qc_flags: Optional[Dict[Tuple[str, str], Dict[str, set]]] = None) -> Dict:
+                  allow_missing_split: bool = False, qc_flags: Optional[Dict[Tuple[str, str], Dict[str, set]]] = None,
+                  window_policy: str = gc.WINDOW_POLICY, tier_up_prob: float = 0.0) -> Dict:
     if rc not in gc.RC_MODES:
         raise ValueError(f"rc must be one of {gc.RC_MODES}")
     ensure_schema(con)
@@ -191,14 +195,20 @@ def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[T
     con.execute("BEGIN TRANSACTION")
     try:
         return _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, add_extra, seed, max_len, clean, mode,
-                                   git_commit, fasta_sha, gff_sha, allow_missing_split, qc_flags, genome, rng, inserted, rc_rows, rejected)
+                                   git_commit, fasta_sha, gff_sha, allow_missing_split, qc_flags, genome, rng, inserted, rc_rows, rejected,
+                                   window_policy, tier_up_prob)
     except BaseException:
         con.execute("ROLLBACK")
         raise
 
 
 def _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, add_extra, seed, max_len, clean, mode, git_commit,
-                        fasta_sha, gff_sha, allow_missing_split, qc_flags, genome, rng, inserted, rc_rows, rejected):
+                        fasta_sha, gff_sha, allow_missing_split, qc_flags, genome, rng, inserted, rc_rows, rejected,
+                        window_policy=gc.WINDOW_POLICY, tier_up_prob=0.0):
+    if window_policy not in (gc.WINDOW_POLICY, gc.WINDOW_POLICY_V2):
+        raise ValueError(f"unknown window policy {window_policy}")
+    if window_policy == gc.WINDOW_POLICY_V2 and max_len < gc.MAX_WINDOW_V2:
+        max_len = gc.MAX_WINDOW_V2
     cols = ", ".join(LEGACY_COLUMNS + NEW_COLUMNS)
     placeholders = ", ".join("?" for _ in LEGACY_COLUMNS + NEW_COLUMNS)
     sql = f"INSERT INTO geneList (rn, {cols}) VALUES (nextval('row_id'), {placeholders})"
@@ -225,7 +235,8 @@ def _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, 
                                    gene.gene_id_original, gene.name_original)
                     qc_list = qc_list + ["transcripts_dropped"]
             chrom_len = len(genome[gene.chrom])
-            ws, we, boundary = _window_for(gene, chrom_len, max_len)
+            ws, we, boundary = _window_for(gene, chrom_len, max_len, policy=window_policy, rng=rng if mode == "train" else None,
+                                           tier_up_prob=tier_up_prob if mode == "train" else 0.0)
             L = we - ws
             if L > max_len:
                 rejected.append({"gene_id": gene.gene_id, "reason": f"window {L} > {max_len}"})
@@ -249,7 +260,7 @@ def _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, 
             five, three = (rng.randrange(add_extra), rng.randrange(add_extra)) if add_extra else (0, 0)
             common = [species_id, gene.gene_id, srow.get("orthogroup_id") or None, srow["split"],
                       str(srow.get("strict_holdout", "")).lower() in ("1", "true", "yes"), False, gc.ORDERING_VERSION,
-                      gc.BUILD_VERSION, fasta_sha, gff_sha, split_sha, gc.WINDOW_POLICY,
+                      gc.BUILD_VERSION, fasta_sha, gff_sha, split_sha, window_policy,
                       gc.count_tokens_v2(gsf) if gsf else None, boundary, len(gene.transcripts), train_weight, ";".join(qc_list) or None,
                       gene.gene_id_original]
             con.execute(sql, [gene.gene_id, ws, we, gene.strand, gene.chrom, seq, gsf, fpb, tpb, five, three] + common)
@@ -273,7 +284,7 @@ def _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, 
         reasons[k] = reasons.get(k, 0) + 1
     con.execute("INSERT INTO build_manifest VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 [species_id, os.path.abspath(fasta), fasta_sha, os.path.abspath(gff), gff_sha, split_sha, rc, inserted, rc_rows,
-                 len(rejected), json.dumps(reasons), gc.BUILD_VERSION, gc.ORDERING_VERSION, gc.WINDOW_POLICY, git_commit,
+                 len(rejected), json.dumps(reasons), gc.BUILD_VERSION, gc.ORDERING_VERSION, window_policy, git_commit,
                  time.strftime("%Y-%m-%dT%H:%M:%S"), duckdb.__version__])
     con.execute("COMMIT")
     return {"species_id": species_id, "rows": inserted, "rc_rows": rc_rows, "rejected": rejected}
@@ -287,7 +298,7 @@ def read_species_manifest(path: str) -> List[Dict[str, str]]:
 def build_b5_database(db: str, species_manifest: str, split_table: str, rc: str = "isoform-only", add_extra: int = 0, seed: int = 123,
                       max_len: int = gc.MAX_WINDOW, clean: bool = False, excluded_species: Iterable[str] = ("Zmays",),
                       verify_md5: bool = True, only_species: Optional[Set[str]] = None, git_commit: str = "",
-                      qc_flags_path: Optional[str] = None) -> List[Dict]:
+                      qc_flags_path: Optional[str] = None, window_policy: str = gc.WINDOW_POLICY, tier_up_prob: float = 0.0) -> List[Dict]:
     manifest = read_species_manifest(species_manifest)
     split_rows, split_sha = read_split_table(split_table)
     qc = read_qc_flags(qc_flags_path) if qc_flags_path else None
@@ -316,7 +327,8 @@ def build_b5_database(db: str, species_manifest: str, split_table: str, rc: str 
                 raise ValueError(f"{sid}: GFF md5 {gmd5} != manifest {m['gff_md5']}")
         print(f"[{sid}] building...", file=sys.stderr)
         results.append(build_species(con, sid, m["fasta"], m["gff"], split_rows, split_sha, rc=rc, add_extra=add_extra, seed=seed,
-                                     max_len=max_len, clean=clean, git_commit=git_commit, fasta_sha=fsha, gff_sha=gsha, qc_flags=qc))
+                                     max_len=max_len, clean=clean, git_commit=git_commit, fasta_sha=fsha, gff_sha=gsha, qc_flags=qc,
+                                     window_policy=window_policy, tier_up_prob=tier_up_prob))
     con.close()
     return results
 
@@ -331,14 +343,15 @@ def validate_b5_database(db: str, excluded_species: Iterable[str] = ("Zmays",), 
         if n:
             violations.append(f"{n} rows whose geneModel starts with {pat}")
     # physical checks: window length, sequence length, stored token count, RC pairing, required fields
-    for (gm, st, fn, seq_len, gsf, tok, is_rc, sp, gid, ov) in con.sql(
-            "SELECT geneModel, start, fin, length(sequence), gff, gsf_token_count, is_rc, species_id, gene_id, ordering_version FROM geneList").fetchall():
+    for (gm, st, fn, seq_len, gsf, tok, is_rc, sp, gid, ov, pol) in con.sql(
+            "SELECT geneModel, start, fin, length(sequence), gff, gsf_token_count, is_rc, species_id, gene_id, ordering_version, window_policy FROM geneList").fetchall():
         if st is None or fn is None or seq_len is None:
             violations.append(f"{gm}: missing start/fin/sequence")
             continue
         L = fn - st
-        if L % gc.WINDOW_UNIT or L > gc.MAX_WINDOW:
-            violations.append(f"{gm}: window {L} is not an allowed multiple of {gc.WINDOW_UNIT}")
+        cap = gc.MAX_WINDOW_V2 if pol == gc.WINDOW_POLICY_V2 else gc.MAX_WINDOW
+        if L % gc.WINDOW_UNIT or L > cap:
+            violations.append(f"{gm}: window {L} is not an allowed multiple of {gc.WINDOW_UNIT} (policy {pol})")
         if seq_len != L:
             violations.append(f"{gm}: sequence length {seq_len} != window {L}")
         if gsf is not None and tok != gc.count_tokens_v2(gsf):

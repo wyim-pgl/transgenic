@@ -14,10 +14,15 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Set, Tuple
 
 WINDOW_UNIT = 6144
-MAX_WINDOW = 49152
+MAX_WINDOW = 49152                      # sym6144-v1 (published recipe)
+WINDOW_TIERS = (30720, 61440, 129024)   # tier6144-v2: 5, 10, 21 chunks (~32 / 64 / 128 kb); Helixer plant context is 106,920
+MAX_WINDOW_V2 = WINDOW_TIERS[-1]
+MIN_FLANK = 1000                        # nt of context required on each side of the gene before a tier is accepted
+TIER_UP_PROB = 0.3                      # augmentation: probability of using the next larger tier (training builds only)
 CAPS = {"CDS": 150, "five_prime_UTR": 50, "three_prime_UTR": 50, "transcripts": 15, "tokens": 2048}
 ORDERING_VERSION = "gsf-order-v1"
 WINDOW_POLICY = "sym6144-v1"
+WINDOW_POLICY_V2 = "tier6144-v2"
 BUILD_VERSION = "gsf-contract-v1"
 PHASE_TO_LETTER = {0: "A", 1: "B", 2: "C"}
 LETTER_TO_PHASE = {v: k for k, v in PHASE_TO_LETTER.items()}
@@ -86,6 +91,30 @@ def gene_key(species_code_: str, gff_id: str, gff_name: str, counter: int) -> st
 # ----------------------------------------------------------------------------------------------
 # §1 coordinates
 # ----------------------------------------------------------------------------------------------
+def pad_window_tiered(start0: int, end0: int, rng: Optional["random.Random"] = None, tier_up_prob: float = 0.0,
+                      tiers: Sequence[int] = WINDOW_TIERS, min_flank: int = MIN_FLANK) -> Tuple[int, int, int]:
+    """tier6144-v2: the smallest tier that holds the gene plus MIN_FLANK on both sides; with `rng` and
+    tier_up_prob the next tier is chosen instead (variable-context augmentation) and the gene is placed at a
+    random offset inside it. Returns (ws, we, tier). Genes longer than the largest tier minus flanks are rejected
+    by the caller via CapError (window > MAX_WINDOW_V2)."""
+    length = end0 - start0
+    idx = next((i for i, t in enumerate(tiers) if length + 2 * min_flank <= t), None)
+    if idx is None:
+        we_ws = tiers[-1]
+        return start0 - min_flank, start0 - min_flank + we_ws + WINDOW_UNIT, tiers[-1] + WINDOW_UNIT  # over cap -> rejected downstream
+    if rng is not None and tier_up_prob > 0 and idx + 1 < len(tiers) and rng.random() < tier_up_prob:
+        idx += 1
+    tier = tiers[idx]
+    slack = tier - length
+    left = slack // 2 if rng is None else rng.randint(min_flank, slack - min_flank)
+    ws = start0 - left
+    we = ws + tier
+    if ws < 0:
+        we -= ws
+        ws = 0
+    return ws, we, tier
+
+
 def pad_window(start0: int, end0: int) -> Tuple[int, int]:
     """Symmetric padding to a multiple of WINDOW_UNIT; no extra chunk at exact multiples."""
     length = end0 - start0
