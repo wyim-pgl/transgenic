@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.3; v1.0 text unchanged, amendments appended)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.4; v1.0 text unchanged, amendments appended)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -272,3 +272,11 @@ Classification rule for PacBio runs (frozen): instrument model from ENA/SRA meta
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | no long-read download or alignment run | v1.3: PacBio restricted to Sequel II+; M-HQ18 and M-FLNC removed; classification rule added | author decision (chemistry/accuracy consistency across PacBio evidence) |
+
+## A13. Amendment v1.4 (2026-09-01; before any long-read download or alignment) — downloaded long-read data are validation-only
+
+Author decision: **all downloaded ONT and PacBio (Sequel II+) transcript datasets are used only for validation (§§6–9 outcomes and Protocol M final evaluation). They are never used for training any model or head, never for label construction or loss weighting (including the C2 segmentation head masks), and never as a reranking or candidate-generation channel.** Training-side evidence is limited to (i) ESTs of the nine training species (A1, with the locus/orthogroup exclusions of the master plan) and (ii) cross-species protein alignments (Protocol M §5 exclusions), both restricted to training species. Any earlier text that allowed ONT reads in C2 labels "with run separation" is superseded. Evaluated-species long reads therefore never touch the model, the reranker, or the candidate pool.
+
+| Date | Analysis state | Change | Reason |
+|---|---|---|---|
+| 2026-09-01 | no long-read download or alignment run | v1.4: A13 — downloaded long-read data validation-only; C2 masks from ESTs/proteins of training species only | author decision: keep validation evidence strictly separate from anything the model or its selectors learn from |
