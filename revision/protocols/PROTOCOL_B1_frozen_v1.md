@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.9; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.10; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -269,6 +269,19 @@ Author decision: the cross-species protein evidence named in A14/A18 is **OrthoD
 
 Nothing in §9 changes.
 
+## A20. Amendment v1.10 (2026-09-02; before any C2 label is built) — class-specific source weights: EST leads for introns and splice boundaries
+
+Author decision: intron junction labels weight EST evidence highest. Rationale: Sanger ESTs place splice boundaries at base precision (no homopolymer indel error), whereas ONT cDNA needs ±3 nt correction and protein alignments infer boundaries indirectly; for transcript ends the order is reversed (EST 5′/3′ ends are unreliable), so the A18.4 weights stay for exon/UTR classes.
+
+`source_weight` in `W = min(4, 1 + source_weight · genotype · log1p(n))` now depends on the label class family:
+
+| class family | EST | PacBio Sequel II+ FLNC/CCS | ONT | protein (miniprot) |
+|---|---|---|---|---|
+| intron, splice_donor, splice_acceptor | **1.0** | 0.9 | 0.7 | 0.5 (only where ≥ 2 organisms agree, A19.3) |
+| exon, 5UTR, 3UTR, protein_coding_gene (A18.4 unchanged) | 0.6 | 1.0 | 0.8 | 1.0 (CDS-family only) |
+
+Junction `n` for EST = independent molecule units per A11 (clone-merged, library-capped), never raw accessions. Everything else in A18.4 (cap 4, genotype multiplier, retained-intron 0.25, neutral cells, unit-weight ablation) is unchanged. Implemented in `gsf_contract.evidence_weight(source, n, genotype, retained_intron, family)`.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
@@ -411,3 +424,4 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 | 2026-09-01 | no long-read alignment run | v1.7: A17 ORF verdict only after alignment on genome-spliced sequence; pre-alignment homology triage is QC-only; ORF-incomplete complete chains are chain-training (C1/C2) evidence, never GSF labels; chain-label weighting | author questions on pre-mapping ORF checks and on chain training with ORF-incomplete reads |
 | 2026-09-02 | no long-read alignment run | v1.8: A18 corrections to A17 (validation-source scope, C1 naming), effective-rule matrix with precedence, dataset-role manifest (Cui → training role, Zhong conversion or unavailable, Wang 2020 B73 selection), frozen C2 weights/class semantics, genotype rule for all species, seed plan, terminology, ingestion hardening | Codex full re-review cross-checked by the author's assistant |
 | 2026-09-02 | no protein alignment run | v1.9: A19 OrthoDB v12 Viridiplantae as the sole cross-species protein resource; leakage filter; miniprot acceptance rules; CDS-family-only labelling; order of operations | author decision on the de novo / C2 protein resource |
+| 2026-09-02 | no C2 label built | v1.10: A20 class-specific source weights — EST 1.0 / PacBio 0.9 / ONT 0.7 / protein 0.5 for intron and splice-boundary classes; A18.4 weights kept for exon/UTR classes | author decision: intron junctions weight EST |

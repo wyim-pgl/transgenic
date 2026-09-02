@@ -53,3 +53,18 @@ def test_junction_evidence_labels_only_intron_and_boundary_classes(gsf):
     assert labels[10][d] == 1.0 and labels[30][a] == 1.0 and all(labels[p][i] == 1.0 for p in range(10, 31))
     touched = {c for p in range(50) for c in range(14) if labels[p][c] == 1.0}
     assert touched <= {d, a, i}
+
+
+@pytest.mark.parametrize("source,expected_sw", [("est", 1.0), ("pacbio", 0.9), ("ont", 0.7), ("protein", 0.5)])
+def test_junction_family_weights_est_leads_a20(gsf, source, expected_sw):
+    n = 5
+    assert gsf.evidence_weight(source, n, family="junction") == pytest.approx(1 + expected_sw * math.log1p(n))
+    assert gsf.junction_weight(source, n) == gsf.evidence_weight(source, n, family="junction")
+
+
+def test_junction_family_est_outranks_every_other_source(gsf):
+    n = 3
+    est = gsf.junction_weight("est", n)
+    assert est > gsf.junction_weight("pacbio", n) > gsf.junction_weight("ont", n) > gsf.junction_weight("protein", n)
+    # exon family keeps the A18.4 order (protein/pacbio > ont > est)
+    assert gsf.evidence_weight("est", n) < gsf.evidence_weight("ont", n) < gsf.evidence_weight("pacbio", n)

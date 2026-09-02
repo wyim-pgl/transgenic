@@ -27,7 +27,9 @@ RC_MODES = ("none", "all", "isoform-only")
 SEG_CLASSES = ["protein_coding_gene", "lncRNA", "exon", "intron", "splice_donor", "splice_acceptor", "5UTR", "3UTR",
                "CTCF-bound", "polyA_signal", "enhancer_Tissue_specific", "enhancer_Tissue_invariant",
                "promoter_Tissue_specific", "promoter_Tissue_invariant"]
-SOURCE_WEIGHT = {"protein": 1.0, "pacbio": 1.0, "ont": 0.8, "est": 0.6}
+SOURCE_WEIGHT = {"protein": 1.0, "pacbio": 1.0, "ont": 0.8, "est": 0.6}            # exon/UTR family (A18.4)
+JUNCTION_SOURCE_WEIGHT = {"est": 1.0, "pacbio": 0.9, "ont": 0.7, "protein": 0.5}  # intron/boundary family (A20)
+JUNCTION_FAMILY = ("intron", "splice_donor", "splice_acceptor")
 WEIGHT_CAP = 4.0
 RETAINED_INTRON_WEIGHT = 0.25
 
@@ -377,10 +379,12 @@ def segmentation_labels(features: Sequence[Tuple[str, int, int, str]], L: int, w
     return labels, weights
 
 
-def evidence_weight(source: str, n_molecules: int, genotype: str = "reference", retained_intron: bool = False) -> float:
+def evidence_weight(source: str, n_molecules: int, genotype: str = "reference", retained_intron: bool = False, family: str = "exon") -> float:
+    """A18.4 weight; `family` selects the source-weight table (A20: 'junction' -> EST leads)."""
     if retained_intron:
         return RETAINED_INTRON_WEIGHT
-    sw = SOURCE_WEIGHT[source] * (1.0 if genotype == "reference" else 0.5)
+    table = JUNCTION_SOURCE_WEIGHT if family == "junction" else SOURCE_WEIGHT
+    sw = table[source] * (1.0 if genotype == "reference" else 0.5)
     return min(WEIGHT_CAP, 1.0 + sw * math.log1p(n_molecules))
 
 
@@ -389,6 +393,10 @@ def add_evidence(labels, weights, cells: Iterable[Tuple[int, int, float]]) -> No
     for pos, cls, w in cells:
         labels[pos][cls] = 1.0
         weights[pos][cls] = max(weights[pos][cls], w)
+
+
+def junction_weight(source: str, n_molecules: int, genotype: str = "reference") -> float:
+    return evidence_weight(source, n_molecules, genotype, family="junction")
 
 
 def add_junction_evidence(labels, weights, donor0: int, acceptor0: int, weight: float) -> None:
