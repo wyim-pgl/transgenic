@@ -41,6 +41,7 @@ Every item below is tracked as a GitHub issue in wyim-pgl/transgenic (#4–#43).
 - Wang 2020 B73-only selection script from `demux_FL_count.txt`; Zhong 2025 ccs→lima→refine job or `excluded(unavailable)` entry.
 - UniVec screening (A21): `revision/scripts/evidence/univec_screen.sh <species>` on Delta for the 11 EST sets before any minimap2 run; outputs under `est/<species>/univec/`.
 - GeenuFF QC (A22): `import2geenuff.py` per training annotation → `revision/scripts/62_geenuff_qc.py` → `qc/<species>.geenuff_flags.tsv` (md5 frozen) → `scripts/build_b5_database.py --qc-flags`; masked-row counts in the validator report.
+- Swiss-Prot sensitivity set (A30): `uniprot_sprot_plants.dat.gz` downloaded with OrthoDB (#44), role `sensitivity_set` in `DATASET_ROLES.tsv` (the manifest builder of #5 must accept this fourth role) → `revision/scripts/63_swissprot_sensitivity.py --dat … --gff SP=<reference GFF3> --species-taxid SP=taxid --proteome SP=<reference proteins>` (gene ids and the transcript→gene map come from the GFF3; a proteome mapping below 90 % aborts, fail closed) → `qc/<species>.swissprot_flags.tsv` (md5 frozen) → `scripts/build_b5_database.py --qc-flags qc/<species>.geenuff_flags.tsv qc/<species>.swissprot_flags.tsv`; masked counts per source in the validator report. Hard flags only for structural cautions whose curated sequence is absent from the reference proteome. Phase audit after #45 (report only); S5–S7 sensitivity outcomes in evaluation only (#28/#35).
 - Seed plan (A18.6): seed 123 primary, 456 and 789 confirmatory before submission; three-seed mean ± s.d. in the supplement.
 
 
@@ -66,11 +67,11 @@ Every item below is tracked as a GitHub issue in wyim-pgl/transgenic (#4–#43).
 
 ## 3a. Schedule gates (author decision 2026-09-02)
 - **Adopted — C2 gate:** at the end of week 3 the author checks B5 (full DB built, primary seed training) and B1 (maize alignments and P4/P5 controls done). If either is behind, C2 is deferred to the follow-up paper; C2 label construction does not start before that check. Recorded in the master plan and resume.
-- **Compute:** NSF ACCESS Explore allocation **approved 2026-09-02**; confirmatory seeds 456/789 run on the ACCESS GPU resource after the #18 benchmark, the 4090 keeps the primary seed 123.
+- **Compute:** NSF ACCESS Explore allocation **approved 2026-09-02**. ❌ SUPERSEDED by A25 (same day, later): "confirmatory seeds 456/789 on ACCESS, the 4090 keeps the primary seed 123" no longer applies — **all three seeds run on ACCESS** (§2c); the 4090 is inference/B7/dev only (the GPU dry run showed the 129,024-nt tier fits 24 GB only for sparse labels).
 - **Adopted — B7 runs and the comparative headline stays** (author decision 2026-09-02): B7 is a submission prerequisite; weeks 5–7.
 - **W1 item 1 done 2026-09-02**: `docs/gsf_spec_v1.md`, `configs/b5_400m_v1.json`, `data/manifests/b5_species_v1.tsv` (+ excluded), `data/splits/README.md`. Gmax label resolved: Table S1 changed to Wm82.a6.v1 (author, 2026-09-02).
 - Resolved by the two decisions above; previously pending: merge minimal C0 into B1 ingestion; Protocol M only if its oracle gate passes within budget; tomato only if its week-2 gates are met (already frozen); B7 required if the "matches or exceeds" headline stays, otherwise narrow the claim.
-- Realistic compute: ~8 GPU-days per seed at the released 400M recipe → two parallel GPUs (4090 + cloud/PRO 6000) for primary + confirmatory seeds.
+- ❌ SUPERSEDED (2026-09-02, A25/A26): "~8 GPU-days per seed at the released 400M recipe → two parallel GPUs (4090 + cloud/PRO 6000)" was the per-locus estimate. The tile recipe (tile6144-v3, three tiers) has roughly 200,000 tiles per epoch; the dry-run throughput (1.6–3.3 s per tile on the 4090, 2–3× faster on H100/GH200) gives an **estimate of 40–50 GPU-days per seed for 22 epochs**, reducible to about 12–18 GPU-days by one tier per genomic region per epoch (#49, not yet implemented), the 10 % empty-tile rule and patience-3 early stopping. The #18 benchmark on the real database fixes the ACCESS request; until then these are estimates.
 
 ## 4. Out of scope until B5 is reproducible
 Evidence-derived GSF transcripts (spec in Codex §4), reranker consumption of C0, prompt-free/candidate-pool experiments (Protocol M), README/CLAUDE.md vocabulary-count and split-ratio corrections beyond the GSF spec document.
