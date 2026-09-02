@@ -45,3 +45,15 @@ def test_tile_windows_cover_contig(gsf):
     tiles = gsf.tile_windows(100000, 30720, offset=5000)
     assert tiles[0] == (5000, 35720) and tiles[-1] == (100000 - 30720, 100000) and all(b - a == 30720 for a, b in tiles)
     assert gsf.tile_windows(20000, 30720) == [(0, 30720)]
+
+
+def test_block_splits_and_leak_mask(gsf):
+    import random
+    rng = random.Random(3)
+    blocks = gsf.block_splits(5 * gsf.BLOCK_LEN + 10, rng, forced_test=[(gsf.BLOCK_LEN + 5, gsf.BLOCK_LEN + 50)])
+    assert len(blocks) == 6 and blocks[1][2] == "test" and all(sp in ("train", "valid", "test") for _, _, sp in blocks)
+    assert gsf.tile_split(blocks, gsf.BLOCK_LEN - 10, gsf.BLOCK_LEN + 100) == "test"        # straddles the forced block
+    g = gsf.Gene("x", "c", "+", 1000, 1500, {})
+    seq = "A" * 3000
+    masked = gsf.leak_mask(seq, 0, [g])
+    assert masked[900:1600] == "N" * 700 and masked[:900] == "A" * 900 and masked[1600:] == "A" * 1400

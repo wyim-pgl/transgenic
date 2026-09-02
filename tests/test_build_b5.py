@@ -221,14 +221,19 @@ def test_tile_policy_v3_build(tmp_path, b5):
     rows = con.sql("SELECT geneModel, split, train_weight, gff, qc_flags, window_policy, fin - start FROM geneList WHERE NOT is_rc").fetchall()
     assert rows and all(r[5] == "tile6144-v3" and r[6] in (30720, 61440, 129024) for r in rows)
     labels = {r[0]: r[3] for r in rows}
-    # Chr1 tile at every tier holds g1 and g2 (both < 6 kb): label has two gene blocks; g2 is hard-flagged -> tile masked
+    # block splits (A29): Chr1 is one block; its split is drawn from the seeded rng. g2 (valid orthogroup) is leak-masked
+    # in a train tile (N in the sequence, absent from the label) or labelled in a valid/test tile.
     chr1 = [r for r in rows if ":Chr1:" in r[0]]
-    assert chr1 and all(r[3].count(b5.gc.GENE_SEP) == 1 and r[2] == 0.0 for r in chr1)
-    # split of a Chr1 tile: g1 train + g2 valid -> valid (most restrictive)
-    assert all(r[1] == "valid" for r in chr1)
-    # contig '2' tiles: glast (test, strict) inside -> test; gbig rejected at gene level (151 CDS) and absent from labels
+    assert chr1
+    for r in chr1:
+        if r[1] == "train":
+            assert r[3].count(b5.gc.GENE_SEP) == 0 and "leak_masked=1" in (r[4] or "") and r[2] == 1.0
+        else:
+            assert r[3].count(b5.gc.GENE_SEP) == 1 and r[2] == 0.0       # g2 labelled and hard-flagged -> tile masked
+    # contig '2': glast is strict held-out -> its block is forced to test; gbig rejected at gene level (151 CDS)
     c2 = [r for r in rows if r[0].startswith("Athaliana:2:")]
     assert c2 and all(r[1] == "test" for r in c2) and all("CDS150" not in r[3] for r in c2)
+    assert con.sql("SELECT count(*) FROM tile_blocks").fetchone()[0] >= 2
     assert con.sql("SELECT count(*) FROM window_genes").fetchone()[0] > 0
     assert con.sql("SELECT count(*) FROM rejected_records WHERE gene_id = 'gbig'").fetchone()[0] == 1
     con.close()

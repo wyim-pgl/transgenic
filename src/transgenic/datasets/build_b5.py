@@ -433,15 +433,26 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
             gene_meta[gene.gene_id] = {"split": srow["split"], "strict": str(srow.get("strict_holdout", "")).lower() in ("1", "true", "yes"),
                                        "weight": train_weight, "qc": qc_list}
     inserted = rc_rows = 0
-    for chrom, genes in by_chrom.items():
+    con.sql("CREATE TABLE IF NOT EXISTS tile_blocks (species_id VARCHAR, chromosome VARCHAR, start0 INT, end0 INT, split VARCHAR)")
+    block_rng = random.Random(f"{seed}:{species_id}:blocks")
+    for chrom in sorted(by_chrom):
+        genes = by_chrom[chrom]
         chrom_len = len(genome[chrom])
+        forced = [(g.start0, g.end0) for g in genes if gene_meta[g.gene_id]["strict"]]
+        blocks = gc.block_splits(chrom_len, block_rng, forced_test=forced)
+        con.executemany("INSERT INTO tile_blocks VALUES (?,?,?,?,?)", [[species_id, chrom, a, b, sp] for a, b, sp in blocks])
         for tier in gc.WINDOW_TIERS:
             offset = rng.randrange(tier) if mode == "train" else 0
             for ws, we in gc.tile_windows(chrom_len, tier, offset):
                 inside, partial = gc.genes_in_window(genes, ws, we)
                 if not inside and rng.random() > gc.EMPTY_KEEP_PROB:
                     continue
-                gsf = gc.window_to_gsf_v3(inside, ws) if mode == "train" else None
+                split = gc.tile_split(blocks, ws, we)
+                # A29 leakage masking: a gene whose orthogroup split is more restrictive than the tile split is
+                # N-masked in the sequence and left out of the label (train tile must never label a test/valid gene)
+                leak = [g for g in inside if gene_meta[g.gene_id]["split"] and gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"], 0) > gc.SPLIT_RANK[split]]
+                labelled = [g for g in inside if g not in leak]
+                gsf = gc.window_to_gsf_v3(labelled, ws) if mode == "train" else None
                 L = we - ws
                 if gsf is not None:
                     try:
@@ -452,14 +463,18 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                 seq = genome[chrom][ws:we]
                 if len(seq) < L:
                     seq = seq + "N" * (L - len(seq))
-                weight = 0.0 if any(gene_meta[g.gene_id]["weight"] == 0 for g in inside) else 1.0
-                split = _tile_split([gene_meta[g.gene_id]["split"] for g in inside], any(gene_meta[g.gene_id]["strict"] for g in inside))
+                if leak:
+                    seq = gc.leak_mask(seq, ws, leak)
+                weight = 0.0 if any(gene_meta[g.gene_id]["weight"] == 0 for g in labelled) else 1.0
                 if allow_missing_split and not inside:
                     split = None
                 wid = f"{species_id}:{chrom}:{ws}-{we}"
-                qc = ";".join(sorted({f for g in inside for f in gene_meta[g.gene_id]["qc"]})) or None
+                qc = ";".join(sorted({f for g in labelled for f in gene_meta[g.gene_id]["qc"]})) or None
                 if partial:
                     qc = (qc + ";" if qc else "") + f"edge_partial={partial}"
+                if leak:
+                    qc = (qc + ";" if qc else "") + f"leak_masked={len(leak)}"
+                inside = labelled
                 common = [species_id, wid, None, split, any(gene_meta[g.gene_id]["strict"] for g in inside), False, gc.ORDERING_VERSION,
                           gc.BUILD_VERSION, fasta_sha, gff_sha, split_sha, gc.WINDOW_POLICY_V3,
                           gc.count_tokens_v3(gsf) if gsf else None, we > chrom_len, sum(len(g.transcripts) for g in inside), weight, qc, wid]

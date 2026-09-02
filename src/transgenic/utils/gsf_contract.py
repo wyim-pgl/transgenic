@@ -33,6 +33,8 @@ EMPTY_LABEL = "<empty>"      # v3: window without any complete gene
 CAPS_V3 = {"tokens": 8192, "genes": 96}   # from tile statistics (A. thaliana 129-kb tiles: p95 42 genes, max 80, ~120 tokens/gene)
 WINDOW_POLICY_V3 = "tile6144-v3"
 EMPTY_KEEP_PROB = 0.1
+BLOCK_LEN = 8 * 129024       # 1,032,192 nt: genomic blocks that carry the tile split (A29)
+LEAK_MASK_FLANK = 100        # nt of N on each side of a leak-masked gene
 
 SEG_CLASSES = ["protein_coding_gene", "lncRNA", "exon", "intron", "splice_donor", "splice_acceptor", "5UTR", "3UTR",
                "CTCF-bound", "polyA_signal", "enhancer_Tissue_specific", "enhancer_Tissue_invariant",
@@ -605,3 +607,42 @@ def tile_windows(chrom_len: int, tier: int, offset: int = 0) -> List[Tuple[int, 
         if not tiles or start > tiles[-1][0]:
             tiles.append((start, start + tier))
     return tiles
+
+
+SPLIT_RANK = {"train": 0, "valid": 1, "test": 2}
+
+
+def block_splits(chrom_len: int, rng: "random.Random", fractions: Sequence[float] = (0.75, 0.10, 0.15),
+                 forced_test: Sequence[Tuple[int, int]] = ()) -> List[Tuple[int, int, str]]:
+    """Split assignment for consecutive BLOCK_LEN blocks of one contig (A29): drawn from `rng` (seeded per species),
+    blocks overlapping any interval in `forced_test` (strict held-out loci) are test."""
+    out = []
+    ws = 0
+    while ws < chrom_len:
+        we = min(chrom_len, ws + BLOCK_LEN)
+        r = rng.random()
+        sp = "train" if r < fractions[0] else ("valid" if r < fractions[0] + fractions[1] else "test")
+        if any(a < we and b > ws for a, b in forced_test):
+            sp = "test"
+        out.append((ws, we, sp))
+        ws = we
+    return out
+
+
+def tile_split(blocks: Sequence[Tuple[int, int, str]], ws: int, we: int) -> str:
+    """Most restrictive split among the blocks a tile overlaps."""
+    best = "train"
+    for a, b, sp in blocks:
+        if a < we and b > ws and SPLIT_RANK[sp] > SPLIT_RANK[best]:
+            best = sp
+    return best
+
+
+def leak_mask(seq: str, ws: int, genes: Sequence["Gene"], flank: int = LEAK_MASK_FLANK) -> str:
+    """Replace the sequence of `genes` (window-relative) by N so that an unlabelled gene never teaches 'no gene here'."""
+    chars = list(seq)
+    L = len(chars)
+    for g in genes:
+        a, b = max(0, g.start0 - ws - flank), min(L, g.end0 - ws + flank)
+        chars[a:b] = "N" * (b - a)
+    return "".join(chars)

@@ -55,7 +55,8 @@ def main():
     for gsf, L in rows[:3] + rows[-1:]:
         ids = tok(gsf)["input_ids"]; back = tok.decode(ids, skip_special_tokens=True)
         n_expected = gc.count_tokens_v3(gsf)
-        ok = back.replace(' ', '') == gsf.replace(' ', '')
+        core = back.replace(' ', '').replace('<s>', '').replace('</s>', '')
+        ok = core == gsf.replace(' ', '')
         print(f"window {L}: tokens={len(ids)} expected={n_expected} roundtrip={'ok' if ok else 'MISMATCH'}")
         if not ok:
             print("   gsf :", gsf[:160]); print("   back:", back[:160])
