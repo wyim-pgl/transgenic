@@ -8,27 +8,30 @@ import argparse, json, os, random, sys, time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
 
-def synthetic_inputs(out, n_genes=40, chrom_len=140000, seed=7):
+def synthetic_inputs(out, n_contigs=8, genes_per_contig=25, chrom_len=140000, seed=7):
     rng = random.Random(seed)
-    seq = "".join(rng.choice("ACGT") for _ in range(chrom_len))
-    fasta = os.path.join(out, "g.fa"); open(fasta, "w").write(">c1\n" + seq + "\n")
-    lines, split = [], ["species_id\tgene_id\torthogroup_id\tsplit\tstrict_holdout\tseed\tsource_version"]
-    pos = 500
-    for i in range(n_genes):
-        gid = f"g{i:03d}"; strand = rng.choice("+-"); n_ex = rng.randint(1, 6)
-        s = pos; feats = []
-        for e in range(n_ex):
-            L = rng.randint(90, 600); feats.append((s, s + L - 1)); s += L + rng.randint(80, 400)
-        gs, ge = feats[0][0], feats[-1][1]
-        lines.append(f"c1\tt\tgene\t{gs}\t{ge}\t.\t{strand}\t.\tID={gid}")
-        lines.append(f"c1\tt\tmRNA\t{gs}\t{ge}\t.\t{strand}\t.\tID={gid}.1;Parent={gid}")
-        cum = 0
-        order = feats if strand == "+" else feats[::-1]
-        for (a, b) in order:
-            ph = (3 - cum % 3) % 3; cum += b - a + 1
-            lines.append(f"c1\tt\tCDS\t{a}\t{b}\t.\t{strand}\t{ph}\tID={gid}.c;Parent={gid}.1")
-        pos = ge + rng.randint(500, 2500)
-        split.append(f"Ath\t{gid}\tOG{i}\t{'train' if i % 5 else 'valid'}\tfalse\t123\tv1")
+    fasta_parts, lines, split = [], [], ["species_id\tgene_id\torthogroup_id\tsplit\tstrict_holdout\tseed\tsource_version"]
+    fasta = os.path.join(out, "g.fa")
+    for c in range(1, n_contigs + 1):
+        seq = "".join(rng.choice("ACGT") for _ in range(chrom_len))
+        fasta_parts.append(f">c{c}\n{seq}\n")
+        pos = 500
+        for i in range(genes_per_contig):
+            gid = f"g{c}_{i:03d}"; strand = rng.choice("+-"); n_ex = rng.randint(1, 6)
+            s = pos; feats = []
+            for e in range(n_ex):
+                L = rng.randint(90, 600); feats.append((s, s + L - 1)); s += L + rng.randint(80, 400)
+            gs, ge = feats[0][0], feats[-1][1]
+            lines.append(f"c{c}\tt\tgene\t{gs}\t{ge}\t.\t{strand}\t.\tID={gid}")
+            lines.append(f"c{c}\tt\tmRNA\t{gs}\t{ge}\t.\t{strand}\t.\tID={gid}.1;Parent={gid}")
+            cum = 0
+            order = feats if strand == "+" else feats[::-1]
+            for (a, b) in order:
+                ph = (3 - cum % 3) % 3; cum += b - a + 1
+                lines.append(f"c{c}\tt\tCDS\t{a}\t{b}\t.\t{strand}\t{ph}\tID={gid}.c;Parent={gid}.1")
+            pos = ge + rng.randint(500, 2500)
+            split.append(f"Ath\t{gid}\tOG{c}_{i}\t{'train' if i % 5 else 'valid'}\tfalse\t123\tv1")
+    open(fasta, "w").write("".join(fasta_parts))
     gff = os.path.join(out, "g.gff3"); open(gff, "w").write("\n".join(lines) + "\n")
     sp = os.path.join(out, "split.tsv"); open(sp, "w").write("\n".join(split) + "\n")
     man = os.path.join(out, "species.tsv"); open(man, "w").write(f"species_id\tspecies\ttable_s1_version\tfasta\tfasta_md5\tgff\tgff_md5\tnote\nAth\tA\tT\t{fasta}\t\t{gff}\t\t\n")
@@ -45,7 +48,7 @@ def main():
     db = os.path.join(a.out, "v3.duckdb"); [os.remove(f) for f in (db, db + ".wal") if os.path.exists(f)]
     res = build_b5_database(db, man, sp, rc="all", verify_md5=False, window_policy="tile6144-v3", tier_up_prob=0.0)
     print("build:", json.dumps({"rows": res[0]["rows"], "rejected": len(res[0]["rejected"])}))
-    rep = validate_b5_database(db); print("validate ok:", rep["ok"], rep["violations"][:3])
+    rep = validate_b5_database(db); print("validate ok:", rep["ok"], rep["violations"][:3], "rows_by_split:", rep["rows_by_split"])
     # tokenizer v3 round trip
     from transgenic.model.tokenization_transgenic import GFFTokenizer
     tok = GFFTokenizer(vocab_version="v3"); print("vocab_size:", tok.vocab_size)
