@@ -41,3 +41,6 @@ Cross-verified against the repository copy (commit 271e938 tree) by reading the 
 
 ## 4. Out of scope until B5 is reproducible
 Evidence-derived GSF transcripts (spec in Codex §4), reranker consumption of C0, prompt-free/candidate-pool experiments (Protocol M), README/CLAUDE.md vocabulary-count and split-ratio corrections beyond the GSF spec document.
+
+## 5. Evidence layer redesign (2026-09-01)
+The evidence layer follows EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md (transcript_model as single source of truth; reference annotations ingested as models; GSF/C2/C0/validation derived from it). Week-1 order above is unchanged; the reference→model→GSF path is the first module built.

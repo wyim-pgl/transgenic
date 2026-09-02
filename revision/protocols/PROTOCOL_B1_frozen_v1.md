@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.5.1; v1.0 text unchanged, amendments appended)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.6; v1.0 text unchanged, amendments appended)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -304,3 +304,16 @@ Added to §3.2 (A. thaliana, **validation-only**): **A-CCS23** PRJNA911826 (Zhan
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | no long-read download or alignment run | v1.5.1: A15 dataset additions (M-CCS26, M-KNX hybrid stratum, A-CCS23 validation-only), exclusions recorded | Sequel II+/Revio scout |
+
+## A16. Amendment v1.6 (2026-09-01; before any long-read alignment) — read completeness codes, molecule-unit counting for non-UMI ONT cDNA, completeness QC output
+
+Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`, Codex design `codex_fulllength_20260901.md`):
+- Every accepted read alignment carries three codes stored in the C0 tables: `complete_5p_code` (5C/5I), `complete_3p_code` (3C/3I), `read_internal_code` (IC/IP/IM/IX), with the thresholds of the design document §2. FLNC/"full-length" library labels do not imply 5C; direct-RNA reads default to 5I unless cap/CAGE clustering establishes 5C.
+- **Chain support is orthogonal to terminal completeness** (clarifies §6): a 5I or 3I read gives complete intron-chain support when it carries the full ordered chain with ≥ 20 nt aligned beyond the first donor and last acceptor; such a read never supports a TSS/TES, UTR boundary, start codon or GSF label. TES/TSS secondary outcomes (A3) use only 3C/5C reads.
+- **Molecule units for ONT cDNA without UMIs** (amends A11 for ONT): reads from the same library with the same strand, the same corrected intron chain and both ends within 10 nt are one PCR-equivalence unit; support thresholds (≥ 3 units, ≥ 2 runs) apply to units; raw read counts are reported alongside. Direct RNA: one read = one unit. PacBio: one source FLNC/ZMW molecule = one unit (never a polished cluster consensus).
+- **Completeness QC table** (new secondary output, Table S12d): per species × protocol × library — raw reads, molecule units, mapped/unique/chimeric/multi-mapped %, 5C/5I, 3C/3I, IC/IP/IM/IX counts, tail-positive and internal-priming-rejected fractions, TSS/TES cluster counts, PCR-equivalence compression ratio, median aligned fraction and soft-clipping. Protocols are never pooled into one species completeness rate.
+- Evidence-derived transcript models, ORF assignment and GSF labels remain out of scope for this protocol (follow-up); nothing in §9 changes.
+
+| Date | Analysis state | Change | Reason |
+|---|---|---|---|
+| 2026-09-01 | no long-read alignment run | v1.6: A16 read completeness codes, chain/terminal orthogonality, non-UMI ONT PCR-equivalence units, completeness QC table | author question on non-full-length long reads; Codex design cross-checked |
