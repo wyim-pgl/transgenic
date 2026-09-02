@@ -55,8 +55,8 @@ class GFFTokenizer(PreTrainedTokenizer):
 			       272-token vocabulary matching the published
 			       jlomas/HyenaTransgenic-* checkpoints (vocab_size 272).
 		"""
-		if vocab_version not in ("v1", "v2"):
-			raise ValueError(f"Unknown vocab_version '{vocab_version}'; expected 'v1' or 'v2'.")
+		if vocab_version not in ("v1", "v2", "v3"):
+			raise ValueError(f"Unknown vocab_version '{vocab_version}'; expected 'v1', 'v2' or 'v3'.")
 		self.vocab_version = vocab_version
 		if vocab is None:
 			# Build the default vocabulary mapping
