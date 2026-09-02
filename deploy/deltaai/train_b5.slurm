@@ -20,7 +20,9 @@ mkdir -p "$RUN_HOST"
 if [ -n "${SYNC_DEST:-}" ]; then
   KEEP_LOCAL=${KEEP_LOCAL:-3} SYNC_OPTIMIZER=${SYNC_OPTIMIZER:-0} INTERVAL=${SYNC_INTERVAL:-300}     bash "$WORK/repo/deploy/deltaai/sync_watch.sh" "$RUN_HOST" "$SYNC_DEST" > "$RUN_HOST/sync.log" 2>&1 &
   SYNC_PID=$!
-  trap 'touch "$RUN_HOST/TRAINING_DONE"; wait $SYNC_PID 2>/dev/null' EXIT
+  # the trainer itself writes TRAINING_DONE on a clean finish; on failure we only stop the watcher (no marker)
+  trap 'touch "$RUN_HOST/TRAINING_FAILED"; kill $SYNC_PID 2>/dev/null' ERR
+  trap 'wait $SYNC_PID 2>/dev/null' EXIT
 fi
 apptainer exec --nv --bind "$WORK":/work "$SIF" bash -lc "
   cd /work/repo && pip install -q -e . --no-deps &&
@@ -30,5 +32,5 @@ apptainer exec --nv --bind "$WORK":/work "$SIF" bash -lc "
     --config configs/b5_400m_v1.json --db /work/db/b5_v1.duckdb --seed $SEED --output-dir $RUN --resume auto \
     2>> $RUN/train.err
 "
-touch "$RUN_HOST/TRAINING_DONE"   # lets the watcher do its final pass and exit
+[ -f "$RUN_HOST/TRAINING_DONE" ] || echo "WARNING: trainer exited without TRAINING_DONE" >&2
 # After each epoch: python revision/scripts/60_epoch_budget.py --log $RUN/train.err --patience 3

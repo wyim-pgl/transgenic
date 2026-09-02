@@ -58,6 +58,29 @@ class Gene:
     start0: int
     end0: int
     transcripts: Dict[str, List[Feature]] = field(default_factory=dict)
+    gene_id_original: str = ""   # GFF ID attribute verbatim
+    name_original: str = ""      # GFF Name attribute verbatim
+
+
+MAX_KEY_LEN = 10
+
+
+def species_code(species_id: str) -> str:
+    """Three-letter species code: first three characters of the manifest species_id (e.g. Athaliana -> Ath)."""
+    return (species_id[:3] or "Unk").capitalize() if not species_id[:3].isupper() else species_id[:3]
+
+
+def key_is_valid(key: str) -> bool:
+    return 0 < len(key) <= MAX_KEY_LEN and key.count(".") <= 1
+
+
+def gene_key(species_code_: str, gff_id: str, gff_name: str, counter: int) -> str:
+    """Author rule (2026-09-02): ID first, then Name; a candidate longer than 10 characters or with more than one dot,
+    or no candidate at all, becomes <3-letter species code><6-digit ordinal in GFF order>."""
+    cand = gff_id or gff_name
+    if cand and key_is_valid(cand):
+        return cand
+    return f"{species_code_}{counter:06d}"
 
 
 # ----------------------------------------------------------------------------------------------
@@ -86,10 +109,13 @@ def _attrs(col9: str) -> Dict[str, str]:
     return {k.strip(): v.strip() for k, v in _ATTR_RE.findall(col9)}
 
 
-def parse_gff3(lines: Iterable[str]) -> Iterator[Gene]:
-    """Yield genes in file order. A gene is emitted when the next gene line starts or at EOF."""
+def parse_gff3(lines: Iterable[str], species_code: Optional[str] = None) -> Iterator[Gene]:
+    """Yield genes in file order. A gene is emitted when the next gene line starts or at EOF.
+    With species_code the gene key rule applies (gene_key); without it the GFF ID (then Name) is used verbatim."""
     cur: Optional[Gene] = None
     tx_parent: Dict[str, str] = {}
+    counter = 0
+    seen_keys: set = set()
     for raw in lines:
         line = raw.rstrip("\n")
         if not line or line.startswith("#"):
@@ -102,7 +128,13 @@ def parse_gff3(lines: Iterable[str]) -> Iterator[Gene]:
         if ftype == "gene":
             if cur is not None:
                 yield cur
-            cur = Gene(a.get("Name", a.get("ID", f"{chrom}:{s}-{e}")), chrom, strand, int(s) - 1, int(e))
+            counter += 1
+            gid, gname = a.get("ID", ""), a.get("Name", "")
+            key = gene_key(species_code, gid, gname, counter) if species_code else (gid or gname or f"{chrom}:{s}-{e}")
+            if key in seen_keys:
+                raise ValueError(f"duplicate gene key {key} (ID={gid!r}, Name={gname!r}) at {chrom}:{s}-{e}")
+            seen_keys.add(key)
+            cur = Gene(key, chrom, strand, int(s) - 1, int(e), {}, gid, gname)
             tx_parent = {}
         elif ftype in ("mRNA", "transcript"):
             if cur is None:
@@ -139,12 +171,25 @@ def _transcription_order(feats: Sequence[Tuple[str, int, int, str]], strand: str
     return sorted(feats, key=lambda f: (o(f[1]), o(f[2])))
 
 
+def exons_of(feats: Sequence[Tuple[str, int, int, str]]) -> List[Tuple[int, int]]:
+    """Merge coordinate-contiguous features (UTR|CDS boundaries) into exons; introns are the genomic gaps between them."""
+    ex: List[Tuple[int, int]] = []
+    for f in sorted(feats, key=lambda f: (f[1], f[2])):
+        if ex and f[1] <= ex[-1][1]:
+            ex[-1] = (ex[-1][0], max(ex[-1][1], f[2]))
+        else:
+            ex.append((f[1], f[2]))
+    return ex
+
+
 def _signature(feats: Sequence[Tuple[str, int, int, str]], strand: str):
     o = _orient(strand)
     ordered = _transcription_order(feats, strand)
-    chain = []
-    for prev, nxt in zip(ordered, ordered[1:]):
-        chain.append((o(prev[2]), o(nxt[1])) if strand == "+" else (o(prev[1]), o(nxt[2])))
+    exons = exons_of(feats)
+    gaps = [(a[1], b[0]) for a, b in zip(exons, exons[1:])]           # genomic introns, ascending
+    if strand == "-":
+        gaps = [(o(b), o(a)) for a, b in reversed(gaps)]
+    chain = gaps
     span = (o(ordered[0][1]), o(ordered[-1][2])) if strand == "+" else (o(ordered[0][2]), o(ordered[-1][1]))
     cds = tuple((o(f[1]), o(f[2]), f[3]) for f in ordered if f[0] == "CDS")
     utr = tuple((f[0], o(f[1]), o(f[2])) for f in ordered if f[0] != "CDS")
@@ -175,6 +220,8 @@ def _serialize(transcripts: Sequence[Sequence[Tuple[str, int, int, str]]], stran
 def _phase_letter(f: Tuple[str, int, int, str]) -> str:
     if f[0] != "CDS":
         return "."
+    if f[3] not in ("0", "1", "2"):
+        raise CapError(f"CDS feature {f[1]}-{f[2]} has no phase ({f[3]!r})")
     return PHASE_TO_LETTER[int(f[3])]
 
 
@@ -187,10 +234,14 @@ def _parse(gsf: str):
     feats_str, _, tx_str = gsf.partition(">")
     feats: Dict[str, Tuple[str, int, int, str]] = {}
     strand = "+"
+    strands = set()
     for item in feats_str.split(";"):
         if not item:
             continue
         s, name, e, strand, ph = item.split("|")
+        strands.add(strand)
+        if len(strands) > 1:
+            raise ValueError("mixed strands in one GSF record")
         ftype = re.match(r"[A-Za-z_]+", name).group(0)
         phase = str(LETTER_TO_PHASE[ph]) if ftype == "CDS" else "."
         feats[name] = (ftype, int(s), int(e), phase)
@@ -219,12 +270,19 @@ def canonicalize(gsf: str) -> str:
 # ----------------------------------------------------------------------------------------------
 # §5 reverse complement (pure transformation, phases recomputed 5'->3')
 # ----------------------------------------------------------------------------------------------
-def _recompute_phases(tx: Sequence[Tuple[str, int, int, str]], strand: str) -> List[Tuple[str, int, int, str]]:
+def _recompute_phases(tx: Sequence[Tuple[str, int, int, str]], strand: str, initial_phase: Optional[int] = None) -> List[Tuple[str, int, int, str]]:
+    """Phases 5'->3': the first CDS keeps its own phase (0 unless the model is 5'-partial), the rest follow from the
+    coding length so far. This makes RC an involution for partial models as well."""
     ordered = _transcription_order(tx, strand)
-    out, cum = [], 0
+    out, cum, first = [], 0, True
     for f in ordered:
         if f[0] == "CDS":
-            phase = (3 - cum % 3) % 3
+            if first:
+                p0 = int(f[3]) if initial_phase is None else initial_phase
+                phase, first = p0, False
+                cum = -p0                       # p0 bases are skipped before the first complete codon
+            else:
+                phase = (3 - cum % 3) % 3
             out.append((f[0], f[1], f[2], str(phase)))
             cum += f[2] - f[1]
         else:
@@ -237,8 +295,10 @@ def reverse_complement(gsf: str, window_len: int) -> str:
     new_strand = "-" if strand == "+" else "+"
     new_txs = []
     for tx in txs:
+        first_cds = next((f for f in _transcription_order(tx, strand) if f[0] == "CDS"), None)
+        p0 = int(first_cds[3]) if first_cds else 0
         mirrored = [(t, window_len - e, window_len - s, ph) for (t, s, e, ph) in tx]
-        new_txs.append(_recompute_phases(mirrored, new_strand))
+        new_txs.append(_recompute_phases(mirrored, new_strand, initial_phase=p0))
     return _serialize(new_txs, new_strand)
 
 
@@ -260,11 +320,15 @@ def count_tokens_v2(gsf: str) -> int:
                 n += len(col) if col.isdigit() else 1
             if j < len(parts) - 1:
                 n += 1  # <iso>
-    return n + 1  # </s>
+    return n + 2  # <s> ... </s> (the tokenizer prepends <s>; verified against tokenization_transgenic.py)
 
 
 def check_caps(gsf: str, window_len: Optional[int] = None) -> None:
     feats, txs, _ = _parse(gsf)
+    if not txs or not any(f[0] == "CDS" for f in feats.values()):
+        raise CapError("no CDS: a GSF label requires at least one coding transcript")
+    if any(not any(feats[n][0] == "CDS" for n in tx) for tx in [t.split("|") for t in gsf.partition(">")[2].split(";") if t]):
+        raise CapError("transcript without CDS")
     counts = {t: 0 for t in FEATURE_TYPES}
     for f in feats.values():
         counts[f[0]] += 1
@@ -345,7 +409,11 @@ def validate_split(rows: Sequence[Dict], excluded_species: Set[str] = frozenset(
             v.append(f"rc row split {r['split']} != forward split {fwd[key]} for {r['gene_id']}")
         if r.get("strict_holdout") and r["split"] != "test":
             v.append(f"strict held-out gene {r['gene_id']} in split {r['split']}")
-        by_group.setdefault(r["orthogroup_id"] or r["gene_id"], set()).add(r["split"])
+        if r["split"] not in ("train", "valid", "test"):
+            v.append(f"invalid split {r['split']!r} for {r['species_id']}:{r['gene_id']}")
+        if r.get("is_rc") and key not in fwd:
+            v.append(f"rc row without a forward row for {r['species_id']}:{r['gene_id']}")
+        by_group.setdefault(r["orthogroup_id"] or f"{r['species_id']}:{r['gene_id']}", set()).add(r["split"])
     for grp, splits in by_group.items():
         if len(splits) > 1:
             v.append(f"orthogroup {grp} spans splits {sorted(splits)}")
@@ -381,16 +449,27 @@ def segmentation_labels(features: Sequence[Tuple[str, int, int, str]], L: int, w
 
 def evidence_weight(source: str, n_molecules: int, genotype: str = "reference", retained_intron: bool = False, family: str = "exon") -> float:
     """A18.4 weight; `family` selects the source-weight table (A20: 'junction' -> EST leads)."""
+    if family not in ("exon", "junction"):
+        raise ValueError(f"family must be 'exon' or 'junction', got {family!r}")
+    if genotype not in ("reference", "non_reference", "hybrid_pooled", "unknown"):
+        raise ValueError(f"unknown genotype stratum {genotype!r}")
+    if n_molecules < 1:
+        raise ValueError("evidence weight needs >= 1 independent molecule")
     if retained_intron:
         return RETAINED_INTRON_WEIGHT
     table = JUNCTION_SOURCE_WEIGHT if family == "junction" else SOURCE_WEIGHT
+    if family == "junction" and source == "protein" and n_molecules < 2:
+        raise ValueError("protein junction support needs >= 2 organisms (A19.3)")
     sw = table[source] * (1.0 if genotype == "reference" else 0.5)
     return min(WEIGHT_CAP, 1.0 + sw * math.log1p(n_molecules))
 
 
 def add_evidence(labels, weights, cells: Iterable[Tuple[int, int, float]]) -> None:
     """Evidence adds positives only; existing labels and weights are never lowered."""
+    L = len(labels)
     for pos, cls, w in cells:
+        if not (0 <= pos < L) or not (0 <= cls < len(SEG_CLASSES)) or w < 0:
+            raise ValueError(f"evidence cell out of range: pos={pos} cls={cls} w={w}")
         labels[pos][cls] = 1.0
         weights[pos][cls] = max(weights[pos][cls], w)
 
@@ -400,6 +479,8 @@ def junction_weight(source: str, n_molecules: int, genotype: str = "reference") 
 
 
 def add_junction_evidence(labels, weights, donor0: int, acceptor0: int, weight: float) -> None:
+    if not (0 <= donor0 < acceptor0 < len(labels)):
+        raise ValueError(f"junction out of range or reversed: donor0={donor0} acceptor0={acceptor0} L={len(labels)}")
     d, a, i = _CLASS["splice_donor"], _CLASS["splice_acceptor"], _CLASS["intron"]
     cells = [(donor0, d, weight), (acceptor0, a, weight)] + [(p, i, weight) for p in range(donor0, acceptor0 + 1)]
     add_evidence(labels, weights, cells)

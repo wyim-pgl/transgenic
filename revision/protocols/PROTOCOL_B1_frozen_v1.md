@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.10; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.12; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -282,6 +282,23 @@ Author decision: intron junction labels weight EST evidence highest. Rationale: 
 
 Junction `n` for EST = independent molecule units per A11 (clone-merged, library-capped), never raw accessions. Everything else in A18.4 (cap 4, genotype multiplier, retained-intron 0.25, neutral cells, unit-weight ablation) is unchanged. Implemented in `gsf_contract.evidence_weight(source, n, genotype, retained_intron, family)`.
 
+## A21. Amendment v1.11 (2026-09-02; before any EST alignment) — UniVec vector/adapter screening of EST records
+
+Author decision: every EST set is screened against **NCBI UniVec_Core** before alignment (A8 ingestion filters gain this step; the "aligned portion only" rule of A8 does not protect against internal vector segments that create false junctions in chimeric clones).
+- Tool and parameters (frozen, VecScreen): `blastn -task blastn -db UniVec_Core -reward 1 -penalty -5 -gapopen 3 -gapextend 3 -dust yes -soft_masking true -evalue 700 -searchsp 1750000000000`; UniVec_Core build/date and md5 recorded (`evidence/univec/UniVec_Core.version`, `.md5`).
+- Categories by raw score and position (terminal = match within 25 nt of either end): strong ≥ 24 terminal / ≥ 30 internal; moderate ≥ 19 / ≥ 25; weak ≥ 16 / ≥ 23.
+- Actions: terminal strong or moderate → trim the matched end and everything outboard; internal strong → suspected chimera: the record is **split at the match** and each piece ≥ 100 nt is kept as `<accession>_partN` (pieces remain one molecule unit for A11 counting); internal moderate and all weak → flagged only; records < 100 nt after trimming → dropped.
+- Outputs per species: `est/<species>/univec/est.univec.fa.gz` (+ md5), `report.tsv` (accession, length, action, kept ranges, categories), `summary.json`, `PROVENANCE.txt` (input md5, UniVec version/md5, blastn version, parameters, trimmer version). Only the screened FASTA is aligned; counts (kept/trimmed/split/dropped) go to the completeness QC table (A16).
+- Implementation: `revision/scripts/evidence/univec_screen.sh` (chunked, resumable) and `revision/scripts/61_univec_trim.py` (tests in `revision/scripts/tests/test_univec_trim.py`).
+
+## A22. Amendment v1.12 (2026-09-02; before the B5 database build) — annotation-quality flags (GeenuFF) and loss masking of partial or erroneous gene models
+
+Author decision: before B5 training, each of the nine reference annotations is imported with **GeenuFF** (Helixer's annotation database; version pinned in the container and recorded) and its error features are used to mask unreliable training labels.
+- Flags: every GeenuFF error feature is attributed to its super-locus (gene) and transcript and stored verbatim (`qc/<species>.geenuff_flags.tsv`, `revision/scripts/62_geenuff_qc.py`). **Hard** flags (name matching `missing_start`, `missing_stop`, `wrong_starting_phase`, `mismatched_ending_phase`, `overlapping_exon`, `too_short_intron`, `empty_transcript`, `empty_super_locus`, other phase mismatches) mark partial or internally inconsistent gene models; **soft** flags (missing UTRs) are recorded only.
+- Loss-mask policy (implemented in the builder, `build_b5.loss_mask_decision`): a hard flag on the gene, or on every transcript → the row is kept in the database with `train_weight = 0` and is **excluded from the training and validation loaders** (masked from the loss; it stays available for auditing and, unchanged, in the test split); hard flags on some transcripts → those transcripts are removed from the GSF label, the row keeps `train_weight = 1` and records `transcripts_dropped`; soft flags → no change. RC rows inherit the decision. For the C2 segmentation head the same rows receive weight 0 over their whole window.
+- Reporting: counts of masked rows and dropped transcripts per species are part of `build_manifest`/the validator output (`rows_loss_masked`) and are reported in the supplement next to the split sizes. The flag file's md5 is frozen with the database; the policy is never changed after a training run has started.
+- Rationale: partial gene models teach the decoder to emit truncated CDS and wrong phases; masking them removes that noise without altering the reference annotation used for evaluation (evaluation is unchanged and still uses the full GFF).
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
@@ -425,3 +442,5 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 | 2026-09-02 | no long-read alignment run | v1.8: A18 corrections to A17 (validation-source scope, C1 naming), effective-rule matrix with precedence, dataset-role manifest (Cui → training role, Zhong conversion or unavailable, Wang 2020 B73 selection), frozen C2 weights/class semantics, genotype rule for all species, seed plan, terminology, ingestion hardening | Codex full re-review cross-checked by the author's assistant |
 | 2026-09-02 | no protein alignment run | v1.9: A19 OrthoDB v12 Viridiplantae as the sole cross-species protein resource; leakage filter; miniprot acceptance rules; CDS-family-only labelling; order of operations | author decision on the de novo / C2 protein resource |
 | 2026-09-02 | no C2 label built | v1.10: A20 class-specific source weights — EST 1.0 / PacBio 0.9 / ONT 0.7 / protein 0.5 for intron and splice-boundary classes; A18.4 weights kept for exon/UTR classes | author decision: intron junctions weight EST |
+| 2026-09-02 | no EST alignment run | v1.11: A21 UniVec_Core VecScreen screening, split-at-internal-vector rule, min length 100 nt, provenance | author request to add UniVec processing |
+| 2026-09-02 | no B5 database built | v1.12: A22 GeenuFF annotation-quality flags; hard flags mask rows from the training loss (train_weight 0) or drop erroneous transcripts; soft flags recorded | author request to mask partial models and annotation errors before training |

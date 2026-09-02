@@ -40,9 +40,9 @@ gc = _load_gsf_contract()
 
 LEGACY_COLUMNS = ("geneModel", "start", "fin", "strand", "chromosome", "sequence", "gff",
                   "static_fpb", "static_tpb", "five_prime_buf", "three_prime_buf")
-NEW_COLUMNS = ("species_id", "gene_id", "orthogroup_id", "split", "strict_holdout", "is_rc", "ordering_version",
-               "build_version", "source_fasta_sha256", "source_gff_sha256", "split_file_sha256", "window_policy",
-               "gsf_token_count", "contig_boundary", "n_transcripts")
+NEW_COLUMNS = ("species_id", "gene_id", "orthogroup_id", "split", "strict_holdout", "is_rc", "ordering_version", "build_version",
+               "source_fasta_sha256", "source_gff_sha256", "split_file_sha256", "window_policy", "gsf_token_count", "contig_boundary", "n_transcripts",
+               "train_weight", "qc_flags", "gene_id_original")
 _COMP = str.maketrans("ACGTNacgtn", "TGCANtgcan")
 STOP = {"TAA", "TAG", "TGA"}
 
@@ -90,6 +90,8 @@ def validate_cds(gsf: str, seq: str) -> Tuple[bool, str]:
             return False, "no ATG start"
         if spliced[-3:].upper() not in STOP:
             return False, "no stop codon"
+        if any(spliced[i:i + 3].upper() in STOP for i in range(0, len(spliced) - 3, 3)):
+            return False, "internal stop codon"
     return True, ""
 
 
@@ -99,8 +101,11 @@ def ensure_schema(con: duckdb.DuckDBPyConnection) -> None:
             "static_fpb INT, static_tpb INT, five_prime_buf INT, three_prime_buf INT, rn INT PRIMARY KEY, "
             "species_id VARCHAR, gene_id VARCHAR, orthogroup_id VARCHAR, split VARCHAR, strict_holdout BOOLEAN, is_rc BOOLEAN, "
             "ordering_version VARCHAR, build_version VARCHAR, source_fasta_sha256 VARCHAR, source_gff_sha256 VARCHAR, "
-            "split_file_sha256 VARCHAR, window_policy VARCHAR, gsf_token_count INT, contig_boundary BOOLEAN, n_transcripts INT)")
+            "split_file_sha256 VARCHAR, window_policy VARCHAR, gsf_token_count INT, contig_boundary BOOLEAN, n_transcripts INT, "
+            "train_weight DOUBLE DEFAULT 1.0, qc_flags VARCHAR, gene_id_original VARCHAR)")
     con.sql("CREATE SEQUENCE IF NOT EXISTS row_id START 1")
+    con.sql("CREATE TABLE IF NOT EXISTS gene_key_map (species_id VARCHAR, gene_id VARCHAR, gene_id_original VARCHAR, name_original VARCHAR, "
+            "chromosome VARCHAR, start0 INT, end0 INT)")
     con.sql("CREATE TABLE IF NOT EXISTS gene_split (species_id VARCHAR, gene_id VARCHAR, orthogroup_id VARCHAR, split VARCHAR, "
             "strict_holdout BOOLEAN, seed INT, source_version VARCHAR)")
     con.sql("CREATE TABLE IF NOT EXISTS build_manifest (species_id VARCHAR, fasta VARCHAR, fasta_sha256 VARCHAR, gff VARCHAR, "
@@ -118,21 +123,62 @@ def read_split_table(path: str) -> Tuple[Dict[Tuple[str, str], Dict[str, str]], 
 
 
 def _window_for(gene: gc.Gene, chrom_len: int, max_len: int):
+    """Symmetric window; when the contig is too short the window is shifted, and if the contig is shorter than the
+    window it keeps its multiple-of-6144 length by N-padding the sequence on the right (contig_boundary = True)."""
     ws, we = gc.pad_window(gene.start0, gene.end0)
+    L = we - ws
     boundary = False
     if we > chrom_len:
         shift = we - chrom_len
-        ws, we = max(0, ws - shift), chrom_len
+        ws = max(0, ws - shift)
+        we = ws + L
         boundary = True
-    if ws == 0 and gene.start0 - ws < (we - ws - (gene.end0 - gene.start0)) // 2:
-        boundary = boundary or ws == 0
+    if gene.end0 > chrom_len:
+        raise ValueError(f"{gene.gene_id}: annotation end {gene.end0} beyond contig length {chrom_len}")
     return ws, we, boundary
+
+
+def loss_mask_decision(gene_flags: Dict[str, set], transcript_ids) -> Tuple[float, List[str], List[str]]:
+    """Protocol A22 (GeenuFF flags): hard flag on the gene or on every transcript -> train_weight 0 (row kept, masked);
+    hard flags on some transcripts -> those transcripts leave the label; soft flags -> nothing changes."""
+    try:
+        from .qc_flags import is_hard  # type: ignore
+    except Exception:
+        import pathlib
+        ns: Dict = {}
+        exec(compile((pathlib.Path(__file__).resolve().parent / "qc_flags.py").read_text(), "qc_flags.py", "exec"), ns)
+        is_hard = ns["is_hard"]
+    tids = list(transcript_ids)
+    hard_gene = {f for f in gene_flags.get("*", set()) if is_hard(f)}
+    hard_by_tx = {t: {f for f in gene_flags.get(t, set()) if is_hard(f)} for t in tids}
+    all_hard = sorted(hard_gene | {f for v in hard_by_tx.values() for f in v})
+    if hard_gene:
+        return 0.0, [], all_hard
+    keep = [t for t in tids if not hard_by_tx[t]]
+    if not keep:
+        return 0.0, [], all_hard
+    return 1.0, keep, all_hard
+
+
+def read_qc_flags(path: str) -> Dict[Tuple[str, str], Dict[str, set]]:
+    out: Dict[Tuple[str, str], Dict[str, set]] = {}
+    with open(path) as fh:
+        header = fh.readline().rstrip("\n").split("\t")
+        idx = {h: i for i, h in enumerate(header)}
+        for line in fh:
+            c = line.rstrip("\n").split("\t")
+            if len(c) < 4:
+                continue
+            key = (c[idx["species_id"]], c[idx["gene_id"]])
+            tx = c[idx["transcript_id"]] or "*"
+            out.setdefault(key, {}).setdefault(tx, set()).add(c[idx["flag"]])
+    return out
 
 
 def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[Tuple[str, str], Dict[str, str]], split_sha: str,
                   rc: str = "none", add_extra: int = 0, seed: int = 123, max_len: int = gc.MAX_WINDOW, clean: bool = False,
                   mode: str = "train", git_commit: str = "", fasta_sha: Optional[str] = None, gff_sha: Optional[str] = None,
-                  allow_missing_split: bool = False) -> Dict:
+                  allow_missing_split: bool = False, qc_flags: Optional[Dict[Tuple[str, str], Dict[str, set]]] = None) -> Dict:
     if rc not in gc.RC_MODES:
         raise ValueError(f"rc must be one of {gc.RC_MODES}")
     ensure_schema(con)
@@ -142,11 +188,22 @@ def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[T
     gff_sha = gff_sha or sha256(gff)
     inserted = rc_rows = 0
     rejected: List[Dict] = []
+    con.execute("BEGIN TRANSACTION")
+    try:
+        return _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, add_extra, seed, max_len, clean, mode,
+                                   git_commit, fasta_sha, gff_sha, allow_missing_split, qc_flags, genome, rng, inserted, rc_rows, rejected)
+    except BaseException:
+        con.execute("ROLLBACK")
+        raise
+
+
+def _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, add_extra, seed, max_len, clean, mode, git_commit,
+                        fasta_sha, gff_sha, allow_missing_split, qc_flags, genome, rng, inserted, rc_rows, rejected):
     cols = ", ".join(LEGACY_COLUMNS + NEW_COLUMNS)
     placeholders = ", ".join("?" for _ in LEGACY_COLUMNS + NEW_COLUMNS)
     sql = f"INSERT INTO geneList (rn, {cols}) VALUES (nextval('row_id'), {placeholders})"
     with open(gff) as fh:
-        for gene in gc.parse_gff3(fh):
+        for gene in gc.parse_gff3(fh, species_code=gc.species_code(species_id)):
             key = (species_id, gene.gene_id)
             if key not in split_rows:
                 if not allow_missing_split:
@@ -157,6 +214,16 @@ def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[T
             if gene.chrom not in genome:
                 rejected.append({"gene_id": gene.gene_id, "reason": f"chromosome {gene.chrom} missing from FASTA"})
                 continue
+            con.execute("INSERT INTO gene_key_map VALUES (?,?,?,?,?,?,?)", [species_id, gene.gene_id, gene.gene_id_original, gene.name_original,
+                                                                          gene.chrom, gene.start0, gene.end0])
+            # A22: annotation-quality flags -> loss masking / transcript filtering
+            train_weight, qc_list = 1.0, []
+            if qc_flags and (species_id, gene.gene_id) in qc_flags:
+                train_weight, keep_tx, qc_list = loss_mask_decision(qc_flags[(species_id, gene.gene_id)], gene.transcripts.keys())
+                if train_weight > 0 and len(keep_tx) < len(gene.transcripts):
+                    gene = gc.Gene(gene.gene_id, gene.chrom, gene.strand, gene.start0, gene.end0, {t: gene.transcripts[t] for t in keep_tx},
+                                   gene.gene_id_original, gene.name_original)
+                    qc_list = qc_list + ["transcripts_dropped"]
             chrom_len = len(genome[gene.chrom])
             ws, we, boundary = _window_for(gene, chrom_len, max_len)
             L = we - ws
@@ -171,6 +238,8 @@ def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[T
                     rejected.append({"gene_id": gene.gene_id, "reason": str(e)})
                     continue
             seq = genome[gene.chrom][ws:we]
+            if len(seq) < L:
+                seq = seq + "N" * (L - len(seq))   # contig shorter than the window: keep the 6144-multiple length
             if clean and gsf is not None:
                 ok, why = validate_cds(gsf, seq)
                 if not ok:
@@ -181,7 +250,8 @@ def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[T
             common = [species_id, gene.gene_id, srow.get("orthogroup_id") or None, srow["split"],
                       str(srow.get("strict_holdout", "")).lower() in ("1", "true", "yes"), False, gc.ORDERING_VERSION,
                       gc.BUILD_VERSION, fasta_sha, gff_sha, split_sha, gc.WINDOW_POLICY,
-                      gc.count_tokens_v2(gsf) if gsf else None, boundary, len(gene.transcripts)]
+                      gc.count_tokens_v2(gsf) if gsf else None, boundary, len(gene.transcripts), train_weight, ";".join(qc_list) or None,
+                      gene.gene_id_original]
             con.execute(sql, [gene.gene_id, ws, we, gene.strand, gene.chrom, seq, gsf, fpb, tpb, five, three] + common)
             inserted += 1
             want_rc = gsf is not None and (rc == "all" or (rc == "isoform-only" and len(gene.transcripts) >= 2))
@@ -189,19 +259,23 @@ def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[T
                 rgsf = gc.reverse_complement(gsf, L)
                 rc_common = list(common)
                 rc_common[5] = True
-                rc_common[12] = gc.count_tokens_v2(rgsf)
+                rc_common[12] = gc.count_tokens_v2(rgsf)  # train_weight / qc_flags are inherited unchanged
                 con.execute(sql, [f"{gene.gene_id}-rc", ws, we, "-" if gene.strand == "+" else "+", gene.chrom, revcomp(seq), rgsf,
                                   tpb, fpb, five, three] + rc_common)
                 inserted += 1
                 rc_rows += 1
+    con.sql("CREATE TABLE IF NOT EXISTS rejected_records (species_id VARCHAR, gene_id VARCHAR, reason VARCHAR)")
+    if rejected:
+        con.executemany("INSERT INTO rejected_records VALUES (?,?,?)", [[species_id, r["gene_id"], r["reason"]] for r in rejected])
     reasons: Dict[str, int] = {}
     for r in rejected:
-        k = r["reason"].split(" ")[0]
+        k = r["reason"].split(":")[0].split(" >")[0]
         reasons[k] = reasons.get(k, 0) + 1
     con.execute("INSERT INTO build_manifest VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 [species_id, os.path.abspath(fasta), fasta_sha, os.path.abspath(gff), gff_sha, split_sha, rc, inserted, rc_rows,
                  len(rejected), json.dumps(reasons), gc.BUILD_VERSION, gc.ORDERING_VERSION, gc.WINDOW_POLICY, git_commit,
                  time.strftime("%Y-%m-%dT%H:%M:%S"), duckdb.__version__])
+    con.execute("COMMIT")
     return {"species_id": species_id, "rows": inserted, "rc_rows": rc_rows, "rejected": rejected}
 
 
@@ -212,9 +286,11 @@ def read_species_manifest(path: str) -> List[Dict[str, str]]:
 
 def build_b5_database(db: str, species_manifest: str, split_table: str, rc: str = "isoform-only", add_extra: int = 0, seed: int = 123,
                       max_len: int = gc.MAX_WINDOW, clean: bool = False, excluded_species: Iterable[str] = ("Zmays",),
-                      verify_md5: bool = True, only_species: Optional[Set[str]] = None, git_commit: str = "") -> List[Dict]:
+                      verify_md5: bool = True, only_species: Optional[Set[str]] = None, git_commit: str = "",
+                      qc_flags_path: Optional[str] = None) -> List[Dict]:
     manifest = read_species_manifest(species_manifest)
     split_rows, split_sha = read_split_table(split_table)
+    qc = read_qc_flags(qc_flags_path) if qc_flags_path else None
     excluded = set(excluded_species)
     con = duckdb.connect(db)
     ensure_schema(con)
@@ -240,7 +316,7 @@ def build_b5_database(db: str, species_manifest: str, split_table: str, rc: str 
                 raise ValueError(f"{sid}: GFF md5 {gmd5} != manifest {m['gff_md5']}")
         print(f"[{sid}] building...", file=sys.stderr)
         results.append(build_species(con, sid, m["fasta"], m["gff"], split_rows, split_sha, rc=rc, add_extra=add_extra, seed=seed,
-                                     max_len=max_len, clean=clean, git_commit=git_commit, fasta_sha=fsha, gff_sha=gsha))
+                                     max_len=max_len, clean=clean, git_commit=git_commit, fasta_sha=fsha, gff_sha=gsha, qc_flags=qc))
     con.close()
     return results
 
@@ -254,13 +330,37 @@ def validate_b5_database(db: str, excluded_species: Iterable[str] = ("Zmays",), 
         n = con.sql(f"SELECT count(*) FROM geneList WHERE geneModel LIKE '{pat}%'").fetchone()[0]
         if n:
             violations.append(f"{n} rows whose geneModel starts with {pat}")
+    # physical checks: window length, sequence length, stored token count, RC pairing, required fields
+    for (gm, st, fn, seq_len, gsf, tok, is_rc, sp, gid, ov) in con.sql(
+            "SELECT geneModel, start, fin, length(sequence), gff, gsf_token_count, is_rc, species_id, gene_id, ordering_version FROM geneList").fetchall():
+        if st is None or fn is None or seq_len is None:
+            violations.append(f"{gm}: missing start/fin/sequence")
+            continue
+        L = fn - st
+        if L % gc.WINDOW_UNIT or L > gc.MAX_WINDOW:
+            violations.append(f"{gm}: window {L} is not an allowed multiple of {gc.WINDOW_UNIT}")
+        if seq_len != L:
+            violations.append(f"{gm}: sequence length {seq_len} != window {L}")
+        if gsf is not None and tok != gc.count_tokens_v2(gsf):
+            violations.append(f"{gm}: stored token count {tok} != recomputed {gc.count_tokens_v2(gsf)}")
+        if sp is None or gid is None or ov != gc.ORDERING_VERSION:
+            violations.append(f"{gm}: missing species/gene id or ordering_version")
+    pairs = con.sql("SELECT f.geneModel, f.gff, r.gff, f.fin - f.start FROM geneList f JOIN geneList r ON r.species_id = f.species_id AND r.gene_id = f.gene_id "
+                    "AND r.is_rc AND NOT f.is_rc").fetchall()
+    for gm, fg, rg, L in pairs:
+        if fg is not None and gc.reverse_complement(fg, L) != rg:
+            violations.append(f"{gm}: rc row is not the reverse complement of the forward row")
+    dup = con.sql("SELECT species_id, gene_id, is_rc, count(*) c FROM geneList GROUP BY 1,2,3 HAVING c > 1").fetchall()
+    for sp, gid, rcflag, c in dup:
+        violations.append(f"duplicate row {sp}:{gid} is_rc={rcflag} x{c}")
     over = con.sql(f"SELECT count(*) FROM geneList WHERE gsf_token_count > {gc.CAPS['tokens']}").fetchone()[0]
     if over:
         violations.append(f"{over} rows exceed the token cap")
     bad_null = con.sql("SELECT count(*) FROM geneList WHERE gff = '' OR gff = 'None'").fetchone()[0]
     if bad_null:
         violations.append(f"{bad_null} rows store empty-string labels instead of NULL")
+    masked = con.sql("SELECT count(*) FROM geneList WHERE train_weight = 0").fetchone()[0]
     counts = {k: v for k, v in con.sql("SELECT split, count(*) FROM geneList GROUP BY split").fetchall()}
     per_species = {k: v for k, v in con.sql("SELECT species_id, count(*) FROM geneList GROUP BY species_id").fetchall()}
     con.close()
-    return {"violations": violations, "rows_by_split": counts, "rows_by_species": per_species, "ok": not violations}
+    return {"violations": violations, "rows_by_split": counts, "rows_by_species": per_species, "rows_loss_masked": masked, "ok": not violations}

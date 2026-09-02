@@ -4,8 +4,8 @@ import pytest
 
 def test_count_tokens_v2_matches_tokenizer_rule_on_readme_example(gsf):
     s = "0|CDS1|51|+|A;100|CDS2|181|+|C;250|CDS3|301|+|B>CDS1|CDS2|CDS3"
-    # features: (1+1+2+1+1) + ';' ... last ';' -> <tx1>; then '>' ; transcripts 3 names; </s>
-    expected = (1 + 1 + 2 + 1 + 1 + 1) + (3 + 1 + 3 + 1 + 1 + 1) + (3 + 1 + 3 + 1 + 1 + 1) + 1 + 3 + 1
+    # <s> + features: (1+1+2+1+1) + ';' ... last ';' -> <tx1>; then '>' ; transcripts 3 names; </s>
+    expected = 1 + (1 + 1 + 2 + 1 + 1 + 1) + (3 + 1 + 3 + 1 + 1 + 1) + (3 + 1 + 3 + 1 + 1 + 1) + 1 + 3 + 1
     assert gsf.count_tokens_v2(s) == expected
 
 

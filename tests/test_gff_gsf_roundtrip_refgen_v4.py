@@ -23,7 +23,7 @@ def test_relative_coordinates_are_window_based_not_gene_based(gsf):
 
 def test_build_rows_uses_sql_null_for_absent_labels(gsf):
     gene = next(gsf.parse_gff3(REFGEN_V4_PLUS.splitlines()))
-    rows = gsf.build_rows([gene], species_id="Zmays", rc="none", split_lookup={"Zm00001d027230": "test"})
+    rows = gsf.build_rows([gene], species_id="Zmays", rc="none", split_lookup={gene.gene_id: "test"})  # verbatim GFF ID without a species code
     assert len(rows) == 1
     r = rows[0]
     assert r["predict"] is None and r["is_rc"] is False and r["split"] == "test"

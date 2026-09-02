@@ -323,6 +323,8 @@ def train(
                 # OOM guard: skip batches where batch_size * seq_len exceeds threshold.
                 # Tune this value based on your GPU's VRAM (24GB for 4090, 80GB for A100).
                 if ii.shape[0] * ii.shape[1] > 100_000:
+                    if layout is not None:
+                        raise RuntimeError(f"B5: oversized batch {ii.shape} — the frozen DB must not contain windows over 49,152 nt")
                     continue
 
                 try:

@@ -42,9 +42,9 @@ def _write_inputs(tmp_path, gsf):
     for gid, (chrom_name, strand, txs) in genes.items():
         allf = [f for fs in txs.values() for f in fs]
         gs, ge = min(f[1] for f in allf), max(f[2] for f in allf)
-        lines.append(f"{chrom_name}\tt\tgene\t{gs}\t{ge}\t.\t{strand}\t.\tID={gid}.v1;Name={gid}")
+        lines.append(f"{chrom_name}\tt\tgene\t{gs}\t{ge}\t.\t{strand}\t.\tID={gid};Name={gid}")
         for tid, fs in txs.items():
-            lines.append(f"{chrom_name}\tt\tmRNA\t{gs}\t{ge}\t.\t{strand}\t.\tID={tid};Parent={gid}.v1")
+            lines.append(f"{chrom_name}\tt\tmRNA\t{gs}\t{ge}\t.\t{strand}\t.\tID={tid};Parent={gid}")
             for k, (t, s, e, ph) in enumerate(fs):
                 lines.append(f"{chrom_name}\tt\t{t}\t{s}\t{e}\t.\t{strand}\t{ph}\tID={tid}.{k};Parent={tid}")
     gff = tmp_path / "g.gff3"
@@ -75,6 +75,7 @@ def test_build_validate_end_to_end(tmp_path, b5):
     assert all(len(row[7]) == row[5] for row in rows.values())
     assert con.sql("SELECT count(*) FROM build_manifest").fetchone()[0] == 1
     assert con.sql("SELECT count(*) FROM gene_split").fetchone()[0] == 4
+    assert con.sql("SELECT count(*) FROM gene_key_map").fetchone()[0] == 4 and con.sql("SELECT gene_id_original FROM geneList WHERE geneModel='g1'").fetchone()[0] == "g1"
     con.close()
     report = b5.validate_b5_database(str(db))
     assert report["ok"], report["violations"]
@@ -152,3 +153,48 @@ def test_create_database_rc_mode_resolution():
     assert resolve(A(add_rc=True)) == "all"
     with pytest.raises(SystemExit):
         resolve(A(rc="all", add_rc=True))
+
+
+def test_qc_flags_mask_and_drop_transcripts(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    flags = tmp_path / "flags.tsv"
+    flags.write_text("species_id\tgene_id\ttranscript_id\tflag\tstart\tend\n"
+                     "Athaliana\tg1\tg1.2\tgeenuff_error_missing_stop_codon\t0\t0\n"   # one of two transcripts -> dropped
+                     "Athaliana\tg2\t\tempty_super_locus\t0\t0\n"                      # gene-level hard -> masked
+                     "Athaliana\tglast\tglast.1\tmissing_utr_5p\t0\t0\n")                # soft -> untouched
+    db = tmp_path / "q.db"
+    b5.build_b5_database(str(db), str(manifest), str(split), rc="isoform-only", verify_md5=False, qc_flags_path=str(flags))
+    con = duckdb.connect(str(db), read_only=True)
+    rows = {r[0]: r for r in con.sql("SELECT geneModel, train_weight, qc_flags, n_transcripts, gff FROM geneList").fetchall()}
+    assert rows["g2"][1] == 0.0 and "empty_super_locus" in rows["g2"][2]
+    assert rows["g1"][1] == 1.0 and rows["g1"][3] == 1 and "transcripts_dropped" in rows["g1"][2] and ";" not in rows["g1"][4].split(">")[1]
+    assert "g1-rc" not in rows  # isoform-only RC no longer applies once the second transcript is dropped
+    assert rows["glast"][1] == 1.0 and rows["glast"][2] is None
+    con.close()
+    rep = b5.validate_b5_database(str(db))
+    assert rep["ok"] and rep["rows_loss_masked"] == 1
+
+
+def test_short_contig_keeps_window_multiple_by_n_padding(tmp_path, b5):
+    fasta = tmp_path / "s.fa"; fasta.write_text(">ctg\n" + "ACGT" * 500 + "\n")   # 2,000-nt contig
+    gff = tmp_path / "s.gff3"
+    gff.write_text("ctg\tt\tgene\t101\t400\t.\t+\t.\tID=gs\nctg\tt\tmRNA\t101\t400\t.\t+\t.\tID=gs.1;Parent=gs\nctg\tt\tCDS\t101\t400\t.\t+\t0\tID=c;Parent=gs.1\n")
+    con = duckdb.connect(str(tmp_path / "s.db"))
+    b5.build_species(con, "Athaliana", str(fasta), str(gff), {("Athaliana", "gs"): {"split": "train"}}, "x")
+    st, fn, seq, cb = con.sql("SELECT start, fin, sequence, contig_boundary FROM geneList").fetchone()
+    assert fn - st == 6144 and len(seq) == 6144 and seq.endswith("N" * 100) and cb is True
+    con.close()
+
+
+def test_validator_catches_corrupted_token_count_and_sequence(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    db = tmp_path / "c.db"
+    b5.build_b5_database(str(db), str(manifest), str(split), rc="isoform-only", verify_md5=False)
+    assert b5.validate_b5_database(str(db))["ok"]
+    con = duckdb.connect(str(db))
+    con.execute("UPDATE geneList SET gsf_token_count = gsf_token_count + 1 WHERE geneModel = 'g2'")
+    con.execute("UPDATE geneList SET sequence = substr(sequence, 1, 100) WHERE geneModel = 'glast'")
+    con.execute("UPDATE geneList SET gff = (SELECT gff FROM geneList WHERE geneModel = 'g1') WHERE geneModel = 'g1-rc'")
+    con.close()
+    v = "\n".join(b5.validate_b5_database(str(db))["violations"])
+    assert "token count" in v and "sequence length" in v and "reverse complement" in v

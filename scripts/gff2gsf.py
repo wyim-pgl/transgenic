@@ -39,7 +39,7 @@ def gff2gsf(gff_file, output, coords="gene"):
             ws = gene.start0
         gsf = gc.gene_to_gsf(gene, ws)
         try:
-            gc.check_caps(gsf)
+            gc.check_caps(gsf, window_len=(gc.pad_window(gene.start0, gene.end0)[1] - ws) if coords == "window" else None)
         except gc.CapError as e:
             print(f"skip {gene.gene_id}: {e}", file=sys.stderr)
             skipped += 1
@@ -56,6 +56,8 @@ def main():
     parser.add_argument("--absolute", action="store_true", help="Absolute chromosome coordinates (0-based half-open)")
     parser.add_argument("--window", action="store_true", help="Coordinates relative to the padded 6,144-nt window (database convention)")
     args = parser.parse_args()
+    if args.absolute and args.window:
+        parser.error("--absolute and --window are mutually exclusive")
     coords = "absolute" if args.absolute else ("window" if args.window else "gene")
     infile = sys.stdin if args.input == "-" else open(args.input)
     outfile = open(args.output, "w") if args.output else sys.stdout

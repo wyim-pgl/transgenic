@@ -39,6 +39,8 @@ Every item below is tracked as a GitHub issue in wyim-pgl/transgenic (#4–#43).
 - `audit_downloads.sh`: re-audit everything already downloaded (files per run vs ENA file list, counts, md5) and write `evidence/PROVENANCE_longread.tsv` (tool versions, commands, dates, md5s) — required by protocol §3.3 item 5.
 - EST: `est_validate.sh` (per-record non-empty sequence, legal alphabet, terminal newline, accession multiset vs an esearch UID/accession manifest); fix the stale `rmdup -n` comment in `est_repair.sh`.
 - Wang 2020 B73-only selection script from `demux_FL_count.txt`; Zhong 2025 ccs→lima→refine job or `excluded(unavailable)` entry.
+- UniVec screening (A21): `revision/scripts/evidence/univec_screen.sh <species>` on Delta for the 11 EST sets before any minimap2 run; outputs under `est/<species>/univec/`.
+- GeenuFF QC (A22): `import2geenuff.py` per training annotation → `revision/scripts/62_geenuff_qc.py` → `qc/<species>.geenuff_flags.tsv` (md5 frozen) → `scripts/build_b5_database.py --qc-flags`; masked-row counts in the validator report.
 - Seed plan (A18.6): seed 123 primary, 456 and 789 confirmatory before submission; three-seed mean ± s.d. in the supplement.
 
 
@@ -50,6 +52,12 @@ Every item below is tracked as a GitHub issue in wyim-pgl/transgenic (#4–#43).
 6. **Days 4–5** — smoke DB (`build_b5_database.py` on representative genes of all nine species) + `validate_b5_database.py`; zero maize by manifest and by `Zm*/GRMZM*` search.
 7. **End of week 1** — full B5 DB build (immutable, manifest archived); training-script change: split-table selection, 400M config, best-validation-loss checkpoint + patience 3, seeds; throughput benchmark on the chosen GPU (4090 / PRO 6000 / cloud) and GB10 decision.
 8. **Week 2 day 1** — start B5 seeds. In parallel (weeks 2–3): C0 ingestion of aligned evidence (validation sets flagged `validation_only`), C2 label/weight generation from training-species evidence only, segmentation trainer fix; neither touches the B5 DB.
+
+## 2b. Decisions of 2026-09-02 (author) recorded for implementation
+- Gene key: GFF `ID` first, `Name` only when `ID` is absent; a candidate longer than 10 characters or containing more than one dot, or no candidate, becomes `<3-letter species code><6-digit ordinal in GFF order>` (`gsf_contract.gene_key`); `gene_key_map` and `gene_id_original` preserve the originals; the split table, strict held-out list and OrthoFinder mapping all use the key.
+- Legacy API (BED input, chromosome prefixing, `staticSize`): deprecated and documented in README; not restored.
+- Reverse complement: the legacy `utils/gsf.py` RC function stays for inference with the published checkpoints (their outputs are not canonical); training labels use `gsf_contract.reverse_complement` only. This dual path is an internal implementation note and is not stated in the manuscript or public docs.
+- Annotation QC (A22): GeenuFF flags → `train_weight` 0 rows are excluded from train/valid loaders (`datasets.py`) and from C2 weights; hard-flagged transcripts are dropped from labels.
 
 ## 3a. Schedule gates (author decision 2026-09-02)
 - **Adopted — C2 gate:** at the end of week 3 the author checks B5 (full DB built, primary seed training) and B1 (maize alignments and P4/P5 controls done). If either is behind, C2 is deferred to the follow-up paper; C2 label construction does not start before that check. Recorded in the master plan and resume.

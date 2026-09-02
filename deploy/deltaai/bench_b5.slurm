@@ -17,6 +17,6 @@ export NCCL_DEBUG=WARN OMP_NUM_THREADS=8
 apptainer exec --nv --bind "$WORK":/work "$SIF" bash -lc "
   cd /work/repo && pip install -q -e . --no-deps &&
   accelerate launch --num_processes=$GPUS --mixed_precision=bf16 train/train_HyenaTransgenic.py \
-    --config configs/b5_400m_v1.json --db $DB --benchmark-steps $STEPS --output-dir /work/runs/bench-g$GPUS
+    --config configs/b5_400m_v1.json --db $DB --seed 123 --benchmark-steps $STEPS --output-dir /work/runs/bench-g$GPUS
 "
 # Expected output: tokens/s, s/step, peak GB, hours/epoch (rows in DB / rows per step / 3600); paste into #18.

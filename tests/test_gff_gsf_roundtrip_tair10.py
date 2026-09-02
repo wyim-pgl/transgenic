@@ -49,8 +49,11 @@ def test_roundtrip_tair10_last_gene_utr_order_on_minus_strand(gsf):
 def test_last_gene_of_file_is_emitted(gsf):
     text = gff("Chr1", "g1", "+", {"t1": [("CDS", 100, 200, 0)]}) + TAIR10_LAST_GENE_MINUS
     genes = list(gsf.parse_gff3(text.splitlines()))
-    assert [g.gene_id for g in genes][-1].startswith("AT5G67640")
+    assert genes[-1].gene_id_original.startswith("AT5G67640") and genes[-1].gene_id == "AT5G67640.TAIR10"
     assert len(genes) == 2
+    keyed = list(gsf.parse_gff3(text.splitlines(), species_code="Ath"))
+    # "AT5G67640.TAIR10" is 16 characters -> generated key; "g1" is valid and kept
+    assert [g.gene_id for g in keyed] == ["g1", "Ath000002"] and keyed[1].gene_id_original == "AT5G67640.TAIR10"
 
 
 def test_chromosome_transition_keeps_each_genes_own_chrom_and_strand(gsf):

@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
-LINE_RE = re.compile(r"epoch=(\d+):.*?train_epoch_loss=(?:tensor\()?([0-9.eE+-]+).*?eval_epoch_loss=(?:tensor\()?([0-9.eE+-]+)")
+LINE_RE = re.compile(r"epoch=(\d+):.*?train(?:_epoch)?_loss=(?:tensor\()?([0-9.eE+-]+).*?eval(?:_epoch)?_loss=(?:tensor\()?([0-9.eE+-]+)")
 
 
 @dataclass

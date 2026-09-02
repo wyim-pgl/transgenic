@@ -23,6 +23,7 @@ def main():
     ap.add_argument("--no-verify-md5", action="store_true")
     ap.add_argument("--only", nargs="*", help="species_id subset (smoke build)")
     ap.add_argument("--overwrite", action="store_true")
+    ap.add_argument("--qc-flags", default=None, help="GeenuFF flags TSV from revision/scripts/62_geenuff_qc.py (protocol A22)")
     a = ap.parse_args()
     if os.path.exists(a.db):
         if not a.overwrite:
@@ -33,7 +34,8 @@ def main():
     except Exception:
         commit = ""
     res = build_b5_database(a.db, a.species_manifest, a.split_table, rc=a.rc, add_extra=a.add_extra, seed=a.seed, max_len=a.max_len,
-                            clean=a.clean, verify_md5=not a.no_verify_md5, only_species=set(a.only) if a.only else None, git_commit=commit)
+                            clean=a.clean, verify_md5=not a.no_verify_md5, only_species=set(a.only) if a.only else None, git_commit=commit,
+                            qc_flags_path=a.qc_flags)
     for r in res:
         print(json.dumps({"species_id": r["species_id"], "rows": r["rows"], "rc_rows": r["rc_rows"], "rejected": len(r["rejected"])}))
     with open(a.db + ".rejected.json", "w") as fh:

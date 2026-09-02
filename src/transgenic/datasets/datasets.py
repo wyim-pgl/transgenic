@@ -203,7 +203,7 @@ class isoformDataHyena(Dataset):
 		with duckdb.connect(self.db, config={"access_mode": "READ_ONLY"}) as con:
 			if split:
 				# B5: membership comes from the frozen split column (docs/gsf_spec_v1.md §7), never from random_split
-				rows = con.sql("SELECT rn, gff FROM geneList WHERE split = ? AND gff IS NOT NULL ORDER BY rn", params=[split]).fetchall()
+				rows = con.sql("SELECT rn, gff FROM geneList WHERE split = ? AND gff IS NOT NULL AND COALESCE(train_weight, 1.0) > 0 ORDER BY rn", params=[split]).fetchall()
 				if not rows:
 					raise ValueError(f"no rows with split={split!r} in {db}; build it with scripts/build_b5_database.py")
 			elif exclude_prefix:

@@ -120,6 +120,14 @@ Chr1  source  three_prime_UTR 800  900  .  +  .  ID=utr3
 - UTRs use `.` for phase since they are non-coding
 - Transcript includes UTRs in the proper order
 
+
+> **Deprecated since 2026-09 (B5 data contract, `docs/gsf_spec_v1.md`).** `scripts/create_database.py` now delegates to the
+> contract builder: BED input is no longer accepted (convert to GFF3 first), `--static-size` other than 6144 is ignored with a
+> warning, and `--species-prefix` is stored as the `species_id` column instead of being prepended to chromosome names.
+> Use `--rc none|all|isoform-only`; `--add-rc`/`--add-rc-iso-only` are deprecated aliases. Gene identifiers follow the
+> gene-key rule (GFF `ID`, else `Name`; keys longer than 10 characters or with more than one dot become
+> `<3-letter species code><6-digit ordinal>`; the original `ID`/`Name` are kept in `gene_key_map` and `gene_id_original`).
+
 ### Converting GFF3 to GSF
 
 Use `scripts/gff2gsf.py` to convert existing GFF3 annotations to GSF format:
