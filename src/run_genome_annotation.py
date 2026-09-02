@@ -138,6 +138,8 @@ def main():
     parser.add_argument("--compile", action="store_true", help="Use torch.compile to optimize model inference.")
     parser.add_argument("--reject_output", default=None, help="Path to save rejected/hallucinated generations (default: <output>.rejects.txt)")
     parser.add_argument("--bed", action="store_true", help="Treat input annotation as BED format instead of GFF3.")
+    parser.add_argument("--constrained", action="store_true", help="Grammar-constrained decoding (protocol A24): coordinates within the window and monotone, single strand, phase letters by feature type, transcript members defined/unique/ordered, transcript count as planned.")
+    parser.add_argument("--num_beams", type=int, default=2, help="Beam width for generation (default: 2).")
 
     args = parser.parse_args()
 
@@ -523,14 +525,22 @@ def main():
             # stricter than torch.no_grad(): it also disables version counting
             # on tensors and enables additional backend optimizations, yielding
             # a small speed improvement over no_grad alone.
+            gen_kwargs = {}
+            if getattr(args, "constrained", False):
+                from transformers import LogitsProcessorList
+                from transgenic.model.constrained_decoding import GSFGrammarLogitsProcessor
+                window_lens = [int(e) - int(s) for s, e in zip(batch[5], batch[6])]
+                gen_kwargs["logits_processor"] = LogitsProcessorList([GSFGrammarLogitsProcessor(
+                    gffTokenizer, window_lens, num_beams=args.num_beams, v2=(gffTokenizer.vocab_version == "v2"))])
             with torch.inference_mode():
                 outputs = model.generate(
                     inputs=input_ids,
                     attention_mask=attention_mask,
                     num_return_sequences=1,   # One prediction per input sample.
-                    max_length=2048,          # Cap output length to prevent runaway generation.
-                    num_beams=2,              # Beam search with 2 beams for better quality.
-                    do_sample=True            # Enable sampling within beam search for diversity.
+                    max_length=args.max_length,  # Cap output length to prevent runaway generation.
+                    num_beams=args.num_beams,    # Beam search width.
+                    do_sample=not getattr(args, "constrained", False),  # sampling off under grammar constraints (deterministic beams)
+                    **gen_kwargs,
                 )
             # Decode the integer token IDs back to GSF text strings.
             # .detach().cpu().numpy() moves the tensor off the GPU and converts
