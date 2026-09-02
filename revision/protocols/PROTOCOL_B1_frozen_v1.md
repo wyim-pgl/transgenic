@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.5; v1.0 text unchanged, amendments appended)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.5.1; v1.0 text unchanged, amendments appended)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -292,3 +292,15 @@ Author decision:
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | no long-read download or alignment run | v1.5: A14 — training uses training-species ONT + Sequel II+ PacBio + ESTs + proteins; test-species validation accepts any PacBio generation; A. thaliana validation sets designated and excluded from training | author decision, correcting v1.3/v1.4 scope |
+
+## A15. Dataset table update v1.5.1 (2026-09-01; before any long-read download) — Sequel II+/Revio scout results
+
+Scout (ENA/SRA enumeration of all Sequel II/IIe/Revio transcriptomic runs, read type verified from submitted file names, ENA headers/QVs, BioSamples): no Revio/Kinnex pure-B73 or Col-0 dataset exists as of 2026-09-01.
+
+Added to §3.1 (maize, validation, tier 1 PacBio): **M-CCS26** PRJNA1470126 (B73, V3 SAM+leaf, Sequel II CCS, 3 runs, 2.26 M reads; submitted `*.ccs.fastq.gz`, headers `/ccs`; 2025, independent of V4/V5); **M-KNX** PRJNA1290227 (Revio Kinnex FLNC, B73×Mo17 and Mo17×B73 F1 embryo/endosperm 14 DAP, 4 runs, 57 M reads; not on ENA → SRA toolkit; **hybrid genotype: reported under the pooled/non-B73 stratum of A7-P, never as B73-direct**). Excluded: PRJNA983493 (iFLAS) and PRJNA921723 — subreads with ZMW names stripped, no original BAM.
+Added to §3.2 (A. thaliana, **validation-only**): **A-CCS23** PRJNA911826 (Zhang et al. 2023 Plant Physiol, doi 10.1093/plphys/kiad193; Col-0 WT runs SRR22719002–07 only, 3 bioreps × 2 runs, ~2.9 M CCS-level reads, 11-day seedlings; mutant runs excluded). A. thaliana validation-only set is now {A-ONT1 FLIC, A-HiFi Zhong 2025, A-CCS23}. Training-eligible A. thaliana long reads: A-ONT2 Cui 2020 and any set listed by the training scout that is not in the validation-only set.
+§4.4 tomato: PRJNA961334 confirmed Sequel II HiFi Q20 (cv. Moneymaker, 30 runs, 1.1–3.5 M reads/run); TomatoRTD PRJNA1406150 (M82) raw data are 1 TB/sample subreads.bam — models only from Zenodo if ever used.
+
+| Date | Analysis state | Change | Reason |
+|---|---|---|---|
+| 2026-09-01 | no long-read download or alignment run | v1.5.1: A15 dataset additions (M-CCS26, M-KNX hybrid stratum, A-CCS23 validation-only), exclusions recorded | Sequel II+/Revio scout |
