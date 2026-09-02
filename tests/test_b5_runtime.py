@@ -28,6 +28,7 @@ def test_load_frozen_config_and_model_kwargs(rt):
     kw = rt.model_kwargs(cfg)
     assert kw["encoder_d_model"] == 768 and kw["decoder_d_model"] == 1536 and kw["encoder_layers"] == 12 and kw["decoder_layers"] == 12
     assert kw["encoder_attention_heads"] == 6 and len(kw["attention_window"]) == 12 and kw["attention_window"][0] == 1024
+    assert kw["encoder_ffn_dim"] == 3072 and kw["decoder_ffn_dim"] == 3072   # published recipe (d013418 used the config defaults)
     assert cfg["patience"] == 3 and cfg["optimizer"] == "AdamW" and cfg["seeds"]["primary"] == 123
     assert rt.accumulation_steps(cfg, 1) == 96 and rt.accumulation_steps(cfg, 4) == 24
     with pytest.raises(ValueError):

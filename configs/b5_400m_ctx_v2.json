@@ -51,5 +51,7 @@
   ],
   "max_encoder_seqlen": 129024,
   "tier_up_prob": 0.3,
-  "min_flank": 1000
+  "min_flank": 1000,
+  "encoder_ffn_dim": 3072,
+  "decoder_ffn_dim": 3072
 }

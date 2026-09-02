@@ -43,7 +43,7 @@ def model_kwargs(cfg: Dict) -> Dict:
     return {
         "d_model": cfg["d_model_encoder"], "encoder_d_model": cfg["d_model_encoder"], "decoder_d_model": cfg["d_model_decoder"],
         "encoder_layers": cfg["encoder_layers"], "decoder_layers": cfg["decoder_layers"], "encoder_n_layer": cfg["encoder_n_layer"],
-        "encoder_ffn_dim": cfg["d_model_encoder"] * 4, "decoder_ffn_dim": cfg["d_model_decoder"] * 4,
+        "encoder_ffn_dim": int(cfg.get("encoder_ffn_dim", 3072)), "decoder_ffn_dim": int(cfg.get("decoder_ffn_dim", 3072)),  # published recipe: both 3,072
         "attention_window": list(cfg["attention_window"]), "dropout": cfg["dropout"],
         "encoder_attention_heads": cfg["encoder_attention_heads"], "decoder_attention_heads": cfg["decoder_attention_heads"],
         "encoder_model": cfg["encoder_model"], "max_encoder_seqlen": int(cfg.get("max_encoder_seqlen", 49152)),

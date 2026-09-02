@@ -9,19 +9,40 @@
   "encoder_n_layer": 12,
   "encoder_attention_heads": 6,
   "decoder_attention_heads": 6,
-  "attention_window": [1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024],
+  "attention_window": [
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024
+  ],
   "dropout": 0.1,
   "do_segment": false,
   "optimizer": "AdamW",
-  "lr": 5e-5,
+  "lr": 5e-05,
   "weight_decay": 0.02,
   "effective_batch_size": 96,
   "lr_schedule": "linear warm-up 5% of total steps, then linear decay",
   "max_epochs": 22,
   "checkpoint_rule": "minimum mean validation loss; patience 3 epochs; compare loss to loss (not perplexity)",
   "split_source": "data/splits/b5_orthogroup_split_v1.tsv (no random_split)",
-  "seeds": {"primary": 123, "confirmatory": [456, 789]},
+  "seeds": {
+    "primary": 123,
+    "confirmatory": [
+      456,
+      789
+    ]
+  },
   "species_manifest": "data/manifests/b5_species_v1.tsv",
   "gsf_spec": "docs/gsf_spec_v1.md",
-  "notes": "Generic train_HyenaTransgenic.py and the GB10 script default to the 1.17B wide config (1152/16/8) and must not be used for B5 without loading this file. The RTX4090 script config (encoder 256/8, decoder 1536/24, 7 epochs, lr 2e-5) is a different experiment and is not the B5 recipe."
+  "notes": "Generic train_HyenaTransgenic.py and the GB10 script default to the 1.17B wide config (1152/16/8) and must not be used for B5 without loading this file. The RTX4090 script config (encoder 256/8, decoder 1536/24, 7 epochs, lr 2e-5) is a different experiment and is not the B5 recipe.",
+  "encoder_ffn_dim": 3072,
+  "decoder_ffn_dim": 3072
 }
