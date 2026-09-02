@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.4; v1.0 text unchanged, amendments appended)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.5; v1.0 text unchanged, amendments appended)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -280,3 +280,15 @@ Author decision: **all downloaded ONT and PacBio (Sequel II+) transcript dataset
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | no long-read download or alignment run | v1.4: A13 — downloaded long-read data validation-only; C2 masks from ESTs/proteins of training species only | author decision: keep validation evidence strictly separate from anything the model or its selectors learn from |
+
+## A14. Amendment v1.5 (2026-09-01; before any long-read download or alignment) — roles of long-read data by species (supersedes A12 for test species and A13 for training species)
+
+Author decision:
+- **Training-side evidence (nine training species only)**: ESTs (A1), **ONT** transcript reads, **PacBio Iso-Seq generated on Sequel II or later**, and cross-species protein alignments. RS II / Sequel I PacBio data are not used for training. Locus/orthogroup exclusions of the master plan apply (strict held-out A. thaliana loci, RC pairs, orthogroups).
+- **Test species (Z. mays, S. lycopersicum) validation evidence**: any ONT and **any PacBio instrument generation** (RS II, Sequel, Sequel II, Revio) provided the reference-independence rule of §3 holds (Wang 2016 remains excluded because it fed the RefGen_V4 annotation). Restored to tier 1: M-HQ18 (Wang 2018 HQ isoforms, PRJEB22122) and M-FLNC (Wang 2020 FLNC, Zenodo 2611319). Test-species long reads are never used for training (they are withheld species).
+- **A. thaliana (training species and replication-validation species)**: datasets are designated by role before download. **Validation-only, never in training**: A-ONT1 (FLIC, PRJNA1087576) and A-HiFi (Zhong 2025, PRJEB77203 → ccs). **Training-eligible**: A-ONT2 (Cui 2020, PRJNA594286 ONT runs) and other training-species long reads. Validation of A. thaliana additions uses only the validation-only sets.
+- The PacBio data-type classification rule of A12 (submitted file names, read names, per-cell read count; not mean length) remains.
+
+| Date | Analysis state | Change | Reason |
+|---|---|---|---|
+| 2026-09-01 | no long-read download or alignment run | v1.5: A14 — training uses training-species ONT + Sequel II+ PacBio + ESTs + proteins; test-species validation accepts any PacBio generation; A. thaliana validation sets designated and excluded from training | author decision, correcting v1.3/v1.4 scope |
