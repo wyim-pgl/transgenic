@@ -50,6 +50,21 @@ DuckDB reads from scratch (parallel file system); copy the DB once, verify its s
 All jobs use `apptainer exec --nv --bind $SCRATCH/transgenic:/work`. Set `NCCL_SOCKET_IFNAME`
 and `OMP_NUM_THREADS` as in the templates; on DeltaAI add `--gpus-per-node=4 --gpu-bind=closest`.
 
+## 4a. Per-epoch off-site copy (rsync)
+`sync_watch.sh` copies every completed `epoch_NN/` directory once (marker in `.synced/`), re-copies
+`train.err`/`*.json`/`best` every 5 min, and can prune old local epochs after a verified copy
+(`KEEP_LOCAL=3`). `train_b5.slurm` starts it in the background when `SYNC_DEST` is set and stops it
+after training. Because pronghorn logins use MFA, either (a) create a dedicated ssh key on the cluster
+and authorise it on the destination (`RSYNC_SSH="ssh -i ~/.ssh/id_ed25519_sync"`), or (b) run the
+watcher in **pull mode** from the destination host instead:
+```bash
+SRC=wyim@dt-login01.delta.ncsa.illinois.edu:/scratch/<proj>/transgenic/runs/seed456 \
+  deploy/deltaai/sync_watch.sh pull /data/gpfs/assoc/pgl/data/Transgenic/runs/seed456
+```
+Optimizer states are skipped by default (`SYNC_OPTIMIZER=0`; ~3× the weight size) — resume happens
+on the cluster from its own scratch copy. Checkpoint layout (`epoch_NN.tmp` → rename to `epoch_NN`,
+`best` symlink, `TRAINING_DONE` marker) is part of the #17 trainer change.
+
 ## 5. Order
 1. Account active → `build.sh` → `apptainer exec --nv transgenic-ngc.sif python -c "import torch;print(torch.cuda.is_available(), torch.cuda.get_device_name())"`.
 2. `pytest -q tests` inside the container (70 tests) → record versions in #18.
