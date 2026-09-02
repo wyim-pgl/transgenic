@@ -19,13 +19,14 @@ from ..utils import gsf_grammar
 
 
 class GSFGrammarLogitsProcessor(LogitsProcessor):
-    def __init__(self, tokenizer, window_lens: Sequence[int], num_beams: int = 1, v2: bool = True):
+    def __init__(self, tokenizer, window_lens: Sequence[int], num_beams: int = 1, v2: bool = True, v3: bool = False):
         self.tok = tokenizer
         self.id2tok = {i: t for t, i in tokenizer.get_vocab().items()}
         self.tok2id = {t: i for i, t in self.id2tok.items()}
         self.window_lens = list(window_lens)
         self.num_beams = num_beams
         self.v2 = v2
+        self.v3 = v3
         self.stats = {"steps": 0, "masked_positions": 0}
 
     def _row_window(self, row: int) -> int:
@@ -36,7 +37,7 @@ class GSFGrammarLogitsProcessor(LogitsProcessor):
         mask = torch.full_like(scores, float("-inf"))
         for row in range(input_ids.shape[0]):
             tokens = [self.id2tok.get(int(i), "<unk>") for i in input_ids[row].tolist()]
-            allowed = gsf_grammar.allowed_next(tokens, self._row_window(row), v2=self.v2)
+            allowed = gsf_grammar.allowed_next(tokens, self._row_window(row), v2=self.v2, v3=self.v3)
             if not allowed:                      # should not happen; fall back to closing the sequence
                 allowed = {"</s>"}
             ids = [self.tok2id[t] for t in allowed if t in self.tok2id]

@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.15; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.16; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -322,6 +322,15 @@ Author decisions: (1) the retrained model is released as a **new version**, so B
 - Consequences stated prospectively: the comparison "published checkpoint vs B5" now confounds leakage removal with the context change; the manuscript reports B5 as the new version and lists the published-recipe result as the legacy comparator. An optional parity control (`sym6144-v1`, published recipe on the leakage-controlled DB, one seed) is run **only if** ACCESS credits remain after the three new-version seeds; it is a supplementary row, not a headline.
 - Everything else in A18.6 (seed 123 primary; 456/789 confirmatory; best validation loss, patience 3; ≤ 22 epochs; effective batch 96) is unchanged. #18 benchmarks the three tiers separately and records tokens/s and peak memory per tier before the seeds start.
 
+## A26. Amendment v1.16 (2026-09-02; before the B5 database build) — whole-window labels: every complete gene in a window (GSF v3)
+
+Author decision: the new version is trained on **genome tiles** whose label contains **every gene fully inside the tile** (docs/gsf_spec_v1.md §1b), which makes prompt-free (de novo) whole-genome inference a native mode instead of a per-locus completion. Rules:
+- Tiles of 30,720 / 61,440 / 129,024 nt per contig with a seeded offset per tier (training builds); a gene is labelled only in tiles that contain it completely; edge-crossing genes are excluded and counted. Inference uses overlapping tiles and keeps a gene from the tile in which it is complete (stitching rule to be fixed in the inference amendment before B7).
+- Label grammar: gene blocks in coordinate order joined by `<gene>`; `<empty>` for tiles without a complete gene (10 % of empty tiles kept, seeded). Vocabulary v3 (290 tokens); label cap 4,096 tokens; 64 genes per window; decoder positions 4,096.
+- Leakage: a tile inherits the most restrictive split of its member genes (test > valid > train) and strict held-out membership; `window_genes` records membership so that no test-orthogroup gene sequence is ever labelled in a train tile. Tiles containing a hard-flagged gene (A22) carry `train_weight 0`.
+- Grammar-constrained decoding (A24) is extended: `<empty>` only as the first token, `<gene>` only after a complete block, numbering and strand reset per block, blocks non-overlapping and ordered.
+- Consequences stated prospectively: this is a further departure from the published recipe (A25); the published-recipe row is a legacy comparator only. The per-locus prompted mode remains available for the additions/B1 analyses by passing single-gene windows.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
@@ -470,3 +479,4 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 | 2026-09-02 | no evidence scoring run | v1.13: A23 evidence-based primary isoform (full-chain units, bottleneck, CDS length, canonical tie-break; uncalled when no full-chain support) as a secondary outcome | author question on using EST chain connectivity to identify the primary isoform |
 | 2026-09-02 | no B5-era inference run | v1.14: A24 grammar-constrained decoding pre-registered as the primary inference arm for the B5 model, unconstrained arm as parity control | author concern about autoregressive coordinate/order/strand/phase hallucinations |
 | 2026-09-02 | no B5 database built | v1.15: A25 B5 = new-version training with variable context tiers 30,720/61,440/129,024 (tier6144-v2), all seeds on NSF ACCESS, published-recipe parity control optional/supplementary | author decision: variable context for the new release; use ACCESS |
+| 2026-09-02 | no B5 database built | v1.16: A26 whole-window labels (GSF v3: <gene>/<empty>, tiles per tier, most-restrictive tile split, edge exclusion, caps 64 genes / 4,096 tokens, vocab 290) | author decision: label every gene inside the window |

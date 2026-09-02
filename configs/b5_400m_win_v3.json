@@ -1,0 +1,61 @@
+{
+  "name": "b5_400m_win_v3",
+  "recipe_source": "train/train_HyenaTransgenic.py @ d013418 (released 400M checkpoints); manuscript Methods",
+  "encoder_model": "LongSafari/hyenadna-large-1m-seqlen-hf",
+  "d_model_encoder": 768,
+  "d_model_decoder": 1536,
+  "encoder_layers": 12,
+  "decoder_layers": 12,
+  "encoder_n_layer": 12,
+  "encoder_attention_heads": 6,
+  "decoder_attention_heads": 6,
+  "attention_window": [
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024
+  ],
+  "dropout": 0.1,
+  "do_segment": false,
+  "optimizer": "AdamW",
+  "lr": 5e-05,
+  "weight_decay": 0.02,
+  "effective_batch_size": 96,
+  "lr_schedule": "linear warm-up 5% of total steps, then linear decay",
+  "max_epochs": 22,
+  "checkpoint_rule": "minimum mean validation loss; patience 3 epochs; compare loss to loss (not perplexity)",
+  "split_source": "data/splits/b5_orthogroup_split_v1.tsv (no random_split)",
+  "seeds": {
+    "primary": 123,
+    "confirmatory": [
+      456,
+      789
+    ]
+  },
+  "species_manifest": "data/manifests/b5_species_v1.tsv",
+  "gsf_spec": "docs/gsf_spec_v1.md",
+  "notes": "New-version recipe (protocol A26, 2026-09-02): genome tiles of 30,720 / 61,440 / 129,024 nt labelled with every complete gene (GSF v3: gene blocks joined by <gene>, <empty> for windows without a complete gene). Same architecture/optimisation as the published 400M recipe except vocab 290, decoder positions and label cap 4,096, encoder input up to 129,024 nt. All seeds on NSF ACCESS (A25).",
+  "window_policy": "tile6144-v3",
+  "window_tiers": [
+    30720,
+    61440,
+    129024
+  ],
+  "max_encoder_seqlen": 129024,
+  "tier_up_prob": 0.3,
+  "min_flank": 1000,
+  "gff_vocab_version": "v3",
+  "vocab_size": 290,
+  "max_decoder_position_embeddings": 4096,
+  "max_label_tokens": 4096,
+  "empty_keep_prob": 0.1,
+  "genes_per_window_cap": 64
+}

@@ -24,8 +24,9 @@ def main():
     ap.add_argument("--only", nargs="*", help="species_id subset (smoke build)")
     ap.add_argument("--overwrite", action="store_true")
     ap.add_argument("--qc-flags", default=None, help="GeenuFF flags TSV from revision/scripts/62_geenuff_qc.py (protocol A22)")
-    ap.add_argument("--window-policy", choices=["sym6144-v1", "tier6144-v2"], default="tier6144-v2",
-                    help="sym6144-v1 = published recipe (<= 49,152); tier6144-v2 = variable context 30,720 / 61,440 / 129,024 (A25)")
+    ap.add_argument("--window-policy", choices=["sym6144-v1", "tier6144-v2", "tile6144-v3"], default="tile6144-v3",
+                    help="sym6144-v1 = published recipe; tier6144-v2 = gene-centred variable context (A25); "
+                         "tile6144-v3 = genome tiles of 30,720 / 61,440 / 129,024 labelled with every complete gene (A26)")
     ap.add_argument("--tier-up-prob", type=float, default=0.3, help="A25 augmentation: probability of the next larger tier (train mode)")
     a = ap.parse_args()
     if os.path.exists(a.db):

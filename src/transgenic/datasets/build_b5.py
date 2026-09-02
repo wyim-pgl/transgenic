@@ -205,8 +205,11 @@ def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[T
 def _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, add_extra, seed, max_len, clean, mode, git_commit,
                         fasta_sha, gff_sha, allow_missing_split, qc_flags, genome, rng, inserted, rc_rows, rejected,
                         window_policy=gc.WINDOW_POLICY, tier_up_prob=0.0):
-    if window_policy not in (gc.WINDOW_POLICY, gc.WINDOW_POLICY_V2):
+    if window_policy not in (gc.WINDOW_POLICY, gc.WINDOW_POLICY_V2, gc.WINDOW_POLICY_V3):
         raise ValueError(f"unknown window policy {window_policy}")
+    if window_policy == gc.WINDOW_POLICY_V3:
+        return _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc, seed, clean, mode, git_commit,
+                                    fasta_sha, gff_sha, allow_missing_split, qc_flags, genome, rng, rejected, tier_up_prob)
     if window_policy == gc.WINDOW_POLICY_V2 and max_len < gc.MAX_WINDOW_V2:
         max_len = gc.MAX_WINDOW_V2
     cols = ", ".join(LEGACY_COLUMNS + NEW_COLUMNS)
@@ -349,19 +352,21 @@ def validate_b5_database(db: str, excluded_species: Iterable[str] = ("Zmays",), 
             violations.append(f"{gm}: missing start/fin/sequence")
             continue
         L = fn - st
-        cap = gc.MAX_WINDOW_V2 if pol == gc.WINDOW_POLICY_V2 else gc.MAX_WINDOW
+        cap = gc.MAX_WINDOW_V2 if pol in (gc.WINDOW_POLICY_V2, gc.WINDOW_POLICY_V3) else gc.MAX_WINDOW
         if L % gc.WINDOW_UNIT or L > cap:
             violations.append(f"{gm}: window {L} is not an allowed multiple of {gc.WINDOW_UNIT} (policy {pol})")
         if seq_len != L:
             violations.append(f"{gm}: sequence length {seq_len} != window {L}")
-        if gsf is not None and tok != gc.count_tokens_v2(gsf):
-            violations.append(f"{gm}: stored token count {tok} != recomputed {gc.count_tokens_v2(gsf)}")
+        expected_tok = (gc.count_tokens_v3(gsf) if pol == gc.WINDOW_POLICY_V3 else gc.count_tokens_v2(gsf)) if gsf is not None else None
+        if gsf is not None and tok != expected_tok:
+            violations.append(f"{gm}: stored token count {tok} != recomputed {expected_tok}")
         if sp is None or gid is None or ov != gc.ORDERING_VERSION:
             violations.append(f"{gm}: missing species/gene id or ordering_version")
-    pairs = con.sql("SELECT f.geneModel, f.gff, r.gff, f.fin - f.start FROM geneList f JOIN geneList r ON r.species_id = f.species_id AND r.gene_id = f.gene_id "
-                    "AND r.is_rc AND NOT f.is_rc").fetchall()
-    for gm, fg, rg, L in pairs:
-        if fg is not None and gc.reverse_complement(fg, L) != rg:
+    pairs = con.sql("SELECT f.geneModel, f.gff, r.gff, f.fin - f.start, f.window_policy FROM geneList f JOIN geneList r ON r.species_id = f.species_id "
+                    "AND r.gene_id = f.gene_id AND r.is_rc AND NOT f.is_rc").fetchall()
+    for gm, fg, rg, L, pol in pairs:
+        rcf = gc.reverse_complement_v3 if pol == gc.WINDOW_POLICY_V3 else gc.reverse_complement
+        if fg is not None and rcf(fg, L) != rg:
             violations.append(f"{gm}: rc row is not the reverse complement of the forward row")
     dup = con.sql("SELECT species_id, gene_id, is_rc, count(*) c FROM geneList GROUP BY 1,2,3 HAVING c > 1").fetchall()
     for sp, gid, rcflag, c in dup:
@@ -377,3 +382,106 @@ def validate_b5_database(db: str, excluded_species: Iterable[str] = ("Zmays",), 
     per_species = {k: v for k, v in con.sql("SELECT species_id, count(*) FROM geneList GROUP BY species_id").fetchall()}
     con.close()
     return {"violations": violations, "rows_by_split": counts, "rows_by_species": per_species, "rows_loss_masked": masked, "ok": not violations}
+
+
+def _tile_split(splits: List[Optional[str]], strict: bool) -> Optional[str]:
+    """A window's split is the most restrictive split of the genes it contains (test > valid > train); strict held-out -> test."""
+    if strict or "test" in splits:
+        return "test"
+    if "valid" in splits:
+        return "valid"
+    if splits:
+        return "train"
+    return "train"  # empty windows carry no gene: usable for training the <empty> label
+
+
+def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc, seed, clean, mode, git_commit, fasta_sha, gff_sha,
+                         allow_missing_split, qc_flags, genome, rng, rejected, tier_up_prob):
+    """tile6144-v3 (protocol A26): every tier tiles each contig with a seeded offset; the label of a tile is the canonical
+    concatenation of all genes fully inside it (or <empty>). Edge-crossing genes are excluded and counted; empty tiles are kept
+    with EMPTY_KEEP_PROB; a tile containing a hard-flagged (A22) gene gets train_weight 0; the tile split is the most
+    restrictive split among its genes."""
+    cols = ", ".join(LEGACY_COLUMNS + NEW_COLUMNS)
+    placeholders = ", ".join("?" for _ in LEGACY_COLUMNS + NEW_COLUMNS)
+    sql = f"INSERT INTO geneList (rn, {cols}) VALUES (nextval('row_id'), {placeholders})"
+    con.sql("CREATE TABLE IF NOT EXISTS window_genes (species_id VARCHAR, window_id VARCHAR, gene_id VARCHAR, is_rc BOOLEAN)")
+    by_chrom: Dict[str, List[gc.Gene]] = {}
+    gene_meta: Dict[str, Dict] = {}
+    with open(gff) as fh:
+        for gene in gc.parse_gff3(fh, species_code=gc.species_code(species_id)):
+            key = (species_id, gene.gene_id)
+            if key not in split_rows and not allow_missing_split:
+                raise gc.SplitError(f"{species_id}:{gene.gene_id} has no split entry")
+            srow = split_rows.get(key, {"split": None, "orthogroup_id": None, "strict_holdout": ""})
+            con.execute("INSERT INTO gene_key_map VALUES (?,?,?,?,?,?,?)", [species_id, gene.gene_id, gene.gene_id_original, gene.name_original,
+                                                                          gene.chrom, gene.start0, gene.end0])
+            train_weight, qc_list = 1.0, []
+            if qc_flags and key in qc_flags:
+                train_weight, keep_tx, qc_list = loss_mask_decision(qc_flags[key], gene.transcripts.keys())
+                if train_weight > 0 and len(keep_tx) < len(gene.transcripts):
+                    gene = gc.Gene(gene.gene_id, gene.chrom, gene.strand, gene.start0, gene.end0, {t: gene.transcripts[t] for t in keep_tx},
+                                   gene.gene_id_original, gene.name_original)
+            if gene.chrom not in genome:
+                rejected.append({"gene_id": gene.gene_id, "reason": f"chromosome {gene.chrom} missing from FASTA"})
+                continue
+            try:
+                gc.check_caps(gc.gene_to_gsf(gene, gene.start0))
+            except gc.CapError as e:
+                rejected.append({"gene_id": gene.gene_id, "reason": str(e)})
+                continue
+            by_chrom.setdefault(gene.chrom, []).append(gene)
+            gene_meta[gene.gene_id] = {"split": srow["split"], "strict": str(srow.get("strict_holdout", "")).lower() in ("1", "true", "yes"),
+                                       "weight": train_weight, "qc": qc_list}
+    inserted = rc_rows = 0
+    for chrom, genes in by_chrom.items():
+        chrom_len = len(genome[chrom])
+        for tier in gc.WINDOW_TIERS:
+            offset = rng.randrange(tier) if mode == "train" else 0
+            for ws, we in gc.tile_windows(chrom_len, tier, offset):
+                inside, partial = gc.genes_in_window(genes, ws, we)
+                if not inside and rng.random() > gc.EMPTY_KEEP_PROB:
+                    continue
+                gsf = gc.window_to_gsf_v3(inside, ws) if mode == "train" else None
+                L = we - ws
+                if gsf is not None:
+                    try:
+                        gc.check_caps_v3(gsf, window_len=L)
+                    except gc.CapError as e:
+                        rejected.append({"gene_id": f"{chrom}:{ws}-{we}", "reason": f"window {e}"})
+                        continue
+                seq = genome[chrom][ws:we]
+                if len(seq) < L:
+                    seq = seq + "N" * (L - len(seq))
+                weight = 0.0 if any(gene_meta[g.gene_id]["weight"] == 0 for g in inside) else 1.0
+                split = _tile_split([gene_meta[g.gene_id]["split"] for g in inside], any(gene_meta[g.gene_id]["strict"] for g in inside))
+                if allow_missing_split and not inside:
+                    split = None
+                wid = f"{species_id}:{chrom}:{ws}-{we}"
+                qc = ";".join(sorted({f for g in inside for f in gene_meta[g.gene_id]["qc"]})) or None
+                if partial:
+                    qc = (qc + ";" if qc else "") + f"edge_partial={partial}"
+                common = [species_id, wid, None, split, any(gene_meta[g.gene_id]["strict"] for g in inside), False, gc.ORDERING_VERSION,
+                          gc.BUILD_VERSION, fasta_sha, gff_sha, split_sha, gc.WINDOW_POLICY_V3,
+                          gc.count_tokens_v3(gsf) if gsf else None, we > chrom_len, sum(len(g.transcripts) for g in inside), weight, qc, wid]
+                con.execute(sql, [wid, ws, we, "+", chrom, seq, gsf, 0, 0, 0, 0] + common)
+                con.executemany("INSERT INTO window_genes VALUES (?,?,?,?)", [[species_id, wid, g.gene_id, False] for g in inside]) if inside else None
+                inserted += 1
+                if gsf is not None and inside and (rc == "all" or (rc == "isoform-only" and any(len(g.transcripts) >= 2 for g in inside))):
+                    rgsf = gc.reverse_complement_v3(gsf, L)
+                    rcc = list(common); rcc[5] = True; rcc[12] = gc.count_tokens_v3(rgsf)
+                    con.execute(sql, [wid + "-rc", ws, we, "-", chrom, revcomp(seq), rgsf, 0, 0, 0, 0] + rcc)
+                    con.executemany("INSERT INTO window_genes VALUES (?,?,?,?)", [[species_id, wid, g.gene_id, True] for g in inside])
+                    inserted += 1; rc_rows += 1
+    con.sql("CREATE TABLE IF NOT EXISTS rejected_records (species_id VARCHAR, gene_id VARCHAR, reason VARCHAR)")
+    if rejected:
+        con.executemany("INSERT INTO rejected_records VALUES (?,?,?)", [[species_id, r["gene_id"], r["reason"]] for r in rejected])
+    reasons: Dict[str, int] = {}
+    for r in rejected:
+        k = r["reason"].split(":")[0].split(" >")[0]
+        reasons[k] = reasons.get(k, 0) + 1
+    con.execute("INSERT INTO build_manifest VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                [species_id, os.path.abspath(fasta), fasta_sha, os.path.abspath(gff), gff_sha, split_sha, rc, inserted, rc_rows,
+                 len(rejected), json.dumps(reasons), gc.BUILD_VERSION, gc.ORDERING_VERSION, gc.WINDOW_POLICY_V3, git_commit,
+                 time.strftime("%Y-%m-%dT%H:%M:%S"), duckdb.__version__])
+    con.execute("COMMIT")
+    return {"species_id": species_id, "rows": inserted, "rc_rows": rc_rows, "rejected": rejected}

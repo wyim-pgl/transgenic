@@ -209,3 +209,28 @@ def test_tiered_policy_build_and_validate(tmp_path, b5):
     assert all(r[1] == 30720 and r[2] == "tier6144-v2" and r[3] == 30720 for r in rows)   # contigs are 20-30 kb -> N-padded
     con.close()
     assert b5.validate_b5_database(str(db))["ok"]
+
+
+def test_tile_policy_v3_build(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    flags = tmp_path / "flags.tsv"
+    flags.write_text("species_id\tgene_id\ttranscript_id\tflag\tstart\tend\nAthaliana\tg2\t\tempty_super_locus\t0\t0\n")
+    db = tmp_path / "v3.db"
+    b5.build_b5_database(str(db), str(manifest), str(split), rc="all", verify_md5=False, window_policy="tile6144-v3", qc_flags_path=str(flags))
+    con = duckdb.connect(str(db), read_only=True)
+    rows = con.sql("SELECT geneModel, split, train_weight, gff, qc_flags, window_policy, fin - start FROM geneList WHERE NOT is_rc").fetchall()
+    assert rows and all(r[5] == "tile6144-v3" and r[6] in (30720, 61440, 129024) for r in rows)
+    labels = {r[0]: r[3] for r in rows}
+    # Chr1 tile at every tier holds g1 and g2 (both < 6 kb): label has two gene blocks; g2 is hard-flagged -> tile masked
+    chr1 = [r for r in rows if ":Chr1:" in r[0]]
+    assert chr1 and all(r[3].count(b5.gc.GENE_SEP) == 1 and r[2] == 0.0 for r in chr1)
+    # split of a Chr1 tile: g1 train + g2 valid -> valid (most restrictive)
+    assert all(r[1] == "valid" for r in chr1)
+    # contig '2' tiles: glast (test, strict) inside -> test; gbig rejected at gene level (151 CDS) and absent from labels
+    c2 = [r for r in rows if r[0].startswith("Athaliana:2:")]
+    assert c2 and all(r[1] == "test" for r in c2) and all("CDS150" not in r[3] for r in c2)
+    assert con.sql("SELECT count(*) FROM window_genes").fetchone()[0] > 0
+    assert con.sql("SELECT count(*) FROM rejected_records WHERE gene_id = 'gbig'").fetchone()[0] == 1
+    con.close()
+    rep = b5.validate_b5_database(str(db))
+    assert rep["ok"], rep["violations"]

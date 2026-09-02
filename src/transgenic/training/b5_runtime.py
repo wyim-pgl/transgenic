@@ -32,6 +32,8 @@ def load_b5_config(path: str) -> Dict:
     cfg.setdefault("lr_warmup_fraction", 0.05)
     cfg.setdefault("encoder_n_layer", cfg["encoder_layers"])
     cfg.setdefault("window_policy", "sym6144-v1")
+    cfg.setdefault("gff_vocab_version", "v2")
+    cfg.setdefault("max_label_tokens", 2048)
     cfg.setdefault("max_encoder_seqlen", 49152 if cfg["window_policy"] == "sym6144-v1" else 129024)
     return cfg
 
@@ -45,6 +47,7 @@ def model_kwargs(cfg: Dict) -> Dict:
         "attention_window": list(cfg["attention_window"]), "dropout": cfg["dropout"],
         "encoder_attention_heads": cfg["encoder_attention_heads"], "decoder_attention_heads": cfg["decoder_attention_heads"],
         "encoder_model": cfg["encoder_model"], "max_encoder_seqlen": int(cfg.get("max_encoder_seqlen", 49152)),
+        "vocab_size": int(cfg.get("vocab_size", 288)), "max_decoder_position_embeddings": int(cfg.get("max_decoder_position_embeddings", 2048)),
     }
 
 

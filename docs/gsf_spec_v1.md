@@ -30,6 +30,16 @@ with different amounts of context. Genes that do not fit the largest tier with f
 window-relative; the `window_policy` column records the policy per row and the validator applies the matching cap.
 `sym6144-v1` (≤ 49,152, symmetric padding) remains available for the parity control.
 
+### 1b. Window policy `tile6144-v3` and GSF v3 (author decision 2026-09-02, protocol A26)
+The new-version database labels **every complete gene inside a window**. Each tier (30,720 / 61,440 / 129,024) tiles every contig
+with a seeded random offset (training builds); the label of a tile is the canonical GSF blocks of all genes fully inside it, in
+coordinate order, joined by the `<gene>` token; a tile with no complete gene is labelled `<empty>` and only 10 % of such tiles are
+kept. Genes crossing a tile edge are excluded from that tile's label and counted (`edge_partial=n` in `qc_flags`). Feature numbering
+and strand consistency restart per gene block; gene blocks must not overlap. Caps: 64 genes per window, 4,096 v3 tokens
+(`<s>` + blocks + separators + `</s>`); decoder positions 4,096; vocabulary v3 = v2 + `<gene>` + `<empty>` (290 tokens). A tile's
+split is the most restrictive split of its genes (test > valid > train; strict held-out → test); a tile containing a hard-flagged
+gene (A22) has `train_weight 0`. `window_genes` maps tiles to member genes. RC of a tile reverses every block and re-sorts.
+
 ## 2. Feature and transcript grammar
 `<features> > <transcripts>` where a feature is `start|TYPEn|end|strand|phase`, TYPE ∈ {CDS, five_prime_UTR, three_prime_UTR}, `n` is the feature number by first use after canonical ordering (§3), phase ∈ {A, B, C} = {0, 1, 2} for CDS and `.` for UTRs. Transcripts are `|`-joined feature names separated by `;`. Features shared by several transcripts appear once in the feature list.
 

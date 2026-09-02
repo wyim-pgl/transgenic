@@ -40,10 +40,32 @@ class State:
     transcripts: List[List[str]] = field(default_factory=list)
     violations: List[str] = field(default_factory=list)
     v1: bool = False
+    gene_index: int = 0
+    prev_gene_end: int = 0               # v3: next gene's features must start at or after the previous gene's end
+    empty: bool = False
+
+
+def _new_gene(st: State) -> State:
+    """v3 <gene>: close the current block and start a fresh one (feature numbering and strand reset)."""
+    st.prev_gene_end = max([e for (_s, e, _t) in st.features.values()] + [st.prev_gene_end])
+    st.features, st.counts = {}, {t: 0 for t in FEATURE_TYPES}
+    st.strand, st.last_start, st.planned_tx, st.transcripts = None, st.prev_gene_end, None, []
+    st.gene_index += 1
+    st.stage, st.num, st.cur = "start", "", {}
+    return st
 
 
 def _advance(st: State, tok: str) -> State:
     """Apply one emitted token (assumed allowed) to the state."""
+    if tok == "<empty>":
+        st.empty = True
+        st.stage = "empty"
+        return st
+    if st.stage == "empty":
+        st.stage = "done"
+        return st
+    if tok == "<gene>":
+        return _new_gene(st)
     if st.stage == "start":
         if tok in DIGITS:
             st.num += tok
@@ -109,12 +131,22 @@ def _next_names(st: State) -> Set[str]:
     return {f"{t}{st.counts[t] + 1}" for t in FEATURE_TYPES if st.counts[t] < CAPS[t]}
 
 
-def allowed_next(tokens: Sequence[str], window_len: int, v2: bool = True) -> Set[str]:
-    """Token strings allowed after `tokens` (which start with <s>)."""
+def allowed_next(tokens: Sequence[str], window_len: int, v2: bool = True, v3: bool = False) -> Set[str]:
+    """Token strings allowed after `tokens` (which start with <s>). v3 adds <gene>/<empty> (protocol A26)."""
     st = replay(tokens)
     max_digits = len(str(window_len))
     if st.stage == "done":
         return {"<pad>"}
+    if st.stage == "empty":
+        return {"</s>"}
+    if v3 and st.gene_index == 0 and st.stage == "start" and st.num == "" and not st.features:
+        base = allowed_next_block(st, window_len, v2, v3)
+        return base | {"<empty>"}
+    return allowed_next_block(st, window_len, v2, v3)
+
+
+def allowed_next_block(st: State, window_len: int, v2: bool = True, v3: bool = False) -> Set[str]:
+    max_digits = len(str(window_len))
     if st.stage == "start":
         out: Set[str] = set()
         cand = st.num
@@ -182,6 +214,8 @@ def allowed_next(tokens: Sequence[str], window_len: int, v2: bool = True) -> Set
                     out.add("</s>")
             if target is None or n_tx == target:
                 out.add("</s>")
+                if v3 and st.gene_index + 1 < 64:
+                    out.add("<gene>")
         return out
     return set()
 

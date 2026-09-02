@@ -28,6 +28,11 @@ PHASE_TO_LETTER = {0: "A", 1: "B", 2: "C"}
 LETTER_TO_PHASE = {v: k for k, v in PHASE_TO_LETTER.items()}
 FEATURE_TYPES = ("five_prime_UTR", "CDS", "three_prime_UTR")
 RC_MODES = ("none", "all", "isoform-only")
+GENE_SEP = "<gene>"          # v3: separates gene blocks inside one window label
+EMPTY_LABEL = "<empty>"      # v3: window without any complete gene
+CAPS_V3 = {"tokens": 4096, "genes": 64}
+WINDOW_POLICY_V3 = "tile6144-v3"
+EMPTY_KEEP_PROB = 0.1
 
 SEG_CLASSES = ["protein_coding_gene", "lncRNA", "exon", "intron", "splice_donor", "splice_acceptor", "5UTR", "3UTR",
                "CTCF-bound", "polyA_signal", "enhancer_Tissue_specific", "enhancer_Tissue_invariant",
@@ -513,3 +518,90 @@ def add_junction_evidence(labels, weights, donor0: int, acceptor0: int, weight: 
     d, a, i = _CLASS["splice_donor"], _CLASS["splice_acceptor"], _CLASS["intron"]
     cells = [(donor0, d, weight), (acceptor0, a, weight)] + [(p, i, weight) for p in range(donor0, acceptor0 + 1)]
     add_evidence(labels, weights, cells)
+
+
+# ----------------------------------------------------------------------------------------------
+# GSF v3: every complete gene inside a window (author decision 2026-09-02, protocol A26)
+# ----------------------------------------------------------------------------------------------
+def genes_in_window(genes: Sequence[Gene], ws: int, we: int) -> Tuple[List[Gene], int]:
+    """Genes fully inside [ws, we) sorted by start; second value = genes that cross a window edge (excluded)."""
+    inside = [g for g in genes if g.start0 >= ws and g.end0 <= we]
+    partial = sum(1 for g in genes if g.end0 > ws and g.start0 < we and not (g.start0 >= ws and g.end0 <= we))
+    return sorted(inside, key=lambda g: (g.start0, g.end0)), partial
+
+
+def window_to_gsf_v3(genes: Sequence[Gene], ws: int) -> str:
+    """Concatenate canonical per-gene GSF blocks in coordinate order; empty window -> EMPTY_LABEL."""
+    blocks = []
+    for g in sorted(genes, key=lambda g: (g.start0, g.end0)):
+        if not any(g.transcripts.values()):
+            continue
+        blocks.append(gene_to_gsf(g, ws))
+    return GENE_SEP.join(blocks) if blocks else EMPTY_LABEL
+
+
+def split_v3(gsf: str) -> List[str]:
+    return [] if gsf == EMPTY_LABEL else gsf.split(GENE_SEP)
+
+
+def canonicalize_v3(gsf: str) -> str:
+    blocks = split_v3(gsf)
+    if not blocks:
+        return EMPTY_LABEL
+    keyed = []
+    for b in blocks:
+        feats, _, _ = _parse(b)
+        keyed.append((min(f[1] for f in feats.values()), max(f[2] for f in feats.values()), canonicalize(b)))
+    keyed.sort(key=lambda t: (t[0], t[1], t[2]))
+    return GENE_SEP.join(k[2] for k in keyed)
+
+
+def reverse_complement_v3(gsf: str, window_len: int) -> str:
+    blocks = split_v3(gsf)
+    if not blocks:
+        return EMPTY_LABEL
+    return canonicalize_v3(GENE_SEP.join(reverse_complement(b, window_len) for b in blocks))
+
+
+def count_tokens_v3(gsf: str) -> int:
+    blocks = split_v3(gsf)
+    if not blocks:
+        return 3  # <s> <empty> </s>
+    # each block counted as v2 minus its own <s>/</s>, joined by <gene>, plus <s> and </s>
+    return 2 + sum(count_tokens_v2(b) - 2 for b in blocks) + (len(blocks) - 1)
+
+
+def check_caps_v3(gsf: str, window_len: Optional[int] = None) -> None:
+    blocks = split_v3(gsf)
+    if len(blocks) > CAPS_V3["genes"]:
+        raise CapError(f"genes per window {len(blocks)} > {CAPS_V3['genes']}")
+    prev_end = -1
+    for b in blocks:
+        check_caps(b, window_len=None)
+        feats, _, _ = _parse(b)
+        gs, ge = min(f[1] for f in feats.values()), max(f[2] for f in feats.values())
+        if gs < prev_end:
+            raise CapError("overlapping genes in one window label")
+        prev_end = ge
+        if window_len is not None and ge > window_len:
+            raise CapError(f"gene extends beyond the window ({ge} > {window_len})")
+    n = count_tokens_v3(gsf)
+    if n > CAPS_V3["tokens"]:
+        raise CapError(f"v3 tokens {n} > {CAPS_V3['tokens']}")
+    if window_len is not None and window_len > MAX_WINDOW_V2:
+        raise CapError(f"window {window_len} > {MAX_WINDOW_V2}")
+
+
+def tile_windows(chrom_len: int, tier: int, offset: int = 0) -> List[Tuple[int, int]]:
+    """Consecutive tiles of one tier starting at `offset` (0 <= offset < tier); the last tile is shifted back so it
+    keeps the full tier length (or starts at 0 when the contig is shorter than the tier)."""
+    tiles = []
+    ws = offset
+    while ws + tier <= chrom_len:
+        tiles.append((ws, ws + tier))
+        ws += tier
+    if not tiles or tiles[-1][1] < chrom_len:
+        start = max(0, chrom_len - tier)
+        if not tiles or start > tiles[-1][0]:
+            tiles.append((start, start + tier))
+    return tiles

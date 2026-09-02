@@ -476,8 +476,9 @@ if __name__ == '__main__':
         patience = args.patience or int(cfg.get("patience", 3))
         # membership comes from the frozen split column; the query also refuses excluded species and NULL splits
         split_row_numbers(args.db, "train"); split_row_numbers(args.db, "valid")
-        train_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="train")
-        eval_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="valid")
+        vv = cfg.get("gff_vocab_version", "v2")
+        train_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="train", gff_vocab_version=vv)
+        eval_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="valid", gff_vocab_version=vv)
         print(f"B5 split sizes: train={len(train_data)} valid={len(eval_data)} seed={args.seed} acc={acc} max_epochs={max_epochs} patience={patience}", file=sys.stderr)
         layout = CheckpointLayout(args.output_dir)
         resume_ckpt = layout.resume_dir(args.resume)

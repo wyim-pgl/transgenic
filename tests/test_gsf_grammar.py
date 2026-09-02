@@ -70,3 +70,17 @@ def test_validate_gsf_reports_each_violation_class():
     v = "\n".join(g.validate_gsf(bad, W))
     for key in ("reversed", "not coordinate-sorted", "phase", "mixed strands", "duplicate", "undefined", "repeated", "multiple of 3"):
         assert key in v, key
+
+
+def test_v3_gene_separator_and_empty_label():
+    assert "<empty>" in g.allowed_next(toks(""), W, v3=True) and "<empty>" not in g.allowed_next(toks(""), W)
+    assert g.allowed_next(toks("<empty>"), W, v3=True) == {"</s>"}
+    base = "1 0 0 CDS1 2 0 0 + A <tx1> > CDS1"
+    a = g.allowed_next(toks(base), W, v3=True)
+    assert {"</s>", "<gene>"} <= a
+    a = g.allowed_next(toks(base + " <gene>"), W, v3=True)
+    assert "<empty>" not in a and "0" not in a and "2" in a     # next gene starts at/after 200: a lone 0 is impossible, 1xxx is still possible
+    a = g.allowed_next(toks(base + " <gene> 3 0 0"), W, v3=True)
+    assert "CDS1" in a                                             # numbering restarts per gene
+    a = g.allowed_next(toks(base + " <gene> 3 0 0 CDS1 4 0 0"), W, v3=True)
+    assert {"+", "-"} <= a                                         # strand is free again for the new gene

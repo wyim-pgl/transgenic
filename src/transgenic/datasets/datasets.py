@@ -189,10 +189,11 @@ class isoformDataHyena(Dataset):
 		self.db = db
 		self.mode = mode
 		self.dt = GFFTokenizer(vocab_version=gff_vocab_version)  # Decoder tokenizer for GFF annotation strings
+		self.gff_vocab_version = gff_vocab_version
 		self.global_attention = global_attention
 		# Load HyenaDNA tokenizer (single-nucleotide: A=0, C=1, G=2, T=3, etc.)
 		self.encoder_tokenizer = AutoTokenizer.from_pretrained(encoder_model, cache_dir="./HFmodels", trust_remote_code=True)
-		self.maxlength = 2048  # Maximum GFF token sequence length
+		self.maxlength = 4096 if gff_vocab_version == "v3" else 2048  # Maximum GFF token sequence length (v3 windows hold many genes)
 		self._worker_pid = None  # PID of the process that owns _con
 		self._con = None         # Persistent DuckDB connection (lazily created)
 

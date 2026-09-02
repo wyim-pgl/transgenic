@@ -103,6 +103,14 @@ class GFFTokenizer(PreTrainedTokenizer):
 				# complexity in the upcoming transcript section.
 				for i in range(1, 16):
 					self.vocab[f"<tx{i}>"] = 272 + i       # IDs 273-287
+			if self.vocab_version == "v3":
+				# v3 = v2 + window-level tokens (protocol A26): <gene> separates gene blocks, <empty> marks a
+				# window without any complete gene. IDs 288-289; vocab_size 290.
+				self.vocab["<iso>"] = 272
+				for i in range(1, 16):
+					self.vocab[f"<tx{i}>"] = 272 + i
+				self.vocab["<gene>"] = 288
+				self.vocab["<empty>"] = 289
 		else:
 			self.vocab = vocab  # Use caller-provided vocabulary
 
@@ -167,6 +175,22 @@ class GFFTokenizer(PreTrainedTokenizer):
 				tokens.append(">")
 			return tokens[:-2] + ["</s>"]
 
+		if getattr(self, "vocab_version", "v1") == "v3":
+			if text.strip() == "<empty>":
+				return ["<empty>", "</s>"]
+			blocks = text.split("<gene>")
+			out = []
+			for j, block in enumerate(blocks):
+				toks = self._tokenize_block_v2(block)
+				out.extend(toks[:-1])            # drop the block's </s>
+				if j < len(blocks) - 1:
+					out.append("<gene>")
+			out.append("</s>")
+			return out
+		return self._tokenize_block_v2(text)
+
+	def _tokenize_block_v2(self, text):
+		tokens = []
 		# Split into features section and transcripts section
 		parts = text.split(">")
 		features_section = parts[0] if len(parts) > 0 else ""
