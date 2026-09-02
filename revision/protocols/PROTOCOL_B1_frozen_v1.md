@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.16; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.17; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -331,6 +331,13 @@ Author decision: the new version is trained on **genome tiles** whose label cont
 - Grammar-constrained decoding (A24) is extended: `<empty>` only as the first token, `<gene>` only after a complete block, numbering and strand reset per block, blocks non-overlapping and ordered.
 - Consequences stated prospectively: this is a further departure from the published recipe (A25); the published-recipe row is a legacy comparator only. The per-locus prompted mode remains available for the additions/B1 analyses by passing single-gene windows.
 
+## A27. Amendment v1.17 (2026-09-02; before any B5-era whole-genome inference) — tiled inference, stitching rule, and v3 caps from tile statistics
+
+- **Caps** (from the 2026-09-02 tile statistics of A. thaliana, O. sativa and G. max reference annotations): 129,024-nt tiles hold up to 80 genes (A. thaliana; p95 42), and 38 % of A. thaliana 129-kb tiles would exceed a 4,096-token label. The v3 caps are therefore **96 genes and 8,192 tokens per window**, decoder positions 8,192. Tiles over either cap are rejected and counted (expected < 0.5 % after the change). Empty tiles (G. max: 45 % at 30 kb) are kept at 10 %.
+- **Tiled inference**: every tier over the genome at three offsets (0, ⅓, ⅔ tier). A predicted gene is accepted from a tile only if both its ends are ≥ 1,000 nt from the tile edges (mirrors the training-time exclusion of edge-crossing genes). Identical predictions (same canonical signature in genome coordinates) merge; overlapping non-identical predictions are resolved by (1) distance from the nearest tile edge, (2) larger tier, (3) fewer grammar-audit violations, (4) canonical order. All resolutions are logged per locus for the B7 report.
+- **Per-locus prompted mode** (single-gene window, published behaviour) remains a separate, reported mode for the additions/B1 analyses (A26).
+- The stitching rule is frozen here before any whole-genome run; changing it after seeing B7 results requires a new labelled arm.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
@@ -480,3 +487,4 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 | 2026-09-02 | no B5-era inference run | v1.14: A24 grammar-constrained decoding pre-registered as the primary inference arm for the B5 model, unconstrained arm as parity control | author concern about autoregressive coordinate/order/strand/phase hallucinations |
 | 2026-09-02 | no B5 database built | v1.15: A25 B5 = new-version training with variable context tiers 30,720/61,440/129,024 (tier6144-v2), all seeds on NSF ACCESS, published-recipe parity control optional/supplementary | author decision: variable context for the new release; use ACCESS |
 | 2026-09-02 | no B5 database built | v1.16: A26 whole-window labels (GSF v3: <gene>/<empty>, tiles per tier, most-restrictive tile split, edge exclusion, caps 64 genes / 4,096 tokens, vocab 290) | author decision: label every gene inside the window |
+| 2026-09-02 | no whole-genome inference run | v1.17: A27 tiled inference with edge margin 1,000 nt and a fixed stitching precedence; v3 caps 96 genes / 8,192 tokens from tile statistics | author instruction to freeze the stitching rule and to set caps from data |

@@ -35,10 +35,17 @@ The new-version database labels **every complete gene inside a window**. Each ti
 with a seeded random offset (training builds); the label of a tile is the canonical GSF blocks of all genes fully inside it, in
 coordinate order, joined by the `<gene>` token; a tile with no complete gene is labelled `<empty>` and only 10 % of such tiles are
 kept. Genes crossing a tile edge are excluded from that tile's label and counted (`edge_partial=n` in `qc_flags`). Feature numbering
-and strand consistency restart per gene block; gene blocks must not overlap. Caps: 64 genes per window, 4,096 v3 tokens
-(`<s>` + blocks + separators + `</s>`); decoder positions 4,096; vocabulary v3 = v2 + `<gene>` + `<empty>` (290 tokens). A tile's
+and strand consistency restart per gene block; gene blocks must not overlap. Caps: 96 genes per window, 8,192 v3 tokens
+(`<s>` + blocks + separators + `</s>`; set from the 2026-09-02 tile statistics: A. thaliana 129-kb tiles hold 29 genes on average, p95 42, max 80, ~120 tokens per gene, so 38 % of them exceed 4,096); decoder positions 8,192; vocabulary v3 = v2 + `<gene>` + `<empty>` (290 tokens). A tile's
 split is the most restrictive split of its genes (test > valid > train; strict held-out → test); a tile containing a hard-flagged
 gene (A22) has `train_weight 0`. `window_genes` maps tiles to member genes. RC of a tile reverses every block and re-sorts.
+
+### 1c. Tiled inference and stitching (protocol A27)
+Whole-genome inference runs every tier over the genome with three offsets (0, ⅓, ⅔ of the tier). A predicted gene is
+**accepted from a tile only if it lies at least 1,000 nt inside both tile edges**; identical predictions from different
+tiles/tiers (same canonical signature after mapping to genome coordinates) are merged; overlapping non-identical predictions
+are resolved by (1) the tile in which the gene is furthest from an edge, (2) the larger tier, (3) grammar-audit violations
+(fewer wins), (4) canonical order. The per-locus prompted mode (single-gene window, published behaviour) stays available.
 
 ## 2. Feature and transcript grammar
 `<features> > <transcripts>` where a feature is `start|TYPEn|end|strand|phase`, TYPE ∈ {CDS, five_prime_UTR, three_prime_UTR}, `n` is the feature number by first use after canonical ordering (§3), phase ∈ {A, B, C} = {0, 1, 2} for CDS and `.` for UTRs. Transcripts are `|`-joined feature names separated by `;`. Features shared by several transcripts appear once in the feature list.

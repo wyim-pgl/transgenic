@@ -42,7 +42,7 @@
   },
   "species_manifest": "data/manifests/b5_species_v1.tsv",
   "gsf_spec": "docs/gsf_spec_v1.md",
-  "notes": "New-version recipe (protocol A26, 2026-09-02): genome tiles of 30,720 / 61,440 / 129,024 nt labelled with every complete gene (GSF v3: gene blocks joined by <gene>, <empty> for windows without a complete gene). Same architecture/optimisation as the published 400M recipe except vocab 290, decoder positions and label cap 4,096, encoder input up to 129,024 nt. All seeds on NSF ACCESS (A25).",
+  "notes": "New-version recipe (protocol A26, 2026-09-02): genome tiles of 30,720 / 61,440 / 129,024 nt labelled with every complete gene (GSF v3: gene blocks joined by <gene>, <empty> for windows without a complete gene). Same architecture/optimisation as the published 400M recipe except vocab 290, decoder positions and label cap 8,192 (tile statistics: 38 % of A. thaliana 129-kb tiles exceed 4,096 tokens), encoder input up to 129,024 nt. All seeds on NSF ACCESS (A25).",
   "window_policy": "tile6144-v3",
   "window_tiers": [
     30720,
@@ -54,8 +54,8 @@
   "min_flank": 1000,
   "gff_vocab_version": "v3",
   "vocab_size": 290,
-  "max_decoder_position_embeddings": 4096,
-  "max_label_tokens": 4096,
+  "max_decoder_position_embeddings": 8192,
+  "max_label_tokens": 8192,
   "empty_keep_prob": 0.1,
-  "genes_per_window_cap": 64
+  "genes_per_window_cap": 96
 }

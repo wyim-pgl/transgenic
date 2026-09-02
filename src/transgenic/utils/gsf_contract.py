@@ -30,7 +30,7 @@ FEATURE_TYPES = ("five_prime_UTR", "CDS", "three_prime_UTR")
 RC_MODES = ("none", "all", "isoform-only")
 GENE_SEP = "<gene>"          # v3: separates gene blocks inside one window label
 EMPTY_LABEL = "<empty>"      # v3: window without any complete gene
-CAPS_V3 = {"tokens": 4096, "genes": 64}
+CAPS_V3 = {"tokens": 8192, "genes": 96}   # from tile statistics (A. thaliana 129-kb tiles: p95 42 genes, max 80, ~120 tokens/gene)
 WINDOW_POLICY_V3 = "tile6144-v3"
 EMPTY_KEEP_PROB = 0.1
 

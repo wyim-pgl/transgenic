@@ -30,7 +30,7 @@ def test_v3_token_count_and_caps(gsf):
     with pytest.raises(gsf.CapError):
         gsf.check_caps_v3(b + gsf.GENE_SEP + a)            # overlapping/unsorted genes
     with pytest.raises(gsf.CapError):
-        gsf.check_caps_v3(gsf.GENE_SEP.join([f"{i*10}|CDS1|{i*10+3}|+|A>CDS1" for i in range(65)]))   # > 64 genes
+        gsf.check_caps_v3(gsf.GENE_SEP.join([f"{i*10}|CDS1|{i*10+3}|+|A>CDS1" for i in range(97)]))   # > 96 genes
 
 
 def test_v3_rc_is_an_involution_and_reorders_genes(gsf):

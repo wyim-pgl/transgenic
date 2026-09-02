@@ -214,7 +214,7 @@ def allowed_next_block(st: State, window_len: int, v2: bool = True, v3: bool = F
                     out.add("</s>")
             if target is None or n_tx == target:
                 out.add("</s>")
-                if v3 and st.gene_index + 1 < 64:
+                if v3 and st.gene_index + 1 < 96:
                     out.add("<gene>")
         return out
     return set()
