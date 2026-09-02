@@ -47,8 +47,10 @@ Cross-verified against the repository copy (commit 271e938 tree) by reading the 
 7. **End of week 1** — full B5 DB build (immutable, manifest archived); training-script change: split-table selection, 400M config, best-validation-loss checkpoint + patience 3, seeds; throughput benchmark on the chosen GPU (4090 / PRO 6000 / cloud) and GB10 decision.
 8. **Week 2 day 1** — start B5 seeds. In parallel (weeks 2–3): C0 ingestion of aligned evidence (validation sets flagged `validation_only`), C2 label/weight generation from training-species evidence only, segmentation trainer fix; neither touches the B5 DB.
 
-## 3a. Schedule gates proposed by the 2026-09-02 Codex review (pending author decision, not yet adopted)
-- Defer C2 unless B5 and B1 are on schedule at the end of week 3; merge minimal C0 into B1 ingestion; Protocol M only if its oracle gate passes within budget; tomato only if its week-2 gates are met (already frozen); B7 required if the "matches or exceeds" headline stays, otherwise narrow the claim.
+## 3a. Schedule gates (author decision 2026-09-02)
+- **Adopted — C2 gate:** at the end of week 3 the author checks B5 (full DB built, primary seed training) and B1 (maize alignments and P4/P5 controls done). If either is behind, C2 is deferred to the follow-up paper; C2 label construction does not start before that check. Recorded in the master plan and resume.
+- **Compute:** NSF ACCESS Explore application submitted 2026-09-02 (award pending); on award the confirmatory seeds run there, the 4090 keeps the primary seed.
+- Still pending author decision: merge minimal C0 into B1 ingestion; Protocol M only if its oracle gate passes within budget; tomato only if its week-2 gates are met (already frozen); B7 required if the "matches or exceeds" headline stays, otherwise narrow the claim.
 - Realistic compute: ~8 GPU-days per seed at the released 400M recipe → two parallel GPUs (4090 + cloud/PRO 6000) for primary + confirmatory seeds.
 
 ## 4. Out of scope until B5 is reproducible
