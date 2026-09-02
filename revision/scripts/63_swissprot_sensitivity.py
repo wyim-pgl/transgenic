@@ -196,10 +196,12 @@ def parse_dat(path: str) -> Iterator[Entry]:
         yield finalize(e)
 
 
-def gene_of(xref: str, genes: Set[str], tx2gene: Optional[Dict[str, str]] = None) -> Optional[str]:
-    """Resolve a gene, transcript or protein identifier to a gene id of the reference annotation: exact gene id, then the
-    transcript->gene map of the GFF3, after stripping a Phytozome `.p` protein suffix; without a map, one trailing
-    `.suffix` is stripped as a fallback (AT1G01010.1 -> AT1G01010)."""
+def gene_of(xref: str, genes, tx2gene: Optional[Dict[str, str]] = None) -> Optional[str]:
+    """Resolve a gene, transcript or protein identifier to the canonical gene id of the reference annotation (the GFF ID,
+    which the builder maps to its own key through gene_id_original). `genes` is a set of canonical ids or, from
+    read_gff_gene_map, a dict alias (ID or Name) -> canonical id. Order: exact alias, then the transcript->gene map,
+    after stripping a Phytozome `.p` protein suffix; one trailing `.suffix` is stripped as a fallback (AT1G01010.1 ->
+    AT1G01010)."""
     tx2gene = tx2gene or {}
     cands = [xref]
     if xref.endswith(".p"):
@@ -209,10 +211,10 @@ def gene_of(xref: str, genes: Set[str], tx2gene: Optional[Dict[str, str]] = None
             cands.append(c.rsplit(".", 1)[0])
     for c in cands:
         if c in genes:
-            return c
+            return genes[c] if isinstance(genes, dict) else c
         g = tx2gene.get(c)
-        if g in genes:
-            return g
+        if g is not None and g in genes:
+            return genes[g] if isinstance(genes, dict) else g
     return None
 
 
@@ -228,9 +230,11 @@ def _gff_attrs(col: str) -> Dict[str, str]:
     return out
 
 
-def read_gff_gene_map(path: str) -> Tuple[Set[str], Dict[str, str]]:
-    """Gene ids and the transcript->gene map (transcript-level features only) of a reference GFF3."""
-    genes: Set[str] = set()
+def read_gff_gene_map(path: str) -> Tuple[Dict[str, str], Dict[str, str]]:
+    """Gene aliases and the transcript->gene map of a reference GFF3. Returns (aliases, tx2gene): aliases maps every
+    gene ID and Name attribute to the canonical gene ID (the ID attribute; e.g. AT1G01010 -> AT1G01010.TAIR10); tx2gene
+    maps every transcript-level ID and Name (PAC:32968375, Pp3c1_20V3.1, AT1G01010.1, ...) to that canonical gene ID."""
+    aliases: Dict[str, str] = {}
     parents: Dict[str, str] = {}
     with _open(path) as fh:
         for line in fh:
@@ -241,11 +245,16 @@ def read_gff_gene_map(path: str) -> Tuple[Set[str], Dict[str, str]]:
                 continue
             attrs = _gff_attrs(c[8])
             if c[2] == "gene" and "ID" in attrs:
-                genes.add(attrs["ID"])
+                aliases[attrs["ID"]] = attrs["ID"]
+                if attrs.get("Name"):
+                    aliases.setdefault(attrs["Name"], attrs["ID"])
             elif c[2] in TRANSCRIPT_TYPES and "ID" in attrs and "Parent" in attrs:
-                parents[attrs["ID"]] = attrs["Parent"].split(",")[0]
-    tx2gene = {t: g for t, g in parents.items() if g in genes}
-    return genes, tx2gene
+                parent = attrs["Parent"].split(",")[0]
+                parents[attrs["ID"]] = parent
+                if attrs.get("Name"):
+                    parents.setdefault(attrs["Name"], parent)
+    tx2gene = {t: aliases[p] for t, p in parents.items() if p in aliases}
+    return aliases, tx2gene
 
 
 def _proteome_by_gene(proteome: Dict[str, str], genes: Set[str], tx2gene: Dict[str, str]) -> Tuple[Dict[str, Set[str]], int, int]:
@@ -409,11 +418,13 @@ def main(argv: Optional[List[str]] = None) -> int:
                 fh.write(e.sequence[i:i + 60] + "\n")
     taxids = {k: {int(t) for t in v.split(",") if t} for k, v in _parse_kv(a.species_taxid).items()}
     proteomes = {k: read_fasta(v) for k, v in _parse_kv(a.proteome).items()}
-    gene_ids = read_gene_ids(a.gene_ids) if a.gene_ids else {}
+    gene_ids: Dict[str, object] = dict(read_gene_ids(a.gene_ids)) if a.gene_ids else {}
     tx2gene: Dict[str, Dict[str, str]] = {}
     for sp, path in _parse_kv(a.gff).items():
-        genes, txmap = read_gff_gene_map(path)
-        gene_ids.setdefault(sp, set()).update(genes)
+        aliases, txmap = read_gff_gene_map(path)
+        for g in gene_ids.get(sp, set()):
+            aliases.setdefault(g, g)
+        gene_ids[sp] = aliases
         tx2gene[sp] = txmap
     for sp in taxids:
         gene_ids.setdefault(sp, set())

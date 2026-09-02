@@ -182,6 +182,20 @@ def read_qc_flags(path) -> Dict[Tuple[str, str], Dict[str, set]]:
     return out
 
 
+def flags_for_gene(qc_flags, species_id: str, gene) -> Dict[str, set]:
+    """Flags addressed to a gene by its builder key, its GFF ID (`gene_id_original`) or its Name attribute: the flag files
+    of GeenuFF (A22) and the Swiss-Prot audit (A30) carry GFF identifiers, while the builder key may be a generated code
+    (gene_key: ids longer than 10 characters or with two dots, e.g. AT1G01010.TAIR10 -> Ath000001)."""
+    if not qc_flags:
+        return {}
+    out: Dict[str, set] = {}
+    for gid in {gene.gene_id, getattr(gene, "gene_id_original", ""), getattr(gene, "name_original", "")}:
+        if gid:
+            for tx, flags in qc_flags.get((species_id, gid), {}).items():
+                out.setdefault(tx, set()).update(flags)
+    return out
+
+
 def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[Tuple[str, str], Dict[str, str]], split_sha: str,
                   rc: str = "none", add_extra: int = 0, seed: int = 123, max_len: int = gc.MAX_WINDOW, clean: bool = False,
                   mode: str = "train", git_commit: str = "", fasta_sha: Optional[str] = None, gff_sha: Optional[str] = None,
@@ -235,8 +249,9 @@ def _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, 
                                                                           gene.chrom, gene.start0, gene.end0])
             # A22: annotation-quality flags -> loss masking / transcript filtering
             train_weight, qc_list = 1.0, []
-            if qc_flags and (species_id, gene.gene_id) in qc_flags:
-                train_weight, keep_tx, qc_list = loss_mask_decision(qc_flags[(species_id, gene.gene_id)], gene.transcripts.keys())
+            gflags = flags_for_gene(qc_flags, species_id, gene)
+            if gflags:
+                train_weight, keep_tx, qc_list = loss_mask_decision(gflags, gene.transcripts.keys())
                 if train_weight > 0 and len(keep_tx) < len(gene.transcripts):
                     gene = gc.Gene(gene.gene_id, gene.chrom, gene.strand, gene.start0, gene.end0, {t: gene.transcripts[t] for t in keep_tx},
                                    gene.gene_id_original, gene.name_original)
@@ -421,8 +436,9 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
             con.execute("INSERT INTO gene_key_map VALUES (?,?,?,?,?,?,?)", [species_id, gene.gene_id, gene.gene_id_original, gene.name_original,
                                                                           gene.chrom, gene.start0, gene.end0])
             train_weight, qc_list = 1.0, []
-            if qc_flags and key in qc_flags:
-                train_weight, keep_tx, qc_list = loss_mask_decision(qc_flags[key], gene.transcripts.keys())
+            gflags = flags_for_gene(qc_flags, species_id, gene)
+            if gflags:
+                train_weight, keep_tx, qc_list = loss_mask_decision(gflags, gene.transcripts.keys())
                 if train_weight > 0 and len(keep_tx) < len(gene.transcripts):
                     gene = gc.Gene(gene.gene_id, gene.chrom, gene.strand, gene.start0, gene.end0, {t: gene.transcripts[t] for t in keep_tx},
                                    gene.gene_id_original, gene.name_original)

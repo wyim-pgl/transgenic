@@ -271,3 +271,46 @@ def test_qc_flags_accepts_several_files_and_swissprot_caution_masks(tmp_path, b5
     calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and getattr(n.func, "attr", "") == "add_argument"
              and n.args and getattr(n.args[0], "value", "") == "--qc-flags"]
     assert calls and any(k.arg == "nargs" for k in calls[0].keywords)
+
+
+def test_qc_flags_resolve_original_gff_ids_and_names(tmp_path, b5):
+    """Flag files (GeenuFF #46, Swiss-Prot A30) carry the GFF ID or Name attribute; the builder resolves them to its own
+    gene keys (gene_key: a generated code when the ID is longer than 10 characters or has two dots, e.g. TAIR10 ids)."""
+    rng = random.Random(3)
+    seq = "".join(rng.choice("ACGT") for _ in range(12000))
+    fasta = tmp_path / "k.fa"; fasta.write_text(f">Chr1\n{seq}\n")
+    gff = tmp_path / "k.gff3"
+    gff.write_text("##gff-version 3\n"
+                   "Chr1\tt\tgene\t1001\t1600\t.\t+\t.\tID=AT1G01010.TAIR10;Name=AT1G01010\n"
+                   "Chr1\tt\tmRNA\t1001\t1600\t.\t+\t.\tID=AT1G01010.1.TAIR10;Parent=AT1G01010.TAIR10;Name=AT1G01010.1\n"
+                   "Chr1\tt\tCDS\t1001\t1600\t.\t+\t0\tID=c1;Parent=AT1G01010.1.TAIR10\n"
+                   "Chr1\tt\tgene\t5001\t5600\t.\t-\t.\tID=AT1G01020.TAIR10;Name=AT1G01020\n"
+                   "Chr1\tt\tmRNA\t5001\t5600\t.\t-\t.\tID=AT1G01020.1.TAIR10;Parent=AT1G01020.TAIR10;Name=AT1G01020.1\n"
+                   "Chr1\tt\tCDS\t5001\t5600\t.\t-\t0\tID=c2;Parent=AT1G01020.1.TAIR10\n"
+                   "Chr1\tt\tgene\t8001\t8600\t.\t+\t.\tID=AT1G01030.TAIR10;Name=AT1G01030\n"
+                   "Chr1\tt\tmRNA\t8001\t8600\t.\t+\t.\tID=AT1G01030.1.TAIR10;Parent=AT1G01030.TAIR10;Name=AT1G01030.1\n"
+                   "Chr1\tt\tCDS\t8001\t8600\t.\t+\t0\tID=c3;Parent=AT1G01030.1.TAIR10\n")
+    genes = list(b5.gc.parse_gff3(gff.read_text().splitlines(), species_code=b5.gc.species_code("Athaliana")))
+    keys = [g.gene_id for g in genes]
+    assert all(k not in ("AT1G01010.TAIR10", "AT1G01010") for k in keys)             # generated keys (16-character ids)
+    assert [g.name_original for g in genes] == ["AT1G01010", "AT1G01020", "AT1G01030"]
+    split = tmp_path / "split.tsv"
+    split.write_text("species_id\tgene_id\torthogroup_id\tsplit\tstrict_holdout\tseed\tsource_version\n"
+                     + "".join(f"Athaliana\t{k}\tOG{i}\ttrain\tfalse\t123\tv1\n" for i, k in enumerate(keys)))
+    manifest = tmp_path / "species.tsv"
+    manifest.write_text(f"species_id\tspecies\ttable_s1_version\tfasta\tfasta_md5\tgff\tgff_md5\tnote\nAthaliana\tA\tTAIR10\t{fasta}\t\t{gff}\t\t\n")
+    flags = tmp_path / "flags.tsv"
+    flags.write_text("species_id\tgene_id\ttranscript_id\tflag\tstart\tend\n"
+                     "Athaliana\tAT1G01010\t\tswissprot_caution_erroneous_initiation\t0\t0\n"        # Name attribute
+                     "Athaliana\tAT1G01020.TAIR10\t\tgeenuff_error_missing_start_codon\t0\t0\n"     # original ID attribute
+                     f"Athaliana\t{keys[2]}\t\tempty_super_locus\t0\t0\n")                         # builder key itself
+    db = tmp_path / "k.db"
+    b5.build_b5_database(str(db), str(manifest), str(split), rc="none", verify_md5=False, qc_flags_path=str(flags))
+    con = duckdb.connect(str(db), read_only=True)
+    rows = {r[0]: r for r in con.sql("SELECT geneModel, train_weight, qc_flags, gene_id_original FROM geneList").fetchall()}
+    keymap = {r[0]: r[1] for r in con.sql("SELECT gene_id, name_original FROM gene_key_map").fetchall()}
+    con.close()
+    assert set(rows) == set(keys) and keymap[keys[0]] == "AT1G01010"
+    assert all(rows[k][1] == 0.0 for k in keys), rows
+    assert "swissprot_caution_erroneous_initiation" in rows[keys[0]][2] and "missing_start" in rows[keys[1]][2]
+    assert b5.validate_b5_database(str(db))["rows_loss_masked"] == 3

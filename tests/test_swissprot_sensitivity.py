@@ -222,10 +222,21 @@ def test_gene_map_from_gff_and_proteome_suffixes(sp, tmp_path):
                    "Chr01\tphytozome\tgene\t1000\t1900\t.\t+\t.\tID=Pp3c1_10V3;Name=Pp3c1_10V3\n"
                    "Chr01\tphytozome\tmRNA\t1000\t1900\t.\t+\t.\tID=Pp3c1_10V3.1;Parent=Pp3c1_10V3\n"
                    "chr01\trap\tgene\t2000\t2900\t.\t+\t.\tID=Os01g0100100;Name=Os01g0100100\n"
-                   "chr01\trap\tmRNA\t2000\t2900\t.\t+\t.\tID=Os01t0100100-01;Parent=Os01g0100100\n")
+                   "chr01\trap\tmRNA\t2000\t2900\t.\t+\t.\tID=Os01t0100100-01;Parent=Os01g0100100\n"
+                   "Chr1\tphytozome\tgene\t3000\t3900\t.\t+\t.\tID=AT1G01010.TAIR10;Name=AT1G01010\n"
+                   "Chr1\tphytozome\tmRNA\t3000\t3900\t.\t+\t.\tID=AT1G01010.1.TAIR10;Parent=AT1G01010.TAIR10;Name=AT1G01010.1;longest=1\n"
+                   "Chr1\tphytozome\tgene\t4000\t4900\t.\t+\t.\tID=Pp3c1_20;Name=Pp3c1_20\n"
+                   "Chr1\tphytozome\tmRNA\t4000\t4900\t.\t+\t.\tID=PAC:32968375;Parent=Pp3c1_20;Name=Pp3c1_20V3.1;longest=1\n")
     genes, tx2gene = sp.read_gff_gene_map(str(gff))
-    assert genes == {"Glyma.01G000100", "Pp3c1_10V3", "Os01g0100100"}
+    # genes: alias (ID or Name) -> canonical gene ID (the GFF ID, which the builder maps to its key via gene_id_original)
+    assert set(genes.values()) == {"Glyma.01G000100", "Pp3c1_10V3", "Os01g0100100", "AT1G01010.TAIR10", "Pp3c1_20"}
+    assert genes["AT1G01010"] == "AT1G01010.TAIR10" and genes["AT1G01010.TAIR10"] == "AT1G01010.TAIR10"
     assert tx2gene["Glyma.01G000100.2"] == "Glyma.01G000100" and tx2gene["Os01t0100100-01"] == "Os01g0100100"
+    assert tx2gene["AT1G01010.1"] == "AT1G01010.TAIR10" and tx2gene["AT1G01010.1.TAIR10"] == "AT1G01010.TAIR10"   # transcript Name and ID
+    assert tx2gene["PAC:32968375"] == "Pp3c1_20" and tx2gene["Pp3c1_20V3.1"] == "Pp3c1_20"                       # gffread header vs Swiss-Prot xref
+    assert sp.gene_of("AT1G01010", genes, tx2gene) == "AT1G01010.TAIR10"
+    assert sp.gene_of("AT1G01010.1", genes, tx2gene) == "AT1G01010.TAIR10"
+    assert sp.gene_of("PAC:32968375", genes, tx2gene) == "Pp3c1_20" and sp.gene_of("Pp3c1_20V3.1", genes, tx2gene) == "Pp3c1_20"
     assert "Glyma.01G000100.2.CDS.1" not in tx2gene                                   # only transcript-level features
     assert sp.gene_of("Glyma.01G000100.1.p", genes, tx2gene) == "Glyma.01G000100"     # Phytozome protein header (.p)
     assert sp.gene_of("Pp3c1_10V3.1.p", genes, tx2gene) == "Pp3c1_10V3"
