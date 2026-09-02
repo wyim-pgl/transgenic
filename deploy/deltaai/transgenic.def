@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: nvcr.io/nvidia/pytorch:{{ NGC_TAG }}-py3
+
+%arguments
+    NGC_TAG=25.06
+
+%labels
+    Project TransGenic B5 retraining
+    Base nvcr.io/nvidia/pytorch (multi-arch: aarch64 for DeltaAI GH200, x86_64 for Delta A100)
+
+%environment
+    export HF_HOME=/work/hf
+    export TOKENIZERS_PARALLELISM=false
+    export PYTHONUNBUFFERED=1
+    export OMP_NUM_THREADS=8
+
+%post
+    set -e
+    mkdir -p /opt/transgenic
+    echo "base=nvcr.io/nvidia/pytorch:{{ NGC_TAG }}-py3 built=$(date -Is) arch=$(uname -m)" > /opt/transgenic/IMAGE_INFO
+    pip install --no-cache-dir "transformers>=4.44,<5" "accelerate>=0.34" "duckdb>=1.1" "safetensors>=0.4" \
+        "huggingface-hub>=0.24" "pandas>=2.0" tqdm wandb pytest matplotlib
+    # The repository is bind-mounted at /work/repo and installed at runtime (see build.sh / job templates);
+    # keeping it outside the image means a git pull needs no rebuild.
+    python - <<'PY'
+import torch, transformers, accelerate, duckdb
+print("torch", torch.__version__, "cuda", torch.version.cuda, "transformers", transformers.__version__,
+      "accelerate", accelerate.__version__, "duckdb", duckdb.__version__)
+PY
+
+%runscript
+    exec "$@"
