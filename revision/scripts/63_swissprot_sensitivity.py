@@ -257,6 +257,45 @@ def read_gff_gene_map(path: str) -> Tuple[Dict[str, str], Dict[str, str]]:
     return aliases, tx2gene
 
 
+_ENSEMBL_RULES = (
+    (re.compile(r"^Glyma\.(\d{2}G\d{6})$"), lambda m: f"GLYMA_{m.group(1)}"),          # G. max Wm82: Glyma.01G000100 -> GLYMA_01G000100
+    (re.compile(r"^Sobic\.(\d{3}G\d{6})$"), lambda m: f"SORBI_3{m.group(1)}"),         # S. bicolor: Sobic.001G000100 -> SORBI_3001G000100
+    (re.compile(r"^Bradi(\d)g(\d{5})$"), lambda m: f"BRADI_{m.group(1)}g{m.group(2)}v3"),  # B. distachyon v3: Bradi1g00200 -> BRADI_1g00200v3
+    (re.compile(r"^Seita\.(\d)G(\d{6})$"), lambda m: f"SETIT_{m.group(1)}G{m.group(2)}"),  # S. italica: Seita.1G000100 -> SETIT_1G000100
+)
+
+
+def ensembl_style_aliases(genes) -> Dict[str, str]:
+    """Deterministic Ensembl Plants / Gramene identifiers derived from Phytozome gene ids (the Swiss-Prot DR lines of
+    soybean, sorghum, Brachypodium and Setaria use the Ensembl form). Returns alias -> canonical gene id."""
+    canon = set(genes.values()) if isinstance(genes, dict) else set(genes)
+    out: Dict[str, str] = {}
+    for g in canon:
+        for rx, fmt in _ENSEMBL_RULES:
+            m = rx.match(g)
+            if m:
+                out.setdefault(fmt(m), g)
+                break
+    return out
+
+
+def read_id_map(path: str, genes, tx2gene: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+    """External id -> canonical gene id from a two-column table (external id, comma-separated gene or transcript ids of the
+    reference annotation; `None` = no counterpart), e.g. the RAP-DB RAP-MSU table for rice. An external id whose
+    targets resolve to more than one gene is skipped (ambiguous)."""
+    out: Dict[str, str] = {}
+    with _open(path) as fh:
+        for line in fh:
+            c = line.rstrip("\n").split("\t")
+            if len(c) < 2 or not c[0] or c[0].lower().startswith(("rap", "#", "external")):
+                continue
+            targets = {gene_of(t.strip(), genes, tx2gene) for t in c[1].split(",") if t.strip() and t.strip() != "None"}
+            targets.discard(None)
+            if len(targets) == 1:
+                out.setdefault(c[0].strip(), next(iter(targets)))
+    return out
+
+
 def _proteome_by_gene(proteome: Dict[str, str], genes: Set[str], tx2gene: Dict[str, str]) -> Tuple[Dict[str, Set[str]], int, int]:
     out: Dict[str, Set[str]] = defaultdict(set)
     mapped = 0
@@ -401,6 +440,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--proteome", action="append", default=[], help="SPECIES=<reference protein FASTA> (repeatable; required for hard flags)")
     ap.add_argument("--min-proteome-mapped", type=float, default=DEFAULT_MIN_PROTEOME_MAPPED,
                     help="abort when a reference proteome maps to fewer than this fraction of its records (fail closed)")
+    ap.add_argument("--id-map", action="append", default=[], help="SPECIES=<external id table> (e.g. RAP-MSU for rice; repeatable)")
+    ap.add_argument("--ensembl-style-aliases", action="store_true",
+                    help="derive Ensembl Plants/Gramene ids from Phytozome gene ids (GLYMA_, SORBI_3, BRADI_...v3, SETIT_)")
     a = ap.parse_args(argv)
     os.makedirs(a.out_dir, exist_ok=True)
     entries = list(parse_dat(a.dat))
@@ -428,7 +470,28 @@ def main(argv: Optional[List[str]] = None) -> int:
         tx2gene[sp] = txmap
     for sp in taxids:
         gene_ids.setdefault(sp, set())
+    aliases_added: Dict[str, Dict[str, int]] = {}
+    id_maps = _parse_kv(a.id_map)
+    for sp in list(gene_ids):
+        if not a.ensembl_style_aliases and sp not in id_maps:
+            continue
+        aliases = gene_ids[sp] if isinstance(gene_ids[sp], dict) else {g: g for g in gene_ids[sp]}
+        added = {"ensembl_style": 0, "id_map": 0}
+        if a.ensembl_style_aliases:
+            for k, v in ensembl_style_aliases(aliases).items():
+                if k not in aliases:
+                    aliases[k] = v
+                    added["ensembl_style"] += 1
+        if sp in id_maps:
+            for k, v in read_id_map(id_maps[sp], aliases, tx2gene.get(sp)).items():
+                if k not in aliases:
+                    aliases[k] = v
+                    added["id_map"] += 1
+        gene_ids[sp] = aliases
+        aliases_added[sp] = added
     rows, per_species = species_flags(kept, gene_ids, taxids, proteomes, tx2gene, a.min_proteome_mapped)
+    for sp, added in aliases_added.items():
+        per_species[sp]["aliases_added"] = added
     by_sp: Dict[str, List[Dict]] = defaultdict(list)
     for r in rows:
         by_sp[r["species_id"]].append(r)

@@ -291,3 +291,22 @@ def test_nterm_negative_controls_dual_taxid_gzip_truncation_and_caution_blocks(s
     assert recs["P00014"].truncated is True and recs["P00014"].sequence == SEQ_D and recs["P00011"].truncated is False
     rows, summary = sp.species_flags(recs.values(), {"Osativa": set()}, {"Osativa": {4530}}, {})
     assert summary["Osativa"]["entries"] == 1                                         # dual-taxid entry matched through its second taxid
+
+
+def test_external_id_map_and_ensembl_style_aliases(sp, tmp_path):
+    """Real run 2026-09-02: Swiss-Prot cross-references of rice (RAP ids), soybean, sorghum, Brachypodium and Setaria use
+    Ensembl Plants / RAP-DB identifiers, while the reference annotations use MSU / Phytozome ids -> 0 mapped. An external
+    id map (RAP-MSU table) and deterministic Ensembl-style aliases derived from the Phytozome gene ids close the gap."""
+    genes = {"LOC_Os01g01010": "LOC_Os01g01010", "Glyma.01G000100": "Glyma.01G000100", "Sobic.001G000100": "Sobic.001G000100",
+             "Bradi1g00200": "Bradi1g00200", "Seita.1G000100": "Seita.1G000100"}
+    idmap = tmp_path / "rap_msu.tsv"
+    idmap.write_text("Os01g0100100\tLOC_Os01g01010.1,LOC_Os01g01010.2\nOs01g0100200\tNone\n")
+    aliases = sp.read_id_map(str(idmap), genes)
+    assert aliases == {"Os01g0100100": "LOC_Os01g01010"}                                  # transcript ids resolved to the gene; None skipped
+    ens = sp.ensembl_style_aliases(genes)
+    assert ens["GLYMA_01G000100"] == "Glyma.01G000100" and ens["SORBI_3001G000100"] == "Sobic.001G000100"
+    assert ens["BRADI_1g00200v3"] == "Bradi1g00200" and ens["SETIT_1G000100"] == "Seita.1G000100"
+    assert "LOC_Os01g01010" not in ens                                                   # no rule for MSU ids
+    merged = dict(genes); merged.update(aliases); merged.update(ens)
+    assert sp.gene_of("Os01g0100100", merged, {}) == "LOC_Os01g01010"
+    assert sp.gene_of("GLYMA_01G000100", merged, {}) == "Glyma.01G000100"
