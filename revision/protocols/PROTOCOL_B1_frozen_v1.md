@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.2.1; v1.0 text unchanged, amendments appended)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.3; v1.0 text unchanged, amendments appended)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -260,3 +260,15 @@ CD-HIT-EST clustering is removed from A6 and A8. Every EST accession is aligned 
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | EST download in progress; no alignment run | v1.2.1: A11 replaces the removed clustering step with independent-molecule-unit counting and an implementation audit | Codex review of v1.2: raw accession counts would let re-sequenced accessions and clone pairs inflate support and satisfy the two-ID rule |
+
+## A12. Amendment v1.3 (2026-09-01; before any long-read download or alignment) — PacBio instrument restriction
+
+Author decision: **PacBio evidence is restricted to Sequel II, Sequel IIe and Revio data.** RS II and Sequel (I) datasets are removed from tier 1 and are not used as evidence: Wang 2016 (RS II; already excluded), Wang 2018 HQ isoforms (RS II/Sequel; M-HQ18 removed), Wang 2020 FLNC (Sequel; M-FLNC removed), Cui 2020 PacBio run (Sequel), Han 2023 (Sequel). The ONT rows of §3 are unchanged (ONT and Sequel II+ Iso-Seq remain the equal tier 1).
+
+Consequences at the time of amendment: maize has **no** Sequel II+ Iso-Seq with CCS/FLNC or original BAM identified yet (iFLAS PRJNA983493 is Sequel II but subreads-only without original BAM → excluded by §3); maize tier 1 therefore rests on ONT root tips (M-ONT) until a Sequel II+/Revio B73 set is found (search in progress). A. thaliana: A-HiFi = PRJEB77203 ERR13994458 (Sequel II subreads.bam → `ccs` → FLNC) retained; Kurihara 2022 PRJDB12660 (Sequel II, subreads-only) excluded. Tomato: PRJNA961334 (Sequel II; 1.4–2.8 M reads/run consistent with CCS) usable if CCS status is confirmed from run metadata or read names.
+
+Classification rule for PacBio runs (frozen): instrument model from ENA/SRA metadata; data type from (i) submitted file names/format (`ccs`, `hifi`, `flnc`, `hq` vs `subreads.bam`), (ii) read names when the submitted file is retained (`movie/zmw/ccs` or `transcript/N` vs `movie/zmw/start_end`), (iii) per-cell read count (CCS/FLNC ≈ 0.3–5 M; subreads ≈ tens of millions). Mean read length is not used (Iso-Seq subreads and CCS are both ~1.5–2 kb).
+
+| Date | Analysis state | Change | Reason |
+|---|---|---|---|
+| 2026-09-01 | no long-read download or alignment run | v1.3: PacBio restricted to Sequel II+; M-HQ18 and M-FLNC removed; classification rule added | author decision (chemistry/accuracy consistency across PacBio evidence) |
