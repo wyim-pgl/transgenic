@@ -2,6 +2,10 @@
 
 Cross-verified against the repository copy (commit 271e938 tree) by reading the cited lines; Codex audit in `codex_gsf_pipeline_20260901.md`. Status of each Codex claim after verification is given in §1.
 
+
+## 0. Issue map (2026-09-02)
+Every item below is tracked as a GitHub issue in wyim-pgl/transgenic (#4–#43). W1: contracts #4 (closed), tests #11, serializer #12, RC #13, orthogroup split #14, smoke DB #15, full DB #16, trainer #17, GPU benchmark #18; data track: roles #5, ingestion v2 #6, Wang B73 #7, Zhong #8, download audit #9, EST integrity #10; W2–3: seed 123 #19, confirmatory seeds #20, C0 #21, evidence tests #22, addition dump #23, B1 scorer #24, pre-alignment audit #25, maize alignment #26, controls/scoring #27, Ath replication #28; W4–5: B2 #29, B7 harness #30, B7 run #31, C2 gate #32, C2 labels #33, C2 trainer #34; W6–8: results rebuild #35, numerical audit #36, manuscript #37, response #38, submission metadata #39, release/audit #40; follow-up: Protocol M #41, tomato gate #42 (W2 decision), chain objective #43.
+
 ## 1. Verified code locations and defects
 
 | Item | Location | Verified | Note |
