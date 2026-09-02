@@ -1,0 +1,1 @@
+`b5_orthogroup_split_v1.tsv` is produced by `make_orthogroup_splits.py` (W1 item 5) from OrthoFinder on the nine primary proteomes listed in `data/manifests/b5_species_v1.tsv`. Schema and rules: `docs/gsf_spec_v1.md` §7. The file is committed with its sha256 before any DB build and never regenerated after results are seen.

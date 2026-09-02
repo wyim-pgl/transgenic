@@ -50,7 +50,9 @@ Cross-verified against the repository copy (commit 271e938 tree) by reading the 
 ## 3a. Schedule gates (author decision 2026-09-02)
 - **Adopted — C2 gate:** at the end of week 3 the author checks B5 (full DB built, primary seed training) and B1 (maize alignments and P4/P5 controls done). If either is behind, C2 is deferred to the follow-up paper; C2 label construction does not start before that check. Recorded in the master plan and resume.
 - **Compute:** NSF ACCESS Explore application submitted 2026-09-02 (award pending); on award the confirmatory seeds run there, the 4090 keeps the primary seed.
-- Still pending author decision: merge minimal C0 into B1 ingestion; Protocol M only if its oracle gate passes within budget; tomato only if its week-2 gates are met (already frozen); B7 required if the "matches or exceeds" headline stays, otherwise narrow the claim.
+- **Adopted — B7 runs and the comparative headline stays** (author decision 2026-09-02): B7 is a submission prerequisite; weeks 5–7.
+- **W1 item 1 done 2026-09-02**: `docs/gsf_spec_v1.md`, `configs/b5_400m_v1.json`, `data/manifests/b5_species_v1.tsv` (+ excluded), `data/splits/README.md`. Open flag: Gmax file labels (Wm82.a6.v1 / v6.0) vs Table S1 wording (Wm82 ISU-01 v2.1) — confirm before the DB build.
+- Resolved by the two decisions above; previously pending: merge minimal C0 into B1 ingestion; Protocol M only if its oracle gate passes within budget; tomato only if its week-2 gates are met (already frozen); B7 required if the "matches or exceeds" headline stays, otherwise narrow the claim.
 - Realistic compute: ~8 GPU-days per seed at the released 400M recipe → two parallel GPUs (4090 + cloud/PRO 6000) for primary + confirmatory seeds.
 
 ## 4. Out of scope until B5 is reproducible

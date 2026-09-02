@@ -1,0 +1,5 @@
+species_id	species	reason
+Zmays	Zea mays	held-out test species (RefGen_V4); entire species excluded from the B5 DB (removes the 174 legacy GRMZM rows)
+Brapa	Brassica rapa	extended benchmark only
+Lsativa	Lactuca sativa	extended benchmark only
+Slycopersicum	Solanum lycopersicum	extended benchmark / conditional B6 test species
