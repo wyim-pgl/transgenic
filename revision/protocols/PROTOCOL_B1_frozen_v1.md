@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.7; v1.0 text unchanged, amendments appended)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.8; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -196,6 +196,50 @@ Author questions (2026-09-01): "how is a complete ORF checked before mapping?" a
 - **Chain-label weighting (Track C1 and C2).** Chain and junction labels carry `W = 1 + source_weight·log1p(independent_molecules)` (capped) and require canonical splice sites; retained-intron-like chains supported by fewer than 3 independent molecules are down-weighted, not removed. Rationale: the benchmark is CDS-based (GFFCompare), so non-coding chains must not dominate the chain objective.
 - This revision's scope rule is unchanged: evidence *selects* (B1–B3) and *teaches only the C2 segmentation head*; ORF-incomplete chains as direct training targets belong to Track C1 (`PROTOCOL_M_exploratory_v1.md`, gated) and the follow-up evidence-derived-label work. Nothing in §9 changes.
 
+## A18. Amendment v1.8 (2026-09-02; before any long-read alignment) — corrections to A17, effective-rule matrix, dataset-role manifest, frozen C2 weights and class semantics, genotype rule for all species, seed plan
+
+Source: full-scope Codex re-review (`codex_full_review_20260902.md`, thread 01a060a9), each item cross-checked against the cited lines by the author's assistant before adoption; two Codex claims were rejected (A8 does not prescribe `-k14 -w5`; `est_repair.sh` deduplicates by accession ID, only its header comment was stale).
+
+### A18.1 Corrections to A17 (supersede the corresponding A17 sentences)
+- The clause "chain evidence requires … a training-species, non-held-out, non-`validation_only` source" applies **only to training-side use of evidence (C2 masks; any future chain objective)**. For the B1/B4 validation analyses (§6–§9) chain support is taken from the designated validation datasets of the test species and of the *A. thaliana* validation-only sets, exactly as §3 and A14 specify; these rows never enter training, reranking or candidate generation.
+- "Track C1" in A17 and design §5a was a misnomer. **C1 is reserved for the reference-label canonical-order control folded into B5** (master plan §C1/v3.4). Evidence-derived chain training targets are renamed **"follow-up chain objective" and are not active in this revision**; the A17 table column is to be read as "representation capability — inactive". The revision-wide rule stands: evidence selects (B1–B3) and teaches only the C2 segmentation head.
+
+### A18.2 Effective-rule matrix (operational precedence; historical §3–§9 text is not rewritten)
+| Source | Mapper (authoritative) | Junction correction for **primary** outcomes | Molecule unit | Support threshold (units) | TES/internal priming |
+|---|---|---|---|---|---|
+| ONT cDNA / direct RNA | §3 `splice -k14 -G 200000` (`-uf` only after the §3.3 strandedness audit ≥ 95 %) | §5: ≤ ±3 nt to a **unique canonical motif**; raw + corrected stored. The design-document rule (correction onto an annotated or ≥ 3-unit junction) is a **labelled sensitivity analysis only** | A16: PCR-equivalence unit (same library, strand, corrected chain, both ends within 10 nt); direct RNA = one read; UMI when present | §5 counts read as **units**: ≥ 3 units; high confidence ≥ 2 runs or ≥ 5 units | A3: reject if downstream 20 nt has ≥ 12 A **or any run ≥ 6 A** |
+| PacBio FLNC / HQ / CCS | §3 `splice:hq -G 200000` | §5: ≤ ±1 nt to a unique canonical motif | source FLNC/ZMW molecule, never a polished cluster | ≥ 2 units; high confidence ≥ 2 runs or ≥ 3 units | A3 (same) |
+| EST / FL-cDNA | §3 `splice:hq -G 200000` (no clustering, A8/A11) | §5: none | A11: accession stem (versions merged; clone ID when present; same library + identical alignment signature otherwise), 10 per library cap | A11: ≥ 2 independent molecule units (replaces "2 clone/accession IDs" of §5) | A3 (same) |
+Precedence: A16 > §3.3 item 3 for ONT counting; A11 > §5 EST support column; A3 (6-A run) > design-document §2 (8-A run) — the design document is amended to 6. The 20-nt-window ≥ 12 A rule is unchanged. This matrix and `evidence/DATASET_ROLES.tsv` are checksummed into §1 before the first alignment.
+
+### A18.3 Dataset-role manifest (fail-closed)
+`evidence/DATASET_ROLES.tsv` lists every dataset **and every run** with exactly one role: `b1_validation_only` | `c2_training_eligible` | `excluded` (+ species, genotype stratum, instrument, data type, expected files, expected read count, source checksum). Builders (C0 ingestion, C2 label generation, B1 scorer) refuse any run without a role. Consequences now recorded:
+- `ont/Athaliana_cui2020_PRJNA594286` (downloaded by the validation driver) has role `c2_training_eligible`; it is **excluded from the A. thaliana B1 replication**, which uses only FLIC, Zhong 2025 and Zhang 2023 (A14).
+- Zhong 2025 (subreads.bam) must be converted (ccs → lima → refine, versions and checksums recorded) **before** the *A. thaliana* replication is scored, or be recorded as unavailable in `DATASET_ROLES.tsv` before alignment; the replication is then FLIC + Zhang 2023 only.
+- Wang 2020 FLNC (Zenodo 2611319): the B73-only selection required by §3.1 is implemented from `demux_FL_count.txt` and the FLNC headers before scoring; the all-genotype file may be scored only as the separately labelled pooled stratum (A7-P).
+
+### A18.4 Frozen C2 label weights and class semantics (before any C2 label is built)
+- `W = min(4, 1 + source_weight · log1p(independent_molecules))` per positive cell. `source_weight`: protein-homology CDS mask 1.0; PacBio Sequel II+/Revio FLNC/CCS 1.0; ONT 0.8; EST 0.6. Genotype multiplier on `source_weight`: reference genotype 1.0; known non-reference cultivar or hybrid/pooled 0.5; unknown 0.5.
+- **Retained-intron-like** (operational): an aligned block that fully spans an intron which has ≥ 3 independent-molecule junction support in the same species, while the spanning block itself has < 3 independent molecules → weight 0.25 on the exon class for those bases. Not removed.
+- Class semantics: protein CDS alignments label **CDS-family classes only** (CDS with phase). EST/long-read aligned blocks label the **transcribed-exon family** only; the CDS-vs-UTR distinction inside a block is set only where the block lies in a model with an assigned CDS (design §4), otherwise those cells get weight 0 (neutral) on that distinction. Junction evidence labels the **intron class over the intron interval and the donor/acceptor boundary classes**, nothing else. Every remaining cell is weight 0, never a guessed positive. The 14-class list of `preprocess.py:550–581` is enumerated with its allowed evidence state in the C2 label specification before label construction.
+- Loss: per-cell weighted cross-entropy normalised by the sum of weights per window; no additional source balancing. A **unit-weight ablation** (all W = 1) is a mandatory reported control.
+
+### A18.5 Genotype-aware acceptance for every species (generalises A7-P beyond maize)
+For all training-species evidence (TRAINING_EVIDENCE_v1.md admits non-reference cultivars and hybrids): primary alignment, MAPQ ≥ 20, aligned query fraction ≥ 0.80, alignment identity over aligned blocks ≥ 95 % (ONT, EST) or ≥ 98 % (CCS/FLNC); equal-best multi-locus placements → `mapping_ambiguous` (family-level counts only, no label); junctions require canonical motif and both anchors (§5). Genotype stratum (reference / known non-reference / hybrid-pooled / unknown) is recorded per library and applied as the A18.4 multiplier; C2 labels from non-reference strata are reported separately in the completeness QC table.
+
+### A18.6 Seed plan and reporting (B5)
+Primary seed 123 selects the reported checkpoint (best validation loss, patience 3). Seeds 456 and 789 are confirmatory and **must finish before submission**; main-text numbers come from seed 123, the three-seed mean ± s.d. is reported in the supplement. If only two GPUs are available, seed 789 may run after seed 456 but not be omitted.
+
+### A18.7 Terminology and B7 labelling
+- Reference-derived rows carry `assumed_from_reference = true` and are never pooled with read-derived 5C/3C rates.
+- Schema names: `read_internal_code` (IC/IP/IM/IX) and `model_internal_code` (MC/MP/MM/MX) everywhere.
+- The B7 whole-chromosome comparison is an **analysis-held-out diagnostic**, not a training-held-out test; the true B5 test-locus subset is reported separately and species-level out-of-training evidence comes from maize.
+
+### A18.8 Ingestion hardening required before the §3.3 audit is considered complete
+Implementation items (recorded in `IMPLEMENTATION_ORDER_B5_C0_C2_v1.md` §2a): enumerate every ENA file per run (not the first URL), verify source `fastq_md5`, reconcile converted read counts with metadata, filter by parsed columns not whole-row regex, expected-run manifest with `DONE | EXCLUDED(reason)`, strict shell mode and atomic renames for Zenodo/SRA paths, keep sources until validation passes, long-read `PROVENANCE.tsv` with tool versions/commands/dates, completion records carrying script and manifest hashes; EST: per-record sequence validation (non-empty, legal alphabet, terminal newline) and an accession manifest compared as a multiset, not counts alone. Existing downloads are re-audited by a separate checker before use; drivers are not edited while running.
+
+Nothing in §9 changes.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
@@ -336,3 +380,4 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 |---|---|---|---|
 | 2026-09-01 | no long-read alignment run | v1.6: A16 read completeness codes, chain/terminal orthogonality, non-UMI ONT PCR-equivalence units, completeness QC table | author question on non-full-length long reads; Codex design cross-checked |
 | 2026-09-01 | no long-read alignment run | v1.7: A17 ORF verdict only after alignment on genome-spliced sequence; pre-alignment homology triage is QC-only; ORF-incomplete complete chains are chain-training (C1/C2) evidence, never GSF labels; chain-label weighting | author questions on pre-mapping ORF checks and on chain training with ORF-incomplete reads |
+| 2026-09-02 | no long-read alignment run | v1.8: A18 corrections to A17 (validation-source scope, C1 naming), effective-rule matrix with precedence, dataset-role manifest (Cui → training role, Zhong conversion or unavailable, Wang 2020 B73 selection), frozen C2 weights/class semantics, genotype rule for all species, seed plan, terminology, ingestion hardening | Codex full re-review cross-checked by the author's assistant |

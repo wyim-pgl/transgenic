@@ -1,16 +1,16 @@
-# Evidence-first data layer — design v1.1 (2026-09-01; v1.0 + §4 sequence source, §4a triage, §5a ORF-incomplete chains; protocol A17)
+# Evidence-first data layer — design v1.2 (2026-09-02; v1.1 + protocol A18 alignment: internal-priming 6-A run, ONT correction rule = sensitivity only, C1 naming, frozen weights, phase split)
 
 Decision (author, 2026-09-01): a fresh design is acceptable. This document replaces the "patch preprocess.py" approach for the evidence layer with a single-source-of-truth **transcript model** representation from which GSF labels, C2 masks, C0 junction tables and validation metrics are derived. The B5 path (reference annotation → model → GSF → DB) uses the same representation, so the week-1 schedule in `IMPLEMENTATION_ORDER_B5_C0_C2_v1.md` is unchanged; only the module boundaries move. Source: Codex design `codex_fulllength_20260901.md` (tool behaviour verified from IsoQuant/FLAIR/StringTie/Iso-Seq collapse/TAMA documentation), cross-checked against the frozen protocol.
 
 ## 1. Core representation
 `transcript_model` (one row per observed or annotated transcript structure):
 `model_id, locus_id, species, assembly, contig, strand, exons[], introns[] (transcription-ordered, corrected), tss, tes, complete_5p_code {5C,5I}, complete_3p_code {3C,3I}, internal_code {MC,MP,MM,MX}, completeness_code "M.<5>.<3>.<internal>", support_molecules, support_libraries, support_bioprojects, observed_template_molecule_id, orf_status {complete, partial, none}, cds[] with phases, nmd_like, uorf_count, orf_source {reference, homology, longest}, gsf_eligible, validation_only, source {reference, ont, pacbio, est}, provenance`.
-Reference annotations are ingested as models with `source=reference`, `5C/3C` assumed, `orf_source=reference`. Everything downstream (GSF serializer, C2 mask builder, C0 aggregates, validation scorer) consumes this table only.
+Reference annotations are ingested as models with `source=reference`, `5C/3C` assumed and flagged `assumed_from_reference=true` (never pooled with read-derived completeness rates), `orf_source=reference`. Column names: `read_internal_code` (IC/IP/IM/IX) vs `model_internal_code` (MC/MP/MM/MX). Everything downstream (GSF serializer, C2 mask builder, C0 aggregates, validation scorer) consumes this table only.
 
 ## 2. Read-level codes (frozen thresholds; proposed by Codex, adopted)
-Input filters: primary alignment, MAPQ ≥ 20, aligned query fraction ≥ 0.80 (lower coverage → junction/block evidence only), junction anchors ≥ 20 nt, ONT junction correction ≤ ±3 nt only onto an annotated junction or one supported by ≥ 3 molecule units; chimeric/supplementary/cross-locus excluded; equal-best multi-locus → `mapping_ambiguous` (family-level counts only).
+Input filters: primary alignment, MAPQ ≥ 20, aligned query fraction ≥ 0.80 (lower coverage → junction/block evidence only), junction anchors ≥ 20 nt, ONT junction correction for primary outcomes follows protocol §5 (≤ ±3 nt to a unique canonical motif); correction onto an annotated junction or one supported by ≥ 3 molecule units is a labelled sensitivity analysis only (A18.2); chimeric/supplementary/cross-locus excluded; equal-best multi-locus → `mapping_ambiguous` (family-level counts only).
 - **5′**: `5C` if (a) cap-trapped/TeloPrime library with 5′ primer detected (≥ 80% identity over ≥ 12 nt), or ONT strand-switch adapter detected AND end within 50 nt of a cap/CAGE TSS; or (b) start within 25 nt of a TSS cluster with ≥ 5 molecule units from ≥ 2 libraries (≥ 2 each in two libraries), ≥ 2 cap/CAGE-associated units, medoid within ±50 nt of a same-strand CAGE peak. Otherwise `5I`. Start pile-ups (≥ 5 starts in a 10-nt bin, ≥ 4× the next five bins) are QC only; gradual decay → `five_prime_decay=true`.
-- **3′**: `3C` if untemplated poly(A) ≥ 10 nt passing the internal-priming filter (fail: ≥ 12 A of downstream 20 nt, or ≥ 8 consecutive A) or end within 25 nt of a TES cluster with ≥ 2 tail-positive units. Otherwise `3I` (with `internal_priming_suspect` where applicable).
+- **3′**: `3C` if untemplated poly(A) ≥ 10 nt passing the internal-priming filter (fail: ≥ 12 A of downstream 20 nt, or ≥ 6 consecutive A; A3/A18.2) or end within 25 nt of a TES cluster with ≥ 2 tail-positive units. Otherwise `3I` (with `internal_priming_suspect` where applicable).
 - **Internal**: `IC` exact admitted chain with 20-nt terminal anchors; `IP` proper contiguous sub-chain; `IM` mono-exonic; `IX` conflicting/ambiguous.
 - Molecule units: UMI → (library, sample, UMI, locus, strand); ONT direct RNA → one read; ONT cDNA without UMI → **PCR-equivalence unit** = same library, same strand, same corrected chain, both ends within 10 nt (conservative); PacBio → source FLNC/ZMW molecule, never a polished cluster; libraries never merged.
 
@@ -37,18 +37,20 @@ Before alignment a read may be tagged `cds_candidate` (DIAMOND blastx hit to a c
 | any model from a test species or an A. thaliana validation-only dataset | validation | validation | no | validation | no (`validation_only`) |
 
 ## 5a. ORF-incomplete chains — allowed uses (protocol A17)
-ORF completeness and chain completeness are independent axes. A chain fully witnessed by one molecule (`IC`) from a training-species, non-held-out, non-`validation_only` source is chain evidence regardless of its ORF or terminal state.
+ORF completeness and chain completeness are independent axes. A chain fully witnessed by one molecule (`IC`) is chain evidence regardless of its ORF or terminal state; the training-species/non-held-out/non-`validation_only` restriction applies only to training-side use (C2 masks, future chain objective), while B1 validation uses the designated validation datasets (A18.1).
 
-| State | intron-chain training target (Track C1) | C0 junction / partial-chain support | C2 positive mask | GSF label |
+| State | chain-training target (follow-up chain objective — **inactive in this revision**; C1 = canonical-order control in B5) | C0 junction / partial-chain support | C2 positive mask | GSF label |
 |---|---|---|---|---|
 | `IC` + 5I/3I (chain complete, ends incomplete) | yes | yes | yes | no |
 | `M.5C.3C.MC` without complete ORF (incl. `nmd_like`, non-coding) | yes | yes | yes | no (GSF vocabulary requires CDS features/phases; non-coding representation = format change, out of scope) |
 | `IP` (partial chain) | no (sub-chain only, T3/T4) | yes | yes | no |
 | `IX` / `mapping_ambiguous` | no | family-level only | no | no |
 
-Chain and junction labels carry `W = 1 + source_weight·log1p(independent_molecules)` (capped), require canonical splice sites, and down-weight retained-intron-like chains with < 3 independent molecules. Current-revision scope is unchanged: evidence selects (B1–B3) and teaches only the C2 head; chain targets from evidence are Track C1 (gated) and follow-up work.
+Weights are frozen in protocol A18.4: `W = min(4, 1 + source_weight·log1p(independent_molecules))`, source_weight protein 1.0 / PacBio Sequel II+ 1.0 / ONT 0.8 / EST 0.6, genotype multiplier 1.0 or 0.5, retained-intron-like (block spanning a ≥ 3-unit intron with < 3 molecules) 0.25, unit-weight ablation mandatory; class semantics per A18.4. Current-revision scope is unchanged: evidence selects (B1–B3) and teaches only the C2 head; evidence-derived chain targets are follow-up work.
 
 ## 6. Scope
+**Two phases (A18, Codex 1.1.11)**: phase 1 (this revision) = reference annotation → transcript_model → GSF/DB for B5, plus read/alignment observations → C0 tables, completeness codes, C2 masks and B1 scoring; phase 2 (follow-up) = observational collapse, ORF/homology/NMD assignment, evidence-derived GSF. B5 does not wait for phase 2.
+
 **Current revision**: per-dataset completeness QC table (species × protocol × library; 5C/5I, 3C/3I, IC/IP/IM/IX, tail-positive and internal-priming-rejected fractions, PCR-equivalence compression, TSS/TES cluster counts) as supplementary output; C0 records carry the three codes; C2 positive masks from observed blocks/junctions (data artifact, evidence-weighted training only under the C2 gate); B1 validation on observed chains unchanged; protocol-stratified limitation statement. **Follow-up**: observational collapse, transcript-model release, ORF/homology/NMD assignment, evidence-derived GSF labels and their ingestion into orthogroup-aware retraining, collapse-tool benchmark and threshold sensitivity.
 
 ## 7. Tests (pytest, to be written before the evidence layer is used)
