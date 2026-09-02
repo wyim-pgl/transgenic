@@ -239,3 +239,35 @@ def test_tile_policy_v3_build(tmp_path, b5):
     con.close()
     rep = b5.validate_b5_database(str(db))
     assert rep["ok"], rep["violations"]
+
+
+def test_qc_flags_accepts_several_files_and_swissprot_caution_masks(tmp_path, b5):
+    """Protocol A30: a second A22-schema flag file (Swiss-Prot sequence-caution audit) is merged with the GeenuFF file;
+    swissprot_caution_* is hard (row masked), swissprot_note_* is soft (recorded only)."""
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    geenuff = tmp_path / "geenuff.tsv"
+    geenuff.write_text("species_id\tgene_id\ttranscript_id\tflag\tstart\tend\n"
+                       "Athaliana\tglast\tglast.1\tmissing_utr_5p\t0\t0\n")
+    swiss = tmp_path / "swiss.tsv"
+    swiss.write_text("species_id\tgene_id\ttranscript_id\tflag\tstart\tend\n"
+                     "Athaliana\tg2\t\tswissprot_caution_erroneous_initiation\t0\t0\n"
+                     "Athaliana\tg1\t\tswissprot_note_caution_resolved_in_reference\t0\t0\n")
+    merged = b5.read_qc_flags([str(geenuff), str(swiss)])
+    assert merged[("Athaliana", "g2")]["*"] == {"swissprot_caution_erroneous_initiation"}
+    assert merged[("Athaliana", "glast")]["glast.1"] == {"missing_utr_5p"}
+    assert b5.read_qc_flags(str(swiss)) == b5.read_qc_flags([str(swiss)])          # a single path still works
+    db = tmp_path / "q2.db"
+    b5.build_b5_database(str(db), str(manifest), str(split), rc="none", verify_md5=False, qc_flags_path=[str(geenuff), str(swiss)])
+    con = duckdb.connect(str(db), read_only=True)
+    rows = {r[0]: r for r in con.sql("SELECT geneModel, train_weight, qc_flags FROM geneList").fetchall()}
+    con.close()
+    assert rows["g2"][1] == 0.0 and "swissprot_caution_erroneous_initiation" in rows["g2"][2]
+    assert rows["g1"][1] == 1.0 and rows["g1"][2] is None                            # soft note changes nothing
+    assert rows["glast"][1] == 1.0
+    assert b5.validate_b5_database(str(db))["rows_loss_masked"] == 1
+    # CLI accepts several files
+    src = (ROOT / "scripts" / "build_b5_database.py").read_text()
+    tree = ast.parse(src)
+    calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and getattr(n.func, "attr", "") == "add_argument"
+             and n.args and getattr(n.args[0], "value", "") == "--qc-flags"]
+    assert calls and any(k.arg == "nargs" for k in calls[0].keywords)

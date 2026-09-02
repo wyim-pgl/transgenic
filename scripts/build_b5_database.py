@@ -23,7 +23,9 @@ def main():
     ap.add_argument("--no-verify-md5", action="store_true")
     ap.add_argument("--only", nargs="*", help="species_id subset (smoke build)")
     ap.add_argument("--overwrite", action="store_true")
-    ap.add_argument("--qc-flags", default=None, help="GeenuFF flags TSV from revision/scripts/62_geenuff_qc.py (protocol A22)")
+    ap.add_argument("--qc-flags", nargs="+", default=None,
+                    help="A22-schema flag TSVs, merged: GeenuFF flags from revision/scripts/62_geenuff_qc.py (A22) and the "
+                         "Swiss-Prot caution audit from revision/scripts/63_swissprot_sensitivity.py (A30)")
     ap.add_argument("--window-policy", choices=["sym6144-v1", "tier6144-v2", "tile6144-v3"], default="tile6144-v3",
                     help="sym6144-v1 = published recipe; tier6144-v2 = gene-centred variable context (A25); "
                          "tile6144-v3 = genome tiles of 30,720 / 61,440 / 129,024 labelled with every complete gene (A26)")

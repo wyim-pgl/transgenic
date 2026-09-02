@@ -22,9 +22,11 @@ from collections import defaultdict
 from typing import Dict, Iterable, List, Set, Tuple
 
 # A22: hard errors make a transcript ineligible as a training label; soft flags are recorded only.
+# A30: swissprot_caution_* (63_swissprot_sensitivity.py) is hard, swissprot_note_* is soft.
 # (kept identical to src/transgenic/datasets/qc_flags.py)
 HARD_FLAG_PATTERNS = ("missing_start", "missing_stop", "wrong_starting_phase", "mismatched_ending_phase", "mismatched_phase",
-                      "overlapping_exon", "too_short_intron", "empty_transcript", "empty_super_locus", "wrong_phase")
+                      "overlapping_exon", "too_short_intron", "empty_transcript", "empty_super_locus", "wrong_phase",
+                      "swissprot_caution")
 SOFT_FLAG_PATTERNS = ("missing_utr", "missing_utr_5p", "missing_utr_3p", "no_utr")
 
 

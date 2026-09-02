@@ -163,18 +163,22 @@ def loss_mask_decision(gene_flags: Dict[str, set], transcript_ids) -> Tuple[floa
     return 1.0, keep, all_hard
 
 
-def read_qc_flags(path: str) -> Dict[Tuple[str, str], Dict[str, set]]:
+def read_qc_flags(path) -> Dict[Tuple[str, str], Dict[str, set]]:
+    """Read one or several A22-schema flag files (species_id, gene_id, transcript_id, flag, start, end) and merge them:
+    the GeenuFF file of 62_geenuff_qc.py (A22) and the Swiss-Prot caution audit of 63_swissprot_sensitivity.py (A30)."""
+    paths = [path] if isinstance(path, (str, bytes)) or hasattr(path, "__fspath__") else list(path)
     out: Dict[Tuple[str, str], Dict[str, set]] = {}
-    with open(path) as fh:
-        header = fh.readline().rstrip("\n").split("\t")
-        idx = {h: i for i, h in enumerate(header)}
-        for line in fh:
-            c = line.rstrip("\n").split("\t")
-            if len(c) < 4:
-                continue
-            key = (c[idx["species_id"]], c[idx["gene_id"]])
-            tx = c[idx["transcript_id"]] or "*"
-            out.setdefault(key, {}).setdefault(tx, set()).add(c[idx["flag"]])
+    for p in paths:
+        with open(p) as fh:
+            header = fh.readline().rstrip("\n").split("\t")
+            idx = {h: i for i, h in enumerate(header)}
+            for line in fh:
+                c = line.rstrip("\n").split("\t")
+                if len(c) < 4:
+                    continue
+                key = (c[idx["species_id"]], c[idx["gene_id"]])
+                tx = c[idx["transcript_id"]] or "*"
+                out.setdefault(key, {}).setdefault(tx, set()).add(c[idx["flag"]])
     return out
 
 
@@ -301,7 +305,8 @@ def read_species_manifest(path: str) -> List[Dict[str, str]]:
 def build_b5_database(db: str, species_manifest: str, split_table: str, rc: str = "isoform-only", add_extra: int = 0, seed: int = 123,
                       max_len: int = gc.MAX_WINDOW, clean: bool = False, excluded_species: Iterable[str] = ("Zmays",),
                       verify_md5: bool = True, only_species: Optional[Set[str]] = None, git_commit: str = "",
-                      qc_flags_path: Optional[str] = None, window_policy: str = gc.WINDOW_POLICY, tier_up_prob: float = 0.0) -> List[Dict]:
+                      qc_flags_path: Optional["str | List[str]"] = None, window_policy: str = gc.WINDOW_POLICY,
+                      tier_up_prob: float = 0.0) -> List[Dict]:
     manifest = read_species_manifest(species_manifest)
     split_rows, split_sha = read_split_table(split_table)
     qc = read_qc_flags(qc_flags_path) if qc_flags_path else None
