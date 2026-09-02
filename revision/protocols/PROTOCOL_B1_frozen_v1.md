@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.1; v1.0 text unchanged, amendment appended)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -181,3 +181,61 @@ Response-letter wording (frozen): "We agree that isoform-specific RT-PCR would p
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
+
+---
+
+# Amendment v1.1 (2026-09-01, analysis state: EST download in progress; no evidence alignment has been run; no addition-level result viewed)
+
+This amendment adds secondary outcomes, QC gates and clarifications. **§§2, 5, 6, 7, 9 primary outcomes and success criteria of v1.0 are unchanged.** Items were selected from a Codex-reviewed brainstorm (`codex_est_brainstorm_20260901.md`, `codex_candidate_pool_20260901.md`); items judged to require new methodology or to create new discovery sets are explicitly excluded (see §A9).
+
+## A1. Correction of the EST source (replaces the EST rows of §3.1–3.2)
+
+NCBI retired dbEST; `db=nucest` now resolves to whole `nuccore` and returns patent, mRNA and genomic records. The frozen EST query is therefore `db=nuccore`, `txid<taxid>[Organism] AND gbdiv_est[PROP]`, fetched by E-utilities history in 10,000-record FASTA batches (`evidence/est/est_fetch.sh`; provenance in `evidence/PROVENANCE_est.tsv`). Counts at download (2026-09-01): Z. mays 2,019,959; A. thaliana 1,529,700; G. max 1,461,724; O. sativa 1,255,251; V. vinifera 446,853; P. patens 382,587; S. lycopersicum 301,030; S. bicolor 209,835; B. distachyon 206,255; P. trichocarpa 89,943; S. italica 66,027. Per-species `TOTAL` after download may fall short of `COUNT` by suppressed records; the difference is recorded, not corrected. GenBank flat files (`rettype=gb`) are fetched additionally for Z. mays and A. thaliana to obtain `/clone`, `/cultivar`, `/tissue_type`, `/dev_stage` and library identifiers; these fields are retained at ingestion (B) even where not analysed in this revision.
+
+## A2. EST partial chains, clone linking and the splice graph (clarifies §6)
+
+- Each accepted spliced EST alignment yields an ordered **partial intron chain**. Clone-linked 5′/3′ reads (same `/clone` and library, consistent strand, non-overlapping or overlapping-consistent placement, outer span ≤ 200 kb) are merged into one partial chain.
+- A per-locus **splice graph** is built with nodes = accepted junctions and edges = adjacency observed on one EST or one linked clone pair. **Graph paths define a candidate space only; they are never molecule support.** Combination-novel additions (§2) remain supported only by a single molecule spanning the whole chain (tier T1/T2 of §8).
+- An addition's **adjacency support fraction** = observed adjacent-intron pairs ÷ all adjacent pairs in its chain (0–1) is reported as a secondary, continuous statistic; "all novel junctions supported" (T3) is unchanged.
+
+## A3. UTR and terminus support (new secondary outcomes S1–S3)
+
+- **S1 TES support**: ≥ 2 accessions from ≥ 2 libraries whose 3′ ends carry ≥ 10 untemplated terminal A bases end within ±30 nt of the predicted TES on the same strand; rejected as internal priming if the downstream genomic 20-nt window has ≥ 12 A or any run of ≥ 6 A. Single unpaired EST ends without poly(A) are not TES evidence.
+- **S2 TSS lower bound**: the predicted TSS lies within ±50 nt of ≥ 2 5′ ends from oriented full-length/RAFL, cap-selected or CAGE evidence; ordinary 5′ EST ends give a lower bound only ("EST start upstream of predicted TSS: yes/no").
+- **S3 UTR-intron support**: predicted UTR introns scored by §5 junction rules, reported separately from CDS introns.
+- Results are published as a two-axis table (CDS status × UTR status) and never combined with the primary exact-CDS outcomes.
+
+## A4. Mandatory QC gate before any addition is scored (L)
+
+On a prespecified set of 2,000 ordinary annotated multi-exon loci per species (fixed seed 123, excluding the 3,429 strict held-out A. thaliana loci and all addition loci), report the agreement of accepted EST junctions with reference introns, stratified by anchor length, identity, motif and library. Thresholds in §5 are not re-tuned on this set; if agreement < 95% for GT–AG junctions with ≥ 2 accessions, the pipeline is debugged (alignment, alias table, strand) before scoring additions, and the fix is logged.
+
+## A5. Callability map (C) and reference-completeness audit (H) — secondary
+
+- **C**: per locus and per evidence source: aligned EST bases, splice-bearing accessions, independent libraries, callable junction positions, callable TES/TSS flags. Frozen before any addition is scored; used as the denominator source for §7 and for the B7 whole-genome pilot.
+- **H**: per locus, accepted EST junctions absent from the reference annotation (TAIR10 / RefGen_V4), stratified by number of independent libraries and by long-read confirmation. Reported as context for "novel" additions; explicitly labeled as not reference-independent (ESTs contributed to both references).
+
+## A6. Independent-source replication score (N) and saturation (O) — secondary
+
+- **N**: for every junction, `S = min(3, libraries) + min(2, BioProjects) + 0.5·log2(1 + accessions)`; "replicated" requires ≥ 2 libraries. Cluster size after within-library deduplication (CD-HIT-EST `-c 0.98 -n 10 -aS 0.90 -g 1`) is never counted as independent support. Leave-one-library-out support is reported.
+- **O**: library rarefaction at 25/50/75/100% (100 fixed-seed draws) with a beta-binomial detection curve; reports the estimated probability that a real junction of given support class remains unobserved. Used only to calibrate the interpretation of "not observed"; no hard-negative labels are derived in this revision.
+
+## A7. Prespecified QC and sensitivity analyses (P, Q, I)
+
+- **P (maize genotype strata)**: libraries classified B73 / known non-B73 / unknown from GenBank metadata; support reported for B73-direct and species-level separately; a > 5-point difference in support precision between all-maize and B73-only is reported as genotype sensitivity. Non-B73 reads: ≤ 8% divergence, unique placement, ≥ 2 allele-discriminating matches within 100 nt where paralogous loci compete.
+- **Q (junction placement ambiguity)**: every accepted junction is re-scored at ±1–6 nt alternative placements; rejected if an alternative is within 2 alignment-score units or both anchors are > 50% masked.
+- **I (clone-pair span)**: proportion of uniquely mapped consistent 5′/3′ clone pairs whose outer span exceeds 49,152 nt — a check on the input-window assumption.
+
+## A8. EST ingestion filters (complements §5)
+
+Within-library exact-duplicate removal, then CD-HIT-EST clustering as in A6; UniVec screening (trim terminal vector, reject internal or > 20% vector); adapter trimming (overlap ≥ 12, error ≤ 0.10); poly(A/T) trimming only for ≥ 10 bases within the terminal 30 nt (tail call saved before trimming); post-trim length ≥ 100; ≤ 5% N; dust masking (64/20) with rejection at > 50% masked and ≥ 12 unmasked bases in every 15-nt anchor; contamination screen against plastid/mitochondrial/rRNA (exclude when ≥ 80% coverage at ≥ 90% identity beats nuclear by ≥ 10); chimera rules (segments ≥ 75 nt on different chromosomes at MAPQ ≥ 20; > 100 kb apart; incompatible strand/order; junction not reproducible after clipping 10 nt each side and realigning); strand inferred from canonical motifs when ≥ 1 intron exists, otherwise from oriented-library metadata or trusted poly(A); strand-ambiguous alignments are retained for coverage only; multi-locus ESTs (no ≥ 10 score margin or MAPQ < 30 where paralogs compete) support a junction family, never a specific gene; per-library molecule contribution capped at 10 per junction; results additionally reported by gene GC decile. Alignment for ESTs: `minimap2 -ax splice --secondary=no -k14 -w5 -G 200000` (no `-uf`), MAPQ ≥ 20 (≥ 30 for maize paralog-sensitive high-confidence tier), aligned fraction ≥ 0.80, identity ≥ 0.90 (high-confidence ≥ 0.95), intron length 20–200,000 nt, ≤ 8% mismatches+indels overall. A one-time minimap2-vs-GMAP comparison on 20,000 ESTs is recorded in PROVENANCE and does not change the primary mapper.
+
+## A9. Explicitly out of scope for this protocol (follow-up work)
+
+Cross-species junction conservation prior (A); hard-negative labels (D); evidence-constrained decoding (E); APA/alternative-last-exon catalogue (F); unannotated-locus discovery (G); EST-weighted B5 training (J, would break the "split-only" comparability of the retraining); evidence-only isoform sets beyond the partial-chain supplement (K); the prompt-free / evidence-prompt / expanded-candidate-pool experiments (M, N) — these have their own exploratory protocol (`PROTOCOL_M_exploratory_v1.md`) and are not secondary outcomes of B1.
+
+## A10. Amendment log
+
+| Date | Analysis state | Change | Reason |
+|---|---|---|---|
+| 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
+| 2026-09-01 | EST download in progress; no alignment run; no addition-level result viewed | v1.1: A1–A9 added; primary outcomes, success criteria and evidence-tier hierarchy unchanged | dbEST retirement discovered during download; Codex-reviewed brainstorm on EST use; author decisions (ONT and Iso-Seq equal tier 1; EST/full-length cDNA as orthogonal transcript evidence, never RT-PCR-equivalent) |
