@@ -111,3 +111,22 @@ def test_benchmark_summary(rt):
     s = rt.benchmark_summary([1.0] * 30, [9600] * 30, rows_in_train=96000, rows_per_step=96, peak_mem_gb=20.5, warmup=10)
     assert s["steps_measured"] == 20 and s["steps_per_epoch"] == 1000 and s["hours_per_epoch"] == pytest.approx(1000 / 3600)
     assert s["tokens_per_sec"] == 9600
+
+
+def test_resume_prefers_newest_state_and_config_check(rt, tmp_path):
+    lay = rt.CheckpointLayout(str(tmp_path / "s"))
+    lay.begin_epoch(1); os.makedirs(Path(lay.epoch_dir(1) + ".tmp") / "accelerate_state")
+    json.dump({"global_step": 100}, open(Path(lay.epoch_dir(1) + ".tmp") / "meta.json", "w"))
+    lay.finish_epoch(1, 0.9, 1.0, is_best=True)
+    assert lay.resume_dir("auto").endswith("epoch_01")
+    ls = Path(lay.latest_state_dir()); os.makedirs(ls / "accelerate_state"); json.dump({"global_step": 150, "epoch": 1, "step": 40}, open(ls / "meta.json", "w"))
+    assert lay.resume_dir("auto").endswith("latest_state")          # mid-epoch state is newer
+    json.dump({"global_step": 50}, open(ls / "meta.json", "w"))
+    assert lay.resume_dir("auto").endswith("epoch_01")              # stale latest_state is ignored
+    json.dump({"recipe": {"name": "x"}, "db": "/a.db", "seed": 123, "batch_size": 1, "accumulation_steps": 96, "max_epochs": 22, "patience": 3},
+              open(tmp_path / "s" / "run_config.json", "w"))
+    lay.check_run_config({"recipe": {"name": "x"}, "db": "/a.db", "seed": 123, "batch_size": 1, "accumulation_steps": 96, "max_epochs": 22, "patience": 3})
+    with pytest.raises(RuntimeError):
+        lay.check_run_config({"recipe": {"name": "y"}, "db": "/a.db", "seed": 123, "batch_size": 1, "accumulation_steps": 96, "max_epochs": 22, "patience": 3})
+    with pytest.raises(RuntimeError):
+        lay.check_run_config({"recipe": {"name": "x"}, "db": "/a.db", "seed": 456, "batch_size": 1, "accumulation_steps": 96, "max_epochs": 22, "patience": 3})

@@ -179,10 +179,10 @@ class GFFTokenizer(PreTrainedTokenizer):
 			if text.strip() == "<empty>":
 				return ["<empty>", "</s>"]
 			blocks = text.split("<gene>")
-			out = []
+			out = ["<s>"]
 			for j, block in enumerate(blocks):
 				toks = self._tokenize_block_v2(block)
-				out.extend(toks[:-1])            # drop the block's </s>
+				out.extend(toks[1:-1])           # drop the block's own <s> and </s>
 				if j < len(blocks) - 1:
 					out.append("<gene>")
 			out.append("</s>")
@@ -190,7 +190,7 @@ class GFFTokenizer(PreTrainedTokenizer):
 		return self._tokenize_block_v2(text)
 
 	def _tokenize_block_v2(self, text):
-		tokens = []
+		tokens = ["<s>"]  # Always start with beginning-of-sequence token
 		# Split into features section and transcripts section
 		parts = text.split(">")
 		features_section = parts[0] if len(parts) > 0 else ""
@@ -272,6 +272,9 @@ class GFFTokenizer(PreTrainedTokenizer):
 			if token == "<iso>":
 				toks.append(";")
 				continue
+			if token in ("<gene>", "<empty>"):
+				toks.append(token)
+				continue
 			if token.isnumeric() and i != 0:
 				# Check previous non-skipped token for digit merging
 				if toks and toks[-1].isnumeric():
@@ -287,6 +290,8 @@ class GFFTokenizer(PreTrainedTokenizer):
 		toks = re.sub(r'\|>', '>', toks)         # Remove pipe before > (from stripped <tx:N>)
 		toks = re.sub(r'>\|', '>', toks)         # Remove pipe after >
 		toks = re.sub(r'\|;\|', ';', toks)       # Remove extra pipes around ;
+		toks = re.sub(r'\|?<gene>\|?', '<gene>', toks)   # v3 gene separator carries no pipes
+		toks = re.sub(r'\|?<empty>\|?', '<empty>', toks)
 		return toks
 
 	def save_vocabulary(self, save_directory, filename_prefix=None):

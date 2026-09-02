@@ -55,14 +55,17 @@ def main():
     for gsf, L in rows[:3] + rows[-1:]:
         ids = tok(gsf)["input_ids"]; back = tok.decode(ids, skip_special_tokens=True)
         n_expected = gc.count_tokens_v3(gsf)
-        print(f"window {L}: tokens={len(ids)} expected={n_expected} roundtrip={'ok' if back.replace(' ', '') == gsf.replace(' ', '') else 'MISMATCH'}")
+        ok = back.replace(' ', '') == gsf.replace(' ', '')
+        print(f"window {L}: tokens={len(ids)} expected={n_expected} roundtrip={'ok' if ok else 'MISMATCH'}")
+        if not ok:
+            print("   gsf :", gsf[:160]); print("   back:", back[:160])
     if a.skip_model:
         return
     import torch
     from transgenic.datasets.datasets import isoformDataHyena, hyena_collate_fn
     from transgenic.training.b5_runtime import load_b5_config, model_kwargs
     from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
-    from transgenic.model.modeling_transgenic import transgenicForConditionalGeneration
+    from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration
     cfg = load_b5_config(a.config)
     ds = isoformDataHyena(db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="train", gff_vocab_version="v3")
     print("dataset rows:", len(ds))

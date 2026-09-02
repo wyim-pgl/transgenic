@@ -146,17 +146,47 @@ class CheckpointLayout:
         with open(os.path.join(self.run_dir, "TRAINING_DONE"), "w") as fh:
             fh.write(time.strftime("%Y-%m-%dT%H:%M:%S\n"))
 
+    def latest_state_dir(self) -> str:
+        return os.path.join(self.run_dir, "latest_state")
+
     def resume_dir(self, mode: Optional[str]) -> Optional[str]:
-        """'auto' -> latest completed epoch dir with an accelerate state, a path -> that path, None -> None."""
+        """'auto' -> the newest of (mid-epoch latest_state, last completed epoch dir with an accelerate state),
+        judged by global_step in meta.json; a path -> that path; None -> None."""
         if not mode:
             return None
         if mode != "auto":
             return mode
+        cands = []
         for ep in reversed(self.completed_epochs()):
             d = self.epoch_dir(ep)
             if os.path.isdir(os.path.join(d, "accelerate_state")):
-                return d
-        return None
+                cands.append(d)
+                break
+        ls = self.latest_state_dir()
+        if os.path.isdir(os.path.join(ls, "accelerate_state")):
+            cands.append(ls)
+        if not cands:
+            return None
+
+        def gstep(d):
+            p = os.path.join(d, "meta.json")
+            try:
+                with open(p) as fh:
+                    return int(json.load(fh).get("global_step", -1))
+            except Exception:
+                return -1
+        return max(cands, key=gstep)
+
+    def check_run_config(self, current: Dict) -> None:
+        """Refuse to resume when the recipe, database or seed differ from the first job of the chain (A28)."""
+        p = os.path.join(self.run_dir, "run_config.json")
+        if not os.path.exists(p):
+            return
+        with open(p) as fh:
+            first = json.load(fh)
+        for key in ("recipe", "db", "seed", "batch_size", "accumulation_steps", "max_epochs", "patience"):
+            if key in first and first.get(key) != current.get(key):
+                raise RuntimeError(f"resume refused: {key} differs from the run's first job ({first.get(key)!r} != {current.get(key)!r})")
 
 
 def split_row_numbers(db: str, split: str, excluded_species: Sequence[str] = ("Zmays",), require_labels: bool = True) -> List[int]:
@@ -193,7 +223,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--max-epochs", type=int, default=None, help="override the config cap")
     p.add_argument("--patience", type=int, default=None)
     p.add_argument("--benchmark-steps", type=int, default=0, help="run N optimizer steps, print throughput JSON, exit")
-    p.add_argument("--save-every-n-steps", type=int, default=0)
+    p.add_argument("--save-every-n-steps", type=int, default=200, help="B5: mid-epoch latest_state every N optimizer steps (0 = off)")
     p.add_argument("--checkpoint-path", type=str, default="checkpoints_HyenaWide/", help="legacy path (no --config)")
     p.add_argument("--no-wandb", action="store_true")
     a = p.parse_args(argv)

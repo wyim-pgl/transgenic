@@ -15,7 +15,7 @@ os.environ['HF_HOME'] = './HFmodels'                       # HuggingFace model c
 os.environ.setdefault('PYTORCH_CUDA_ALLOC_CONF',           # Use CUDA async memory allocator
                        'backend:cudaMallocAsync')           # Reduces alloc/dealloc overhead vs native
 
-import torch, wandb, gc, time, sys, math, json, argparse, glob
+import torch, wandb, gc, time, sys, math, json, argparse, glob, signal, shutil
 from transgenic.training.b5_runtime import (load_b5_config, model_kwargs, accumulation_steps as _acc_steps, EarlyStopper,
                                              CheckpointLayout, split_row_numbers, parse_args as _b5_parse_args, benchmark_summary)
 from tqdm import tqdm
@@ -299,6 +299,30 @@ def train(
         layout.finish_epoch(epoch_1based, eval_loss, train_loss, extra={"global_step": global_step, "is_best": is_best,
                             "stopper": stopper.state()}, is_best=is_best)
         layout.write_state({"epoch": epoch_1based, "global_step": global_step, "stopper": stopper.state(), "seed": seed})
+        if os.path.isdir(layout.latest_state_dir()):
+            shutil.rmtree(layout.latest_state_dir(), ignore_errors=True)   # the epoch dir supersedes any mid-epoch state
+
+    def _save_latest_b5(epoch0: int, step: int, global_step: int):
+        """Mid-epoch resumable state (A28): <run>/latest_state.tmp -> latest_state (atomic)."""
+        tmp = layout.latest_state_dir() + ".tmp"
+        shutil.rmtree(tmp, ignore_errors=True)
+        os.makedirs(tmp)
+        accelerator.save_state(os.path.join(tmp, "accelerate_state"))
+        _write_json(os.path.join(tmp, "meta.json"), {"epoch": epoch0, "step": step, "global_step": global_step,
+                                                     "best_eval_score": stopper.best, "seed": seed, "stopper": stopper.state()})
+        shutil.rmtree(layout.latest_state_dir(), ignore_errors=True)
+        os.rename(tmp, layout.latest_state_dir())
+        print(f"latest_state saved at epoch {epoch0} step {step} global_step {global_step}", file=sys.stderr)
+
+    _stop_requested = {"flag": False}
+
+    def _on_signal(signum, frame):
+        _stop_requested["flag"] = True
+        print(f"signal {signum} received: will save latest_state at the next optimizer step and exit", file=sys.stderr)
+
+    if layout is not None:
+        signal.signal(signal.SIGUSR1, _on_signal)
+        signal.signal(signal.SIGTERM, _on_signal)
 
     # ========================================================================
     # Training loop
@@ -374,7 +398,15 @@ def train(
                         optimizer.zero_grad(set_to_none=True)
 
                         # Save full resumable checkpoint every save_every_n_steps optimizer steps
-                        if save_every_n_steps and global_step % save_every_n_steps == 0:
+                        if layout is not None:
+                            if (save_every_n_steps and global_step % save_every_n_steps == 0) or _stop_requested["flag"]:
+                                _save_latest_b5(epoch, step + 1, global_step)
+                            if _stop_requested["flag"]:
+                                print("exiting cleanly for the job chain (no TRAINING_DONE marker)", file=sys.stderr)
+                                if log_wandb:
+                                    wandb.finish()
+                                return {"preempted": True, "epoch": epoch, "global_step": global_step}
+                        elif save_every_n_steps and global_step % save_every_n_steps == 0:
                             _save_state(epoch, step + 1, global_step, best_eval_score)
                             print(f"Checkpoint saved at epoch {epoch}, step {step+1}, global_step {global_step}", file=sys.stderr)
 
@@ -481,18 +513,21 @@ if __name__ == '__main__':
         eval_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="valid", gff_vocab_version=vv)
         print(f"B5 split sizes: train={len(train_data)} valid={len(eval_data)} seed={args.seed} acc={acc} max_epochs={max_epochs} patience={patience}", file=sys.stderr)
         layout = CheckpointLayout(args.output_dir)
+        run_cfg = {"config": args.config, "recipe": cfg, "db": os.path.abspath(args.db), "seed": args.seed, "batch_size": args.batch_size,
+                   "accumulation_steps": acc, "max_epochs": max_epochs, "patience": patience}
+        layout.check_run_config(run_cfg)          # A28: the chain never changes recipe/db/seed silently
         resume_ckpt = layout.resume_dir(args.resume)
         if args.resume and resume_ckpt:
             print(f"Resuming from {resume_ckpt}", file=sys.stderr)
-        _write_json(os.path.join(args.output_dir, "run_config.json"), {"config": args.config, "recipe": cfg, "db": os.path.abspath(args.db),
-                    "seed": args.seed, "batch_size": args.batch_size, "accumulation_steps": acc, "max_epochs": max_epochs, "patience": patience})
+        if not os.path.exists(os.path.join(args.output_dir, "run_config.json")):
+            _write_json(os.path.join(args.output_dir, "run_config.json"), run_cfg)
         train(
             train_data, eval_data,
             lr=float(cfg["lr"]), num_epochs=max_epochs, schedule_lr=True, do_eval=True,
             batch_size=args.batch_size, accumulation_steps=acc, num_workers=args.num_workers,
             checkpoint_path=args.output_dir, output_dir=args.output_dir, max_grad_norm=1,
             notes=f"B5 {cfg.get('name')} seed {args.seed}", encoder_model=cfg["encoder_model"],
-            resume_from_checkpoint=resume_ckpt, save_every_epoch=True, save_every_n_steps=args.save_every_n_steps or 10**9,
+            resume_from_checkpoint=resume_ckpt, save_every_epoch=True, save_every_n_steps=args.save_every_n_steps,
             unlink=False, log_wandb=not args.no_wandb,
             b5_config=cfg, seed=args.seed, patience=patience, run_dir=args.output_dir, benchmark_steps=args.benchmark_steps,
         )

@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.17; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.18; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -338,6 +338,13 @@ Author decision: the new version is trained on **genome tiles** whose label cont
 - **Per-locus prompted mode** (single-gene window, published behaviour) remains a separate, reported mode for the additions/B1 analyses (A26).
 - The stitching rule is frozen here before any whole-genome run; changing it after seeing B7 results requires a new labelled arm.
 
+## A28. Amendment v1.18 (2026-09-02; before any B5 seed starts) — job-chain checkpointing on ACCESS (48-hour wall-clock limit)
+
+- Every seed runs as a **chain of SLURM jobs** on the same run directory: `--resume auto` restarts from the newest of the last completed epoch (`epoch_NN/accelerate_state`) and the mid-epoch `latest_state` (saved every `--save-every-n-steps` optimizer steps, default 200, and on the SIGUSR1 that SLURM sends 15 minutes before the limit); the job resubmits itself with `--dependency=afterany` until `TRAINING_DONE` exists, never after `TRAINING_FAILED` or a non-zero exit, and at most `CHAIN_MAX` (default 8) times.
+- `latest_state` holds model, optimizer, scheduler and RNG state plus epoch/step/global_step and the early-stopping state, written atomically (`.tmp` → rename); a completed epoch directory supersedes it. Mid-epoch resume skips the already-consumed micro-batches of that epoch, so the effective sample order of an epoch is unchanged by a restart.
+- The first job writes `run_config.json` (recipe, database path, seed, batch and accumulation, max epochs, patience); every later job **refuses to resume** if any of these differ. Code changes inside a chain are forbidden; a changed recipe is a new labelled run.
+- The per-epoch rsync watcher (deploy/deltaai/sync_watch.sh) restarts with each job and uses `.synced` markers, so the chain never copies an epoch twice.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
@@ -488,3 +495,4 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 | 2026-09-02 | no B5 database built | v1.15: A25 B5 = new-version training with variable context tiers 30,720/61,440/129,024 (tier6144-v2), all seeds on NSF ACCESS, published-recipe parity control optional/supplementary | author decision: variable context for the new release; use ACCESS |
 | 2026-09-02 | no B5 database built | v1.16: A26 whole-window labels (GSF v3: <gene>/<empty>, tiles per tier, most-restrictive tile split, edge exclusion, caps 64 genes / 4,096 tokens, vocab 290) | author decision: label every gene inside the window |
 | 2026-09-02 | no whole-genome inference run | v1.17: A27 tiled inference with edge margin 1,000 nt and a fixed stitching precedence; v3 caps 96 genes / 8,192 tokens from tile statistics | author instruction to freeze the stitching rule and to set caps from data |
+| 2026-09-02 | no B5 seed started | v1.18: A28 job-chain checkpointing (latest_state every N steps and on SIGUSR1, self-resubmission until TRAINING_DONE, run_config refusal on drift) | 48-hour job limit on ACCESS; no epoch may be lost |
