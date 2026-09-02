@@ -1,0 +1,113 @@
+"""Tests for the torch-free B5 trainer runtime (issue #17)."""
+import json
+import os
+import sys
+import types
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(path, name):
+    mod = types.ModuleType(name)
+    mod.__file__ = str(path)
+    sys.modules[name] = mod
+    exec(compile(path.read_text(), str(path), "exec"), mod.__dict__)
+    return mod
+
+
+@pytest.fixture(scope="module")
+def rt():
+    return _load(ROOT / "src" / "transgenic" / "training" / "b5_runtime.py", "b5_runtime")
+
+
+def test_load_frozen_config_and_model_kwargs(rt):
+    cfg = rt.load_b5_config(str(ROOT / "configs" / "b5_400m_v1.json"))
+    kw = rt.model_kwargs(cfg)
+    assert kw["encoder_d_model"] == 768 and kw["decoder_d_model"] == 1536 and kw["encoder_layers"] == 12 and kw["decoder_layers"] == 12
+    assert kw["encoder_attention_heads"] == 6 and len(kw["attention_window"]) == 12 and kw["attention_window"][0] == 1024
+    assert cfg["patience"] == 3 and cfg["optimizer"] == "AdamW" and cfg["seeds"]["primary"] == 123
+    assert rt.accumulation_steps(cfg, 1) == 96 and rt.accumulation_steps(cfg, 4) == 24
+    with pytest.raises(ValueError):
+        rt.accumulation_steps(cfg, 5)
+
+
+def test_wide_config_is_rejected(rt, tmp_path):
+    cfg = json.load(open(ROOT / "configs" / "b5_400m_v1.json"))
+    cfg["d_model_encoder"], cfg["encoder_layers"] = 1152, 16
+    p = tmp_path / "wide.json"
+    p.write_text(json.dumps(cfg))
+    with pytest.raises(ValueError):
+        rt.load_b5_config(str(p))
+
+
+def test_early_stopper_patience_three(rt):
+    es = rt.EarlyStopper(patience=3)
+    seq = [1.0, 0.9, 0.8, 0.81, 0.82, 0.83]
+    out = [es.update(i + 1, v) for i, v in enumerate(seq)]
+    assert [o[0] for o in out] == [True, True, True, False, False, False]
+    assert [o[1] for o in out] == [False, False, False, False, False, True]
+    assert es.best_epoch == 3 and es.best == 0.8
+    s = es.state()
+    es2 = rt.EarlyStopper(patience=3)
+    es2.load_state(s)
+    assert es2.best_epoch == 3 and es2.bad_epochs == 3
+
+
+def test_checkpoint_layout_atomic_rename_best_and_done(rt, tmp_path):
+    lay = rt.CheckpointLayout(str(tmp_path / "seed123"))
+    tmp = lay.begin_epoch(1)
+    assert tmp.endswith("epoch_01.tmp") and os.path.isdir(tmp)
+    (Path(tmp) / "model.safetensors").write_bytes(b"x")
+    final = lay.finish_epoch(1, eval_loss=0.9, train_loss=1.0, is_best=True)
+    assert final.endswith("epoch_01") and not os.path.exists(tmp)
+    assert json.load(open(Path(final) / "eval.json"))["eval_loss"] == 0.9
+    assert os.readlink(tmp_path / "seed123" / "best") == "epoch_01"
+    lay.begin_epoch(2)
+    lay.finish_epoch(2, eval_loss=0.95, train_loss=0.9, is_best=False)
+    assert lay.completed_epochs() == [1, 2] and lay.latest_epoch() == 2
+    assert os.readlink(tmp_path / "seed123" / "best") == "epoch_01"
+    assert lay.resume_dir("auto") is None  # no accelerate_state saved
+    os.makedirs(Path(lay.epoch_dir(2)) / "accelerate_state")
+    assert lay.resume_dir("auto").endswith("epoch_02")
+    lay.write_state({"epoch": 2}); assert lay.read_state()["epoch"] == 2
+    lay.mark_done(); assert (tmp_path / "seed123" / "TRAINING_DONE").exists()
+
+
+def test_split_row_numbers_from_b5_db(rt, tmp_path):
+    duckdb = pytest.importorskip("duckdb")
+    db = str(tmp_path / "t.db")
+    con = duckdb.connect(db)
+    con.sql("CREATE TABLE geneList (rn INT, species_id VARCHAR, split VARCHAR, gff VARCHAR, geneModel VARCHAR)")
+    con.executemany("INSERT INTO geneList VALUES (?,?,?,?,?)", [
+        [1, "Athaliana", "train", "g", "a"], [2, "Athaliana", "valid", "g", "b"], [3, "Osativa", "train", "g", "c"], [4, "Osativa", "test", "g", "d"]])
+    con.close()
+    assert rt.split_row_numbers(db, "train") == [1, 3] and rt.split_row_numbers(db, "valid") == [2]
+    con = duckdb.connect(db); con.sql("INSERT INTO geneList VALUES (5, 'Zmays', 'train', 'g', 'Zm1')"); con.close()
+    with pytest.raises(ValueError):
+        rt.split_row_numbers(db, "train")
+
+
+def test_split_row_numbers_refuses_legacy_db(rt, tmp_path):
+    duckdb = pytest.importorskip("duckdb")
+    db = str(tmp_path / "legacy.db")
+    con = duckdb.connect(db); con.sql("CREATE TABLE geneList (rn INT, geneModel VARCHAR, gff VARCHAR)"); con.close()
+    with pytest.raises(ValueError):
+        rt.split_row_numbers(db, "train")
+
+
+def test_parse_args_requires_seed_and_output_with_config(rt):
+    a = rt.parse_args(["--db", "x.db", "--config", "c.json", "--seed", "456", "--output-dir", "runs/seed456", "--resume", "auto"])
+    assert a.seed == 456 and a.resume == "auto" and a.benchmark_steps == 0
+    with pytest.raises(SystemExit):
+        rt.parse_args(["--db", "x.db", "--config", "c.json"])
+    legacy = rt.parse_args(["--db", "x.db"])
+    assert legacy.config is None
+
+
+def test_benchmark_summary(rt):
+    s = rt.benchmark_summary([1.0] * 30, [9600] * 30, rows_in_train=96000, rows_per_step=96, peak_mem_gb=20.5, warmup=10)
+    assert s["steps_measured"] == 20 and s["steps_per_epoch"] == 1000 and s["hours_per_epoch"] == pytest.approx(1000 / 3600)
+    assert s["tokens_per_sec"] == 9600

@@ -101,12 +101,12 @@ class isoformData(Dataset):
 		with duckdb.connect(self.db, config={"access_mode": "READ_ONLY"}) as con:
 			try:
 				# Unpack all columns from the geneList table
-				gm, region_start, region_end, strand, chr, region_seq, gff, sfpb, stpb, fpb, tpb, _ = con.sql(f"SELECT * FROM geneList where rn={idx}").fetchall()[0]
+				gm, region_start, region_end, strand, chr, region_seq, gff, sfpb, stpb, fpb, tpb, _ = con.sql(f"SELECT geneModel, start, fin, strand, chromosome, sequence, gff, static_fpb, static_tpb, five_prime_buf, three_prime_buf, rn FROM geneList where rn={idx}").fetchall()[0]
 			except:
 				# Fallback: if this index fails, try a random different index
 				newidx = torch.randint(self.__len__(), (1,)).item()
 				print(f"Warning {idx=} produced an error... using {newidx}", file=sys.stderr)
-				gm, region_start, region_end, strand, chr, region_seq, gff, sfpb, stpb, fpb, tpb, _ = con.sql(f"SELECT * FROM geneList where rn={newidx}").fetchall()[0]
+				gm, region_start, region_end, strand, chr, region_seq, gff, sfpb, stpb, fpb, tpb, _ = con.sql(f"SELECT geneModel, start, fin, strand, chromosome, sequence, gff, static_fpb, static_tpb, five_prime_buf, three_prime_buf, rn FROM geneList where rn={newidx}").fetchall()[0]
 
 		# Data augmentation: randomly shuffle the order of GFF features and transcripts
 		if self.shuffle:
@@ -172,7 +172,7 @@ class isoformDataHyena(Dataset):
 	    the inherited connection is closed and a fresh one is opened
 	  - Connections are closed in __del__ when the dataset is garbage-collected
 	"""
-	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None, gff_vocab_version="v2"):
+	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None, split=None, gff_vocab_version="v2"):
 		"""
 		Args:
 			db: Path to DuckDB database file.
@@ -180,6 +180,7 @@ class isoformDataHyena(Dataset):
 			encoder_model: HuggingFace model ID for the HyenaDNA encoder tokenizer.
 			global_attention: Whether to use global attention (not used with HyenaDNA).
 			exclude_prefix: Gene name prefix to exclude (e.g., "Zm" for maize).
+			split: "train" | "valid" | "test" — select rows by the frozen split column of a B5 database.
 			gff_vocab_version: Vocabulary version for the decoder GFF tokenizer.
 				Use "v1" (legacy 272 tokens) when pairing with the published
 				jlomas/HyenaTransgenic-* checkpoints (vocab_size 272); "v2"
@@ -200,7 +201,12 @@ class isoformDataHyena(Dataset):
 		# Also compute isoform counts for sampling weight rebalancing
 		self._sample_weights = None
 		with duckdb.connect(self.db, config={"access_mode": "READ_ONLY"}) as con:
-			if exclude_prefix:
+			if split:
+				# B5: membership comes from the frozen split column (docs/gsf_spec_v1.md §7), never from random_split
+				rows = con.sql("SELECT rn, gff FROM geneList WHERE split = ? AND gff IS NOT NULL ORDER BY rn", params=[split]).fetchall()
+				if not rows:
+					raise ValueError(f"no rows with split={split!r} in {db}; build it with scripts/build_b5_database.py")
+			elif exclude_prefix:
 				# SQL-level filtering: exclude genes whose name starts with the prefix
 				rows = con.sql("SELECT rn, gff FROM geneList WHERE geneModel NOT LIKE ? ORDER BY rn",
 					params=[f"{exclude_prefix}%"]).fetchall()
@@ -290,13 +296,13 @@ class isoformDataHyena(Dataset):
 		try:
 			# Fetch all columns from the geneList table by row number
 			# Columns: geneModel, region_start, region_end, strand, chr, region_seq, gff, ...
-			gm, region_start, region_end, strand, chr, region_seq, gff, sfpb, stpb, fpb, tpb, _ = con.sql("SELECT * FROM geneList where rn=?", params=[rn]).fetchall()[0]
+			gm, region_start, region_end, strand, chr, region_seq, gff, sfpb, stpb, fpb, tpb, _ = con.sql("SELECT geneModel, start, fin, strand, chromosome, sequence, gff, static_fpb, static_tpb, five_prime_buf, three_prime_buf, rn FROM geneList where rn=?", params=[rn]).fetchall()[0]
 		except Exception as e:
 			# Fallback: try a random different sample if this one fails
 			newidx = torch.randint(self._length, (1,)).item()
 			rn_fallback = self._index_map[newidx]
 			print(f"Warning rn={rn} produced {type(e).__name__}: {e}; falling back to rn={rn_fallback}", file=sys.stderr)
-			gm, region_start, region_end, strand, chr, region_seq, gff, sfpb, stpb, fpb, tpb, _ = con.sql("SELECT * FROM geneList where rn=?", params=[rn_fallback]).fetchall()[0]
+			gm, region_start, region_end, strand, chr, region_seq, gff, sfpb, stpb, fpb, tpb, _ = con.sql("SELECT geneModel, start, fin, strand, chromosome, sequence, gff, static_fpb, static_tpb, five_prime_buf, three_prime_buf, rn FROM geneList where rn=?", params=[rn_fallback]).fetchall()[0]
 
 		# Tokenize GFF labels using the custom GFFTokenizer
 		tx_count = 1  # Default transcript count
