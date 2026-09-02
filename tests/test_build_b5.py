@@ -1,0 +1,154 @@
+"""Integration tests for the B5 builder (spec §6–§8) and the CLI wiring of #12."""
+import ast
+import json
+import random
+import subprocess
+import sys
+import types
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+duckdb = pytest.importorskip("duckdb")
+
+
+def _load(path, name):
+    mod = types.ModuleType(name)
+    mod.__file__ = str(path)
+    sys.modules[name] = mod
+    exec(compile(path.read_text(), str(path), "exec"), mod.__dict__)
+    return mod
+
+
+@pytest.fixture(scope="module")
+def b5():
+    return _load(ROOT / "src" / "transgenic" / "datasets" / "build_b5.py", "build_b5")
+
+
+def _write_inputs(tmp_path, gsf):
+    rng = random.Random(7)
+    chrom = {"Chr1": "".join(rng.choice("ACGT") for _ in range(30000)), "2": "".join(rng.choice("ACGT") for _ in range(20000))}
+    fasta = tmp_path / "g.fa"
+    fasta.write_text("".join(f">{k}\n{v}\n" for k, v in chrom.items()))
+    genes = {
+        "g1": ("Chr1", "+", {"g1.1": [("five_prime_UTR", 1001, 1050, "."), ("CDS", 1051, 1350, "0"), ("CDS", 1501, 1700, "0"), ("three_prime_UTR", 1701, 1800, ".")],
+                            "g1.2": [("CDS", 1051, 1350, "0"), ("CDS", 1601, 1700, "0")]}),
+        "g2": ("Chr1", "-", {"g2.1": [("CDS", 5001, 5300, "0")]}),
+        "gbig": ("2", "+", {"gbig.1": [("CDS", 100 + 10 * i, 105 + 10 * i, "0") for i in range(151)]}),  # 151 CDS -> rejected
+        "glast": ("2", "-", {"glast.1": [("CDS", 3001, 3300, "0"), ("CDS", 3401, 3700, "0")]}),  # last gene at EOF
+    }
+    lines = []
+    for gid, (chrom_name, strand, txs) in genes.items():
+        allf = [f for fs in txs.values() for f in fs]
+        gs, ge = min(f[1] for f in allf), max(f[2] for f in allf)
+        lines.append(f"{chrom_name}\tt\tgene\t{gs}\t{ge}\t.\t{strand}\t.\tID={gid}.v1;Name={gid}")
+        for tid, fs in txs.items():
+            lines.append(f"{chrom_name}\tt\tmRNA\t{gs}\t{ge}\t.\t{strand}\t.\tID={tid};Parent={gid}.v1")
+            for k, (t, s, e, ph) in enumerate(fs):
+                lines.append(f"{chrom_name}\tt\t{t}\t{s}\t{e}\t.\t{strand}\t{ph}\tID={tid}.{k};Parent={tid}")
+    gff = tmp_path / "g.gff3"
+    gff.write_text("##gff-version 3\n" + "\n".join(lines) + "\n")
+    split = tmp_path / "split.tsv"
+    split.write_text("species_id\tgene_id\torthogroup_id\tsplit\tstrict_holdout\tseed\tsource_version\n"
+                     "Athaliana\tg1\tOG1\ttrain\tfalse\t123\tv1\nAthaliana\tg2\tOG2\tvalid\tfalse\t123\tv1\n"
+                     "Athaliana\tgbig\tOG3\ttrain\tfalse\t123\tv1\nAthaliana\tglast\tOG4\ttest\ttrue\t123\tv1\n")
+    manifest = tmp_path / "species.tsv"
+    manifest.write_text(f"species_id\tspecies\ttable_s1_version\tfasta\tfasta_md5\tgff\tgff_md5\tnote\nAthaliana\tA\tTAIR10\t{fasta}\t\t{gff}\t\t\n")
+    return fasta, gff, split, manifest
+
+
+def test_build_validate_end_to_end(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    db = tmp_path / "b5.db"
+    res = b5.build_b5_database(str(db), str(manifest), str(split), rc="isoform-only", add_extra=0, verify_md5=False)
+    r = res[0]
+    assert r["rows"] == 4 and r["rc_rows"] == 1  # g1(+rc), g2, glast; gbig rejected
+    assert r["rejected"][0]["gene_id"] == "gbig" and "CDS" in r["rejected"][0]["reason"]
+    con = duckdb.connect(str(db), read_only=True)
+    rows = {row[0]: row for row in con.sql("SELECT geneModel, split, is_rc, predict, gff, gsf_token_count, fin - start, strict_holdout FROM geneList").fetchall()} if False else \
+           {row[0]: row for row in con.sql("SELECT geneModel, split, is_rc, gff, gsf_token_count, fin - start, strict_holdout, sequence FROM geneList").fetchall()}
+    assert "glast" in rows, "last gene of the file must be flushed"
+    assert rows["g1-rc"][1] == "train" and rows["g1-rc"][2] is True and rows["g1"][2] is False
+    assert all(row[5] % 6144 == 0 for row in rows.values())
+    assert rows["glast"][6] is True and rows["glast"][1] == "test"
+    assert all(len(row[7]) == row[5] for row in rows.values())
+    assert con.sql("SELECT count(*) FROM build_manifest").fetchone()[0] == 1
+    assert con.sql("SELECT count(*) FROM gene_split").fetchone()[0] == 4
+    con.close()
+    report = b5.validate_b5_database(str(db))
+    assert report["ok"], report["violations"]
+
+
+def test_predict_mode_stores_null_labels(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    con = duckdb.connect(str(tmp_path / "p.db"))
+    rows, _ = b5.read_split_table(str(split))
+    b5.build_species(con, "Athaliana", str(fasta), str(gff), rows, "x", rc="all", mode="predict")
+    assert con.sql("SELECT count(*) FROM geneList WHERE gff IS NULL").fetchone()[0] == con.sql("SELECT count(*) FROM geneList").fetchone()[0]
+    assert con.sql("SELECT count(*) FROM geneList WHERE is_rc").fetchone()[0] == 0  # no RC without labels
+    con.close()
+
+
+def test_missing_split_fails_closed_unless_legacy(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    con = duckdb.connect(str(tmp_path / "m.db"))
+    with pytest.raises(b5.gc.SplitError):
+        b5.build_species(con, "Athaliana", str(fasta), str(gff), {}, "x")
+    res = b5.build_species(con, "Athaliana", str(fasta), str(gff), {}, "x", allow_missing_split=True)
+    assert res["rows"] >= 3 and con.sql("SELECT count(*) FROM geneList WHERE split IS NULL").fetchone()[0] == res["rows"]
+    con.close()
+
+
+def test_excluded_species_refused(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    manifest.write_text(manifest.read_text().replace("Athaliana", "Zmays"))
+    with pytest.raises(ValueError):
+        b5.build_b5_database(str(tmp_path / "z.db"), str(manifest), str(split), verify_md5=False)
+
+
+def test_validate_detects_maize_rows_and_split_violations(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    db = tmp_path / "v.db"
+    b5.build_b5_database(str(db), str(manifest), str(split), rc="none", verify_md5=False)
+    con = duckdb.connect(str(db))
+    con.execute("UPDATE geneList SET split = 'valid' WHERE geneModel = 'glast'")  # strict held-out moved out of test
+    con.execute("INSERT INTO geneList (rn, geneModel, species_id, gene_id, orthogroup_id, split, is_rc, strict_holdout, gff) "
+                "VALUES (999, 'GRMZM2G0001', 'Zmays', 'GRMZM2G0001', 'OG9', 'train', false, false, NULL)")
+    con.close()
+    report = b5.validate_b5_database(str(db))
+    joined = "\n".join(report["violations"]).lower()
+    assert "strict" in joined and "zmays" in joined and "grmzm" in joined
+
+
+def test_validate_cds_clean_filter(b5):
+    seq = "ATG" + "GCT" * 5 + "TAA"
+    assert b5.validate_cds(f"0|CDS1|{len(seq)}|+|A>CDS1", seq) == (True, "")
+    assert b5.validate_cds(f"0|CDS1|{len(seq)-1}|+|A>CDS1", seq[:-1])[0] is False
+    rc = b5.revcomp(seq)
+    assert b5.validate_cds(f"0|CDS1|{len(rc)}|-|A>CDS1", rc) == (True, "")
+
+
+def test_gff2gsf_cli_uses_contract(tmp_path):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    out = subprocess.run([sys.executable, str(ROOT / "scripts" / "gff2gsf.py"), str(gff)], capture_output=True, text=True, check=True)
+    lines = dict(l.split("\t") for l in out.stdout.strip().splitlines())
+    assert set(lines) == {"g1", "g2", "glast"} and "skip gbig" in out.stderr
+    assert lines["g2"] == "0|CDS1|300|-|A>CDS1"  # relative to gene start, 0-based half-open
+    assert lines["g1"].split(">")[1].count(";") == 1
+
+
+def test_create_database_rc_mode_resolution():
+    src = (ROOT / "scripts" / "create_database.py").read_text()
+    tree = ast.parse(src)
+    fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "resolve_rc_mode")
+    ns = {"sys": sys, "print": lambda *a, **k: None}
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), "cd", "exec"), ns)
+    resolve = ns["resolve_rc_mode"]
+    A = lambda **k: types.SimpleNamespace(**{**dict(rc=None, add_rc=False, add_rc_iso_only=False), **k})
+    assert resolve(A()) == "none"
+    assert resolve(A(rc="isoform-only")) == "isoform-only"
+    assert resolve(A(add_rc_iso_only=True)) == "isoform-only"  # no longer a silent no-op
+    assert resolve(A(add_rc=True)) == "all"
+    with pytest.raises(SystemExit):
+        resolve(A(rc="all", add_rc=True))

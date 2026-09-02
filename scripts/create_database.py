@@ -97,6 +97,11 @@ Examples:
              "Helps model learn UTR boundaries (default: 0, recommended: 200).",
     )
     aug.add_argument(
+        "--rc", choices=["none", "all", "isoform-only"], default=None,
+        help="Reverse-complement augmentation: none | all genes | only genes with >= 2 transcripts "
+             "(replaces --add-rc/--add-rc-iso-only, which remain as deprecated aliases).",
+    )
+    aug.add_argument(
         "--add-rc", action="store_true",
         help="Add reverse complement copies of all genes for data augmentation.",
     )
@@ -148,6 +153,22 @@ Examples:
     return parser.parse_args()
 
 
+def resolve_rc_mode(args) -> str:
+    """Single source of truth for RC augmentation. --add-rc-iso-only alone used to be a silent no-op."""
+    if args.rc is not None:
+        if args.add_rc or args.add_rc_iso_only:
+            print("Error: --rc cannot be combined with the deprecated --add-rc/--add-rc-iso-only flags.", file=sys.stderr)
+            sys.exit(1)
+        return args.rc
+    if args.add_rc_iso_only:
+        print("Warning: --add-rc-iso-only is deprecated; use --rc isoform-only.", file=sys.stderr)
+        return "isoform-only"
+    if args.add_rc:
+        print("Warning: --add-rc is deprecated; use --rc all.", file=sys.stderr)
+        return "all"
+    return "none"
+
+
 def main():
     args = parse_args()
 
@@ -167,9 +188,9 @@ def main():
             sys.exit(1)
 
     # Validate mutually exclusive RC options
-    if args.add_rc and args.add_rc_iso_only:
-        print("Error: --add-rc and --add-rc-iso-only are mutually exclusive.", file=sys.stderr)
-        sys.exit(1)
+    rc_mode = resolve_rc_mode(args)
+    args.add_rc = rc_mode != "none"
+    args.add_rc_iso_only = rc_mode == "isoform-only"
 
     # Resolve species prefixes for chromosome naming
     if args.no_prefix:
@@ -245,10 +266,7 @@ def main():
         opts = []
         if args.add_extra:
             opts.append(f"addExtra={args.add_extra}")
-        if args.add_rc:
-            opts.append("addRC")
-        if args.add_rc_iso_only:
-            opts.append("addRCIsoOnly")
+        opts.append(f"rc={rc_mode}")
         if args.clean:
             opts.append("clean")
         if opts:
