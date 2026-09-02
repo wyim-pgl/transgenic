@@ -159,7 +159,7 @@ def split_row_numbers(db: str, split: str, excluded_species: Sequence[str] = ("Z
     import duckdb
     con = duckdb.connect(db, read_only=True)
     try:
-        cols = {r[0] for r in con.sql("PRAGMA table_info('geneList')").fetchall()} if hasattr(con, "sql") else set()
+        cols = {r[1] for r in con.sql("PRAGMA table_info('geneList')").fetchall()}  # (cid, name, type, ...)
         if "split" not in cols:
             raise ValueError(f"{db} has no split column; it was not built by scripts/build_b5_database.py")
         n_null = con.sql("SELECT count(*) FROM geneList WHERE split IS NULL").fetchone()[0]
