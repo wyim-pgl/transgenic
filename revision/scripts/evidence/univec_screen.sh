@@ -29,10 +29,10 @@ for f in chunks/*.fa.gz chunks/*.fasta.gz chunks/*.fa chunks/*.fasta; do
       -outfmt "6 qseqid sseqid pident length qstart qend sstart send evalue score qlen" > "chunks/$b.hits.tmp" && mv "chunks/$b.hits.tmp" "chunks/$b.hits"
 done
 cat chunks/*.hits > hits.tsv
-$PY "$REPO/revision/scripts/61_univec_trim.py" --fasta "$IN" --hits hits.tsv --out est.univec.fa.gz --report report.tsv --summary summary.json --min-len 100
+$PY "$REPO/revision/scripts/61_univec_trim.py" --fasta "$IN" --hits hits.tsv --out est.univec.fa.gz --report report.tsv --summary summary.json --min-len 121
 md5sum est.univec.fa.gz > est.univec.fa.gz.md5
 { echo "date=$(date -Is)"; echo "input=$IN"; echo "input_md5=$(cut -d' ' -f1 "$ROOT/est/$SP/est.fa.gz.md5" 2>/dev/null)";
   echo "univec=UniVec_Core $(cat "$DBDIR/UniVec_Core.version") md5=$(cut -d' ' -f1 "$DBDIR/UniVec_Core.md5")";
   echo "blastn=$($BLASTN -version | head -1)"; echo "params=-task blastn -reward 1 -penalty -5 -gapopen 3 -gapextend 3 -dust yes -soft_masking true -evalue 700 -searchsp 1750000000000";
-  echo "trimmer=revision/scripts/61_univec_trim.py min_len=100 terminal_nt=25"; echo "summary=$(cat summary.json | tr -d '\n ')"; } > PROVENANCE.txt
+  echo "trimmer=revision/scripts/61_univec_trim.py min_len=121 terminal_nt=25"; echo "summary=$(cat summary.json | tr -d '\n ')"; } > PROVENANCE.txt
 touch DONE; echo "$SP univec finished: $(cat summary.json | tr -d '\n ')"

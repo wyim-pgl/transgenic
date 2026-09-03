@@ -10,7 +10,7 @@ Categories (NCBI VecScreen, raw score, terminal = match within 25 nt of either e
   weak     terminal >= 16, internal >= 23      (weak hits are reported, not acted on)
 Actions: terminal strong/moderate -> trim the matched end (plus anything outboard of it);
          internal strong -> the record is a suspected chimera: split at the match and keep every
-         piece >= --min-len (default 100 nt); internal moderate -> flagged only;
+         piece >= --min-len (default 121 nt, protocol A36); internal moderate -> flagged only;
          records shorter than --min-len after trimming are dropped.
 Outputs: trimmed FASTA(.gz), a per-record report TSV (accession, qlen, action, kept ranges, categories)
 and a JSON summary. Pure Python; no external dependencies.
@@ -26,6 +26,10 @@ from typing import Dict, Iterable, Iterator, List, Tuple
 
 TERMINAL_NT = 25
 THRESH = {"terminal": {"strong": 24, "moderate": 19, "weak": 16}, "internal": {"strong": 30, "moderate": 25, "weak": 23}}
+# Protocol A36 (v1.26, author decision 2026-09-03): EST records of 120 nt or shorter are excluded
+# from the evidence layer. Raised from the A8/A21 floor of 100. Keep this as the default so a caller
+# that omits --min-len still gets the protocol value.
+DEFAULT_MIN_LEN = 121
 
 
 def open_any(path: str, mode: str = "rt"):
@@ -111,7 +115,7 @@ def plan_record(qlen: int, rec_hits: Iterable[Tuple[int, int, int, int]], min_le
     return "trim" if pieces != [(1, qlen)] else "keep", pieces, tags
 
 
-def run(fasta: str, hits_path: str, out_fasta: str, report: str, summary: str, min_len: int = 100) -> Dict:
+def run(fasta: str, hits_path: str, out_fasta: str, report: str, summary: str, min_len: int = DEFAULT_MIN_LEN) -> Dict:
     hits = read_hits(hits_path)
     counts = defaultdict(int)
     with open_any(out_fasta, "wt") as fo, open(report, "w") as fr:
@@ -143,7 +147,7 @@ def main(argv=None):
     ap.add_argument("--out", required=True, help="trimmed FASTA (.gz allowed)")
     ap.add_argument("--report", required=True)
     ap.add_argument("--summary", required=True)
-    ap.add_argument("--min-len", type=int, default=100)
+    ap.add_argument("--min-len", type=int, default=DEFAULT_MIN_LEN, help="A36 floor: records shorter than this are dropped (default %(default)s)")
     a = ap.parse_args(argv)
     c = run(a.fasta, a.hits, a.out, a.report, a.summary, a.min_len)
     print(json.dumps(c))
