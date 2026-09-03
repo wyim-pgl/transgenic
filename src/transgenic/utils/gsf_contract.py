@@ -34,7 +34,15 @@ CAPS_V3 = {"tokens": 8192, "genes": 96}   # from tile statistics (A. thaliana 12
 WINDOW_POLICY_V3 = "tile6144-v3"
 EMPTY_KEEP_PROB = 0.1
 BLOCK_LEN = 8 * 129024       # 1,032,192 nt: genomic blocks that carry the tile split (A29)
-LEAK_MASK_FLANK = 100        # nt of N on each side of a leak-masked gene
+LEAK_MASK_FLANK = 100        # nt of N on each side of a leak-masked gene (A29; A33 draws it from FLANK_RANGE)
+# --- A33 parameters, fixed from the nine reference annotations before the B5 build ---
+FLANK_RANGE = (50, 150)      # seeded uniform flank per masked component (A33.3)
+MASK_FRACTION_MAX = 0.60     # train/valid tile dropped above this masked-base fraction (above the p95 of every tier)
+DECOY_RATIO = 1.0 / 3.0      # decoy rate = min(DECOY_MAX, species mask rate * DECOY_RATIO), train tiles only
+DECOY_MAX = 0.05
+EDGE_MARGIN = 1000           # A27 inference-side acceptance margin; A33.4 invariant ties it to the three offsets
+STITCH_RECIPROCAL = 0.90     # same-locus test for non-identical same-strand predictions (A33.2)
+STITCH_MONO_END = 1000       # mono-exon pairs: both ends within this distance
 
 SEG_CLASSES = ["protein_coding_gene", "lncRNA", "exon", "intron", "splice_donor", "splice_acceptor", "5UTR", "3UTR",
                "CTCF-bound", "polyA_signal", "enhancer_Tissue_specific", "enhancer_Tissue_invariant",
@@ -577,14 +585,16 @@ def check_caps_v3(gsf: str, window_len: Optional[int] = None) -> None:
     blocks = split_v3(gsf)
     if len(blocks) > CAPS_V3["genes"]:
         raise CapError(f"genes per window {len(blocks)} > {CAPS_V3['genes']}")
-    prev_end = -1
+    prev_key: Optional[Tuple[int, int, str]] = None
     for b in blocks:
         check_caps(b, window_len=None)
         feats, _, _ = _parse(b)
         gs, ge = min(f[1] for f in feats.values()), max(f[2] for f in feats.values())
-        if gs < prev_end:
-            raise CapError("overlapping genes in one window label")
-        prev_end = ge
+        # A33.1: gene blocks may overlap; the block key (start, end, canonical block) must not decrease.
+        key = (gs, ge, canonicalize(b))
+        if prev_key is not None and key < prev_key:
+            raise CapError(f"gene blocks out of canonical order ({key[:2]} after {prev_key[:2]})")
+        prev_key = key
         if window_len is not None and ge > window_len:
             raise CapError(f"gene extends beyond the window ({ge} > {window_len})")
     n = count_tokens_v3(gsf)
@@ -639,11 +649,125 @@ def tile_split(blocks: Sequence[Tuple[int, int, str]], ws: int, we: int) -> str:
     return best
 
 
-def leak_mask(seq: str, ws: int, genes: Sequence["Gene"], flank: int = LEAK_MASK_FLANK) -> str:
-    """Replace the sequence of `genes` (window-relative) by N so that an unlabelled gene never teaches 'no gene here'."""
+def leak_mask(seq: str, ws: int, genes: Sequence["Gene"], flank: int = LEAK_MASK_FLANK,
+              flanks: Optional[Sequence[int]] = None) -> str:
+    """Replace the sequence of `genes` (window-relative) by N so that an unlabelled gene never teaches 'no gene here'.
+    `flanks` gives a per-gene flank (A33.3 draws it from FLANK_RANGE); otherwise the fixed `flank` is used."""
     chars = list(seq)
     L = len(chars)
-    for g in genes:
-        a, b = max(0, g.start0 - ws - flank), min(L, g.end0 - ws + flank)
+    for i, g in enumerate(genes):
+        f = flanks[i] if flanks is not None else flank
+        a, b = max(0, g.start0 - ws - f), min(L, g.end0 - ws + f)
         chars[a:b] = "N" * (b - a)
     return "".join(chars)
+
+
+def masked_fraction(seq: str) -> float:
+    """Fraction of N in a window sequence (A33.3 drops train/valid tiles above MASK_FRACTION_MAX)."""
+    return (seq.count("N") + seq.count("n")) / len(seq) if seq else 0.0
+
+
+def overlap_components(genes: Sequence["Gene"]) -> List[List["Gene"]]:
+    """Connected components of genes whose spans overlap (A33.3). Masking one member of a component forces the whole
+    component out of the label, so no labelled gene keeps a label whose bases were replaced by N."""
+    order = sorted(range(len(genes)), key=lambda i: (genes[i].start0, genes[i].end0))
+    comps: List[List[int]] = []
+    cur: List[int] = []
+    cur_end = -1
+    for i in order:
+        g = genes[i]
+        if cur and g.start0 < cur_end:
+            cur.append(i)
+            cur_end = max(cur_end, g.end0)
+        else:
+            if cur:
+                comps.append(cur)
+            cur, cur_end = [i], g.end0
+    if cur:
+        comps.append(cur)
+    return [[genes[i] for i in c] for c in comps]
+
+
+def cds_signature(gene: "Gene") -> Tuple[str, Tuple[Tuple[int, int], ...]]:
+    """(strand, merged CDS intervals) of a gene — the key for A33.1 annotation-duplicate collapse."""
+    iv = sorted((f.start1, f.end1) for tx in gene.transcripts.values() for f in tx if f.type == "CDS")
+    merged: List[List[int]] = []
+    for s, e in iv:
+        if merged and s <= merged[-1][1] + 1:
+            merged[-1][1] = max(merged[-1][1], e)
+        else:
+            merged.append([s, e])
+    return gene.strand, tuple((a, b) for a, b in merged)
+
+
+def collapse_duplicate_genes(genes: Sequence["Gene"]) -> Tuple[List["Gene"], int]:
+    """A33.1: genes of one tile sharing a strand and CDS signature are one annotation duplicated under two ids; keep the
+    longest span (ties by gene_id) and report how many were dropped. Measured in the nine references: 665 such genes."""
+    by_sig: Dict[Tuple[str, Tuple[Tuple[int, int], ...]], List["Gene"]] = {}
+    for g in genes:
+        sig = cds_signature(g)
+        if not sig[1]:
+            by_sig[("", (("noncds", id(g)),))] = [g]      # no CDS: never collapsed
+            continue
+        by_sig.setdefault(sig, []).append(g)
+    kept, dropped = [], 0
+    for group in by_sig.values():
+        if len(group) == 1:
+            kept.append(group[0])
+            continue
+        best = max(group, key=lambda g: (g.end0 - g.start0, g.gene_id))
+        kept.append(best)
+        dropped += len(group) - 1
+    kept.sort(key=lambda g: (g.start0, g.end0, g.gene_id))
+    return kept, dropped
+
+
+def _cds_intervals(blocks: Sequence[Tuple[int, int, str]]) -> int:
+    return sum(e - s for s, e in ((b[0], b[1]) for b in blocks))
+
+
+def same_locus(a_cds: Sequence[Tuple[int, int]], a_strand: str, b_cds: Sequence[Tuple[int, int]], b_strand: str,
+               same_tile: bool = False) -> bool:
+    """A33.2 locus test for two non-identical predictions: do they compete for one locus (True) or are they distinct
+    overlapping genes (False)? Coordinates are genomic, half-open, CDS only."""
+    if a_strand != b_strand or same_tile:
+        return False
+    la = sum(e - s for s, e in a_cds)
+    lb = sum(e - s for s, e in b_cds)
+    if la == 0 or lb == 0:
+        return False
+    ov = 0
+    for s1, e1 in a_cds:
+        for s2, e2 in b_cds:
+            ov += max(0, min(e1, e2) - max(s1, s2))
+    if min(ov / la, ov / lb) < STITCH_RECIPROCAL:
+        return False
+    if len(a_cds) > 1 and len(b_cds) > 1:
+        ia = {(a_cds[i][1], a_cds[i + 1][0]) for i in range(len(a_cds) - 1)}
+        ib = {(b_cds[i][1], b_cds[i + 1][0]) for i in range(len(b_cds) - 1)}
+        return bool(ia & ib)
+    if len(a_cds) == 1 and len(b_cds) == 1:
+        return abs(a_cds[0][0] - b_cds[0][0]) <= STITCH_MONO_END and abs(a_cds[0][1] - b_cds[0][1]) <= STITCH_MONO_END
+    return False
+
+
+def tier_offsets(tier: int, n: int = 3) -> List[int]:
+    """Inference offsets of one tier (A27: 0, 1/3, 2/3)."""
+    return [round(i * tier / n) for i in range(n)]
+
+
+def covered_with_margin(gene_start: int, gene_end: int, tier: int, margin: int = EDGE_MARGIN,
+                        contig_len: Optional[int] = None) -> bool:
+    """A33.4 invariant: with the three offsets of a tier, a gene of length <= tier - 2*margin lies at least `margin`
+    inside at least one tile of that tier, so the A27 edge rule never loses it. A tile edge that coincides with a
+    contig edge satisfies the margin on that side (a gene at the start of a contig has no upstream sequence)."""
+    for off in tier_offsets(tier):
+        k = (gene_start - off) // tier
+        for kk in (k - 1, k, k + 1):
+            ws = off + kk * tier
+            we = ws + tier
+            left_ok = ws <= gene_start - margin or ws <= 0
+            right_ok = gene_end + margin <= we or (contig_len is not None and we >= contig_len)
+            if left_ok and right_ok and ws <= gene_start and gene_end <= we:
+                return True
+    return False

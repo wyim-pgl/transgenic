@@ -461,6 +461,11 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
             gene_meta[gene.gene_id] = {"split": srow["split"], "strict": str(srow.get("strict_holdout", "")).lower() in ("1", "true", "yes"),
                                        "weight": train_weight, "qc": qc_list}
     inserted = rc_rows = 0
+    # A33.3 decoy rate: min(DECOY_MAX, realised leak+hard rate / 3), computed per species before tiling.
+    n_genes = sum(len(v) for v in by_chrom.values())
+    n_masked = sum(1 for g in (x for v in by_chrom.values() for x in v)
+                   if gene_meta[g.gene_id]["weight"] == 0 or gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"] or "train", 0) > 0)
+    decoy_rate = min(gc.DECOY_MAX, (n_masked / n_genes) * gc.DECOY_RATIO) if n_genes else 0.0
     con.sql("CREATE TABLE IF NOT EXISTS tile_blocks (species_id VARCHAR, chromosome VARCHAR, start0 INT, end0 INT, split VARCHAR)")
     block_rng = random.Random(f"{seed}:{species_id}:blocks")
     for chrom in sorted(by_chrom):
@@ -480,13 +485,26 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                 split = gc.tile_split(blocks, ws, we)
                 # A29 leakage masking: a gene whose orthogroup split is more restrictive than the tile split is
                 # N-masked in the sequence and left out of the label (train tile must never label a test/valid gene)
-                leak = [g for g in inside if gene_meta[g.gene_id]["split"] and gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"], 0) > gc.SPLIT_RANK[split]]
-                # A32 (author decision 2026-09-02): a hard-flagged gene (A22/A30) is masked at gene level like a leaking
-                # gene — N-replaced in the sequence and absent from the label — instead of zeroing the whole tile
-                # (690 flagged A. thaliana genes had masked 13.8 / 26.4 / 45.5 % of the 30 / 61 / 129 kb tiles).
-                hard = [g for g in inside if g not in leak and gene_meta[g.gene_id]["weight"] == 0]
-                masked = leak + hard
-                labelled = [g for g in inside if g not in masked]
+                leak = {g.gene_id for g in inside if gene_meta[g.gene_id]["split"] and gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"], 0) > gc.SPLIT_RANK[split]}
+                # A32: a hard-flagged gene (A22/A30) is masked at gene level like a leaking gene, not by zeroing the tile.
+                hard = {g.gene_id for g in inside if g.gene_id not in leak and gene_meta[g.gene_id]["weight"] == 0}
+                # A33.3: decoy masks weaken the association "N-run => an annotated gene was here"; train tiles only,
+                # because deleting true genes from valid tiles would corrupt best-validation checkpoint selection.
+                decoy = set()
+                if split == "train" and decoy_rate > 0:
+                    drng = random.Random(f"{seed}:{species_id}:{chrom}:{ws}-{we}:decoy")
+                    decoy = {g.gene_id for g in inside if g.gene_id not in leak and g.gene_id not in hard and drng.random() < decoy_rate}
+                seed_ids = leak | hard | decoy
+                # A33.3: masking closes over overlap-connected components, so no labelled gene keeps a label whose
+                # bases were replaced by N.
+                masked_ids = set()
+                for comp in gc.overlap_components(inside):
+                    if any(g.gene_id in seed_ids for g in comp):
+                        masked_ids |= {g.gene_id for g in comp}
+                masked = [g for g in inside if g.gene_id in masked_ids]
+                labelled = [g for g in inside if g.gene_id not in masked_ids]
+                # A33.1: one annotation duplicated under two gene ids is labelled once.
+                labelled, dup_collapsed = gc.collapse_duplicate_genes(labelled)
                 gsf = gc.window_to_gsf_v3(labelled, ws) if mode == "train" else None
                 L = we - ws
                 if gsf is not None:
@@ -499,7 +517,12 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                 if len(seq) < L:
                     seq = seq + "N" * (L - len(seq))
                 if masked:
-                    seq = gc.leak_mask(seq, ws, masked)
+                    frng = random.Random(f"{seed}:{species_id}:{chrom}:{ws}-{we}:flank")
+                    flanks = [frng.randint(*gc.FLANK_RANGE) for _ in masked]      # A33.3 seeded flank jitter
+                    seq = gc.leak_mask(seq, ws, masked, flanks=flanks)
+                if split in ("train", "valid") and gc.masked_fraction(seq) > gc.MASK_FRACTION_MAX:
+                    rejected.append({"gene_id": f"{chrom}:{ws}-{we}", "reason": f"masked fraction {gc.masked_fraction(seq):.3f} > {gc.MASK_FRACTION_MAX}"})
+                    continue
                 weight = 1.0
                 if allow_missing_split and not inside:
                     split = None
@@ -507,10 +530,10 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                 qc = ";".join(sorted({f for g in labelled for f in gene_meta[g.gene_id]["qc"]})) or None
                 if partial:
                     qc = (qc + ";" if qc else "") + f"edge_partial={partial}"
-                if leak:
-                    qc = (qc + ";" if qc else "") + f"leak_masked={len(leak)}"
-                if hard:
-                    qc = (qc + ";" if qc else "") + f"hard_masked={len(hard)}"
+                for name, n in (("leak_masked", len(leak)), ("hard_masked", len(hard)), ("decoy_masked", len(decoy)),
+                                ("component_masked", len(masked_ids) - len(seed_ids)), ("dup_collapsed", dup_collapsed)):
+                    if n:
+                        qc = (qc + ";" if qc else "") + f"{name}={n}"
                 inside = labelled
                 common = [species_id, wid, None, split, any(gene_meta[g.gene_id]["strict"] for g in inside), False, gc.ORDERING_VERSION,
                           gc.BUILD_VERSION, fasta_sha, gff_sha, split_sha, gc.WINDOW_POLICY_V3,

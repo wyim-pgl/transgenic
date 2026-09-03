@@ -333,3 +333,56 @@ def test_validator_token_cap_follows_window_policy(b5):
     assert b5.token_cap_for("tier6144-v2") == 2048
     src = (ROOT / "src" / "transgenic" / "datasets" / "build_b5.py").read_text()
     assert "CASE WHEN window_policy" in src and "token_cap_for(gc.WINDOW_POLICY_V3)" in src
+
+
+def test_a33_component_closure_decoy_and_mask_fraction(tmp_path, b5):
+    """A33.3 in the builder: masking closes over overlap components, decoys are train-only, the masked-base fraction
+    cap drops a tile, and every masking kind is reported in qc_flags."""
+    rng = random.Random(11)
+    seq = "".join(rng.choice("ACGT") for _ in range(40000))
+    fasta = tmp_path / "c.fa"; fasta.write_text(f">Chr1\n{seq}\n")
+    # g1 overlaps g2 (one component); g2 is valid-split -> in a train tile the whole component is masked
+    lines = ["##gff-version 3"]
+    for gid, s, e, strand in (("g1", 1001, 3000, "+"), ("g2", 2500, 4000, "-"), ("g3", 20001, 20600, "+")):
+        lines += [f"Chr1\tt\tgene\t{s}\t{e}\t.\t{strand}\t.\tID={gid};Name={gid}",
+                  f"Chr1\tt\tmRNA\t{s}\t{e}\t.\t{strand}\t.\tID={gid}.1;Parent={gid}",
+                  f"Chr1\tt\tCDS\t{s}\t{e}\t.\t{strand}\t0\tID={gid}.1.c;Parent={gid}.1"]
+    gff = tmp_path / "c.gff3"; gff.write_text("\n".join(lines) + "\n")
+    split = tmp_path / "s.tsv"
+    split.write_text("species_id\tgene_id\torthogroup_id\tsplit\tstrict_holdout\tseed\tsource_version\n"
+                     "Athaliana\tg1\tOG1\ttrain\tfalse\t123\tv1\nAthaliana\tg2\tOG2\tvalid\tfalse\t123\tv1\n"
+                     "Athaliana\tg3\tOG3\ttrain\tfalse\t123\tv1\n")
+    manifest = tmp_path / "m.tsv"
+    manifest.write_text(f"species_id\tspecies\ttable_s1_version\tfasta\tfasta_md5\tgff\tgff_md5\tnote\nAthaliana\tA\tT\t{fasta}\t\t{gff}\t\t\n")
+    db = tmp_path / "c.db"
+    b5.build_b5_database(str(db), str(manifest), str(split), rc="none", verify_md5=False, window_policy="tile6144-v3")
+    con = duckdb.connect(str(db), read_only=True)
+    rows = con.sql("SELECT geneModel, split, gff, qc_flags, sequence, train_weight FROM geneList").fetchall()
+    con.close()
+    train = [r for r in rows if r[1] == "train"]
+    assert train, rows
+    # in a tile holding the whole g1/g2 component, masking g2 (valid split) closes over g1: neither is labelled
+    closed = [r for r in train if "component_masked" in (r[3] or "")]
+    assert closed, [r[3] for r in train]
+    for r in closed:
+        assert "leak_masked=1" in r[3] and "component_masked=1" in r[3]
+        assert r[2].count("|CDS1|") == 1                          # only g3 remains in the label
+        assert "N" in r[4] and r[5] == 1.0                        # tile weight stays 1 (A32)
+    # a gene that only partly falls in a tile is an edge case of A26, counted separately and never labelled
+    assert any("edge_partial" in (r[3] or "") for r in train)
+    # decoys never appear in valid tiles
+    assert all("decoy_masked" not in (r[3] or "") for r in rows if r[1] == "valid")
+    # a tile whose masked fraction exceeds the cap is rejected rather than stored
+    assert b5.gc.MASK_FRACTION_MAX == 0.60 and b5.gc.FLANK_RANGE == (50, 150)
+
+
+def test_a33_builder_masking_is_seed_reproducible(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    outs = []
+    for i in range(2):
+        db = tmp_path / f"r{i}.db"
+        b5.build_b5_database(str(db), str(manifest), str(split), rc="none", verify_md5=False, window_policy="tile6144-v3", seed=123)
+        con = duckdb.connect(str(db), read_only=True)
+        outs.append(con.sql("SELECT geneModel, gff, qc_flags, sequence FROM geneList ORDER BY geneModel").fetchall())
+        con.close()
+    assert outs[0] == outs[1]

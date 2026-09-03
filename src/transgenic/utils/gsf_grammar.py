@@ -41,15 +41,21 @@ class State:
     violations: List[str] = field(default_factory=list)
     v1: bool = False
     gene_index: int = 0
-    prev_gene_end: int = 0               # v3: next gene's features must start at or after the previous gene's end
+    prev_gene_end: int = 0               # v3: end of the previous gene block (reported, no longer a lower bound)
+    prev_gene_start: int = 0             # v3/A33: the next block may overlap but must not start before this
     empty: bool = False
 
 
 def _new_gene(st: State) -> State:
-    """v3 <gene>: close the current block and start a fresh one (feature numbering and strand reset)."""
+    """v3 <gene>: close the current block and start a fresh one (feature numbering and strand reset).
+    A33.1: gene blocks may overlap, so the next block's lower bound is the previous block's *start*, not its end.
+    Enforcing the full key (start, end, canonical) while decoding would create states with no legal closing token
+    (equal start, shorter end already emitted); the decoded label is canonicalised instead."""
     st.prev_gene_end = max([e for (_s, e, _t) in st.features.values()] + [st.prev_gene_end])
+    if st.features:
+        st.prev_gene_start = min(s for (s, _e, _t) in st.features.values())
     st.features, st.counts = {}, {t: 0 for t in FEATURE_TYPES}
-    st.strand, st.last_start, st.planned_tx, st.transcripts = None, st.prev_gene_end, None, []
+    st.strand, st.last_start, st.planned_tx, st.transcripts = None, st.prev_gene_start, None, []
     st.gene_index += 1
     st.stage, st.num, st.cur = "start", "", {}
     return st
