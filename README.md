@@ -6,7 +6,7 @@ TransGenic is a transformer for DNA-to-annotation machine translation. Gene anno
 > 📌 **정본 안내 (2026-09-03).** 이 README는 **공개된 published 모델**의 문서다. 2026-09 리비전(B5)에서
 > 분할·창 정책·어휘·학습 경로가 바뀌었고, 아래 여러 절은 그대로 따라 하면 B5가 고치려는 결함을 재현한다.
 > 어긋나는 부분에는 `❌ SUPERSEDED` / `⚠️ CAUTION` 마커를 달아 두었고, **기각·제외된 것의 정본 목록은**
-> **[`ruleout.md`](ruleout.md)** 에 있다. 전수 확인: `grep -n 'SUPERSEDED\|CAUTION (' README.md`.
+> **[`quarantine.md`](quarantine.md)** 에 있다. 전수 확인: `grep -n 'SUPERSEDED\|CAUTION (' README.md`.
 
 
 ## Table of Contents
@@ -23,7 +23,7 @@ TransGenic is a transformer for DNA-to-annotation machine translation. Gene anno
 - [End-to-End Pipeline](#end-to-end-pipeline)
 - [Benchmark Results](#benchmark-results)
 - [License](#license)
-- **[기각·제외 원장 (ruleout.md)](ruleout.md)** — 이 README에서 더 이상 유효하지 않은 부분과 그 현재 진실
+- **[기각·제외 원장 (quarantine.md)](quarantine.md)** — 이 README에서 더 이상 유효하지 않은 부분과 그 현재 진실
 
 ## Architecture
 
@@ -39,7 +39,7 @@ This design enables the model to capture long-range dependencies in DNA while pr
 - **Splice variant prediction**: Predict alternative isoforms via prompt completion given an existing transcript
 - **Compact output format**: Gene Sentence Format (GSF) reduces annotation redundancy for efficient generation
 - **Plant-focused**: Trained on 9 phylogenetically diverse plant species
-> ⚠️ **CAUTION (2026-09-03):** 이 92 % F1은 아래 R1의 누출 있는 `random_split` 분할에서 측정됐다 — RC 쌍둥이가 train/test로 갈라졌고 상동 유전자가 분할을 가로질렀다. 재측정 전까지 일반화 성능으로 인용하지 말 것. 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R7).
+> ⚠️ **CAUTION (2026-09-03):** 이 92 % F1은 아래 R1의 누출 있는 `random_split` 분할에서 측정됐다 — RC 쌍둥이가 train/test로 갈라졌고 상동 유전자가 분할을 가로질렀다. 재측정 전까지 일반화 성능으로 인용하지 말 것. 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R7).
 
 - **High accuracy**: Achieves 92% base-level F1 score on *Arabidopsis thaliana* test data
 
@@ -264,7 +264,7 @@ python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
 
 ## Pretrained Checkpoints on HuggingFace
 
-> ⚠️ **CAUTION (2026-09-03):** 92 % F1은 R7, "6144의 배수" 창 정책은 R5를 볼 것 — B5는 30,720 / 61,440 / 129,024 nt 타일을 쓴다. 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R7 · R5).
+> ⚠️ **CAUTION (2026-09-03):** 92 % F1은 R7, "6144의 배수" 창 정책은 R5를 볼 것 — B5는 30,720 / 61,440 / 129,024 nt 타일을 쓴다. 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R7 · R5).
 
 All checkpoints were trained on 9 plant genomes covering diverse phyla, including dicot, monocot, and moss species. The highest performance on test set evaluation (92% base-level F1 in *Arabidopsis*) was achieved using the 400M parameter model. Both checkpoints used sequences padded with neighboring genomic sequence to the next multiple of 6144 nucleotides.
 
@@ -276,7 +276,7 @@ Nine phylogenetically diverse plant species:
 
 ### Available Models
 
-> ⚠️ **CAUTION (2026-09-03):** published v1(272)·이 저장소 기본 v2(288)까지는 맞다. **B5는 v3(290)**이며 `<empty>` 라벨에 미해결 비대칭이 있다(이슈 #58). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R6).
+> ⚠️ **CAUTION (2026-09-03):** published v1(272)·이 저장소 기본 v2(288)까지는 맞다. **B5는 v3(290)**이며 `<empty>` 라벨에 미해결 비대칭이 있다(이슈 #58). 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R6).
 
 | Model | Parameters | Hidden Size | Layers | Attention Heads | F1 Score |
 |-------|------------|-------------|--------|-----------------|----------|
@@ -290,7 +290,7 @@ Nine phylogenetically diverse plant species:
 - **Batch size**: 96 (effective)
 - **Loss**: Cross Entropy
 - **Mixed precision**: BF16
-> ⚠️ **CAUTION (2026-09-03):** published 체크포인트 기준이다. B5의 입력 길이는 계층 30,720 / 61,440 / 129,024 nt, `max_encoder_seqlen` 129,024. 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R5).
+> ⚠️ **CAUTION (2026-09-03):** published 체크포인트 기준이다. B5의 입력 길이는 계층 30,720 / 61,440 / 129,024 nt, `max_encoder_seqlen` 129,024. 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R5).
 
 - **Input length**: Multiples of 6,144nt (max 49,152nt)
 
@@ -298,7 +298,7 @@ Nine phylogenetically diverse plant species:
 1. Generate *de novo* annotations for plant DNA sequences containing genes
 2. Add alternatively spliced isoforms to known primary mRNA transcripts via prompt completion
 
-> ⚠️ **CAUTION (2026-09-03):** 이 절 전체는 legacy 12컬럼 스키마와 `genome2GSFDataset` 경로를 설명한다. B5 DB는 스키마도 빌드 경로도 다르다 — `scripts/build_b5_database.py` → `merge_b5_databases.py` → `validate_b5_database.py`. 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R8).
+> ⚠️ **CAUTION (2026-09-03):** 이 절 전체는 legacy 12컬럼 스키마와 `genome2GSFDataset` 경로를 설명한다. B5 DB는 스키마도 빌드 경로도 다르다 — `scripts/build_b5_database.py` → `merge_b5_databases.py` → `validate_b5_database.py`. 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R8).
 
 ## Building a DuckDB Database
 
@@ -649,7 +649,7 @@ genome2GSFDataset(
 
 All training scripts accept command-line arguments (see the [CLI options table](#3-launch-training) below). You can also call the training function directly from Python:
 
-> ❌ **SUPERSEDED (2026-09-03):** **이 분할이 B5 전체가 고치려는 결함이다.** RC 증강 이후 행 단위로 나뉘어 정방향 행과 그 역상보 쌍둥이가 train/test로 갈라졌고(twin leakage), 상동 유전자가 분할을 가로질렀다. B5는 동결 분할표 `data/splits/b5_orthogroup_split_v1.tsv`만 쓴다. 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R1).
+> ❌ **SUPERSEDED (2026-09-03):** **이 분할이 B5 전체가 고치려는 결함이다.** RC 증강 이후 행 단위로 나뉘어 정방향 행과 그 역상보 쌍둥이가 train/test로 갈라졌고(twin leakage), 상동 유전자가 분할을 가로질렀다. B5는 동결 분할표 `data/splits/b5_orthogroup_split_v1.tsv`만 쓴다. 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R1).
 
 ```python
 from transgenic.datasets.datasets import isoformDataHyena
@@ -673,7 +673,7 @@ train_data, eval_data, test_data = torch.utils.data.random_split(
 
 #### 3. Launch Training
 
-> ❌ **SUPERSEDED (2026-09-03):** `_RTX4090.py`·`_GB10.py`는 아직 `random_split`을 쓴다(R2) — B5에 쓰면 안 된다. "OOM-safe batch skipping"은 프로토콜 A35가 금지한 동작이며, 129,024-nt 계층에서 1,103 배치 중 1,093개를 조용히 버렸다(R3). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R2 · R3).
+> ❌ **SUPERSEDED (2026-09-03):** `_RTX4090.py`·`_GB10.py`는 아직 `random_split`을 쓴다(R2) — B5에 쓰면 안 된다. "OOM-safe batch skipping"은 프로토콜 A35가 금지한 동작이며, 129,024-nt 계층에서 1,103 배치 중 1,093개를 조용히 버렸다(R3). 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R2 · R3).
 
 ```bash
 # Single GPU (generic)
@@ -700,7 +700,7 @@ python train/train_HyenaTransgenic_GB10.py --db training_data.db
 
 **CLI options** (available in all three training scripts):
 
-> ⚠️ **CAUTION (2026-09-03):** legacy 스크립트 기본값이다. B5 경로의 기본값은 200이다(ACCESS 선점 재개 전제). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R9).
+> ⚠️ **CAUTION (2026-09-03):** legacy 스크립트 기본값이다. B5 경로의 기본값은 200이다(ACCESS 선점 재개 전제). 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R9).
 
 | Option | Default | Description |
 |--------|---------|-------------|
@@ -715,7 +715,7 @@ python train/train_HyenaTransgenic_GB10.py --db training_data.db
 
 #### 4. Resume Training from Checkpoint
 
-> ⚠️ **CAUTION (2026-09-03):** 에폭 **경계** 재개에만 참이다. 에폭 중간 재개는 셔플이 달라져 건너뛰기가 엉뚱한 샘플을 버린다 — 실측 64개 중 20에서 재개 시 15개 중복·15개 미관측(이슈 #59). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R4).
+> ⚠️ **CAUTION (2026-09-03):** 에폭 **경계** 재개에만 참이다. 에폭 중간 재개는 셔플이 달라져 건너뛰기가 엉뚱한 샘플을 버린다 — 실측 64개 중 20에서 재개 시 15개 중복·15개 미관측(이슈 #59). 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R4).
 
 All three training scripts support **step-level resumable checkpoints** via [Accelerate](https://huggingface.co/docs/accelerate). Training can be interrupted at any time (Ctrl+C, OOM, node failure) and resumed from exactly where it left off — no wasted computation.
 
@@ -803,7 +803,7 @@ The pretrained models used:
 - **Optimizer**: AdamW with weight decay 0.02
 - **Scheduler**: Linear warmup
 - **Gradient clipping**: max norm 1.0
-> ⚠️ **CAUTION (2026-09-03):** published 체크포인트 기준이다. B5는 R5를 볼 것. 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R5).
+> ⚠️ **CAUTION (2026-09-03):** published 체크포인트 기준이다. B5는 R5를 볼 것. 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R5).
 
 - **Input length**: Multiples of 6,144nt (max 49,152nt)
 
@@ -1043,7 +1043,7 @@ for line in gff3_lines:
     print(line)
 ```
 
-> ⚠️ **CAUTION (2026-09-03):** legacy 레시피(6,144 배수 창)의 처리량이며 B5 계층 벤치마크가 아니다. B5 실측은 R10의 표 — **129,024 계층은 24 GB 카드에서 물리적으로 불가능하다**(1,103 배치 중 1,093 OOM). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R10).
+> ⚠️ **CAUTION (2026-09-03):** legacy 레시피(6,144 배수 창)의 처리량이며 B5 계층 벤치마크가 아니다. B5 실측은 R10의 표 — **129,024 계층은 24 GB 카드에서 물리적으로 불가능하다**(1,103 배치 중 1,093 OOM). 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R10).
 
 ## Benchmark Results
 
@@ -1154,7 +1154,7 @@ python train/train_HyenaTransgenic_GB10.py \
 - Effective batch size: 256 (micro-batch=8 x accumulation=32)
 - Learning rate: 5e-5 with linear warmup (5%) + linear decay
 - Gradient clipping: max norm 1.0
-> ❌ **SUPERSEDED (2026-09-03):** R1과 같은 분할이다. 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R1).
+> ❌ **SUPERSEDED (2026-09-03):** R1과 같은 분할이다. 자세한 근거와 현재 진실은 [`quarantine.md`](quarantine.md) (R1).
 
 - Dataset split: 75% train, 10% eval, 15% test
 - Maize (Zm) excluded for cross-species evaluation

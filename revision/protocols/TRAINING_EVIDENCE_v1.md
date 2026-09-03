@@ -16,7 +16,7 @@ Rules (protocol B1 v1.5): ONT of any chemistry; PacBio only if ENA `instrument_m
 > **파급**: *S. bicolor*는 ONT가 없어 **장독 증거가 0**이 된다(아래 21–24행). *B. distachyon*은 원래 0.
 > 나머지 일곱 종은 ONT로 남는다: A. thaliana 6런 · G. max 27 · O. sativa 12(수집 중) · P. patens
 > (수집 대기) · P. trichocarpa 11 · S. italica 9 · V. vinifera 11.
-> 상세는 `ruleout.md` D3, 현행 학습 증거 구성은 이 배너를 기준으로 읽을 것.
+> 상세는 `quarantine.md` D3, 현행 학습 증거 구성은 이 배너를 기준으로 읽을 것.
 
 | Species | Type | Accession | Runs / size (fastq) | Genotype, tissue | Citation |
 |---|---|---|---|---|---|
