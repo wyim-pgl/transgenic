@@ -1,0 +1,92 @@
+{
+ "seed": 123,
+ "fractions": [
+  0.75,
+  0.1,
+  0.15
+ ],
+ "source_version": "orthofinder-3.1.5-run1-2026-09-02-HOG-N1",
+ "rows": 334642,
+ "orthogroups_used": 22553,
+ "singletons": {
+  "Ptrichocarpa": 2570,
+  "Vvinifera": 14458,
+  "Osativa": 6670,
+  "Ppatens": 32926,
+  "Gmax": 3545,
+  "Bdistachyon": 5173,
+  "Athaliana": 2270,
+  "Sbicolor": 3323,
+  "Sitalica": 3412
+ },
+ "genes_without_orthofinder_entry": {
+  "Athaliana": 53,
+  "Vvinifera": 6333,
+  "Gmax": 56,
+  "Ptrichocarpa": 40,
+  "Sbicolor": 14,
+  "Bdistachyon": 32,
+  "Sitalica": 30,
+  "Osativa": 45,
+  "Ppatens": 23916
+ },
+ "unmapped_orthofinder_genes": {},
+ "strict_holdout": {
+  "species": "Athaliana",
+  "requested": 3430,
+  "found": 3430,
+  "missing": [],
+  "groups_forced_to_test": 2891
+ },
+ "per_species": {
+  "Athaliana": {
+   "train": 13660,
+   "valid": 1896,
+   "test": 11860
+  },
+  "Vvinifera": {
+   "train": 31643,
+   "valid": 4198,
+   "test": 12130
+  },
+  "Gmax": {
+   "train": 29182,
+   "valid": 4000,
+   "test": 15205
+  },
+  "Ptrichocarpa": {
+   "train": 20787,
+   "valid": 3048,
+   "test": 10864
+  },
+  "Sbicolor": {
+   "train": 20697,
+   "valid": 2800,
+   "test": 8663
+  },
+  "Bdistachyon": {
+   "train": 22670,
+   "valid": 2995,
+   "test": 8645
+  },
+  "Sitalica": {
+   "train": 22382,
+   "valid": 3016,
+   "test": 9186
+  },
+  "Osativa": {
+   "train": 28012,
+   "valid": 3925,
+   "test": 10252
+  },
+  "Ppatens": {
+   "train": 24669,
+   "valid": 3275,
+   "test": 4982
+  }
+ },
+ "validation_violations": [],
+ "sha256": "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+ "orthogroup_definition": "OrthoFinder 3.1.5 hierarchical orthogroups, root-most level present (N1.tsv; N0 not written), author decision 2026-09-02 (broad OGs gave 48 % test in A. thaliana)",
+ "held_out_list": "data/splits/athaliana_strict_heldout_v1.txt (3,430 genes)"
+}
