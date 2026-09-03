@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.21; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.22; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing; §A32 gene-level masking of hard-flagged genes in tiles)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -397,6 +397,16 @@ Found in the first real tile build (*A. thaliana*, tile6144-v3, 2026-09-02): the
 
 Nothing in §9 changes.
 
+## A32. Amendment v1.22 (2026-09-02; before the B5 database build) — hard-flagged genes are masked at gene level inside tiles
+
+Found in the same tile build: the tile-mode implementation of A22 zeroed the loss of every tile containing a hard-flagged gene; with 690 flagged *A. thaliana* genes (GeenuFF hard flags + Swiss-Prot cautions, A30) that removed 13.8 / 26.4 / 45.5 % of the 30,720 / 61,440 / 129,024-nt tiles. Author decision: mask the gene, not the tile.
+- In tile builds, a gene with a hard flag (A22 GeenuFF list, A30 `swissprot_caution_*`) is treated like a leaking gene: its sequence with 100 nt of flank is replaced by N and it is absent from the label; the tile keeps `train_weight = 1` and records `hard_masked = n`. Transcript-level hard flags still drop only the flagged transcripts from the gene's label (A22 unchanged).
+- Per-locus (gene-centred) rows are unchanged: a hard-flagged gene's own row keeps `train_weight = 0`.
+- The masked genes stay in `window_genes` only when labelled; the per-species counts of hard-masked genes are reported with the split sizes (A22 reporting), together with the leak-masked counts of A29/A31.
+- Rationale: the purpose of A22 is to keep wrong structures out of the loss; masking the gene achieves that without discarding the correct genes around it.
+
+Nothing in §9 changes.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
@@ -551,3 +561,4 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 | 2026-09-02 | no B5 database built | v1.19: A29 tile splits by 1,032,192-nt genomic blocks (strict held-out blocks test), orthogroup leakage masking by N-replacement in tiles, dual test reporting | GPU dry run showed the most-restrictive-gene rule leaves no training tiles |
 | 2026-09-02 | no protein alignment run; no B5 database built; no evidence scoring run | v1.20: A30 Swiss-Prot reviewed Viridiplantae as a separately labelled sensitivity set — caution-based hard-flag masking through the A22 mechanism only when the reference does not carry the curated sequence; OrthoDB phase audit report-only; secondary outcomes S5–S7 (start/stop/phase agreement per stratum) computed inside evaluation only; A19 label resource unchanged | author question on using curated Swiss-Prot for start/stop codons and phase |
 | 2026-09-02 | first tile build done (smoke), no training run | v1.21: A31 strict held-out loci no longer force genomic blocks to test; protection by A29 leak masking (N-replacement + label removal) in train/valid tiles; A. thaliana stays in training | author decision: A. thaliana must be used; the block rule had made 120/121 blocks test |
+| 2026-09-02 | first tile build done (smoke), no training run | v1.22: A32 hard-flagged genes are N-masked and unlabelled at gene level inside tiles (tile weight stays 1; per-locus rows unchanged) | author decision: whole-tile masking removed 14–46 % of tiles per tier |

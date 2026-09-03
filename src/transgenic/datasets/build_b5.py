@@ -426,7 +426,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                          allow_missing_split, qc_flags, genome, rng, rejected, tier_up_prob):
     """tile6144-v3 (protocol A26): every tier tiles each contig with a seeded offset; the label of a tile is the canonical
     concatenation of all genes fully inside it (or <empty>). Edge-crossing genes are excluded and counted; empty tiles are kept
-    with EMPTY_KEEP_PROB; a tile containing a hard-flagged (A22) gene gets train_weight 0; the tile split is the most
+    with EMPTY_KEEP_PROB; a hard-flagged (A22/A30) gene is N-masked and unlabelled at gene level (A32, tile weight stays 1); the tile split is the most
     restrictive split among its genes."""
     cols = ", ".join(LEGACY_COLUMNS + NEW_COLUMNS)
     placeholders = ", ".join("?" for _ in LEGACY_COLUMNS + NEW_COLUMNS)
@@ -481,7 +481,12 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                 # A29 leakage masking: a gene whose orthogroup split is more restrictive than the tile split is
                 # N-masked in the sequence and left out of the label (train tile must never label a test/valid gene)
                 leak = [g for g in inside if gene_meta[g.gene_id]["split"] and gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"], 0) > gc.SPLIT_RANK[split]]
-                labelled = [g for g in inside if g not in leak]
+                # A32 (author decision 2026-09-02): a hard-flagged gene (A22/A30) is masked at gene level like a leaking
+                # gene — N-replaced in the sequence and absent from the label — instead of zeroing the whole tile
+                # (690 flagged A. thaliana genes had masked 13.8 / 26.4 / 45.5 % of the 30 / 61 / 129 kb tiles).
+                hard = [g for g in inside if g not in leak and gene_meta[g.gene_id]["weight"] == 0]
+                masked = leak + hard
+                labelled = [g for g in inside if g not in masked]
                 gsf = gc.window_to_gsf_v3(labelled, ws) if mode == "train" else None
                 L = we - ws
                 if gsf is not None:
@@ -493,9 +498,9 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                 seq = genome[chrom][ws:we]
                 if len(seq) < L:
                     seq = seq + "N" * (L - len(seq))
-                if leak:
-                    seq = gc.leak_mask(seq, ws, leak)
-                weight = 0.0 if any(gene_meta[g.gene_id]["weight"] == 0 for g in labelled) else 1.0
+                if masked:
+                    seq = gc.leak_mask(seq, ws, masked)
+                weight = 1.0
                 if allow_missing_split and not inside:
                     split = None
                 wid = f"{species_id}:{chrom}:{ws}-{we}"
@@ -504,6 +509,8 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                     qc = (qc + ";" if qc else "") + f"edge_partial={partial}"
                 if leak:
                     qc = (qc + ";" if qc else "") + f"leak_masked={len(leak)}"
+                if hard:
+                    qc = (qc + ";" if qc else "") + f"hard_masked={len(hard)}"
                 inside = labelled
                 common = [species_id, wid, None, split, any(gene_meta[g.gene_id]["strict"] for g in inside), False, gc.ORDERING_VERSION,
                           gc.BUILD_VERSION, fasta_sha, gff_sha, split_sha, gc.WINDOW_POLICY_V3,

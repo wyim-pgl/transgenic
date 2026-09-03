@@ -229,7 +229,8 @@ def test_tile_policy_v3_build(tmp_path, b5):
         if r[1] == "train":
             assert r[3].count(b5.gc.GENE_SEP) == 0 and "leak_masked=1" in (r[4] or "") and r[2] == 1.0
         else:
-            assert r[3].count(b5.gc.GENE_SEP) == 1 and r[2] == 0.0       # g2 labelled and hard-flagged -> tile masked
+            # A32: g2 is hard-flagged -> masked at gene level (N in the sequence, absent from the label); the tile keeps weight 1
+            assert r[3].count(b5.gc.GENE_SEP) == 0 and r[2] == 1.0 and "hard_masked=1" in (r[4] or "")
     # contig '2' (A31): glast is strict held-out but its block is drawn like any other; in a train/valid tile glast is
     # N-masked and unlabelled (leak rule), in a test tile it is labelled. gbig rejected at gene level (151 CDS).
     c2 = [r for r in rows if r[0].startswith("Athaliana:2:")]
