@@ -28,7 +28,7 @@ def b5():
 MANIFEST = ("split_file_sha256", "rc_mode", "build_version", "ordering_version", "window_policy", "duckdb_version")
 
 
-def _species_db(path, b5, species, n_rows, *, git_commit="abc1234", split_sha="904c6265", window_policy="tile6144-v3"):
+def _species_db(path, b5, species, n_rows, *, git_commit="abc1234", split_sha="904c6265", window_policy="tile6144-v3", seq_len=30720):
     """A minimal stand-in for one per-species build: rn restarts at 1, gene_split holds the whole frozen table."""
     con = duckdb.connect(str(path))
     b5.ensure_schema(con)
@@ -41,7 +41,7 @@ def _species_db(path, b5, species, n_rows, *, git_commit="abc1234", split_sha="9
             "INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff, species_id, gene_id, split, "
             "is_rc, strict_holdout, ordering_version, build_version, split_file_sha256, window_policy, train_weight, gene_id_original) "
             "VALUES (nextval('row_id'), ?, ?, ?, '+', 'Chr1', ?, ?, ?, ?, 'train', false, false, 'gsf-order-v1', 'gsf-contract-v1', ?, ?, 1.0, ?)",
-            [wid, i * 30720, (i + 1) * 30720, "A" * 30720, "0|CDS1|300|+|A>CDS1", species, wid, split_sha, window_policy, wid])
+            [wid, i * 30720, (i + 1) * 30720, "A" * seq_len, "0|CDS1|300|+|A>CDS1", species, wid, split_sha, window_policy, wid])
     con.executemany("INSERT INTO window_genes VALUES (?,?,?,?)", [[species, f"{species}:Chr1:0-30720", f"{species}_g{i}", False] for i in range(3)])
     con.execute("INSERT INTO tile_blocks VALUES (?,?,?,?,?)", [species, "Chr1", 0, 100000, "train"])
     con.execute("INSERT INTO rejected_records VALUES (?,?,?)", [species, "gx", "masked fraction 0.7 > 0.6"])
@@ -146,3 +146,36 @@ def test_merge_refuses_a_missing_done_marker_and_an_existing_output(two_species,
 def test_merge_refuses_a_wrong_species_count(two_species, tmp_path):
     r = _run(two_species, tmp_path / "b5.db", tmp_path / "f.json", expect=9)
     assert r.returncode != 0 and "expected 9" in r.stdout + r.stderr
+
+
+def test_merged_rn_follows_the_source_rn_order(tmp_path, b5):
+    """A sequence in the SELECT list is evaluated during the parallel scan, not in ORDER BY order: with
+    nextval() this scrambled every row while row counts, splits and content all stayed correct."""
+    src = tmp_path / "full"
+    src.mkdir()
+    n = 30000                                     # well past the 2,048-row vector, so the scan really is parallel
+    _species_db(src / "Athaliana.db", b5, "Athaliana", n, seq_len=8)
+    _species_db(src / "Gmax.db", b5, "Gmax", 1000, seq_len=8)
+    for s in ("Athaliana", "Gmax"):
+        (src / f"{s}.DONE").write_text("x")
+    out, man = tmp_path / "b5.db", tmp_path / "f.json"
+    assert _run(src, out, man).returncode == 0
+    con = duckdb.connect(str(out), read_only=True)
+    con.sql(f"ATTACH '{src / 'Athaliana.db'}' AS a (READ_ONLY)")
+    wrong = con.sql("SELECT count(*) FROM geneList m JOIN a.geneList s ON s.geneModel = m.geneModel "
+                    "WHERE m.species_id = 'Athaliana' AND m.rn <> s.rn").fetchone()[0]
+    assert wrong == 0, f"{wrong} of {n} Athaliana rows are not in source rn order"
+    # the second species keeps its own order, offset by the first
+    con.sql(f"ATTACH '{src / 'Gmax.db'}' AS g (READ_ONLY)")
+    wrong_g = con.sql("SELECT count(*) FROM geneList m JOIN g.geneList s ON s.geneModel = m.geneModel "
+                      "WHERE m.species_id = 'Gmax' AND m.rn <> s.rn + ?", params=[n]).fetchone()[0]
+    assert wrong_g == 0
+    con.close()
+
+
+def test_merge_leaves_the_sequence_past_the_last_row(two_species, tmp_path):
+    out = tmp_path / "b5.db"
+    assert _run(two_species, out, tmp_path / "f.json").returncode == 0
+    con = duckdb.connect(str(out))
+    assert con.sql("SELECT nextval('row_id')").fetchone()[0] == 11   # 10 rows merged
+    con.close()

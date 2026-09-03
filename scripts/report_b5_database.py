@@ -3,19 +3,32 @@
 
 Counts rows by species, tier and split, RC rows, rejections by class, and the A29/A32/A33 masking
 counters that the tile builder writes into `geneList.qc_flags` as `name=<n>` tokens.
-`tier_margin_unguaranteed` is required by PROTOCOL_B1_frozen_v1.md §A26 but is not written by the
-builder, so it is reported as null rather than as zero.
+`tier_margin_unguaranteed` is required by PROTOCOL_B1_frozen_v1.md:439 but the builder never writes it,
+so it is recomputed here from gene_key_map coordinates and labelled as recomputed, not as recorded.
 """
 import argparse
 import collections
 import json
+import os
 import re
+import sys
+import types
 
 import duckdb
 
+# loaded by path, the way tests/conftest.py does: importing the transgenic package pulls in torch.
+_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "transgenic", "utils", "gsf_contract.py")
+gc = types.ModuleType("gsf_contract")
+gc.__file__ = _PATH
+sys.modules["gsf_contract"] = gc
+with open(_PATH) as _fh:
+    exec(compile(_fh.read(), _PATH, "exec"), gc.__dict__)
+
 QC_COUNTERS = ("leak_masked", "hard_masked", "decoy_masked", "component_masked", "dup_collapsed", "edge_partial")
-# Written nowhere in the builder; see PROTOCOL_B1_frozen_v1.md:439. Reported as null, never as 0.
-UNIMPLEMENTED_COUNTERS = ("tier_margin_unguaranteed",)
+# tier_margin_unguaranteed is required by PROTOCOL_B1_frozen_v1.md:439 but the builder never writes it, so
+# it cannot be read back out of the database. It is recomputed here from gene_key_map coordinates with the
+# same predicate the protocol names (gsf_contract.covered_with_margin) and reported separately, clearly
+# labelled as recomputed at report time rather than recorded at build time.
 REJECT_CLASSES = (
     ("mask_fraction_a33", r"^masked fraction"),
     ("token_cap", r"tokens \d+ >"),
@@ -32,6 +45,36 @@ def classify(reason):
         if re.search(pat, reason):
             return name
     return "other"
+
+
+def tier_margin_unguaranteed(con):
+    """A33.4, recomputed from gene_key_map because the builder records no such counter (PROTOCOL:439).
+
+    Two different quantities, both reported:
+    `exceeds_length_guarantee` — genes longer than 2*tier/3 - 2*EDGE_MARGIN, which is the bound the protocol
+    measured (3,418 / 653 / 86 across the nine references); a gene over that length is not *guaranteed* to sit
+    EDGE_MARGIN inside any tile of the tier.
+    `not_covered_with_margin` — of those, the ones that also do not happen to land inside a tile with margin
+    at any of the three offsets. This is what the protocol means by tier_margin_unguaranteed: "those 86 genes
+    are recovered only when they happen to fall inside a tile with margin".
+
+    contig_len is not stored in the database, so a tile edge coinciding with a contig edge cannot be credited:
+    `not_covered_with_margin` is an upper bound.
+    """
+    rows = con.sql("SELECT species_id, start0, end0 FROM gene_key_map WHERE start0 IS NOT NULL AND end0 IS NOT NULL").fetchall()
+    out = {"source": "recomputed from gene_key_map at report time; the builder records no such counter",
+           "contig_edge_credit": False, "edge_margin": gc.EDGE_MARGIN, "genes_considered": len(rows),
+           "exceeds_length_guarantee": {}, "not_covered_with_margin": {}, "not_covered_with_margin_by_species": {}}
+    for tier in gc.WINDOW_TIERS:
+        bound = 2 * tier // 3 - 2 * gc.EDGE_MARGIN
+        per_species = collections.Counter()
+        for sp, s0, e0 in rows:
+            if not gc.covered_with_margin(s0, e0, tier):
+                per_species[sp] += 1
+        out["exceeds_length_guarantee"][str(tier)] = {"bound_nt": bound, "genes": sum(1 for _, s0, e0 in rows if e0 - s0 > bound)}
+        out["not_covered_with_margin"][str(tier)] = sum(per_species.values())
+        out["not_covered_with_margin_by_species"][str(tier)] = dict(sorted(per_species.items()))
+    return out
 
 
 def main():
@@ -88,7 +131,7 @@ def main():
         "mask_counters_by_species": {k: counters[k] for k in sorted(counters)},
         "tiles_carrying_counter_by_species": {k: tiles_with[k] for k in sorted(tiles_with)},
         "mask_counters_total": {k: sum(counters[s][k] for s in counters) for k in QC_COUNTERS},
-        "unimplemented_counters": {k: None for k in UNIMPLEMENTED_COUNTERS},
+        "tier_margin_unguaranteed": tier_margin_unguaranteed(con),
         "rejections_by_species": {k: dict(v) for k, v in sorted(rejections.items())},
         "rejections_total": dict(sum((collections.Counter(v) for v in rejections.values()), collections.Counter())),
     }
