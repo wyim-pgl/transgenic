@@ -206,6 +206,58 @@ def rows_for_runs(root, rel, default_role, data_type, basis):
                        role=role, basis=note_extra or basis, note=gt_note)
 
 
+# ----------------------------------------------------------------------------------------------
+# Non-run resources (issue #66, author decision 2026-09-03)
+# ----------------------------------------------------------------------------------------------
+# Everything above is *scanned*: the builder walks the evidence tree and emits one row per
+# sequencing run. Two objects the protocol depends on are not runs and are not in that tree --
+# the cross-species protein resource (A19/#44) and the Swiss-Prot sensitivity set (A30) -- so
+# they had no way into the manifest at all, and hand-editing the TSV does not survive the next
+# regeneration. They are *declared* here instead.
+#
+# Declared, not measured: both files live on pgl-gpu, outside this filesystem, so the builder
+# cannot stat or hash them. The checksums below were recomputed from the files at the dates in
+# each note and must be re-recorded, here, if a resource is ever replaced. A resource whose file
+# changes without this table changing is exactly the drift the manifest exists to catch, so the
+# note carries the recomputation date rather than implying a live check.
+RESOURCE_DATA_TYPES = ("protein_resource", "sensitivity_resource")
+
+RESOURCES = (
+    dict(dataset="protein/orthodb_v12_viridiplantae_stage2",
+         run="odb12_Viridiplantae.filtered.fa.gz",
+         species="cross_species", genotype_stratum="n/a", instrument="n/a",
+         data_type="protein_resource", expected_files="1", expected_reads="12115085",
+         source_checksum="", source_checksum_authority="none",
+         local_fa_md5="453cb32b02e0799950d7d5f4de5f62ac",
+         role="c2_training_eligible",
+         basis="A19: cross-species protein resource for C2 CDS-family labels; leakage filter A19.1",
+         note="pgl-gpu /home/pgl/scratch1/wyim/transgenic_data/orthodb_filtered_stage2/; "
+              "12,115,085 of 12,204,762 sequences over 408 taxa; zero sequences from the evaluated "
+              "species (taxids 3702/4577/4081), removed in stage 1; 3,178,195,033 B; "
+              "md5 recomputed from the file 2026-09-03, matches filter_summary.json; "
+              "frozen into protocol section 1 (issue #66)"),
+    dict(dataset="protein/swissprot_plants_2026_02",
+         run="uniprot_sprot_plants.dat.gz",
+         species="cross_species", genotype_stratum="n/a", instrument="n/a",
+         data_type="sensitivity_resource", expected_files="1", expected_reads="42096",
+         source_checksum="", source_checksum_authority="none",
+         local_fa_md5="552089d0642b6c17f3486140a73a0163",
+         role="sensitivity_set",
+         basis="A30: separately labelled sensitivity/audit set for start codon, stop codon and "
+               "phase; never a label resource (A19 unchanged)",
+         note="pgl-gpu /home/pgl/scratch1/wyim/transgenic_data/protein/; UniProtKB/Swiss-Prot "
+              "Release 2026_02 of 10-Jun-2026; 44,909 entries, 42,096 Viridiplantae; 58,889,942 B; "
+              "sha256 09116f0b9db67ecc47bd4393ca6a417f311c0c6499b4614a9f581c0f5ead092e; "
+              "md5 recomputed from the file 2026-09-03"),
+)
+
+
+def rows_for_resources():
+    """Declared non-run resources. Copies, so a caller cannot mutate the declaration."""
+    for r in RESOURCES:
+        yield dict(r)
+
+
 def demote_duplicates(rows):
     """중복 사본을 excluded로 내린다 — 매니페스트가 같은 증거를 두 번 세지 않게."""
     n = 0
@@ -230,6 +282,7 @@ def build(root):
     rows += list(rows_for_runs(root, "RETIRED_DO_NOT_USE", "excluded", "PacBio",
                                "issue #60, author decision 2026-09-03: subreads-only, "
                                "protocol §3/v1.3/v1.5 admits CCS/FLNC level only"))
+    rows += list(rows_for_resources())
     demote_duplicates(rows)
     return rows
 
@@ -260,7 +313,7 @@ def validate(rows):
     # downloaded twice into two different dataset paths, which is what happened to Cui 2020.
     by_run: dict = {}
     for r in rows:
-        if r["data_type"] in ("reference_gff", "demultiplex_counts") or r["run"] == "est.fa.gz":
+        if r["data_type"] in ("reference_gff", "demultiplex_counts") + RESOURCE_DATA_TYPES or r["run"] == "est.fa.gz":
             continue
         by_run.setdefault(r["run"], []).append(r["dataset"])
     for run, datasets in sorted(by_run.items()):
