@@ -162,8 +162,11 @@ def train(
 
     accelerator = Accelerator(mixed_precision="bf16")  # bf16: better dynamic range than fp16,
     device = accelerator.device                        # no loss scaling needed, native on Ampere+
-    gpu_props = torch.cuda.get_device_properties(0)
-    print(f"Using: {device} ({gpu_props.name}, {gpu_props.total_mem / 1e9:.0f}GB)", file=sys.stderr)
+    if torch.cuda.is_available():
+        gpu_props = torch.cuda.get_device_properties(0)
+        print(f"Using: {device} ({gpu_props.name}, {gpu_props.total_memory / 1e9:.0f}GB)", file=sys.stderr)
+    else:
+        print(f"Using: {device} (no CUDA device)", file=sys.stderr)
 
     # ---- DataLoaders ----
     torch.manual_seed(seed)                     # Seed for reproducible data shuffling / init

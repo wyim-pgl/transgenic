@@ -179,3 +179,12 @@ def test_trainer_does_not_require_wandb_at_import():
     names |= {(n.module or "").split(".")[0] for n in top_imports if isinstance(n, ast.ImportFrom)}
     assert "wandb" not in names, "wandb must not be imported at module load"
     assert "def _wandb()" in src and "import wandb as _w" in src
+
+
+def test_trainer_reads_a_real_cuda_property_and_tolerates_cpu():
+    """`total_mem` does not exist on torch's device properties (`total_memory` does): the banner crashed every run
+    before the first batch, and get_device_properties(0) also throws on a CPU-only host."""
+    src = (ROOT / "train" / "train_HyenaTransgenic.py").read_text()
+    assert "total_mem " not in src and ".total_mem /" not in src
+    assert "gpu_props.total_memory" in src
+    assert "if torch.cuda.is_available():" in src.split("gpu_props =")[0].rsplit("\n\n", 1)[-1]
