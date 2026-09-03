@@ -4,6 +4,10 @@
 > `revision/protocols/PROTOCOL_B1_frozen_v1.md`(v1.25) · `docs/gsf_spec_v1.md` ·
 > `configs/b5_400m_win_v3.json` · `data/freeze/` · GitHub 이슈 wyim-pgl/transgenic #4–#62 이다.
 > 최종 갱신 2026-09-03.
+>
+> 이 파일은 **저장소 문서·데이터·설계·코드 경로**의 기각 목록이다. 랩 내부의 핸드오프 이력에서
+> 격리한 것(과거 스냅샷, 낡은 수치, 끝난 "다음 작업")은 저장소 밖의
+> `Transgenic/ruleout.md`에 있다 — 공개 저장소가 랩 내부 이력을 담지 않도록 분리했다.
 
 `README.md`는 **공개된 published 모델**의 문서다. 2026-09 리비전(B5)에서 레시피·분할·창 정책·어휘가
 전부 바뀌었기 때문에, README를 그대로 따라 하면 B5가 고치려는 결함을 그대로 재현하게 된다.
