@@ -15,7 +15,19 @@ os.environ['HF_HOME'] = './HFmodels'                       # HuggingFace model c
 os.environ.setdefault('PYTORCH_CUDA_ALLOC_CONF',           # Use CUDA async memory allocator
                        'backend:cudaMallocAsync')           # Reduces alloc/dealloc overhead vs native
 
-import torch, wandb, gc, time, sys, math, json, argparse, glob, signal, shutil
+import torch, gc, time, sys, math, json, argparse, glob, signal, shutil
+
+# Weights & Biases is optional: a benchmark or an offline run passes --no-wandb, and the ACCESS/DeltaAI
+# container does not ship it. Importing it at module load made `--no-wandb` fail with ModuleNotFoundError.
+wandb = None
+
+
+def _wandb():
+    global wandb
+    if wandb is None:
+        import wandb as _w
+        wandb = _w
+    return wandb
 from transgenic.training.b5_runtime import (load_b5_config, model_kwargs, accumulation_steps as _acc_steps, EarlyStopper,
                                              CheckpointLayout, split_row_numbers, parse_args as _b5_parse_args, benchmark_summary)
 from tqdm import tqdm
@@ -123,7 +135,7 @@ def train(
 
     # ---- Initialize wandb for experiment tracking ----
     if log_wandb:
-        wandb.init(
+        _wandb().init(
             entity="transgenic-paper",
             project="transgenic",
             config={
@@ -398,7 +410,7 @@ def train(
                                 for name, param in model.named_parameters():
                                     if param.grad is not None and param.requires_grad:
                                         wandb_log[f"{name}_grad_norm"] = param.grad.norm().detach().item()
-                            wandb.log(wandb_log)
+                            _wandb().log(wandb_log)
 
                         # Release gradient memory (faster than filling with zeros)
                         optimizer.zero_grad(set_to_none=True)
@@ -428,7 +440,7 @@ def train(
                             if _stop_requested["flag"]:
                                 print("exiting cleanly for the job chain (no TRAINING_DONE marker)", file=sys.stderr)
                                 if log_wandb:
-                                    wandb.finish()
+                                    _wandb().finish()
                                 return {"preempted": True, "epoch": epoch, "global_step": global_step}
                         elif save_every_n_steps and global_step % save_every_n_steps == 0:
                             _save_state(epoch, step + 1, global_step, best_eval_score)
@@ -468,7 +480,7 @@ def train(
                 print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}, {eval_ppl=}, {eval_epoch_loss=}", file=sys.stderr)
 
                 if log_wandb:
-                    wandb.log({"epoch_train_ppl": train_ppl, "epoch_train_loss": train_epoch_loss,
+                    _wandb().log({"epoch_train_ppl": train_ppl, "epoch_train_loss": train_epoch_loss,
                                "epoch_eval_ppl": eval_ppl, "epoch_eval_loss": eval_epoch_loss})
 
                 # Save model if eval loss improved (best model selection)
@@ -515,7 +527,7 @@ def train(
         raise                                   # Re-raise so the process exits with correct code
 
     if log_wandb:
-        wandb.finish()                          # Finalize wandb run (upload remaining data)
+        _wandb().finish()                       # Finalize wandb run (upload remaining data)
 
 
 # ---------------------------------------------------------------------------

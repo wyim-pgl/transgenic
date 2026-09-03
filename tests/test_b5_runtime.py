@@ -1,4 +1,5 @@
 """Tests for the torch-free B5 trainer runtime (issue #17)."""
+import ast
 import json
 import os
 import sys
@@ -166,3 +167,15 @@ def test_oversized_batch_cap_follows_the_recipe(rt):
     assert "if ii.shape[1] > _max_seqlen" in src
     assert "elif ii.shape[0] * ii.shape[1] > 100_000" in src
     assert '_max_seqlen = int((b5_config or {}).get("max_encoder_seqlen", 49152))' in src
+
+
+def test_trainer_does_not_require_wandb_at_import():
+    """A benchmark or offline run passes --no-wandb, and the ACCESS container has no wandb; importing it at module
+    load made every such run die with ModuleNotFoundError (measured on pgl-gpu 2026-09-02)."""
+    src = (ROOT / "train" / "train_HyenaTransgenic.py").read_text()
+    tree = ast.parse(src)
+    top_imports = [n for n in tree.body if isinstance(n, (ast.Import, ast.ImportFrom))]
+    names = {a.name.split(".")[0] for n in top_imports if isinstance(n, ast.Import) for a in n.names}
+    names |= {(n.module or "").split(".")[0] for n in top_imports if isinstance(n, ast.ImportFrom)}
+    assert "wandb" not in names, "wandb must not be imported at module load"
+    assert "def _wandb()" in src and "import wandb as _w" in src
