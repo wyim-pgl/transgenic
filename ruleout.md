@@ -21,6 +21,15 @@
 README의 해당 줄 **바로 위**에 이 표의 ID를 가리키는 마커가 달려 있다.
 행 번호는 마커 삽입 **이후** 기준이다(2026-09-03). 마커 자체를 지우면 번호가 다시 어긋난다.
 
+⚠️ **마커 배치 규칙**: "대상 줄 바로 위"를 문자 그대로 지키면 코드 펜스와 마크다운 표를 깨뜨린다.
+처음 삽입할 때 README 4곳·CLAUDE.md 4곳이 그렇게 들어갔고, 그중 하나는 `\`로 이어진 명령
+한가운데라 **예제를 복사하면 깨지는 상태**였다. 대상이 펜스나 표 안에 있으면 마커는 **그 블록 전체
+바로 위**로 올린다. 검사:
+
+```python
+# 펜스 안: 앞선 ``` 개수가 홀수 / 표 분리: 앞뒤 비어 있지 않은 줄이 둘 다 '|'로 시작
+```
+
 ### R1 ❌ SUPERSEDED (2026-09-03) — `random_split` 75/10/15 분할
 
 `README.md:666-672`(`random_split` 호출은 :669), `:1159`. **B5 전체가 이 결함을 고치려고 존재한다.** 두 가지가 겹쳐 있었다.
@@ -132,20 +141,23 @@ published 모델의 자기 분할 위 성적으로만 인용한다.
 
 ### R11 ⚠️ CAUTION (2026-09-03) — `CLAUDE.md`도 같은 legacy 서술을 담고 있다
 
-에이전트가 저장소에서 **가장 먼저 읽는 파일**이라 영향이 크다. 저자 승인 전까지 `CLAUDE.md` 자체는
-**건드리지 않았다** — 아래가 확인된 어긋남이다.
+에이전트가 저장소에서 **가장 먼저 읽는 파일**이라 영향이 크다. ✅ **2026-09-03 마킹 완료** —
+배너 1개 + 마커 10개(원문 삭제 0). 아래가 그 목록이다.
+
+행 번호는 마커 삽입 **이후** 기준(2026-09-03). CLAUDE.md는 `.git/info/exclude`로 git에서 제외돼 있어
+이 마킹은 로컬 디스크에만 있고 커밋되지 않는다 — 새로 클론하면 사라진다.
 
 | CLAUDE.md | 서술 | 현재 진실 |
 |---|---|---|
-| :20, :65 | `scripts/create_database.py … --add-rc-iso-only` | B5 빌드 경로는 `scripts/build_b5_database.py`. `--add-rc-iso-only` 단독은 무효였고 enum(`--rc none/all/isoform-only`)으로 교체됐다(IMPLEMENTATION_ORDER_B5_C0_C2_v1) |
-| :47 | "Run a test script (ad-hoc scripts, **no pytest framework**)" | ❌ 이제 `tests/`에 pytest 스위트 21파일 **155건**이 있고 전부 통과한다(`pytest -q tests`, duckdb 필요) |
-| :64, :110 | "Published checkpoint, **92 % F1**" | R7 — 누출 있는 분할에서 측정된 수치다 |
-| :66 | "Wide (1.17B) — GB10/RTX 4090 **training target**" | B5 정본은 **400M**(`configs/b5_400m_win_v3.json`). 학습 스크립트 기본이 1.17B였던 것이 B5 설정 명시의 이유다 |
-| :167 | `--save-every-n-steps 5000` | R9 — B5 기본값 200 |
-| :178 | "Step-level resume: skips already-processed micro-batches within an epoch" | R4 / 이슈 **#59** — 에폭 중간 재개는 셔플이 달라져 **엉뚱한** 마이크로배치를 건너뛴다 |
-| :213 | "**49152 bp** — max encoder input (8 × 6144)" | R5 — B5는 `max_encoder_seqlen` **129,024** |
-| :214 | "**2048** — max decoder position embeddings" | B5는 **8,192**(`max_decoder_position_embeddings`, 라벨 캡도 8,192) |
-| :217 | "GFFTokenizer vocab (**272 tokens**)" | R6 — B5는 v3 **290**(`<gene>`·`<empty>` 추가) |
+| :29 | `scripts/create_database.py … --add-rc-iso-only` | B5 빌드 경로는 `scripts/build_b5_database.py`. `--add-rc-iso-only` 단독은 무효였고 enum(`--rc none/all/isoform-only`)으로 교체됐다(IMPLEMENTATION_ORDER_B5_C0_C2_v1) |
+| :56 | "Run a test script (ad-hoc scripts, **no pytest framework**)" | ❌ 이제 `tests/`에 pytest 스위트 21파일 **155건**이 있고 전부 통과한다(`pytest -q tests`, duckdb 필요) |
+| :77, :125 | "Published checkpoint, **92 % F1**" | R7 — 누출 있는 분할에서 측정된 수치다 |
+| :79 | "Wide (1.17B) — GB10/RTX 4090 **training target**" | B5 정본은 **400M**(`configs/b5_400m_win_v3.json`). 학습 스크립트 기본이 1.17B였던 것이 B5 설정 명시의 이유다 |
+| :184 | `--save-every-n-steps 5000` | R9 — B5 기본값 200 |
+| :197 | "Step-level resume: skips already-processed micro-batches within an epoch" | R4 / 이슈 **#59** — 에폭 중간 재개는 셔플이 달라져 **엉뚱한** 마이크로배치를 건너뛴다 |
+| :234 | "**49152 bp** — max encoder input (8 × 6144)" | R5 — B5는 `max_encoder_seqlen` **129,024** |
+| :237 | "**2048** — max decoder position embeddings" | B5는 **8,192**(`max_decoder_position_embeddings`, 라벨 캡도 8,192) |
+| :242 | "GFFTokenizer vocab (**272 tokens**)" | R6 — B5는 v3 **290**(`<gene>`·`<empty>` 추가) |
 
 ---
 

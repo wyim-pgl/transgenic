@@ -276,11 +276,11 @@ Nine phylogenetically diverse plant species:
 
 ### Available Models
 
+> ⚠️ **CAUTION (2026-09-03):** published v1(272)·이 저장소 기본 v2(288)까지는 맞다. **B5는 v3(290)**이며 `<empty>` 라벨에 미해결 비대칭이 있다(이슈 #58). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R6).
+
 | Model | Parameters | Hidden Size | Layers | Attention Heads | F1 Score |
 |-------|------------|-------------|--------|-----------------|----------|
 | [HyenaTransgenic-768L12A6-400M](https://huggingface.co/jlomas/HyenaTransgenic-768L12A6-400M) | ~400M | 768 | 12 | 6 | 92% |
-> ⚠️ **CAUTION (2026-09-03):** published v1(272)·이 저장소 기본 v2(288)까지는 맞다. **B5는 v3(290)**이며 `<empty>` 라벨에 미해결 비대칭이 있다(이슈 #58). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R6).
-
 | [HyenaTransgenic-512L9A4-160M](https://huggingface.co/jlomas/HyenaTransgenic-512L9A4-160M) | ~160M | 512 | 9 | 4 | - |
 
 > **Tokenizer vocabulary versions.** The published checkpoints have `vocab_size: 272` and each HF repository ships the matching legacy `GFFTokenizer` (v1), so `AutoTokenizer.from_pretrained(<checkpoint>, trust_remote_code=True)` always pairs correctly. The tokenizer in this repository defaults to the isoform-aware 288-token vocabulary (v2: adds `<iso>` and `<tx1>`–`<tx15>` planning tokens) used for new training runs. When using this repo's tokenizer class with a published 272-token checkpoint (e.g., fine-tuning), instantiate `GFFTokenizer(vocab_version="v1")`; `run_genome_annotation.py` and `examples/prompt_mode.py` check tokenizer/checkpoint vocabulary agreement at load time and fail fast on a mismatch.
@@ -649,6 +649,8 @@ genome2GSFDataset(
 
 All training scripts accept command-line arguments (see the [CLI options table](#3-launch-training) below). You can also call the training function directly from Python:
 
+> ❌ **SUPERSEDED (2026-09-03):** **이 분할이 B5 전체가 고치려는 결함이다.** RC 증강 이후 행 단위로 나뉘어 정방향 행과 그 역상보 쌍둥이가 train/test로 갈라졌고(twin leakage), 상동 유전자가 분할을 가로질렀다. B5는 동결 분할표 `data/splits/b5_orthogroup_split_v1.tsv`만 쓴다. 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R1).
+
 ```python
 from transgenic.datasets.datasets import isoformDataHyena
 from transgenic.model.tokenization_transgenic import GFFTokenizer
@@ -661,8 +663,6 @@ ds = isoformDataHyena(
     exclude_prefix="Zm"   # Exclude maize for cross-species evaluation
 )
 
-> ❌ **SUPERSEDED (2026-09-03):** **이 분할이 B5 전체가 고치려는 결함이다.** RC 증강 이후 행 단위로 나뉘어 정방향 행과 그 역상보 쌍둥이가 train/test로 갈라졌고(twin leakage), 상동 유전자가 분할을 가로질렀다. B5는 동결 분할표 `data/splits/b5_orthogroup_split_v1.tsv`만 쓴다. 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R1).
-
 # Split: 75% train, 10% eval, 15% test
 import torch
 total = len(ds)
@@ -673,14 +673,14 @@ train_data, eval_data, test_data = torch.utils.data.random_split(
 
 #### 3. Launch Training
 
+> ❌ **SUPERSEDED (2026-09-03):** `_RTX4090.py`·`_GB10.py`는 아직 `random_split`을 쓴다(R2) — B5에 쓰면 안 된다. "OOM-safe batch skipping"은 프로토콜 A35가 금지한 동작이며, 129,024-nt 계층에서 1,103 배치 중 1,093개를 조용히 버렸다(R3). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R2 · R3).
+
 ```bash
 # Single GPU (generic)
 python train/train_HyenaTransgenic.py --db training_data.db
 
 # Multi-GPU with Accelerate
 accelerate launch train/train_HyenaTransgenic.py --db training_data.db
-
-> ❌ **SUPERSEDED (2026-09-03):** `_RTX4090.py`·`_GB10.py`는 아직 `random_split`을 쓴다(R2) — B5에 쓰면 안 된다. "OOM-safe batch skipping"은 프로토콜 A35가 금지한 동작이며, 129,024-nt 계층에서 1,103 배치 중 1,093개를 조용히 버렸다(R3). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R2 · R3).
 
 # RTX 4090 optimized (torch.compile, TF32, pinned memory, OOM-safe batch skipping)
 python train/train_HyenaTransgenic_RTX4090.py --db training_data.db
@@ -700,6 +700,8 @@ python train/train_HyenaTransgenic_GB10.py --db training_data.db
 
 **CLI options** (available in all three training scripts):
 
+> ⚠️ **CAUTION (2026-09-03):** legacy 스크립트 기본값이다. B5 경로의 기본값은 200이다(ACCESS 선점 재개 전제). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R9).
+
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--db` | (required) | Path to DuckDB training database |
@@ -707,8 +709,6 @@ python train/train_HyenaTransgenic_GB10.py --db training_data.db
 | `--batch-size` | 16 / 4 / 8 | Micro-batch size (generic / RTX 4090 / GB10) |
 | `--accumulation-steps` | 16 / 64 / 32 | Gradient accumulation steps |
 | `--num-workers` | 8 / 6 / 4 | DataLoader worker count |
-> ⚠️ **CAUTION (2026-09-03):** legacy 스크립트 기본값이다. B5 경로의 기본값은 200이다(ACCESS 선점 재개 전제). 자세한 근거와 현재 진실은 [`ruleout.md`](ruleout.md) (R9).
-
 | `--save-every-n-steps` | 5000 | Save checkpoint every N optimizer steps |
 | `--checkpoint-path` | `checkpoints/` | Directory for Accelerate checkpoints |
 | `--no-wandb` | off | Disable Weights & Biases logging |
