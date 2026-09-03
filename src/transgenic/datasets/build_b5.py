@@ -182,6 +182,12 @@ def read_qc_flags(path) -> Dict[Tuple[str, str], Dict[str, set]]:
     return out
 
 
+def token_cap_for(window_policy: str) -> int:
+    """Decoder token cap per window policy: v3 tiles use CAPS_V3 (8,192, A27); gene-centred windows use CAPS (2,048).
+    The smoke build of 2026-09-02 flagged 410 v3 rows against the v2 cap."""
+    return gc.CAPS_V3["tokens"] if window_policy == gc.WINDOW_POLICY_V3 else gc.CAPS["tokens"]
+
+
 def flags_for_gene(qc_flags, species_id: str, gene) -> Dict[str, set]:
     """Flags addressed to a gene by its builder key, its GFF ID (`gene_id_original`) or its Name attribute: the flag files
     of GeenuFF (A22) and the Swiss-Prot audit (A30) carry GFF identifiers, while the builder key may be a generated code
@@ -391,7 +397,8 @@ def validate_b5_database(db: str, excluded_species: Iterable[str] = ("Zmays",), 
     dup = con.sql("SELECT species_id, gene_id, is_rc, count(*) c FROM geneList GROUP BY 1,2,3 HAVING c > 1").fetchall()
     for sp, gid, rcflag, c in dup:
         violations.append(f"duplicate row {sp}:{gid} is_rc={rcflag} x{c}")
-    over = con.sql(f"SELECT count(*) FROM geneList WHERE gsf_token_count > {gc.CAPS['tokens']}").fetchone()[0]
+    over = con.sql(f"SELECT count(*) FROM geneList WHERE gsf_token_count > CASE WHEN window_policy = '{gc.WINDOW_POLICY_V3}' "
+                   f"THEN {token_cap_for(gc.WINDOW_POLICY_V3)} ELSE {token_cap_for(gc.WINDOW_POLICY)} END").fetchone()[0]
     if over:
         violations.append(f"{over} rows exceed the token cap")
     bad_null = con.sql("SELECT count(*) FROM geneList WHERE gff = '' OR gff = 'None'").fetchone()[0]

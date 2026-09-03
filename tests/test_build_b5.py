@@ -314,3 +314,12 @@ def test_qc_flags_resolve_original_gff_ids_and_names(tmp_path, b5):
     assert all(rows[k][1] == 0.0 for k in keys), rows
     assert "swissprot_caution_erroneous_initiation" in rows[keys[0]][2] and "missing_start" in rows[keys[1]][2]
     assert b5.validate_b5_database(str(db))["rows_loss_masked"] == 3
+
+
+def test_validator_token_cap_follows_window_policy(b5):
+    """Smoke build 2026-09-02: 410 tile6144-v3 rows were reported over the cap because the validator used the v2 cap."""
+    assert b5.token_cap_for(b5.gc.WINDOW_POLICY_V3) == b5.gc.CAPS_V3["tokens"] == 8192
+    assert b5.token_cap_for(b5.gc.WINDOW_POLICY) == b5.gc.CAPS["tokens"] == 2048
+    assert b5.token_cap_for("tier6144-v2") == 2048
+    src = (ROOT / "src" / "transgenic" / "datasets" / "build_b5.py").read_text()
+    assert "CASE WHEN window_policy" in src and "token_cap_for(gc.WINDOW_POLICY_V3)" in src
