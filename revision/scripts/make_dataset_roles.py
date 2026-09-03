@@ -39,7 +39,10 @@ TRAINING_SPECIES = ("Athaliana", "Bdistachyon", "Gmax", "Osativa", "Ppatens",
                     "Ptrichocarpa", "Sbicolor", "Sitalica", "Vvinifera")
 TEST_SPECIES = ("Zmays", "Slycopersicum")
 
-ROLES = ("b1_validation_only", "c2_training_eligible", "excluded")
+# A30 (frozen text): the Swiss-Prot resource is recorded "with the role sensitivity_set (a fourth
+# role value; builders still fail closed on unknown roles)". The tuple held three values, so the row
+# A30.5 step 1 tells this script to write was rejected by validate(). Unknown roles still fail.
+ROLES = ("b1_validation_only", "c2_training_eligible", "excluded", "sensitivity_set")
 
 # Genotype stratum per dataset. Not derivable from any field, so it is stated once, here, with the
 # reason. A18.4 gives it a weight: reference 1.0, non_reference / hybrid_pooled / unknown 0.5.

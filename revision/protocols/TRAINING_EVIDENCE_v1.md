@@ -27,7 +27,7 @@ Rules (protocol B1 v1.5): ONT of any chemistry; PacBio only if ENA `instrument_m
 | V. vinifera | ONT | PRJNA776245 | 9 / 20 Gb | Pinot Noir berries (PN40024 lineage) | unpublished |
 | V. vinifera | ONT | PRJNA732451 | 2 / 18.5 Gb | embryogenic callus | Chen 2022 Mobile DNA 10.1186/s13100-022-00271-5 |
 | V. vinifera | PacBio SqII HiFi | PRJNA1185815 | 9 / 6.5 Gb | cv. Zhuosexiang, 9 tissues | genome paper 2024 |
-| G. max | ONT | PRJNA648759 | 4 / 17.7 Gb | Williams 82 grafts | unpublished |
+| G. max | ONT | PRJNA648759 | **8** / 28.9 M reads | Williams 82 grafts | unpublished | ✏️ PARTIAL (2026-09-03, #67): the run count read **4**; the BioProject holds exactly **8** Oxford Nanopore FL-cDNA MinION runs (`SRR12327364/365/382/383/384/385/386/387`, 28,923,488 reads, 11 GB converted FASTA, one `.DONE` each) and all 8 were fetched. Counted from the dataset's own ENA `filereport.tsv`, not from the tree. The remaining 18 runs in the project are Illumina (8 miRNA-Seq, 8 RNA-Seq, 2 OTHER) and were correctly not selected. The old **17.7 Gb** figure was a base count for the undercounted 4 and is not carried forward; reads are given instead because that is what was measured. |
 | G. max | ONT | PRJNA416810 | 10 / 3 Gb | Williams 82 seed axis | unpublished |
 | G. max | ONT | PRJNA803218 | 9 / 55 Gb | genotype 09-138 roots ± SCN | Huang 2022 Front Plant Sci 10.3389/fpls.2022.866322 |
 | G. max | PacBio | — | none usable (Sequel II sets are subreads-only) | | |
