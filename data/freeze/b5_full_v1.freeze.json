@@ -1,4 +1,32 @@
 {
+ "amendments": [
+  {
+   "added": [
+    "qc_flag_files: the nine *.swissprot_flags.tsv (A30)",
+    "build_driver",
+    "species_manifest",
+    "source_rejected_json_md5"
+   ],
+   "at": "2026-09-03T01:44:27-0700",
+   "unchanged": [
+    "file_md5",
+    "geneList_content_sha256",
+    "table_content_sha256",
+    "gene_split_content_sha256",
+    "rows_by_species",
+    "rn_ranges",
+    "git_commits",
+    "frozen_inputs",
+    "source_md5",
+    "split_table"
+   ],
+   "why": "the merge was run with --qc-flags covering only the GeenuFF files and without --species-manifest, so the manifest recorded half the masking inputs and none of the build invocation. run_full_build.sh:6 passes both flag families, and the Swiss-Prot masking is measurable in the artifact: of 535 genes that are swissprot_caution-hard but not GeenuFF-hard, 0 are labelled in any tile, while 918 of 8,737 GeenuFF-only hard genes are (the A22 partial-transcript case)."
+  }
+ ],
+ "build_driver": {
+  "md5": "cc615a0094164700e8d28c545e577cec",
+  "path": "/home/pgl/scratch1/wyim/transgenic_data/run_full_build.sh"
+ },
  "database": "/home/pgl/scratch1/wyim/transgenic_data/b5/merged/b5_full_v1.db",
  "file_bytes": 23491260416,
  "file_md5": "ebf4fb511073c546d05e3fa0fc0e4258",
@@ -31,14 +59,23 @@
  "merged_at": "2026-09-03T00:59:21-0700",
  "qc_flag_files": {
   "Athaliana.geenuff_flags.tsv": "5ab607c50e37af0591494cfb1f5b0b05",
+  "Athaliana.swissprot_flags.tsv": "1bf39ce9ae07324ad9a9924cbc6b4f2d",
   "Bdistachyon.geenuff_flags.tsv": "c6b905f0e4eaa63729c6f3c462cff5e0",
+  "Bdistachyon.swissprot_flags.tsv": "ffca7f04c3c1e04b8226bd5aa1511c2c",
   "Gmax.geenuff_flags.tsv": "4e30d2ec816d0c5701cc5dd0b3f6d414",
+  "Gmax.swissprot_flags.tsv": "632fc827cd7c75407f047c237d8eb269",
   "Osativa.geenuff_flags.tsv": "4731d03981d6bfd30cf0b21acb2ecd40",
+  "Osativa.swissprot_flags.tsv": "22273b6591fa6759d621e1b322cdc666",
   "Ppatens.geenuff_flags.tsv": "7d16d4b5542a2c67b355afeb16a6df80",
+  "Ppatens.swissprot_flags.tsv": "e175fcb3ae6d6e564b3d50f800c46213",
   "Ptrichocarpa.geenuff_flags.tsv": "9aeb684de2aea1611a76691b4cf21043",
+  "Ptrichocarpa.swissprot_flags.tsv": "ffcd8f04942855455d8a8c0cba476f30",
   "Sbicolor.geenuff_flags.tsv": "26958f9a8be02609b0e59e56d950fb0a",
+  "Sbicolor.swissprot_flags.tsv": "59133b0d9bd2720c57a12da298a4895d",
   "Sitalica.geenuff_flags.tsv": "09d506058d1e989e8106ae78b4738950",
-  "Vvinifera.geenuff_flags.tsv": "a42e1c225edd4b26b5991ec0b7d70c3f"
+  "Sitalica.swissprot_flags.tsv": "ffca7f04c3c1e04b8226bd5aa1511c2c",
+  "Vvinifera.geenuff_flags.tsv": "a42e1c225edd4b26b5991ec0b7d70c3f",
+  "Vvinifera.swissprot_flags.tsv": "629db6e761835689ce4a1a841b765683"
  },
  "rn_ranges": {
   "Athaliana": [
@@ -100,6 +137,17 @@
   "Sitalica": "c37482893fa2ec6a194edb4e9fa14fe0",
   "Vvinifera": "3714204953e2fa153c2e1fe870fb7b22"
  },
+ "source_rejected_json_md5": {
+  "Athaliana": "761b0cb19ce326502ded71821ee662e5",
+  "Bdistachyon": "7e3d60f08a5ce844406910070afc22a1",
+  "Gmax": "c467fb8bc3f45b8deebab5ab12dc1575",
+  "Osativa": "fbaceabefcd4491847c3d2354ccb9a13",
+  "Ppatens": "a865e6ae798c24d3c80a55e6fe1a3997",
+  "Ptrichocarpa": "48827dde4014c8bb6452a73e14c713c8",
+  "Sbicolor": "62aeba7565e2ee0f0fb2679b4561d5d3",
+  "Sitalica": "129647e173de273c255447033c04df1c",
+  "Vvinifera": "932b3c01d6b5c3be0b180b59cd213a0d"
+ },
  "sources": [
   "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Athaliana.db",
   "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Bdistachyon.db",
@@ -111,6 +159,11 @@
   "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Sitalica.db",
   "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Vvinifera.db"
  ],
+ "species_manifest": {
+  "md5": "778993cdfa2479c6a9c4f98c17d6c556",
+  "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/manifests/b5_species_v1.gpu.tsv",
+  "sha256": "a5ded85c586a4462202acbd0543bfdb4fb4fb8d605f08f49b485c0bc297c1c2e"
+ },
  "split_table": {
   "path": "/home/pgl/scratch1/wyim/transgenic_data/splits/final/b5_orthogroup_split_v1.tsv",
   "sha256": "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7"

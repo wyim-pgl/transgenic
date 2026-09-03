@@ -24,3 +24,23 @@ The nine builds were not all made from the same commit — six at `0aa5fab`, thr
 builder is byte-identical between the two (`git diff 0aa5fab fea0d1d -- src/transgenic/datasets/build_b5.py
 src/transgenic/utils/gsf_contract.py` is empty); `fea0d1d` only touched the trainer, `datasets.py` and
 `b5_runtime.py`. Both commits are recorded in the freeze manifest rather than collapsed to one.
+
+## Amendment, 2026-09-03
+
+The merge was run with `--qc-flags` covering only the nine GeenuFF files and without `--species-manifest`,
+so the manifest as first written recorded half the masking inputs and nothing about the build invocation.
+`b5_full_v1.freeze.json` now also carries the nine `*.swissprot_flags.tsv` md5s (A30), the build driver
+(`run_full_build.sh`, md5 `cc615a00…`), the species manifest the driver named
+(`genomes_src/manifests/b5_species_v1.gpu.tsv` — gpu-local paths, not the repo copy), and each source's
+`.db.rejected.json` md5, which is the only place the per-tile rejection reasons survive with their
+mask-fraction values since that file is not merged in. The `amendments` key in the JSON records what was
+added, when, and what was left untouched; `file_md5`, the content hashes, the row counts, the rn ranges and
+the git commits are unchanged and were re-asserted against the artifact before writing.
+
+Recording the Swiss-Prot files is a claim that the builds consumed them, so it was checked rather than
+assumed. `run_full_build.sh:6` passes both flag families, and the effect is visible in the artifact: of the
+535 genes that are `swissprot_caution`-hard but not GeenuFF-hard, **none** is labelled in any tile, while
+918 of the 8,737 GeenuFF-only hard genes are — the A22 case where a hard flag hits some transcripts and not
+the gene, which keeps the gene labelled at `train_weight` 1. Ids were resolved through `gene_key_map` on
+`gene_id` / `gene_id_original` / `name_original`, the way `flags_for_gene` does; comparing the flag files'
+GFF ids against the builder's generated keys directly matches nothing and looks like total failure.
