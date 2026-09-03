@@ -329,7 +329,10 @@ def train(
     # ========================================================================
     best_eval_score = None
     try:
+        _max_seqlen = int((b5_config or {}).get("max_encoder_seqlen", 49152))
         _bench_sec, _bench_tok, _bench_tokens, _bench_t0 = [], [], 0, time.perf_counter()
+        if benchmark_steps and torch.cuda.is_available():
+            torch.cuda.reset_peak_memory_stats()
         for epoch in range(start_epoch, num_epochs):
             total_loss = 0                      # Accumulated loss for epoch-level metrics
 
@@ -344,11 +347,13 @@ def train(
                 am = batch[1].to(device, non_blocking=True)    # attention_mask: 1=real, 0=padding
                 lab = batch[2].to(device, non_blocking=True)   # labels: GSF annotation tokens
 
-                # OOM guard: skip batches where batch_size * seq_len exceeds threshold.
-                # Tune this value based on your GPU's VRAM (24GB for 4090, 80GB for A100).
-                if ii.shape[0] * ii.shape[1] > 100_000:
-                    if layout is not None:
-                        raise RuntimeError(f"B5: oversized batch {ii.shape} — the frozen DB must not contain windows over 49,152 nt")
+                # OOM guard. Under a frozen recipe the cap is the recipe's own max_encoder_seqlen
+                # (49,152 for sym6144-v1, 129,024 for tier6144-v2 / tile6144-v3), so a legal tile is never
+                # rejected; without a recipe the legacy heuristic is kept.
+                if layout is not None:
+                    if ii.shape[1] > _max_seqlen:
+                        raise RuntimeError(f"B5: window {ii.shape[1]} nt exceeds the recipe's max_encoder_seqlen {_max_seqlen}")
+                elif ii.shape[0] * ii.shape[1] > 100_000:
                     continue
 
                 try:
@@ -364,6 +369,7 @@ def train(
                     accelerator.backward(outputs.loss / accumulation_steps)
 
                     # Only update weights every `accumulation_steps` mini-batches
+                    _bench_tokens += int(lab.numel())
                     if (step + 1) % accumulation_steps == 0:
                         global_step += 1
                         # Clip gradients to prevent explosion (common in transformer training)
@@ -396,6 +402,24 @@ def train(
 
                         # Release gradient memory (faster than filling with zeros)
                         optimizer.zero_grad(set_to_none=True)
+
+                        # --- #18 benchmark: time N optimizer steps, print JSON, exit ---
+                        if benchmark_steps:
+                            if torch.cuda.is_available():
+                                torch.cuda.synchronize()
+                            now = time.perf_counter()
+                            _bench_sec.append(now - _bench_t0)
+                            _bench_tok.append(_bench_tokens)
+                            _bench_t0, _bench_tokens = now, 0
+                            if len(_bench_sec) >= benchmark_steps:
+                                peak = torch.cuda.max_memory_allocated() / 1e9 if torch.cuda.is_available() else None
+                                summary = benchmark_summary(_bench_sec, _bench_tok, len(train_data),
+                                                            batch_size * accumulation_steps, peak_mem_gb=peak)
+                                summary.update({"window_nt": int(ii.shape[1]), "batch_size": batch_size,
+                                                "accumulation_steps": accumulation_steps, "rows_in_split": len(train_data),
+                                                "device": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"})
+                                print(json.dumps(summary), flush=True)
+                                return summary
 
                         # Save full resumable checkpoint every save_every_n_steps optimizer steps
                         if layout is not None:
@@ -509,8 +533,9 @@ if __name__ == '__main__':
         # membership comes from the frozen split column; the query also refuses excluded species and NULL splits
         split_row_numbers(args.db, "train"); split_row_numbers(args.db, "valid")
         vv = cfg.get("gff_vocab_version", "v2")
-        train_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="train", gff_vocab_version=vv)
-        eval_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="valid", gff_vocab_version=vv)
+        wl = args.benchmark_tier if args.benchmark_steps else None   # #18: per-tier throughput
+        train_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="train", gff_vocab_version=vv, window_len=wl)
+        eval_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="valid", gff_vocab_version=vv, window_len=wl)
         print(f"B5 split sizes: train={len(train_data)} valid={len(eval_data)} seed={args.seed} acc={acc} max_epochs={max_epochs} patience={patience}", file=sys.stderr)
         layout = CheckpointLayout(args.output_dir)
         run_cfg = {"config": args.config, "recipe": cfg, "db": os.path.abspath(args.db), "seed": args.seed, "batch_size": args.batch_size,

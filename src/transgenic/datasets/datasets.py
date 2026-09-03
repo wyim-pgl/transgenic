@@ -172,7 +172,7 @@ class isoformDataHyena(Dataset):
 	    the inherited connection is closed and a fresh one is opened
 	  - Connections are closed in __del__ when the dataset is garbage-collected
 	"""
-	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None, split=None, gff_vocab_version="v2"):
+	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None, split=None, gff_vocab_version="v2", window_len=None):
 		"""
 		Args:
 			db: Path to DuckDB database file.
@@ -204,7 +204,12 @@ class isoformDataHyena(Dataset):
 		with duckdb.connect(self.db, config={"access_mode": "READ_ONLY"}) as con:
 			if split:
 				# B5: membership comes from the frozen split column (docs/gsf_spec_v1.md §7), never from random_split
-				rows = con.sql("SELECT rn, gff FROM geneList WHERE split = ? AND gff IS NOT NULL AND COALESCE(train_weight, 1.0) > 0 ORDER BY rn", params=[split]).fetchall()
+				q = "SELECT rn, gff FROM geneList WHERE split = ? AND gff IS NOT NULL AND COALESCE(train_weight, 1.0) > 0"
+				params = [split]
+				if window_len:                      # #18: restrict to one tile tier (fin - start)
+					q += " AND fin - start = ?"
+					params.append(int(window_len))
+				rows = con.sql(q + " ORDER BY rn", params=params).fetchall()
 				if not rows:
 					raise ValueError(f"no rows with split={split!r} in {db}; build it with scripts/build_b5_database.py")
 			elif exclude_prefix:

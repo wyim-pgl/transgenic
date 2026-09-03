@@ -189,8 +189,10 @@ class CheckpointLayout:
                 raise RuntimeError(f"resume refused: {key} differs from the run's first job ({first.get(key)!r} != {current.get(key)!r})")
 
 
-def split_row_numbers(db: str, split: str, excluded_species: Sequence[str] = ("Zmays",), require_labels: bool = True) -> List[int]:
-    """Row numbers of one split from the frozen split column; refuses excluded species and NULL splits."""
+def split_row_numbers(db: str, split: str, excluded_species: Sequence[str] = ("Zmays",), require_labels: bool = True,
+                      window_len: Optional[int] = None) -> List[int]:
+    """Row numbers of one split from the frozen split column; refuses excluded species and NULL splits.
+    `window_len` restricts the rows to one tile tier (`fin - start`), which #18 uses for per-tier throughput."""
     import duckdb
     con = duckdb.connect(db, read_only=True)
     try:
@@ -204,8 +206,12 @@ def split_row_numbers(db: str, split: str, excluded_species: Sequence[str] = ("Z
             n = con.sql("SELECT count(*) FROM geneList WHERE species_id = ?", params=[sp]).fetchone()[0]
             if n:
                 raise ValueError(f"{db}: excluded species {sp} present ({n} rows)")
-        q = "SELECT rn FROM geneList WHERE split = ?" + (" AND gff IS NOT NULL" if require_labels else "") + " ORDER BY rn"
-        return [r[0] for r in con.sql(q, params=[split]).fetchall()]
+        q = "SELECT rn FROM geneList WHERE split = ?" + (" AND gff IS NOT NULL" if require_labels else "")
+        params: List = [split]
+        if window_len is not None:
+            q += " AND fin - start = ?"
+            params.append(int(window_len))
+        return [r[0] for r in con.sql(q + " ORDER BY rn", params=params).fetchall()]
     finally:
         con.close()
 
@@ -223,6 +229,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--max-epochs", type=int, default=None, help="override the config cap")
     p.add_argument("--patience", type=int, default=None)
     p.add_argument("--benchmark-steps", type=int, default=0, help="run N optimizer steps, print throughput JSON, exit")
+    p.add_argument("--benchmark-tier", type=int, default=None, help="restrict the benchmark to one tile tier (window length in nt)")
     p.add_argument("--save-every-n-steps", type=int, default=200, help="B5: mid-epoch latest_state every N optimizer steps (0 = off)")
     p.add_argument("--checkpoint-path", type=str, default="checkpoints_HyenaWide/", help="legacy path (no --config)")
     p.add_argument("--no-wandb", action="store_true")

@@ -131,3 +131,38 @@ def test_resume_prefers_newest_state_and_config_check(rt, tmp_path):
         lay.check_run_config({"recipe": {"name": "y"}, "db": "/a.db", "seed": 123, "batch_size": 1, "accumulation_steps": 96, "max_epochs": 22, "patience": 3})
     with pytest.raises(RuntimeError):
         lay.check_run_config({"recipe": {"name": "x"}, "db": "/a.db", "seed": 456, "batch_size": 1, "accumulation_steps": 96, "max_epochs": 22, "patience": 3})
+
+
+def test_split_row_numbers_filters_by_window_length(rt, tmp_path):
+    """#18 needs per-tier throughput, so the split query can be restricted to one tile tier."""
+    duckdb = pytest.importorskip("duckdb")
+    db = tmp_path / "t.db"
+    con = duckdb.connect(str(db))
+    con.sql("CREATE TABLE geneList (rn INT, species_id VARCHAR, split VARCHAR, gff VARCHAR, start INT, fin INT, train_weight DOUBLE)")
+    con.executemany("INSERT INTO geneList VALUES (?,?,?,?,?,?,?)",
+                    [(1, "Athaliana", "train", "x", 0, 30720, 1.0), (2, "Athaliana", "train", "y", 0, 61440, 1.0),
+                     (3, "Athaliana", "train", "z", 0, 129024, 1.0), (4, "Athaliana", "valid", "w", 0, 30720, 1.0)])
+    con.close()
+    assert rt.split_row_numbers(str(db), "train") == [1, 2, 3]
+    assert rt.split_row_numbers(str(db), "train", window_len=30720) == [1]
+    assert rt.split_row_numbers(str(db), "train", window_len=129024) == [3]
+    assert rt.split_row_numbers(str(db), "valid", window_len=61440) == []
+
+
+def test_parse_args_accepts_benchmark_tier(rt):
+    a = rt.parse_args(["--db", "x.db", "--config", "c.json", "--seed", "123", "--output-dir", "o",
+                       "--benchmark-steps", "50", "--benchmark-tier", "129024"])
+    assert a.benchmark_steps == 50 and a.benchmark_tier == 129024
+    assert rt.parse_args(["--db", "x.db"]).benchmark_tier is None
+
+
+def test_oversized_batch_cap_follows_the_recipe(rt):
+    """The trainer's guard must accept the tier it was configured for: 129,024-nt tiles are legal under tile6144-v3."""
+    v3 = rt.load_b5_config(str(ROOT / "configs" / "b5_400m_win_v3.json"))
+    v1 = rt.load_b5_config(str(ROOT / "configs" / "b5_400m_v1.json"))
+    assert v3["max_encoder_seqlen"] == 129024 and v1["max_encoder_seqlen"] == 49152
+    src = (ROOT / "train" / "train_HyenaTransgenic.py").read_text()
+    # under a recipe the cap is the recipe's own window length; the 100,000 heuristic survives only on the legacy path
+    assert "if ii.shape[1] > _max_seqlen" in src
+    assert "elif ii.shape[0] * ii.shape[1] > 100_000" in src
+    assert '_max_seqlen = int((b5_config or {}).get("max_encoder_seqlen", 49152))' in src
