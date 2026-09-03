@@ -1,0 +1,21 @@
+{
+ "violations": [],
+ "rows_by_split": {
+  "valid": 25910,
+  "test": 48143,
+  "train": 198171
+ },
+ "rows_by_species": {
+  "Sitalica": 26075,
+  "Bdistachyon": 21967,
+  "Sbicolor": 31223,
+  "Ppatens": 39009,
+  "Gmax": 53247,
+  "Osativa": 28057,
+  "Vvinifera": 32116,
+  "Athaliana": 10454,
+  "Ptrichocarpa": 30076
+ },
+ "rows_loss_masked": 0,
+ "ok": true
+}

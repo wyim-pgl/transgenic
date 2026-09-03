@@ -1,0 +1,144 @@
+{
+ "database": "/home/pgl/scratch1/wyim/transgenic_data/b5/merged/b5_full_v1.db",
+ "file_bytes": 23491260416,
+ "file_md5": "ebf4fb511073c546d05e3fa0fc0e4258",
+ "frozen_inputs": {
+  "build_version": "gsf-contract-v1",
+  "duckdb_version": "1.5.5",
+  "ordering_version": "gsf-order-v1",
+  "rc_mode": "isoform-only",
+  "split_file_sha256": "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+  "window_policy": "tile6144-v3"
+ },
+ "geneList_content_sha256": "bf6cde9c2e49b5b0ec02f0a0800b8245a5a807822386035bc9fa197a97013617",
+ "geneList_rows": 272224,
+ "gene_split_content_sha256": "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+ "git_commits": {
+  "0aa5fab": [
+   "Athaliana",
+   "Bdistachyon",
+   "Gmax",
+   "Ptrichocarpa",
+   "Sbicolor",
+   "Vvinifera"
+  ],
+  "fea0d1d": [
+   "Osativa",
+   "Ppatens",
+   "Sitalica"
+  ]
+ },
+ "merged_at": "2026-09-03T00:59:21-0700",
+ "qc_flag_files": {
+  "Athaliana.geenuff_flags.tsv": "5ab607c50e37af0591494cfb1f5b0b05",
+  "Bdistachyon.geenuff_flags.tsv": "c6b905f0e4eaa63729c6f3c462cff5e0",
+  "Gmax.geenuff_flags.tsv": "4e30d2ec816d0c5701cc5dd0b3f6d414",
+  "Osativa.geenuff_flags.tsv": "4731d03981d6bfd30cf0b21acb2ecd40",
+  "Ppatens.geenuff_flags.tsv": "7d16d4b5542a2c67b355afeb16a6df80",
+  "Ptrichocarpa.geenuff_flags.tsv": "9aeb684de2aea1611a76691b4cf21043",
+  "Sbicolor.geenuff_flags.tsv": "26958f9a8be02609b0e59e56d950fb0a",
+  "Sitalica.geenuff_flags.tsv": "09d506058d1e989e8106ae78b4738950",
+  "Vvinifera.geenuff_flags.tsv": "a42e1c225edd4b26b5991ec0b7d70c3f"
+ },
+ "rn_ranges": {
+  "Athaliana": [
+   1,
+   10454
+  ],
+  "Bdistachyon": [
+   10455,
+   32421
+  ],
+  "Gmax": [
+   32422,
+   85668
+  ],
+  "Osativa": [
+   85669,
+   113725
+  ],
+  "Ppatens": [
+   113726,
+   152734
+  ],
+  "Ptrichocarpa": [
+   152735,
+   182810
+  ],
+  "Sbicolor": [
+   182811,
+   214033
+  ],
+  "Sitalica": [
+   214034,
+   240108
+  ],
+  "Vvinifera": [
+   240109,
+   272224
+  ]
+ },
+ "rows_by_species": {
+  "Athaliana": 10454,
+  "Bdistachyon": 21967,
+  "Gmax": 53247,
+  "Osativa": 28057,
+  "Ppatens": 39009,
+  "Ptrichocarpa": 30076,
+  "Sbicolor": 31223,
+  "Sitalica": 26075,
+  "Vvinifera": 32116
+ },
+ "source_md5": {
+  "Athaliana": "5ef307faf8aadca39c3691965d7441aa",
+  "Bdistachyon": "9c9d09174a16f655b747502b88f2980c",
+  "Gmax": "c94e6d4e168d4c12bc902df89b24b200",
+  "Osativa": "54744576df774b49a16d8013e4152f9b",
+  "Ppatens": "e737b46b1510de16329665dbde94ed03",
+  "Ptrichocarpa": "8f9228de0354e4efb3a64858bfafb554",
+  "Sbicolor": "149305c69f1ad4220f27d1e0b920dd1a",
+  "Sitalica": "c37482893fa2ec6a194edb4e9fa14fe0",
+  "Vvinifera": "3714204953e2fa153c2e1fe870fb7b22"
+ },
+ "sources": [
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Athaliana.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Bdistachyon.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Gmax.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Osativa.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Ppatens.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Ptrichocarpa.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Sbicolor.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Sitalica.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/full/Vvinifera.db"
+ ],
+ "split_table": {
+  "path": "/home/pgl/scratch1/wyim/transgenic_data/splits/final/b5_orthogroup_split_v1.tsv",
+  "sha256": "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7"
+ },
+ "table_content_sha256": {
+  "build_manifest": {
+   "rows": 9,
+   "sha256": "6c29d06e2d30912b9519cacdd07729279ae8d034b388d0fe85d6461f3067573e"
+  },
+  "gene_key_map": {
+   "rows": 334642,
+   "sha256": "e1e907ff71fa760204bc0240f15a8eb8fea151fa53e3f99e2c6240e6239204d0"
+  },
+  "gene_split": {
+   "rows": 334642,
+   "sha256": "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee"
+  },
+  "rejected_records": {
+   "rows": 8181,
+   "sha256": "8d66353997687ffa1a7928ba1b5f7cba441aa3b52eb9197db1547e3cb252f8a5"
+  },
+  "tile_blocks": {
+   "rows": 4454,
+   "sha256": "3ad19472c1ed5a920e294ea3b9e646bf6827d3bab19d57fe06cbd88d1b33e890"
+  },
+  "window_genes": {
+   "rows": 978586,
+   "sha256": "79430f0376cced3619a8ba499cbe03acf2438853ea7d03e43c7842a0840dbd47"
+  }
+ }
+}

@@ -1,0 +1,522 @@
+{
+ "checks": {
+  "gene_split_copied_once": true,
+  "no_excluded_species": true,
+  "no_maize_gene_models": true,
+  "no_null_split": true,
+  "one_build_manifest_row_per_species": true,
+  "rn_dense_1_to_n": true,
+  "species_blocks_contiguous": true,
+  "species_blocks_disjoint_and_ordered": true
+ },
+ "db": "/home/pgl/scratch1/wyim/transgenic_data/b5/merged/b5_full_v1.db",
+ "mask_counters_by_species": {
+  "Athaliana": {
+   "component_masked": 3630,
+   "decoy_masked": 2367,
+   "dup_collapsed": 0,
+   "edge_partial": 11271,
+   "hard_masked": 1618,
+   "leak_masked": 57154
+  },
+  "Bdistachyon": {
+   "component_masked": 4484,
+   "decoy_masked": 3536,
+   "dup_collapsed": 0,
+   "edge_partial": 20170,
+   "hard_masked": 6385,
+   "leak_masked": 42557
+  },
+  "Gmax": {
+   "component_masked": 2237,
+   "decoy_masked": 4377,
+   "dup_collapsed": 0,
+   "edge_partial": 32425,
+   "hard_masked": 295,
+   "leak_masked": 64127
+  },
+  "Osativa": {
+   "component_masked": 1147,
+   "decoy_masked": 4272,
+   "dup_collapsed": 73,
+   "edge_partial": 18943,
+   "hard_masked": 192,
+   "leak_masked": 46843
+  },
+  "Ppatens": {
+   "component_masked": 8006,
+   "decoy_masked": 4378,
+   "dup_collapsed": 670,
+   "edge_partial": 19899,
+   "hard_masked": 9670,
+   "leak_masked": 33519
+  },
+  "Ptrichocarpa": {
+   "component_masked": 2076,
+   "decoy_masked": 3322,
+   "dup_collapsed": 0,
+   "edge_partial": 20728,
+   "hard_masked": 613,
+   "leak_masked": 48719
+  },
+  "Sbicolor": {
+   "component_masked": 2640,
+   "decoy_masked": 3060,
+   "dup_collapsed": 0,
+   "edge_partial": 17536,
+   "hard_masked": 1451,
+   "leak_masked": 37518
+  },
+  "Sitalica": {
+   "component_masked": 1971,
+   "decoy_masked": 2987,
+   "dup_collapsed": 0,
+   "edge_partial": 16312,
+   "hard_masked": 4269,
+   "leak_masked": 37442
+  },
+  "Vvinifera": {
+   "component_masked": 3176,
+   "decoy_masked": 3509,
+   "dup_collapsed": 0,
+   "edge_partial": 27610,
+   "hard_masked": 2765,
+   "leak_masked": 42507
+  }
+ },
+ "mask_counters_total": {
+  "component_masked": 29367,
+  "decoy_masked": 31808,
+  "dup_collapsed": 743,
+  "edge_partial": 184894,
+  "hard_masked": 27258,
+  "leak_masked": 410386
+ },
+ "rejections_by_species": {
+  "Athaliana": {
+   "canonical_order": 8,
+   "mask_fraction_a33": 140
+  },
+  "Bdistachyon": {
+   "mask_fraction_a33": 132,
+   "transcript_cap": 43
+  },
+  "Gmax": {
+   "mask_fraction_a33": 177,
+   "token_cap": 1,
+   "transcript_cap": 84
+  },
+  "Osativa": {
+   "mask_fraction_a33": 53
+  },
+  "Ppatens": {
+   "canonical_order": 10,
+   "mask_fraction_a33": 286,
+   "transcript_cap": 161
+  },
+  "Ptrichocarpa": {
+   "canonical_order": 1,
+   "mask_fraction_a33": 80,
+   "transcript_cap": 26
+  },
+  "Sbicolor": {
+   "mask_fraction_a33": 126,
+   "token_cap": 2,
+   "transcript_cap": 16
+  },
+  "Sitalica": {
+   "mask_fraction_a33": 219,
+   "transcript_cap": 3
+  },
+  "Vvinifera": {
+   "canonical_order": 78,
+   "mask_fraction_a33": 330,
+   "no_cds": 6205
+  }
+ },
+ "rejections_total": {
+  "canonical_order": 97,
+  "mask_fraction_a33": 1543,
+  "no_cds": 6205,
+  "token_cap": 3,
+  "transcript_cap": 333
+ },
+ "rn_ranges": {
+  "Athaliana": {
+   "max": 10454,
+   "min": 1,
+   "rows": 10454
+  },
+  "Bdistachyon": {
+   "max": 32421,
+   "min": 10455,
+   "rows": 21967
+  },
+  "Gmax": {
+   "max": 85668,
+   "min": 32422,
+   "rows": 53247
+  },
+  "Osativa": {
+   "max": 113725,
+   "min": 85669,
+   "rows": 28057
+  },
+  "Ppatens": {
+   "max": 152734,
+   "min": 113726,
+   "rows": 39009
+  },
+  "Ptrichocarpa": {
+   "max": 182810,
+   "min": 152735,
+   "rows": 30076
+  },
+  "Sbicolor": {
+   "max": 214033,
+   "min": 182811,
+   "rows": 31223
+  },
+  "Sitalica": {
+   "max": 240108,
+   "min": 214034,
+   "rows": 26075
+  },
+  "Vvinifera": {
+   "max": 272224,
+   "min": 240109,
+   "rows": 32116
+  }
+ },
+ "rows_by_species_split": {
+  "Athaliana": {
+   "test": 1382,
+   "train": 7631,
+   "valid": 1441
+  },
+  "Bdistachyon": {
+   "test": 3514,
+   "train": 16469,
+   "valid": 1984
+  },
+  "Gmax": {
+   "test": 9451,
+   "train": 38954,
+   "valid": 4842
+  },
+  "Osativa": {
+   "test": 5095,
+   "train": 20283,
+   "valid": 2679
+  },
+  "Ppatens": {
+   "test": 6233,
+   "train": 29110,
+   "valid": 3666
+  },
+  "Ptrichocarpa": {
+   "test": 4994,
+   "train": 21750,
+   "valid": 3332
+  },
+  "Sbicolor": {
+   "test": 5716,
+   "train": 22730,
+   "valid": 2777
+  },
+  "Sitalica": {
+   "test": 5574,
+   "train": 18078,
+   "valid": 2423
+  },
+  "Vvinifera": {
+   "test": 6184,
+   "train": 23166,
+   "valid": 2766
+  }
+ },
+ "rows_by_species_tier": {
+  "Athaliana": {
+   "129024": {
+    "rc_rows": 781,
+    "rows": 1694
+   },
+   "30720": {
+    "rc_rows": 1952,
+    "rows": 5520
+   },
+   "61440": {
+    "rc_rows": 1379,
+    "rows": 3240
+   }
+  },
+  "Bdistachyon": {
+   "129024": {
+    "rc_rows": 1755,
+    "rows": 3842
+   },
+   "30720": {
+    "rc_rows": 3205,
+    "rows": 11190
+   },
+   "61440": {
+    "rc_rows": 2669,
+    "rows": 6935
+   }
+  },
+  "Gmax": {
+   "129024": {
+    "rc_rows": 3931,
+    "rows": 10416
+   },
+   "30720": {
+    "rc_rows": 6100,
+    "rows": 25633
+   },
+   "61440": {
+    "rc_rows": 5444,
+    "rows": 17198
+   }
+  },
+  "Osativa": {
+   "129024": {
+    "rc_rows": 1955,
+    "rows": 4855
+   },
+   "30720": {
+    "rc_rows": 3000,
+    "rows": 14500
+   },
+   "61440": {
+    "rc_rows": 2666,
+    "rows": 8702
+   }
+  },
+  "Ppatens": {
+   "129024": {
+    "rc_rows": 3436,
+    "rows": 7031
+   },
+   "30720": {
+    "rc_rows": 8046,
+    "rows": 19258
+   },
+   "61440": {
+    "rc_rows": 5835,
+    "rows": 12720
+   }
+  },
+  "Ptrichocarpa": {
+   "129024": {
+    "rc_rows": 2342,
+    "rows": 5326
+   },
+   "30720": {
+    "rc_rows": 4014,
+    "rows": 15227
+   },
+   "61440": {
+    "rc_rows": 3418,
+    "rows": 9523
+   }
+  },
+  "Sbicolor": {
+   "129024": {
+    "rc_rows": 2125,
+    "rows": 6161
+   },
+   "30720": {
+    "rc_rows": 2969,
+    "rows": 15097
+   },
+   "61440": {
+    "rc_rows": 2748,
+    "rows": 9965
+   }
+  },
+  "Sitalica": {
+   "129024": {
+    "rc_rows": 1813,
+    "rows": 4866
+   },
+   "30720": {
+    "rc_rows": 2417,
+    "rows": 12924
+   },
+   "61440": {
+    "rc_rows": 2309,
+    "rows": 8285
+   }
+  },
+  "Vvinifera": {
+   "129024": {
+    "rc_rows": 2169,
+    "rows": 5852
+   },
+   "30720": {
+    "rc_rows": 2813,
+    "rows": 15996
+   },
+   "61440": {
+    "rc_rows": 2788,
+    "rows": 10268
+   }
+  }
+ },
+ "rows_by_tier_split": {
+  "129024": {
+   "test": 9116,
+   "train": 35985,
+   "valid": 4942
+  },
+  "30720": {
+   "test": 23594,
+   "train": 99034,
+   "valid": 12717
+  },
+  "61440": {
+   "test": 15433,
+   "train": 63152,
+   "valid": 8251
+  }
+ },
+ "tier_margin_unguaranteed": {
+  "contig_edge_credit": false,
+  "edge_margin": 1000,
+  "exceeds_length_guarantee": {
+   "129024": {
+    "bound_nt": 84016,
+    "genes": 86
+   },
+   "30720": {
+    "bound_nt": 18480,
+    "genes": 3418
+   },
+   "61440": {
+    "bound_nt": 38960,
+    "genes": 653
+   }
+  },
+  "genes_considered": 334642,
+  "not_covered_with_margin": {
+   "129024": 44,
+   "30720": 2034,
+   "61440": 434
+  },
+  "not_covered_with_margin_by_species": {
+   "129024": {
+    "Gmax": 3,
+    "Vvinifera": 41
+   },
+   "30720": {
+    "Athaliana": 3,
+    "Bdistachyon": 48,
+    "Gmax": 420,
+    "Osativa": 27,
+    "Ppatens": 29,
+    "Ptrichocarpa": 56,
+    "Sbicolor": 204,
+    "Sitalica": 32,
+    "Vvinifera": 1215
+   },
+   "61440": {
+    "Bdistachyon": 1,
+    "Gmax": 68,
+    "Osativa": 1,
+    "Sbicolor": 21,
+    "Sitalica": 1,
+    "Vvinifera": 342
+   }
+  },
+  "source": "recomputed from gene_key_map at report time; the builder records no such counter"
+ },
+ "tiles_carrying_counter_by_species": {
+  "Athaliana": {
+   "component_masked": 2683,
+   "decoy_masked": 1925,
+   "dup_collapsed": 0,
+   "edge_partial": 7903,
+   "hard_masked": 1368,
+   "leak_masked": 8729
+  },
+  "Bdistachyon": {
+   "component_masked": 3437,
+   "decoy_masked": 3012,
+   "dup_collapsed": 0,
+   "edge_partial": 14917,
+   "hard_masked": 4989,
+   "leak_masked": 14461
+  },
+  "Gmax": {
+   "component_masked": 2066,
+   "decoy_masked": 3972,
+   "dup_collapsed": 0,
+   "edge_partial": 25730,
+   "hard_masked": 290,
+   "leak_masked": 28303
+  },
+  "Osativa": {
+   "component_masked": 1078,
+   "decoy_masked": 3691,
+   "dup_collapsed": 61,
+   "edge_partial": 15425,
+   "hard_masked": 184,
+   "leak_masked": 17357
+  },
+  "Ppatens": {
+   "component_masked": 6216,
+   "decoy_masked": 3911,
+   "dup_collapsed": 650,
+   "edge_partial": 16438,
+   "hard_masked": 7487,
+   "leak_masked": 18405
+  },
+  "Ptrichocarpa": {
+   "component_masked": 1830,
+   "decoy_masked": 2934,
+   "dup_collapsed": 0,
+   "edge_partial": 16504,
+   "hard_masked": 579,
+   "leak_masked": 18453
+  },
+  "Sbicolor": {
+   "component_masked": 2174,
+   "decoy_masked": 2736,
+   "dup_collapsed": 0,
+   "edge_partial": 14171,
+   "hard_masked": 1371,
+   "leak_masked": 15728
+  },
+  "Sitalica": {
+   "component_masked": 1754,
+   "decoy_masked": 2644,
+   "dup_collapsed": 0,
+   "edge_partial": 13037,
+   "hard_masked": 3651,
+   "leak_masked": 14403
+  },
+  "Vvinifera": {
+   "component_masked": 2103,
+   "decoy_masked": 3133,
+   "dup_collapsed": 0,
+   "edge_partial": 20193,
+   "hard_masked": 2497,
+   "leak_masked": 17430
+  }
+ },
+ "totals": {
+  "build_manifest_rows": 9,
+  "distinct_rn": 272224,
+  "gene_split_rows": 334642,
+  "rc_rows": 84079,
+  "rejected_rows": 8181,
+  "rows": 272224,
+  "rows_by_split": {
+   "test": 48143,
+   "train": 198171,
+   "valid": 25910
+  },
+  "rows_null_label": 0,
+  "rows_train_weight_zero": 0
+ }
+}
