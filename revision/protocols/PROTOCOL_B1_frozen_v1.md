@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.23; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing; §A32 gene-level masking of hard-flagged genes in tiles; §A33 overlapping blocks, locus-aware stitching, masking parameters from reference statistics)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.24; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing; §A32 gene-level masking of hard-flagged genes in tiles; §A33 overlapping blocks, locus-aware stitching, masking parameters from reference statistics; §A34 partially pretrained encoder: audit, gate and record)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -580,6 +580,49 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 - **Completeness QC table** (new secondary output, Table S12d): per species × protocol × library — raw reads, molecule units, mapped/unique/chimeric/multi-mapped %, 5C/5I, 3C/3I, IC/IP/IM/IX counts, tail-positive and internal-priming-rejected fractions, TSS/TES cluster counts, PCR-equivalence compression ratio, median aligned fraction and soft-clipping. Protocols are never pooled into one species completeness rate.
 - Evidence-derived transcript models, ORF assignment and GSF labels remain out of scope for this protocol (follow-up); nothing in §9 changes.
 
+
+## A34. Amendment v1.24 (2026-09-03; before any B5 seed starts) — the encoder is *partially* pretrained: audit, gate and record, initialisation unchanged
+
+Measured while preparing the first training run: the B5 encoder is not fully initialised from the public checkpoint.
+The recipe asks for `d_model` 768 and 12 layers; every public HyenaDNA checkpoint is 128 or 256 wide with at most
+8 layers. `HyenaEncoder.__init__` therefore builds the target model and copies what it can from
+`LongSafari/hyenadna-large-1m-seqlen-hf` (`d_model` 256, `n_layer` 8, `max_seq_len` 1,000,002):
+
+| tensors | count | what happens |
+|---|---|---|
+| exact key and shape | 80 | copied verbatim |
+| key present, shape differs | 147 | tiled along undersized dimensions and cropped from index 0 (`_adapt_tensor_shape`); e.g. `out_proj.weight` (256,256) → (768,768) is the same matrix repeated 3×3, and `pos_emb.z` (1, 1000002, 5) → (1, 129024, 5) is the first 129,024 positions |
+| key absent | 112 | **kept at the target model's random initialisation — all of `layers.8`–`layers.11`** |
+| total | 339 | 227 loaded (67 %), 112 random |
+
+**The initialisation is not changed.** It is the published 400M recipe (`recipe_source` of `configs/b5_400m_win_v3.json`)
+and the reported 92 % F1 was obtained with it; altering it would change the numbers and break the parity claim that the
+resubmission rests on. Two independent reviews (Codex thread `01a065f3`, Kimi K3, 2026-09-03) reached the same
+conclusion, and both rejected interpolating `pos_emb` instead of cropping: Hyena's positional encoding is a
+deterministic function of absolute position, so the prefix is exactly what a model built at `max_seq_len` 129,024
+would generate, whereas interpolation would rescale the position axis and change the synthesised filters.
+Options considered and refused for this revision: a checkpoint of the exact size (none exists publicly — LongSafari
+releases are 128 or 256 wide), changing the architecture to match the checkpoint (A25 parity lost), and initialising
+`layers.8`–`layers.11` by stacking the lower layers (scientifically the most defensible, but a numerical change; it
+belongs in the follow-up as an ablation arm alongside full-random and function-preserving widening).
+
+What changes is the record and the failure mode (implementation only, no numerical effect):
+- `src/transgenic/model/encoder_init.py` builds a per-tensor audit (key, status, source and target shape) and a summary.
+- The frozen expectation for this checkpoint at 768×12 — 339 target tensors, 227 loaded, 80 exact, 147 adapted,
+  112 missing, missing layers ≤ 11 — is checked at load time. Any deviation, a load of zero tensors, or a tensor
+  missing outside the layer stack (a key-naming break rather than a size gap) **stops the run**;
+  `TRANSGENIC_ALLOW_ENCODER_DRIFT=1` overrides it only for a deliberate, documented change.
+- The loader no longer catches every exception and continues with a randomly initialised encoder; a failed load raises.
+- With `TRANSGENIC_RUN_DIR` set, `encoder_init_report.json` (checkpoint, target and source sizes, the 339-row audit,
+  violations, timestamp) is written as a run artifact and archived with the checkpoint.
+
+Reporting: the Methods must say *partially* pretrained, not "pretrained HyenaDNA" — the encoder was initialised from
+the 256-wide 8-layer checkpoint by width-wise weight replication, with the top four layers randomly initialised. The
+supplementary carries the audit table and the statement that reported performance reflects supervised training *and*
+this partial tile-and-crop initialisation, and does not isolate the benefit of conventional full-checkpoint transfer.
+
+Nothing in §9 changes.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | no long-read alignment run | v1.6: A16 read completeness codes, chain/terminal orthogonality, non-UMI ONT PCR-equivalence units, completeness QC table | author question on non-full-length long reads; Codex design cross-checked |
@@ -600,3 +643,4 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 | 2026-09-02 | first tile build done (smoke), no training run | v1.21: A31 strict held-out loci no longer force genomic blocks to test; protection by A29 leak masking (N-replacement + label removal) in train/valid tiles; A. thaliana stays in training | author decision: A. thaliana must be used; the block rule had made 120/121 blocks test |
 | 2026-09-02 | first tile build done (smoke), no training run | v1.22: A32 hard-flagged genes are N-masked and unlabelled at gene level inside tiles (tile weight stays 1; per-locus rows unchanged) | author decision: whole-tile masking removed 14–46 % of tiles per tier |
 | 2026-09-02 | first tile build done (smoke), no training run | v1.23: A33 overlapping gene blocks allowed with a monotone block key; locus-aware A27 stitching (reciprocal CDS overlap 0.90 + shared intron / 1,000-nt ends); overlap-component masking closure, flank [50,150] nt, masked-fraction cap 0.60, train-only decoy masks; edge-rule invariant; per-tier cap reporting | Codex and Kimi reviews; every threshold fixed from the nine reference annotations before the build |
+| 2026-09-03 | no B5 seed started | v1.24: A34 the encoder is partially pretrained (227/339 tensors; layers 8-11 random, 147 tiled/cropped) — initialisation unchanged, but the load is audited, gated against a frozen expectation, written to encoder_init_report.json, and a failed load now raises instead of silently continuing with a random encoder | discovered while preparing the first training run; Codex and Kimi reviews agreed to keep the initialisation and fix the record |
