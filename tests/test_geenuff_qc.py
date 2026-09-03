@@ -104,3 +104,35 @@ def test_pinned_geenuff_error_names_map_to_hard_or_soft(qc):
     for name in qc.GEENUFF_ERROR_TYPES:
         assert qc.is_hard(name) == (name not in soft), name
     assert qc.is_hard("super_loci_overlap_error") and qc.is_hard("missmatching_strands") and qc.is_hard("truncated_intron")
+
+
+# ----------------------------------------------------------------------------------------------
+# A22 policy and the flag reader.
+#
+# Migrated 2026-09-03 from revision/scripts/tests/test_geenuff_qc.py, which was written against a
+# guessed GeenuFF schema before 232ebe7 measured the real one. Its schema test was superseded by
+# test_extract_error_features_through_transcript_piece above and its is_hard test by the exhaustive
+# GEENUFF_ERROR_TYPES sweep, but these two cases had no equivalent anywhere in the repository --
+# and, because the two files shared a basename, pytest could not collect both test roots at once,
+# so in practice they were not running at all. loss_mask_decision is the A22 mechanism itself.
+# ----------------------------------------------------------------------------------------------
+
+def test_loss_mask_policy_a22(qc):
+    # gene-level hard error -> masked (weight 0)
+    assert qc.loss_mask_decision({"*": {"empty_super_locus"}}, ["t1"]) == (0.0, [], ["empty_super_locus"])
+    # one bad transcript of two -> keep the clean one, weight 1
+    w, keep, hard = qc.loss_mask_decision({"t1": {"missing_stop_codon"}, "t2": {"missing_utr_3p"}}, ["t1", "t2"])
+    assert w == 1.0 and keep == ["t2"] and hard == ["missing_stop_codon"]
+    # every transcript bad -> masked
+    assert qc.loss_mask_decision({"t1": {"wrong_starting_phase"}}, ["t1"])[0] == 0.0
+    # soft only -> untouched
+    assert qc.loss_mask_decision({"t1": {"missing_utr_5p"}}, ["t1"]) == (1.0, ["t1"], [])
+
+
+def test_read_flags_tsv(qc, tmp_path):
+    p = tmp_path / "f.tsv"
+    p.write_text("species_id\tgene_id\ttranscript_id\tflag\tstart\tend\n"
+                 "Ath\tg1\tt1\tmissing_stop_codon\t10\t20\n"
+                 "Ath\tg1\t\tempty_super_locus\t0\t0\n")
+    d = qc.read_flags_tsv(str(p))
+    assert d[("Ath", "g1")]["t1"] == {"missing_stop_codon"} and d[("Ath", "g1")]["*"] == {"empty_super_locus"}
