@@ -614,8 +614,9 @@ SPLIT_RANK = {"train": 0, "valid": 1, "test": 2}
 
 def block_splits(chrom_len: int, rng: "random.Random", fractions: Sequence[float] = (0.75, 0.10, 0.15),
                  forced_test: Sequence[Tuple[int, int]] = ()) -> List[Tuple[int, int, str]]:
-    """Split assignment for consecutive BLOCK_LEN blocks of one contig (A29): drawn from `rng` (seeded per species),
-    blocks overlapping any interval in `forced_test` (strict held-out loci) are test."""
+    """Split assignment for consecutive BLOCK_LEN blocks of one contig (A29): drawn from `rng` (seeded per species).
+    `forced_test` intervals make their blocks test; since A31 the builder passes none (strict held-out loci are handled
+    by leak masking inside train/valid tiles), the parameter stays for tests and ad-hoc analyses."""
     out = []
     ws = 0
     while ws < chrom_len:

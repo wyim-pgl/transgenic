@@ -466,8 +466,10 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
     for chrom in sorted(by_chrom):
         genes = by_chrom[chrom]
         chrom_len = len(genome[chrom])
-        forced = [(g.start0, g.end0) for g in genes if gene_meta[g.gene_id]["strict"]]
-        blocks = gc.block_splits(chrom_len, block_rng, forced_test=forced)
+        # A31 (author decision 2026-09-02): blocks are drawn only; strict held-out loci no longer force their block to
+        # test (3,430 A. thaliana loci hit 120 of 121 blocks and left 23 train tiles). Held-out genes are test in the
+        # orthogroup split, so in train/valid tiles they are N-masked and unlabelled by the A29 leakage rule below.
+        blocks = gc.block_splits(chrom_len, block_rng)
         con.executemany("INSERT INTO tile_blocks VALUES (?,?,?,?,?)", [[species_id, chrom, a, b, sp] for a, b, sp in blocks])
         for tier in gc.WINDOW_TIERS:
             offset = rng.randrange(tier) if mode == "train" else 0

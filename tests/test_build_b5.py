@@ -230,9 +230,18 @@ def test_tile_policy_v3_build(tmp_path, b5):
             assert r[3].count(b5.gc.GENE_SEP) == 0 and "leak_masked=1" in (r[4] or "") and r[2] == 1.0
         else:
             assert r[3].count(b5.gc.GENE_SEP) == 1 and r[2] == 0.0       # g2 labelled and hard-flagged -> tile masked
-    # contig '2': glast is strict held-out -> its block is forced to test; gbig rejected at gene level (151 CDS)
+    # contig '2' (A31): glast is strict held-out but its block is drawn like any other; in a train/valid tile glast is
+    # N-masked and unlabelled (leak rule), in a test tile it is labelled. gbig rejected at gene level (151 CDS).
     c2 = [r for r in rows if r[0].startswith("Athaliana:2:")]
-    assert c2 and all(r[1] == "test" for r in c2) and all("CDS150" not in r[3] for r in c2)
+    assert c2 and all("CDS150" not in r[3] for r in c2)
+    for r in c2:
+        if r[1] == "test":
+            assert r[3] != b5.gc.EMPTY_TOKEN if hasattr(b5.gc, "EMPTY_TOKEN") else True
+            assert "leak_masked" not in (r[4] or "")
+        else:
+            assert "leak_masked=1" in (r[4] or "")
+    src = (ROOT / "src" / "transgenic" / "datasets" / "build_b5.py").read_text()
+    assert "forced_test=forced" not in src                                   # A31: no block forcing in the builder
     assert con.sql("SELECT count(*) FROM tile_blocks").fetchone()[0] >= 2
     assert con.sql("SELECT count(*) FROM window_genes").fetchone()[0] > 0
     assert con.sql("SELECT count(*) FROM rejected_records WHERE gene_id = 'gbig'").fetchone()[0] == 1

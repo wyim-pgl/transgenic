@@ -60,6 +60,7 @@ Every item below is tracked as a GitHub issue in wyim-pgl/transgenic (#4–#43).
 - Reverse complement: the legacy `utils/gsf.py` RC function stays for inference with the published checkpoints (their outputs are not canonical); training labels use `gsf_contract.reverse_complement` only. This dual path is an internal implementation note and is not stated in the manuscript or public docs.
 - Annotation QC (A22): GeenuFF flags → `train_weight` 0 rows are excluded from train/valid loaders (`datasets.py`) and from C2 weights; hard-flagged transcripts are dropped from labels.
 
+- **Strict held-out loci and blocks (author decision 2026-09-02, protocol A31, #15):** *A. thaliana* stays in training; blocks are drawn only (no held-out forcing), held-out loci are N-masked and unlabelled in train/valid tiles by the A29 leakage rule. The first tile build had 120 of 121 *A. thaliana* blocks forced to test.
 - **Orthogroup unit for the split table (author decision 2026-09-02, #14):** OrthoFinder hierarchical orthogroups (root-most level written, `N1.tsv`), not the broad `Orthogroups.tsv` OGs — with OGs the 3,430 held-out *A. thaliana* loci forced 48 % of *A. thaliana* genes (34 % of all genes) into test; with HOGs 43.3 % / 27.4 %. Spec §7 wording ("orthogroups from OrthoFinder") is satisfied; the artifact README records the numbers. Preparation ran on pgl-gpu, not Delta (see §3a note).
 
 ## 2c. New-version recipe (A25, author decision 2026-09-02)

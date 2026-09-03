@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.20; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.21; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -387,6 +387,16 @@ Author decision (2026-09-02): the manually curated UniProtKB/Swiss-Prot entries 
 
 Nothing in §9 changes.
 
+## A31. Amendment v1.21 (2026-09-02; before the B5 database build) — strict held-out loci no longer force genomic blocks to test; *A. thaliana* stays in training
+
+Found in the first real tile build (*A. thaliana*, tile6144-v3, 2026-09-02): the 3,430 strict held-out loci are spread over the whole genome (28.7 per 1,032,192-nt block on average), so the A29 rule "blocks overlapping a strict held-out locus are test" made 120 of 121 blocks test and left 23 training tiles — *A. thaliana* would have dropped out of training. Author decision: *A. thaliana* must be used for training.
+- **Block splits are drawn only.** Every block of every training species is train/valid/test by the seeded 75/10/15 draw of A29; no locus forces a block.
+- **Held-out loci are protected by the A29 leakage rule.** Every strict held-out locus is `test` in the orthogroup split (spec §7), so in a train or valid tile its sequence (with 100 nt of flank) is replaced by N and it is absent from the label, exactly as for any other test/valid-orthogroup gene. The model never sees a held-out gene's sequence or structure; it does see the neighbouring genes and the intergenic sequence, which the released model also saw through the windows of neighbouring loci. The strict held-out set therefore remains at least as isolated as in the original evaluation.
+- Evaluation of held-out loci is unchanged: per-locus windows (B1, additions, S5–S7) and, at inference, tiles in which the masked positions carry the real sequence.
+- Reporting: per species, the number of train/valid tiles with leak-masked held-out genes is part of `build_manifest` / validator output (`leak_masked` counts).
+
+Nothing in §9 changes.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | pre-download | v1.0 frozen (repository commit 5f7b373) | — |
@@ -540,3 +550,4 @@ Adopted from the evidence-first design (`EVIDENCE_TRANSCRIPT_MODEL_DESIGN_v1.md`
 | 2026-09-02 | no B5 seed started | v1.18: A28 job-chain checkpointing (latest_state every N steps and on SIGUSR1, self-resubmission until TRAINING_DONE, run_config refusal on drift) | 48-hour job limit on ACCESS; no epoch may be lost |
 | 2026-09-02 | no B5 database built | v1.19: A29 tile splits by 1,032,192-nt genomic blocks (strict held-out blocks test), orthogroup leakage masking by N-replacement in tiles, dual test reporting | GPU dry run showed the most-restrictive-gene rule leaves no training tiles |
 | 2026-09-02 | no protein alignment run; no B5 database built; no evidence scoring run | v1.20: A30 Swiss-Prot reviewed Viridiplantae as a separately labelled sensitivity set — caution-based hard-flag masking through the A22 mechanism only when the reference does not carry the curated sequence; OrthoDB phase audit report-only; secondary outcomes S5–S7 (start/stop/phase agreement per stratum) computed inside evaluation only; A19 label resource unchanged | author question on using curated Swiss-Prot for start/stop codons and phase |
+| 2026-09-02 | first tile build done (smoke), no training run | v1.21: A31 strict held-out loci no longer force genomic blocks to test; protection by A29 leak masking (N-replacement + label removal) in train/valid tiles; A. thaliana stays in training | author decision: A. thaliana must be used; the block rule had made 120/121 blocks test |
