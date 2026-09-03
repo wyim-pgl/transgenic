@@ -7,6 +7,7 @@ on the frozen inputs, and writes a freeze manifest with a *content* hash that do
 DuckDB file layout (the file md5 is recorded too, but it is not reproducible across rebuilds).
 """
 import argparse
+import csv
 import glob
 import hashlib
 import json
@@ -59,8 +60,21 @@ def stream_hash(con, table, columns):
     return h.hexdigest(), n
 
 
-def preflight(sources):
+def read_excluded(path):
+    """species_id column of data/manifests/b5_excluded_species_v1.tsv."""
+    with open(path) as fh:
+        rows = list(csv.DictReader(fh, delimiter="\t"))
+    return {r["species_id"] for r in rows}
+
+
+def preflight(sources, excluded):
     """Refuse to merge builds that disagree on a frozen input, and report the git commits used."""
+    # --src-dir is globbed, so an excluded species dropped into the directory would otherwise be merged in
+    # (Zmays is the whole point of the split: docs/gsf_spec_v1.md §7-8).
+    for path in sources:
+        sp = os.path.basename(path)[:-3]
+        if sp in excluded:
+            raise SystemExit(f"{path}: {sp} is an excluded species and must never enter the B5 database")
     frozen, commits, split_hashes = {}, {}, {}
     for path in sources:
         sp = os.path.basename(path)[:-3]
@@ -72,6 +86,10 @@ def preflight(sources):
             raise SystemExit(f"{sp}: build_manifest species_id is {rows[0][0]}")
         frozen.setdefault(tuple(rows[0][1:-1]), []).append(sp)
         commits.setdefault(rows[0][-1], []).append(sp)
+        for bad in sorted(excluded):
+            n = con.sql("SELECT count(*) FROM geneList WHERE species_id = ?", params=[bad]).fetchone()[0]
+            if n:
+                raise SystemExit(f"{sp}: {n} rows of excluded species {bad} inside the database")
         gs_cols = table_columns(con, "gene_split")
         split_hashes[sp] = stream_hash(con, "gene_split", gs_cols)
         con.close()
@@ -168,6 +186,8 @@ def main():
     ap.add_argument("--split-table", default=None, help="data/splits/b5_orthogroup_split_v1.tsv, hashed into the manifest")
     ap.add_argument("--qc-flags", nargs="*", default=[], help="flag TSVs used by the builds, md5'd into the manifest")
     ap.add_argument("--expect-species", type=int, default=9)
+    ap.add_argument("--excluded-manifest", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+                                                                "data", "manifests", "b5_excluded_species_v1.tsv"))
     a = ap.parse_args()
     sources = sorted(glob.glob(os.path.join(a.src_dir, "*.db")))
     if len(sources) != a.expect_species:
@@ -176,7 +196,7 @@ def main():
         done = p[:-3] + ".DONE"
         if not os.path.exists(done):
             raise SystemExit(f"{p} has no .DONE marker")
-    frozen, commits, split_hash = preflight(sources)
+    frozen, commits, split_hash = preflight(sources, read_excluded(a.excluded_manifest))
     print(json.dumps({"frozen_inputs": frozen, "git_commits": commits}, indent=1), flush=True)
     manifest = merge(a.out, sources, frozen, commits, split_hash, a.split_table, a.qc_flags)
     with open(a.manifest, "w") as fh:

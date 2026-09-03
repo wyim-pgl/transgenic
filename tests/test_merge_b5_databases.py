@@ -179,3 +179,16 @@ def test_merge_leaves_the_sequence_past_the_last_row(two_species, tmp_path):
     con = duckdb.connect(str(out))
     assert con.sql("SELECT nextval('row_id')").fetchone()[0] == 11   # 10 rows merged
     con.close()
+
+
+def test_merge_refuses_an_excluded_species(tmp_path, b5):
+    """--src-dir is globbed: a stray Zmays.db must not be merged in (docs/gsf_spec_v1.md 7-8)."""
+    src = tmp_path / "full"
+    src.mkdir()
+    _species_db(src / "Athaliana.db", b5, "Athaliana", 3)
+    _species_db(src / "Zmays.db", b5, "Zmays", 3)
+    for s in ("Athaliana", "Zmays"):
+        (src / f"{s}.DONE").write_text("x")
+    r = _run(src, tmp_path / "b5.db", tmp_path / "f.json")
+    assert r.returncode != 0 and "excluded species" in r.stdout + r.stderr
+    assert not (tmp_path / "b5.db").exists()

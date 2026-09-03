@@ -122,8 +122,25 @@ def main():
         "build_manifest_rows": con.sql("SELECT count(*) FROM build_manifest").fetchone()[0],
         "rejected_rows": con.sql("SELECT count(*) FROM rejected_records").fetchone()[0],
     }
+    rn_ranges = {sp: (lo, hi, n) for sp, lo, hi, n in con.sql(
+        "SELECT species_id, min(rn), max(rn), count(*) FROM geneList GROUP BY 1 ORDER BY 2").fetchall()}
+    n = totals["rows"]
+    checks = {
+        "rn_dense_1_to_n": con.sql("SELECT min(rn), max(rn) FROM geneList").fetchone() == (1, n) and totals["distinct_rn"] == n,
+        "species_blocks_contiguous": all(hi - lo + 1 == cnt for lo, hi, cnt in rn_ranges.values()),
+        "species_blocks_disjoint_and_ordered": [r[0] for r in rn_ranges.values()] == sorted(r[0] for r in rn_ranges.values())
+                                               and sum(r[2] for r in rn_ranges.values()) == n,
+        "gene_split_copied_once": con.sql("SELECT count(*) FROM (SELECT species_id, gene_id FROM gene_split "
+                                          "GROUP BY 1, 2 HAVING count(*) > 1)").fetchone()[0] == 0,
+        "one_build_manifest_row_per_species": totals["build_manifest_rows"] == len(rn_ranges),
+        "no_excluded_species": con.sql("SELECT count(*) FROM geneList WHERE species_id = 'Zmays'").fetchone()[0] == 0,
+        "no_maize_gene_models": con.sql("SELECT count(*) FROM geneList WHERE geneModel LIKE 'Zm%' OR geneModel LIKE 'GRMZM%'").fetchone()[0] == 0,
+        "no_null_split": con.sql("SELECT count(*) FROM geneList WHERE split IS NULL").fetchone()[0] == 0,
+    }
     report = {
         "db": a.db,
+        "checks": checks,
+        "rn_ranges": {k: {"min": v[0], "max": v[1], "rows": v[2]} for k, v in rn_ranges.items()},
         "totals": totals,
         "rows_by_species_tier": {k: v for k, v in sorted(rows_by_species_tier.items())},
         "rows_by_species_split": {k: v for k, v in sorted(by_species_split.items())},
