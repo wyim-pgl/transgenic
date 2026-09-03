@@ -188,3 +188,32 @@ def test_trainer_reads_a_real_cuda_property_and_tolerates_cpu():
     assert "total_mem " not in src and ".total_mem /" not in src
     assert "gpu_props.total_memory" in src
     assert "if torch.cuda.is_available():" in src.split("gpu_props =")[0].rsplit("\n\n", 1)[-1]
+
+
+def test_b5_run_never_skips_a_failing_batch():
+    """Protocol A35. The loop caught every exception, logged one stderr line and continued: on the 129,024-nt tier
+    the 4090 skipped 1,093 of 1,103 batches while the run looked healthy. Both reviews (Codex, Kimi K3) called for
+    an immediate failure with an allowed-skip threshold of zero for the frozen-recipe path."""
+    src = (ROOT / "train" / "train_HyenaTransgenic.py").read_text()
+    tree = ast.parse(src)
+    # the handler must not be a bare `except Exception` that continues
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ExceptHandler) and any(isinstance(n, ast.Continue) for n in ast.walk(node)):
+            assert node.type is not None, "a bare except that continues is forbidden"
+            names = {n.id for n in ast.walk(node.type) if isinstance(n, ast.Name)} | \
+                    {n.attr for n in ast.walk(node.type) if isinstance(n, ast.Attribute)}
+            assert "Exception" not in names, "the batch handler must not swallow every exception and continue"
+            assert "OutOfMemoryError" in names, "only CUDA OOM may be skipped, and only on the legacy path"
+    # under a frozen recipe even an OOM raises, with the sample, the shapes and the memory state
+    body = src.split("except torch.cuda.OutOfMemoryError as e:")[1][:2600]
+    assert "if layout is not None:" in body and "raise RuntimeError(" in body
+    assert "memory_allocated" in body and "protocol A35" in body
+
+
+def test_accumulation_accounting_uses_completed_microbatches():
+    """Both reviews: `(step + 1) % accumulation_steps` counts DataLoader indices, so a skipped batch silently
+    changes the effective batch and the epoch-loss denominator."""
+    src = (ROOT / "train" / "train_HyenaTransgenic.py").read_text()
+    assert "(step + 1) % accumulation_steps" not in src, "optimizer steps must key off completed micro-batches"
+    assert "micro_done" in src
+    assert "total_loss / len(train_dl)" not in src, "the epoch loss must divide by the batches actually seen"

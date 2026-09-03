@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.24; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing; §A32 gene-level masking of hard-flagged genes in tiles; §A33 overlapping blocks, locus-aware stitching, masking parameters from reference statistics; §A34 partially pretrained encoder: audit, gate and record)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.25; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing; §A32 gene-level masking of hard-flagged genes in tiles; §A33 overlapping blocks, locus-aware stitching, masking parameters from reference statistics; §A34 partially pretrained encoder: audit, gate and record; §A35 a failing batch stops the run, no silent skips)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -623,6 +623,31 @@ this partial tile-and-crop initialisation, and does not isolate the benefit of c
 
 Nothing in §9 changes.
 
+
+## A35. Amendment v1.25 (2026-09-03; before any B5 seed starts) — a failing training batch stops the run; no batch is ever skipped under the frozen recipe
+
+Measured on 2026-09-02 while benchmarking the tiers on a 24 GB card: at the 129,024-nt tier **1,093 of 1,103 batches
+raised CUDA OOM and were skipped**, and the run continued as if healthy. The loop caught every exception, printed one
+stderr line, cleared the gradients and moved to the next batch. In a pre-registered study this silently deletes
+training data: the loss curve still descends, the checkpoints still save, and nothing in the artifacts records that
+99 % of the largest tier never reached the model. Both independent reviews (Codex thread `01a065f3`, Kimi K3) reached
+the same verdict — fail immediately, allowed-skip threshold zero.
+
+Three defects were fixed together (implementation only; the recipe, the data and the optimisation are unchanged):
+- **Fail closed.** With a frozen recipe (`--config`), a CUDA OOM raises `RuntimeError` carrying the sample id, the
+  input and label shapes and the allocated/reserved/peak memory, and points at resuming from the last checkpoint on a
+  GPU that fits the tier. The legacy path (no `--config`) keeps its skip so published behaviour is unchanged.
+- **Only OOM is caught.** The handler was `except Exception`, which also hid model and data bugs. Every other
+  exception now propagates on both paths.
+- **Accumulation and loss accounting.** The optimizer step keyed off the DataLoader index
+  (`(step + 1) % accumulation_steps`), so a skipped batch shifted the effective batch size, and the epoch loss divided
+  by `len(train_dl)` rather than by the batches actually forwarded. Both now count completed micro-batches.
+
+Consequence for the compute plan: the 129,024-nt tier cannot be trained on a 24 GB card at all, which the previous
+behaviour concealed. This is consistent with A25 (all seeds on NSF ACCESS) and is now enforced rather than assumed.
+
+Nothing in §9 changes.
+
 | Date | Analysis state | Change | Reason |
 |---|---|---|---|
 | 2026-09-01 | no long-read alignment run | v1.6: A16 read completeness codes, chain/terminal orthogonality, non-UMI ONT PCR-equivalence units, completeness QC table | author question on non-full-length long reads; Codex design cross-checked |
@@ -644,3 +669,4 @@ Nothing in §9 changes.
 | 2026-09-02 | first tile build done (smoke), no training run | v1.22: A32 hard-flagged genes are N-masked and unlabelled at gene level inside tiles (tile weight stays 1; per-locus rows unchanged) | author decision: whole-tile masking removed 14–46 % of tiles per tier |
 | 2026-09-02 | first tile build done (smoke), no training run | v1.23: A33 overlapping gene blocks allowed with a monotone block key; locus-aware A27 stitching (reciprocal CDS overlap 0.90 + shared intron / 1,000-nt ends); overlap-component masking closure, flank [50,150] nt, masked-fraction cap 0.60, train-only decoy masks; edge-rule invariant; per-tier cap reporting | Codex and Kimi reviews; every threshold fixed from the nine reference annotations before the build |
 | 2026-09-03 | no B5 seed started | v1.24: A34 the encoder is partially pretrained (227/339 tensors; layers 8-11 random, 147 tiled/cropped) — initialisation unchanged, but the load is audited, gated against a frozen expectation, written to encoder_init_report.json, and a failed load now raises instead of silently continuing with a random encoder | discovered while preparing the first training run; Codex and Kimi reviews agreed to keep the initialisation and fix the record |
+| 2026-09-03 | no B5 seed started | v1.25: A35 a failing training batch stops the run under the frozen recipe (previously every exception was caught and the batch skipped; the 129,024-nt tier skipped 1,093 of 1,103 batches on a 24 GB card while looking healthy); only CUDA OOM is caught, and the optimizer step and epoch loss now count completed micro-batches | measured during the tier benchmark; Codex and Kimi both required an allowed-skip threshold of zero |

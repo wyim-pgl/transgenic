@@ -345,6 +345,8 @@ def train(
     best_eval_score = None
     try:
         _max_seqlen = int((b5_config or {}).get("max_encoder_seqlen", 49152))
+        micro_done = 0                 # completed micro-batches (drives the optimizer step, A35)
+        batch_skipped = 0              # legacy path only; the frozen recipe raises instead
         _bench_sec, _bench_tok, _bench_tokens, _bench_t0 = [], [], 0, time.perf_counter()
         if benchmark_steps and torch.cuda.is_available():
             torch.cuda.reset_peak_memory_stats()
@@ -383,9 +385,11 @@ def train(
                     # Effective batch size = batch_size (16) * accumulation_steps (16) = 256
                     accelerator.backward(outputs.loss / accumulation_steps)
 
-                    # Only update weights every `accumulation_steps` mini-batches
+                    # Only update weights every `accumulation_steps` *completed* mini-batches. Keying off the
+                    # DataLoader index would let a skipped batch shift the effective batch size silently (A35).
                     _bench_tokens += int(lab.numel())
-                    if (step + 1) % accumulation_steps == 0:
+                    micro_done += 1
+                    if micro_done % accumulation_steps == 0:
                         global_step += 1
                         # Clip gradients to prevent explosion (common in transformer training)
                         clip_grad_norm_(model.parameters(), max_grad_norm)
@@ -451,18 +455,40 @@ def train(
 
                     del outputs                                 # Free GPU memory from output tensors
 
-                except Exception as e:
-                    # Recovery from OOM or other errors: clear all state and skip to next batch.
-                    # batch[3] contains gene names for debugging which samples caused the error.
-                    print(f"Error in batch: {batch[3]}, {e}", file=sys.stderr)
+                except torch.cuda.OutOfMemoryError as e:
+                    # Protocol A35. Under a frozen recipe a failing batch stops the run: silently skipping it
+                    # removes training data from a pre-registered study (measured 2026-09-02: the 129,024-nt tier
+                    # skipped 1,093 of 1,103 batches on a 24 GB card while the loss curve looked healthy), and it
+                    # also corrupts the accumulation group and the epoch-loss denominator. The legacy path keeps
+                    # the old skip so published behaviour is unchanged.
+                    # Only CUDA OOM is caught here. Every other exception propagates on both paths: the old
+                    # `except Exception` hid model and data bugs as well (Codex and Kimi both flagged it).
+                    where = batch[3] if len(batch) > 3 else "<unknown>"
+                    shapes = f"input {tuple(ii.shape)} labels {tuple(lab.shape)}"
+                    if torch.cuda.is_available():
+                        mem = (f"allocated {torch.cuda.memory_allocated()/1e9:.2f} GB, "
+                               f"reserved {torch.cuda.memory_reserved()/1e9:.2f} GB, "
+                               f"peak {torch.cuda.max_memory_allocated()/1e9:.2f} GB")
+                    else:
+                        mem = "no CUDA"
                     optimizer.zero_grad(set_to_none=True)       # Clear optimizer gradient state
                     model.zero_grad(set_to_none=True)           # Clear model gradient buffers
                     torch.cuda.empty_cache()                    # Return cached GPU memory to allocator
                     gc.collect()                                # Force Python garbage collection
+                    if layout is not None:
+                        batch_skipped += 1
+                        raise RuntimeError(
+                            f"B5 batch failed at epoch {epoch} step {step} (CUDA OOM): "
+                            f"{where}; {shapes}; {mem}. Skipping it would drop training data from a pre-registered run "
+                            f"(protocol A35). Resume from the last checkpoint on a GPU that fits this tier."
+                        ) from e
+                    print(f"Error in batch: {where}, {e}", file=sys.stderr)
+                    batch_skipped += 1
                     continue
 
             # ---- End of epoch: compute metrics ----
-            train_epoch_loss = total_loss / len(train_dl)       # Average loss over all batches
+            seen = max(1, micro_done)                          # batches actually forwarded this run (A35)
+            train_epoch_loss = total_loss / seen                # Average loss over the batches actually seen
             train_ppl = torch.exp(train_epoch_loss)             # Perplexity = exp(loss)
 
             if do_eval:
