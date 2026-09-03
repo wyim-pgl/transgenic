@@ -148,14 +148,42 @@ def test_merge_refuses_a_wrong_species_count(two_species, tmp_path):
     assert r.returncode != 0 and "expected 9" in r.stdout + r.stderr
 
 
+def _big_species_db(path, b5, species, n_rows):
+    """A wide-but-trivial source built entirely in SQL: 300k rows through executemany would dominate the suite."""
+    con = duckdb.connect(str(path))
+    b5.ensure_schema(con)
+    for ddl in ("window_genes (species_id VARCHAR, window_id VARCHAR, gene_id VARCHAR, is_rc BOOLEAN)",
+                "tile_blocks (species_id VARCHAR, chromosome VARCHAR, start0 INT, end0 INT, split VARCHAR)",
+                "rejected_records (species_id VARCHAR, gene_id VARCHAR, reason VARCHAR)"):
+        con.sql(f"CREATE TABLE IF NOT EXISTS {ddl}")
+    con.sql(f"""INSERT INTO geneList (rn, geneModel, start, fin, strand, chromosome, sequence, gff, species_id, gene_id,
+                                      split, is_rc, strict_holdout, ordering_version, build_version, split_file_sha256,
+                                      window_policy, train_weight, gene_id_original)
+                SELECT i + 1, '{species}:Chr1:' || i, i * 100, (i + 1) * 100, '+', 'Chr1', 'A',
+                       '0|CDS1|300|+|A>CDS1', '{species}', '{species}:Chr1:' || i, 'train', false, false,
+                       'gsf-order-v1', 'gsf-contract-v1', '904c6265', 'tile6144-v3', 1.0, '{species}:Chr1:' || i
+                FROM range({n_rows}) t(i)""")
+    con.sql("DROP SEQUENCE IF EXISTS row_id")
+    con.sql(f"CREATE SEQUENCE row_id START {n_rows + 1}")
+    con.execute("INSERT INTO build_manifest VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                [species, "g.fa", "fa" * 32, "g.gff", "gf" * 32, "904c6265", "isoform-only", n_rows, 0, 0, "{}",
+                 "gsf-contract-v1", "gsf-order-v1", "tile6144-v3", "abc1234", "2026-09-03T00:00:00", duckdb.__version__])
+    con.close()
+
+
 def test_merged_rn_follows_the_source_rn_order(tmp_path, b5):
-    """A sequence in the SELECT list is evaluated during the parallel scan, not in ORDER BY order: with
-    nextval() this scrambled every row while row counts, splits and content all stayed correct."""
+    """A sequence in the SELECT list is evaluated during the scan, not in ORDER BY order.
+
+    The scramble appears once the sort exceeds one sort block: measured with duckdb 1.5.5, an
+    `INSERT ... SELECT nextval(...) ... ORDER BY rn` is exact at 100,000 rows and wrong for 262,144 of
+    300,000 (2 threads) and for 300,000 of 300,000 (16 threads). So the source here has to be larger than
+    that boundary for the test to be able to fail at all; at 30,000 rows nextval looks perfectly correct.
+    """
     src = tmp_path / "full"
     src.mkdir()
-    n = 30000                                     # well past the 2,048-row vector, so the scan really is parallel
-    _species_db(src / "Athaliana.db", b5, "Athaliana", n, seq_len=8)
-    _species_db(src / "Gmax.db", b5, "Gmax", 1000, seq_len=8)
+    n = 300000
+    _big_species_db(src / "Athaliana.db", b5, "Athaliana", n)
+    _big_species_db(src / "Gmax.db", b5, "Gmax", 1000)
     for s in ("Athaliana", "Gmax"):
         (src / f"{s}.DONE").write_text("x")
     out, man = tmp_path / "b5.db", tmp_path / "f.json"
@@ -165,7 +193,6 @@ def test_merged_rn_follows_the_source_rn_order(tmp_path, b5):
     wrong = con.sql("SELECT count(*) FROM geneList m JOIN a.geneList s ON s.geneModel = m.geneModel "
                     "WHERE m.species_id = 'Athaliana' AND m.rn <> s.rn").fetchone()[0]
     assert wrong == 0, f"{wrong} of {n} Athaliana rows are not in source rn order"
-    # the second species keeps its own order, offset by the first
     con.sql(f"ATTACH '{src / 'Gmax.db'}' AS g (READ_ONLY)")
     wrong_g = con.sql("SELECT count(*) FROM geneList m JOIN g.geneList s ON s.geneModel = m.geneModel "
                       "WHERE m.species_id = 'Gmax' AND m.rn <> s.rn + ?", params=[n]).fetchone()[0]
