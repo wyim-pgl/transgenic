@@ -26,6 +26,7 @@ from typing import Dict, Iterable, List, Set, Tuple
 # (kept identical to src/transgenic/datasets/qc_flags.py)
 HARD_FLAG_PATTERNS = ("missing_start", "missing_stop", "wrong_starting_phase", "mismatched_ending_phase", "mismatched_phase",
                       "overlapping_exon", "too_short_intron", "empty_transcript", "empty_super_locus", "wrong_phase",
+                      "super_loci_overlap", "missmatching_strand", "truncated_intron",   # GeenuFF 702cbf3 names (inconsistent models)
                       "swissprot_caution")
 SOFT_FLAG_PATTERNS = ("missing_utr", "missing_utr_5p", "missing_utr_3p", "no_utr")
 
@@ -68,37 +69,47 @@ def loss_mask_decision(gene_flags: Dict[str, Set[str]], transcript_ids: Iterable
     return 1.0, keep, all_hard
 
 
-def extract_from_geenuff_db(db_path: str, species_id: str) -> List[Tuple[str, str, str, str, int, int]]:
-    """Best-effort extraction from GeenuFF's sqlite schema: error features -> (species, gene, transcript, flag, start, end).
-    GeenuFF stores features with a `type` column and links them to transcripts/super_loci through association tables; the
-    exact table names differ between releases, so this walks the schema generically."""
+# Error feature types of the pinned GeenuFF (weberlab-hhu/GeenuFF 702cbf3, 2024-03-23; geenuff.base.types.Errors), recorded
+# for the provenance record. Extraction does not depend on this list: every feature whose type does not start with
+# "geenuff_" (the biological feature types geenuff_transcript / geenuff_cds / geenuff_intron) is an error feature.
+GEENUFF_ERROR_TYPES = ("missing_utr_5p", "missing_utr_3p", "empty_super_locus", "missing_start_codon", "missing_stop_codon",
+                       "wrong_starting_phase", "mismatched_ending_phase", "overlapping_exons", "too_short_intron",
+                       "super_loci_overlap_error", "missmatching_strands", "truncated_intron")
+BIOLOGICAL_PREFIX = "geenuff_"
+
+
+def extract_from_geenuff_db(db_path: str, species_id: str, seen: Optional[Dict] = None) -> List[Tuple[str, str, str, str, int, int]]:
+    """GeenuFF sqlite (schema of 702cbf3) -> (species, gene, transcript, flag, start, end) per error feature.
+    Features reach their transcript through transcript_piece: feature -> association_transcript_piece_to_feature ->
+    transcript_piece -> transcript -> super_locus. gene = super_locus.given_name (the GFF gene ID; the builder resolves it
+    through gene_id_original), transcript = transcript.given_name (the mRNA ID). An error feature without a transcript
+    association is kept with gene "" and transcript "*" (gene-level unknown) so that it is counted, never silently lost."""
     con = sqlite3.connect(db_path)
     cur = con.cursor()
     tables = {r[0] for r in cur.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    if "feature" not in tables:
-        raise ValueError(f"{db_path}: no 'feature' table; not a GeenuFF database?")
-    cols = [r[1] for r in cur.execute("PRAGMA table_info(feature)")]
-    type_col = "type" if "type" in cols else next((c for c in cols if "type" in c), None)
-    if type_col is None:
-        raise ValueError("feature table has no type column")
-    start_col = "start" if "start" in cols else "start_position"
-    end_col = "end" if "end" in cols else "end_position"
-    rows = cur.execute(f"SELECT id, {type_col}, {start_col}, {end_col} FROM feature WHERE lower({type_col}) LIKE '%error%'").fetchall()
-    # transcript / super-locus association (names vary: association_transcript_to_feature, transcript, super_locus)
-    assoc = next((t for t in tables if "transcript" in t and "feature" in t and "association" in t), None)
-    tx_table = "transcript" if "transcript" in tables else None
-    sl_table = "super_locus" if "super_locus" in tables else None
+    for t in ("feature", "transcript", "transcript_piece", "super_locus", "association_transcript_piece_to_feature"):
+        if t not in tables:
+            raise ValueError(f"{db_path}: table {t!r} missing; expected the GeenuFF 702cbf3 schema (tables: {sorted(tables)})")
+    types_seen = sorted(r[0] for r in cur.execute("SELECT DISTINCT type FROM feature"))
+    if seen is not None:
+        seen["feature_types_seen"] = types_seen
+        seen["schema"] = {"association": "association_transcript_piece_to_feature", "path": "feature->transcript_piece->transcript->super_locus"}
+    q = """SELECT f.id, f.type, f.start, f.end, t.given_name, sl.given_name
+           FROM feature f
+           LEFT JOIN association_transcript_piece_to_feature a ON a.feature_id = f.id
+           LEFT JOIN transcript_piece tp ON tp.id = a.transcript_piece_id
+           LEFT JOIN transcript t ON t.id = tp.transcript_id
+           LEFT JOIN super_locus sl ON sl.id = t.super_locus_id
+           WHERE f.type NOT LIKE ?
+           ORDER BY f.id"""
     out = []
-    for fid, ftype, s, e in rows:
-        gene_id, tx_id = "", "*"
-        if assoc and tx_table:
-            r = cur.execute(f"SELECT t.given_name, t.super_locus_id FROM {assoc} a JOIN {tx_table} t ON a.transcript_id = t.id WHERE a.feature_id = ? LIMIT 1", (fid,)).fetchone()
-            if r:
-                tx_id = r[0] or "*"
-                if sl_table and r[1] is not None:
-                    g = cur.execute(f"SELECT given_name FROM {sl_table} WHERE id = ?", (r[1],)).fetchone()
-                    gene_id = g[0] if g else ""
-        out.append((species_id, gene_id, tx_id, str(ftype), int(s or 0), int(e or 0)))
+    done = set()
+    for fid, ftype, s, e, tx_name, sl_name in cur.execute(q, (BIOLOGICAL_PREFIX + "%",)):
+        key = (fid, tx_name)
+        if key in done:                       # a feature attached to several pieces of the same transcript
+            continue
+        done.add(key)
+        out.append((species_id, sl_name or "", tx_name or "*", str(ftype), int(s or 0), int(e or 0)))
     con.close()
     return out
 
@@ -110,7 +121,8 @@ def main(argv=None):
     ap.add_argument("--out", required=True, help="flags TSV")
     ap.add_argument("--summary", required=True)
     a = ap.parse_args(argv)
-    rows = extract_from_geenuff_db(a.geenuff_db, a.species_id)
+    seen: Dict = {}
+    rows = extract_from_geenuff_db(a.geenuff_db, a.species_id, seen)
     with open(a.out, "w") as fh:
         fh.write("species_id\tgene_id\ttranscript_id\tflag\tstart\tend\n")
         for r in rows:
@@ -119,7 +131,9 @@ def main(argv=None):
     for r in rows:
         counts[r[3]] += 1
     summ = {"species_id": a.species_id, "n_flags": len(rows), "by_flag": dict(counts),
-            "genes_with_hard_flags": len({r[1] for r in rows if is_hard(r[3])}), "hard_patterns": HARD_FLAG_PATTERNS}
+            "genes_with_hard_flags": len({r[1] for r in rows if is_hard(r[3]) and r[1]}),
+            "flags_without_gene": sum(1 for r in rows if not r[1]),
+            "hard_patterns": HARD_FLAG_PATTERNS, "geenuff_error_types_pinned": GEENUFF_ERROR_TYPES, **seen}
     with open(a.summary, "w") as fh:
         json.dump(summ, fh, indent=1)
     print(json.dumps(summ))

@@ -5,6 +5,7 @@ soft and recorded only. `swissprot_caution_*` (A30: a Swiss-Prot SEQUENCE CAUTIO
 sequence is absent from the current reference proteome) is hard; `swissprot_note_*` is soft."""
 HARD_FLAG_PATTERNS = ("missing_start", "missing_stop", "wrong_starting_phase", "mismatched_ending_phase", "mismatched_phase",
                       "overlapping_exon", "too_short_intron", "empty_transcript", "empty_super_locus", "wrong_phase",
+                      "super_loci_overlap", "missmatching_strand", "truncated_intron",   # GeenuFF 702cbf3 names (inconsistent models)
                       "swissprot_caution")
 
 
