@@ -33,7 +33,7 @@ Model hierarchy:
         └─ LEDForConditionalGeneration.decoder (Longformer decoder)
 """
 
-import sys, math, copy
+import sys, math, copy, os
 from typing import List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
@@ -44,6 +44,7 @@ from transformers.modeling_outputs import ModelOutput
 
 from dataclasses import dataclass
 from .configuration_transgenic import HyenaTransgenicConfig
+from . import encoder_init as _enc_init      # protocol A34: partial-load audit, gate and report
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -458,33 +459,65 @@ class HyenaEncoder(nn.Module):
 					adapted = {}
 					exact_match = 0
 					inflated_match = 0
+					audit = []                      # per-tensor provenance (protocol A34)
 					for k, tgt in target_state.items():
 						src = pretrained_state.get(k)
 						if src is None:
+							audit.append({"key": k, "status": "missing", "src": None, "dst": list(tgt.shape)})
 							continue
 						if tuple(src.shape) == tuple(tgt.shape):
 							adapted[k] = src.to(dtype=tgt.dtype)
 							exact_match += 1
+							audit.append({"key": k, "status": "exact", "src": list(src.shape), "dst": list(tgt.shape)})
 							continue
 						new_tensor = _adapt_tensor_shape(src, tgt)
 						if new_tensor is not None:
 							adapted[k] = new_tensor
 							inflated_match += 1
+							audit.append({"key": k, "status": "adapted", "src": list(src.shape), "dst": list(tgt.shape)})
+						else:
+							audit.append({"key": k, "status": "missing", "src": list(src.shape), "dst": list(tgt.shape)})
 
 					load_result = self.hyena.load_state_dict(adapted, strict=False)
+					self.init_audit = audit
+					# A34: the partial load is recorded and gated, never just logged. The initialisation itself is
+					# unchanged (published 400M recipe); a load that does not match the frozen expectation stops the run.
+					summary = _enc_init.summarise(audit)
+					exp_key = _enc_init.expectation_key(config.encoder_model, HyenaConfig.d_model, HyenaConfig.n_layer)
+					violations = _enc_init.check_expected(summary, _enc_init.EXPECTED.get(exp_key))
+					self.init_summary, self.init_violations = summary, violations
+					report_dir = os.environ.get("TRANSGENIC_RUN_DIR")
+					if report_dir:
+						_enc_init.write_report(os.path.join(report_dir, "encoder_init_report.json"), audit,
+											   checkpoint=config.encoder_model,
+											   target={"d_model": HyenaConfig.d_model, "n_layer": HyenaConfig.n_layer,
+													   "max_seq_len": HyenaConfig.max_seq_len},
+											   source={"tensors": len(pretrained_state)}, violations=violations)
 					print(
 						f"Hyena encoder init: loaded {len(adapted)}/{len(target_state)} tensors "
 						f"(exact={exact_match}, adapted={inflated_match}) "
 						f"from {config.encoder_model}; missing={len(load_result.missing_keys)} "
-						f"unexpected={len(load_result.unexpected_keys)}",
+						f"unexpected={len(load_result.unexpected_keys)}"
+						+ (f"; missing layers {summary['missing_layers']}" if summary["missing_layers"] else ""),
 						file=sys.stderr,
 					)
+					if violations and not os.environ.get("TRANSGENIC_ALLOW_ENCODER_DRIFT"):
+						raise RuntimeError(
+							"encoder initialisation does not match the frozen expectation (protocol A34): "
+							+ "; ".join(violations)
+							+ ". Set TRANSGENIC_ALLOW_ENCODER_DRIFT=1 only for a deliberate, documented change.")
 				else:
 					self.hyena.load_state_dict(pretrained_hyena.state_dict(), strict=True)
 					print(f"Hyena encoder init: loaded full pretrained weights from {config.encoder_model}", file=sys.stderr)
 				del pretrained_hyena
+			except RuntimeError:
+				raise                                   # A34 gate: never fall back to a silently random encoder
 			except Exception as exc:
-				print(f"Warning: pretrained Hyena encoder load failed, using random init: {exc}", file=sys.stderr)
+				raise RuntimeError(
+					f"pretrained Hyena encoder load failed for {config.encoder_model}: {exc}. "
+					"A run whose encoder is randomly initialised is not the pre-registered recipe; fix the checkpoint "
+					"or set load_pretrained_encoder=False deliberately."
+				) from exc
 
 	def forward(self, input_ids, segLabels=None, *args, **kwargs):
 		"""
