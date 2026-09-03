@@ -2,6 +2,22 @@
 
 Rules (protocol B1 v1.5): ONT of any chemistry; PacBio only if ENA `instrument_model` is Sequel II / Sequel IIe / Revio AND the deposit is CCS/FLNC-level (per-run read count ≤ 5 M; subreads-only sets excluded because CCS cannot be regenerated without original BAMs). Non-reference cultivars are admitted for training labels (junction/UTR masks) with the genotype recorded; A. thaliana validation-only sets (PRJNA1087576 FLIC, PRJEB77203 Zhong 2025, PRJNA911826 Zhang 2023) are excluded here and never enter training. Downloaded as FASTA only (`evidence/training/<ont|pacbio>/<species>/<label>/`), provenance in each `log`.
 
+> ❌ **SUPERSEDED (2026-09-03) — 아래 표의 PacBio 행 전부.** 저자 결정: **제외**(이슈 #60).
+> 이 표는 ENA `instrument_model`(Sequel II / IIe / Revio)과 리드 수로 CCS/FLNC급이라 판정하고
+> "SqII CCS" · "SqII FLNC" · "SqII HiFi" · "SqIIe HiFi"로 적었지만, **실제 ENA 기탁물은 51런 전부
+> `_subreads.fastq.gz`이고 CCS/FLNC는 0건이다**(2026-09-03 실측, 각 데이터셋 `log`의 `source_url=`).
+> `submitted_ftp`가 비어 있어 대체 기탁물이 없고, 원본 BAM 없이는 CCS를 재생성할 수 없다 —
+> 바로 위 규칙 문단이 이미 배제한 조건이다. **규칙과 표가 서로 모순이었고, 규칙이 맞다.**
+>
+> 내려받은 43 GB는 삭제하지 않고
+> `evidence/RETIRED_DO_NOT_USE/training_pacbio_subreads_20260903/`로 격리했다(같은 곳의 `README.md`에
+> 종·데이터셋·런 수와 되돌리는 법). `longread_fetch.sh`는 이제 `_subreads` URL을 이름으로 거부한다.
+>
+> **파급**: *S. bicolor*는 ONT가 없어 **장독 증거가 0**이 된다(아래 21–24행). *B. distachyon*은 원래 0.
+> 나머지 일곱 종은 ONT로 남는다: A. thaliana 6런 · G. max 27 · O. sativa 12(수집 중) · P. patens
+> (수집 대기) · P. trichocarpa 11 · S. italica 9 · V. vinifera 11.
+> 상세는 `ruleout.md` D3, 현행 학습 증거 구성은 이 배너를 기준으로 읽을 것.
+
 | Species | Type | Accession | Runs / size (fastq) | Genotype, tissue | Citation |
 |---|---|---|---|---|---|
 | A. thaliana | ONT | PRJNA594286 | 3 / 28.5 Gb | Col-0 rosette | Cui 2020 Plant Methods 10.1186/s13007-020-00629-x |

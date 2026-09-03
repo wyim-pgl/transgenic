@@ -182,7 +182,21 @@ PRJDB12660 · PRJNA921723 — ZMW 이름 소실 또는 BAM 부재로 제외.
 `MODEL_RE`는 기기(Sequel II/IIe)를 맞게 통과시키지만 데이터 산물을 보지 않고, subreads 가드로 둔
 `MAX_READS=5000000`은 실제 세트가 24.8만–157.8만 리드라 발동하지 않는다. 검증 세트도 3개 중 2개가
 같은 상태이며 그중 `pacbio/Zmays_B73_ccs_PRJNA1470126`은 **디렉토리 이름이 ccs인데 내용은 subreads**다.
-→ 이슈 **#60**, 저자 결정 대기. 제외하면 *S. bicolor*는 장독 증거가 전부 사라진다(ONT 없음).
+**✅ 저자 결정 2026-09-03: 제외.** 51런 43 GB를 삭제하지 않고
+`evidence/RETIRED_DO_NOT_USE/training_pacbio_subreads_20260903/`로 경로 격리했다(그 디렉토리의
+`README.md`에 종·데이터셋별 내역과 되돌리는 법). `longread_fetch.sh`는 이제 `_subreads`가 들어간 URL을
+이름으로 거부한다 — `MODEL_RE`(기기)도 `MAX_READS`(리드 수)도 데이터 산물을 보지 않기 때문이다.
+`revision/protocols/TRAINING_EVIDENCE_v1.md`의 PacBio 행 전부에 ❌ 배너를 달았다(그 표는 기기와 리드
+수만 보고 "SqII CCS/FLNC/HiFi"로 적었는데, 같은 문서의 규칙 문단은 이미 subreads를 배제하고 있었다 —
+**규칙과 표가 모순이었고 규칙이 맞다**). 이슈 **#60** 종료.
+
+**파급(확정)**: *S. bicolor*는 ONT가 없어 **장독 증거 0**. *B. distachyon*은 원래 0. 남는 ONT 런 수 —
+A. thaliana 6 · G. max 27 · O. sativa 12(수집 중) · P. patens 수집 대기 · P. trichocarpa 11 ·
+S. italica 9 · V. vinifera 11.
+
+⚠️ 검증 세트의 PacBio 2건은 **이 결정에 포함되지 않았다**: `pacbio/Athaliana_zhang2023_PRJNA911826`은
+프로토콜이 "subreads.bam → ccs → FLNC"로 **변환을 전제**한 세트인데 변환이 아직 실행되지 않았고,
+`pacbio/Zmays_B73_ccs_PRJNA1470126`은 이름만 ccs다. 둘 다 별도 판단이 필요하다.
 
 ### D4 ❌ AtRTD3 자체 Iso-Seq(PRJNA755474) 제외 — 독립성 위반
 

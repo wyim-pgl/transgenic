@@ -575,8 +575,10 @@ if __name__ == '__main__':
         split_row_numbers(args.db, "train"); split_row_numbers(args.db, "valid")
         vv = cfg.get("gff_vocab_version", "v2")
         wl = args.benchmark_tier if args.benchmark_steps else None   # #18: per-tier throughput
-        train_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="train", gff_vocab_version=vv, window_len=wl)
-        eval_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="valid", gff_vocab_version=vv, window_len=wl)
+        # strict=True (A35): under the frozen recipe a row that cannot be read, is empty, or tokenises to
+        # zero length stops the run instead of being replaced by a randomly chosen different row.
+        train_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="train", gff_vocab_version=vv, window_len=wl, strict=True)
+        eval_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="valid", gff_vocab_version=vv, window_len=wl, strict=True)
         print(f"B5 split sizes: train={len(train_data)} valid={len(eval_data)} seed={args.seed} acc={acc} max_epochs={max_epochs} patience={patience}", file=sys.stderr)
         layout = CheckpointLayout(args.output_dir)
         run_cfg = {"config": args.config, "recipe": cfg, "db": os.path.abspath(args.db), "seed": args.seed, "batch_size": args.batch_size,

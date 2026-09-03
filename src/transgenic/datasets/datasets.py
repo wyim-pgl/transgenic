@@ -172,7 +172,7 @@ class isoformDataHyena(Dataset):
 	    the inherited connection is closed and a fresh one is opened
 	  - Connections are closed in __del__ when the dataset is garbage-collected
 	"""
-	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None, split=None, gff_vocab_version="v2", window_len=None):
+	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None, split=None, gff_vocab_version="v2", window_len=None, strict=False):
 		"""
 		Args:
 			db: Path to DuckDB database file.
@@ -181,6 +181,11 @@ class isoformDataHyena(Dataset):
 			global_attention: Whether to use global attention (not used with HyenaDNA).
 			exclude_prefix: Gene name prefix to exclude (e.g., "Zm" for maize).
 			split: "train" | "valid" | "test" — select rows by the frozen split column of a B5 database.
+			strict: Protocol A35 applied to the dataset. When True a row that cannot be read,
+				that holds an empty sequence, or that tokenises to zero length raises instead of
+				being replaced by a randomly chosen different row. A frozen-recipe run must set
+				this: silently substituting a row removes one sample from a pre-registered study
+				and duplicates another, and the only trace is a line in a SLURM log.
 			gff_vocab_version: Vocabulary version for the decoder GFF tokenizer.
 				Use "v1" (legacy 272 tokens) when pairing with the published
 				jlomas/HyenaTransgenic-* checkpoints (vocab_size 272); "v2"
@@ -188,6 +193,8 @@ class isoformDataHyena(Dataset):
 		"""
 		self.db = db
 		self.mode = mode
+		self.split = split
+		self.strict = strict          # A35: raise instead of substituting a random row
 		self.dt = GFFTokenizer(vocab_version=gff_vocab_version)  # Decoder tokenizer for GFF annotation strings
 		self.gff_vocab_version = gff_vocab_version
 		self.global_attention = global_attention
@@ -304,6 +311,15 @@ class isoformDataHyena(Dataset):
 			# Columns: geneModel, region_start, region_end, strand, chr, region_seq, gff, ...
 			gm, region_start, region_end, strand, chr, region_seq, gff, sfpb, stpb, fpb, tpb, _ = con.sql("SELECT geneModel, start, fin, strand, chromosome, sequence, gff, static_fpb, static_tpb, five_prime_buf, three_prime_buf, rn FROM geneList where rn=?", params=[rn]).fetchall()[0]
 		except Exception as e:
+			# A35 applied one level below the batch loop: under a frozen recipe a row that cannot be
+			# read stops the run. The legacy path keeps the random substitute so published behaviour
+			# is unchanged.
+			if self.strict:
+				raise RuntimeError(
+					f"dataset row rn={rn} (index {idx}, split={self.split!r}) could not be read from {self.db}: "
+					f"{type(e).__name__}: {e}. Substituting another row would drop this sample and duplicate "
+					f"another one silently (protocol A35)."
+				) from e
 			# Fallback: try a random different sample if this one fails
 			newidx = torch.randint(self._length, (1,)).item()
 			rn_fallback = self._index_map[newidx]
@@ -327,6 +343,11 @@ class isoformDataHyena(Dataset):
 		# Tokenize the full DNA sequence with HyenaDNA tokenizer
 		# HyenaDNA uses single-nucleotide vocabulary (no segmentation needed)
 		if not region_seq:
+			if self.strict:
+				raise RuntimeError(
+					f"dataset row rn={rn} (index {idx}, split={self.split!r}, geneModel={gm!r}) holds an empty "
+					f"sequence in {self.db}; refusing to substitute another row (protocol A35)."
+				)
 			fallback_idx = torch.randint(self._length, (1,)).item()
 			print(
 				f"Warning rn={rn} produced empty sequence region; falling back to rn={self._index_map[fallback_idx]}",
@@ -338,6 +359,11 @@ class isoformDataHyena(Dataset):
 		if seqs["input_ids"].shape[1] > 1:
 			seqs["input_ids"] = seqs["input_ids"][:, :-1]  # Remove the trailing [SEP] token
 		if seqs["input_ids"].shape[1] == 0:
+			if self.strict:
+				raise RuntimeError(
+					f"dataset row rn={rn} (index {idx}, split={self.split!r}, geneModel={gm!r}) tokenised to zero "
+					f"length ({len(region_seq)} nt of sequence); refusing to substitute another row (protocol A35)."
+				)
 			fallback_idx = torch.randint(self._length, (1,)).item()
 			print(
 				f"Warning rn={rn} tokenized to zero length; falling back to rn={self._index_map[fallback_idx]}",
