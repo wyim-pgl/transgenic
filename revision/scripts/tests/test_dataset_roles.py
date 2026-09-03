@@ -80,3 +80,38 @@ def test_build_includes_the_declared_resources(tmp_path):
     runs = {r["run"] for r in rows}
     assert "odb12_Viridiplantae.filtered.fa.gz" in runs
     assert "uniprot_sprot_plants.dat.gz" in runs
+
+
+# ----------------------------------------------------------------------------------------------
+# Live verification of the declared resources (issue #66 follow-up)
+# ----------------------------------------------------------------------------------------------
+
+def test_every_declared_resource_has_a_location_to_verify_against():
+    """A declaration nobody can check is just a comment."""
+    for r in dr.RESOURCES:
+        assert r["run"] in dr.RESOURCE_LOCATIONS, r["run"]
+
+
+def test_verify_resources_accepts_matching_checksums():
+    def runner(host, path):
+        return {"odb12_Viridiplantae.filtered.fa.gz": "453cb32b02e0799950d7d5f4de5f62ac",
+                "uniprot_sprot_plants.dat.gz": "552089d0642b6c17f3486140a73a0163"}[path.rsplit("/", 1)[-1]]
+    assert dr.verify_resources(runner) == []
+
+
+def test_verify_resources_catches_a_changed_file():
+    """The point of the table: the file moved on and the declaration did not."""
+    def runner(host, path):
+        return "00000000000000000000000000000000"
+    v = dr.verify_resources(runner)
+    assert len(v) == len(dr.RESOURCES)
+    assert all("md5 mismatch" in x for x in v), v
+
+
+def test_verify_resources_reports_an_unreachable_file_instead_of_passing():
+    """Failing to look must never read as 'looked and it was fine'."""
+    def runner(host, path):
+        raise OSError("ssh: Could not resolve hostname")
+    v = dr.verify_resources(runner)
+    assert len(v) == len(dr.RESOURCES)
+    assert all("could not be read" in x for x in v), v

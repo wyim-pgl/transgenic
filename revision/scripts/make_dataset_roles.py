@@ -27,6 +27,8 @@ implemented. GenBank efetch publishes no per-batch checksum, so the EST rows car
 """
 import argparse
 import csv
+import shlex
+import subprocess
 import hashlib
 import json
 import os
@@ -215,11 +217,12 @@ def rows_for_runs(root, rel, default_role, data_type, basis):
 # they had no way into the manifest at all, and hand-editing the TSV does not survive the next
 # regeneration. They are *declared* here instead.
 #
-# Declared, not measured: both files live on pgl-gpu, outside this filesystem, so the builder
-# cannot stat or hash them. The checksums below were recomputed from the files at the dates in
-# each note and must be re-recorded, here, if a resource is ever replaced. A resource whose file
-# changes without this table changing is exactly the drift the manifest exists to catch, so the
-# note carries the recomputation date rather than implying a live check.
+# Declared, but checkable: both files live on pgl-gpu, outside the tree this builder walks, so
+# they cannot be scanned into the manifest -- but that host is reachable over ssh, so the
+# declaration is verified rather than trusted. `--verify-resources` recomputes each md5 from the
+# file and refuses to write on a mismatch *or* on a file it could not read; without the flag the
+# run says so on stderr. A resource whose file changes without this table changing is exactly the
+# drift the manifest exists to catch, and now the check can see it.
 RESOURCE_DATA_TYPES = ("protein_resource", "sensitivity_resource")
 
 RESOURCES = (
@@ -234,7 +237,8 @@ RESOURCES = (
          note="pgl-gpu /home/pgl/scratch1/wyim/transgenic_data/orthodb_filtered_stage2/; "
               "12,115,085 of 12,204,762 sequences over 408 taxa; zero sequences from the evaluated "
               "species (taxids 3702/4577/4081), removed in stage 1; 3,178,195,033 B; "
-              "md5 recomputed from the file 2026-09-03, matches filter_summary.json; "
+              "md5 recomputed from the file 2026-09-03 and re-verified live over ssh, matches "
+              "filter_summary.json; "
               "frozen into protocol section 1 (issue #66)"),
     dict(dataset="protein/swissprot_plants_2026_02",
          run="uniprot_sprot_plants.dat.gz",
@@ -248,8 +252,50 @@ RESOURCES = (
          note="pgl-gpu /home/pgl/scratch1/wyim/transgenic_data/protein/; UniProtKB/Swiss-Prot "
               "Release 2026_02 of 10-Jun-2026; 44,909 entries, 42,096 Viridiplantae; 58,889,942 B; "
               "sha256 09116f0b9db67ecc47bd4393ca6a417f311c0c6499b4614a9f581c0f5ead092e; "
-              "md5 recomputed from the file 2026-09-03"),
+              "md5 recomputed from the file 2026-09-03, re-verified live over ssh"),
 )
+
+
+# Where each declared resource actually lives, so the declaration can be checked rather than
+# trusted. The builder runs on pronghorn and the files sit on pgl-gpu, but that host is reachable
+# over ssh, so "the builder cannot see them" was a reason to write the check, not to skip it.
+RESOURCE_LOCATIONS = {
+    "odb12_Viridiplantae.filtered.fa.gz":
+        ("gpu", "/home/pgl/scratch1/wyim/transgenic_data/orthodb_filtered_stage2/"
+                "odb12_Viridiplantae.filtered.fa.gz"),
+    "uniprot_sprot_plants.dat.gz":
+        ("gpu", "/home/pgl/scratch1/wyim/transgenic_data/protein/uniprot_sprot_plants.dat.gz"),
+}
+
+
+def _ssh_md5(host, path):
+    """md5 of a remote file. Raises if the host or the file cannot be reached."""
+    out = subprocess.run(["ssh", "-o", "BatchMode=yes", host, f"md5sum -- {shlex.quote(path)}"],
+                         capture_output=True, text=True, timeout=1800)
+    if out.returncode != 0 or not out.stdout.strip():
+        raise OSError((out.stderr or out.stdout).strip() or f"md5sum failed on {host}:{path}")
+    return out.stdout.split()[0]
+
+
+def verify_resources(runner=_ssh_md5):
+    """Recompute every declared resource's md5 from the file and compare with the declaration.
+
+    Fails closed in both directions that matter: a checksum that no longer matches, and a file we
+    could not read at all. The second case is the subtle one -- a check that quietly passes when it
+    could not look is worse than no check, because it converts 'unknown' into 'verified'.
+    """
+    v = []
+    for r in RESOURCES:
+        host, path = RESOURCE_LOCATIONS[r["run"]]
+        try:
+            got = runner(host, path)
+        except Exception as e:                      # noqa: BLE001 - any failure to look is a failure
+            v.append(f"{r['dataset']}: {host}:{path} could not be read ({e})")
+            continue
+        if got != r["local_fa_md5"]:
+            v.append(f"{r['dataset']}: md5 mismatch at {host}:{path} "
+                     f"(declared {r['local_fa_md5']}, file has {got})")
+    return v
 
 
 def rows_for_resources():
@@ -354,10 +400,18 @@ def main():
                          "change, so its roles are frozen first and the long-read scope gets its own v2 "
                          "freeze once collection finishes (protocol line 213 asks the manifest to be "
                          "checksummed into §1 before the first alignment)")
+    ap.add_argument("--verify-resources", action="store_true",
+                    help="recompute the declared resources' md5 from the files themselves (over ssh) "
+                         "and refuse to write on a mismatch or on a file that cannot be read")
     a = ap.parse_args()
     out = a.out or os.path.join(a.root, "DATASET_ROLES.tsv")
     rows = build(a.root)
     violations = validate(rows)                      # 검증은 항상 전체에 대해 한다
+    if a.verify_resources:
+        violations += verify_resources()
+    else:
+        print(f"note: {len(RESOURCES)} declared resource(s) were not checked against their files "
+              f"this run; pass --verify-resources to recompute their md5", file=sys.stderr)
     if a.scope == "est":
         rows = [r for r in rows if r["run"] == "est.fa.gz"]
     if violations:
