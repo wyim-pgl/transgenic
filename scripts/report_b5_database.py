@@ -122,6 +122,35 @@ def main():
         "build_manifest_rows": con.sql("SELECT count(*) FROM build_manifest").fetchone()[0],
         "rejected_rows": con.sql("SELECT count(*) FROM rejected_records").fetchone()[0],
     }
+    # Gene-level assertions the validator structurally cannot make: geneList.orthogroup_id is NULL for every
+    # tile row, so validate_split's group key degenerates to the window id and its cross-split check is inert.
+    # window_genes holds only the genes a tile actually labelled (masked genes are dropped before the insert).
+    con.sql("CREATE TEMP TABLE _lab AS SELECT DISTINCT w.species_id, w.gene_id, g.split AS tile_split "
+            "FROM window_genes w JOIN geneList g ON g.species_id = w.species_id AND g.gene_id = w.window_id")
+    _rank = "CASE {} WHEN 'train' THEN 0 WHEN 'valid' THEN 1 WHEN 'test' THEN 2 END"
+    gene_checks = {
+        "no_gene_labelled_below_its_split": con.sql(
+            f"SELECT count(*) FROM _lab l JOIN gene_split s ON s.species_id = l.species_id AND s.gene_id = l.gene_id "
+            f"WHERE {_rank.format('s.split')} > {_rank.format('l.tile_split')}").fetchone()[0] == 0,
+        "no_strict_holdout_labelled_outside_test": con.sql(
+            "SELECT count(*) FROM _lab l JOIN gene_split s ON s.species_id = l.species_id AND s.gene_id = l.gene_id "
+            "WHERE s.strict_holdout AND l.tile_split <> 'test'").fetchone()[0] == 0,
+        "no_orphan_window_genes": con.sql(
+            "SELECT count(*) FROM window_genes w LEFT JOIN geneList g ON g.species_id = w.species_id "
+            "AND g.gene_id = w.window_id WHERE g.gene_id IS NULL").fetchone()[0] == 0,
+    }
+    # A gene is labelled only where its own split allows, so a test gene needs a test block: the labelled
+    # fraction is far from 1 for test and valid and is not recoverable from the split table alone.
+    labelled_coverage = {}
+    for sp, split, lab, tot in con.sql(
+            "WITH tot AS (SELECT species_id, split, count(*) n FROM gene_split GROUP BY 1, 2), "
+            "     got AS (SELECT s.species_id, s.split, count(DISTINCT l.gene_id) n FROM _lab l "
+            "             JOIN gene_split s ON s.species_id = l.species_id AND s.gene_id = l.gene_id GROUP BY 1, 2) "
+            "SELECT t.species_id, t.split, coalesce(g.n, 0), t.n FROM tot t "
+            "LEFT JOIN got g ON g.species_id = t.species_id AND g.split = t.split ORDER BY 1, 2").fetchall():
+        labelled_coverage.setdefault(sp, {})[split] = {"labelled": lab, "genes": tot,
+                                                       "pct": round(100.0 * lab / tot, 1) if tot else None}
+
     rn_ranges = {sp: (lo, hi, n) for sp, lo, hi, n in con.sql(
         "SELECT species_id, min(rn), max(rn), count(*) FROM geneList GROUP BY 1 ORDER BY 2").fetchall()}
     n = totals["rows"]
@@ -137,9 +166,11 @@ def main():
         "no_maize_gene_models": con.sql("SELECT count(*) FROM geneList WHERE geneModel LIKE 'Zm%' OR geneModel LIKE 'GRMZM%'").fetchone()[0] == 0,
         "no_null_split": con.sql("SELECT count(*) FROM geneList WHERE split IS NULL").fetchone()[0] == 0,
     }
+    checks.update(gene_checks)
     report = {
         "db": a.db,
         "checks": checks,
+        "labelled_coverage_by_species": labelled_coverage,
         "rn_ranges": {k: {"min": v[0], "max": v[1], "rows": v[2]} for k, v in rn_ranges.items()},
         "totals": totals,
         "rows_by_species_tier": {k: v for k, v in sorted(rows_by_species_tier.items())},

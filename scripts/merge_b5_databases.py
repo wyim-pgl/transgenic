@@ -102,7 +102,7 @@ def preflight(sources, excluded):
     return dict(zip(FROZEN_FIELDS, next(iter(frozen)))), commits, next(iter(split_hashes.values()))
 
 
-def merge(out, sources, frozen, commits, split_hash, split_table, qc_flags):
+def merge(out, sources, frozen, commits, split_hash, split_table, qc_flags, species_manifest=None):
     if os.path.exists(out):
         raise SystemExit(f"{out} exists; refusing to overwrite a frozen artifact")
     con = duckdb.connect(out)
@@ -158,6 +158,10 @@ def merge(out, sources, frozen, commits, split_hash, split_table, qc_flags):
         "git_commits": commits,
         "split_table": {"path": split_table, "sha256": sha256(split_table)} if split_table else None,
         "qc_flag_files": {os.path.basename(p): md5(p) for p in qc_flags},
+        "species_manifest": ({"path": species_manifest, "sha256": sha256(species_manifest)} if species_manifest else None),
+        # the only place the per-tile rejection reasons survive with their mask-fraction values; not merged in
+        "source_rejected_json_md5": {os.path.basename(p)[:-3]: md5(p + ".rejected.json")
+                                     for p in sources if os.path.exists(p + ".rejected.json")},
         "rows_by_species": per_species,
         "rn_ranges": {k: list(v) for k, v in rn_ranges.items()},
         "geneList_rows": n_rows,
@@ -184,7 +188,9 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--manifest", required=True, help="freeze manifest JSON")
     ap.add_argument("--split-table", default=None, help="data/splits/b5_orthogroup_split_v1.tsv, hashed into the manifest")
-    ap.add_argument("--qc-flags", nargs="*", default=[], help="flag TSVs used by the builds, md5'd into the manifest")
+    ap.add_argument("--qc-flags", nargs="*", default=[],
+                    help="every flag TSV the builds consumed — GeenuFF (A22) AND Swiss-Prot (A30) — md5'd into the manifest")
+    ap.add_argument("--species-manifest", default=None, help="b5_species_v1.tsv used by the builds, sha256'd into the manifest")
     ap.add_argument("--expect-species", type=int, default=9)
     ap.add_argument("--excluded-manifest", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
                                                                 "data", "manifests", "b5_excluded_species_v1.tsv"))
@@ -198,7 +204,7 @@ def main():
             raise SystemExit(f"{p} has no .DONE marker")
     frozen, commits, split_hash = preflight(sources, read_excluded(a.excluded_manifest))
     print(json.dumps({"frozen_inputs": frozen, "git_commits": commits}, indent=1), flush=True)
-    manifest = merge(a.out, sources, frozen, commits, split_hash, a.split_table, a.qc_flags)
+    manifest = merge(a.out, sources, frozen, commits, split_hash, a.split_table, a.qc_flags, a.species_manifest)
     with open(a.manifest, "w") as fh:
         json.dump(manifest, fh, indent=1, sort_keys=True)
     print(json.dumps({k: v for k, v in manifest.items() if k not in ("sources", "source_md5")}, indent=1))
