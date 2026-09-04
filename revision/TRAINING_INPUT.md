@@ -30,7 +30,7 @@ ACCESS로 올릴 것을 한곳에 모은 스테이징 영역이다. **무엇이 
 | 파일 | md5 |
 |---|---|
 | `DATASET_ROLES.est_v1.tsv` | `a6375713ca2321c6a0cc55acc8e1d7fe` |
-| `DATASET_ROLES.longread_v1.tsv` | `d644278f6a18a8b2b2162c8378cf61a8` |
+| `DATASET_ROLES.longread_v1.tsv` | `c2f4c2e8fe68b3e522abb8298e1999ff` |
 | `odb12_Viridiplantae.filtered.fa.gz` | `453cb32b02e0799950d7d5f4de5f62ac` |
 | `Athaliana_167_TAIR10.fa` | `513e5ef30845ed754b00816a99abbf8e` |
 

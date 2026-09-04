@@ -149,3 +149,52 @@ def test_scope_longread_excludes_est_and_declared_resources():
 def test_scope_all_keeps_everything():
     rows = _rows_for_scope_test()
     assert len(dr.scope_filter(rows, "all")) == len(rows)
+
+
+# --- A38: runs excluded before collection ------------------------------------------------------
+
+
+def test_declared_run_is_emitted_and_marked_as_never_scanned():
+    """A18.3 wants a role for every run. A tree scan cannot produce one for a run that was never
+    collected, so the declaration has to come from the builder itself (A38)."""
+    rows = list(dr.rows_for_declared_runs())
+    assert len(rows) == 1
+    r = rows[0]
+    assert r["dataset"] == "training/ont/Osativa/nip_pool_PRJNA953663"
+    assert r["run"] == "SRR25203456"
+    assert r["role"] == "excluded"
+    assert r["local_fa_md5"] == ""          # nothing was ever written locally
+    assert r["source_checksum"] == "a8a59f575ff287efe951305edbedab27"
+    assert r["source_checksum_authority"] == "ENA_fastq_md5"
+    assert r["expected_reads"] == "13195758"
+    assert r["note"].startswith("DECLARED_NOT_SCANNED:")
+
+
+def test_rows_for_declared_runs_yields_copies():
+    """A caller must not be able to mutate the declaration, the way rows_for_resources promises."""
+    first = list(dr.rows_for_declared_runs())[0]
+    first["role"] = "c2_training_eligible"
+    assert list(dr.rows_for_declared_runs())[0]["role"] == "excluded"
+
+
+def test_declared_run_stays_in_the_longread_scope():
+    """It is a sequencing run, not a non-run resource, so the long-read freeze must carry it."""
+    got = dr.scope_filter(list(dr.rows_for_declared_runs()), "longread")
+    assert [r["run"] for r in got] == ["SRR25203456"]
+    assert dr.scope_filter(list(dr.rows_for_declared_runs()), "est") == []
+
+
+def test_a_declared_run_that_was_later_collected_refuses_to_build():
+    """If the run is ever downloaded the scan emits a second row for the same (dataset, run). The
+    declaration then has to be withdrawn deliberately instead of silently colliding."""
+    declared = list(dr.rows_for_declared_runs())
+    scanned = dict(declared[0])
+    scanned.update(role="c2_training_eligible", local_fa_md5="0" * 32,
+                   note="scanned from the tree")
+    v = dr.validate(declared + [scanned])
+    assert any("occurs 2 times" in x for x in v), v
+
+
+def test_a_missing_declaration_is_a_violation_not_a_silent_gap():
+    v = dr.validate([])
+    assert any("occurs 0 times" in x for x in v), v

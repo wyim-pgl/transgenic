@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.27; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing; §A32 gene-level masking of hard-flagged genes in tiles; §A33 overlapping blocks, locus-aware stitching, masking parameters from reference statistics; §A34 partially pretrained encoder: audit, gate and record; §A35 a failing batch stops the run, no silent skips; §A36 EST length floor raised to 121 nt, **superseded by §A37**; §A37 the floor returns to 100 nt and 121 nt becomes a labelled sensitivity arm)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.28; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing; §A32 gene-level masking of hard-flagged genes in tiles; §A33 overlapping blocks, locus-aware stitching, masking parameters from reference statistics; §A34 partially pretrained encoder: audit, gate and record; §A35 a failing batch stops the run, no silent skips; §A36 EST length floor raised to 121 nt, **superseded by §A37**; §A37 the floor returns to 100 nt and 121 nt becomes a labelled sensitivity arm; §A38 a run excluded before collection is declared in the manifest instead of in prose, and the long-read scope is refrozen)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -20,7 +20,7 @@ Wording rule for the manuscript and response letter (frozen): the results of thi
 | A. thaliana completion prediction (beam1, deduplicated) | `transgenic_comparison/standardized_results/A_thaliana_transgenic400Mprompt_beam1.gff3` | `670d419b887271e0a9b8a4d82b9bf700` | 50,403,784 |
 | A. thaliana primary transcript IDs | `transgenic/revision/data/TAIR10/primary_transcript_ids.txt` | `8442eed7f20e879ebd1928a615fe0747` | 520,904 |
 | **Dataset-role manifest, EST scope (A18.3)** | `evidence/DATASET_ROLES.est_v1.tsv` | `a6375713ca2321c6a0cc55acc8e1d7fe` | 3,252 |
-| **Dataset-role manifest, long-read scope (A18.3)** | `evidence/DATASET_ROLES.longread_v1.tsv` | `d644278f6a18a8b2b2162c8378cf61a8` | 61,801 |
+| **Dataset-role manifest, long-read scope (A18.3)** | `evidence/DATASET_ROLES.longread_v1.tsv` | `c2f4c2e8fe68b3e522abb8298e1999ff` | 62,511 |
 | **Cross-species protein resource (A19)** — OrthoDB v12 Viridiplantae, leakage-filtered stage 2 | `orthodb_filtered_stage2/odb12_Viridiplantae.filtered.fa.gz` (pgl-gpu `/home/pgl/scratch1/wyim/transgenic_data/`, outside the root above) | `453cb32b02e0799950d7d5f4de5f62ac` | 3,178,195,033 |
 
 Scoring code frozen at repository commit `21e8752` (tag `revision-2026-09`): `28_score_added_isoforms.py` (blob `e98a0fe89158`), `36_filter_additions_structurally.py` (blob `595fc2539905`), `48_score_zmays_additions.py` (blob `e3e09ccce760`). New code written under this protocol (per-structure dump for maize, species-agnostic evidence scorer `59_evidence_support.py`) may add outputs but may not change the definitions in §2.
@@ -39,9 +39,9 @@ had. The tree looked complete (no process running, 122 `.DONE`, 150 GB) while se
 missing: `longread_fetch.sh` counted DONE and skipped but not FAILED, so a dataset whose every run had failed
 signed off `0 runs DONE, 0 skipped` and exited 0. All seven were recovered (each verified against its
 ENA-published `fastq_md5`, and each converted record count equal to the published `read_count`) after the
-fetcher was made resumable; the accounting defect is fixed in the same file. The scope holds **214 rows** —
-129 `c2_training_eligible`, 31 `b1_validation_only`, 54 `excluded` — and the excluded rows are kept on
-purpose: a freeze that records only what was retained cannot be audited against what was rejected. **One run is absent by decision rather than by scan**: *O. sativa* `SRR25203456` (PRJNA953663, 13,195,758 ONT RNA-Seq reads) was excluded by the author on 2026-09-04 (issue #68) because ENA's published path is a directory and reaching NCBI's mirror would require an SRA fallback in the fetch driver. It carries no manifest row because it never entered the tree; the reason is recorded here and in `TRAINING_EVIDENCE_v1.md` so that a tree-versus-plan reconciliation finds an answer rather than a gap. Both are generated by
+fetcher was made resumable; the accounting defect is fixed in the same file. The scope holds **215 rows** —
+129 `c2_training_eligible`, 31 `b1_validation_only`, 55 `excluded` — and the excluded rows are kept on
+purpose: a freeze that records only what was retained cannot be audited against what was rejected. **One run is absent by decision rather than by scan**: *O. sativa* `SRR25203456` (PRJNA953663, 13,195,758 ONT RNA-Seq reads) was excluded by the author on 2026-09-04 (issue #68) because ENA's published path is a directory and reaching NCBI's mirror would require an SRA fallback in the fetch driver. It carries a **declared** manifest row rather than a scanned one (A38): the builder emits it from `DECLARED_RUNS` and marks it `DECLARED_NOT_SCANNED`, because a tree scan can only tell *here* from *not here* and cannot tell *never considered* from *considered and rejected*. The v1.27 freeze `d644278f6a18a8b2b2162c8378cf61a8` (61,801 B, 214 rows) recorded the reason in this prose only and is superseded. Both are generated by
 `revision/scripts/make_dataset_roles.py`, which refuses to write a manifest whose roles are incomplete,
 ambiguous, or contain a run present in two dataset paths without a declared canonical copy — the check that
 caught the Cui 2020 (PRJNA594286) double download, whose non-canonical copy is `excluded` by author decision
@@ -757,3 +757,43 @@ Not required for the primary analysis; recorded so that the open question is not
 
 `61_univec_trim.py` returns to `DEFAULT_MIN_LEN = 100`; the 121-nt arm is produced by passing `--min-len 121` explicitly, so the sensitivity arm is always an explicit act and never a default. The screening blastn does not re-run: the per-species `hits.tsv` from the 2026-09-03 pass is the same object either way, and only the trim step is repeated. Both arms are aligned with the §4 command and kept side by side; the primary is `evidence/est_align/`, the sensitivity arm `evidence/est_align_min121/`.
 | 2026-09-04 | nine EST alignments run on the 121-nt arm; no junction called; no evidence scoring run | v1.27: A37 restores the ≥ 100 nt primary floor, relabels 121 nt as a pre-registered sensitivity arm, requires paired reporting with per-length-bin callability and junction support, and fixes the wording for the mapping-rate anomaly | external review: A36 was triggered by an outcome rather than a defect, argued against itself by recording that the excluded reads are not low quality, and moved frozen quantities while claiming §§4–7 untouched |
+
+---
+
+## A38. Amendment v1.28 (2026-09-04; before any junction is called, before any evidence scoring) — a run excluded before collection gets a declared manifest row, and the long-read scope is refrozen
+
+**Defect.** A18.3 requires every dataset **and every run** to carry exactly one role, and `excluded` is one of the three. *O. sativa* `SRR25203456` was excluded by author decision on 2026-09-04 (issue #68) and the reason was written into §1 above and into `TRAINING_EVIDENCE_v1.md` — but into prose only. The run had no row. `make_dataset_roles.py` builds the manifest by walking the evidence tree and keying on `.DONE` markers, and a run that was never collected leaves nothing to walk. The v1.27 freeze `d644278f6a18a8b2b2162c8378cf61a8` was therefore an **incomplete object** against the rule it was frozen under.
+
+This is not a bookkeeping nicety. A tree scan distinguishes *here* from *not here*. It cannot distinguish *never considered* from *considered and rejected*, and separating those two is the reason a scope manifest exists at all: a later reconciliation of tree against plan must find an answer, not a gap, and prose is not something a reconciliation reads.
+
+**Correction.** `make_dataset_roles.py` gains `DECLARED_RUNS`, a declaration mechanism for runs known from source metadata but deliberately absent from the tree. It is kept separate from `RESOURCES` (which declares non-run objects such as the OrthoDB partition) because these objects *are* sequencing runs and stay inside the long-read scope. The row is emitted with `note` beginning `DECLARED_NOT_SCANNED:`, so declared and scanned rows can be told apart by grep. No synthetic `.DONE` marker and no placeholder FASTA is created: either would make the run indistinguishable from collected evidence, which is the error being fixed.
+
+`validate()` gains a matching check — a declared run must resolve to exactly one row. If the run is ever downloaded the scan produces a second row for the same `(dataset, run)` and the manifest refuses to build, so the declaration has to be withdrawn deliberately rather than silently colliding.
+
+**The declared row** (14 columns, values taken from the run's ENA `filereport.tsv`, which is retained at `evidence/training/ont/Osativa/nip_pool_PRJNA953663/filereport.tsv`):
+
+| field | value |
+|---|---|
+| dataset | `training/ont/Osativa/nip_pool_PRJNA953663` |
+| run | `SRR25203456` |
+| species / stratum | Osativa / reference |
+| instrument / data_type | PromethION / RNA-Seq |
+| expected_files / expected_reads | 1 / 13,195,758 |
+| source_checksum | `a8a59f575ff287efe951305edbedab27` (authority `ENA_fastq_md5`) |
+| local_fa_md5 | *(empty — nothing was ever written locally)* |
+| role | `excluded` |
+
+**Measurement supporting the basis.** The recorded reason — that ENA publishes the path as a directory — was checked on 2026-09-04 rather than restated: `HEAD` on `https://ftp.sra.ebi.ac.uk/vol1/fastq/SRR252/056/SRR25203456/SRR25203456_1.fastq.gz` returns `301` to the same path with a trailing slash, and the parent listing shows `SRR25203456_1.fastq.gz/` as a directory entry. The 2026-09-03 fetch log records the driver selecting that URL and the run FAILED. This is a measurement, not an author statement.
+
+**Refreeze.** The long-read scope becomes:
+
+| | v1.27 (superseded) | v1.28 |
+|---|---|---|
+| md5 | `d644278f6a18a8b2b2162c8378cf61a8` | `c2f4c2e8fe68b3e522abb8298e1999ff` |
+| bytes | 61,801 | 62,511 |
+| data rows | 214 | 215 |
+| roles | 129 / 31 / 54 | 129 / 31 / **55** |
+
+The single added row is `excluded`. **No eligibility decision changes and no evidence content changes**: nothing moves into or out of training, no file is added or removed, and every other row is byte-identical. §1 is amended to the new identity and the superseded one is kept here rather than overwritten, so the incomplete freeze remains auditable.
+
+Nothing in §§3–9 changes. §A37 is unaffected: the EST arms and the alignment they feed are a different scope.

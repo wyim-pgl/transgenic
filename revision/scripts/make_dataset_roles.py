@@ -225,6 +225,41 @@ def rows_for_runs(root, rel, default_role, data_type, basis):
 # drift the manifest exists to catch, and now the check can see it.
 RESOURCE_DATA_TYPES = ("protein_resource", "sensitivity_resource")
 
+# Runs that A18.3 has to account for but the tree scan can never see, because they were never
+# collected. A tree scan can only distinguish "here" from "not here"; it cannot distinguish "never
+# considered" from "considered and rejected", and that distinction is the whole point of a scope
+# manifest. Recording the decision in prose (protocol §1, TRAINING_EVIDENCE_v1.md) left the run
+# with no role, which A18.3 forbids: every dataset AND every run carries exactly one role, and
+# `excluded` is one of them.
+#
+# These are declarations, never synthetic .DONE files or placeholder FASTAs. A fake marker would
+# make the run indistinguishable from collected evidence, which is the error this is fixing.
+DECLARED_RUNS = (
+    dict(dataset="training/ont/Osativa/nip_pool_PRJNA953663", run="SRR25203456",
+         species="Osativa", genotype_stratum="reference", instrument="PromethION",
+         data_type="RNA-Seq", expected_files="1", expected_reads="13195758",
+         source_checksum="a8a59f575ff287efe951305edbedab27",
+         source_checksum_authority="ENA_fastq_md5",
+         local_fa_md5="",
+         role="excluded",
+         basis="author decision 2026-09-04, issue #68: ENA publishes this run's fastq path as a "
+               "directory, so no resume or retry reaches a file; the NCBI mirror was verified "
+               "reachable but an SRA fallback was not added to the frozen fetch driver and the run "
+               "was dropped instead",
+         note="DECLARED_NOT_SCANNED: never collected, so there is no local FASTA and no .DONE "
+              "marker. Measured 2026-09-04: HEAD on the published fastq_ftp path 301-redirects to "
+              "a trailing slash and the parent listing shows SRR25203456_1.fastq.gz/ as a "
+              "directory. PRJNA953663 therefore contributes nothing"),
+)
+
+
+def rows_for_declared_runs():
+    """Declared sequencing runs that are absent from the scanned evidence tree. Copies, so a
+    caller cannot mutate the declaration."""
+    for r in DECLARED_RUNS:
+        yield dict(r)
+
+
 RESOURCES = (
     dict(dataset="protein/orthodb_v12_viridiplantae_stage2",
          run="odb12_Viridiplantae.filtered.fa.gz",
@@ -328,6 +363,7 @@ def build(root):
     rows += list(rows_for_runs(root, "RETIRED_DO_NOT_USE", "excluded", "PacBio",
                                "issue #60, author decision 2026-09-03: subreads-only, "
                                "protocol §3/v1.3/v1.5 admits CCS/FLNC level only"))
+    rows += list(rows_for_declared_runs())
     rows += list(rows_for_resources())
     demote_duplicates(rows)
     return rows
@@ -396,6 +432,16 @@ def validate(rows):
             for r in rows:
                 if r["run"] == run and r["dataset"] != canonical and r["role"] != "excluded":
                     v.append(f"run {run}: non-canonical copy in {r['dataset']} is {r['role']}, must be excluded")
+
+    # A declared run must stay exactly one row. If it is ever downloaded, the scan produces a
+    # second row for the same (dataset, run) and the declaration has to be removed deliberately
+    # rather than left to collide.
+    for d in DECLARED_RUNS:
+        k = (d["dataset"], d["run"])
+        matches = [r for r in rows if (r["dataset"], r["run"]) == k]
+        if len(matches) != 1:
+            v.append(f"declared run {k} occurs {len(matches)} times; expected exactly once "
+                     f"(was it collected after all? then drop the declaration)")
 
     for sp in TEST_SPECIES:
         bad = [r for r in rows if r["species"] == sp and r["role"] == "c2_training_eligible"]
