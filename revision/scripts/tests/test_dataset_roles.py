@@ -115,3 +115,37 @@ def test_verify_resources_reports_an_unreachable_file_instead_of_passing():
     v = dr.verify_resources(runner)
     assert len(v) == len(dr.RESOURCES)
     assert all("could not be read" in x for x in v), v
+
+
+# ----------------------------------------------------------------------------------------------
+# Scope selection (A18.3 / protocol section 1: the manifest is frozen in scopes, not all at once)
+# ----------------------------------------------------------------------------------------------
+
+def _rows_for_scope_test():
+    return [
+        dict(_row(dataset="est/Athaliana", run="est.fa.gz", data_type="EST")),
+        dict(_row(dataset="training/ont/Gmax/x", run="SRR1", data_type="RNA-Seq")),
+        dict(_row(dataset="pacbio/Zmays_wang2020", run="F1maize.FINAL.gff", data_type="reference_gff")),
+        dict(_row(dataset="RETIRED_DO_NOT_USE/y", run="SRR2", data_type="OTHER", role="excluded")),
+        dict(_row(dataset="protein/orthodb", run="odb.fa.gz", data_type="protein_resource")),
+        dict(_row(dataset="protein/swissprot", run="sp.dat.gz", data_type="sensitivity_resource",
+                  role="sensitivity_set")),
+    ]
+
+
+def test_scope_est_selects_only_est():
+    got = {r["run"] for r in dr.scope_filter(_rows_for_scope_test(), "est")}
+    assert got == {"est.fa.gz"}
+
+
+def test_scope_longread_excludes_est_and_declared_resources():
+    """The long-read freeze must not drag in EST (already frozen as est_v1) or the non-run
+    resources, but must keep a dataset's auxiliary files and the excluded runs — a freeze that
+    omits what was excluded cannot be audited."""
+    got = {r["run"] for r in dr.scope_filter(_rows_for_scope_test(), "longread")}
+    assert got == {"SRR1", "F1maize.FINAL.gff", "SRR2"}
+
+
+def test_scope_all_keeps_everything():
+    rows = _rows_for_scope_test()
+    assert len(dr.scope_filter(rows, "all")) == len(rows)

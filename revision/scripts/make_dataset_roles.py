@@ -338,6 +338,27 @@ FIELDS = ["dataset", "run", "species", "genotype_stratum", "instrument", "data_t
           "local_fa_md5", "role", "basis", "note"]
 
 
+def scope_filter(rows, scope):
+    """Select the rows of one freeze scope.
+
+    Protocol section 1 freezes the manifest in scopes rather than all at once, because the two
+    bodies of evidence complete at different times: EST finished downloading on 2026-09-01 and was
+    frozen as DATASET_ROLES.est_v1.tsv, while long-read collection was still running and a single
+    freeze would have gone stale within the hour.
+
+    The long-read scope is everything that is neither EST nor a declared non-run resource. It keeps
+    a dataset's auxiliary files (the Wang 2020 reference GFF and demultiplex counts) because they
+    belong to that dataset, and it keeps `excluded` rows on purpose: a freeze that records only what
+    was kept cannot be audited against what was rejected.
+    """
+    if scope == "est":
+        return [r for r in rows if r["run"] == "est.fa.gz"]
+    if scope == "longread":
+        return [r for r in rows
+                if r["run"] != "est.fa.gz" and r["data_type"] not in RESOURCE_DATA_TYPES]
+    return list(rows)
+
+
 def validate(rows):
     """The manifest is only worth having if it is complete and unambiguous. Refuse to write otherwise."""
     v = []
@@ -395,7 +416,7 @@ def main():
     ap.add_argument("--root", default=ROOT_DEFAULT)
     ap.add_argument("--out", default=None, help="default: <root>/DATASET_ROLES.tsv")
     ap.add_argument("--summary", default=None, help="write a JSON summary next to the manifest")
-    ap.add_argument("--scope", choices=["all", "est"], default="all",
+    ap.add_argument("--scope", choices=["all", "est", "longread"], default="all",
                     help="est = only the EST rows. Author decision 2026-09-03: EST is complete and cannot "
                          "change, so its roles are frozen first and the long-read scope gets its own v2 "
                          "freeze once collection finishes (protocol line 213 asks the manifest to be "
@@ -412,8 +433,7 @@ def main():
     else:
         print(f"note: {len(RESOURCES)} declared resource(s) were not checked against their files "
               f"this run; pass --verify-resources to recompute their md5", file=sys.stderr)
-    if a.scope == "est":
-        rows = [r for r in rows if r["run"] == "est.fa.gz"]
+    rows = scope_filter(rows, a.scope)
     if violations:
         print("manifest refused:", file=sys.stderr)
         for x in violations:
