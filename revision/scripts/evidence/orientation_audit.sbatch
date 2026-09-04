@@ -70,18 +70,51 @@ gzip -t "$FA" 2>/dev/null || { echo "REFUSED: corrupt reads: $FA" >&2; exit 3; }
 FA_MD5=$(md5sum "$FA" | cut -d' ' -f1)
 
 # --- Completion marker bound to every input that can change the verdict ---
-KEY="$FA_MD5:$REF_MD5:$GFF_MD5"
+# The SCORER is one of those inputs. A39 replaced the statistic this audit gates on: the superseded
+# scorer passed all 27 runs it saw, the current one passes 4 of them. A key that named only the
+# data would have let those stale verdicts read as current, which is the whole failure mode the
+# marker exists to prevent.
+SCORER_MD5=$(md5sum "$SCRIPTS/67_orientation_audit.py" | cut -d' ' -f1)
+KEY="$FA_MD5:$REF_MD5:$GFF_MD5:$SCORER_MD5"
 if [ -e "$DONE" ]; then
   HAVE=$(awk -F= '$1=="key"{print $2}' "$DONE")
   if [ "$HAVE" = "$KEY" ] && [ -s "$OUT/audit.json" ]; then
     echo "$RUN already audited for key=$KEY"; exit 0
   fi
-  echo "REFUSED: $RUN has a DONE marker for a different input (have=${HAVE:-<none>}, want=$KEY)" >&2
-  exit 6
+  # Two different situations share one symptom. If only the SCORER changed, the verdict is stale by
+  # amendment (A39 replaced the statistic) and must be recomputed - that is expected and the SAM is
+  # reusable. If the DATA changed, something moved underneath a finished audit and refusing is the
+  # only safe answer.
+  # Markers written before A39 carry three fields and no scorer md5; those written after carry
+  # four. Both mean "same data, different scorer" when the data part matches.
+  DATA3="$FA_MD5:$REF_MD5:$GFF_MD5"
+  if [ "$HAVE" = "$DATA3" ] || [ "${HAVE%:*}" = "$DATA3" ]; then
+    echo "note: $RUN was audited by a superseded scorer (${HAVE##*:} -> $SCORER_MD5); rescoring"
+    rm -f "$DONE"
+  else
+    echo "REFUSED: $RUN has a DONE marker built from different data (have=${HAVE:-<none>}, want=$KEY)" >&2
+    exit 6
+  fi
 fi
 
 START=$(date -Is); SECONDS=0
 SAMPLE=$OUT/sample.fa
+
+# If this run was already aligned for these same reads and reference, reuse the retained SAM and
+# only rescore. Realigning to reach a different verdict from identical alignments would burn a
+# queue slot to reproduce bytes we already hold; the sample is deterministic from the reads' md5,
+# so the SAM is a function of (reads, reference) alone and the scorer never touches the aligner.
+REUSED=false
+DATA_KEY="$FA_MD5:$REF_MD5"
+if [ -s "$OUT/sample.sam.gz" ] && [ "$(cat "$OUT/.data_key" 2>/dev/null)" = "$DATA_KEY" ]; then
+  gzip -cd "$OUT/sample.sam.gz" > "$OUT/sample.sam" \
+    && REUSED=true \
+    && SAMPLE_JSON=$(cat "$OUT/sample.json" 2>/dev/null) \
+    && [ -n "$SAMPLE_JSON" ] \
+    || { echo "note: could not reuse the retained SAM for $RUN, realigning" >&2; REUSED=false; rm -f "$OUT/sample.sam"; }
+fi
+
+if [ "$REUSED" = false ]; then
 SAMPLE_JSON=$("$PY" "$SCRIPTS/68_sample_fasta.py" --fasta "$FA" --out "$SAMPLE" --n 10000 --md5 "$FA_MD5") \
   || { echo "REFUSED: sampling failed for $RUN" >&2; exit 4; }
 
@@ -92,6 +125,9 @@ CMD="minimap2 -t $THREADS -ax splice -k14 -G 200000 --secondary=no --cs=long $RE
 rc=$?
 [ "$rc" -eq 0 ] || { echo "REFUSED: minimap2 exited $rc for $RUN" >&2; rm -f "$OUT/sample.sam"; exit 4; }
 [ -s "$OUT/sample.sam" ] || { echo "REFUSED: empty SAM for $RUN" >&2; exit 4; }
+printf '%s' "$SAMPLE_JSON" > "$OUT/sample.json"
+printf '%s' "$DATA_KEY" > "$OUT/.data_key"
+fi
 
 EXTRA=$(printf '{"reads_fa":"%s","reads_md5":"%s","reference":"%s","reference_md5":"%s","gff":"%s","gff_md5":"%s","sample":%s,"command":"%s","slurm_job":"%s_%s"}' \
   "$FA" "$FA_MD5" "$REF" "$REF_MD5" "$GFF" "$GFF_MD5" "$SAMPLE_JSON" "$CMD" \
@@ -106,11 +142,13 @@ arc=$?
 
 STATUS=$("$PY" -c "import json,sys;print(json.load(open(sys.argv[1]))['status'])" "$OUT/audit.json")
 USEUF=$("$PY" -c "import json,sys;print(json.load(open(sys.argv[1]))['use_uf'])" "$OUT/audit.json")
-FRAC=$("$PY" -c "import json,sys;d=json.load(open(sys.argv[1]));print(d['fraction'])" "$OUT/audit.json")
+FRAC=$("$PY" -c "import json,sys;print(json.load(open(sys.argv[1]))['sense_read_fraction'])" "$OUT/audit.json")
+MOTIF=$("$PY" -c "import json,sys;print(json.load(open(sys.argv[1]))['motif_annotation_agreement'])" "$OUT/audit.json")
 
 # The 10,000-record sample and its SAM are intermediates; the verdict and its provenance are the
 # artifact. Keeping 129 SAMs would cost far more than regenerating one from the recorded seed.
 gzip -1 -f "$OUT/sample.sam" && rm -f "$SAMPLE"
+printf '%s' "$DATA_KEY" > "$OUT/.data_key"
 
 {
   echo "run            $RUN"
@@ -124,10 +162,13 @@ gzip -1 -f "$OUT/sample.sam" && rm -f "$SAMPLE"
   echo "gff            $GFF"
   echo "gff_md5        $GFF_MD5"
   echo "sample         $SAMPLE_JSON"
+  echo "sam_reused     $REUSED"
+  echo "scorer_md5     $SCORER_MD5   (A39: the marker is bound to it; the superseded scorer gated a different statistic)"
   echo "command        $CMD"
   echo "status         $STATUS"
   echo "use_uf         $USEUF"
-  echo "fraction       $FRAC"
+  echo "sense_read     $FRAC   (A39: P(read strand == annotated strand); THIS is the gate)"
+  echo "motif_agree    $MOTIF   (diagnostic only; ~0.995 for stranded and unstranded alike)"
   echo "minimap2       $("$BIN"/minimap2 --version)"
   echo "started        $START"
   echo "finished       $(date -Is)"
@@ -144,7 +185,7 @@ mkdir -p "$(dirname "$PROVTSV")"
   printf "%s\tlongread_orientation_audit\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
     "$(date -Is)" "$SP" "$FA" "$FA_MD5" "$REF" "$REF_MD5" "$("$BIN"/minimap2 --version)" "$CMD" \
     "$OUT/audit.json" "$(md5sum "$OUT/audit.json" | cut -d' ' -f1)" \
-    "§3.3 item 2, run $RUN: $STATUS, agreement $FRAC, use_uf=$USEUF; GFF md5 $GFF_MD5 verified against b5_species_v1.tsv" \
+    "§3.3 item 2 as corrected by A39, run $RUN: $STATUS, sense_read_fraction $FRAC (motif_annotation_agreement $MOTIF, diagnostic), use_uf=$USEUF; scorer md5 $SCORER_MD5; GFF md5 $GFF_MD5 verified against b5_species_v1.tsv" \
     >> "$PROVTSV"
 } 9>"$PROVTSV.lock"
 

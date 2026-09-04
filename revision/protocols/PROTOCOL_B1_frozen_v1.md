@@ -1,4 +1,4 @@
-# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.28; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing; §A32 gene-level masking of hard-flagged genes in tiles; §A33 overlapping blocks, locus-aware stitching, masking parameters from reference statistics; §A34 partially pretrained encoder: audit, gate and record; §A35 a failing batch stops the run, no silent skips; §A36 EST length floor raised to 121 nt, **superseded by §A37**; §A37 the floor returns to 100 nt and 121 nt becomes a labelled sensitivity arm; §A38 a run excluded before collection is declared in the manifest instead of in prose, and the long-read scope is refrozen)
+# PROTOCOL B1/B4 — Frozen protocol for independent transcript-evidence validation of completion-mode additions (v1.29; v1.0 text unchanged, amendments appended; §A18 effective-rule matrix is the operational reading of §3–§9 + amendments; §A19 protein resource; §A20 class-specific source weights; §A21 vector screening; §A22 annotation-quality loss masking; §A23 evidence-based primary isoform; §A24 grammar-constrained decoding; §A25 variable-context new-version recipe on ACCESS; §A26 whole-window labels, GSF v3; §A27 tiled inference and caps; §A28 job-chain checkpointing; §A29 block splits and leakage masking for tiles; §A30 Swiss-Prot sensitivity set: caution-based masking, phase audit, S5–S7; §A31 held-out loci protected by leak masking, no block forcing; §A32 gene-level masking of hard-flagged genes in tiles; §A33 overlapping blocks, locus-aware stitching, masking parameters from reference statistics; §A34 partially pretrained encoder: audit, gate and record; §A35 a failing batch stops the run, no silent skips; §A36 EST length floor raised to 121 nt, **superseded by §A37**; §A37 the floor returns to 100 nt and 121 nt becomes a labelled sensitivity arm; §A38 a run excluded before collection is declared in the manifest instead of in prose, and the long-read scope is refrozen; §A39 the §3.3 item 2 `-uf` gate is the READ's orientation, not the splice motif's — the literal reading was blind to library strandedness)
 
 **Version 1.0 — frozen 2026-09-01.** Status: FROZEN before any evidence read is downloaded or aligned. Amendments are allowed only (a) before the first evidence alignment is run, or (b) for defects that make a rule inapplicable, and must be logged in §12 with date, reason and the state of the analysis at that moment. Nothing in §§3–9 may be changed after the first result table is produced.
 
@@ -797,3 +797,40 @@ This is not a bookkeeping nicety. A tree scan distinguishes *here* from *not her
 The single added row is `excluded`. **No eligibility decision changes and no evidence content changes**: nothing moves into or out of training, no file is added or removed, and every other row is byte-identical. §1 is amended to the new identity and the superseded one is kept here rather than overwritten, so the incomplete freeze remains auditable.
 
 Nothing in §§3–9 changes. §A37 is unaffected: the EST arms and the alignment they feed are a different scope.
+
+---
+
+## A39. Amendment v1.29 (2026-09-04; before any long-read alignment, before any junction is called) — the §3.3 item 2 gate measures the read's orientation, not the splice motif's
+
+**Defect.** §3.3 item 2 reads: *"compute the fraction of spliced alignments whose inferred transcript strand agrees with the annotated strand"*. Implemented literally that is **P(T = A)**, where *T* is minimap2's motif-inferred transcript strand placed on the genome (its `ts:A:` tag composed with SAM FLAG `0x10`) and *A* is the annotated gene strand.
+
+That quantity cannot decide `-uf`, because *T* and *A* are two readings of the same thing. minimap2 derives `ts` from the splice motif (GT–AG versus CT–AC), and the annotation records the strand of the same transcript, so for any correctly placed canonical alignment the two agree **whether or not the library is stranded**. The estimator is invariant to exactly the property being gated.
+
+Measured on the first 27 *A. thaliana* runs: P(T = A) ranged **0.9929–0.9987**, median 0.9958, and **every run passed**. The frozen ≥ 95 % threshold gated nothing.
+
+**What `-uf` actually asserts** is a different proposition: that the **read** is in the forward transcript orientation. minimap2 documents `ts` as the transcript strand *relative to the read*, so the proposition is **P(R = A)** with *R* the read's own genomic strand from FLAG `0x10` — equivalently, among alignments whose motif call agrees with the annotation, the fraction carrying `ts:A:+`.
+
+On the same 27 runs and the same eligible alignments, that statistic separates the libraries completely:
+
+| library | `sense_read_fraction` | runs | verdict |
+|---|---|---|---|
+| stranded **antisense** (`col0_DRP009401`) | 0.128 – 0.186 | 3 | FAIL |
+| **unstranded** cDNA (six datasets) | 0.492 – 0.527 | 20 | FAIL |
+| stranded **sense** (`lncrna_survey_PRJNA765684`) | 0.991 – 0.994 | 4 | PASS |
+
+Under the literal reading all 27 would have received `-uf`. On the 23 that are not sense-stranded, `-uf` forces minimap2 to treat the read as the sense strand and therefore **mis-calls the transcript strand of roughly half of every unstranded run's junctions**, and §5 takes junction strand from precisely that tag. The literal reading was not merely uninformative; acting on it would have corrupted the junction set.
+
+**Correction (operative).** The no-`-uf` 10,000-read audit of §3.3 item 2 measures the orientation of each read relative to its source transcript. For every eligible primary spliced alignment at a uniquely assigned, confidently annotated multi-exon gene in a single-strand locus **whose motif-inferred genomic transcript strand agrees with the annotation** (that agreement is the validity condition for the observation, not the statistic), the read's genomic alignment strand from FLAG `0x10` is compared with the annotated gene strand. `-uf` is enabled for a run only if that fraction is **≥ 95 %**, the threshold §3.3 already fixed. Runs below it — including ~50:50 unstranded libraries and predominantly reverse-oriented libraries — are aligned without `-uf` throughout. The minimum-eligible floor is unchanged and still yields `UNRESOLVED`, which never enables `-uf`.
+
+The literal quantity is **retained and reported** as `motif_annotation_agreement`, which is what it is: a consistency check on the alignment and the annotation that would catch a wrong reference, a broken FLAG/`ts` conversion, or systematically noncanonical motifs. It is withdrawn only as the `-uf` decision statistic.
+
+**Why this is not A36-shaped.** A36 was withdrawn (see `quarantine.md` §1e) because a threshold was moved after seeing that moving it improved the number it was measured by. This amendment has the opposite structure, and the distinction matters:
+
+- The defect was identified from the **estimator's algebra**, not from a result being unwelcome: P(T = A) is invariant to read orientation, so it cannot gate a read-orientation assumption. That is true before any run is measured.
+- The replacement statistic is **fixed by minimap2's documented contract** for `-uf`, not chosen from the data.
+- **The threshold is untouched.** §3.3's 95 % stands exactly as frozen; A36 by contrast moved its own criterion.
+- The observed 0.13 / 0.50 / 0.99 clusters **diagnose** the defect. They did not select the statistic, and no run was reclassified to improve any downstream rate.
+- The change makes the protocol **more restrictive, not less**: 27 of 27 runs passed before, 4 of 27 pass now. It removes an unearned licence rather than removing inconvenient evidence.
+- Every run is treated identically, and the retained no-`-uf` SAMs allow a complete rescore without realignment and without selecting runs by outcome.
+
+**Effect on existing artefacts.** No long-read alignment had been run, so nothing downstream is invalidated. The 27 audits produced under the literal reading are rescored from their retained SAMs; the audit's completion marker binds the scorer's md5 so a verdict produced by the superseded scorer cannot be mistaken for a current one. Nothing in §§3–9 changes, and §3.3 items 1 and 3–5 are unaffected.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""§3.3 item 2 — library orientation audit. Decides `-uf` for ONE run.
+"""§3.3 item 2 as corrected by A39 — library orientation audit. Decides `-uf` for ONE run.
 
 Protocol §3.3 item 2 (frozen): "align 10,000 reads without -uf; compute the fraction of spliced
 alignments whose inferred transcript strand agrees with the annotated strand at confidently
@@ -7,6 +7,26 @@ annotated multi-exon genes (single-strand loci only). -uf is enabled for a run o
 >= 95%; otherwise the run is aligned without -uf throughout."
 
 Reads SAM on stdin (or --sam) and a reference GFF3, writes a JSON verdict.
+
+WHAT A39 CORRECTED. §3.3 item 2 says "the fraction of spliced alignments whose inferred transcript
+strand agrees with the annotated strand". Read literally that is P(T = A), where T is minimap2's
+motif-inferred transcript strand placed on the genome and A is the annotated gene strand. That
+quantity is ~0.995 for every run whatever the library is, because T and A both describe the same
+transcript: minimap2 reads the strand off the GT-AG motif, not off the library. Measured over 27
+A. thaliana runs it ranged 0.9929-0.9987 with no spread at all, so the frozen 95% gate never gated.
+
+What -uf asserts is a different proposition: that the READ is in the forward transcript
+orientation. That is P(R = A), R being the read's own genomic strand from FLAG 0x10 -- equivalently
+the fraction of ts:A:+ among alignments whose motif call agrees with the annotation, since
+minimap2 defines ts relative to the read. The same 27 runs separate into three tight clusters on
+it: ~0.13-0.19 (stranded antisense), ~0.49-0.53 (unstranded cDNA), ~0.99 (stranded sense). Only the
+last may be given -uf; on the other two it would mis-call the strand of roughly half the junctions,
+and §5 takes junction strand from exactly that.
+
+Both quantities are computed over the same eligible set and reported. Only sense_read_fraction
+gates -uf. motif_annotation_agreement is kept as what it actually is: a consistency check on the
+alignment and the annotation, which would catch a wrong reference, a broken FLAG/ts conversion or
+systematically noncanonical motifs.
 
 The three places this can quietly go wrong, and what is done about them:
 
@@ -197,6 +217,8 @@ def audit(sam_fh, qual, min_mapq):
     c = defaultdict(int)
     agree = 0
     eligible = 0
+    read_sense = 0
+    valid = 0
     for line in sam_fh:
         if line.startswith("@"):
             continue
@@ -233,8 +255,16 @@ def audit(sam_fh, qual, min_mapq):
         eligible += 1
         if inferred == gstrand:
             agree += 1
+            # A39: the orientation observation is only valid where the motif call and the
+            # annotation agree; where they disagree we do not know which of the two is wrong, so
+            # the read's orientation relative to the transcript is not established either.
+            valid += 1
+            if ts == "+":
+                read_sense += 1
     c["eligible"] = eligible
     c["agree"] = agree
+    c["read_sense"] = read_sense
+    c["valid_for_orientation"] = valid
     return c
 
 
@@ -260,29 +290,51 @@ def main():
     c = audit(fh, qual, a.min_mapq)
 
     eligible, agree = c["eligible"], c["agree"]
-    fraction = agree / eligible if eligible else None
-    if eligible < a.min_eligible:
+    motif_agreement = agree / eligible if eligible else None
+    read_sense, valid = c["read_sense"], c["valid_for_orientation"]
+    sense_fraction = read_sense / valid if valid else None
+    # A39: the gate is the READ's orientation, not the motif call's.
+    if valid < a.min_eligible:
         status, uf = "UNRESOLVED", False
-        reason = (f"only {eligible} eligible alignments, below the floor of {a.min_eligible}; "
-                  f"the frozen >= {a.threshold:.0%} rule is not applied to a sample this small")
-    elif fraction >= a.threshold:
+        reason = (f"only {valid} alignments valid for an orientation call, below the floor of "
+                  f"{a.min_eligible}; the frozen >= {a.threshold:.0%} rule is not applied to a "
+                  f"sample this small")
+    elif sense_fraction >= a.threshold:
         status, uf = "PASS", True
-        reason = f"agreement {fraction:.4f} >= {a.threshold}"
+        reason = (f"sense_read_fraction {sense_fraction:.4f} >= {a.threshold}: the reads are in "
+                  f"transcript orientation, which is what -uf asserts")
     else:
         status, uf = "FAIL", False
-        reason = f"agreement {fraction:.4f} < {a.threshold}"
+        kind = ("unstranded (~0.5)" if 0.35 <= sense_fraction <= 0.65
+                else "predominantly antisense" if sense_fraction < 0.35 else "mixed")
+        reason = (f"sense_read_fraction {sense_fraction:.4f} < {a.threshold}, {kind}; -uf would "
+                  f"assert an orientation this library does not have")
 
-    lo, hi = wilson(agree, eligible)
+    lo, hi = wilson(read_sense, valid)
     out = {
         "run": a.run, "species": a.species, "dataset": a.dataset,
         "status": status, "use_uf": uf, "reason": reason,
         "agree": agree, "eligible": eligible,
-        "fraction": fraction,
-        "wilson95": None if eligible == 0 else [round(lo, 6), round(hi, 6)],
+        "motif_annotation_agreement": motif_agreement,
+        "motif_annotation_note": ("P(motif-inferred genomic transcript strand == annotated strand). "
+                                  "A consistency check on the alignment and the annotation, NOT the "
+                                  "-uf gate: it is ~0.995 for stranded and unstranded libraries "
+                                  "alike (A39)."),
+        "sense_read_fraction": sense_fraction,
+        "valid_for_orientation": valid,
+        "fraction": sense_fraction,
+        "wilson95": None if valid == 0 else [round(lo, 6), round(hi, 6)],
+        "read_sense": read_sense,
+        "sense_read_note": ("P(read genomic strand == annotated strand), over alignments whose "
+                            "motif call agrees with the annotation. This is the proposition -uf "
+                            "asserts. ~0.5 unstranded; ~1.0 stranded sense; ~0.0 stranded "
+                            "antisense. THIS is the gate (A39)."),
         "threshold": a.threshold, "min_eligible": a.min_eligible, "min_mapq": a.min_mapq,
         "qualifying_genes": n_qual, "genes_dropped_opposite_strand": dropped_opposite,
         "counters": dict(c),
-        "protocol": "B1 §3.3 item 2 (frozen); ts converted to genomic strand via FLAG 0x10",
+        "protocol": ("B1 §3.3 item 2 as corrected by A39 (v1.29): -uf is gated on "
+                     "sense_read_fraction, the read's orientation relative to the transcript. The "
+                     "literal reading, motif_annotation_agreement, is retained as a diagnostic."),
     }
     out.update(json.loads(a.extra))
     with open(a.out, "w") as f:
