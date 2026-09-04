@@ -69,14 +69,39 @@ if [ ! -f "$UVD/DONE" ] || [ ! -f "$EST" ]; then
 fi
 
 CMD="minimap2 -t 32 -ax splice:hq -G 200000 --secondary=no --cs=long $REF $EST"
+PAF=$OUT/$SP/$SP.est.paf.gz
 START=$(date -Is)
 SECONDS=0
 
+# Section 4 requires BOTH a sorted BAM and a PAF carrying --cs=long to be retained. Only the BAM was
+# produced before; the PAF is a second pass with -x instead of -ax, the rest of the frozen command
+# unchanged.
+set -o pipefail
 "$BIN"/minimap2 -t 32 -ax splice:hq -G 200000 --secondary=no --cs=long "$REF" "$EST" 2> "$OUT/$SP/minimap2.err" \
   | "$BIN"/samtools sort -@ 4 -m 2G -o "$BAM" - 2> "$OUT/$SP/samtools.err"
-rc=${PIPESTATUS[0]}
-[ "$rc" -eq 0 ] || { echo "minimap2 failed rc=$rc for $SP" >&2; exit 4; }
-"$BIN"/samtools index "$BAM"
+# Every stage, not just the first. Checking PIPESTATUS[0] alone reads minimap2's status and ignores
+# samtools sort, so a sort that ran out of memory or disk produced a truncated BAM that this script
+# then signed off as complete.
+st=("${PIPESTATUS[@]}")
+for i in "${!st[@]}"; do
+  [ "${st[$i]}" -eq 0 ] || { echo "REFUSED: stage $i of the alignment pipeline exited ${st[$i]} for $SP" >&2; rm -f "$BAM"; exit 4; }
+done
+"$BIN"/samtools quickcheck -v "$BAM" || { echo "REFUSED: $BAM fails samtools quickcheck" >&2; rm -f "$BAM"; exit 4; }
+"$BIN"/samtools index "$BAM" || { echo "REFUSED: samtools index failed for $SP" >&2; exit 4; }
+
+"$BIN"/minimap2 -t 32 -x splice:hq -G 200000 --secondary=no --cs=long "$REF" "$EST" 2> "$OUT/$SP/minimap2.paf.err" \
+  | gzip -1 > "$PAF"
+st=("${PIPESTATUS[@]}")
+for i in "${!st[@]}"; do
+  [ "${st[$i]}" -eq 0 ] || { echo "REFUSED: stage $i of the PAF pipeline exited ${st[$i]} for $SP" >&2; rm -f "$PAF"; exit 4; }
+done
+
+# Section 3.3 item 1: the alias table that maps our reference names onto the frozen contig names is
+# stored with the results. The training genomes carry Chr1..ChrN/ChrM/ChrC; the frozen naming is
+# 1..N/Mt/Pt. Written, not applied - renaming a finished BAM is a separate, auditable step.
+"$BIN"/samtools view -H "$BAM" | awk -v sp="$SP" '"'"'$1=="@SQ"{n=$2; sub("^SN:","",n); a=n;
+  sub("^[Cc]hr","",a); if(a=="C")a="Pt"; if(a=="M")a="Mt"; if(a=="Pt"||a=="Mt"||a ~ /^[0-9]+$/) print sp"\t"n"\t"a"\tfrozen-naming"; else print sp"\t"n"\t"n"\tunchanged"}'"'"' \
+  > "$OUT/$SP/contig_alias.tsv"
 
 {
   echo "species        $SP"
@@ -100,9 +125,25 @@ rc=${PIPESTATUS[0]}
   echo "wall_seconds   $SECONDS"
   echo "bam            $BAM"
   echo "bam_md5        $(md5sum "$BAM" | cut -d' ' -f1)"
+  echo "paf            $PAF"
+  echo "paf_md5        $(md5sum "$PAF" | cut -d' ' -f1)"
+  echo "contig_alias   $OUT/$SP/contig_alias.tsv"
+  echo "ref_md5_source b5_species_v1.tsv (training-species authority; NOT the section 1 object - see PROVENANCE.tsv note)"
   echo "slurm_job      ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID} on $(hostname)"
 } > "$PROV"
 
 "$BIN"/samtools flagstat "$BAM" > "$OUT/$SP/flagstat.txt"
+
+# Section 3.3 item 5: tool versions, command lines, dates and file MD5s go to one central table.
+PROVTSV=$ROOT/transgenic/revision/results/evidence/PROVENANCE.tsv
+mkdir -p "$(dirname "$PROVTSV")"
+[ -s "$PROVTSV" ] || printf "date\tscope\tspecies\tinput\tinput_md5\treference\treference_md5\ttool\tcommand\toutput\toutput_md5\tnote\n" > "$PROVTSV"
+printf "%s\test_training_evidence\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+  "$(date -Is)" "$SP" "$EST" "$(cut -d' ' -f1 "$UVD/est.univec.fa.gz.md5" 2>/dev/null)" \
+  "$REF" "$(md5sum "$REF" | cut -d' ' -f1)" "$("$BIN"/minimap2 --version)" "$CMD" \
+  "$BAM;$PAF" "$(md5sum "$BAM" | cut -d' ' -f1);$(md5sum "$PAF" | cut -d' ' -f1)" \
+  "A37 primary arm (min_len 100); reference md5 checked against b5_species_v1.tsv, not the section 1 frozen object" \
+  >> "$PROVTSV"
+
 touch "$OUT/$SP/DONE"
 echo "$SP finished in ${SECONDS}s"
