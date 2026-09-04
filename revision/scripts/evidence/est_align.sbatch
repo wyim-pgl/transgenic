@@ -128,7 +128,7 @@ done
   echo "paf            $PAF"
   echo "paf_md5        $(md5sum "$PAF" | cut -d' ' -f1)"
   echo "contig_alias   $OUT/$SP/contig_alias.tsv"
-  echo "ref_md5_source b5_species_v1.tsv (training-species authority; NOT the section 1 object - see PROVENANCE.tsv note)"
+  echo "ref_md5_source b5_species_v1.tsv (training-species authority). Differs from the section 1 TAIR10 md5; author states the difference is headers/formatting only (2026-09-04)."
   echo "slurm_job      ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID} on $(hostname)"
 } > "$PROV"
 
@@ -142,7 +142,7 @@ printf "%s\test_training_evidence\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
   "$(date -Is)" "$SP" "$EST" "$(cut -d' ' -f1 "$UVD/est.univec.fa.gz.md5" 2>/dev/null)" \
   "$REF" "$(md5sum "$REF" | cut -d' ' -f1)" "$("$BIN"/minimap2 --version)" "$CMD" \
   "$BAM;$PAF" "$(md5sum "$BAM" | cut -d' ' -f1);$(md5sum "$PAF" | cut -d' ' -f1)" \
-  "A37 primary arm (min_len 100); reference md5 checked against b5_species_v1.tsv, not the section 1 frozen object" \
+  "A37 primary arm (min_len 100); ref md5 checked against b5_species_v1.tsv. It differs from the section 1 TAIR10 object (513e5ef3 vs 987ca803); author states 2026-09-04 the two differ in headers/formatting only, same sequence - stated, not measured here" \
   >> "$PROVTSV"
 
 touch "$OUT/$SP/DONE"
