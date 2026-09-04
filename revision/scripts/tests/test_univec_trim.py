@@ -59,18 +59,18 @@ def test_run_end_to_end(tmp_path):
     assert json.load(open(summ))["records_in"] == 4
 
 
-def test_default_min_len_is_the_a36_floor(tmp_path):
-    """A36 (v1.26): EST records <= 120 nt are excluded. The floor lives in the default,
-    so a caller that forgets --min-len still gets the protocol value."""
-    assert uv.DEFAULT_MIN_LEN == 121
+def test_default_min_len_is_the_a37_primary_floor(tmp_path):
+    """A37 (v1.27): the primary floor is 100 nt again. A36 had made it 121, but that was chosen
+    because it improved a mapping rate, so 121 is now a sensitivity arm that must be asked for."""
+    assert uv.DEFAULT_MIN_LEN == 100
 
     fa = tmp_path / "est.fa.gz"
     with gzip.open(fa, "wt") as fh:
-        fh.write(">keep121\n" + "A" * 121 + "\n>drop120\n" + "C" * 120 + "\n>drop92_454\n" + "G" * 92 + "\n")
+        fh.write(">keep121\n" + "A" * 121 + "\n>keep120\n" + "C" * 120 + "\n>keep100\n" + "D" * 100 + "\n>drop92_454\n" + "G" * 92 + "\n")
     hits = tmp_path / "hits.tsv"; hits.write_text("")
     out = tmp_path / "trim.fa.gz"; rep = tmp_path / "rep.tsv"; summ = tmp_path / "s.json"
 
     c = uv.run(str(fa), str(hits), str(out), str(rep), str(summ))   # no min_len -> A36 default
     recs = set(l[1:].split()[0] for l in gzip.open(out, "rt") if l.startswith(">"))
-    assert recs == {"keep121"}
-    assert c["drop"] == 2 and c["records_out"] == 1
+    assert recs == {"keep121", "keep120", "keep100"}      # 100 is kept: the floor is >= 100, not > 100
+    assert c["drop"] == 1 and c["records_out"] == 3

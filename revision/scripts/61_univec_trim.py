@@ -10,7 +10,7 @@ Categories (NCBI VecScreen, raw score, terminal = match within 25 nt of either e
   weak     terminal >= 16, internal >= 23      (weak hits are reported, not acted on)
 Actions: terminal strong/moderate -> trim the matched end (plus anything outboard of it);
          internal strong -> the record is a suspected chimera: split at the match and keep every
-         piece >= --min-len (default 121 nt, protocol A36); internal moderate -> flagged only;
+         piece >= --min-len (default 100 nt, protocol A8/A37); internal moderate -> flagged only;
          records shorter than --min-len after trimming are dropped.
 Outputs: trimmed FASTA(.gz), a per-record report TSV (accession, qlen, action, kept ranges, categories)
 and a JSON summary. Pure Python; no external dependencies.
@@ -26,10 +26,12 @@ from typing import Dict, Iterable, Iterator, List, Tuple
 
 TERMINAL_NT = 25
 THRESH = {"terminal": {"strong": 24, "moderate": 19, "weak": 16}, "internal": {"strong": 30, "moderate": 25, "weak": 23}}
-# Protocol A36 (v1.26, author decision 2026-09-03): EST records of 120 nt or shorter are excluded
-# from the evidence layer. Raised from the A8/A21 floor of 100. Keep this as the default so a caller
-# that omits --min-len still gets the protocol value.
-DEFAULT_MIN_LEN = 121
+# Protocol A37 (v1.27, 2026-09-04) returns the primary floor to the A8/A21 value of 100 nt. A36 had
+# raised it to 121, but that change was triggered by a mapping rate rather than by a defect, so the
+# 121-nt arm is now a labelled sensitivity analysis instead of the default. Passing --min-len 121 is
+# therefore always an explicit act: a sensitivity arm that could be produced by forgetting a flag is
+# indistinguishable from the primary one.
+DEFAULT_MIN_LEN = 100
 
 
 def open_any(path: str, mode: str = "rt"):
