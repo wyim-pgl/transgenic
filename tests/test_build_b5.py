@@ -386,3 +386,101 @@ def test_a33_builder_masking_is_seed_reproducible(tmp_path, b5):
         outs.append(con.sql("SELECT geneModel, gff, qc_flags, sequence FROM geneList ORDER BY geneModel").fetchall())
         con.close()
     assert outs[0] == outs[1]
+
+
+def test_issue57_margin_counter_includes_no_cds_and_credits_contig_end(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    # Same >18,480-nt locus fails the first tier internally but is covered
+    # when its end is the contig end. Neither locus can enter coding labels.
+    with fasta.open('a') as fh:
+        fh.write('>internal\n' + 'A' * 40000 + '\n>edge\n' + 'A' * 30000 + '\n')
+    with gff.open('a') as fh, split.open('a') as sh:
+        for chrom, gid in [('internal', 'nc1'), ('edge', 'nc2')]:
+            fh.write(f'{chrom}\tt\tgene\t10001\t30000\t.\t+\t.\tID={gid}\n'
+                     f'{chrom}\tt\tlncRNA\t10001\t30000\t.\t+\t.\tID={gid}.1;Parent={gid}\n'
+                     f'{chrom}\tt\texon\t10001\t30000\t.\t+\t.\tParent={gid}.1\n')
+            sh.write(f'Athaliana\t{gid}\t{gid}\tvalid\tfalse\t123\tv1\n')
+    db = tmp_path / 'margin.db'
+    b5.build_b5_database(str(db), str(manifest), str(split), rc='all', verify_md5=False,
+                         window_policy='tile6144-v3')
+    con = duckdb.connect(str(db), read_only=True)
+    margin, reasons = con.sql('SELECT tier_margin_unguaranteed, rejected_reasons FROM build_manifest').fetchone()
+    margin = json.loads(margin)
+    assert margin['genes_considered'] == 6  # includes the CDS-cap reject and both no-CDS rejects
+    assert margin['exceeds_length_guarantee']['30720'] == {'bound_nt': 18480, 'genes': 2}
+    assert margin['not_covered_with_margin'] == {'30720': 1, '61440': 0, '129024': 0}
+    assert margin['contig_edge_credit'] is True and margin['genes_missing_contig'] == 0
+    assert json.loads(reasons)['cds_cap'] == 1
+    assert json.loads(reasons)['no_cds'] == 2
+    assert con.sql("SELECT count(*) FROM rejected_records WHERE reason LIKE 'no CDS%'").fetchone()[0] == 2
+    report = _load(ROOT / 'scripts' / 'report_b5_database.py', 'report_b5_issue57')
+    recomputed = report.tier_margin_unguaranteed(con)
+    assert recomputed['not_covered_with_margin']['30720'] == 2  # no right-edge credit
+    assert recomputed['recorded_by_species']['Athaliana'] == margin
+    con.close()
+    validated = b5.validate_b5_database(str(db))
+    assert validated['ok'], validated['violations']
+    assert validated['tier_margin_unguaranteed_recorded']['Athaliana'] == margin
+
+
+@pytest.mark.parametrize('reason,expected', [
+    ('masked fraction 0.612 > 0.6', 'mask_fraction_dropped'),
+    ('masked fraction 0.999 > 0.6', 'mask_fraction_dropped'),
+    ('window v3 tokens 9000 > 8192', 'token_cap'),
+    ('v2 tokens 3000 > 2048', 'token_cap'),
+    ('transcripts 16 > 15', 'transcript_cap'),
+    ('window genes per window 97 > 96', 'gene_cap'),
+    ('CDS features 151 > 150', 'cds_cap'),
+    ('five_prime_UTR features 51 > 50', 'five_prime_utr_cap'),
+    ('three_prime_UTR features 51 > 50', 'three_prime_utr_cap'),
+    ('no CDS: a GSF label requires at least one coding transcript', 'no_cds'),
+    ('window gene blocks out of canonical order ((12, 34) after (56, 78))', 'canonical_order'),
+])
+def test_issue57_rejection_classes(b5, reason, expected):
+    assert b5.rejection_class(reason) == expected
+
+
+def test_issue57_mask_rejections_are_aggregated_in_manifest(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    # Real input Ns trigger different measured mask fractions without changing any threshold.
+    fasta.write_text('>Chr1\n' + 'N' * 30000 + '\n>2\n' + 'N' * 20000 + '\n')
+    db = tmp_path / 'masked.db'
+    b5.build_b5_database(str(db), str(manifest), str(split), verify_md5=False, window_policy='tile6144-v3')
+    con = duckdb.connect(str(db), read_only=True)
+    reasons = json.loads(con.sql('SELECT rejected_reasons FROM build_manifest').fetchone()[0])
+    n = con.sql("SELECT count(*) FROM rejected_records WHERE reason LIKE 'masked fraction%'").fetchone()[0]
+    assert n > 1 and reasons['mask_fraction_dropped'] == n
+    assert sum(reasons.values()) == con.sql('SELECT count(*) FROM rejected_records').fetchone()[0]
+    con.close()
+
+
+def test_issue57_tile_validator_checks_global_gene_split_and_legacy_manifest(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    db = tmp_path / 'split.db'
+    b5.build_b5_database(str(db), str(manifest), str(split), verify_md5=False, window_policy='tile6144-v3')
+    con = duckdb.connect(str(db))
+    assert con.sql('SELECT count(*) FROM geneList WHERE orthogroup_id IS NOT NULL').fetchone()[0] == 0
+    # Compatibility with existing frozen databases: absence of the new column is not a violation.
+    con.sql('ALTER TABLE build_manifest DROP COLUMN tier_margin_unguaranteed')
+    con.close()
+    report = b5.validate_b5_database(str(db))
+    assert report['ok'] and report['gene_split_rows_checked'] == 4
+    con = duckdb.connect(str(db))
+    # Cross-species conflict absent from geneList; the old window-level check cannot see it.
+    og = con.sql("SELECT orthogroup_id FROM gene_split WHERE gene_id = 'g1'").fetchone()[0]
+    con.execute('INSERT INTO gene_split VALUES (?,?,?,?,?,?,?)', ['Gmax', 'other', og, 'test', False, 123, 'v1'])
+    con.sql("UPDATE gene_split SET split='valid' WHERE gene_id='glast'")
+    con.close()
+    violations = '\n'.join(b5.validate_b5_database(str(db))['violations'])
+    assert f'gene_split: orthogroup {og} spans splits' in violations
+    assert 'gene_split: strict held-out gene glast' in violations
+
+
+def test_issue57_tile_validator_rejects_missing_assignments(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    db = tmp_path / 'missing.db'
+    b5.build_b5_database(str(db), str(manifest), str(split), verify_md5=False, window_policy='tile6144-v3')
+    con = duckdb.connect(str(db))
+    con.sql("DELETE FROM gene_split WHERE gene_id='gbig'")  # rejected gene still needs an assignment
+    con.close()
+    assert 'gene_split: missing assignment for Athaliana:gbig' in b5.validate_b5_database(str(db))['violations']

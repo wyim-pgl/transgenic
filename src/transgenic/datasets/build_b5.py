@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import random
+import re
 import sys
 import time
 from typing import Dict, Iterable, List, Optional, Set, Tuple
@@ -45,6 +46,53 @@ NEW_COLUMNS = ("species_id", "gene_id", "orthogroup_id", "split", "strict_holdou
                "train_weight", "qc_flags", "gene_id_original")
 _COMP = str.maketrans("ACGTNacgtn", "TGCANtgcan")
 STOP = {"TAA", "TAG", "TGA"}
+
+
+def rejection_class(reason: str) -> str:
+    """Stable aggregate keys; the full diagnostic remains in rejected_records."""
+    for name, pattern in (
+        ("mask_fraction_dropped", r"^masked fraction"),
+        ("token_cap", r"tokens \d+ >"),
+        ("transcript_cap", r"^(?:window )?transcripts \d+ >"),
+        ("gene_cap", r"genes per window \d+ >"),
+        ("cds_cap", r"CDS features \d+ >"),
+        ("five_prime_utr_cap", r"five_prime_UTR features \d+ >"),
+        ("three_prime_utr_cap", r"three_prime_UTR features \d+ >"),
+        ("no_cds", r"^no CDS"),
+        ("canonical_order", r"canonical order"),
+        ("chromosome_missing", r"missing from FASTA"),
+        ("window_cap", r"^(?:window )?window \d+ >|^window \d+ >"),
+        ("gene_outside_window", r"gene extends beyond the window"),
+        ("cds_phase_missing", r"CDS feature .* has no phase"),
+    ):
+        if re.search(pattern, reason):
+            return name
+    # Remaining fixed diagnostics (e.g. CDS validation); never bucket by numbers.
+    return re.sub(r"-?\d+(?:\.\d+)?", "<n>", reason.split(":")[0])
+
+
+def tier_margin_summary(con, species_id: str, genome: Dict[str, str]) -> Dict:
+    """A33.4 inference geometry on all original genes, before any label eligibility filter.
+
+    No tiling RNG is consumed. Unknown contigs receive no right-edge credit and
+    are counted explicitly, so their failures remain conservative upper bounds.
+    """
+    rows = con.execute("SELECT chromosome, start0, end0 FROM gene_key_map WHERE species_id = ?",
+                       [species_id]).fetchall()
+    out = {"source": "builder: gene_key_map and FASTA contig lengths",
+           "contig_edge_credit": True, "edge_margin": gc.EDGE_MARGIN,
+           "genes_considered": len(rows),
+           "genes_missing_contig": sum(chrom not in genome for chrom, _, _ in rows),
+           "exceeds_length_guarantee": {}, "not_covered_with_margin": {}}
+    for tier in gc.WINDOW_TIERS:
+        bound = 2 * tier // 3 - 2 * gc.EDGE_MARGIN
+        out["exceeds_length_guarantee"][str(tier)] = {
+            "bound_nt": bound, "genes": sum(e - s > bound for _, s, e in rows)}
+        out["not_covered_with_margin"][str(tier)] = sum(
+            not gc.covered_with_margin(s, e, tier,
+                contig_len=len(genome[chrom]) if chrom in genome else None)
+            for chrom, s, e in rows if e - s > bound)
+    return out
 
 
 def sha256(path: str) -> str:
@@ -112,6 +160,7 @@ def ensure_schema(con: duckdb.DuckDBPyConnection) -> None:
             "gff_sha256 VARCHAR, split_file_sha256 VARCHAR, rc_mode VARCHAR, rows_inserted INT, rows_rc INT, rejected INT, "
             "rejected_reasons VARCHAR, build_version VARCHAR, ordering_version VARCHAR, window_policy VARCHAR, "
             "git_commit VARCHAR, built_at VARCHAR, duckdb_version VARCHAR)")
+    con.sql("ALTER TABLE build_manifest ADD COLUMN IF NOT EXISTS tier_margin_unguaranteed VARCHAR")
 
 
 def read_split_table(path: str) -> Tuple[Dict[Tuple[str, str], Dict[str, str]], str]:
@@ -308,12 +357,12 @@ def _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, 
         con.executemany("INSERT INTO rejected_records VALUES (?,?,?)", [[species_id, r["gene_id"], r["reason"]] for r in rejected])
     reasons: Dict[str, int] = {}
     for r in rejected:
-        k = r["reason"].split(":")[0].split(" >")[0]
+        k = rejection_class(r["reason"])
         reasons[k] = reasons.get(k, 0) + 1
-    con.execute("INSERT INTO build_manifest VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    con.execute("INSERT INTO build_manifest VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 [species_id, os.path.abspath(fasta), fasta_sha, os.path.abspath(gff), gff_sha, split_sha, rc, inserted, rc_rows,
                  len(rejected), json.dumps(reasons), gc.BUILD_VERSION, gc.ORDERING_VERSION, window_policy, git_commit,
-                 time.strftime("%Y-%m-%dT%H:%M:%S"), duckdb.__version__])
+                 time.strftime("%Y-%m-%dT%H:%M:%S"), duckdb.__version__, None])
     con.execute("COMMIT")
     return {"species_id": species_id, "rows": inserted, "rc_rows": rc_rows, "rejected": rejected}
 
@@ -367,6 +416,30 @@ def validate_b5_database(db: str, excluded_species: Iterable[str] = ("Zmays",), 
     rows = [dict(zip(["species_id", "gene_id", "orthogroup_id", "split", "is_rc", "strict_holdout"], r)) for r in
             con.sql("SELECT species_id, gene_id, orthogroup_id, split, is_rc, strict_holdout FROM geneList").fetchall()]
     violations = gc.validate_split(rows, excluded_species=set(excluded_species))
+    # Tile rows have window ids, not orthogroup ids. Check the authoritative
+    # gene assignment table globally, including genes rejected before tiling.
+    tables = {r[0] for r in con.sql("SHOW TABLES").fetchall()}
+    split_rows_checked = 0
+    if "gene_split" in tables:
+        split_cols = ["species_id", "gene_id", "orthogroup_id", "split", "strict_holdout"]
+        assignments = [dict(zip(split_cols, r)) for r in con.sql(
+            "SELECT species_id, gene_id, orthogroup_id, split, strict_holdout FROM gene_split").fetchall()]
+        split_rows_checked = len(assignments)
+        violations.extend("gene_split: " + v for v in gc.validate_split(
+            assignments, excluded_species=set(excluded_species)))
+        missing = con.sql("SELECT DISTINCT k.species_id, k.gene_id FROM gene_key_map k "
+                          "LEFT JOIN gene_split s ON k.species_id = s.species_id AND k.gene_id = s.gene_id "
+                          "WHERE s.gene_id IS NULL").fetchall()
+        violations.extend(f"gene_split: missing assignment for {sp}:{gid}" for sp, gid in missing)
+        duplicates = con.sql("SELECT species_id, gene_id, count(*) FROM gene_split GROUP BY 1,2 HAVING count(*) > 1").fetchall()
+        violations.extend(f"gene_split: duplicate assignment for {sp}:{gid} x{n}" for sp, gid, n in duplicates)
+    else:
+        violations.append("gene_split: missing authoritative split table")
+    margin_recorded = {}
+    manifest_cols = {r[0] for r in con.sql("DESCRIBE build_manifest").fetchall()}
+    if "tier_margin_unguaranteed" in manifest_cols:
+        margin_recorded = {sp: json.loads(value) if value is not None else None for sp, value in con.sql(
+            "SELECT species_id, tier_margin_unguaranteed FROM build_manifest").fetchall()}
     for pat in maize_patterns:
         n = con.sql(f"SELECT count(*) FROM geneList WHERE geneModel LIKE '{pat}%'").fetchone()[0]
         if n:
@@ -408,7 +481,8 @@ def validate_b5_database(db: str, excluded_species: Iterable[str] = ("Zmays",), 
     counts = {k: v for k, v in con.sql("SELECT split, count(*) FROM geneList GROUP BY split").fetchall()}
     per_species = {k: v for k, v in con.sql("SELECT species_id, count(*) FROM geneList GROUP BY species_id").fetchall()}
     con.close()
-    return {"violations": violations, "rows_by_split": counts, "rows_by_species": per_species, "rows_loss_masked": masked, "ok": not violations}
+    return {"violations": violations, "gene_split_rows_checked": split_rows_checked,
+            "tier_margin_unguaranteed_recorded": margin_recorded, "rows_by_split": counts, "rows_by_species": per_species, "rows_loss_masked": masked, "ok": not violations}
 
 
 def _tile_split(splits: List[Optional[str]], strict: bool) -> Optional[str]:
@@ -552,11 +626,12 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
         con.executemany("INSERT INTO rejected_records VALUES (?,?,?)", [[species_id, r["gene_id"], r["reason"]] for r in rejected])
     reasons: Dict[str, int] = {}
     for r in rejected:
-        k = r["reason"].split(":")[0].split(" >")[0]
+        k = rejection_class(r["reason"])
         reasons[k] = reasons.get(k, 0) + 1
-    con.execute("INSERT INTO build_manifest VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    margin_summary = tier_margin_summary(con, species_id, genome)
+    con.execute("INSERT INTO build_manifest VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 [species_id, os.path.abspath(fasta), fasta_sha, os.path.abspath(gff), gff_sha, split_sha, rc, inserted, rc_rows,
                  len(rejected), json.dumps(reasons), gc.BUILD_VERSION, gc.ORDERING_VERSION, gc.WINDOW_POLICY_V3, git_commit,
-                 time.strftime("%Y-%m-%dT%H:%M:%S"), duckdb.__version__])
+                 time.strftime("%Y-%m-%dT%H:%M:%S"), duckdb.__version__, json.dumps(margin_summary, sort_keys=True)])
     con.execute("COMMIT")
     return {"species_id": species_id, "rows": inserted, "rc_rows": rc_rows, "rejected": rejected}

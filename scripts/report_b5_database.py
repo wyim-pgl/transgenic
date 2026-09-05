@@ -3,7 +3,7 @@
 
 Counts rows by species, tier and split, RC rows, rejections by class, and the A29/A32/A33 masking
 counters that the tile builder writes into `geneList.qc_flags` as `name=<n>` tokens.
-`tier_margin_unguaranteed` is required by PROTOCOL_B1_frozen_v1.md:439 but the builder never writes it,
+`tier_margin_unguaranteed` is required by PROTOCOL_B1_frozen_v1.md:439 but older builders did not write it,
 so it is recomputed here from gene_key_map coordinates and labelled as recomputed, not as recorded.
 """
 import argparse
@@ -25,8 +25,8 @@ with open(_PATH) as _fh:
     exec(compile(_fh.read(), _PATH, "exec"), gc.__dict__)
 
 QC_COUNTERS = ("leak_masked", "hard_masked", "decoy_masked", "component_masked", "dup_collapsed", "edge_partial")
-# tier_margin_unguaranteed is required by PROTOCOL_B1_frozen_v1.md:439 but the builder never writes it, so
-# it cannot be read back out of the database. It is recomputed here from gene_key_map coordinates with the
+# tier_margin_unguaranteed is required by PROTOCOL_B1_frozen_v1.md:439 but older builders did not write it, so
+# legacy databases need recomputation from gene_key_map coordinates with the
 # same predicate the protocol names (gsf_contract.covered_with_margin) and reported separately, clearly
 # labelled as recomputed at report time rather than recorded at build time.
 REJECT_CLASSES = (
@@ -48,7 +48,7 @@ def classify(reason):
 
 
 def tier_margin_unguaranteed(con):
-    """A33.4, recomputed from gene_key_map because the builder records no such counter (PROTOCOL:439).
+    """A33.4, recomputed from gene_key_map for compatibility with older builds (PROTOCOL:439).
 
     Two different quantities, both reported:
     `exceeds_length_guarantee` — genes longer than 2*tier/3 - 2*EDGE_MARGIN, which is the bound the protocol
@@ -62,18 +62,24 @@ def tier_margin_unguaranteed(con):
     `not_covered_with_margin` is an upper bound.
     """
     rows = con.sql("SELECT species_id, start0, end0 FROM gene_key_map WHERE start0 IS NOT NULL AND end0 IS NOT NULL").fetchall()
-    out = {"source": "recomputed from gene_key_map at report time; the builder records no such counter",
+    out = {"source": "recomputed from gene_key_map at report time; without contig lengths; compare separately with recorded builder counters",
            "contig_edge_credit": False, "edge_margin": gc.EDGE_MARGIN, "genes_considered": len(rows),
            "exceeds_length_guarantee": {}, "not_covered_with_margin": {}, "not_covered_with_margin_by_species": {}}
     for tier in gc.WINDOW_TIERS:
         bound = 2 * tier // 3 - 2 * gc.EDGE_MARGIN
         per_species = collections.Counter()
         for sp, s0, e0 in rows:
-            if not gc.covered_with_margin(s0, e0, tier):
+            if e0 - s0 > bound and not gc.covered_with_margin(s0, e0, tier):
                 per_species[sp] += 1
         out["exceeds_length_guarantee"][str(tier)] = {"bound_nt": bound, "genes": sum(1 for _, s0, e0 in rows if e0 - s0 > bound)}
         out["not_covered_with_margin"][str(tier)] = sum(per_species.values())
         out["not_covered_with_margin_by_species"][str(tier)] = dict(sorted(per_species.items()))
+    columns = {r[0] for r in con.sql("DESCRIBE build_manifest").fetchall()}
+    out["recorded_by_species"] = {}
+    if "tier_margin_unguaranteed" in columns:
+        out["recorded_by_species"] = {
+            sp: json.loads(value) if value is not None else None for sp, value in con.sql(
+                "SELECT species_id, tier_margin_unguaranteed FROM build_manifest").fetchall()}
     return out
 
 

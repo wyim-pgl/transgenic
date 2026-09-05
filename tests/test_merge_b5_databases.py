@@ -32,6 +32,8 @@ def _species_db(path, b5, species, n_rows, *, git_commit="abc1234", split_sha="9
     """A minimal stand-in for one per-species build: rn restarts at 1, gene_split holds the whole frozen table."""
     con = duckdb.connect(str(path))
     b5.ensure_schema(con)
+    # Model the pre-#57 frozen source schema; merge must accept missing diagnostics.
+    con.sql("ALTER TABLE build_manifest DROP COLUMN tier_margin_unguaranteed")
     con.sql("CREATE TABLE IF NOT EXISTS window_genes (species_id VARCHAR, window_id VARCHAR, gene_id VARCHAR, is_rc BOOLEAN)")
     con.sql("CREATE TABLE IF NOT EXISTS tile_blocks (species_id VARCHAR, chromosome VARCHAR, start0 INT, end0 INT, split VARCHAR)")
     con.sql("CREATE TABLE IF NOT EXISTS rejected_records (species_id VARCHAR, gene_id VARCHAR, reason VARCHAR)")
@@ -152,6 +154,8 @@ def _big_species_db(path, b5, species, n_rows):
     """A wide-but-trivial source built entirely in SQL: 300k rows through executemany would dominate the suite."""
     con = duckdb.connect(str(path))
     b5.ensure_schema(con)
+    # Model the pre-#57 frozen source schema; merge must accept missing diagnostics.
+    con.sql("ALTER TABLE build_manifest DROP COLUMN tier_margin_unguaranteed")
     for ddl in ("window_genes (species_id VARCHAR, window_id VARCHAR, gene_id VARCHAR, is_rc BOOLEAN)",
                 "tile_blocks (species_id VARCHAR, chromosome VARCHAR, start0 INT, end0 INT, split VARCHAR)",
                 "rejected_records (species_id VARCHAR, gene_id VARCHAR, reason VARCHAR)"):
@@ -219,3 +223,20 @@ def test_merge_refuses_an_excluded_species(tmp_path, b5):
     r = _run(src, tmp_path / "b5.db", tmp_path / "f.json")
     assert r.returncode != 0 and "excluded species" in r.stdout + r.stderr
     assert not (tmp_path / "b5.db").exists()
+
+
+
+def test_merge_preserves_new_margin_metadata_and_accepts_legacy_sources(two_species):
+    src = two_species
+    con = duckdb.connect(str(src / "Athaliana.db"))
+    con.sql("ALTER TABLE build_manifest ADD COLUMN tier_margin_unguaranteed VARCHAR")
+    value = json.dumps({"not_covered_with_margin": {"30720": 1}})
+    con.execute("UPDATE build_manifest SET tier_margin_unguaranteed = ?", [value])
+    con.close()
+    out = src.parent / "with_margin.db"
+    run = _run(src, out, src.parent / "with_margin.json")
+    assert run.returncode == 0, run.stderr
+    con = duckdb.connect(str(out), read_only=True)
+    recorded = dict(con.sql("SELECT species_id, tier_margin_unguaranteed FROM build_manifest").fetchall())
+    assert recorded == {"Athaliana": value, "Gmax": None}
+    con.close()
