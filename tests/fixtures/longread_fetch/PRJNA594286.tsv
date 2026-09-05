@@ -1,0 +1,5 @@
+run_accession	instrument_platform	library_strategy	fastq_ftp	submitted_ftp	submitted_format	fastq_md5	read_count	instrument_model
+SRR10611192	PACBIO_SMRT	RNA-Seq	ftp.sra.ebi.ac.uk/vol1/fastq/SRR106/092/SRR10611192/SRR10611192_subreads.fastq.gz			24d2e62c9ccfd722917f242efbc49ea4	21531816	Sequel
+SRR10611195	OXFORD_NANOPORE	RNA-Seq	ftp.sra.ebi.ac.uk/vol1/fastq/SRR106/095/SRR10611195/SRR10611195_1.fastq.gz			fd8ed6382a50e847a1160a2be6c8a28b	7025983	PromethION
+SRR10611193	OXFORD_NANOPORE	RNA-Seq	ftp.sra.ebi.ac.uk/vol1/fastq/SRR106/093/SRR10611193/SRR10611193_1.fastq.gz			b92be0018f35b9cdce78276404380fc5	8258511	PromethION
+SRR10611194	OXFORD_NANOPORE	RNA-Seq	ftp.sra.ebi.ac.uk/vol1/fastq/SRR106/094/SRR10611194/SRR10611194_1.fastq.gz			5073807e46282d01eff4978e21943ca1	7849574	PromethION

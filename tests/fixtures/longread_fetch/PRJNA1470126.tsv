@@ -1,0 +1,4 @@
+run_accession	instrument_platform	library_strategy	fastq_ftp	submitted_ftp	submitted_format	fastq_md5	read_count	instrument_model
+SRR38818770	PACBIO_SMRT	RNA-Seq	ftp.sra.ebi.ac.uk/vol1/fastq/SRR388/070/SRR38818770/SRR38818770_subreads.fastq.gz			f9dc27a9b7a63a19f22b997bdff5adda	1749142	Sequel II
+SRR38818771	PACBIO_SMRT	RNA-Seq	ftp.sra.ebi.ac.uk/vol1/fastq/SRR388/071/SRR38818771/SRR38818771_subreads.fastq.gz			9b174e5a9d7e4fef9143c77905053bcb	366084	Sequel II
+SRR38818769	PACBIO_SMRT	RNA-Seq	ftp.sra.ebi.ac.uk/vol1/fastq/SRR388/069/SRR38818769/SRR38818769_subreads.fastq.gz			cc90b1c36570d0c43da95c8e963df6e7	144795	Sequel II

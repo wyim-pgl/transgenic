@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 # Run after EST lanes finish. Sequential to spare bandwidth. FASTA only on disk.
 # Roles (protocol v1.5): test-species sets = validation only (any PacBio generation);
 # A. thaliana FLIC and Zhong 2025 = VALIDATION-ONLY (never training); Cui 2020 = training-eligible.
-cd /data/gpfs/assoc/pgl/data/Transgenic/evidence
+cd "${LONGREAD_ROOT:-/data/gpfs/assoc/pgl/data/Transgenic/evidence}"
 S=./longread_fetch.sh
 $S ont    Zmays_roottip_PRJNA822071      PRJNA822071  'SRR185719(05|06|07|11|14|15)'   # B73 only, validation
-$S pacbio Zmays_wang2018_PRJEB22122      PRJEB22122   'maize'                           # HQ isoforms, validation (RS II/Sequel allowed for test species)
-$S ont    Athaliana_FLIC_PRJNA1087576    PRJNA1087576 'OXFORD_NANOPORE'                 # VALIDATION-ONLY
-$S ont    Athaliana_cui2020_PRJNA594286  PRJNA594286  'OXFORD_NANOPORE'                 # training-eligible
+SUBMITTED_RE='maize' $S pacbio Zmays_wang2018_PRJEB22122      PRJEB22122                              # HQ isoforms, validation (RS II/Sequel allowed for test species)
+PLATFORM_RE='OXFORD_NANOPORE' $S ont    Athaliana_FLIC_PRJNA1087576    PRJNA1087576                  # VALIDATION-ONLY
+PLATFORM_RE='OXFORD_NANOPORE' $S ont    Athaliana_cui2020_PRJNA594286  PRJNA594286                   # training-eligible
 $S ont    Slycopersicum_heinz_PRJEB37834 PRJEB37834   'ERR4039883'                      # validation (conditional tomato)
 $S pacbio Zmays_B73_ccs_PRJNA1470126   PRJNA1470126 'SRR388187(69|70|71)'             # B73 Sequel II CCS (validation)
 $S pacbio Athaliana_zhang2023_PRJNA911826 PRJNA911826 'SRR227190(02|03|04|05|06|07)'   # Col-0 WT CCS-level, VALIDATION-ONLY
