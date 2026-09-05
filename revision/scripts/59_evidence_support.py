@@ -31,6 +31,20 @@ class RuleUnresolved(EvidenceError):
 
 SOURCES = ("ONT", "PacBio", "EST", "FL-cDNA")
 THRESHOLDS = {"ONT": 3, "PacBio": 2, "EST": 2, "FL-cDNA": 2}
+CHAIN_READINGS = {
+    "chain_support_single_read": "primary",
+    "chain_support_threshold": "sensitivity",
+}
+CHAIN_DECISION = {"who": "author", "date": "2026-09-05",
+                  "primary_declared_before_real_addition_scoring": True}
+INCOMPLETE_WORK = [
+    "disk-backed read indexing for production scale",
+    "manifest-wide expected-run reconciliation and frozen-reference identity binding",
+    "per-species A4 attestation, P4 seed/sample verification, P5 +9-nt decoy correspondence",
+    "A37 per-length-bin callability/junction/intron-count/gene-length tables",
+    "S12 P2 alternative recall and retained-match counts; A7 MAPQ10/placement sensitivities",
+    "C0 accession aliases, clone/library conflicts, source-molecule provenance, S12d completeness",
+]
 CIGAR = re.compile(r"(\d+)([MIDNSHP=X])")
 CS = re.compile(r"(:\d+|=[A-Za-z]+|\*[A-Za-z]{2}|[+-][A-Za-z]+|~[A-Za-z]{2}\d+[A-Za-z]{2})")
 
@@ -396,6 +410,60 @@ def normalize_clone(value):
     return re.sub(r"[^a-z0-9]", "", value)
 
 
+def pcr_components(pcr):
+    """Connected candidates are diagnostic objects, never automatically molecule units."""
+    for key, group in sorted(pcr.items(), key=lambda item: repr(item[0])):
+        group = sorted(group, key=lambda o: (o.alignment.start, o.alignment.end, o.run, o.alignment.read))
+        neighbours = [set([i]) for i in range(len(group))]
+        for i, o in enumerate(group):
+            for j in range(i + 1, len(group)):
+                p = group[j]
+                if p.alignment.start - o.alignment.start > 10:
+                    break
+                if abs(p.alignment.end - o.alignment.end) <= 10:
+                    neighbours[i].add(j)
+                    neighbours[j].add(i)
+        visited = set()
+        for i in range(len(group)):
+            if i in visited:
+                continue
+            component, pending = set(), [i]
+            while pending:
+                j = pending.pop()
+                if j not in component:
+                    component.add(j)
+                    pending.extend(neighbours[j] - component)
+            visited.update(component)
+            members = [group[j] for j in sorted(component)]
+            yield key, members, all(neighbours[j] == component for j in component)
+
+
+def pcr_diagnostics(observations, additions, specs):
+    """Count non-clique candidates without assigning units, scoring, or raising."""
+    pcr = defaultdict(list)
+    for o in observations:
+        if (o.source == "ONT" and o.metadata.get("protocol") == "cDNA"
+                and o.metadata.get("umi_status") == "absent"):
+            key = (o.species, o.assembly, o.source, o.library,
+                   o.alignment.contig, o.strand, o.chain)
+            pcr[key].append(o)
+    components = list(pcr_components(pcr))
+    def counts(groups):
+        return dict(candidate_equivalence_groups=len(groups),
+                    non_clique_groups=sum(not clique for _, _, clique in groups))
+    runs = []
+    for spec in specs:
+        groups = [g for g in components if any(
+            (o.dataset, o.run) == (spec["dataset"], spec["run"]) for o in g[1])]
+        runs.append(dict(dataset=spec["dataset"], run=spec["run"], arm=spec["arm"], **counts(groups)))
+    per_addition = []
+    for a in additions:
+        groups = [g for g in components if any(overlaps(o, a) and o.strand == a.strand for o in g[1])]
+        per_addition.append(dict(addition_id=a.addition_id, **counts(groups)))
+    return dict(**counts(components), per_run=runs, per_addition=per_addition,
+                counting_rule="Global same-library candidates; counted once per run containing a member and once per same-strand overlapping addition. Counts across runs/additions are not additive.")
+
+
 def assign_molecules(observations):
     """A11/A16 units; refuse a non-transitive PCR component instead of picking a linkage."""
     newest = {}
@@ -441,35 +509,14 @@ def assign_molecules(observations):
             pcr[base + (a.contig, o.strand, o.chain)].append(o)
             continue
         o.molecule = hashlib.sha256(repr(key).encode()).hexdigest()
-    for key, group in pcr.items():
-        group.sort(key=lambda o: (o.alignment.start, o.alignment.end, o.run, o.alignment.read))
-        neighbours = [set([i]) for i in range(len(group))]
-        for i, o in enumerate(group):
-            for j in range(i + 1, len(group)):
-                p = group[j]
-                if p.alignment.start - o.alignment.start > 10:
-                    break
-                if abs(p.alignment.end - o.alignment.end) <= 10:
-                    neighbours[i].add(j)
-                    neighbours[j].add(i)
-        visited = set()
-        for i in range(len(group)):
-            if i in visited:
-                continue
-            component, pending = set(), [i]
-            while pending:
-                j = pending.pop()
-                if j not in component:
-                    component.add(j)
-                    pending.extend(neighbours[j] - component)
-            if any(neighbours[j] != component for j in component):
-                raise RuleUnresolved("A16 non-transitive 10-nt PCR equivalence: " +
-                                     ", ".join(group[j].alignment.read for j in sorted(component)))
-            visited.update(component)
-            ends = sorted((group[j].alignment.start, group[j].alignment.end) for j in component)
-            unit = hashlib.sha256(repr((key, ends[0])).encode()).hexdigest()
-            for j in component:
-                group[j].molecule = unit
+    for key, group, clique in pcr_components(pcr):
+        if not clique:
+            raise RuleUnresolved("A16 non-transitive 10-nt PCR equivalence: " +
+                                 ", ".join(o.alignment.read for o in group))
+        ends = sorted((o.alignment.start, o.alignment.end) for o in group)
+        unit = hashlib.sha256(repr((key, ends[0])).encode()).hexdigest()
+        for o in group:
+            o.molecule = unit
     return observations
 
 
@@ -506,43 +553,45 @@ def score_addition(addition, observations):
             junctions[intron] = support_counts(carrying)
         witnesses = [o for o in obs if chain_witness(addition, o)]
         count = support_counts(witnesses)
-        constituent_rule = bool(witnesses) and all(v["supported"] for v in junctions.values())
-        whole_chain_rule = count["supported"]
-        if constituent_rule != whole_chain_rule:
-            raise RuleUnresolved(
-                f"{addition.addition_id}/{source}: §§5–6/A16 chain threshold unresolved: "
-                f"{count['units']} complete-chain units; threshold-supported constituents="
-                f"{constituent_rule}. See EVIDENCE_SCORER_READINGS.md")
         per_source[source] = {"chain": count, "junctions": junctions}
     supported = {j for j in addition.introns if any(
         per_source[s]["junctions"][j]["supported"] for s in SOURCES)}
-    complete_sources = [s for s in SOURCES if per_source[s]["chain"]["supported"]]
     novel_n = len(set(addition.novel_introns) & supported)
     novel_status = ("N/A" if not addition.novel_introns else "all" if novel_n == len(addition.novel_introns)
                     else "some" if novel_n else "none")
-    chain_status = "complete" if complete_sources else "partial" if supported else "none"
-    if any(s in ("ONT", "PacBio") for s in complete_sources):
-        tier = "T1"
-    elif complete_sources:
-        tier = "T2"
-    elif novel_status == "all":
-        tier = "T3"
-    elif supported:
-        tier = "T4"
-    elif row["chain_callable"] or row["junction_callable"]:
-        tier = "T5"
-    else:
-        tier = "T6"
-    row.update(chain_support=chain_status, novel_junction_support=novel_status, tier=tier,
+    reports = {}
+    for reading, label in CHAIN_READINGS.items():
+        complete_sources = [s for s in SOURCES if (per_source[s]["chain"]["raw_reads"] > 0
+                            if label == "primary" else per_source[s]["chain"]["supported"])]
+        chain_status = "complete" if complete_sources else "partial" if supported else "none"
+        if any(s in ("ONT", "PacBio") for s in complete_sources):
+            tier = "T1"
+        elif complete_sources:
+            tier = "T2"
+        elif novel_status == "all":
+            tier = "T3"
+        elif supported:
+            tier = "T4"
+        elif row["chain_callable"] or row["junction_callable"]:
+            tier = "T5"
+        else:
+            tier = "T6"
+        reports[reading] = dict(label=label, chain_support=chain_status, tier=tier,
+                                chain_negative=chain_status != "complete" if row["chain_callable"] else None,
+                                complete_sources=complete_sources,
+                                high_confidence_sources=[s for s in complete_sources
+                                                         if per_source[s]["chain"]["high_confidence"]])
+    row.update(chain_reading_report=reports,
+               tier_disagreement=len({v["tier"] for v in reports.values()}) > 1,
+               **{reading: report["chain_support"] for reading, report in reports.items()})
+    row.update(novel_junction_support=novel_status,
                constituent_junction_support=bool(addition.introns) and len(supported) == len(addition.introns),
                supported_junctions=len(supported), novel_supported_junctions=novel_n,
                chain_witness_reads=sum(v["chain"]["raw_reads"] for v in per_source.values()),
                chain_units_by_source={s: per_source[s]["chain"]["units"] for s in SOURCES},
                single_record_support=any(v["chain"]["raw_reads"] == 1 for v in per_source.values()),
-               high_confidence_sources=[s for s in complete_sources if per_source[s]["chain"]["high_confidence"]],
                annotation_independence=sorted({o.annotation_independence for o in same}),
                model_independent=all(o.model_independent for o in same) if same else None,
-               chain_negative=chain_status != "complete" if row["chain_callable"] else None,
                junction_negative=novel_status != "all" if row["junction_callable"] else None,
                intron_count=len(addition.introns), gene_length=addition.locus_end - addition.locus_start + 1,
                chain_applicable=bool(addition.introns),
@@ -554,15 +603,17 @@ def score_addition(addition, observations):
 def table_inputs(rows):
     """Numerators and denominators are exported, including empty strata (undefined rate)."""
     result = []
-    dimensions = ("species", "assembly", "arm", "genotype", "scope", "control", "length_bin")
+    dimensions = ("species", "assembly", "arm", "genotype", "scope", "control", "length_bin", "chain_reading", "chain_reading_label")
     grouped = defaultdict(list)
     for row in rows:
-        grouped[tuple(row[k] for k in dimensions)].append(row)
+        for reading, label in CHAIN_READINGS.items():
+            paired = dict(row, chain_reading=reading, chain_reading_label=label)
+            grouped[tuple(paired[k] for k in dimensions)].append(paired)
     for key, group in sorted(grouped.items()):
         for filtered in (False, True):
             selected = [r for r in group if not filtered or r["filter_pass"]]
             for metric, eligible, callable_key, success in (
-                ("chain", selected, "chain_callable", lambda r: r["chain_support"] == "complete"),
+                ("chain", selected, "chain_callable", lambda r: r[r["chain_reading"]] == "complete"),
                 ("novel_junction", [r for r in selected if r["novelty"] == "junction-novel"],
                  "junction_callable", lambda r: r["novel_junction_support"] == "all"),
                 ("exact_CDS", selected, None, lambda r: r["exact_cds_match"]),
@@ -781,9 +832,7 @@ def execute(config_path, output, samtools="samtools"):
     purpose = config.get("purpose")
     require(purpose in ("synthetic", "b1", "c0_diagnostic"), "explicit purpose required")
     if purpose == "b1":
-        raise RuleUnresolved("B1 primary scoring is blocked pending the chain-unit and PCR-linkage author decisions in EVIDENCE_SCORER_READINGS.md")
-    if purpose == "b1":
-        gate = json.loads(checked(config["qc_gate"]).read_text())
+        gate = json.loads(checked(config.get("qc_gate")).read_text())
         require(gate.get("passed") is True, "A4 pre-addition QC gate is not passed")
         require(gate.get("seed") == 123 and gate.get("loci") == 2000,
                 "A4 QC gate requires 2,000 loci, seed 123")
@@ -824,7 +873,7 @@ def execute(config_path, output, samtools="samtools"):
             done = dict(line.split("=", 1) for line in done_path.read_text().splitlines() if "=" in line)
             require(done.get("bam_md5") == digest(spec["alignment"], "md5"), f"DONE BAM hash mismatch: {key}")
             if spec["source"] == "ONT":
-                audit = json.loads(checked(spec["orientation_audit"]).read_text())
+                audit = json.loads(checked(spec.get("orientation_audit")).read_text())
                 require(done.get("uf") == ("-uf" if spec["uf"] else "none"), f"DONE uf mismatch: {key}")
                 require(audit.get("status") == done.get("audit_status"), f"audit/DONE disagreement: {key}")
                 require(spec["uf"] == (audit.get("status") == "PASS"), f"uf/audit disagreement: {key}")
@@ -848,8 +897,25 @@ def execute(config_path, output, samtools="samtools"):
     require(all(a.assembly == config["assembly"] for a in additions), "addition assembly mismatch")
     require(all(any(s["species"] == a.species for s in specs) for a in additions),
             "species has additions but no declared evidence runs")
+    diagnostic = pcr_diagnostics(observations, additions, specs)
+    refusal = ("A16 non-transitive 10-nt PCR equivalence" if diagnostic["non_clique_groups"] else
+               "B1 incomplete implementation: " + "; ".join(INCOMPLETE_WORK) if purpose == "b1" and INCOMPLETE_WORK else None)
+    if refusal:
+        # Preserve pre-scoring diagnostics on a scientific stop, with no scores or DONE.
+        output.mkdir(parents=True)
+        write_csv(output / "PCR_diagnostic_runs.csv", diagnostic["per_run"])
+        write_csv(output / "PCR_diagnostic_additions.csv", diagnostic["per_addition"])
+        report = dict(status="scoring_refused", reason=refusal, purpose=purpose,
+                      inputs_sha256=hashes, pcr_diagnostic=diagnostic,
+                      chain_readings=CHAIN_READINGS, chain_reading_decision=CHAIN_DECISION,
+                      incomplete_work=INCOMPLETE_WORK,
+                      outputs_sha256={p.name: digest(p) for p in sorted(output.iterdir())})
+        (output / "PROVENANCE.json").write_text(json.dumps(report, sort_keys=True, indent=2) + "\n")
+        if diagnostic["non_clique_groups"]:
+            raise RuleUnresolved(refusal)
+        raise EvidenceError(refusal)
     observations = assign_molecules(observations)
-    # Controls are completed before any addition is overlapped with evidence (§10).
+    # Controls are scored before additions (§10); the PCR diagnostic above is unscored.
     controls = [a for a in additions if a.control != "addition"]
     rows = score_scopes(controls, observations, specs)
     rows.extend(score_scopes([a for a in additions if a.control == "addition"], observations, specs))
@@ -860,11 +926,16 @@ def execute(config_path, output, samtools="samtools"):
     write_csv(output / "per_addition.csv", rows)
     write_csv(output / "S12_inputs.csv", tables)
     write_csv(output / "S12c_runs.csv", qc)
+    write_csv(output / "PCR_diagnostic_runs.csv", diagnostic["per_run"])
+    write_csv(output / "PCR_diagnostic_additions.csv", diagnostic["per_addition"])
     with open(output / "C0_observations.jsonl", "w") as f:
         for o in observations:
             f.write(json.dumps(asdict(o), sort_keys=True) + "\n")
     report = {"schema": config["schema"], "purpose": purpose, "inputs_sha256": hashes,
               "source_thresholds": THRESHOLDS,
+              "chain_readings": CHAIN_READINGS,
+              "chain_reading_decision": CHAIN_DECISION,
+              "pcr_diagnostic": diagnostic, "incomplete_work": INCOMPLETE_WORK,
               "missing_outputs": ["P2 reference-alternative recall requires frozen reference alternative IDs/denominator",
                                   "A3 TES/TSS, A6 rarefaction and S12d terminal completeness are separate C0 analyses",
                                   "A7 MAPQ10/placement sensitivities are not primary outcomes"],

@@ -53,11 +53,11 @@ def score(a, observations):
 
 def test_positive_complete_chain_control():
     row = score(addition(), [obs(f"r{i}") for i in range(3)])
-    assert row["chain_support"] == "complete"
+    assert row["chain_support_single_read"] == "complete"
     assert row["novel_junction_support"] == "all"
-    assert row["tier"] == "T1"
+    assert row["chain_reading_report"]["chain_support_single_read"]["tier"] == "T1"
     assert row["chain_callable"] and row["junction_callable"]
-    assert row["chain_negative"] is False
+    assert row["chain_reading_report"]["chain_support_single_read"]["chain_negative"] is False
 
 
 def test_partial_control_does_not_assemble_a_combination():
@@ -65,18 +65,18 @@ def test_partial_control_does_not_assemble_a_combination():
     right = [obs(f"r{i}", start=221, cigar="30M100N50M", cs=":30~gt100ag:50") for i in range(3)]
     a = addition(novelty="combination-novel", novel_introns=())
     row = score(a, left + right)
-    assert row["chain_support"] == "partial"
+    assert row["chain_support_single_read"] == "partial"
     assert row["constituent_junction_support"] is True
     assert row["chain_witness_reads"] == 0 and not row["chain_callable"]
-    assert row["novel_junction_support"] == "N/A" and row["tier"] == "T4"
-    assert row["chain_negative"] is None
+    assert row["novel_junction_support"] == "N/A" and row["chain_reading_report"]["chain_support_single_read"]["tier"] == "T4"
+    assert row["chain_reading_report"]["chain_support_single_read"]["chain_negative"] is None
 
 
 def test_ambiguous_correction_control():
     g = genome(((101, 200), (103, 200), (251, 350)))
     row = score(addition(), [obs(f"r{i}", g=g) for i in range(3)])
-    assert row["chain_support"] == "partial"
-    assert row["chain_negative"] is True
+    assert row["chain_support_single_read"] == "partial"
+    assert row["chain_reading_report"]["chain_support_single_read"]["chain_negative"] is True
     assert m.call_junctions(m.parse_sam(sam()), g, "+", "ONT")[0].status == "ambiguous_correction"
 
 
@@ -84,9 +84,9 @@ def test_negative_callable_control_and_uncovered_are_different():
     a = addition()
     unspliced = [obs(cigar="350M", cs=":350")]
     row = score(a, unspliced)
-    assert row["tier"] == "T5" and row["chain_negative"] is True
+    assert row["chain_reading_report"]["chain_support_single_read"]["tier"] == "T5" and row["chain_reading_report"]["chain_support_single_read"]["chain_negative"] is True
     row = score(a, [])
-    assert row["tier"] == "T6" and row["chain_negative"] is None
+    assert row["chain_reading_report"]["chain_support_single_read"]["tier"] == "T6" and row["chain_reading_report"]["chain_support_single_read"]["chain_negative"] is None
     assert row["junction_negative"] is None and row["uncovered"]
 
 
@@ -106,7 +106,7 @@ def test_uf_fallback_and_unknown_strand():
 def test_minus_strand_control():
     a = addition(strand="-")
     row = score(a, [obs(f"r{i}", flag=16, g=genome(strand="-")) for i in range(3)])
-    assert row["chain_support"] == "complete"
+    assert row["chain_support_single_read"] == "complete"
 
 
 def test_primary_later_supplementary_and_cross_contig_rejected():
@@ -145,8 +145,8 @@ def test_ont_anchor_boundaries(cs, accepted):
 def test_source_specific_thresholds_never_pool_subthreshold_units():
     row = score(addition(), [obs("ont", cigar="50M100N30M", cs=":50~gt100ag:30"),
                              obs("pb", source="PacBio", cigar="50M100N30M", cs=":50~gt100ag:30")])
-    assert row["chain_support"] == "none" and row["supported_junctions"] == 0
-    assert score(addition(), [obs("p1", source="PacBio"), obs("p2", source="PacBio")])["tier"] == "T1"
+    assert row["chain_support_single_read"] == "none" and row["supported_junctions"] == 0
+    assert score(addition(), [obs("p1", source="PacBio"), obs("p2", source="PacBio")])["chain_reading_report"]["chain_support_single_read"]["tier"] == "T1"
 
 
 def test_est_signature_clone_and_library_units():
@@ -189,12 +189,15 @@ def test_unknown_umi_status_fails_closed():
         m.assign_molecules([o])
 
 
-def test_chain_threshold_disagreement_stops_pending_author():
+def test_chain_threshold_disagreement_is_paired_and_flagged():
     observations = [obs("whole")]
     observations += [obs(f"l{i}", cigar="50M100N30M", cs=":50~gt100ag:30") for i in range(2)]
     observations += [obs(f"r{i}", start=221, cigar="30M100N50M", cs=":30~gt100ag:50") for i in range(2)]
-    with pytest.raises(m.RuleUnresolved, match="chain threshold unresolved"):
-        score(addition(), observations)
+    row = score(addition(), observations)
+    assert row["chain_support_single_read"] == "complete"
+    assert row["chain_support_threshold"] == "partial"
+    assert row["chain_reading_report"]["chain_support_threshold"]["tier"] == "T3"
+    assert row["tier_disagreement"] is True
 
 
 def test_both_denominators_and_wilson_empty_are_explicit():
@@ -203,7 +206,8 @@ def test_both_denominators_and_wilson_empty_are_explicit():
     for row in rows:
         row.update(arm="primary", genotype="reference", scope="ONT", length_bin="all")
     table = m.table_inputs(rows)
-    chain = [r for r in table if r["metric"] == "chain" and not r["filtered"]]
+    chain = [r for r in table if r["metric"] == "chain" and not r["filtered"]
+             and r["chain_reading"] == "chain_support_single_read"]
     assert [(r["denominator"], r["numerator"], r["n"]) for r in chain] == [("all", 1, 2), ("callable", 1, 1)]
     assert chain[0]["callable_unsupported"] == 0
     assert m.wilson(0, 0) == (None, None, None)
@@ -292,11 +296,11 @@ def test_missing_manifest_role_and_missing_metadata_stop(tmp_path):
     assert not (tmp_path / "out").exists()
 
 
-def test_primary_is_blocked_until_author_resolves_rules(tmp_path):
+def test_b1_now_reaches_existing_qc_gate(tmp_path):
     p, config = synthetic_config(tmp_path)
     config["purpose"] = "b1"
     p.write_text(json.dumps(config))
-    with pytest.raises(m.RuleUnresolved, match="B1 primary scoring is blocked"):
+    with pytest.raises(m.EvidenceError, match="frozen sha256"):
         m.execute(p, tmp_path / "out")
     assert not (tmp_path / "out").exists()
 
@@ -304,4 +308,146 @@ def test_primary_is_blocked_until_author_resolves_rules(tmp_path):
 def test_corrected_chain_uses_corrected_coordinates_without_rewriting_blocks():
     introns = ((102, 201), (252, 351))
     a = addition(introns=introns, novel_introns=(introns[1],))
-    assert score(a, [obs(f"r{i}", g=genome(introns)) for i in range(3)])["chain_support"] == "complete"
+    assert score(a, [obs(f"r{i}", g=genome(introns)) for i in range(3)])["chain_support_single_read"] == "complete"
+
+
+@pytest.mark.parametrize("source,threshold,tier", [("ONT", 3, "T1"), ("PacBio", 2, "T1"),
+                                                 ("EST", 2, "T2"), ("FL-cDNA", 2, "T2")])
+def test_single_witness_needs_no_constituent_threshold(source, threshold, tier):
+    reads = [obs(f"r{i}", source=source) for i in range(threshold)]
+    for i, o in enumerate(reads):
+        o.metadata["clone"] = f"clone{i}x"
+    one = score(addition(), reads[:1])
+    assert one["chain_support_single_read"] == "complete"
+    assert one["chain_support_threshold"] == "none"
+    assert one["chain_reading_report"]["chain_support_single_read"]["tier"] == tier
+    assert one["chain_reading_report"]["chain_support_threshold"]["tier"] == "T5"
+    assert one["tier_disagreement"]
+    assert "tier" not in one and "chain_support" not in one
+    enough = score(addition(), reads)
+    assert enough["chain_support_threshold"] == "complete"
+    assert not enough["tier_disagreement"]
+
+
+def test_union_does_not_pool_chain_thresholds():
+    row = score(addition(), [obs("ont"), obs("pb", source="PacBio")])
+    assert row["chain_support_single_read"] == "complete"
+    assert row["chain_support_threshold"] == "none"
+
+
+def test_pcr_diagnostic_counts_candidates_without_mutating_or_raising():
+    reads = [obs(f"r{i}", run="run1" if i < 2 else "run2") for i in range(3)]
+    for offset, o in zip((0, 9, 18), reads):
+        o.metadata["protocol"] = "cDNA"
+        o.alignment = replace(o.alignment, start=51+offset, end=400+offset)
+    # A separate clique in the same library/chain is another candidate.
+    far = obs("far")
+    far.metadata["protocol"] = "cDNA"
+    far.alignment = replace(far.alignment, start=700, end=900)
+    specs = [dict(dataset="dataset", run=r, arm="primary") for r in ("run1", "run2", "empty")]
+    additions = [addition(), addition(addition_id="away", locus_start=910, locus_end=990,
+                                     cds_start=920, cds_end=980, introns=(), novel_introns=(), novelty="reference-alt")]
+    before = [m.asdict(o) for o in reads + [far]]
+    d = m.pcr_diagnostics(reads + [far], additions, specs)
+    assert (d["candidate_equivalence_groups"], d["non_clique_groups"]) == (2, 1)
+    assert [r["non_clique_groups"] for r in d["per_run"]] == [1, 1, 0]
+    assert [r["non_clique_groups"] for r in d["per_addition"]] == [1, 0]
+    assert before == [m.asdict(o) for o in reads + [far]]
+    assert d == m.pcr_diagnostics(list(reversed(reads + [far])), additions, specs)
+    with pytest.raises(m.RuleUnresolved):
+        m.assign_molecules(reads)
+
+
+def test_est_arms_crossed_with_both_readings_in_every_rate():
+    observations = [obs("primary", source="EST"), obs("sensitivity", source="EST")]
+    observations[1].metadata["arm"] = "min121"
+    specs = [dict(species="synthetic", source="EST", dataset="dataset", run="run1", arm=arm,
+                  genotype_stratum="reference", annotation_independence="independent", model_independent=True)
+             for arm in ("primary", "min121")]
+    rows = m.score_scopes([addition()], m.assign_molecules(observations), specs)
+    assert all(set(r["chain_reading_report"]) == set(m.CHAIN_READINGS) for r in rows)
+    tables = m.table_inputs(rows)
+    assert {(r["arm"], r["chain_reading"]) for r in tables} == {
+        (a, c) for a in ("primary", "min121") for c in m.CHAIN_READINGS}
+    for r in tables:
+        assert r["chain_reading_label"] == m.CHAIN_READINGS[r["chain_reading"]]
+    chain = [r for r in tables if r["metric"] == "chain" and r["scope"] == "EST"]
+    assert all(r["numerator"] == (1 if r["chain_reading_label"] == "primary" else 0) for r in chain)
+
+
+def make_b1_inputs(tmp_path):
+    p, config = synthetic_config(tmp_path)
+    def write(name, value):
+        path = tmp_path / name
+        path.write_text(value)
+        return dict(path=name, sha256=m.digest(path))
+    config["purpose"] = "b1"
+    config["qc_gate"] = write("qc.json", json.dumps(dict(passed=True, seed=123, loci=2000, agreement=.99)))
+    config["positive_control_seed"] = 123
+    controls = [addition(addition_id=f"p{i}", control="positive") for i in range(500)]
+    controls += [addition(), addition(addition_id="negative", control="negative")]
+    config["additions"] = write("additions.json", json.dumps([m.asdict(a) for a in controls]))
+    spec = config["runs"][0]
+    spec["done"] = write("DONE", "bam_md5=" + m.digest(tmp_path / "run.sam", "md5") +
+                         "\nuf=none\naudit_status=FAIL\n")
+    spec["provenance"] = write("run.provenance", "fixture\n")
+    spec["orientation_audit"] = write("audit.json", json.dumps(dict(status="FAIL")))
+    p.write_text(json.dumps(config))
+    return p, config
+
+
+def test_b1_incomplete_work_still_refuses_without_scores(tmp_path):
+    p, config = make_b1_inputs(tmp_path)
+    out = tmp_path / "out"
+    with pytest.raises(m.EvidenceError, match="B1 incomplete implementation"):
+        m.execute(p, out)
+    report = json.loads((out / "PROVENANCE.json").read_text())
+    assert report["status"] == "scoring_refused"
+    assert report["incomplete_work"] == m.INCOMPLETE_WORK
+    assert report["pcr_diagnostic"]["non_clique_groups"] == 0
+    assert not (out / "DONE").exists() and not (out / "per_addition.csv").exists()
+
+
+def test_b1_missing_orientation_audit_still_refuses(tmp_path):
+    p, config = make_b1_inputs(tmp_path)
+    del config["runs"][0]["orientation_audit"]
+    p.write_text(json.dumps(config))
+    with pytest.raises(m.EvidenceError, match="frozen sha256"):
+        m.execute(p, tmp_path / "out")
+    assert not (tmp_path / "out").exists()
+
+
+def test_nonclique_cli_keeps_diagnostics_but_no_scores(tmp_path):
+    p, config = synthetic_config(tmp_path)
+    alignment = tmp_path / "run.sam"
+    alignment.write_text("".join(sam(name=f"r{i}", start=51+offset,
+        cigar=f"{50-offset}M100N50M100N{50+offset}M",
+        cs=f":{50-offset}~gt100ag:50~gt100ag:{50+offset}") for i, offset in enumerate((0, 9, 18))))
+    config["runs"][0]["alignment"]["sha256"] = m.digest(alignment)
+    meta_path = tmp_path / "meta.json"
+    metadata = json.loads(meta_path.read_text())
+    for v in metadata.values():
+        v["protocol"] = "cDNA"
+    meta_path.write_text(json.dumps(metadata))
+    config["runs"][0]["metadata"]["sha256"] = m.digest(meta_path)
+    p.write_text(json.dumps(config))
+    out = tmp_path / "out"
+    assert m.main(["--config", str(p), "--out", str(out)]) == 2
+    report = json.loads((out / "PROVENANCE.json").read_text())
+    assert report["pcr_diagnostic"]["non_clique_groups"] == 1
+    assert report["pcr_diagnostic"]["per_addition"][0]["non_clique_groups"] == 1
+    assert set(f.name for f in out.iterdir()) == {
+        "PCR_diagnostic_runs.csv", "PCR_diagnostic_additions.csv", "PROVENANCE.json"}
+    for name, sha in report["outputs_sha256"].items():
+        assert m.digest(out / name) == sha
+
+
+
+def test_tier_disagreement_flag_even_when_both_chains_complete():
+    reads = [obs("ont"), obs("est1", source="EST", library="lib1"),
+             obs("est2", source="EST", library="lib2")]
+    row = score(addition(), reads)
+    assert row["chain_support_single_read"] == row["chain_support_threshold"] == "complete"
+    assert row["chain_reading_report"]["chain_support_single_read"]["tier"] == "T1"
+    assert row["chain_reading_report"]["chain_support_threshold"]["tier"] == "T2"
+    assert row["tier_disagreement"]

@@ -2,14 +2,20 @@
 
 No real addition/evidence overlap has been inspected. Protocol §§3–9 and all evidence/driver files are unchanged.
 
-## Author decisions pending — do not select a numerical reading
+## Decided by the author — 2026-09-05
 
-1. **Complete-chain unit threshold (§§5–6, §8, A16, A18.2).** §5 places minimum support in the junction-calling table; §6 says one read witnesses a complete chain and §8 derives T1/T2 from a read. A16 refers to independent-unit support thresholds. These permit different numerical implementations: one full-chain witness plus threshold-supported constituent junctions, or the source threshold on full-chain witnesses themselves. Example: one ONT read spans two junctions, each independently seen on two additional truncated reads. The former passes and the latter fails. Pending author decision; neither interpretation may become a primary outcome by default.
-2. **Non-transitive ONT PCR equivalence (A16/A18.2).** Three same-library, same-chain reads with both endpoints offset by 0, 9 and 18 nt satisfy the 10-nt rule pairwise along a path, but the endpoints of that path do not. Connected components merge ends 18 nt apart; greedy or complete-linkage partitioning chooses which pair counts together. No linkage/tie rule is frozen for this 10-nt unit (design §3's 25-nt model-end clustering is a different operation). Stop on this configuration rather than choosing a partition or treating ambiguous units as negatives.
+Both decisions were supplied by the manuscript author in the issue #24 continuation instruction on **2026-09-05**. The **primary was declared before any real addition was scored**; this implementation and its tests inspect synthetic fixtures only.
+
+1. **Complete-chain unit threshold: report both readings, with the primary declared now.**
+   - **Primary — `chain_support_single_read`:** one accepted read satisfying §6's corrected whole-chain predicate gives complete support. No §5 constituent-junction threshold is added to this predicate.
+   - **Sensitivity — `chain_support_threshold`:** whole-chain witnesses themselves must reach the source unit threshold: ONT ≥3, PacBio ≥2, EST/FL-cDNA ≥2 A11 units (distinct clone/accession identities, subject to the existing fallback and cap).
+   - **Checked justification:** `PROTOCOL_B1_frozen_v1.md` §6 (line 150) says “An evidence read gives complete intron-chain support”; §8 (line 178) defines T1 through a tier-1 read, singular; A18.2's ONT support-threshold cell (line 249) explicitly says “§5 counts read as units.” §5 is junction calling. A16 (line 618) changes ONT counting to independent units and repeats the thresholds, but does not explicitly attach them to the §6 witness predicate. A17's chain discussion (line 225) concerns training evidence and does not impose a numerical B1 chain threshold. No direct contradiction to the author's reading was found in these passages.
+   - **Why paired:** A37 item 3 (line 749) requires both EST arms wherever an EST-derived quantity appears; workspace `quarantine.md` §1e records why outcome-selected A36 was withdrawn. The same paired-reporting pattern is adopted here so the chain reading cannot be chosen after seeing the rates. Both readings accompany every chain-support result, tier, S12 input and rate, crossed with both A37 arms. Differing tiers are explicitly flagged.
+2. **Non-transitive ONT PCR equivalence: retain the stop.** Only mutually-within-10-nt cliques form units. A same-library/strand/corrected-chain path with endpoints at 0, 9 and 18 nt is not a clique; connected-component merging or greedy partitioning would invent a linkage rule. The author adopts `RuleUnresolved` for this configuration. A non-raising pre-scoring diagnostic counts all candidate components and non-cliques globally, per run and per addition; counting components for diagnosis does not make them molecule units.
 
 ## Status
 
-This is a **provisional implementation, not a completed issue #24 or a production B1 scorer**. The `purpose=b1` entry point raises `RuleUnresolved` before scoring. Synthetic and C0 diagnostic execution are available for review. Where the two chain-threshold readings above give different answers, diagnostic scoring also stops. No primary outcome has been computed and no threshold has been changed. The author questions were sent before implementing the affected scoring path.
+This remains a **provisional implementation, not a completed issue #24 or a production B1 scorer**. The `purpose=b1` author-decision block is removed. Existing input hashes, orientation audits, role/QC/control checks and PCR-clique stops remain. The incomplete-work list below is now also an explicit B1 refusal gate, not a claim of completion. Synthetic and C0 diagnostic scoring report both readings; differing chain readings no longer stop scoring. No real primary outcome has been computed and no junction threshold has changed.
 
 ## Explicit provisional readings for review
 
@@ -22,7 +28,7 @@ This is a **provisional implementation, not a completed issue #24 or a productio
 - **§7 empty chains:** mono-exonic additions have no defined first donor/last acceptor, so `chain_applicable=false`, neither chain nor novel-junction callable, but remain in the frozen all-addition denominator. No novel junction means `novel_junction_support=N/A` and no junction-callable denominator, rather than vacuous truth.
 - **§8 union:** apply thresholds within each source first; union supported features afterward. One ONT unit plus one PacBio unit cannot satisfy a source threshold. Callability is the union of eligible observations and may span different sources for different novel junctions. Run-level counts and pooled counts are both emitted. Union independence is a list of states; declared source independence is retained even for uncovered additions.
 - **§8 partial/tier:** `partial` requires at least one threshold-supported junction, not just one raw junction observation. Combination-novel constituent-only support is T4, never T3 or complete. Unsupported callable rows have explicit negative flags; all non-callable negative flags are null. All-addition rate denominators do not turn their non-callable failures into negative evidence.
-- **A11:** newest parsed accession version is retained for counting; clone normalization removes punctuation/case and separated read-direction suffixes. Clone keys include biological library. With no clone, the exact contig/strand/CIGAR block signature is the counting key within library. Ten-unit cap is applied per feature/library. For the provisional whole-chain counts the cap also applies to chain witnesses; this cannot settle the pending chain-threshold reading. Clone/library aliases must already be resolved in C0 metadata; the scorer does not guess them.
+- **A11:** newest parsed accession version is retained for counting; clone normalization removes punctuation/case and separated read-direction suffixes. Clone keys include biological library. With no clone, the exact contig/strand/CIGAR block signature is the counting key within library. Ten-unit cap is applied per feature/library. The cap also applies to sensitivity whole-chain unit counts; the primary requires one accepted whole-chain read. Clone/library aliases must already be resolved in C0 metadata; the scorer does not guess them.
 - **A16/A18.2:** library/sample/UMI/locus/strand identifies UMI units; direct RNA uses run/read identity; PacBio requires source FLNC/ZMW identity and cannot use polished-cluster IDs. Unknown ONT UMI/protocol metadata stops, rather than asserting independence. Endpoint PCR components are accepted only when all members are mutually within 10 nt; non-cliques stop. This is a detection gate, not a new clustering rule.
 - **A18.5/genotypes:** training-role observations apply aligned fraction 0.80, identity 0.95 (ONT/EST) or 0.98 (PacBio) and canonical junction acceptance. EST validation retains A8's fraction/divergence checks. Maize nonreference/pooled/unknown observations require the A7 divergence and competing-paralog metadata. Other B1 validation long reads do not acquire A18.5 training-only filters. Genotype labels use `reference`, `known_nonreference`, `hybrid_pooled`, `unknown`, plus a separately labelled `species_union` output; no genotype weights modify validation rates.
 - **§9–§10:** frozen addition/filter/reference-match fields are input data, not recomputed from evidence. Controls are scored before additions. Wilson intervals use the ordinary two-sided 95% binomial formula; zero denominator yields null rate and interval. No full-length expression or experimental-validation claim is emitted.
@@ -31,13 +37,19 @@ This is a **provisional implementation, not a completed issue #24 or a productio
 
 Run `59_evidence_support.py --config CONFIG.json --out NEW_DIRECTORY` with Python 3.10+ and samtools on PATH for BAM input. Synthetic SAM files need no samtools. PAF-only ingestion is deliberately rejected: it cannot establish the required SAM-flag exclusions. `--cs=long` BAM tags are consumed directly; no sam2paf conversion is used.
 
-The JSON config has `schema: "b1-evidence-v1"`, `purpose` (`synthetic`, `c0_diagnostic`, or currently blocked `b1`), `assembly`, `genome`, `role_manifests` (list), `additions`, and `runs`. File entries have `path` (relative to config) and `sha256`. Additions are a JSON list of `Addition` dataclass fields; intron lists are genomic low/high pairs. The synthetic CLI test constructs a complete minimal example.
+The JSON config has `schema: "b1-evidence-v1"`, `purpose` (`synthetic`, `c0_diagnostic`, or `b1`, which still refuses on the incomplete-work gate), `assembly`, `genome`, `role_manifests` (list), `additions`, and `runs`. File entries have `path` (relative to config) and `sha256`. Additions are a JSON list of `Addition` dataclass fields; intron lists are genomic low/high pairs. The synthetic CLI test constructs a complete minimal example.
 
 Every run names `dataset`, `run`, `species`, `assembly`, `source`, `genotype_stratum`, boolean `uf`, both independence fields, `status: "complete"`, hashed `alignment` and hashed `metadata`. EST/FL-cDNA runs require both `arm: "primary"` and `arm: "min121"`. Nonsynthetic runs additionally require hashed DONE/provenance, and ONT orientation-audit JSON. Metadata is a JSON mapping from read ID to biological library, BioProject, genotype, explicit ingestion-QC and mapping-ambiguity states, plus applicable molecule-unit fields. EST metadata additionally carries post-trim length and optional accession/clone. Upstream ingestion QC is an explicit prerequisite covering vector/masking/contamination/paralog checks; it is not inferred from an existing DONE marker.
 
-Successful diagnostic execution emits `per_addition.csv`, `S12_inputs.csv`, `S12c_runs.csv`, `C0_observations.jsonl`, `PROVENANCE.json`, and a hash-bound `DONE`. The provenance hashes config, code, declared inputs and outputs. Neither the filesystem location of inputs nor a manifest role substitutes for an input hash comparison. An existing output directory is refused. Hash mismatch or an unresolved rule leaves no result directory.
+Successful diagnostic scoring emits `per_addition.csv`, `S12_inputs.csv`, `S12c_runs.csv`, `C0_observations.jsonl`, `PCR_diagnostic_runs.csv`, `PCR_diagnostic_additions.csv`, `PROVENANCE.json`, and a hash-bound `DONE`.
 
-## Work remaining after the author decisions
+`per_addition.csv` includes `chain_support_single_read` and `chain_support_threshold`, plus `chain_reading_report` holding both labelled tiers, complete sources, high-confidence sources and callable-negative flags. There is no unqualified `tier` or `chain_support` result. `tier_disagreement` flags a difference within each addition/arm/genotype/scope. S12 rates include both `chain_reading` and `chain_reading_label` for **every** metric (even unchanged junction and exact-CDS rates), crossed with A37's `arm`. Raw witness/unit counts remain shared measurements accompanied by both support readings.
+
+PCR diagnostics count connected candidate groups with the exact same enumeration used by molecule assignment. Per-run counts include global groups containing any member of that run; per-addition counts include groups with any same-strand overlapping member. This detects cross-run non-transitivity too. Such counts are not additive across runs or additions. Zero rows are emitted for unaffected runs/additions. Only accepted, known non-UMI ONT cDNA observations enter these groups. Unknown protocol/UMI metadata still fails molecule assignment; zero detected non-cliques is not clearance of other gates. The pass counts without raising or assigning units.
+
+A PCR stop or the B1 incomplete-work gate preserves **only** the two diagnostic CSVs and `PROVENANCE.json` with `status=scoring_refused`, the reason, counts, hashes and incomplete-work list. It emits no scores and no `DONE`, and the CLI exits 2. Counts are also in provenance on successful diagnostic scoring. The provenance hashes config, code, declared inputs and outputs. Neither the filesystem location of inputs nor a manifest role substitutes for an input hash comparison. An existing output directory is refused. Hash mismatch and earlier input/audit/QC failures leave no output directory; the two documented post-ingestion refusals retain diagnostics only.
+
+## Work remaining after the author decisions — all still incomplete
 
 These are implementation limits, not amendments or interpretations adopted by default:
 
@@ -49,17 +61,19 @@ These are implementation limits, not amendments or interpretations adopted by de
 
 ## Verification
 
-Command (uv supplies pytest without changing the shared conda environment):
+Synthetic-only command, from `/data/gpfs/assoc/pgl/data/Transgenic` (uv supplies pytest without changing the shared conda environment):
 
 ```sh
 /data/gpfs/home/wyim/.local/bin/uv run --no-project --with pytest --python /data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python python -m pytest -q transgenic/revision/scripts/tests/test_evidence_support.py
 ```
 
+Coverage includes single-witness primary support without threshold-supported constituents for all four sources; sensitivity thresholds and union non-pooling; tier disagreement; both readings crossed with A37 arms in rates; non-clique counts, cross-run membership, zero counts and permutation invariance; retained diagnostic outputs on refusal; and B1 QC, orientation and incomplete-work gates.
+
 Output:
 
 ```text
-................................ [100%]
-32 passed in 1.56s
+........................................... [100%]
+43 passed in 0.52s
 ```
 
-`git diff --check` reported no errors. Only the three requested files are new/untracked; no commit was made.
+`git diff --check` reported no errors. Only the scorer, its synthetic tests and this readings document are modified. No real evidence was scored. No commit is made; evidence/, *.sbatch and frozen §§3–9 text are unchanged.
