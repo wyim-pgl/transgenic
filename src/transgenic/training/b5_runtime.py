@@ -19,6 +19,19 @@ REQUIRED_CONFIG_KEYS = ("d_model_encoder", "d_model_decoder", "encoder_layers", 
 DEFAULT_PATIENCE = 3
 
 
+def epoch_batches(dataloader, epoch: int, resume_step: int = 0):
+    """Replay an Accelerate loader's epoch, preserving absolute micro-batch indices.
+
+    The trainer must prepare it with use_seedable_sampler=True. A new process
+    starts the loader at epoch zero even when checkpoint metadata names a later
+    epoch, so set_epoch is necessary on every entry, including resumed epochs.
+    """
+    dataloader.set_epoch(epoch)
+    for step, batch in enumerate(dataloader):
+        if step >= resume_step:
+            yield step, batch
+
+
 def load_b5_config(path: str) -> Dict:
     with open(path) as fh:
         cfg = json.load(fh)

@@ -29,12 +29,14 @@ def _wandb():
         wandb = _w
     return wandb
 from transgenic.training.b5_runtime import (load_b5_config, model_kwargs, accumulation_steps as _acc_steps, EarlyStopper,
-                                             CheckpointLayout, split_row_numbers, parse_args as _b5_parse_args, benchmark_summary)
+                                             CheckpointLayout, split_row_numbers, parse_args as _b5_parse_args, benchmark_summary,
+                                             epoch_batches)
 from tqdm import tqdm
 import bitsandbytes as bnb                                  # Provides 8-bit quantized optimizers
 from torch.nn.utils import clip_grad_norm_                  # Prevents gradient explosion
 from transformers import get_linear_schedule_with_warmup    # LR: warmup then linear decay to 0
 from accelerate import Accelerator                          # Handles mixed precision + multi-GPU
+from accelerate.utils import DataLoaderConfiguration
 from safetensors.torch import save_model                    # Fast, safe model serialization format
 
 # --- Project imports ---
@@ -160,7 +162,10 @@ def train(
     torch.set_float32_matmul_precision('high')  # Enable TF32 on tensor cores (3x faster matmul)
     torch.backends.cudnn.benchmark = True       # cuDNN auto-tuner: picks fastest conv algorithm
 
-    accelerator = Accelerator(mixed_precision="bf16")  # bf16: better dynamic range than fp16,
+    # A28 / #59: permutation must depend on the run seed and epoch, not the
+    # mid-epoch RNG state restored by load_state. manual_seed below seeds the sampler at prepare.
+    accelerator = Accelerator(mixed_precision="bf16", dataloader_config=DataLoaderConfiguration(
+        use_seedable_sampler=True))
     device = accelerator.device                        # no loss scaling needed, native on Ampere+
     if torch.cuda.is_available():
         gpu_props = torch.cuda.get_device_properties(0)
@@ -353,10 +358,9 @@ def train(
         for epoch in range(start_epoch, num_epochs):
             total_loss = 0                      # Accumulated loss for epoch-level metrics
 
-            for step, batch in enumerate(tqdm(train_dl, miniters=10)):
-                # Skip already-processed steps when resuming mid-epoch
-                if epoch == start_epoch and step < resume_step:
-                    continue
+            skip = resume_step if epoch == start_epoch else 0
+            for step, batch in tqdm(epoch_batches(train_dl, epoch, skip),
+                                    total=len(train_dl), initial=skip, miniters=10):
 
                 # Transfer tensors to GPU asynchronously (overlaps with computation)
                 # Requires pin_memory=True in DataLoader to be effective
