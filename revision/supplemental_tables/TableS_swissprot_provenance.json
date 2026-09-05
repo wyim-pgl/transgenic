@@ -1,0 +1,45 @@
+{
+  "Athaliana.swissprot_flags.tsv": {
+    "md5": "1bf39ce9ae07324ad9a9924cbc6b4f2d",
+    "sha256": "19733ad763b83468ad38202c153ec0a1300b579ee98086622f086250af9fd530"
+  },
+  "Bdistachyon.swissprot_flags.tsv": {
+    "md5": "ffca7f04c3c1e04b8226bd5aa1511c2c",
+    "sha256": "c9536d0dfbc28a75a1e4c899057ff58db656b895a60db17e77a094f3e582d11b"
+  },
+  "Gmax.swissprot_flags.tsv": {
+    "md5": "632fc827cd7c75407f047c237d8eb269",
+    "sha256": "9413b606d79f49f060c74d6539bd9fc8a78d0ecd25e069120c13d6ee705335a2"
+  },
+  "Osativa.swissprot_flags.tsv": {
+    "md5": "22273b6591fa6759d621e1b322cdc666",
+    "sha256": "cb2e279e98794d74a93b4693a6936b8121988a6b7fc29c4fbbb2090c947c9619"
+  },
+  "Ppatens.swissprot_flags.tsv": {
+    "md5": "e175fcb3ae6d6e564b3d50f800c46213",
+    "sha256": "2f8abd8cb6204fa8eaf3e8295ebbad0b85f3573e9290c85d05e0920a2e4df577"
+  },
+  "Ptrichocarpa.swissprot_flags.tsv": {
+    "md5": "ffcd8f04942855455d8a8c0cba476f30",
+    "sha256": "bd35aa7470b1b3a531d9377a2a36555df1b3c6914923779f917c9482f8f2580d"
+  },
+  "Sbicolor.swissprot_flags.tsv": {
+    "md5": "59133b0d9bd2720c57a12da298a4895d",
+    "sha256": "fd394d69381219ba0d7dd8f52fa77855ae14352d14a86b6e400f855623e9a61b"
+  },
+  "Sitalica.swissprot_flags.tsv": {
+    "md5": "ffca7f04c3c1e04b8226bd5aa1511c2c",
+    "sha256": "c9536d0dfbc28a75a1e4c899057ff58db656b895a60db17e77a094f3e582d11b"
+  },
+  "Vvinifera.swissprot_flags.tsv": {
+    "md5": "629db6e761835689ce4a1a841b765683",
+    "sha256": "a32fa74cff9c2bee88c6c04d33a4c46e0033aa5f2f50dde7f22e80b793ba7add"
+  },
+  "freeze_manifest_sha256": "200690a0ccd1e454cf0c5b04cc2042c8c596785f881f8c5709c3f2b9d0b1ba9f",
+  "masked_audit_sha256": "e191f61982e4b435d680bc704bb4d8b49d0d7ac097dd9b7e8b4bfbc9c9206903",
+  "scope": "Reporting only. Flag MD5s verified against frozen manifest; no database opened or input changed.",
+  "source_flags": "/tmp/transgenic-swissprot-inputs",
+  "source_masked_audit": "../evidence/swissprot_hard_masked_genes_20260902.tsv",
+  "source_summary": "/tmp/transgenic-swissprot-inputs/swissprot_summary.json",
+  "summary_sha256": "dcae553a692a2a29f4989d281b3b1e2d8122c0a6a9dd956e09b083e7f89c4165"
+}

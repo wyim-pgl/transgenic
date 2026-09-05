@@ -151,3 +151,30 @@ def test_a33_edge_margin_invariant_over_three_offsets(gsf):
         # a gene at a contig edge has no sequence beyond it; the contig edge satisfies the margin on that side
         assert gsf.covered_with_margin(0, 5000, tier)
         assert gsf.covered_with_margin(3 * tier - 5000, 3 * tier, tier, contig_len=3 * tier)
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_equal_span_distinct_genes_use_canonical_block_tiebreak(gsf, reverse):
+    text = (gff("Chr1", "a", "+", {"a1": [("CDS", 101, 400, 0)]})
+            + gff("Chr1", "b", "+", {"b1": [("CDS", 101, 199, 0), ("CDS", 302, 400, 0)]}))
+    genes = _genes(gsf, text)
+    if reverse:
+        genes.reverse()
+    blocks = sorted(gsf.gene_to_gsf(g, 50) for g in genes)
+    label = gsf.window_to_gsf_v3(genes, 50)
+    assert label == gsf.GENE_SEP.join(blocks)
+    gsf.check_caps_v3(label, 1000)
+    assert gsf.reverse_complement_v3(gsf.reverse_complement_v3(label, 1000), 1000) == label
+    with pytest.raises(gsf.CapError, match="tie-break at equal span"):
+        gsf.check_caps_v3(gsf.GENE_SEP.join(reversed(blocks)), 1000)
+
+
+def test_emitter_orders_emitted_features_not_outer_annotation_spans(gsf):
+    genes = _genes(gsf, gff("Chr1", "a", "+", {"a1": [("CDS", 501, 800, 0)]})
+                   + gff("Chr1", "b", "+", {"b1": [("CDS", 201, 400, 0)]}))
+    # Outer annotation envelopes can extend beyond the emitted features.
+    genes[0].start0 = 0
+    genes[1].start0 = 100
+    label = gsf.window_to_gsf_v3(genes, 0)
+    assert label.startswith('200|')
+    gsf.check_caps_v3(label, 1000)

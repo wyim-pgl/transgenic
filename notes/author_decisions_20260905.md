@@ -1,6 +1,6 @@
 # Author decisions — 2026-09-05
 
-Pending decisions, not author approvals. Reply with one line per issue using the choices below. No recipe, tokenizer, input annotation, frozen database, or protocol text has been changed for these decisions.
+Pending decisions, not author approvals. Reply with one line per issue using the choices below. No author-approved recipe, tokenizer, input annotation, frozen database, or protocol text has been changed for these decisions. The #55 ordering correction is implemented for future builds only; applying it to replace the frozen corpus remains pending below.
 
 Measurements: GitHub #58 and #56, read 2026-09-05; outer `resume.md`, measured 2026-09-04. Frozen corpus: 272,224 rows. Full nine-species rebuild budget: approximately 1.5 hours, plus merge, validation and a new freeze; a species-only rebuild is cheaper but still requires a new merged artifact and freeze. These are not timings measured in this change.
 
@@ -88,3 +88,30 @@ gene_split: 334642 rows; 0 violations
 ```
 
 `git diff --check` passed. No commits, protocol edits, `evidence/` changes or `*.sbatch` changes. #58 and #56 remain pending author decisions.
+
+## #55 — disposition of frozen ordering rejections (pending)
+
+**Correction to the issue's diagnosis:** the 2026-09-05 read-only audit of the frozen merged database finds 97 canonical-order rejections (Athaliana 8, Ppatens 10, Ptrichocarpa 1, Vvinifera 78). Only **13** compare equal spans; **84** compare decreasing feature spans, with zero unparsed messages. The emitter used annotation coordinates; the validator uses emitted feature coordinates and canonical block text. A tie-break-only patch is insufficient. The emitter now canonicalizes the emitted blocks with the same ordering as the validator, and diagnostics name equal-span tie breaks explicitly. This is a future-build code correction, not authorization to replace the frozen object.
+
+| Pending author choice | Cost and effect |
+|---|---|
+| Retain current frozen corpus and defer recovery | No rebuild. Report all 97 discarded windows and the corrected 13/84 diagnosis as a corpus limitation; explicitly accept retaining these omissions for the current run. |
+| Recover ordering failures in a replacement corpus | Rebuild affected species, then merge, validate and freeze a **new artifact**. Conservative full-nine-species budget is approximately 1.5 hours plus merge/validation/refreeze (inherited estimate, not a timing from this audit). Four species have recorded ordering rejects; prove other species unchanged before reusing them. Recompute all membership, split and masking counts and training provenance. |
+
+**Recommendation:** coordinate recovery with whichever #56 remedy the author selects, avoiding repeated rebuilds. Fixing order removes this rejection reason but does **not** prove all 97 windows survive subsequent mask-fraction filters or establish the final RC row count. The rejection log does not retain discarded labels. Do not patch the frozen database in place or advertise “97 recovered” without a replacement build. Record the approved disposition and recipe correction in a dated §12 defect amendment before applying it to the corpus; frozen §§3–9 remain untouched.
+
+#58 does not block the ordering fix or read-only diagnostics: neither changes empty-label tokenization. #56 does not block these implementations, but its masking/population choice affects a replacement build and must be coordinated before producing that artifact. No rebuild was performed here.
+
+## #61 — metric universe (pending definition, completed accounting)
+
+The read-only frozen audit establishes **15,005 / 91,787** nominal test genes ever labelled, **7,316 / 29,153** validation genes, **196,592 / 213,702** training genes, and **431 / 3,430** strict holdouts. The test-tile target population is **54,188** unique genes, comprising 34,606 train-assigned + 4,577 valid-assigned + 15,005 test-assigned genes. Frozen row counts are 198,171 train / 25,910 valid / 48,143 test (RC included). All three label-membership integrity checks pass. These checks do not absolve #56's unlabelled sequence exposure.
+
+There is no single denominator shared by coverage, validation loss, gene/reference accuracy and evidence-support outcomes. The actual trainer averages validation-batch losses; the nominal validation-gene count is not its divisor. Full-GFF evaluation remains as specified in A22/A30; callability-based outcomes retain their frozen definitions. The implementation reports the assignment-by-tile-split matrix, strict counts, per-species length and reference transcript-count distributions, and the Methods insert distinguishes these populations. No metric was rerun or test set redefined.
+
+**Author decision still required:** identify the intended scoring universe for any paper claim called “test performance” (existing tile targets, nominal test-gene intersection, or another explicitly approved reference evaluation). Choosing a new subset is a protocol/scorer decision, not accomplished by dividing by 15,005. Existing full-GFF outcomes must not silently be narrowed to labelled loci. Reporting costs no rebuild; changing only scoring eligibility needs a versioned scorer and rerun, while changing tile/block allocation needs a new corpus/build budget and freeze. Those costs depend on the author's choice.
+
+#58 prevents asserting an exact decoder-token denominator until the empty-target convention is resolved. #56 affects corpus eligibility and the interpretation of unlabelled test genes; all present measurements describe the existing frozen corpus, not a repaired one. Neither blocks factual population/distribution reporting. Descriptive differences are reported without claiming random representativeness.
+
+## #54 — existing decisions implemented, no new decision requested
+
+The author already declined the rice RAP–MSU map (2026-09-02) and retained all Arabidopsis caution masks (2026-09-03). Per-species mapping/flag accounting, the unchanged 571-row / 567-gene Arabidopsis detail table, and Methods wording now appear in `revision/Methods_B5_corpus_accounting.md` and the linked supplementary tables. All nine flag hashes match the freeze. The frozen inputs also contain **one soybean hard-flagged gene**, explicitly reported; “effectively Arabidopsis-only” does not mean exclusively Arabidopsis. No flags, evidence inputs or frozen objects were changed.

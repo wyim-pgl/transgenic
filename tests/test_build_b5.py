@@ -484,3 +484,20 @@ def test_issue57_tile_validator_rejects_missing_assignments(tmp_path, b5):
     con.sql("DELETE FROM gene_split WHERE gene_id='gbig'")  # rejected gene still needs an assignment
     con.close()
     assert 'gene_split: missing assignment for Athaliana:gbig' in b5.validate_b5_database(str(db))['violations']
+
+
+def test_population_reference_counts_and_hash_guard(tmp_path, b5):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    db = tmp_path / 'population.db'
+    b5.build_b5_database(str(db), str(manifest), str(split), rc='all', verify_md5=False,
+                         window_policy='tile6144-v3')
+    report = _load(ROOT / 'scripts' / 'report_b5_database.py', 'report_population')
+    with duckdb.connect(str(db), read_only=True) as con:
+        p = report.evaluation_population(con, reference_distributions=True)
+        tx = p['test_reference_transcript_count']
+        assert tx['missing_test_gene_keys'] == 0
+        assert sum(v['n'] for v in tx['by_species']['Athaliana'].values()) == 1
+        assert p['split_totals']['test']['assigned_genes'] == 1
+        gff.write_text(gff.read_text() + '# changed\n')
+        with pytest.raises(ValueError, match='SHA256 differs'):
+            report.evaluation_population(con, reference_distributions=True)

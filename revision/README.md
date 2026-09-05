@@ -102,3 +102,7 @@ python scripts/03_splice_event_detection.py \
 - **AtRTD3**: Zhang et al., Genome Biology 2022
 - **GFFCompare**: Pertea & Pertea, 2020
 - **rMATS definitions**: Shen et al., PNAS 2014
+
+## B5 corpus and Swiss-Prot accounting
+
+[Methods insert and supplementary table definitions](Methods_B5_corpus_accounting.md) report the frozen corpus's labelled populations and the existing A30 Swiss-Prot decisions. [Author decisions](../notes/author_decisions_20260905.md) retain the pending corpus-rebuild and evaluation-universe choices. The reproducible read-only audit and validation commands are in [the issue implementation record](../notes/issues55_61_54_20260905.md).

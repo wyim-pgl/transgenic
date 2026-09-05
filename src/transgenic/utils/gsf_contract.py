@@ -547,7 +547,7 @@ def window_to_gsf_v3(genes: Sequence[Gene], ws: int) -> str:
         if not any(g.transcripts.values()):
             continue
         blocks.append(gene_to_gsf(g, ws))
-    return GENE_SEP.join(blocks) if blocks else EMPTY_LABEL
+    return canonicalize_v3(GENE_SEP.join(blocks)) if blocks else EMPTY_LABEL
 
 
 def split_v3(gsf: str) -> List[str]:
@@ -593,7 +593,8 @@ def check_caps_v3(gsf: str, window_len: Optional[int] = None) -> None:
         # A33.1: gene blocks may overlap; the block key (start, end, canonical block) must not decrease.
         key = (gs, ge, canonicalize(b))
         if prev_key is not None and key < prev_key:
-            raise CapError(f"gene blocks out of canonical order ({key[:2]} after {prev_key[:2]})")
+            detail = "canonical block tie-break at equal span" if key[:2] == prev_key[:2] else "decreasing span"
+            raise CapError(f"gene blocks out of canonical order ({key[:2]} after {prev_key[:2]}; {detail})")
         prev_key = key
         if window_len is not None and ge > window_len:
             raise CapError(f"gene extends beyond the window ({ge} > {window_len})")

@@ -1,0 +1,2100 @@
+{
+ "canonical_order_audit": {
+  "by_species": {
+   "Athaliana": 8,
+   "Ppatens": 10,
+   "Ptrichocarpa": 1,
+   "Vvinifera": 78
+  },
+  "cases": [
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((50890, 53514) after (50890, 53514))",
+    "species_id": "Athaliana",
+    "window": "Chr1:10441084-10570108"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((25226, 27850) after (25226, 27850))",
+    "species_id": "Athaliana",
+    "window": "Chr1:10466748-10528188"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((14739, 17363) after (14739, 17363))",
+    "species_id": "Athaliana",
+    "window": "Chr1:10477235-10507955"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((112276, 114333) after (112276, 114333))",
+    "species_id": "Athaliana",
+    "window": "Chr1:21408124-21537148"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((55892, 57949) after (55892, 57949))",
+    "species_id": "Athaliana",
+    "window": "Chr1:21464508-21525948"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((14685, 16742) after (14685, 16742))",
+    "species_id": "Athaliana",
+    "window": "Chr1:21505715-21536435"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((103256, 105286) after (103256, 105286))",
+    "species_id": "Athaliana",
+    "window": "Chr3:19694850-19823874"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((16760, 18790) after (16760, 18790))",
+    "species_id": "Athaliana",
+    "window": "Chr3:19781346-19842786"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((116087, 120372) after (118359, 120228))",
+    "species_id": "Ppatens",
+    "window": "Chr02:25869060-25998084"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((48503, 52788) after (50775, 52644))",
+    "species_id": "Ppatens",
+    "window": "Chr02:25936644-25998084"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((17783, 22068) after (20055, 21924))",
+    "species_id": "Ppatens",
+    "window": "Chr02:25967364-25998084"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((34505, 37895) after (34505, 38031))",
+    "species_id": "Ppatens",
+    "window": "Chr10:10007992-10069432"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((10144, 13534) after (10144, 13670))",
+    "species_id": "Ppatens",
+    "window": "Chr10:10032353-10063073"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((72516, 75906) after (72516, 76042))",
+    "species_id": "Ppatens",
+    "window": "Chr10:9969981-10099005"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((36793, 39296) after (36793, 39296))",
+    "species_id": "Ppatens",
+    "window": "Chr13:10223351-10284791"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((5703, 8206) after (5703, 8206))",
+    "species_id": "Ppatens",
+    "window": "Chr13:10254441-10285161"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((58698, 68382) after (58698, 68382))",
+    "species_id": "Ppatens",
+    "window": "Chr21:8256210-8385234"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((33940, 43624) after (33940, 43624))",
+    "species_id": "Ppatens",
+    "window": "Chr21:8280968-8342408"
+   },
+   {
+    "decreasing_span": false,
+    "equal_span_tie": true,
+    "reason": "window gene blocks out of canonical order ((9585, 11357) after (9585, 11357))",
+    "species_id": "Ptrichocarpa",
+    "window": "Chr06:2139170-2200610"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((30494, 30800) after (33252, 42165))",
+    "species_id": "Vvinifera",
+    "window": "chr01:1549894-1611334"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((41468, 48001) after (49008, 50685))",
+    "species_id": "Vvinifera",
+    "window": "chr02:14270220-14331660"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((18970, 25503) after (26510, 28187))",
+    "species_id": "Vvinifera",
+    "window": "chr02:14292718-14421742"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((12316, 18849) after (19856, 21533))",
+    "species_id": "Vvinifera",
+    "window": "chr02:14299372-14330092"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((62872, 63022) after (66026, 67149))",
+    "species_id": "Vvinifera",
+    "window": "chr02:3067630-3196654"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((42362, 42512) after (45516, 46639))",
+    "species_id": "Vvinifera",
+    "window": "chr02:3088140-3149580"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((91526, 98869) after (104004, 114020))",
+    "species_id": "Vvinifera",
+    "window": "chr02:616174-745198"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((15720, 23063) after (28198, 38214))",
+    "species_id": "Vvinifera",
+    "window": "chr02:691980-753420"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((73122, 75465) after (76833, 84249))",
+    "species_id": "Vvinifera",
+    "window": "chr03:1831406-1960430"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((46320, 46707) after (47039, 47198))",
+    "species_id": "Vvinifera",
+    "window": "chr04:13286052-13347492"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((22895, 23282) after (23614, 23773))",
+    "species_id": "Vvinifera",
+    "window": "chr04:13309477-13438501"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((10588, 10975) after (11307, 11466))",
+    "species_id": "Vvinifera",
+    "window": "chr04:13321784-13352504"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((103012, 103216) after (103919, 104210))",
+    "species_id": "Vvinifera",
+    "window": "chr04:536101-665125"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((9701, 9905) after (10608, 10899))",
+    "species_id": "Vvinifera",
+    "window": "chr04:629412-690852"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((4689, 4893) after (5596, 5887))",
+    "species_id": "Vvinifera",
+    "window": "chr04:634424-665144"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((9670, 16785) after (18161, 18387))",
+    "species_id": "Vvinifera",
+    "window": "chr04:9169572-9231012"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((4658, 11773) after (13149, 13375))",
+    "species_id": "Vvinifera",
+    "window": "chr04:9174584-9205304"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((108894, 110143) after (113317, 114384))",
+    "species_id": "Vvinifera",
+    "window": "chr05:567118-696142"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((17983, 19232) after (22406, 23473))",
+    "species_id": "Vvinifera",
+    "window": "chr05:658029-719469"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((7548, 8797) after (11971, 13038))",
+    "species_id": "Vvinifera",
+    "window": "chr05:668464-699184"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((64395, 64946) after (67830, 77823))",
+    "species_id": "Vvinifera",
+    "window": "chr06:1968703-2097727"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((7536, 8087) after (10971, 20964))",
+    "species_id": "Vvinifera",
+    "window": "chr06:2025562-2056282"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((2994, 3545) after (6429, 16422))",
+    "species_id": "Vvinifera",
+    "window": "chr06:2030104-2091544"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((59467, 60608) after (61007, 61331))",
+    "species_id": "Vvinifera",
+    "window": "chr06:6871615-7000639"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((47218, 48359) after (48758, 49082))",
+    "species_id": "Vvinifera",
+    "window": "chr06:6883864-6945304"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((21040, 22181) after (22580, 22904))",
+    "species_id": "Vvinifera",
+    "window": "chr06:6910042-6940762"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((9778, 10255) after (10618, 11648))",
+    "species_id": "Vvinifera",
+    "window": "chr07:27764259-27794979"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((111516, 112639) after (114816, 122582))",
+    "species_id": "Vvinifera",
+    "window": "chr07:5194357-5323381"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((17778, 18901) after (21078, 28844))",
+    "species_id": "Vvinifera",
+    "window": "chr07:5288095-5349535"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((33910, 35779) after (36091, 45621))",
+    "species_id": "Vvinifera",
+    "window": "chr08:10367434-10428874"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((51661, 53378) after (59349, 61323))",
+    "species_id": "Vvinifera",
+    "window": "chr08:19174390-19303414"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((11257, 12974) after (18945, 20919))",
+    "species_id": "Vvinifera",
+    "window": "chr08:19214794-19276234"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((2494, 4211) after (10182, 12156))",
+    "species_id": "Vvinifera",
+    "window": "chr08:19223557-19254277"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((22636, 23750) after (23986, 27218))",
+    "species_id": "Vvinifera",
+    "window": "chr09:6285111-6414135"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((5604, 6718) after (6954, 10186))",
+    "species_id": "Vvinifera",
+    "window": "chr09:6302143-6363583"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((2743, 3857) after (4093, 7325))",
+    "species_id": "Vvinifera",
+    "window": "chr09:6305004-6335724"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((25186, 25963) after (26460, 29537))",
+    "species_id": "Vvinifera",
+    "window": "chr11:16630818-16661538"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((6445, 6628) after (6631, 6835))",
+    "species_id": "Vvinifera",
+    "window": "chr11:5598144-5727168"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((2251, 2434) after (2437, 2641))",
+    "species_id": "Vvinifera",
+    "window": "chr11:5602338-5633058"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((27839, 28695) after (28817, 29761))",
+    "species_id": "Vvinifera",
+    "window": "chr11:5624958-5686398"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((19739, 20595) after (20717, 21661))",
+    "species_id": "Vvinifera",
+    "window": "chr11:5633058-5663778"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((30931, 31093) after (39846, 40140))",
+    "species_id": "Vvinifera",
+    "window": "chr11:7404480-7533504"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((28693, 28855) after (37608, 37902))",
+    "species_id": "Vvinifera",
+    "window": "chr11:7406718-7468158"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((20593, 20755) after (29508, 29802))",
+    "species_id": "Vvinifera",
+    "window": "chr11:7414818-7445538"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((107729, 109174) after (109230, 109933))",
+    "species_id": "Vvinifera",
+    "window": "chr12:21723152-21852176"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((57557, 59002) after (59058, 59761))",
+    "species_id": "Vvinifera",
+    "window": "chr12:21773324-21834764"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((20737, 22182) after (22238, 22941))",
+    "species_id": "Vvinifera",
+    "window": "chr12:21810144-21840864"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((10744, 12188) after (13244, 14522))",
+    "species_id": "Vvinifera",
+    "window": "chr14:21470715-21599739"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((3517, 4961) after (6017, 7295))",
+    "species_id": "Vvinifera",
+    "window": "chr14:21477942-21539382"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((111537, 113904) after (115701, 115902))",
+    "species_id": "Vvinifera",
+    "window": "chr14:22889979-23019003"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((49014, 51381) after (53178, 53379))",
+    "species_id": "Vvinifera",
+    "window": "chr14:22952502-23013942"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((46900, 48055) after (53120, 53291))",
+    "species_id": "Vvinifera",
+    "window": "chr15:16918031-16979471"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((15311, 16466) after (21531, 21702))",
+    "species_id": "Vvinifera",
+    "window": "chr15:16949620-16980340"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((117699, 117963) after (118542, 118926))",
+    "species_id": "Vvinifera",
+    "window": "chr15:16981855-17110879"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((27054, 27318) after (27897, 28281))",
+    "species_id": "Vvinifera",
+    "window": "chr15:17072500-17103220"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((111583, 112681) after (111872, 112424))",
+    "species_id": "Vvinifera",
+    "window": "chr16:13669536-13798560"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((59181, 60279) after (59470, 60022))",
+    "species_id": "Vvinifera",
+    "window": "chr16:13721938-13783378"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((16639, 17737) after (16928, 17480))",
+    "species_id": "Vvinifera",
+    "window": "chr16:13764480-13795200"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((8505, 10062) after (12565, 17005))",
+    "species_id": "Vvinifera",
+    "window": "chr16:509088-638112"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((5255, 6812) after (9315, 13755))",
+    "species_id": "Vvinifera",
+    "window": "chr16:512338-573778"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((88787, 89111) after (89397, 89754))",
+    "species_id": "Vvinifera",
+    "window": "chr18:14117883-14246907"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((34445, 34769) after (35055, 35412))",
+    "species_id": "Vvinifera",
+    "window": "chr18:14172225-14233665"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((24048, 24372) after (24658, 25015))",
+    "species_id": "Vvinifera",
+    "window": "chr18:14182622-14213342"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((70222, 70936) after (74070, 74785))",
+    "species_id": "Vvinifera",
+    "window": "chr19:22941999-23071023"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((19377, 20091) after (23225, 23940))",
+    "species_id": "Vvinifera",
+    "window": "chr19:22992844-23023564"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((10489, 11203) after (14337, 15052))",
+    "species_id": "Vvinifera",
+    "window": "chr19:23001732-23063172"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((46937, 47615) after (48803, 49007))",
+    "species_id": "Vvinifera",
+    "window": "chr19:23458095-23587119"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((20668, 21346) after (22534, 22738))",
+    "species_id": "Vvinifera",
+    "window": "chr19:23484364-23515084"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((11780, 12458) after (13646, 13850))",
+    "species_id": "Vvinifera",
+    "window": "chr19:23493252-23554692"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((40046, 40395) after (40862, 49787))",
+    "species_id": "Vvinifera",
+    "window": "chr19:2814255-2943279"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((13777, 14126) after (14593, 23518))",
+    "species_id": "Vvinifera",
+    "window": "chr19:2840524-2871244"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((4889, 5238) after (5705, 14630))",
+    "species_id": "Vvinifera",
+    "window": "chr19:2849412-2910852"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((89672, 89921) after (95243, 98536))",
+    "species_id": "Vvinifera",
+    "window": "chr19:3072303-3201327"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((100513, 101273) after (102085, 103144))",
+    "species_id": "Vvinifera",
+    "window": "chr19:4104495-4233519"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((12804, 13564) after (14376, 15435))",
+    "species_id": "Vvinifera",
+    "window": "chr19:4192204-4222924"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((3916, 4676) after (5488, 6547))",
+    "species_id": "Vvinifera",
+    "window": "chr19:4201092-4262532"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((122130, 123303) after (123859, 128578))",
+    "species_id": "Vvinifera",
+    "window": "chr19:749871-878895"
+   },
+   {
+    "decreasing_span": true,
+    "equal_span_tie": false,
+    "reason": "window gene blocks out of canonical order ((50109, 51282) after (51838, 56557))",
+    "species_id": "Vvinifera",
+    "window": "chr19:821892-883332"
+   }
+  ],
+  "decreasing_spans": 84,
+  "equal_span_ties": 13,
+  "limitation": "Does not reconstruct discarded labels or establish survival of later mask-fraction filters.",
+  "rejected_tiles": 97,
+  "source": "read-only rejected_records; comparison keys recorded by validator",
+  "unparsed_or_unexpected": 0
+ },
+ "checks": {
+  "gene_split_copied_once": true,
+  "no_excluded_species": true,
+  "no_gene_labelled_below_its_split": true,
+  "no_maize_gene_models": true,
+  "no_null_split": true,
+  "no_orphan_window_genes": true,
+  "no_strict_holdout_labelled_outside_test": true,
+  "one_build_manifest_row_per_species": true,
+  "rn_dense_1_to_n": true,
+  "species_blocks_contiguous": true,
+  "species_blocks_disjoint_and_ordered": true
+ },
+ "database_access": "read_only=True; temporary relations only; frozen file never updated",
+ "db": "/home/pgl/scratch1/wyim/transgenic_data/b5/merged/b5_full_v1.db",
+ "evaluation_population": {
+  "definition": "Ever-labelled unique (species_id, gene_id) in window_genes, not nominal split size or a universal metric denominator.",
+  "gene_split_by_tile_split": [
+   {
+    "gene_split": "test",
+    "species_id": "Athaliana",
+    "tile_split": "test",
+    "unique_genes": 1551
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Athaliana",
+    "tile_split": "test",
+    "unique_genes": 1776
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Athaliana",
+    "tile_split": "train",
+    "unique_genes": 9329
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Athaliana",
+    "tile_split": "valid",
+    "unique_genes": 1816
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Athaliana",
+    "tile_split": "test",
+    "unique_genes": 245
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Athaliana",
+    "tile_split": "valid",
+    "unique_genes": 241
+   },
+   {
+    "gene_split": "test",
+    "species_id": "Bdistachyon",
+    "tile_split": "test",
+    "unique_genes": 1305
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Bdistachyon",
+    "tile_split": "test",
+    "unique_genes": 3159
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Bdistachyon",
+    "tile_split": "train",
+    "unique_genes": 15632
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Bdistachyon",
+    "tile_split": "valid",
+    "unique_genes": 2053
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Bdistachyon",
+    "tile_split": "test",
+    "unique_genes": 439
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Bdistachyon",
+    "tile_split": "valid",
+    "unique_genes": 267
+   },
+   {
+    "gene_split": "test",
+    "species_id": "Gmax",
+    "tile_split": "test",
+    "unique_genes": 2581
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Gmax",
+    "tile_split": "test",
+    "unique_genes": 5111
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Gmax",
+    "tile_split": "train",
+    "unique_genes": 21102
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Gmax",
+    "tile_split": "valid",
+    "unique_genes": 2825
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Gmax",
+    "tile_split": "test",
+    "unique_genes": 662
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Gmax",
+    "tile_split": "valid",
+    "unique_genes": 428
+   },
+   {
+    "gene_split": "test",
+    "species_id": "Osativa",
+    "tile_split": "test",
+    "unique_genes": 1851
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Osativa",
+    "tile_split": "test",
+    "unique_genes": 5039
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Osativa",
+    "tile_split": "train",
+    "unique_genes": 20527
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Osativa",
+    "tile_split": "valid",
+    "unique_genes": 2638
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Osativa",
+    "tile_split": "test",
+    "unique_genes": 624
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Osativa",
+    "tile_split": "valid",
+    "unique_genes": 387
+   },
+   {
+    "gene_split": "test",
+    "species_id": "Ppatens",
+    "tile_split": "test",
+    "unique_genes": 688
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Ppatens",
+    "tile_split": "test",
+    "unique_genes": 3404
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Ppatens",
+    "tile_split": "train",
+    "unique_genes": 16001
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Ppatens",
+    "tile_split": "valid",
+    "unique_genes": 2110
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Ppatens",
+    "tile_split": "test",
+    "unique_genes": 484
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Ppatens",
+    "tile_split": "valid",
+    "unique_genes": 253
+   },
+   {
+    "gene_split": "test",
+    "species_id": "Ptrichocarpa",
+    "tile_split": "test",
+    "unique_genes": 1749
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Ptrichocarpa",
+    "tile_split": "test",
+    "unique_genes": 3188
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Ptrichocarpa",
+    "tile_split": "train",
+    "unique_genes": 14902
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Ptrichocarpa",
+    "tile_split": "valid",
+    "unique_genes": 2461
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Ptrichocarpa",
+    "tile_split": "test",
+    "unique_genes": 414
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Ptrichocarpa",
+    "tile_split": "valid",
+    "unique_genes": 393
+   },
+   {
+    "gene_split": "test",
+    "species_id": "Sbicolor",
+    "tile_split": "test",
+    "unique_genes": 1398
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Sbicolor",
+    "tile_split": "test",
+    "unique_genes": 3564
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Sbicolor",
+    "tile_split": "train",
+    "unique_genes": 14829
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Sbicolor",
+    "tile_split": "valid",
+    "unique_genes": 1762
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Sbicolor",
+    "tile_split": "test",
+    "unique_genes": 491
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Sbicolor",
+    "tile_split": "valid",
+    "unique_genes": 227
+   },
+   {
+    "gene_split": "test",
+    "species_id": "Sitalica",
+    "tile_split": "test",
+    "unique_genes": 1777
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Sitalica",
+    "tile_split": "test",
+    "unique_genes": 4444
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Sitalica",
+    "tile_split": "train",
+    "unique_genes": 14792
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Sitalica",
+    "tile_split": "valid",
+    "unique_genes": 2200
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Sitalica",
+    "tile_split": "test",
+    "unique_genes": 612
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Sitalica",
+    "tile_split": "valid",
+    "unique_genes": 269
+   },
+   {
+    "gene_split": "test",
+    "species_id": "Vvinifera",
+    "tile_split": "test",
+    "unique_genes": 2105
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Vvinifera",
+    "tile_split": "test",
+    "unique_genes": 4921
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Vvinifera",
+    "tile_split": "train",
+    "unique_genes": 18777
+   },
+   {
+    "gene_split": "train",
+    "species_id": "Vvinifera",
+    "tile_split": "valid",
+    "unique_genes": 2200
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Vvinifera",
+    "tile_split": "test",
+    "unique_genes": 606
+   },
+   {
+    "gene_split": "valid",
+    "species_id": "Vvinifera",
+    "tile_split": "valid",
+    "unique_genes": 314
+   }
+  ],
+  "metric_scope": "Tile targets contain all eligible labelled genes, including train/valid genes in test tiles. Full-GFF evaluation and evidence callability have separate denominators. No scoring universe is changed.",
+  "split_totals": {
+   "test": {
+    "assigned_genes": 91787,
+    "ever_labelled_genes": 15005,
+    "pct": 16.348,
+    "strict_assigned": 3430,
+    "strict_ever_labelled": 431
+   },
+   "train": {
+    "assigned_genes": 213702,
+    "ever_labelled_genes": 196592,
+    "pct": 91.994,
+    "strict_assigned": 0,
+    "strict_ever_labelled": 0
+   },
+   "valid": {
+    "assigned_genes": 29153,
+    "ever_labelled_genes": 7316,
+    "pct": 25.095,
+    "strict_assigned": 0,
+    "strict_ever_labelled": 0
+   }
+  },
+  "test_gene_length_nt": {
+   "Athaliana": {
+    "labelled": {
+     "max": 19352,
+     "mean": 2043.1521598968407,
+     "median": 1747.0,
+     "n": 1551,
+     "p25": 1039.0,
+     "p75": 2634.5
+    },
+    "unlabelled": {
+     "max": 25965,
+     "mean": 2052.35386555437,
+     "median": 1740.0,
+     "n": 10309,
+     "p25": 1055.0,
+     "p75": 2632.0
+    }
+   },
+   "Bdistachyon": {
+    "labelled": {
+     "max": 45046,
+     "mean": 3546.313409961686,
+     "median": 2865.0,
+     "n": 1305,
+     "p25": 1618.0,
+     "p75": 4577.0
+    },
+    "unlabelled": {
+     "max": 34162,
+     "mean": 3580.124931880109,
+     "median": 2832.5,
+     "n": 7340,
+     "p25": 1490.0,
+     "p75": 4730.0
+    }
+   },
+   "Gmax": {
+    "labelled": {
+     "max": 64195,
+     "mean": 4186.2080588919025,
+     "median": 3368.0,
+     "n": 2581,
+     "p25": 1806.0,
+     "p75": 5234.0
+    },
+    "unlabelled": {
+     "max": 101575,
+     "mean": 4383.6180291508235,
+     "median": 3446.5,
+     "n": 12624,
+     "p25": 1813.0,
+     "p75": 5428.25
+    }
+   },
+   "Osativa": {
+    "labelled": {
+     "max": 23438,
+     "mean": 3019.2296056185846,
+     "median": 2458.0,
+     "n": 1851,
+     "p25": 1213.0,
+     "p75": 4147.0
+    },
+    "unlabelled": {
+     "max": 57094,
+     "mean": 3109.2104511367693,
+     "median": 2450.0,
+     "n": 8401,
+     "p25": 1192.0,
+     "p75": 4184.0
+    }
+   },
+   "Ppatens": {
+    "labelled": {
+     "max": 21534,
+     "mean": 3499.3982558139537,
+     "median": 2893.0,
+     "n": 688,
+     "p25": 1513.75,
+     "p75": 4736.5
+    },
+    "unlabelled": {
+     "max": 20274,
+     "mean": 3252.663483931067,
+     "median": 2766.5,
+     "n": 4294,
+     "p25": 1240.5,
+     "p75": 4490.75
+    }
+   },
+   "Ptrichocarpa": {
+    "labelled": {
+     "max": 38408,
+     "mean": 3622.7347055460264,
+     "median": 2743.0,
+     "n": 1749,
+     "p25": 1578.0,
+     "p75": 4608.0
+    },
+    "unlabelled": {
+     "max": 37536,
+     "mean": 3588.2662643993417,
+     "median": 2893.0,
+     "n": 9115,
+     "p25": 1586.0,
+     "p75": 4697.0
+    }
+   },
+   "Sbicolor": {
+    "labelled": {
+     "max": 61183,
+     "mean": 3877.271101573677,
+     "median": 2939.5,
+     "n": 1398,
+     "p25": 1637.5,
+     "p75": 4780.25
+    },
+    "unlabelled": {
+     "max": 74108,
+     "mean": 3955.4803854094976,
+     "median": 3010.0,
+     "n": 7265,
+     "p25": 1622.0,
+     "p75": 4951.0
+    }
+   },
+   "Sitalica": {
+    "labelled": {
+     "max": 36888,
+     "mean": 3301.099606077659,
+     "median": 2635.0,
+     "n": 1777,
+     "p25": 1451.0,
+     "p75": 4253.0
+    },
+    "unlabelled": {
+     "max": 31747,
+     "mean": 3321.018625995411,
+     "median": 2663.0,
+     "n": 7409,
+     "p25": 1435.0,
+     "p75": 4379.0
+    }
+   },
+   "Vvinifera": {
+    "labelled": {
+     "max": 94758,
+     "mean": 4538.781947743468,
+     "median": 2663.0,
+     "n": 2105,
+     "p25": 1183.0,
+     "p75": 5504.0
+    },
+    "unlabelled": {
+     "max": 131520,
+     "mean": 4715.970972568579,
+     "median": 2475.0,
+     "n": 10025,
+     "p25": 917.0,
+     "p75": 5225.0
+    }
+   }
+  },
+  "test_reference_transcript_count": {
+   "by_species": {
+    "Athaliana": {
+     "labelled": {
+      "max": 7,
+      "mean": 1.2056737588652482,
+      "median": 1.0,
+      "n": 1551,
+      "p25": 1.0,
+      "p75": 1.0
+     },
+     "unlabelled": {
+      "max": 9,
+      "mean": 1.1991463769521777,
+      "median": 1.0,
+      "n": 10309,
+      "p25": 1.0,
+      "p75": 1.0
+     }
+    },
+    "Bdistachyon": {
+     "labelled": {
+      "max": 14,
+      "mean": 1.5455938697318008,
+      "median": 1.0,
+      "n": 1305,
+      "p25": 1.0,
+      "p75": 2.0
+     },
+     "unlabelled": {
+      "max": 25,
+      "mean": 1.5798365122615803,
+      "median": 1.0,
+      "n": 7340,
+      "p25": 1.0,
+      "p75": 1.0
+     }
+    },
+    "Gmax": {
+     "labelled": {
+      "max": 13,
+      "mean": 1.545912437039907,
+      "median": 1.0,
+      "n": 2581,
+      "p25": 1.0,
+      "p75": 2.0
+     },
+     "unlabelled": {
+      "max": 21,
+      "mean": 1.6195342205323193,
+      "median": 1.0,
+      "n": 12624,
+      "p25": 1.0,
+      "p75": 2.0
+     }
+    },
+    "Osativa": {
+     "labelled": {
+      "max": 7,
+      "mean": 1.2549972987574285,
+      "median": 1.0,
+      "n": 1851,
+      "p25": 1.0,
+      "p75": 1.0
+     },
+     "unlabelled": {
+      "max": 11,
+      "mean": 1.2768718009760742,
+      "median": 1.0,
+      "n": 8401,
+      "p25": 1.0,
+      "p75": 1.0
+     }
+    },
+    "Ppatens": {
+     "labelled": {
+      "max": 15,
+      "mean": 2.934593023255814,
+      "median": 2.0,
+      "n": 688,
+      "p25": 2.0,
+      "p75": 3.0
+     },
+     "unlabelled": {
+      "max": 26,
+      "mean": 2.6930600838379135,
+      "median": 2.0,
+      "n": 4294,
+      "p25": 1.0,
+      "p75": 3.0
+     }
+    },
+    "Ptrichocarpa": {
+     "labelled": {
+      "max": 9,
+      "mean": 1.4917095483133218,
+      "median": 1.0,
+      "n": 1749,
+      "p25": 1.0,
+      "p75": 2.0
+     },
+     "unlabelled": {
+      "max": 21,
+      "mean": 1.4735052111903455,
+      "median": 1.0,
+      "n": 9115,
+      "p25": 1.0,
+      "p75": 2.0
+     }
+    },
+    "Sbicolor": {
+     "labelled": {
+      "max": 12,
+      "mean": 1.3819742489270386,
+      "median": 1.0,
+      "n": 1398,
+      "p25": 1.0,
+      "p75": 1.0
+     },
+     "unlabelled": {
+      "max": 21,
+      "mean": 1.3873365450791466,
+      "median": 1.0,
+      "n": 7265,
+      "p25": 1.0,
+      "p75": 1.0
+     }
+    },
+    "Sitalica": {
+     "labelled": {
+      "max": 13,
+      "mean": 1.229600450196961,
+      "median": 1.0,
+      "n": 1777,
+      "p25": 1.0,
+      "p75": 1.0
+     },
+     "unlabelled": {
+      "max": 25,
+      "mean": 1.2559049804292077,
+      "median": 1.0,
+      "n": 7409,
+      "p25": 1.0,
+      "p75": 1.0
+     }
+    },
+    "Vvinifera": {
+     "labelled": {
+      "max": 3,
+      "mean": 1.178622327790974,
+      "median": 1.0,
+      "n": 2105,
+      "p25": 1.0,
+      "p75": 1.0
+     },
+     "unlabelled": {
+      "max": 3,
+      "mean": 1.0605486284289276,
+      "median": 1.0,
+      "n": 10025,
+      "p25": 1.0,
+      "p75": 1.0
+     }
+    }
+   },
+   "definition": "Transcripts retained by the original GSF GFF parser before QC/caps/masking; not an isoform-scoring denominator.",
+   "missing_test_gene_keys": 0,
+   "references": {
+    "Athaliana": {
+     "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+     "sha256": "529510b60756c9a1ae5a590ec4097fd4b9773649c29e6a5543553118bb042c38"
+    },
+    "Bdistachyon": {
+     "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Bdistachyon_314_v3.1.gene_exons.clean.gff3",
+     "sha256": "fde5af49183ecffe0f1eab704a013eadb39e7eb459130051267b0f5c40950887"
+    },
+    "Gmax": {
+     "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
+     "sha256": "7eb1bfe9365588bd215677109c0b730950dfd1807fff2eccd391d3af4770297c"
+    },
+    "Osativa": {
+     "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Osativa_323_v7.0.gene_exons.exon.gff3",
+     "sha256": "bc06a79b5ae845b2b276467861a85e3d640bb44d4d7bff38d33b808651c61ffe"
+    },
+    "Ppatens": {
+     "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Ppatens_318_v3.3.gene_exons.clean.gff3",
+     "sha256": "ca8069b3dca286487b9d55fd9d86597b0c4065cc94623e75311acf35bfaf8115"
+    },
+    "Ptrichocarpa": {
+     "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
+     "sha256": "b78f3b8f0897f2ab350f69cad41622c6da7c8da76a3ea84ed01030d2feb4ed98"
+    },
+    "Sbicolor": {
+     "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Sbicolor_730_v5.1.gene_exons.clean.gff3",
+     "sha256": "ee41ce13164ade39d5ab6f258819999344b57311b1161358aa8e50ba2c7181e7"
+    },
+    "Sitalica": {
+     "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Sitalica_312_v2.2.gene_exons.clean.gff3",
+     "sha256": "c2d0d0643bd98537d94c8f34c6c1602c500f90843f88ceb3ae1ea06e4c6c484c"
+    },
+    "Vvinifera": {
+     "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Vvinifera_PN40024_5.1_on_T2T_ref.exon.gff3",
+     "sha256": "526bbe0aff59a365bed2588448e692d7b973304616b9dfd564cc80629f11d78a"
+    }
+   }
+  }
+ },
+ "labelled_coverage_by_species": {
+  "Athaliana": {
+   "test": {
+    "genes": 11860,
+    "labelled": 1551,
+    "pct": 13.1
+   },
+   "train": {
+    "genes": 13660,
+    "labelled": 12649,
+    "pct": 92.6
+   },
+   "valid": {
+    "genes": 1896,
+    "labelled": 484,
+    "pct": 25.5
+   }
+  },
+  "Bdistachyon": {
+   "test": {
+    "genes": 8645,
+    "labelled": 1305,
+    "pct": 15.1
+   },
+   "train": {
+    "genes": 22670,
+    "labelled": 20427,
+    "pct": 90.1
+   },
+   "valid": {
+    "genes": 2995,
+    "labelled": 700,
+    "pct": 23.4
+   }
+  },
+  "Gmax": {
+   "test": {
+    "genes": 15205,
+    "labelled": 2581,
+    "pct": 17.0
+   },
+   "train": {
+    "genes": 29182,
+    "labelled": 28494,
+    "pct": 97.6
+   },
+   "valid": {
+    "genes": 4000,
+    "labelled": 1086,
+    "pct": 27.1
+   }
+  },
+  "Osativa": {
+   "test": {
+    "genes": 10252,
+    "labelled": 1851,
+    "pct": 18.1
+   },
+   "train": {
+    "genes": 28012,
+    "labelled": 27662,
+    "pct": 98.8
+   },
+   "valid": {
+    "genes": 3925,
+    "labelled": 1004,
+    "pct": 25.6
+   }
+  },
+  "Ppatens": {
+   "test": {
+    "genes": 4982,
+    "labelled": 688,
+    "pct": 13.8
+   },
+   "train": {
+    "genes": 24669,
+    "labelled": 21104,
+    "pct": 85.5
+   },
+   "valid": {
+    "genes": 3275,
+    "labelled": 731,
+    "pct": 22.3
+   }
+  },
+  "Ptrichocarpa": {
+   "test": {
+    "genes": 10864,
+    "labelled": 1749,
+    "pct": 16.1
+   },
+   "train": {
+    "genes": 20787,
+    "labelled": 20184,
+    "pct": 97.1
+   },
+   "valid": {
+    "genes": 3048,
+    "labelled": 802,
+    "pct": 26.3
+   }
+  },
+  "Sbicolor": {
+   "test": {
+    "genes": 8663,
+    "labelled": 1398,
+    "pct": 16.1
+   },
+   "train": {
+    "genes": 20697,
+    "labelled": 19744,
+    "pct": 95.4
+   },
+   "valid": {
+    "genes": 2800,
+    "labelled": 713,
+    "pct": 25.5
+   }
+  },
+  "Sitalica": {
+   "test": {
+    "genes": 9186,
+    "labelled": 1777,
+    "pct": 19.3
+   },
+   "train": {
+    "genes": 22382,
+    "labelled": 20955,
+    "pct": 93.6
+   },
+   "valid": {
+    "genes": 3016,
+    "labelled": 881,
+    "pct": 29.2
+   }
+  },
+  "Vvinifera": {
+   "test": {
+    "genes": 12130,
+    "labelled": 2105,
+    "pct": 17.4
+   },
+   "train": {
+    "genes": 31643,
+    "labelled": 25373,
+    "pct": 80.2
+   },
+   "valid": {
+    "genes": 4198,
+    "labelled": 915,
+    "pct": 21.8
+   }
+  }
+ },
+ "mask_counters_by_species": {
+  "Athaliana": {
+   "component_masked": 3630,
+   "decoy_masked": 2367,
+   "dup_collapsed": 0,
+   "edge_partial": 11271,
+   "hard_masked": 1618,
+   "leak_masked": 57154
+  },
+  "Bdistachyon": {
+   "component_masked": 4484,
+   "decoy_masked": 3536,
+   "dup_collapsed": 0,
+   "edge_partial": 20170,
+   "hard_masked": 6385,
+   "leak_masked": 42557
+  },
+  "Gmax": {
+   "component_masked": 2237,
+   "decoy_masked": 4377,
+   "dup_collapsed": 0,
+   "edge_partial": 32425,
+   "hard_masked": 295,
+   "leak_masked": 64127
+  },
+  "Osativa": {
+   "component_masked": 1147,
+   "decoy_masked": 4272,
+   "dup_collapsed": 73,
+   "edge_partial": 18943,
+   "hard_masked": 192,
+   "leak_masked": 46843
+  },
+  "Ppatens": {
+   "component_masked": 8006,
+   "decoy_masked": 4378,
+   "dup_collapsed": 670,
+   "edge_partial": 19899,
+   "hard_masked": 9670,
+   "leak_masked": 33519
+  },
+  "Ptrichocarpa": {
+   "component_masked": 2076,
+   "decoy_masked": 3322,
+   "dup_collapsed": 0,
+   "edge_partial": 20728,
+   "hard_masked": 613,
+   "leak_masked": 48719
+  },
+  "Sbicolor": {
+   "component_masked": 2640,
+   "decoy_masked": 3060,
+   "dup_collapsed": 0,
+   "edge_partial": 17536,
+   "hard_masked": 1451,
+   "leak_masked": 37518
+  },
+  "Sitalica": {
+   "component_masked": 1971,
+   "decoy_masked": 2987,
+   "dup_collapsed": 0,
+   "edge_partial": 16312,
+   "hard_masked": 4269,
+   "leak_masked": 37442
+  },
+  "Vvinifera": {
+   "component_masked": 3176,
+   "decoy_masked": 3509,
+   "dup_collapsed": 0,
+   "edge_partial": 27610,
+   "hard_masked": 2765,
+   "leak_masked": 42507
+  }
+ },
+ "mask_counters_total": {
+  "component_masked": 29367,
+  "decoy_masked": 31808,
+  "dup_collapsed": 743,
+  "edge_partial": 184894,
+  "hard_masked": 27258,
+  "leak_masked": 410386
+ },
+ "rejections_by_species": {
+  "Athaliana": {
+   "canonical_order": 8,
+   "mask_fraction_a33": 140
+  },
+  "Bdistachyon": {
+   "mask_fraction_a33": 132,
+   "transcript_cap": 43
+  },
+  "Gmax": {
+   "mask_fraction_a33": 177,
+   "token_cap": 1,
+   "transcript_cap": 84
+  },
+  "Osativa": {
+   "mask_fraction_a33": 53
+  },
+  "Ppatens": {
+   "canonical_order": 10,
+   "mask_fraction_a33": 286,
+   "transcript_cap": 161
+  },
+  "Ptrichocarpa": {
+   "canonical_order": 1,
+   "mask_fraction_a33": 80,
+   "transcript_cap": 26
+  },
+  "Sbicolor": {
+   "mask_fraction_a33": 126,
+   "token_cap": 2,
+   "transcript_cap": 16
+  },
+  "Sitalica": {
+   "mask_fraction_a33": 219,
+   "transcript_cap": 3
+  },
+  "Vvinifera": {
+   "canonical_order": 78,
+   "mask_fraction_a33": 330,
+   "no_cds": 6205
+  }
+ },
+ "rejections_total": {
+  "canonical_order": 97,
+  "mask_fraction_a33": 1543,
+  "no_cds": 6205,
+  "token_cap": 3,
+  "transcript_cap": 333
+ },
+ "rn_ranges": {
+  "Athaliana": {
+   "max": 10454,
+   "min": 1,
+   "rows": 10454
+  },
+  "Bdistachyon": {
+   "max": 32421,
+   "min": 10455,
+   "rows": 21967
+  },
+  "Gmax": {
+   "max": 85668,
+   "min": 32422,
+   "rows": 53247
+  },
+  "Osativa": {
+   "max": 113725,
+   "min": 85669,
+   "rows": 28057
+  },
+  "Ppatens": {
+   "max": 152734,
+   "min": 113726,
+   "rows": 39009
+  },
+  "Ptrichocarpa": {
+   "max": 182810,
+   "min": 152735,
+   "rows": 30076
+  },
+  "Sbicolor": {
+   "max": 214033,
+   "min": 182811,
+   "rows": 31223
+  },
+  "Sitalica": {
+   "max": 240108,
+   "min": 214034,
+   "rows": 26075
+  },
+  "Vvinifera": {
+   "max": 272224,
+   "min": 240109,
+   "rows": 32116
+  }
+ },
+ "rows_by_species_split": {
+  "Athaliana": {
+   "test": 1382,
+   "train": 7631,
+   "valid": 1441
+  },
+  "Bdistachyon": {
+   "test": 3514,
+   "train": 16469,
+   "valid": 1984
+  },
+  "Gmax": {
+   "test": 9451,
+   "train": 38954,
+   "valid": 4842
+  },
+  "Osativa": {
+   "test": 5095,
+   "train": 20283,
+   "valid": 2679
+  },
+  "Ppatens": {
+   "test": 6233,
+   "train": 29110,
+   "valid": 3666
+  },
+  "Ptrichocarpa": {
+   "test": 4994,
+   "train": 21750,
+   "valid": 3332
+  },
+  "Sbicolor": {
+   "test": 5716,
+   "train": 22730,
+   "valid": 2777
+  },
+  "Sitalica": {
+   "test": 5574,
+   "train": 18078,
+   "valid": 2423
+  },
+  "Vvinifera": {
+   "test": 6184,
+   "train": 23166,
+   "valid": 2766
+  }
+ },
+ "rows_by_species_tier": {
+  "Athaliana": {
+   "129024": {
+    "rc_rows": 781,
+    "rows": 1694
+   },
+   "30720": {
+    "rc_rows": 1952,
+    "rows": 5520
+   },
+   "61440": {
+    "rc_rows": 1379,
+    "rows": 3240
+   }
+  },
+  "Bdistachyon": {
+   "129024": {
+    "rc_rows": 1755,
+    "rows": 3842
+   },
+   "30720": {
+    "rc_rows": 3205,
+    "rows": 11190
+   },
+   "61440": {
+    "rc_rows": 2669,
+    "rows": 6935
+   }
+  },
+  "Gmax": {
+   "129024": {
+    "rc_rows": 3931,
+    "rows": 10416
+   },
+   "30720": {
+    "rc_rows": 6100,
+    "rows": 25633
+   },
+   "61440": {
+    "rc_rows": 5444,
+    "rows": 17198
+   }
+  },
+  "Osativa": {
+   "129024": {
+    "rc_rows": 1955,
+    "rows": 4855
+   },
+   "30720": {
+    "rc_rows": 3000,
+    "rows": 14500
+   },
+   "61440": {
+    "rc_rows": 2666,
+    "rows": 8702
+   }
+  },
+  "Ppatens": {
+   "129024": {
+    "rc_rows": 3436,
+    "rows": 7031
+   },
+   "30720": {
+    "rc_rows": 8046,
+    "rows": 19258
+   },
+   "61440": {
+    "rc_rows": 5835,
+    "rows": 12720
+   }
+  },
+  "Ptrichocarpa": {
+   "129024": {
+    "rc_rows": 2342,
+    "rows": 5326
+   },
+   "30720": {
+    "rc_rows": 4014,
+    "rows": 15227
+   },
+   "61440": {
+    "rc_rows": 3418,
+    "rows": 9523
+   }
+  },
+  "Sbicolor": {
+   "129024": {
+    "rc_rows": 2125,
+    "rows": 6161
+   },
+   "30720": {
+    "rc_rows": 2969,
+    "rows": 15097
+   },
+   "61440": {
+    "rc_rows": 2748,
+    "rows": 9965
+   }
+  },
+  "Sitalica": {
+   "129024": {
+    "rc_rows": 1813,
+    "rows": 4866
+   },
+   "30720": {
+    "rc_rows": 2417,
+    "rows": 12924
+   },
+   "61440": {
+    "rc_rows": 2309,
+    "rows": 8285
+   }
+  },
+  "Vvinifera": {
+   "129024": {
+    "rc_rows": 2169,
+    "rows": 5852
+   },
+   "30720": {
+    "rc_rows": 2813,
+    "rows": 15996
+   },
+   "61440": {
+    "rc_rows": 2788,
+    "rows": 10268
+   }
+  }
+ },
+ "rows_by_tier_split": {
+  "129024": {
+   "test": 9116,
+   "train": 35985,
+   "valid": 4942
+  },
+  "30720": {
+   "test": 23594,
+   "train": 99034,
+   "valid": 12717
+  },
+  "61440": {
+   "test": 15433,
+   "train": 63152,
+   "valid": 8251
+  }
+ },
+ "tier_margin_unguaranteed": {
+  "contig_edge_credit": false,
+  "edge_margin": 1000,
+  "exceeds_length_guarantee": {
+   "129024": {
+    "bound_nt": 84016,
+    "genes": 86
+   },
+   "30720": {
+    "bound_nt": 18480,
+    "genes": 3418
+   },
+   "61440": {
+    "bound_nt": 38960,
+    "genes": 653
+   }
+  },
+  "genes_considered": 334642,
+  "not_covered_with_margin": {
+   "129024": 44,
+   "30720": 2034,
+   "61440": 434
+  },
+  "not_covered_with_margin_by_species": {
+   "129024": {
+    "Gmax": 3,
+    "Vvinifera": 41
+   },
+   "30720": {
+    "Athaliana": 3,
+    "Bdistachyon": 48,
+    "Gmax": 420,
+    "Osativa": 27,
+    "Ppatens": 29,
+    "Ptrichocarpa": 56,
+    "Sbicolor": 204,
+    "Sitalica": 32,
+    "Vvinifera": 1215
+   },
+   "61440": {
+    "Bdistachyon": 1,
+    "Gmax": 68,
+    "Osativa": 1,
+    "Sbicolor": 21,
+    "Sitalica": 1,
+    "Vvinifera": 342
+   }
+  },
+  "recorded_by_species": {},
+  "source": "recomputed from gene_key_map at report time; without contig lengths; compare separately with recorded builder counters"
+ },
+ "tiles_carrying_counter_by_species": {
+  "Athaliana": {
+   "component_masked": 2683,
+   "decoy_masked": 1925,
+   "dup_collapsed": 0,
+   "edge_partial": 7903,
+   "hard_masked": 1368,
+   "leak_masked": 8729
+  },
+  "Bdistachyon": {
+   "component_masked": 3437,
+   "decoy_masked": 3012,
+   "dup_collapsed": 0,
+   "edge_partial": 14917,
+   "hard_masked": 4989,
+   "leak_masked": 14461
+  },
+  "Gmax": {
+   "component_masked": 2066,
+   "decoy_masked": 3972,
+   "dup_collapsed": 0,
+   "edge_partial": 25730,
+   "hard_masked": 290,
+   "leak_masked": 28303
+  },
+  "Osativa": {
+   "component_masked": 1078,
+   "decoy_masked": 3691,
+   "dup_collapsed": 61,
+   "edge_partial": 15425,
+   "hard_masked": 184,
+   "leak_masked": 17357
+  },
+  "Ppatens": {
+   "component_masked": 6216,
+   "decoy_masked": 3911,
+   "dup_collapsed": 650,
+   "edge_partial": 16438,
+   "hard_masked": 7487,
+   "leak_masked": 18405
+  },
+  "Ptrichocarpa": {
+   "component_masked": 1830,
+   "decoy_masked": 2934,
+   "dup_collapsed": 0,
+   "edge_partial": 16504,
+   "hard_masked": 579,
+   "leak_masked": 18453
+  },
+  "Sbicolor": {
+   "component_masked": 2174,
+   "decoy_masked": 2736,
+   "dup_collapsed": 0,
+   "edge_partial": 14171,
+   "hard_masked": 1371,
+   "leak_masked": 15728
+  },
+  "Sitalica": {
+   "component_masked": 1754,
+   "decoy_masked": 2644,
+   "dup_collapsed": 0,
+   "edge_partial": 13037,
+   "hard_masked": 3651,
+   "leak_masked": 14403
+  },
+  "Vvinifera": {
+   "component_masked": 2103,
+   "decoy_masked": 3133,
+   "dup_collapsed": 0,
+   "edge_partial": 20193,
+   "hard_masked": 2497,
+   "leak_masked": 17430
+  }
+ },
+ "totals": {
+  "build_manifest_rows": 9,
+  "distinct_rn": 272224,
+  "gene_split_rows": 334642,
+  "rc_rows": 84079,
+  "rejected_rows": 8181,
+  "rows": 272224,
+  "rows_by_split": {
+   "test": 48143,
+   "train": 198171,
+   "valid": 25910
+  },
+  "rows_null_label": 0,
+  "rows_train_weight_zero": 0
+ }
+}
