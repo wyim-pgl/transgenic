@@ -89,10 +89,20 @@ FA_MD5=$(md5sum "$FA" | cut -d' ' -f1)
 # --- Gate 3: §3.3 item 2 verdict. No audit, no alignment. ---
 [ -s "$AUDIT/DONE" ] && [ -s "$AUDIT/audit.json" ] \
   || { echo "REFUSED: $RUN has no §3.3 orientation audit at $AUDIT" >&2; exit 5; }
+# The audit's key names the data it measured AND the scorer that measured it (A39). This driver
+# checks the data part - it must be the objects we are about to align - and records the scorer,
+# but does not pin a scorer md5: that would couple the aligner to a version number instead of to a
+# meaning. What it does require is the meaning: an audit written under the superseded reading,
+# which gated on the splice motif rather than the read, must not be accepted.
 WANT_KEY="$FA_MD5:$REF_MD5:$GFF_MD5"
 HAVE_KEY=$(awk -F= '$1=="key"{print $2}' "$AUDIT/DONE")
-[ "$HAVE_KEY" = "$WANT_KEY" ] \
-  || { echo "REFUSED: $RUN audit was built from different inputs (have=$HAVE_KEY want=$WANT_KEY)" >&2; exit 5; }
+AUDIT_SCORER=${HAVE_KEY##*:}
+case "$HAVE_KEY" in
+  "$WANT_KEY"|"$WANT_KEY":*) ;;
+  *) echo "REFUSED: $RUN audit was built from different inputs (have=$HAVE_KEY want=$WANT_KEY)" >&2; exit 5;;
+esac
+[ "$AUDIT_SCORER" != "$HAVE_KEY" ] \
+  || { echo "REFUSED: $RUN audit predates A39 (its key names no scorer); rescore it" >&2; exit 5; }
 AUDIT_MD5_REC=$(awk -F= '$1=="audit_md5"{print $2}' "$AUDIT/DONE")
 AUDIT_MD5=$(md5sum "$AUDIT/audit.json" | cut -d' ' -f1)
 [ "$AUDIT_MD5_REC" = "$AUDIT_MD5" ] \
@@ -101,11 +111,16 @@ AUDIT_MD5=$(md5sum "$AUDIT/audit.json" | cut -d' ' -f1)
 # md5-valid audit.json saying FAIL would have enabled -uf; the verdict is taken FROM THE JSON and
 # the marker only has to agree with it.
 STATUS_MARK=$(awk -F= '$1=="status"{print $2}' "$AUDIT/DONE")
-read -r STATUS J_USEUF J_READS J_REF J_GFF < <("$PY" -c '
+read -r STATUS J_USEUF J_READS J_REF J_GFF J_A39 < <("$PY" -c '
 import json,sys
 d=json.load(open(sys.argv[1]))
-print(d["status"], d["use_uf"], d.get("reads_md5",""), d.get("reference_md5",""), d.get("gff_md5",""))
+print(d["status"], d["use_uf"], d.get("reads_md5",""), d.get("reference_md5",""),
+      d.get("gff_md5",""), "A39" in d.get("protocol",""))
 ' "$AUDIT/audit.json")
+# A39 is what makes the verdict mean "the reads are in transcript orientation" rather than "the
+# splice motifs agree with the annotation". Without it the number is not a -uf gate at all.
+[ "$J_A39" = "True" ] \
+  || { echo "REFUSED: $RUN audit.json was not scored under A39; its verdict is not a -uf gate" >&2; exit 5; }
 [ "$STATUS" = "$STATUS_MARK" ] \
   || { echo "REFUSED: $RUN audit.json says $STATUS but its DONE says $STATUS_MARK" >&2; exit 5; }
 # use_uf and status must not disagree with each other either.
@@ -193,6 +208,7 @@ done
   echo "orientation    $UFNOTE, agreement $FRAC -> ${UF:-no -uf}"
   echo "audit          $AUDIT/audit.json"
   echo "audit_md5      $AUDIT_MD5"
+  echo "audit_scorer   $AUDIT_SCORER   (md5 of 67_orientation_audit.py that produced the verdict)"
   echo "umi_status     unknown (§3.3 item 3: ENA metadata publishes no kit or UMI field for these runs; counts are READS, never molecules, and no endpoint deduplication is performed)"
   echo "minimap2       $("$BIN"/minimap2 --version)"
   echo "samtools       $("$BIN"/samtools --version | head -1)"
