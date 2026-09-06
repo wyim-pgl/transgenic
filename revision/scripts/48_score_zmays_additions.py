@@ -322,8 +322,8 @@ def read_reference_ordered(path: Path) -> tuple[dict, dict, dict]:
     return dict(order), {t: tuple(sorted(v)) for t, v in cds.items()}, longest
 
 
-def verify_athaliana() -> dict:
-    """Rerun this file's score() on the A. thaliana inputs; it must return 200/1,103."""
+def read_athaliana() -> tuple[dict, dict, dict]:
+    """Read the frozen Arabidopsis inputs using the script-28 conventions."""
     pred: dict = defaultdict(dict)
     with AT_PRED.open() as fh:
         for line in fh:
@@ -360,6 +360,12 @@ def verify_athaliana() -> dict:
         if line.strip():
             primary[line.strip().split(".")[0]] = line.strip()
 
+    return pred, ref, primary
+
+
+def verify_athaliana() -> dict:
+    """Rerun score() on the frozen inputs; it must return 200/1,103."""
+    pred, ref, primary = read_athaliana()
     s = score(pred, ref, primary, sorted(pred), "A. thaliana, all evaluation loci", "TAIR10")
     s["reproduces_script_28"] = (s["added_transcripts"] == AT_ALL_ADDED
                                  and s["added_matching_TAIR10_alternative_exact_CDS"] == AT_ALL_HITS)
@@ -389,7 +395,13 @@ def main() -> int:
     ap.add_argument("--json", type=Path, default=OUTDIR / "zmays_additions_precision.json")
     ap.add_argument("--verify-athaliana", action="store_true",
                     help="rerun score() on the A. thaliana inputs and check it returns 200/1103")
+    ap.add_argument("--dump-structures", type=Path,
+                    help="write both species to a NEW directory and exit without aggregate writes")
     args = ap.parse_args()
+    if args.dump_structures is not None:
+        from addition_dump import write_frozen_dump
+        write_frozen_dump(args.dump_structures, sys.modules[__name__])
+        return 0
 
     print(f"reading prediction: {PRED}", file=sys.stderr)
     pred, pred_meta = read_prediction(PRED)

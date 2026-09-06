@@ -516,6 +516,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
             srow = split_rows.get(key, {"split": None, "orthogroup_id": None, "strict_holdout": ""})
             con.execute("INSERT INTO gene_key_map VALUES (?,?,?,?,?,?,?)", [species_id, gene.gene_id, gene.gene_id_original, gene.name_original,
                                                                           gene.chrom, gene.start0, gene.end0])
+            no_cds = not any(f.type == "CDS" for tx in gene.transcripts.values() for f in tx)
             train_weight, qc_list = 1.0, []
             gflags = flags_for_gene(qc_flags, species_id, gene)
             if gflags:
@@ -530,12 +531,16 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                 gc.check_caps(gc.gene_to_gsf(gene, gene.start0))
             except gc.CapError as e:
                 rejected.append({"gene_id": gene.gene_id, "reason": str(e)})
-                continue
+                # A40: no-CDS is a coding-label exclusion, not a masking exclusion.
+                # Other cap/structure rejects retain their existing disposition.
+                if not no_cds:
+                    continue
             by_chrom.setdefault(gene.chrom, []).append(gene)
             gene_meta[gene.gene_id] = {"split": srow["split"], "strict": str(srow.get("strict_holdout", "")).lower() in ("1", "true", "yes"),
-                                       "weight": train_weight, "qc": qc_list}
+                                       "weight": train_weight, "qc": qc_list, "labelable": not no_cds}
     inserted = rc_rows = 0
     # A33.3 decoy rate: min(DECOY_MAX, realised leak+hard rate / 3), computed per species before tiling.
+    # Includes eligible no-CDS loci in denominator and leak/hard numerator (A40).
     n_genes = sum(len(v) for v in by_chrom.values())
     n_masked = sum(1 for g in (x for v in by_chrom.values() for x in v)
                    if gene_meta[g.gene_id]["weight"] == 0 or gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"] or "train", 0) > 0)
@@ -567,7 +572,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                 decoy = set()
                 if split == "train" and decoy_rate > 0:
                     drng = random.Random(f"{seed}:{species_id}:{chrom}:{ws}-{we}:decoy")
-                    decoy = {g.gene_id for g in inside if g.gene_id not in leak and g.gene_id not in hard and drng.random() < decoy_rate}
+                    decoy = {g.gene_id for g in inside if gene_meta[g.gene_id]["labelable"] and g.gene_id not in leak and g.gene_id not in hard and drng.random() < decoy_rate}
                 seed_ids = leak | hard | decoy
                 # A33.3: masking closes over overlap-connected components, so no labelled gene keeps a label whose
                 # bases were replaced by N.
@@ -576,7 +581,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                     if any(g.gene_id in seed_ids for g in comp):
                         masked_ids |= {g.gene_id for g in comp}
                 masked = [g for g in inside if g.gene_id in masked_ids]
-                labelled = [g for g in inside if g.gene_id not in masked_ids]
+                labelled = [g for g in inside if gene_meta[g.gene_id]["labelable"] and g.gene_id not in masked_ids]
                 # A33.1: one annotation duplicated under two gene ids is labelled once.
                 labelled, dup_collapsed = gc.collapse_duplicate_genes(labelled)
                 gsf = gc.window_to_gsf_v3(labelled, ws) if mode == "train" else None
@@ -610,7 +615,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
                         qc = (qc + ";" if qc else "") + f"{name}={n}"
                 inside = labelled
                 common = [species_id, wid, None, split, any(gene_meta[g.gene_id]["strict"] for g in inside), False, gc.ORDERING_VERSION,
-                          gc.BUILD_VERSION, fasta_sha, gff_sha, split_sha, gc.WINDOW_POLICY_V3,
+                          gc.TILE_BUILD_VERSION, fasta_sha, gff_sha, split_sha, gc.WINDOW_POLICY_V3,
                           gc.count_tokens_v3(gsf) if gsf else None, we > chrom_len, sum(len(g.transcripts) for g in inside), weight, qc, wid]
                 con.execute(sql, [wid, ws, we, "+", chrom, seq, gsf, 0, 0, 0, 0] + common)
                 con.executemany("INSERT INTO window_genes VALUES (?,?,?,?)", [[species_id, wid, g.gene_id, False] for g in inside]) if inside else None
@@ -631,7 +636,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
     margin_summary = tier_margin_summary(con, species_id, genome)
     con.execute("INSERT INTO build_manifest VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 [species_id, os.path.abspath(fasta), fasta_sha, os.path.abspath(gff), gff_sha, split_sha, rc, inserted, rc_rows,
-                 len(rejected), json.dumps(reasons), gc.BUILD_VERSION, gc.ORDERING_VERSION, gc.WINDOW_POLICY_V3, git_commit,
+                 len(rejected), json.dumps(reasons), gc.TILE_BUILD_VERSION, gc.ORDERING_VERSION, gc.WINDOW_POLICY_V3, git_commit,
                  time.strftime("%Y-%m-%dT%H:%M:%S"), duckdb.__version__, json.dumps(margin_summary, sort_keys=True)])
     con.execute("COMMIT")
     return {"species_id": species_id, "rows": inserted, "rc_rows": rc_rows, "rejected": rejected}

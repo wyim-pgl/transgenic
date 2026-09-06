@@ -41,7 +41,11 @@ awk -F '\t' '
     n++
     f = $4; sub(/^.*\//, "", f)
     if (seen[f]++)                       { err = 11; exit err }
-    if ($5 !~ /^[[:xdigit:]]{32}$/)      { err = 12; exit err }
+    # length + class, not /^[[:xdigit:]]{32}$/: interval expressions are not in POSIX
+    # awk and older mawk silently matches nothing, so every md5 read as invalid and the
+    # gate refused a correct manifest. Measured 2026-09-05: mawk 1.3.4 on pronghorn
+    # matches, the awk on pgl-gpu does not.
+    if (length($5) != 32 || $5 !~ /^[[:xdigit:]]+$/) { err = 12; exit err }
     print f "\t" tolower($5)
   }
   END {

@@ -24,6 +24,7 @@ ORDERING_VERSION = "gsf-order-v1"
 WINDOW_POLICY = "sym6144-v1"
 WINDOW_POLICY_V2 = "tier6144-v2"
 BUILD_VERSION = "gsf-contract-v1"
+TILE_BUILD_VERSION = "gsf-contract-a40-v1"  # replacement tile corpus; A40 review pending
 PHASE_TO_LETTER = {0: "A", 1: "B", 2: "C"}
 LETTER_TO_PHASE = {v: k for k, v in PHASE_TO_LETTER.items()}
 FEATURE_TYPES = ("five_prime_UTR", "CDS", "three_prime_UTR")

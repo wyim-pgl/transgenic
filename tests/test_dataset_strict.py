@@ -93,3 +93,29 @@ def test_b5_trainer_constructs_the_dataset_strict():
     assert b5_calls, "the B5 dataset construction moved; update this test"
     for line in b5_calls:
         assert "strict=True" in line, line
+
+
+def test_a40_empty_target_matches_contract_through_dataset(tmp_path, dataset_cls, monkeypatch, gsf):
+    from transgenic.datasets import datasets
+    from transgenic.model.tokenization_transgenic import GFFTokenizer
+
+    class Encoder:
+        pad_token_id = 4
+        def __call__(self, seq, **kwargs):
+            return {'input_ids': torch.zeros((1, len(seq) + 1), dtype=torch.long)}
+    monkeypatch.setattr(datasets.AutoTokenizer, 'from_pretrained', lambda *args, **kwargs: Encoder())
+    db = tmp_path / 'empty-target.db'
+    _b5_db(db, [(1, 'empty-label', 'ACGT' * 32), (2, 'coding', 'ACGT' * 32)])
+    with duckdb.connect(str(db)) as con:
+        con.execute("UPDATE geneList SET gff='<empty>' WHERE rn=1")
+    ds = _make(dataset_cls, db, strict=True)
+    tokenizer = GFFTokenizer(vocab_version='v3')
+    expected = ['<s>', '<empty>', '</s>']
+    assert tokenizer._tokenize('<empty>') == expected
+    assert tokenizer.encode('<empty>', add_special_tokens=False) == [tokenizer.vocab[t] for t in expected]
+    for idx, label in enumerate(['<empty>', '0|CDS1|300|+|A>CDS1']):
+        actual = ds[idx][2].tolist()[0]
+        assert actual == [tokenizer.vocab[t] for t in tokenizer._tokenize(label)]
+        assert len(actual) == gsf.count_tokens_v3(label)
+    ds._con.close()
+    ds._con = None

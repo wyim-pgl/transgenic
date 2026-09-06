@@ -113,3 +113,23 @@ def test_awk_header_error_is_not_masked_by_the_row_count_check(tmp_path):
     assert r.returncode == 2
     assert "unexpected header" in r.stderr
     assert "exactly nine" not in r.stderr
+
+
+def test_awk_programs_avoid_interval_expressions():
+    """`/x{32}/` matches nothing under POSIX awk and older mawk, silently.
+
+    The gate used /^[[:xdigit:]]{32}$/ to validate an md5. mawk 1.3.4 on pronghorn matches it;
+    the awk on pgl-gpu does not, so every md5 read as invalid and the gate refused a correct
+    manifest — found 2026-09-05 when the A40 pre-flight ran the suite on the GPU host. The failure
+    direction was safe, but ACCESS staging would have been blocked on that machine with a message
+    accusing the manifest.
+
+    A test cannot easily run two awks, so it pins the rule instead: no interval expressions in the
+    awk programs of this script. Use length() plus a character class.
+    """
+    import re
+    # Comments explain the trap and quote the bad pattern, so they must not be scanned.
+    code = "\n".join(l for l in SCRIPT.read_text().splitlines() if not l.lstrip().startswith("#"))
+    offenders = [m.group(0) for m in
+                 re.finditer(r"/\^?\[?\[:[a-z]+:\]\]?[^/\n]*\{\d+(,\d*)?\}[^/\n]*/", code)]
+    assert not offenders, f"awk interval expression is not portable: {offenders}"

@@ -501,3 +501,86 @@ def test_population_reference_counts_and_hash_guard(tmp_path, b5):
         gff.write_text(gff.read_text() + '# changed\n')
         with pytest.raises(ValueError, match='SHA256 differs'):
             report.evaluation_population(con, reference_distributions=True)
+
+
+@pytest.mark.parametrize('tile_split,locus_split,hard,masked', [
+    ('train', 'valid', False, True), ('valid', 'test', False, True),
+    ('test', 'test', False, False), ('train', 'train', False, False),
+    ('train', 'train', True, True),
+])
+def test_no_cds_protection_and_overlap_closure(tmp_path, b5, monkeypatch, tile_split, locus_split, hard, masked):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    # The noncoding locus bridges two non-overlapping coding loci.
+    gff.write_text('''##gff-version 3
+Chr1\tt\tgene\t1001\t1200\t.\t+\t.\tID=a
+Chr1\tt\tmRNA\t1001\t1200\t.\t+\t.\tID=a1;Parent=a
+Chr1\tt\tCDS\t1001\t1200\t.\t+\t0\tParent=a1
+Chr1\tt\tgene\t1101\t1500\t.\t+\t.\tID=nc
+Chr1\tt\tlnc_RNA\t1101\t1500\t.\t+\t.\tID=nc1;Parent=nc
+Chr1\tt\texon\t1101\t1500\t.\t+\t.\tParent=nc1
+Chr1\tt\tgene\t1401\t1600\t.\t+\t.\tID=b
+Chr1\tt\tmRNA\t1401\t1600\t.\t+\t.\tID=b1;Parent=b
+Chr1\tt\tCDS\t1401\t1600\t.\t+\t0\tParent=b1
+''')
+    split.write_text('species_id\tgene_id\torthogroup_id\tsplit\tstrict_holdout\n' +
+                     ''.join(f'Athaliana\t{g}\tOG{g}\t{s}\tfalse\n' for g, s in [('a','train'), ('nc',locus_split), ('b','train')]))
+    monkeypatch.setattr(b5.gc, 'WINDOW_TIERS', (30720,))
+    monkeypatch.setattr(b5.gc, 'tile_windows', lambda *args: [(0, 30720)])
+    monkeypatch.setattr(b5.gc, 'block_splits', lambda *args: [(0, 30720, tile_split)])
+    monkeypatch.setattr(b5.gc, 'DECOY_MAX', 0)
+    if hard:
+        monkeypatch.setattr(b5, 'flags_for_gene', lambda flags, species, gene: ['hard'] if gene.gene_id == 'nc' else [])
+        monkeypatch.setattr(b5, 'loss_mask_decision', lambda *args: (0, [], ['hard']))
+    db = tmp_path / 'protected.db'
+    b5.build_b5_database(str(db), str(manifest), str(split), verify_md5=False, rc='all', window_policy='tile6144-v3')
+    with duckdb.connect(str(db), read_only=True) as con:
+        seq, label, qc, tokens = con.sql('SELECT sequence,gff,qc_flags,gsf_token_count FROM geneList WHERE NOT is_rc').fetchone()
+        members = {r[0] for r in con.sql('SELECT gene_id FROM window_genes').fetchall()}
+        assert 'nc' not in members
+        assert members == (set() if masked else {'a', 'b'})
+        assert (seq[1000:1600] == 'N' * 600) == masked
+        assert (label == '<empty>') == masked
+        if masked:
+            assert tokens == 3 and 'component_masked=2' in qc
+        assert con.sql("SELECT count(*) FROM rejected_records WHERE gene_id='nc' AND reason LIKE 'no CDS%'").fetchone()[0] == 1
+    assert b5.validate_b5_database(str(db))['ok']
+
+
+@pytest.mark.parametrize('draw,decoy_expected', [(0.02, True), (0.04, False)])
+def test_no_cds_rate_population_and_coding_only_decoys(tmp_path, b5, monkeypatch, draw, decoy_expected):
+    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
+    lines = []
+    for i in range(10):
+        gid = f'g{i}'
+        start, end = 1001 + i * 1000, 1200 + i * 1000
+        lines += [f'Chr1\tt\tgene\t{start}\t{end}\t.\t+\t.\tID={gid}',
+                  f'Chr1\tt\tmRNA\t{start}\t{end}\t.\t+\t.\tID={gid}t;Parent={gid}',
+                  f'Chr1\tt\t{"CDS" if i == 0 else "exon"}\t{start}\t{end}\t.\t+\t0\tParent={gid}t']
+    gff.write_text('\n'.join(lines) + '\n')
+    split.write_text('species_id\tgene_id\torthogroup_id\tsplit\tstrict_holdout\n' + ''.join(
+        f'Athaliana\tg{i}\tOG{i}\t{"test" if i == 1 else "train"}\tfalse\n' for i in range(10)))
+    monkeypatch.setattr(b5.gc, 'WINDOW_TIERS', (30720,))
+    monkeypatch.setattr(b5.gc, 'tile_windows', lambda *args: [(0, 30720)])
+    monkeypatch.setattr(b5.gc, 'block_splits', lambda *args: [(0, 30720, 'train')])
+    original_random = random.Random
+    draws = []
+    class DecoyRandom(original_random):
+        def __init__(self, seed=None):
+            super().__init__(seed)
+            self.decoy = isinstance(seed, str) and seed.endswith(':decoy')
+        def random(self):
+            if self.decoy:
+                draws.append(draw)
+                return draw
+            return super().random()
+    monkeypatch.setattr(b5.random, 'Random', DecoyRandom)
+    db = tmp_path / 'rate.db'
+    b5.build_b5_database(str(db), str(manifest), str(split), verify_md5=False, rc='none', window_policy='tile6144-v3')
+    # Rate = (one test no-CDS locus / all ten loci) / 3 = 1/30.
+    # Only the single coding gene receives a decoy draw, never the eight train no-CDS loci.
+    assert draws == [draw]
+    with duckdb.connect(str(db), read_only=True) as con:
+        label, seq = con.sql('SELECT gff,sequence FROM geneList').fetchone()
+        assert (label == '<empty>') == decoy_expected
+        assert seq[2000:2200] == 'N' * 200  # test no-CDS leak seed
+        assert seq[3000:3200] != 'N' * 200  # train no-CDS is not an unconditional mask

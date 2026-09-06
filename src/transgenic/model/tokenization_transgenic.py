@@ -177,7 +177,7 @@ class GFFTokenizer(PreTrainedTokenizer):
 
 		if getattr(self, "vocab_version", "v1") == "v3":
 			if text.strip() == "<empty>":
-				return ["<empty>", "</s>"]
+				return ["<s>", "<empty>", "</s>"]
 			blocks = text.split("<gene>")
 			out = ["<s>"]
 			for j, block in enumerate(blocks):

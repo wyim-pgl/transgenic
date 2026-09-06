@@ -1,0 +1,217 @@
+diff --git a/src/transgenic/datasets/build_b5.py b/src/transgenic/datasets/build_b5.py
+index bb771f4..4c415e7 100644
+--- a/src/transgenic/datasets/build_b5.py
++++ b/src/transgenic/datasets/build_b5.py
+@@ -516,6 +516,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
+             srow = split_rows.get(key, {"split": None, "orthogroup_id": None, "strict_holdout": ""})
+             con.execute("INSERT INTO gene_key_map VALUES (?,?,?,?,?,?,?)", [species_id, gene.gene_id, gene.gene_id_original, gene.name_original,
+                                                                           gene.chrom, gene.start0, gene.end0])
++            no_cds = not any(f.type == "CDS" for tx in gene.transcripts.values() for f in tx)
+             train_weight, qc_list = 1.0, []
+             gflags = flags_for_gene(qc_flags, species_id, gene)
+             if gflags:
+@@ -530,12 +531,16 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
+                 gc.check_caps(gc.gene_to_gsf(gene, gene.start0))
+             except gc.CapError as e:
+                 rejected.append({"gene_id": gene.gene_id, "reason": str(e)})
+-                continue
++                # A40: no-CDS is a coding-label exclusion, not a masking exclusion.
++                # Other cap/structure rejects retain their existing disposition.
++                if not no_cds:
++                    continue
+             by_chrom.setdefault(gene.chrom, []).append(gene)
+             gene_meta[gene.gene_id] = {"split": srow["split"], "strict": str(srow.get("strict_holdout", "")).lower() in ("1", "true", "yes"),
+-                                       "weight": train_weight, "qc": qc_list}
++                                       "weight": train_weight, "qc": qc_list, "labelable": not no_cds}
+     inserted = rc_rows = 0
+     # A33.3 decoy rate: min(DECOY_MAX, realised leak+hard rate / 3), computed per species before tiling.
++    # Includes eligible no-CDS loci in denominator and leak/hard numerator (A40).
+     n_genes = sum(len(v) for v in by_chrom.values())
+     n_masked = sum(1 for g in (x for v in by_chrom.values() for x in v)
+                    if gene_meta[g.gene_id]["weight"] == 0 or gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"] or "train", 0) > 0)
+@@ -567,7 +572,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
+                 decoy = set()
+                 if split == "train" and decoy_rate > 0:
+                     drng = random.Random(f"{seed}:{species_id}:{chrom}:{ws}-{we}:decoy")
+-                    decoy = {g.gene_id for g in inside if g.gene_id not in leak and g.gene_id not in hard and drng.random() < decoy_rate}
++                    decoy = {g.gene_id for g in inside if gene_meta[g.gene_id]["labelable"] and g.gene_id not in leak and g.gene_id not in hard and drng.random() < decoy_rate}
+                 seed_ids = leak | hard | decoy
+                 # A33.3: masking closes over overlap-connected components, so no labelled gene keeps a label whose
+                 # bases were replaced by N.
+@@ -576,7 +581,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
+                     if any(g.gene_id in seed_ids for g in comp):
+                         masked_ids |= {g.gene_id for g in comp}
+                 masked = [g for g in inside if g.gene_id in masked_ids]
+-                labelled = [g for g in inside if g.gene_id not in masked_ids]
++                labelled = [g for g in inside if gene_meta[g.gene_id]["labelable"] and g.gene_id not in masked_ids]
+                 # A33.1: one annotation duplicated under two gene ids is labelled once.
+                 labelled, dup_collapsed = gc.collapse_duplicate_genes(labelled)
+                 gsf = gc.window_to_gsf_v3(labelled, ws) if mode == "train" else None
+@@ -610,7 +615,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
+                         qc = (qc + ";" if qc else "") + f"{name}={n}"
+                 inside = labelled
+                 common = [species_id, wid, None, split, any(gene_meta[g.gene_id]["strict"] for g in inside), False, gc.ORDERING_VERSION,
+-                          gc.BUILD_VERSION, fasta_sha, gff_sha, split_sha, gc.WINDOW_POLICY_V3,
++                          gc.TILE_BUILD_VERSION, fasta_sha, gff_sha, split_sha, gc.WINDOW_POLICY_V3,
+                           gc.count_tokens_v3(gsf) if gsf else None, we > chrom_len, sum(len(g.transcripts) for g in inside), weight, qc, wid]
+                 con.execute(sql, [wid, ws, we, "+", chrom, seq, gsf, 0, 0, 0, 0] + common)
+                 con.executemany("INSERT INTO window_genes VALUES (?,?,?,?)", [[species_id, wid, g.gene_id, False] for g in inside]) if inside else None
+@@ -631,7 +636,7 @@ def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc,
+     margin_summary = tier_margin_summary(con, species_id, genome)
+     con.execute("INSERT INTO build_manifest VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                 [species_id, os.path.abspath(fasta), fasta_sha, os.path.abspath(gff), gff_sha, split_sha, rc, inserted, rc_rows,
+-                 len(rejected), json.dumps(reasons), gc.BUILD_VERSION, gc.ORDERING_VERSION, gc.WINDOW_POLICY_V3, git_commit,
++                 len(rejected), json.dumps(reasons), gc.TILE_BUILD_VERSION, gc.ORDERING_VERSION, gc.WINDOW_POLICY_V3, git_commit,
+                  time.strftime("%Y-%m-%dT%H:%M:%S"), duckdb.__version__, json.dumps(margin_summary, sort_keys=True)])
+     con.execute("COMMIT")
+     return {"species_id": species_id, "rows": inserted, "rc_rows": rc_rows, "rejected": rejected}
+diff --git a/src/transgenic/model/tokenization_transgenic.py b/src/transgenic/model/tokenization_transgenic.py
+index 736034e..4293501 100644
+--- a/src/transgenic/model/tokenization_transgenic.py
++++ b/src/transgenic/model/tokenization_transgenic.py
+@@ -177,7 +177,7 @@ class GFFTokenizer(PreTrainedTokenizer):
+ 
+ 		if getattr(self, "vocab_version", "v1") == "v3":
+ 			if text.strip() == "<empty>":
+-				return ["<empty>", "</s>"]
++				return ["<s>", "<empty>", "</s>"]
+ 			blocks = text.split("<gene>")
+ 			out = ["<s>"]
+ 			for j, block in enumerate(blocks):
+diff --git a/src/transgenic/utils/gsf_contract.py b/src/transgenic/utils/gsf_contract.py
+index 40c85e1..5fc0a63 100644
+--- a/src/transgenic/utils/gsf_contract.py
++++ b/src/transgenic/utils/gsf_contract.py
+@@ -24,6 +24,7 @@ ORDERING_VERSION = "gsf-order-v1"
+ WINDOW_POLICY = "sym6144-v1"
+ WINDOW_POLICY_V2 = "tier6144-v2"
+ BUILD_VERSION = "gsf-contract-v1"
++TILE_BUILD_VERSION = "gsf-contract-a40-v1"  # replacement tile corpus; A40 review pending
+ PHASE_TO_LETTER = {0: "A", 1: "B", 2: "C"}
+ LETTER_TO_PHASE = {v: k for k, v in PHASE_TO_LETTER.items()}
+ FEATURE_TYPES = ("five_prime_UTR", "CDS", "three_prime_UTR")
+diff --git a/tests/test_build_b5.py b/tests/test_build_b5.py
+index 1e96523..04e70d2 100644
+--- a/tests/test_build_b5.py
++++ b/tests/test_build_b5.py
+@@ -501,3 +501,86 @@ def test_population_reference_counts_and_hash_guard(tmp_path, b5):
+         gff.write_text(gff.read_text() + '# changed\n')
+         with pytest.raises(ValueError, match='SHA256 differs'):
+             report.evaluation_population(con, reference_distributions=True)
++
++
++@pytest.mark.parametrize('tile_split,locus_split,hard,masked', [
++    ('train', 'valid', False, True), ('valid', 'test', False, True),
++    ('test', 'test', False, False), ('train', 'train', False, False),
++    ('train', 'train', True, True),
++])
++def test_no_cds_protection_and_overlap_closure(tmp_path, b5, monkeypatch, tile_split, locus_split, hard, masked):
++    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
++    # The noncoding locus bridges two non-overlapping coding loci.
++    gff.write_text('''##gff-version 3
++Chr1\tt\tgene\t1001\t1200\t.\t+\t.\tID=a
++Chr1\tt\tmRNA\t1001\t1200\t.\t+\t.\tID=a1;Parent=a
++Chr1\tt\tCDS\t1001\t1200\t.\t+\t0\tParent=a1
++Chr1\tt\tgene\t1101\t1500\t.\t+\t.\tID=nc
++Chr1\tt\tlnc_RNA\t1101\t1500\t.\t+\t.\tID=nc1;Parent=nc
++Chr1\tt\texon\t1101\t1500\t.\t+\t.\tParent=nc1
++Chr1\tt\tgene\t1401\t1600\t.\t+\t.\tID=b
++Chr1\tt\tmRNA\t1401\t1600\t.\t+\t.\tID=b1;Parent=b
++Chr1\tt\tCDS\t1401\t1600\t.\t+\t0\tParent=b1
++''')
++    split.write_text('species_id\tgene_id\torthogroup_id\tsplit\tstrict_holdout\n' +
++                     ''.join(f'Athaliana\t{g}\tOG{g}\t{s}\tfalse\n' for g, s in [('a','train'), ('nc',locus_split), ('b','train')]))
++    monkeypatch.setattr(b5.gc, 'WINDOW_TIERS', (30720,))
++    monkeypatch.setattr(b5.gc, 'tile_windows', lambda *args: [(0, 30720)])
++    monkeypatch.setattr(b5.gc, 'block_splits', lambda *args: [(0, 30720, tile_split)])
++    monkeypatch.setattr(b5.gc, 'DECOY_MAX', 0)
++    if hard:
++        monkeypatch.setattr(b5, 'flags_for_gene', lambda flags, species, gene: ['hard'] if gene.gene_id == 'nc' else [])
++        monkeypatch.setattr(b5, 'loss_mask_decision', lambda *args: (0, [], ['hard']))
++    db = tmp_path / 'protected.db'
++    b5.build_b5_database(str(db), str(manifest), str(split), verify_md5=False, rc='all', window_policy='tile6144-v3')
++    with duckdb.connect(str(db), read_only=True) as con:
++        seq, label, qc, tokens = con.sql('SELECT sequence,gff,qc_flags,gsf_token_count FROM geneList WHERE NOT is_rc').fetchone()
++        members = {r[0] for r in con.sql('SELECT gene_id FROM window_genes').fetchall()}
++        assert 'nc' not in members
++        assert members == (set() if masked else {'a', 'b'})
++        assert (seq[1000:1600] == 'N' * 600) == masked
++        assert (label == '<empty>') == masked
++        if masked:
++            assert tokens == 3 and 'component_masked=2' in qc
++        assert con.sql("SELECT count(*) FROM rejected_records WHERE gene_id='nc' AND reason LIKE 'no CDS%'").fetchone()[0] == 1
++    assert b5.validate_b5_database(str(db))['ok']
++
++
++@pytest.mark.parametrize('draw,decoy_expected', [(0.02, True), (0.04, False)])
++def test_no_cds_rate_population_and_coding_only_decoys(tmp_path, b5, monkeypatch, draw, decoy_expected):
++    fasta, gff, split, manifest = _write_inputs(tmp_path, None)
++    lines = []
++    for i in range(10):
++        gid = f'g{i}'
++        start, end = 1001 + i * 1000, 1200 + i * 1000
++        lines += [f'Chr1\tt\tgene\t{start}\t{end}\t.\t+\t.\tID={gid}',
++                  f'Chr1\tt\tmRNA\t{start}\t{end}\t.\t+\t.\tID={gid}t;Parent={gid}',
++                  f'Chr1\tt\t{"CDS" if i == 0 else "exon"}\t{start}\t{end}\t.\t+\t0\tParent={gid}t']
++    gff.write_text('\n'.join(lines) + '\n')
++    split.write_text('species_id\tgene_id\torthogroup_id\tsplit\tstrict_holdout\n' + ''.join(
++        f'Athaliana\tg{i}\tOG{i}\t{"test" if i == 1 else "train"}\tfalse\n' for i in range(10)))
++    monkeypatch.setattr(b5.gc, 'WINDOW_TIERS', (30720,))
++    monkeypatch.setattr(b5.gc, 'tile_windows', lambda *args: [(0, 30720)])
++    monkeypatch.setattr(b5.gc, 'block_splits', lambda *args: [(0, 30720, 'train')])
++    original_random = random.Random
++    draws = []
++    class DecoyRandom(original_random):
++        def __init__(self, seed=None):
++            super().__init__(seed)
++            self.decoy = isinstance(seed, str) and seed.endswith(':decoy')
++        def random(self):
++            if self.decoy:
++                draws.append(draw)
++                return draw
++            return super().random()
++    monkeypatch.setattr(b5.random, 'Random', DecoyRandom)
++    db = tmp_path / 'rate.db'
++    b5.build_b5_database(str(db), str(manifest), str(split), verify_md5=False, rc='none', window_policy='tile6144-v3')
++    # Rate = (one test no-CDS locus / all ten loci) / 3 = 1/30.
++    # Only the single coding gene receives a decoy draw, never the eight train no-CDS loci.
++    assert draws == [draw]
++    with duckdb.connect(str(db), read_only=True) as con:
++        label, seq = con.sql('SELECT gff,sequence FROM geneList').fetchone()
++        assert (label == '<empty>') == decoy_expected
++        assert seq[2000:2200] == 'N' * 200  # test no-CDS leak seed
++        assert seq[3000:3200] != 'N' * 200  # train no-CDS is not an unconditional mask
+diff --git a/tests/test_dataset_strict.py b/tests/test_dataset_strict.py
+index 6a8f315..5c2cdda 100644
+--- a/tests/test_dataset_strict.py
++++ b/tests/test_dataset_strict.py
+@@ -93,3 +93,29 @@ def test_b5_trainer_constructs_the_dataset_strict():
+     assert b5_calls, "the B5 dataset construction moved; update this test"
+     for line in b5_calls:
+         assert "strict=True" in line, line
++
++
++def test_a40_empty_target_matches_contract_through_dataset(tmp_path, dataset_cls, monkeypatch, gsf):
++    from transgenic.datasets import datasets
++    from transgenic.model.tokenization_transgenic import GFFTokenizer
++
++    class Encoder:
++        pad_token_id = 4
++        def __call__(self, seq, **kwargs):
++            return {'input_ids': torch.zeros((1, len(seq) + 1), dtype=torch.long)}
++    monkeypatch.setattr(datasets.AutoTokenizer, 'from_pretrained', lambda *args, **kwargs: Encoder())
++    db = tmp_path / 'empty-target.db'
++    _b5_db(db, [(1, 'empty-label', 'ACGT' * 32), (2, 'coding', 'ACGT' * 32)])
++    with duckdb.connect(str(db)) as con:
++        con.execute("UPDATE geneList SET gff='<empty>' WHERE rn=1")
++    ds = _make(dataset_cls, db, strict=True)
++    tokenizer = GFFTokenizer(vocab_version='v3')
++    expected = ['<s>', '<empty>', '</s>']
++    assert tokenizer._tokenize('<empty>') == expected
++    assert tokenizer.encode('<empty>', add_special_tokens=False) == [tokenizer.vocab[t] for t in expected]
++    for idx, label in enumerate(['<empty>', '0|CDS1|300|+|A>CDS1']):
++        actual = ds[idx][2].tolist()[0]
++        assert actual == [tokenizer.vocab[t] for t in tokenizer._tokenize(label)]
++        assert len(actual) == gsf.count_tokens_v3(label)
++    ds._con.close()
++    ds._con = None

@@ -1,6 +1,12 @@
 # Author decisions — 2026-09-05
 
-Pending decisions, not author approvals. Reply with one line per issue using the choices below. No author-approved recipe, tokenizer, input annotation, frozen database, or protocol text has been changed for these decisions. The #55 ordering correction is implemented for future builds only; applying it to replace the frozen corpus remains pending below.
+**Current decision record — author, 2026-09-05.** #56 is **B: protect no-CDS loci**, decided by the author: “lncRNA는 마스킹 해” (mask the lncRNA). No-CDS loci remain in the masking/overlap population and are excluded from coding labels. Include them in the leak+hard rate denominator (all eligible loci) and numerator when leak/hard eligible; decoy candidates remain otherwise-labelable coding genes. Replacement of the frozen merged database is accepted. The historical pending-choice brief below is superseded for #55/#56/#58 by this record.
+
+**Recommendations adopted under the author's instruction to follow them, 2026-09-05:** #58 **A: use three tokens**, reaffirmed even with a rebuild available: uniform decoder start convention and agreement with the existing token contract are the substantive reasons. #55 **recover ordering failures in the same replacement build**, handling both 13 equal-span ties and 84 decreasing spans through canonical emitted-feature ordering. These two selections are the assistant's judgement adopted by delegation, not quotations of the author's original choices.
+
+**Execution remains on hold at the author's explicit request.** Implement and review the diff and [single rebuild plan / A40 v1.30 draft](a40_rebuild_plan_20260905.md) first. Do not execute the rebuild, merge or freeze. No protocol amendment has been applied. #61's separate scoring-universe decision remains pending; this plan does not redefine scoring or tile allocation for it.
+
+**Prior work parked:** the pre-existing modifications to `revision/scripts/48_score_zmays_additions.py` and untracked `revision/scripts/addition_dump.py`, `revision/scripts/tests/test_addition_dump.py` are preserved untouched. The previously implemented #55 canonical ordering and #57 diagnostics are retained and included in the replacement source snapshot.
 
 Measurements: GitHub #58 and #56, read 2026-09-05; outer `resume.md`, measured 2026-09-04. Frozen corpus: 272,224 rows. Full nine-species rebuild budget: approximately 1.5 hours, plus merge, validation and a new freeze; a species-only rebuild is cheaper but still requires a new merged artifact and freeze. These are not timings measured in this change.
 
@@ -87,9 +93,9 @@ longest gene: 196414
 gene_split: 334642 rows; 0 violations
 ```
 
-`git diff --check` passed. No commits, protocol edits, `evidence/` changes or `*.sbatch` changes. #58 and #56 remain pending author decisions.
+`git diff --check` passed. No commits, protocol edits, `evidence/` changes or `*.sbatch` changes. #58 and #56 were pending at that verification; the current decision record above supersedes that status.
 
-## #55 — disposition of frozen ordering rejections (pending)
+## #55 — historical disposition brief (now decided above)
 
 **Correction to the issue's diagnosis:** the 2026-09-05 read-only audit of the frozen merged database finds 97 canonical-order rejections (Athaliana 8, Ppatens 10, Ptrichocarpa 1, Vvinifera 78). Only **13** compare equal spans; **84** compare decreasing feature spans, with zero unparsed messages. The emitter used annotation coordinates; the validator uses emitted feature coordinates and canonical block text. A tie-break-only patch is insufficient. The emitter now canonicalizes the emitted blocks with the same ordering as the validator, and diagnostics name equal-span tie breaks explicitly. This is a future-build code correction, not authorization to replace the frozen object.
 
