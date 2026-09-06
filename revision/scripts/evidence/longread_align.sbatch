@@ -3,10 +3,10 @@
 #SBATCH --account=cpu-s1-pgl-0
 #SBATCH --partition=cpu-s1-pgl-0
 #SBATCH --cpus-per-task=32
-#SBATCH --mem=32G
+#SBATCH --mem=96G
 #SBATCH --time=1-00:00:00
 #SBATCH --output=/data/gpfs/assoc/pgl/data/Transgenic/evidence/longread_align_v1/logs/%x_%A_%a.out
-#SBATCH --array=0-128%4
+#SBATCH --array=0-128%3
 #
 # ONT long-read -> genome spliced alignment. Protocol B1 §4 (frozen command) + §3.3 + A18.3.
 #
@@ -205,7 +205,10 @@ done
   echo "reads_md5      $FA_MD5"
   echo "reference      $REF"
   echo "reference_md5  $REF_MD5"
-  echo "orientation    $UFNOTE, agreement $FRAC -> ${UF:-no -uf}"
+  # One token, not a phrase: "-> no -uf" ends in "-uf", so grepping this line for -uf matched
+  # the runs that did NOT use it. The command line below is authoritative either way, but a
+  # provenance field a reader can misread is a provenance field that will be misread.
+  echo "uf             ${UF:-none}   ($UFNOTE, sense_read_fraction $FRAC)"
   echo "audit          $AUDIT/audit.json"
   echo "audit_md5      $AUDIT_MD5"
   echo "audit_scorer   $AUDIT_SCORER   (md5 of 67_orientation_audit.py that produced the verdict)"
