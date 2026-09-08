@@ -31,6 +31,12 @@ SEED=${SEED:?set SEED=123|456|789}; GPUS=${SLURM_GPUS_ON_NODE:-${GPUS:-1}}; RUN=
 # bound at /.singularity.d/libs/libcuda.so.1; without this, torch.compile dies at the first forward with
 # "libcuda.so cannot found!" (measured on the GB10 SIF, 2026-09-08; triton 3.3.0 honours the variable).
 export TRITON_LIBCUDA_PATH=/.singularity.d/libs
+# Encoder weights come from the pre-populated cache, never from the network. train_HyenaTransgenic.py:14 sets
+# HF_HOME='./HFmodels' itself (so the image's HF_HOME=/work/hf is never used); the model lives under
+# HFmodels/hub/models--... and the tokenizer under HFmodels/models--... (cache_dir=./HFmodels). Both were
+# shipped from the GB10 test bed and load with HF_HUB_OFFLINE=1 on DeltaAI (6.6 M params, 18 s). Offline
+# mode makes a missing file a fast failure instead of six jobs downloading into one shared directory.
+export HF_HOME=/work/repo/HFmodels HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 export NCCL_DEBUG=WARN OMP_NUM_THREADS=8 WANDB_MODE=${WANDB_MODE:-offline}
 # Per-epoch off-site copy (deploy/deltaai/sync_watch.sh). SYNC_DEST e.g. wyim@pronghorn:/data/gpfs/assoc/pgl/data/Transgenic/runs/seed$SEED
 # Needs a passphrase-less key on this host (RSYNC_SSH="ssh -i ~/.ssh/id_ed25519_sync") authorised on the destination.

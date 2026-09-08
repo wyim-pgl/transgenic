@@ -111,6 +111,19 @@ case "$TOK" in
   *)            bad "tokenizer: could not verify - $TOK";;
 esac
 
+# ---- 4b. encoder cache present (no network at job start) ----------------------
+# train_HyenaTransgenic.py sets HF_HOME=./HFmodels; the weights must already be under the repo or the
+# job downloads at step 0 -- six concurrent jobs into one directory, on a node that may have no route out.
+ENC=$(sed -n 's/.*"encoder_model": *"\([^"]*\)".*/\1/p' "$REPO/configs/b5_400m_win_v3.json" | head -1)
+ENCDIR="$REPO/HFmodels/hub/models--${ENC//\//--}"
+if [ -n "$ENC" ] && ls "$ENCDIR"/snapshots/*/model.safetensors >/dev/null 2>&1 \
+   && ls "$REPO/HFmodels/models--${ENC//\//--}"/snapshots/*/tokenizer_config.json >/dev/null 2>&1; then
+  ok "encoder cache present for $ENC (weights + tokenizer under repo/HFmodels; offline load)"
+else
+  bad "encoder cache missing for ${ENC:-<unparsed>}: expected $ENCDIR/snapshots/*/model.safetensors and the tokenizer
+      under repo/HFmodels/models--...; the job would download at step 0. Ship the cache first."
+fi
+
 # ---- 5. seedable sampler (#59) ----------------------------------------------
 if grep -rq "use_seedable_sampler" "$REPO/train" 2>/dev/null; then
   ok "trainer uses a seedable sampler (#59)"
