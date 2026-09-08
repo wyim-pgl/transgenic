@@ -33,6 +33,11 @@ CONFIG=${CONFIG:-configs/b5_400m_win_v3.json}
 # One tier per run: window_tiers are 30720 / 61440 / 129024 and tier_up_prob 0.3 means an
 # unpinned run samples a mixture, which is not a per-tier number. --benchmark-tier pins it.
 TIER=${TIER:-129024}
+# Triton must be told where apptainer --nv put the host driver. Inside the container the image's ldconfig
+# points at /usr/local/cuda/compat/lib/libcuda.so.1, which does not exist, while the real library is
+# bound at /.singularity.d/libs/libcuda.so.1; without this, torch.compile dies at the first forward with
+# "libcuda.so cannot found!" (measured on the GB10 SIF, 2026-09-08; triton 3.3.0 honours the variable).
+export TRITON_LIBCUDA_PATH=/.singularity.d/libs
 export NCCL_DEBUG=WARN OMP_NUM_THREADS=8
 # No runtime `pip install -e`. Measured on GB10 in the same SIF recipe: setuptools egg_info wants to write
 # src/transgenic.egg-info INTO the bind-mounted repo ("Cannot update time stamp of directory"), so

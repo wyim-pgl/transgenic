@@ -234,7 +234,12 @@ def train(
     if not os.environ.get("TRANSGENIC_NO_COMPILE"):
         try:
             model = torch.compile(model)        # Lazy compilation: compiles on first forward pass
-            print("torch.compile (inductor) enabled.", file=sys.stderr)
+            # torch.compile() itself never fails here; Inductor/Triton fail at the FIRST FORWARD, outside this
+            # try. suppress_errors turns that into a logged fallback to eager instead of a dead job
+            # (measured: "libcuda.so cannot found!" killed a container run at step 0 on the GB10 test bed).
+            import torch._dynamo
+            torch._dynamo.config.suppress_errors = True
+            print("torch.compile (inductor) enabled; compile errors fall back to eager.", file=sys.stderr)
         except Exception as e:
             print(f"Warning: torch.compile failed, continuing eager: {e}", file=sys.stderr)
 

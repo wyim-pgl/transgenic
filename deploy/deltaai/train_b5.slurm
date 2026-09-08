@@ -26,6 +26,11 @@ WORK=$SCRATCH/transgenic; SIF=$SCRATCH/containers/transgenic-ngc.sif
 # SLURM_GPUS_PER_NODE echoes the submitter's string (can be nvidia_gh200_120gb:4) and is
 # unset for --gres=gpu:N or --gpus=N, which would silently run 1 process on 4 GPUs.
 SEED=${SEED:?set SEED=123|456|789}; GPUS=${SLURM_GPUS_ON_NODE:-${GPUS:-1}}; RUN=/work/runs/seed$SEED; RUN_HOST=$WORK/runs/seed$SEED
+# Triton must be told where apptainer --nv put the host driver. Inside the container the image's ldconfig
+# points at /usr/local/cuda/compat/lib/libcuda.so.1, which does not exist, while the real library is
+# bound at /.singularity.d/libs/libcuda.so.1; without this, torch.compile dies at the first forward with
+# "libcuda.so cannot found!" (measured on the GB10 SIF, 2026-09-08; triton 3.3.0 honours the variable).
+export TRITON_LIBCUDA_PATH=/.singularity.d/libs
 export NCCL_DEBUG=WARN OMP_NUM_THREADS=8 WANDB_MODE=${WANDB_MODE:-offline}
 # Per-epoch off-site copy (deploy/deltaai/sync_watch.sh). SYNC_DEST e.g. wyim@pronghorn:/data/gpfs/assoc/pgl/data/Transgenic/runs/seed$SEED
 # Needs a passphrase-less key on this host (RSYNC_SSH="ssh -i ~/.ssh/id_ed25519_sync") authorised on the destination.
