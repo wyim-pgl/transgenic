@@ -1,0 +1,613 @@
+{
+ "completion_evidence": {
+  "path": "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/provenance/build-status.json",
+  "sha256": "233d7b7cb4e3bee7175f8cf13a046a5f7cd8add06fc5894cae763c3f69c0a393",
+  "species": {
+   "Athaliana": {
+    "completion_ok": true,
+    "database_sha256": "19242e0aef77261f36d5ff3729245c6feb66ebb3218784a1e4a788bc0db12bbb",
+    "exit_status": 0,
+    "manifest_sha256": "9f0e9debdda89c48677ec3405a0d3b16b1860d8dac864a869cde29c0505189f9",
+    "rejection_sha256": "30d7c9787728b0aa0bf7b93e0a48e9e86465268c7a4a53453217720204fcf40b",
+    "validation": {
+     "gene_split_rows_checked": 334642,
+     "ok": true,
+     "rows_by_species": {
+      "Athaliana": 10470
+     },
+     "rows_by_split": {
+      "test": 1388,
+      "train": 7635,
+      "valid": 1447
+     },
+     "rows_loss_masked": 0,
+     "tier_margin_unguaranteed_recorded": {
+      "Athaliana": {
+       "contig_edge_credit": true,
+       "edge_margin": 1000,
+       "exceeds_length_guarantee": {
+        "129024": {
+         "bound_nt": 84016,
+         "genes": 0
+        },
+        "30720": {
+         "bound_nt": 18480,
+         "genes": 7
+        },
+        "61440": {
+         "bound_nt": 38960,
+         "genes": 0
+        }
+       },
+       "genes_considered": 27416,
+       "genes_missing_contig": 0,
+       "not_covered_with_margin": {
+        "129024": 0,
+        "30720": 3,
+        "61440": 0
+       },
+       "source": "builder: gene_key_map and FASTA contig lengths"
+      }
+     },
+     "violations": []
+    }
+   },
+   "Bdistachyon": {
+    "completion_ok": true,
+    "database_sha256": "a04456a43375ee0f8644c13ff1a6f8e0e2238219433ea97872ae9a10192e640a",
+    "exit_status": 0,
+    "manifest_sha256": "4832388a7696448ee1b35b5f5e4c69c017f7edaaecb1d874ba557b38e72f006b",
+    "rejection_sha256": "5d51162936e2f3847a8433c73d046d47810edd81c7026d56ef49965e9d46a6e5",
+    "validation": {
+     "gene_split_rows_checked": 334642,
+     "ok": true,
+     "rows_by_species": {
+      "Bdistachyon": 21967
+     },
+     "rows_by_split": {
+      "test": 3514,
+      "train": 16469,
+      "valid": 1984
+     },
+     "rows_loss_masked": 0,
+     "tier_margin_unguaranteed_recorded": {
+      "Bdistachyon": {
+       "contig_edge_credit": true,
+       "edge_margin": 1000,
+       "exceeds_length_guarantee": {
+        "129024": {
+         "bound_nt": 84016,
+         "genes": 0
+        },
+        "30720": {
+         "bound_nt": 18480,
+         "genes": 124
+        },
+        "61440": {
+         "bound_nt": 38960,
+         "genes": 2
+        }
+       },
+       "genes_considered": 34310,
+       "genes_missing_contig": 0,
+       "not_covered_with_margin": {
+        "129024": 0,
+        "30720": 48,
+        "61440": 1
+       },
+       "source": "builder: gene_key_map and FASTA contig lengths"
+      }
+     },
+     "violations": []
+    }
+   },
+   "Gmax": {
+    "completion_ok": true,
+    "database_sha256": "af0211fea611d10836784ba1873356b83726849b51d97a3de719a5549537d617",
+    "exit_status": 0,
+    "manifest_sha256": "e6f6411afbac6f4308933d8ae2be4a9dbe3b3a1cc3ea4e95ab4505f39f5c03be",
+    "rejection_sha256": "7714a3abb01e6ebe434302e863f14b82f04c74f1c564e3c067cca87d6001cd2f",
+    "validation": {
+     "gene_split_rows_checked": 334642,
+     "ok": true,
+     "rows_by_species": {
+      "Gmax": 53247
+     },
+     "rows_by_split": {
+      "test": 9451,
+      "train": 38954,
+      "valid": 4842
+     },
+     "rows_loss_masked": 0,
+     "tier_margin_unguaranteed_recorded": {
+      "Gmax": {
+       "contig_edge_credit": true,
+       "edge_margin": 1000,
+       "exceeds_length_guarantee": {
+        "129024": {
+         "bound_nt": 84016,
+         "genes": 8
+        },
+        "30720": {
+         "bound_nt": 18480,
+         "genes": 728
+        },
+        "61440": {
+         "bound_nt": 38960,
+         "genes": 113
+        }
+       },
+       "genes_considered": 48387,
+       "genes_missing_contig": 0,
+       "not_covered_with_margin": {
+        "129024": 3,
+        "30720": 420,
+        "61440": 68
+       },
+       "source": "builder: gene_key_map and FASTA contig lengths"
+      }
+     },
+     "violations": []
+    }
+   },
+   "Osativa": {
+    "completion_ok": true,
+    "database_sha256": "9018f9bf40a0f54533f7870747a389adbf6e47566612130f2e91322574b160ff",
+    "exit_status": 0,
+    "manifest_sha256": "495b999a48a64c126463b11675ec05b9ded41f7701e91a2fc3156a7d1851c987",
+    "rejection_sha256": "b854f0a310cdb0a265582488187e459a3bae5d18d8573c268d4412e520b0358b",
+    "validation": {
+     "gene_split_rows_checked": 334642,
+     "ok": true,
+     "rows_by_species": {
+      "Osativa": 28057
+     },
+     "rows_by_split": {
+      "test": 5095,
+      "train": 20283,
+      "valid": 2679
+     },
+     "rows_loss_masked": 0,
+     "tier_margin_unguaranteed_recorded": {
+      "Osativa": {
+       "contig_edge_credit": true,
+       "edge_margin": 1000,
+       "exceeds_length_guarantee": {
+        "129024": {
+         "bound_nt": 84016,
+         "genes": 0
+        },
+        "30720": {
+         "bound_nt": 18480,
+         "genes": 76
+        },
+        "61440": {
+         "bound_nt": 38960,
+         "genes": 1
+        }
+       },
+       "genes_considered": 42189,
+       "genes_missing_contig": 0,
+       "not_covered_with_margin": {
+        "129024": 0,
+        "30720": 27,
+        "61440": 1
+       },
+       "source": "builder: gene_key_map and FASTA contig lengths"
+      }
+     },
+     "violations": []
+    }
+   },
+   "Ppatens": {
+    "completion_ok": true,
+    "database_sha256": "275ef8305ddb033ce4e7efc183fbac24fe7a946f1405c006493d6922d1534c22",
+    "exit_status": 0,
+    "manifest_sha256": "9f3571a37371e4510e4a05099b233eba7601096ef795108cf19c555952fd7a13",
+    "rejection_sha256": "56c136c58c1fbeb934c45bbcbbc4e5be84164ed68b097aeef07779dbf1df9ad8",
+    "validation": {
+     "gene_split_rows_checked": 334642,
+     "ok": true,
+     "rows_by_species": {
+      "Ppatens": 39029
+     },
+     "rows_by_split": {
+      "test": 6233,
+      "train": 29130,
+      "valid": 3666
+     },
+     "rows_loss_masked": 0,
+     "tier_margin_unguaranteed_recorded": {
+      "Ppatens": {
+       "contig_edge_credit": true,
+       "edge_margin": 1000,
+       "exceeds_length_guarantee": {
+        "129024": {
+         "bound_nt": 84016,
+         "genes": 0
+        },
+        "30720": {
+         "bound_nt": 18480,
+         "genes": 79
+        },
+        "61440": {
+         "bound_nt": 38960,
+         "genes": 0
+        }
+       },
+       "genes_considered": 32926,
+       "genes_missing_contig": 0,
+       "not_covered_with_margin": {
+        "129024": 0,
+        "30720": 29,
+        "61440": 0
+       },
+       "source": "builder: gene_key_map and FASTA contig lengths"
+      }
+     },
+     "violations": []
+    }
+   },
+   "Ptrichocarpa": {
+    "completion_ok": true,
+    "database_sha256": "27ef0039f583616bb607d1b7b222a11c783f1449c46395e1fd28ef68fa52f3e2",
+    "exit_status": 0,
+    "manifest_sha256": "3b09c84db6d1ef292c8cae8c6312895d51ca08fc8f73e02aed5c52f43e2e0ef4",
+    "rejection_sha256": "689f19e6c3bf614e57f069975f2cbf32bf04316eb80fa47ef21f1f6ba89406c8",
+    "validation": {
+     "gene_split_rows_checked": 334642,
+     "ok": true,
+     "rows_by_species": {
+      "Ptrichocarpa": 30078
+     },
+     "rows_by_split": {
+      "test": 4994,
+      "train": 21752,
+      "valid": 3332
+     },
+     "rows_loss_masked": 0,
+     "tier_margin_unguaranteed_recorded": {
+      "Ptrichocarpa": {
+       "contig_edge_credit": true,
+       "edge_margin": 1000,
+       "exceeds_length_guarantee": {
+        "129024": {
+         "bound_nt": 84016,
+         "genes": 0
+        },
+        "30720": {
+         "bound_nt": 18480,
+         "genes": 157
+        },
+        "61440": {
+         "bound_nt": 38960,
+         "genes": 2
+        }
+       },
+       "genes_considered": 34699,
+       "genes_missing_contig": 0,
+       "not_covered_with_margin": {
+        "129024": 0,
+        "30720": 56,
+        "61440": 0
+       },
+       "source": "builder: gene_key_map and FASTA contig lengths"
+      }
+     },
+     "violations": []
+    }
+   },
+   "Sbicolor": {
+    "completion_ok": true,
+    "database_sha256": "4034248ceca9de5cf5e0ae655a878e23f7481edb16b19e673a0a2c1092e93559",
+    "exit_status": 0,
+    "manifest_sha256": "ba82dd6c14e62ae0f8d77322e12ebc87d51b3233cd27d51ca05054d283ddda79",
+    "rejection_sha256": "d2f6c57a56be2e03b8440b936b5b5ab9b6a22b4624d2eb60e47bf6576cfbcc0b",
+    "validation": {
+     "gene_split_rows_checked": 334642,
+     "ok": true,
+     "rows_by_species": {
+      "Sbicolor": 31223
+     },
+     "rows_by_split": {
+      "test": 5716,
+      "train": 22730,
+      "valid": 2777
+     },
+     "rows_loss_masked": 0,
+     "tier_margin_unguaranteed_recorded": {
+      "Sbicolor": {
+       "contig_edge_credit": true,
+       "edge_margin": 1000,
+       "exceeds_length_guarantee": {
+        "129024": {
+         "bound_nt": 84016,
+         "genes": 1
+        },
+        "30720": {
+         "bound_nt": 18480,
+         "genes": 353
+        },
+        "61440": {
+         "bound_nt": 38960,
+         "genes": 47
+        }
+       },
+       "genes_considered": 32160,
+       "genes_missing_contig": 0,
+       "not_covered_with_margin": {
+        "129024": 0,
+        "30720": 204,
+        "61440": 21
+       },
+       "source": "builder: gene_key_map and FASTA contig lengths"
+      }
+     },
+     "violations": []
+    }
+   },
+   "Sitalica": {
+    "completion_ok": true,
+    "database_sha256": "3e52091a9e4927af4bb62605b927cb09e6ef7e793f0b8ebd234e151812f681c5",
+    "exit_status": 0,
+    "manifest_sha256": "3ce5ce36a66042a689f69e8ad30505f3badd35c23ed143a86795e5ce2638e864",
+    "rejection_sha256": "5c11b3307b2b5580840fb2829182d0ca597b47674f33c76fc29359925f0b3b68",
+    "validation": {
+     "gene_split_rows_checked": 334642,
+     "ok": true,
+     "rows_by_species": {
+      "Sitalica": 26075
+     },
+     "rows_by_split": {
+      "test": 5574,
+      "train": 18078,
+      "valid": 2423
+     },
+     "rows_loss_masked": 0,
+     "tier_margin_unguaranteed_recorded": {
+      "Sitalica": {
+       "contig_edge_credit": true,
+       "edge_margin": 1000,
+       "exceeds_length_guarantee": {
+        "129024": {
+         "bound_nt": 84016,
+         "genes": 0
+        },
+        "30720": {
+         "bound_nt": 18480,
+         "genes": 87
+        },
+        "61440": {
+         "bound_nt": 38960,
+         "genes": 2
+        }
+       },
+       "genes_considered": 34584,
+       "genes_missing_contig": 0,
+       "not_covered_with_margin": {
+        "129024": 0,
+        "30720": 32,
+        "61440": 1
+       },
+       "source": "builder: gene_key_map and FASTA contig lengths"
+      }
+     },
+     "violations": []
+    }
+   },
+   "Vvinifera": {
+    "completion_ok": true,
+    "database_sha256": "109887e2eab92597aa599f45f2e9c11772025da9bc6525087ba56227e4884b21",
+    "exit_status": 0,
+    "manifest_sha256": "dc4494f005112a83d990b37f4ee4f496a3cf1bc57ead244fc25efeb31a799c6f",
+    "rejection_sha256": "5884a85ca6db718875451f8db1ec86cf9cab4f4db45758a8600a2323b322f63e",
+    "validation": {
+     "gene_split_rows_checked": 334642,
+     "ok": true,
+     "rows_by_species": {
+      "Vvinifera": 33002
+     },
+     "rows_by_split": {
+      "test": 6378,
+      "train": 23797,
+      "valid": 2827
+     },
+     "rows_loss_masked": 0,
+     "tier_margin_unguaranteed_recorded": {
+      "Vvinifera": {
+       "contig_edge_credit": true,
+       "edge_margin": 1000,
+       "exceeds_length_guarantee": {
+        "129024": {
+         "bound_nt": 84016,
+         "genes": 77
+        },
+        "30720": {
+         "bound_nt": 18480,
+         "genes": 1807
+        },
+        "61440": {
+         "bound_nt": 38960,
+         "genes": 486
+        }
+       },
+       "genes_considered": 47971,
+       "genes_missing_contig": 0,
+       "not_covered_with_margin": {
+        "129024": 41,
+        "30720": 1215,
+        "61440": 342
+       },
+       "source": "builder: gene_key_map and FASTA contig lengths"
+      }
+     },
+     "violations": []
+    }
+   }
+  }
+ },
+ "database": "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/merged/b5_full_a40_v1.db",
+ "file_bytes": 23534252032,
+ "file_md5": "dda7e78c880c993435654b57dcd1c498",
+ "frozen_inputs": {
+  "build_version": "gsf-contract-a40-v1",
+  "duckdb_version": "1.5.5",
+  "ordering_version": "gsf-order-v1",
+  "rc_mode": "isoform-only",
+  "split_file_sha256": "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+  "window_policy": "tile6144-v3"
+ },
+ "geneList_content_sha256": "063c9f2f78549dd3d36c692dbc1cf2f6ff1d44816718a51865610f97f5e9e0d0",
+ "geneList_rows": 273148,
+ "gene_split_content_sha256": "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+ "git_commits": {
+  "": [
+   "Athaliana",
+   "Bdistachyon",
+   "Gmax",
+   "Osativa",
+   "Ppatens",
+   "Ptrichocarpa",
+   "Sbicolor",
+   "Sitalica",
+   "Vvinifera"
+  ]
+ },
+ "merged_at": "2026-09-06T00:12:44-0700",
+ "qc_flag_files": {
+  "Athaliana.geenuff_flags.tsv": "5ab607c50e37af0591494cfb1f5b0b05",
+  "Athaliana.swissprot_flags.tsv": "1bf39ce9ae07324ad9a9924cbc6b4f2d",
+  "Bdistachyon.geenuff_flags.tsv": "c6b905f0e4eaa63729c6f3c462cff5e0",
+  "Bdistachyon.swissprot_flags.tsv": "ffca7f04c3c1e04b8226bd5aa1511c2c",
+  "Gmax.geenuff_flags.tsv": "4e30d2ec816d0c5701cc5dd0b3f6d414",
+  "Gmax.swissprot_flags.tsv": "632fc827cd7c75407f047c237d8eb269",
+  "Osativa.geenuff_flags.tsv": "4731d03981d6bfd30cf0b21acb2ecd40",
+  "Osativa.swissprot_flags.tsv": "22273b6591fa6759d621e1b322cdc666",
+  "Ppatens.geenuff_flags.tsv": "7d16d4b5542a2c67b355afeb16a6df80",
+  "Ppatens.swissprot_flags.tsv": "e175fcb3ae6d6e564b3d50f800c46213",
+  "Ptrichocarpa.geenuff_flags.tsv": "9aeb684de2aea1611a76691b4cf21043",
+  "Ptrichocarpa.swissprot_flags.tsv": "ffcd8f04942855455d8a8c0cba476f30",
+  "Sbicolor.geenuff_flags.tsv": "26958f9a8be02609b0e59e56d950fb0a",
+  "Sbicolor.swissprot_flags.tsv": "59133b0d9bd2720c57a12da298a4895d",
+  "Sitalica.geenuff_flags.tsv": "09d506058d1e989e8106ae78b4738950",
+  "Sitalica.swissprot_flags.tsv": "ffca7f04c3c1e04b8226bd5aa1511c2c",
+  "Vvinifera.geenuff_flags.tsv": "a42e1c225edd4b26b5991ec0b7d70c3f",
+  "Vvinifera.swissprot_flags.tsv": "629db6e761835689ce4a1a841b765683"
+ },
+ "rn_ranges": {
+  "Athaliana": [
+   1,
+   10470
+  ],
+  "Bdistachyon": [
+   10471,
+   32437
+  ],
+  "Gmax": [
+   32438,
+   85684
+  ],
+  "Osativa": [
+   85685,
+   113741
+  ],
+  "Ppatens": [
+   113742,
+   152770
+  ],
+  "Ptrichocarpa": [
+   152771,
+   182848
+  ],
+  "Sbicolor": [
+   182849,
+   214071
+  ],
+  "Sitalica": [
+   214072,
+   240146
+  ],
+  "Vvinifera": [
+   240147,
+   273148
+  ]
+ },
+ "rows_by_species": {
+  "Athaliana": 10470,
+  "Bdistachyon": 21967,
+  "Gmax": 53247,
+  "Osativa": 28057,
+  "Ppatens": 39029,
+  "Ptrichocarpa": 30078,
+  "Sbicolor": 31223,
+  "Sitalica": 26075,
+  "Vvinifera": 33002
+ },
+ "source_md5": {
+  "Athaliana": "deb6c02f5fd9a9bae5a7fe436f9e23e1",
+  "Bdistachyon": "74df5e68c3f501e13e3fee042266db7b",
+  "Gmax": "e98e8756a209f2ad6531cce5f2b4f739",
+  "Osativa": "021e1129d0d25861a43c17ee584cc749",
+  "Ppatens": "4115415035ad722b67910aaa6d394595",
+  "Ptrichocarpa": "3fefc2ce1241c88905f26f650221960d",
+  "Sbicolor": "c3338a2966cb06a953c8758e5c7e7990",
+  "Sitalica": "3e67bd0a4d8835f3cf040bda9ef6026a",
+  "Vvinifera": "4f86ba34f43d32ffc58801797b7eba43"
+ },
+ "source_rejected_json_md5": {
+  "Athaliana": "cdddf967c8acc5ca0ebb87fd2b3216cc",
+  "Bdistachyon": "7e3d60f08a5ce844406910070afc22a1",
+  "Gmax": "c467fb8bc3f45b8deebab5ab12dc1575",
+  "Osativa": "fbaceabefcd4491847c3d2354ccb9a13",
+  "Ppatens": "65c24942db8d67c2153d5d7b7284031c",
+  "Ptrichocarpa": "6434b9641537e2fdf0b6a0385ec490be",
+  "Sbicolor": "62aeba7565e2ee0f0fb2679b4561d5d3",
+  "Sitalica": "129647e173de273c255447033c04df1c",
+  "Vvinifera": "953596b1b3767149085dddf0c1598039"
+ },
+ "sources": [
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/full/Athaliana.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/full/Bdistachyon.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/full/Gmax.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/full/Osativa.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/full/Ppatens.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/full/Ptrichocarpa.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/full/Sbicolor.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/full/Sitalica.db",
+  "/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/full/Vvinifera.db"
+ ],
+ "species_manifest": {
+  "path": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/manifests/b5_species_v1.gpu.tsv",
+  "sha256": "a5ded85c586a4462202acbd0543bfdb4fb4fb8d605f08f49b485c0bc297c1c2e"
+ },
+ "split_table": {
+  "path": "data/splits/b5_orthogroup_split_v1.tsv",
+  "sha256": "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7"
+ },
+ "table_content_sha256": {
+  "build_manifest": {
+   "rows": 9,
+   "sha256": "1ae9bb33ecc66cf1e39e4cfe7bf610b071edcff2bdb0c2dd9182203acb704442"
+  },
+  "gene_key_map": {
+   "rows": 334642,
+   "sha256": "e1e907ff71fa760204bc0240f15a8eb8fea151fa53e3f99e2c6240e6239204d0"
+  },
+  "gene_split": {
+   "rows": 334642,
+   "sha256": "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee"
+  },
+  "rejected_records": {
+   "rows": 8130,
+   "sha256": "9e3936fa7c2282b0d6b476420252ad0f60c689d21fbc0bc0c1eb37f28e9783fd"
+  },
+  "tile_blocks": {
+   "rows": 4454,
+   "sha256": "3ad19472c1ed5a920e294ea3b9e646bf6827d3bab19d57fe06cbd88d1b33e890"
+  },
+  "window_genes": {
+   "rows": 978864,
+   "sha256": "7fcc3df0f32bb921093aeae51062e1f80247dca444bff145247ab9f49f41ba89"
+  }
+ }
+}

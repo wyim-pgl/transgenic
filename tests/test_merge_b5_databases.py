@@ -240,3 +240,57 @@ def test_merge_preserves_new_margin_metadata_and_accepts_legacy_sources(two_spec
     recorded = dict(con.sql("SELECT species_id, tier_margin_unguaranteed FROM build_manifest").fetchall())
     assert recorded == {"Athaliana": value, "Gmax": None}
     con.close()
+
+
+def _status_fixture(src, mod):
+    records = []
+    for path in sorted(src.glob('*.db')):
+        con = duckdb.connect(str(path), read_only=True)
+        cur = con.execute('SELECT * FROM build_manifest')
+        manifest = dict(zip([c[0] for c in cur.description], cur.fetchone()))
+        con.close()
+        mp = path.with_suffix('.build_manifest.json')
+        mp.write_text(json.dumps(manifest))
+        rp = Path(str(path) + '.rejected.json')
+        rp.write_text('[]')
+        records.append(dict(species=path.stem, exit_status=0, completion_ok=True,
+                            command=['builder', '--db', str(path)], manifest=str(mp),
+                            rejection_json=str(rp), rejection_sha256=mod.sha256(str(rp))))
+    status = src / 'build-status.json'
+    status.write_text(json.dumps(dict(status='SUCCESS', exit_status=0, species=records)))
+    return status
+
+
+@pytest.mark.parametrize('fault', ['missing', 'duplicate', 'failed', 'incomplete', 'wrong_db', 'stale_rejection', 'stale_manifest', 'invalid'])
+def test_status_completion_fails_closed(two_species, monkeypatch, fault):
+    mod = _load(SCRIPT, 'merge_status_test')
+    status = _status_fixture(two_species, mod)
+    value = json.loads(status.read_text())
+    row = value['species'][0]
+    if fault == 'missing': value['species'].pop()
+    if fault == 'duplicate': value['species'][1] = row
+    if fault == 'failed': row['exit_status'] = 1
+    if fault == 'incomplete': row['completion_ok'] = False
+    if fault == 'wrong_db': row['command'][-1] += '.other'
+    if fault == 'stale_rejection': Path(row['rejection_json']).write_text('[1]')
+    if fault == 'stale_manifest': Path(row['manifest']).write_text('{}')
+    status.write_text(json.dumps(value))
+    monkeypatch.setattr(mod._b5, 'validate_b5_database', lambda p: {'ok': False, 'violations': ['bad']})
+    with pytest.raises(SystemExit):
+        mod.completion_from_status([str(p) for p in sorted(two_species.glob('*.db'))], str(status))
+
+
+def test_status_completion_records_current_evidence(two_species, monkeypatch):
+    mod = _load(SCRIPT, 'merge_status_pass')
+    status = _status_fixture(two_species, mod)
+    calls = []
+    def validate(path):
+        calls.append(path)
+        return {'ok': True, 'violations': [], 'rows_by_species': {Path(path).stem: 1}}
+    monkeypatch.setattr(mod._b5, 'validate_b5_database', validate)
+    sources = [str(p) for p in sorted(two_species.glob('*.db'))]
+    result = mod.completion_from_status(sources, str(status))
+    assert calls == sources
+    assert result['sha256'] == mod.sha256(str(status))
+    for p in sources:
+        assert result['species'][Path(p).stem]['database_sha256'] == mod.sha256(p)

@@ -1,0 +1,47 @@
+{
+  "old_database": {
+    "bytes": 23491260416,
+    "mtime_ns": 1788422329816219148,
+    "md5": "ebf4fb511073c546d05e3fa0fc0e4258",
+    "expected_md5": "ebf4fb511073c546d05e3fa0fc0e4258"
+  },
+  "old_sources": {
+    "Athaliana": {
+      "md5": "5ef307faf8aadca39c3691965d7441aa",
+      "expected_md5": "5ef307faf8aadca39c3691965d7441aa"
+    },
+    "Bdistachyon": {
+      "md5": "9c9d09174a16f655b747502b88f2980c",
+      "expected_md5": "9c9d09174a16f655b747502b88f2980c"
+    },
+    "Gmax": {
+      "md5": "c94e6d4e168d4c12bc902df89b24b200",
+      "expected_md5": "c94e6d4e168d4c12bc902df89b24b200"
+    },
+    "Osativa": {
+      "md5": "54744576df774b49a16d8013e4152f9b",
+      "expected_md5": "54744576df774b49a16d8013e4152f9b"
+    },
+    "Ppatens": {
+      "md5": "e737b46b1510de16329665dbde94ed03",
+      "expected_md5": "e737b46b1510de16329665dbde94ed03"
+    },
+    "Ptrichocarpa": {
+      "md5": "8f9228de0354e4efb3a64858bfafb554",
+      "expected_md5": "8f9228de0354e4efb3a64858bfafb554"
+    },
+    "Sbicolor": {
+      "md5": "149305c69f1ad4220f27d1e0b920dd1a",
+      "expected_md5": "149305c69f1ad4220f27d1e0b920dd1a"
+    },
+    "Sitalica": {
+      "md5": "c37482893fa2ec6a194edb4e9fa14fe0",
+      "expected_md5": "c37482893fa2ec6a194edb4e9fa14fe0"
+    },
+    "Vvinifera": {
+      "md5": "3714204953e2fa153c2e1fe870fb7b22",
+      "expected_md5": "3714204953e2fa153c2e1fe870fb7b22"
+    }
+  },
+  "status": "PASS"
+}

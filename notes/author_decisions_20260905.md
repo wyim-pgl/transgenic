@@ -4,7 +4,15 @@
 
 **Recommendations adopted under the author's instruction to follow them, 2026-09-05:** #58 **A: use three tokens**, reaffirmed even with a rebuild available: uniform decoder start convention and agreement with the existing token contract are the substantive reasons. #55 **recover ordering failures in the same replacement build**, handling both 13 equal-span ties and 84 decreasing spans through canonical emitted-feature ordering. These two selections are the assistant's judgement adopted by delegation, not quotations of the author's original choices.
 
-**Execution remains on hold at the author's explicit request.** Implement and review the diff and [single rebuild plan / A40 v1.30 draft](a40_rebuild_plan_20260905.md) first. Do not execute the rebuild, merge or freeze. No protocol amendment has been applied. #61's separate scoring-universe decision remains pending; this plan does not redefine scoring or tile allocation for it.
+**Resolved by the combined rebuild and A40 / v1.30 freeze — 2026-09-06.** The author decided #55, #56 and #58 on **2026-09-05** and has now approved freeze/adoption after independent reconciliation. The prior execution hold and pending-choice briefs are historical and superseded. Protocol §1 now adopts `gpu:/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/merged/b5_full_a40_v1.db` (273,148 rows); see [A40 verification](a40_verification_20260906.md) and [freeze](../data/freeze/b5_full_a40_v1.freeze.json). #61's separate scoring-universe decision remains pending; scoring and tile allocation for it are not redefined.
+
+| Issue | Author decision (2026-09-05) | Resolution recorded 2026-09-06 |
+|---|---|---|
+| #55 | Recover ordering failures in the replacement build | **RESOLVED by this rebuild**: canonical emitted order shared with validator; zero order rejects. **19 forward +19 RC** directly survive in the final corpus; 97 forward +63 RC belongs only to the ordering-only counterfactual. |
+| #56 | B: protect no-CDS loci | **RESOLVED by this rebuild**: all 6,205 no-CDS loci participate in masking/closure and rate population, with no coding or decoy memberships; stored N coverage independently verified. |
+| #58 | A: use three tokens | **RESOLVED with this rebuild and its corrected tokenizer**: `<s> <empty> </s>` for all 26,057 new empty rows; all 273,148 stored/actual token lengths agree. |
+
+B5 may now start with the new §1 DB and corrected tokenizer under a **new labelled run**; A28 forbids an in-chain patch. The superseded corpus and freeze remain preserved. The historical options below describe the pre-decision state, not current blockers.
 
 **Prior work parked:** the pre-existing modifications to `revision/scripts/48_score_zmays_additions.py` and untracked `revision/scripts/addition_dump.py`, `revision/scripts/tests/test_addition_dump.py` are preserved untouched. The previously implemented #55 canonical ordering and #57 diagnostics are retained and included in the replacement source snapshot.
 

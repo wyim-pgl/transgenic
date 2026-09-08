@@ -1,6 +1,22 @@
 # Frozen B5 database (#16, #50)
 
-`b5_full_v1.db` — the single leakage-controlled tile database the B5 seeds train on. Built as nine
+**Current §1 object — A40 / v1.30, adopted 2026-09-06:**
+[`b5_full_a40_v1.freeze.json`](b5_full_a40_v1.freeze.json), mirrored at
+`gpu:/home/pgl/scratch1/wyim/transgenic_data/b5/a40_20260905_v1/merged/b5_full_a40_v1.freeze.json`.
+The database beside it is `b5_full_a40_v1.db`: **273,148 rows, 23,534,252,032 bytes**,
+MD5 `dda7e78c880c993435654b57dcd1c498`, recipe `gsf-contract-a40-v1`.
+The record includes file and seven table hashes, nine source DB hashes, HEAD `aa2623f` plus the
+executed uncommitted merge patch and source SHA256 inventories, actual invocations and verification.
+See [A40](../../revision/protocols/PROTOCOL_B1_frozen_v1.md) and the
+[verification note](../../notes/a40_verification_20260906.md), whose pre-adoption status is preserved
+as historical evidence. Final direct ordering recovery is **19 forward +19 RC**, not 97.
+Every new B5 run requires this DB, the corrected three-token empty-target tokenizer and a new run
+label under A28. No-CDS loci participate in masking and overlap closure, with no coding labels;
+emitter and validator share canonical emitted-block order.
+
+## Superseded corpus — preserved
+
+`b5_full_v1.db` — the historical leakage-controlled tile database, superseded by A40. Built as nine
 per-species databases (one DuckDB file cannot take parallel writers) and merged by
 `scripts/merge_b5_databases.py`.
 

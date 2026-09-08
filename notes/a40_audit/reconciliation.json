@@ -1,0 +1,1305 @@
+{
+  "method": "Snapshot replay into in-memory row fingerprints, membership and key maps; only counterfactual edit removes no-CDS retention. Current replay must match every current source row, membership, key map, block and rejection before causal attribution.",
+  "species": {
+    "Athaliana": {
+      "old_rows": 10454,
+      "new_rows": 10470,
+      "delta": 16,
+      "current_replay_row_mismatches": 0,
+      "first_mismatches": [],
+      "current_stats": {
+        "candidate_windows": 6769,
+        "forward_retained": 6350,
+        "leak": 32852,
+        "hard": 950,
+        "decoy": 1351,
+        "masked_ids": 37199,
+        "component_added": 2046,
+        "dup_collapsed": 0,
+        "N_bases": 82049722,
+        "bases": 342380544,
+        "mask_fraction_rejected": 140,
+        "empty_sampled_out": 279,
+        "rows": 10470,
+        "rc_rows": 4120,
+        "no_cds_loci": 0
+      },
+      "current_population": {
+        "denominator": 27416,
+        "numerator": 14048,
+        "decoy_rate": 0.05,
+        "no_cds_by_split": {},
+        "no_cds_hard": 0,
+        "no_cds_union_numerator": 0
+      },
+      "checks": {
+        "rows": true,
+        "membership": true,
+        "key_map": true,
+        "blocks": true,
+        "rejections": true,
+        "old_key_map_unchanged": true
+      },
+      "ordering_forward": 8,
+      "ordering_rc": 8,
+      "unexplained_added": 0,
+      "unexplained_removed": 0,
+      "unexplained_shared_semantic_changes": 0,
+      "mask_population_added": 0,
+      "mask_population_removed": 0,
+      "mask_population_shared_changed": 0,
+      "ordering_fates": [
+        {
+          "coordinate": "Chr1:10477235-10507955",
+          "old_reason": "window gene blocks out of canonical order ((14739, 17363) after (14739, 17363))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr1:21505715-21536435",
+          "old_reason": "window gene blocks out of canonical order ((14685, 16742) after (14685, 16742))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr1:10466748-10528188",
+          "old_reason": "window gene blocks out of canonical order ((25226, 27850) after (25226, 27850))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr1:21464508-21525948",
+          "old_reason": "window gene blocks out of canonical order ((55892, 57949) after (55892, 57949))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr1:10441084-10570108",
+          "old_reason": "window gene blocks out of canonical order ((50890, 53514) after (50890, 53514))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr1:21408124-21537148",
+          "old_reason": "window gene blocks out of canonical order ((112276, 114333) after (112276, 114333))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr3:19781346-19842786",
+          "old_reason": "window gene blocks out of canonical order ((16760, 18790) after (16760, 18790))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr3:19694850-19823874",
+          "old_reason": "window gene blocks out of canonical order ((103256, 105286) after (103256, 105286))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        }
+      ],
+      "unexplained_examples": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      }
+    },
+    "Bdistachyon": {
+      "old_rows": 21967,
+      "new_rows": 21967,
+      "delta": 0,
+      "current_replay_row_mismatches": 0,
+      "first_mismatches": [],
+      "current_stats": {
+        "candidate_windows": 15352,
+        "forward_retained": 14338,
+        "leak": 26436,
+        "hard": 3976,
+        "decoy": 2195,
+        "masked_ids": 35371,
+        "component_added": 2764,
+        "dup_collapsed": 0,
+        "N_bases": 114745336,
+        "bases": 776675328,
+        "empty_sampled_out": 882,
+        "mask_fraction_rejected": 132,
+        "rows": 21967,
+        "rc_rows": 7629,
+        "no_cds_loci": 0
+      },
+      "current_population": {
+        "denominator": 34267,
+        "numerator": 12935,
+        "decoy_rate": 0.05,
+        "no_cds_by_split": {},
+        "no_cds_hard": 0,
+        "no_cds_union_numerator": 0
+      },
+      "checks": {
+        "rows": true,
+        "membership": true,
+        "key_map": true,
+        "blocks": true,
+        "rejections": true,
+        "old_key_map_unchanged": true
+      },
+      "ordering_forward": 0,
+      "ordering_rc": 0,
+      "unexplained_added": 0,
+      "unexplained_removed": 0,
+      "unexplained_shared_semantic_changes": 0,
+      "mask_population_added": 0,
+      "mask_population_removed": 0,
+      "mask_population_shared_changed": 0,
+      "ordering_fates": [],
+      "unexplained_examples": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      }
+    },
+    "Gmax": {
+      "old_rows": 53247,
+      "new_rows": 53247,
+      "delta": 0,
+      "current_replay_row_mismatches": 0,
+      "first_mismatches": [],
+      "current_stats": {
+        "candidate_windows": 57207,
+        "empty_sampled_out": 19258,
+        "forward_retained": 37772,
+        "leak": 42689,
+        "hard": 194,
+        "decoy": 2882,
+        "masked_ids": 47185,
+        "component_added": 1420,
+        "dup_collapsed": 0,
+        "N_bases": 196669329,
+        "bases": 2158940160,
+        "mask_fraction_rejected": 177,
+        "rows": 53247,
+        "rc_rows": 15475,
+        "no_cds_loci": 0
+      },
+      "current_population": {
+        "denominator": 48302,
+        "numerator": 19231,
+        "decoy_rate": 0.05,
+        "no_cds_by_split": {},
+        "no_cds_hard": 0,
+        "no_cds_union_numerator": 0
+      },
+      "checks": {
+        "rows": true,
+        "membership": true,
+        "key_map": true,
+        "blocks": true,
+        "rejections": true,
+        "old_key_map_unchanged": true
+      },
+      "ordering_forward": 0,
+      "ordering_rc": 0,
+      "unexplained_added": 0,
+      "unexplained_removed": 0,
+      "unexplained_shared_semantic_changes": 0,
+      "mask_population_added": 0,
+      "mask_population_removed": 0,
+      "mask_population_shared_changed": 0,
+      "ordering_fates": [],
+      "unexplained_examples": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      }
+    },
+    "Osativa": {
+      "old_rows": 28057,
+      "new_rows": 28057,
+      "delta": 0,
+      "current_replay_row_mismatches": 0,
+      "first_mismatches": [],
+      "current_stats": {
+        "candidate_windows": 21190,
+        "forward_retained": 20436,
+        "leak": 32209,
+        "hard": 136,
+        "decoy": 3003,
+        "masked_ids": 36091,
+        "component_added": 743,
+        "dup_collapsed": 52,
+        "N_bases": 109492268,
+        "bases": 1098301440,
+        "empty_sampled_out": 701,
+        "mask_fraction_rejected": 53,
+        "rows": 28057,
+        "rc_rows": 7621,
+        "no_cds_loci": 0
+      },
+      "current_population": {
+        "denominator": 42189,
+        "numerator": 14221,
+        "decoy_rate": 0.05,
+        "no_cds_by_split": {},
+        "no_cds_hard": 0,
+        "no_cds_union_numerator": 0
+      },
+      "checks": {
+        "rows": true,
+        "membership": true,
+        "key_map": true,
+        "blocks": true,
+        "rejections": true,
+        "old_key_map_unchanged": true
+      },
+      "ordering_forward": 0,
+      "ordering_rc": 0,
+      "unexplained_added": 0,
+      "unexplained_removed": 0,
+      "unexplained_shared_semantic_changes": 0,
+      "mask_population_added": 0,
+      "mask_population_removed": 0,
+      "mask_population_shared_changed": 0,
+      "ordering_fates": [],
+      "unexplained_examples": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      }
+    },
+    "Ppatens": {
+      "old_rows": 39009,
+      "new_rows": 39029,
+      "delta": 20,
+      "current_replay_row_mismatches": 0,
+      "first_mismatches": [],
+      "current_stats": {
+        "candidate_windows": 26911,
+        "forward_retained": 21702,
+        "leak": 18589,
+        "hard": 5416,
+        "decoy": 2429,
+        "masked_ids": 30895,
+        "component_added": 4461,
+        "dup_collapsed": 350,
+        "N_bases": 101289838,
+        "bases": 1232013312,
+        "empty_sampled_out": 4923,
+        "mask_fraction_rejected": 286,
+        "rows": 39029,
+        "rc_rows": 17327,
+        "no_cds_loci": 0
+      },
+      "current_population": {
+        "denominator": 32765,
+        "numerator": 10000,
+        "decoy_rate": 0.05,
+        "no_cds_by_split": {},
+        "no_cds_hard": 0,
+        "no_cds_union_numerator": 0
+      },
+      "checks": {
+        "rows": true,
+        "membership": true,
+        "key_map": true,
+        "blocks": true,
+        "rejections": true,
+        "old_key_map_unchanged": true
+      },
+      "ordering_forward": 10,
+      "ordering_rc": 10,
+      "unexplained_added": 0,
+      "unexplained_removed": 0,
+      "unexplained_shared_semantic_changes": 0,
+      "mask_population_added": 0,
+      "mask_population_removed": 0,
+      "mask_population_shared_changed": 0,
+      "ordering_fates": [
+        {
+          "coordinate": "Chr02:25967364-25998084",
+          "old_reason": "window gene blocks out of canonical order ((17783, 22068) after (20055, 21924))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr02:25936644-25998084",
+          "old_reason": "window gene blocks out of canonical order ((48503, 52788) after (50775, 52644))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr02:25869060-25998084",
+          "old_reason": "window gene blocks out of canonical order ((116087, 120372) after (118359, 120228))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr10:10032353-10063073",
+          "old_reason": "window gene blocks out of canonical order ((10144, 13534) after (10144, 13670))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr10:10007992-10069432",
+          "old_reason": "window gene blocks out of canonical order ((34505, 37895) after (34505, 38031))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr10:9969981-10099005",
+          "old_reason": "window gene blocks out of canonical order ((72516, 75906) after (72516, 76042))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr13:10254441-10285161",
+          "old_reason": "window gene blocks out of canonical order ((5703, 8206) after (5703, 8206))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr13:10223351-10284791",
+          "old_reason": "window gene blocks out of canonical order ((36793, 39296) after (36793, 39296))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr21:8280968-8342408",
+          "old_reason": "window gene blocks out of canonical order ((33940, 43624) after (33940, 43624))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        },
+        {
+          "coordinate": "Chr21:8256210-8385234",
+          "old_reason": "window gene blocks out of canonical order ((58698, 68382) after (58698, 68382))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        }
+      ],
+      "unexplained_examples": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      }
+    },
+    "Ptrichocarpa": {
+      "old_rows": 30076,
+      "new_rows": 30078,
+      "delta": 2,
+      "current_replay_row_mismatches": 0,
+      "first_mismatches": [],
+      "current_stats": {
+        "candidate_windows": 22172,
+        "forward_retained": 20303,
+        "leak": 31792,
+        "hard": 395,
+        "decoy": 2133,
+        "masked_ids": 35660,
+        "component_added": 1340,
+        "dup_collapsed": 0,
+        "N_bases": 126759612,
+        "bases": 1104623616,
+        "empty_sampled_out": 1789,
+        "mask_fraction_rejected": 80,
+        "rows": 30078,
+        "rc_rows": 9775,
+        "no_cds_loci": 0
+      },
+      "current_population": {
+        "denominator": 34673,
+        "numerator": 14032,
+        "decoy_rate": 0.05,
+        "no_cds_by_split": {},
+        "no_cds_hard": 0,
+        "no_cds_union_numerator": 0
+      },
+      "checks": {
+        "rows": true,
+        "membership": true,
+        "key_map": true,
+        "blocks": true,
+        "rejections": true,
+        "old_key_map_unchanged": true
+      },
+      "ordering_forward": 1,
+      "ordering_rc": 1,
+      "unexplained_added": 0,
+      "unexplained_removed": 0,
+      "unexplained_shared_semantic_changes": 0,
+      "mask_population_added": 0,
+      "mask_population_removed": 0,
+      "mask_population_shared_changed": 0,
+      "ordering_fates": [
+        {
+          "coordinate": "Chr06:2139170-2200610",
+          "old_reason": "window gene blocks out of canonical order ((9585, 11357) after (9585, 11357))",
+          "ordering_only_fate": "retained",
+          "current_fate": "retained",
+          "current_forward": true,
+          "current_rc": true
+        }
+      ],
+      "unexplained_examples": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      }
+    },
+    "Sbicolor": {
+      "old_rows": 31223,
+      "new_rows": 31223,
+      "delta": 0,
+      "current_replay_row_mismatches": 0,
+      "first_mismatches": [],
+      "current_stats": {
+        "candidate_windows": 40771,
+        "forward_retained": 23381,
+        "leak": 25835,
+        "hard": 1029,
+        "decoy": 2128,
+        "masked_ids": 30754,
+        "component_added": 1762,
+        "dup_collapsed": 0,
+        "N_bases": 115177527,
+        "bases": 1336725504,
+        "empty_sampled_out": 17264,
+        "mask_fraction_rejected": 126,
+        "rows": 31223,
+        "rc_rows": 7842,
+        "no_cds_loci": 0
+      },
+      "current_population": {
+        "denominator": 32142,
+        "numerator": 11791,
+        "decoy_rate": 0.05,
+        "no_cds_by_split": {},
+        "no_cds_hard": 0,
+        "no_cds_union_numerator": 0
+      },
+      "checks": {
+        "rows": true,
+        "membership": true,
+        "key_map": true,
+        "blocks": true,
+        "rejections": true,
+        "old_key_map_unchanged": true
+      },
+      "ordering_forward": 0,
+      "ordering_rc": 0,
+      "unexplained_added": 0,
+      "unexplained_removed": 0,
+      "unexplained_shared_semantic_changes": 0,
+      "mask_population_added": 0,
+      "mask_population_removed": 0,
+      "mask_population_shared_changed": 0,
+      "ordering_fates": [],
+      "unexplained_examples": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      }
+    },
+    "Sitalica": {
+      "old_rows": 26075,
+      "new_rows": 26075,
+      "delta": 0,
+      "current_replay_row_mismatches": 0,
+      "first_mismatches": [],
+      "current_stats": {
+        "candidate_windows": 23006,
+        "forward_retained": 19536,
+        "leak": 26549,
+        "hard": 2934,
+        "decoy": 2088,
+        "masked_ids": 32916,
+        "component_added": 1345,
+        "dup_collapsed": 0,
+        "N_bases": 118179708,
+        "bases": 1083850752,
+        "empty_sampled_out": 3251,
+        "mask_fraction_rejected": 219,
+        "rows": 26075,
+        "rc_rows": 6539,
+        "no_cds_loci": 0
+      },
+      "current_population": {
+        "denominator": 34581,
+        "numerator": 13113,
+        "decoy_rate": 0.05,
+        "no_cds_by_split": {},
+        "no_cds_hard": 0,
+        "no_cds_union_numerator": 0
+      },
+      "checks": {
+        "rows": true,
+        "membership": true,
+        "key_map": true,
+        "blocks": true,
+        "rejections": true,
+        "old_key_map_unchanged": true
+      },
+      "ordering_forward": 0,
+      "ordering_rc": 0,
+      "unexplained_added": 0,
+      "unexplained_removed": 0,
+      "unexplained_shared_semantic_changes": 0,
+      "mask_population_added": 0,
+      "mask_population_removed": 0,
+      "mask_population_shared_changed": 0,
+      "ordering_fates": [],
+      "unexplained_examples": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      }
+    },
+    "Vvinifera": {
+      "old_rows": 32116,
+      "new_rows": 33002,
+      "delta": 886,
+      "current_replay_row_mismatches": 0,
+      "first_mismatches": [],
+      "current_stats": {
+        "candidate_windows": 28552,
+        "forward_retained": 25253,
+        "leak": 34686,
+        "hard": 1969,
+        "decoy": 2602,
+        "masked_ids": 43235,
+        "component_added": 3978,
+        "dup_collapsed": 0,
+        "N_bases": 152335499,
+        "bases": 1376507904,
+        "no_cds_complete_occurrences": 17776,
+        "empty_sampled_out": 2923,
+        "no_cds_leak": 3632,
+        "no_cds_seed_union": 3632,
+        "no_cds_N_covered_occurrences": 4850,
+        "mask_fraction_rejected": 376,
+        "rows": 33002,
+        "rc_rows": 7749,
+        "no_cds_loci": 6205
+      },
+      "current_population": {
+        "denominator": 47971,
+        "numerator": 16951,
+        "decoy_rate": 0.05,
+        "no_cds_by_split": {
+          "train": 4600,
+          "test": 971,
+          "valid": 634
+        },
+        "no_cds_hard": 0,
+        "no_cds_union_numerator": 1605
+      },
+      "checks": {
+        "rows": true,
+        "membership": true,
+        "key_map": true,
+        "blocks": true,
+        "rejections": true,
+        "old_key_map_unchanged": true
+      },
+      "counterfactual_stats": {
+        "candidate_windows": 28555,
+        "forward_retained": 24424,
+        "leak": 31096,
+        "hard": 1985,
+        "decoy": 2542,
+        "masked_ids": 37904,
+        "component_added": 2281,
+        "dup_collapsed": 0,
+        "N_bases": 141937314,
+        "bases": 1345658880,
+        "empty_sampled_out": 3801,
+        "mask_fraction_rejected": 330,
+        "rows": 32238,
+        "rc_rows": 7814,
+        "no_cds_loci": 0
+      },
+      "counterfactual_population": {
+        "denominator": 41766,
+        "numerator": 15346,
+        "decoy_rate": 0.05,
+        "no_cds_by_split": {},
+        "no_cds_hard": 0,
+        "no_cds_union_numerator": 0
+      },
+      "ordering_forward": 78,
+      "ordering_rc": 44,
+      "unexplained_added": 0,
+      "unexplained_removed": 0,
+      "unexplained_shared_semantic_changes": 0,
+      "mask_population_added": 32627,
+      "mask_population_removed": 31863,
+      "mask_population_shared_changed": 30,
+      "ordering_fates": [
+        {
+          "coordinate": "chr01:1549894-1611334",
+          "old_reason": "window gene blocks out of canonical order ((30494, 30800) after (33252, 42165))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr02:14299372-14330092",
+          "old_reason": "window gene blocks out of canonical order ((12316, 18849) after (19856, 21533))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr02:691980-753420",
+          "old_reason": "window gene blocks out of canonical order ((15720, 23063) after (28198, 38214))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr02:3088140-3149580",
+          "old_reason": "window gene blocks out of canonical order ((42362, 42512) after (45516, 46639))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr02:14270220-14331660",
+          "old_reason": "window gene blocks out of canonical order ((41468, 48001) after (49008, 50685))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr02:616174-745198",
+          "old_reason": "window gene blocks out of canonical order ((91526, 98869) after (104004, 114020))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr02:3067630-3196654",
+          "old_reason": "window gene blocks out of canonical order ((62872, 63022) after (66026, 67149))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr02:14292718-14421742",
+          "old_reason": "window gene blocks out of canonical order ((18970, 25503) after (26510, 28187))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr03:1831406-1960430",
+          "old_reason": "window gene blocks out of canonical order ((73122, 75465) after (76833, 84249))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr04:634424-665144",
+          "old_reason": "window gene blocks out of canonical order ((4689, 4893) after (5596, 5887))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr04:9174584-9205304",
+          "old_reason": "window gene blocks out of canonical order ((4658, 11773) after (13149, 13375))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr04:13321784-13352504",
+          "old_reason": "window gene blocks out of canonical order ((10588, 10975) after (11307, 11466))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr04:629412-690852",
+          "old_reason": "window gene blocks out of canonical order ((9701, 9905) after (10608, 10899))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr04:9169572-9231012",
+          "old_reason": "window gene blocks out of canonical order ((9670, 16785) after (18161, 18387))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr04:13286052-13347492",
+          "old_reason": "window gene blocks out of canonical order ((46320, 46707) after (47039, 47198))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr04:536101-665125",
+          "old_reason": "window gene blocks out of canonical order ((103012, 103216) after (103919, 104210))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr04:13309477-13438501",
+          "old_reason": "window gene blocks out of canonical order ((22895, 23282) after (23614, 23773))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr05:668464-699184",
+          "old_reason": "window gene blocks out of canonical order ((7548, 8797) after (11971, 13038))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr05:658029-719469",
+          "old_reason": "window gene blocks out of canonical order ((17983, 19232) after (22406, 23473))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr05:567118-696142",
+          "old_reason": "window gene blocks out of canonical order ((108894, 110143) after (113317, 114384))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr06:2025562-2056282",
+          "old_reason": "window gene blocks out of canonical order ((7536, 8087) after (10971, 20964))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr06:6910042-6940762",
+          "old_reason": "window gene blocks out of canonical order ((21040, 22181) after (22580, 22904))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr06:2030104-2091544",
+          "old_reason": "window gene blocks out of canonical order ((2994, 3545) after (6429, 16422))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr06:6883864-6945304",
+          "old_reason": "window gene blocks out of canonical order ((47218, 48359) after (48758, 49082))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr06:1968703-2097727",
+          "old_reason": "window gene blocks out of canonical order ((64395, 64946) after (67830, 77823))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr06:6871615-7000639",
+          "old_reason": "window gene blocks out of canonical order ((59467, 60608) after (61007, 61331))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr07:27764259-27794979",
+          "old_reason": "window gene blocks out of canonical order ((9778, 10255) after (10618, 11648))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr07:5288095-5349535",
+          "old_reason": "window gene blocks out of canonical order ((17778, 18901) after (21078, 28844))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr07:5194357-5323381",
+          "old_reason": "window gene blocks out of canonical order ((111516, 112639) after (114816, 122582))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr08:19223557-19254277",
+          "old_reason": "window gene blocks out of canonical order ((2494, 4211) after (10182, 12156))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr08:10367434-10428874",
+          "old_reason": "window gene blocks out of canonical order ((33910, 35779) after (36091, 45621))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr08:19214794-19276234",
+          "old_reason": "window gene blocks out of canonical order ((11257, 12974) after (18945, 20919))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr08:19174390-19303414",
+          "old_reason": "window gene blocks out of canonical order ((51661, 53378) after (59349, 61323))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr09:6305004-6335724",
+          "old_reason": "window gene blocks out of canonical order ((2743, 3857) after (4093, 7325))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr09:6302143-6363583",
+          "old_reason": "window gene blocks out of canonical order ((5604, 6718) after (6954, 10186))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr09:6285111-6414135",
+          "old_reason": "window gene blocks out of canonical order ((22636, 23750) after (23986, 27218))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr11:5602338-5633058",
+          "old_reason": "window gene blocks out of canonical order ((2251, 2434) after (2437, 2641))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr11:5633058-5663778",
+          "old_reason": "window gene blocks out of canonical order ((19739, 20595) after (20717, 21661))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr11:7414818-7445538",
+          "old_reason": "window gene blocks out of canonical order ((20593, 20755) after (29508, 29802))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr11:16630818-16661538",
+          "old_reason": "window gene blocks out of canonical order ((25186, 25963) after (26460, 29537))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr11:5624958-5686398",
+          "old_reason": "window gene blocks out of canonical order ((27839, 28695) after (28817, 29761))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr11:7406718-7468158",
+          "old_reason": "window gene blocks out of canonical order ((28693, 28855) after (37608, 37902))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr11:5598144-5727168",
+          "old_reason": "window gene blocks out of canonical order ((6445, 6628) after (6631, 6835))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr11:7404480-7533504",
+          "old_reason": "window gene blocks out of canonical order ((30931, 31093) after (39846, 40140))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr12:21810144-21840864",
+          "old_reason": "window gene blocks out of canonical order ((20737, 22182) after (22238, 22941))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr12:21773324-21834764",
+          "old_reason": "window gene blocks out of canonical order ((57557, 59002) after (59058, 59761))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr12:21723152-21852176",
+          "old_reason": "window gene blocks out of canonical order ((107729, 109174) after (109230, 109933))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr14:21477942-21539382",
+          "old_reason": "window gene blocks out of canonical order ((3517, 4961) after (6017, 7295))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr14:22952502-23013942",
+          "old_reason": "window gene blocks out of canonical order ((49014, 51381) after (53178, 53379))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr14:21470715-21599739",
+          "old_reason": "window gene blocks out of canonical order ((10744, 12188) after (13244, 14522))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr14:22889979-23019003",
+          "old_reason": "window gene blocks out of canonical order ((111537, 113904) after (115701, 115902))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr15:16949620-16980340",
+          "old_reason": "window gene blocks out of canonical order ((15311, 16466) after (21531, 21702))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr15:17072500-17103220",
+          "old_reason": "window gene blocks out of canonical order ((27054, 27318) after (27897, 28281))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr15:16918031-16979471",
+          "old_reason": "window gene blocks out of canonical order ((46900, 48055) after (53120, 53291))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr15:16981855-17110879",
+          "old_reason": "window gene blocks out of canonical order ((117699, 117963) after (118542, 118926))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr16:13764480-13795200",
+          "old_reason": "window gene blocks out of canonical order ((16639, 17737) after (16928, 17480))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr16:512338-573778",
+          "old_reason": "window gene blocks out of canonical order ((5255, 6812) after (9315, 13755))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr16:13721938-13783378",
+          "old_reason": "window gene blocks out of canonical order ((59181, 60279) after (59470, 60022))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr16:509088-638112",
+          "old_reason": "window gene blocks out of canonical order ((8505, 10062) after (12565, 17005))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr16:13669536-13798560",
+          "old_reason": "window gene blocks out of canonical order ((111583, 112681) after (111872, 112424))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr18:14182622-14213342",
+          "old_reason": "window gene blocks out of canonical order ((24048, 24372) after (24658, 25015))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr18:14172225-14233665",
+          "old_reason": "window gene blocks out of canonical order ((34445, 34769) after (35055, 35412))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr18:14117883-14246907",
+          "old_reason": "window gene blocks out of canonical order ((88787, 89111) after (89397, 89754))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:2840524-2871244",
+          "old_reason": "window gene blocks out of canonical order ((13777, 14126) after (14593, 23518))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:4192204-4222924",
+          "old_reason": "window gene blocks out of canonical order ((12804, 13564) after (14376, 15435))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:22992844-23023564",
+          "old_reason": "window gene blocks out of canonical order ((19377, 20091) after (23225, 23940))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:23484364-23515084",
+          "old_reason": "window gene blocks out of canonical order ((20668, 21346) after (22534, 22738))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:821892-883332",
+          "old_reason": "window gene blocks out of canonical order ((50109, 51282) after (51838, 56557))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:2849412-2910852",
+          "old_reason": "window gene blocks out of canonical order ((4889, 5238) after (5705, 14630))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:4201092-4262532",
+          "old_reason": "window gene blocks out of canonical order ((3916, 4676) after (5488, 6547))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:23001732-23063172",
+          "old_reason": "window gene blocks out of canonical order ((10489, 11203) after (14337, 15052))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:23493252-23554692",
+          "old_reason": "window gene blocks out of canonical order ((11780, 12458) after (13646, 13850))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:749871-878895",
+          "old_reason": "window gene blocks out of canonical order ((122130, 123303) after (123859, 128578))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:2814255-2943279",
+          "old_reason": "window gene blocks out of canonical order ((40046, 40395) after (40862, 49787))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:3072303-3201327",
+          "old_reason": "window gene blocks out of canonical order ((89672, 89921) after (95243, 98536))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:4104495-4233519",
+          "old_reason": "window gene blocks out of canonical order ((100513, 101273) after (102085, 103144))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:22941999-23071023",
+          "old_reason": "window gene blocks out of canonical order ((70222, 70936) after (74070, 74785))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        },
+        {
+          "coordinate": "chr19:23458095-23587119",
+          "old_reason": "window gene blocks out of canonical order ((46937, 47615) after (48803, 49007))",
+          "ordering_only_fate": "retained",
+          "current_fate": "grid_absent",
+          "current_forward": false,
+          "current_rc": false
+        }
+      ],
+      "unexplained_examples": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      }
+    }
+  },
+  "status": "PASS"
+}

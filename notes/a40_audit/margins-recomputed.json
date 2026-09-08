@@ -1,0 +1,239 @@
+{
+  "status": "PASS",
+  "species": {
+    "Athaliana": {
+      "source": "builder: gene_key_map and FASTA contig lengths",
+      "contig_edge_credit": true,
+      "edge_margin": 1000,
+      "genes_considered": 27416,
+      "genes_missing_contig": 0,
+      "exceeds_length_guarantee": {
+        "30720": {
+          "bound_nt": 18480,
+          "genes": 7
+        },
+        "61440": {
+          "bound_nt": 38960,
+          "genes": 0
+        },
+        "129024": {
+          "bound_nt": 84016,
+          "genes": 0
+        }
+      },
+      "not_covered_with_margin": {
+        "30720": 3,
+        "61440": 0,
+        "129024": 0
+      }
+    },
+    "Bdistachyon": {
+      "source": "builder: gene_key_map and FASTA contig lengths",
+      "contig_edge_credit": true,
+      "edge_margin": 1000,
+      "genes_considered": 34310,
+      "genes_missing_contig": 0,
+      "exceeds_length_guarantee": {
+        "30720": {
+          "bound_nt": 18480,
+          "genes": 124
+        },
+        "61440": {
+          "bound_nt": 38960,
+          "genes": 2
+        },
+        "129024": {
+          "bound_nt": 84016,
+          "genes": 0
+        }
+      },
+      "not_covered_with_margin": {
+        "30720": 48,
+        "61440": 1,
+        "129024": 0
+      }
+    },
+    "Gmax": {
+      "source": "builder: gene_key_map and FASTA contig lengths",
+      "contig_edge_credit": true,
+      "edge_margin": 1000,
+      "genes_considered": 48387,
+      "genes_missing_contig": 0,
+      "exceeds_length_guarantee": {
+        "30720": {
+          "bound_nt": 18480,
+          "genes": 728
+        },
+        "61440": {
+          "bound_nt": 38960,
+          "genes": 113
+        },
+        "129024": {
+          "bound_nt": 84016,
+          "genes": 8
+        }
+      },
+      "not_covered_with_margin": {
+        "30720": 420,
+        "61440": 68,
+        "129024": 3
+      }
+    },
+    "Osativa": {
+      "source": "builder: gene_key_map and FASTA contig lengths",
+      "contig_edge_credit": true,
+      "edge_margin": 1000,
+      "genes_considered": 42189,
+      "genes_missing_contig": 0,
+      "exceeds_length_guarantee": {
+        "30720": {
+          "bound_nt": 18480,
+          "genes": 76
+        },
+        "61440": {
+          "bound_nt": 38960,
+          "genes": 1
+        },
+        "129024": {
+          "bound_nt": 84016,
+          "genes": 0
+        }
+      },
+      "not_covered_with_margin": {
+        "30720": 27,
+        "61440": 1,
+        "129024": 0
+      }
+    },
+    "Ppatens": {
+      "source": "builder: gene_key_map and FASTA contig lengths",
+      "contig_edge_credit": true,
+      "edge_margin": 1000,
+      "genes_considered": 32926,
+      "genes_missing_contig": 0,
+      "exceeds_length_guarantee": {
+        "30720": {
+          "bound_nt": 18480,
+          "genes": 79
+        },
+        "61440": {
+          "bound_nt": 38960,
+          "genes": 0
+        },
+        "129024": {
+          "bound_nt": 84016,
+          "genes": 0
+        }
+      },
+      "not_covered_with_margin": {
+        "30720": 29,
+        "61440": 0,
+        "129024": 0
+      }
+    },
+    "Ptrichocarpa": {
+      "source": "builder: gene_key_map and FASTA contig lengths",
+      "contig_edge_credit": true,
+      "edge_margin": 1000,
+      "genes_considered": 34699,
+      "genes_missing_contig": 0,
+      "exceeds_length_guarantee": {
+        "30720": {
+          "bound_nt": 18480,
+          "genes": 157
+        },
+        "61440": {
+          "bound_nt": 38960,
+          "genes": 2
+        },
+        "129024": {
+          "bound_nt": 84016,
+          "genes": 0
+        }
+      },
+      "not_covered_with_margin": {
+        "30720": 56,
+        "61440": 0,
+        "129024": 0
+      }
+    },
+    "Sbicolor": {
+      "source": "builder: gene_key_map and FASTA contig lengths",
+      "contig_edge_credit": true,
+      "edge_margin": 1000,
+      "genes_considered": 32160,
+      "genes_missing_contig": 0,
+      "exceeds_length_guarantee": {
+        "30720": {
+          "bound_nt": 18480,
+          "genes": 353
+        },
+        "61440": {
+          "bound_nt": 38960,
+          "genes": 47
+        },
+        "129024": {
+          "bound_nt": 84016,
+          "genes": 1
+        }
+      },
+      "not_covered_with_margin": {
+        "30720": 204,
+        "61440": 21,
+        "129024": 0
+      }
+    },
+    "Sitalica": {
+      "source": "builder: gene_key_map and FASTA contig lengths",
+      "contig_edge_credit": true,
+      "edge_margin": 1000,
+      "genes_considered": 34584,
+      "genes_missing_contig": 0,
+      "exceeds_length_guarantee": {
+        "30720": {
+          "bound_nt": 18480,
+          "genes": 87
+        },
+        "61440": {
+          "bound_nt": 38960,
+          "genes": 2
+        },
+        "129024": {
+          "bound_nt": 84016,
+          "genes": 0
+        }
+      },
+      "not_covered_with_margin": {
+        "30720": 32,
+        "61440": 1,
+        "129024": 0
+      }
+    },
+    "Vvinifera": {
+      "source": "builder: gene_key_map and FASTA contig lengths",
+      "contig_edge_credit": true,
+      "edge_margin": 1000,
+      "genes_considered": 47971,
+      "genes_missing_contig": 0,
+      "exceeds_length_guarantee": {
+        "30720": {
+          "bound_nt": 18480,
+          "genes": 1807
+        },
+        "61440": {
+          "bound_nt": 38960,
+          "genes": 486
+        },
+        "129024": {
+          "bound_nt": 84016,
+          "genes": 77
+        }
+      },
+      "not_covered_with_margin": {
+        "30720": 1215,
+        "61440": 342,
+        "129024": 41
+      }
+    }
+  }
+}

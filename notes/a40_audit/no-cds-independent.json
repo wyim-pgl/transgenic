@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "source_no_cds": 6205,
+  "source_by_split": {
+    "train": 4600,
+    "test": 971,
+    "valid": 634
+  },
+  "eligible_no_cds": 6205,
+  "coding_memberships": 0,
+  "decoy_memberships": 0,
+  "population_denominator": 47971,
+  "population_numerator": 16951,
+  "decoy_rate": 0.05,
+  "checks": "Independent fixed-point interval closure for every retained Vvinifera forward window; actual stored N coverage across each masked complete locus; RC coverage follows exhaustive stored RC sequence equality in ledger. Partial edge loci are outside the existing complete-locus guarantee.",
+  "violations": [],
+  "occurrences": {
+    "forward_windows_checked": 25253,
+    "complete_occurrences_forward": 17776,
+    "complete_occurrences_RC": 6445,
+    "leak_forward": 3632,
+    "leak_RC": 1178,
+    "leak_hard_union_forward": 3632,
+    "leak_hard_union_RC": 1178,
+    "component_masked_forward": 4850,
+    "component_masked_RC": 1615
+  }
+}

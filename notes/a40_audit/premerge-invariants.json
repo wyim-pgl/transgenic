@@ -1,0 +1,132 @@
+{
+  "timestamp": "2026-09-06T06:59:01.649664+00:00",
+  "old_stat": {
+    "bytes": 23491260416,
+    "mtime_ns": 1788422329816219148
+  },
+  "old_gene_split_hash": [
+    "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+    334642
+  ],
+  "species": {
+    "Athaliana": {
+      "counts": {
+        "train": 213702,
+        "valid": 29153,
+        "test": 91787
+      },
+      "strict": 3430,
+      "content_hash": [
+        "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+        334642
+      ],
+      "ok": true
+    },
+    "Bdistachyon": {
+      "counts": {
+        "valid": 29153,
+        "test": 91787,
+        "train": 213702
+      },
+      "strict": 3430,
+      "content_hash": [
+        "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+        334642
+      ],
+      "ok": true
+    },
+    "Gmax": {
+      "counts": {
+        "valid": 29153,
+        "train": 213702,
+        "test": 91787
+      },
+      "strict": 3430,
+      "content_hash": [
+        "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+        334642
+      ],
+      "ok": true
+    },
+    "Osativa": {
+      "counts": {
+        "train": 213702,
+        "valid": 29153,
+        "test": 91787
+      },
+      "strict": 3430,
+      "content_hash": [
+        "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+        334642
+      ],
+      "ok": true
+    },
+    "Ppatens": {
+      "counts": {
+        "valid": 29153,
+        "train": 213702,
+        "test": 91787
+      },
+      "strict": 3430,
+      "content_hash": [
+        "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+        334642
+      ],
+      "ok": true
+    },
+    "Ptrichocarpa": {
+      "counts": {
+        "train": 213702,
+        "valid": 29153,
+        "test": 91787
+      },
+      "strict": 3430,
+      "content_hash": [
+        "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+        334642
+      ],
+      "ok": true
+    },
+    "Sbicolor": {
+      "counts": {
+        "valid": 29153,
+        "train": 213702,
+        "test": 91787
+      },
+      "strict": 3430,
+      "content_hash": [
+        "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+        334642
+      ],
+      "ok": true
+    },
+    "Sitalica": {
+      "counts": {
+        "valid": 29153,
+        "train": 213702,
+        "test": 91787
+      },
+      "strict": 3430,
+      "content_hash": [
+        "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+        334642
+      ],
+      "ok": true
+    },
+    "Vvinifera": {
+      "counts": {
+        "valid": 29153,
+        "test": 91787,
+        "train": 213702
+      },
+      "strict": 3430,
+      "content_hash": [
+        "61766859a1d712b49f3fdbeb457067d00e604d53a0298af614c28bff2ea1deee",
+        334642
+      ],
+      "ok": true
+    }
+  },
+  "source_mismatches": [],
+  "ok": true
+}

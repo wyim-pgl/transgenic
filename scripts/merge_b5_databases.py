@@ -182,9 +182,57 @@ def md5(path):
     return h.hexdigest()
 
 
+def completion_from_status(sources, status_path):
+    """Use build evidence and fresh validation; never infer completion from existence."""
+    with open(status_path) as fh:
+        status = json.load(fh)
+    if status.get("status") != "SUCCESS" or type(status.get("exit_status")) is not int or status["exit_status"] != 0:
+        raise SystemExit("build status is not clean")
+    records = status.get("species", [])
+    expected = {os.path.basename(p)[:-3] for p in sources}
+    if len(records) != len(expected) or {r.get("species") for r in records} != expected:
+        raise SystemExit("build status species set is missing, duplicated, or unexpected")
+    evidence = {"path": os.path.abspath(status_path), "sha256": sha256(status_path), "species": {}}
+    by_species = {r["species"]: r for r in records}
+    for path in sources:
+        sp = os.path.basename(path)[:-3]
+        r = by_species[sp]
+        if type(r.get("exit_status")) is not int or r["exit_status"] != 0 or r.get("completion_ok") is not True:
+            raise SystemExit(f"{sp}: build is not clean and complete")
+        cmd = r.get("command", [])
+        if cmd.count("--db") != 1 or cmd.index("--db") + 1 >= len(cmd) or os.path.realpath(cmd[cmd.index("--db") + 1]) != os.path.realpath(path):
+            raise SystemExit(f"{sp}: status names a different database")
+        rejection = path + ".rejected.json"
+        if os.path.realpath(r.get("rejection_json", "")) != os.path.realpath(rejection) or sha256(rejection) != r.get("rejection_sha256"):
+            raise SystemExit(f"{sp}: rejection evidence changed")
+        with open(r["manifest"]) as fh:
+            recorded_manifest = json.load(fh)
+        con = duckdb.connect(path, read_only=True)
+        cur = con.execute("SELECT * FROM build_manifest")
+        cols = [c[0] for c in cur.description]
+        manifests = [dict(zip(cols, row)) for row in cur.fetchall()]
+        con.close()
+        if manifests != [recorded_manifest] or recorded_manifest.get("species_id") != sp:
+            raise SystemExit(f"{sp}: build manifest evidence differs from database")
+        before = sha256(path)
+        validation = _b5.validate_b5_database(path)
+        if validation.get("ok") is not True or validation.get("violations") != [] or set(validation.get("rows_by_species", {})) != {sp}:
+            raise SystemExit(f"{sp}: fresh species validation failed: {validation}")
+        if sha256(path) != before:
+            raise SystemExit(f"{sp}: database changed during validation")
+        evidence["species"][sp] = {"database_sha256": before, "exit_status": r["exit_status"],
+                                   "completion_ok": r["completion_ok"], "validation": validation,
+                                   "manifest_sha256": sha256(r["manifest"]), "rejection_sha256": sha256(rejection)}
+        print(f"[{sp}] completion evidence and fresh validation PASS", flush=True)
+    if sha256(status_path) != evidence["sha256"]:
+        raise SystemExit("build status changed during validation")
+    return evidence
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--src-dir", required=True, help="directory holding <species>.db and <species>.DONE")
+    ap.add_argument("--build-status", help="A40 completion JSON; requires fresh per-species validation instead of legacy markers")
     ap.add_argument("--out", required=True)
     ap.add_argument("--manifest", required=True, help="freeze manifest JSON")
     ap.add_argument("--split-table", default=None, help="data/splits/b5_orthogroup_split_v1.tsv, hashed into the manifest")
@@ -198,13 +246,21 @@ def main():
     sources = sorted(glob.glob(os.path.join(a.src_dir, "*.db")))
     if len(sources) != a.expect_species:
         raise SystemExit(f"found {len(sources)} databases in {a.src_dir}, expected {a.expect_species}")
-    for p in sources:
-        done = p[:-3] + ".DONE"
-        if not os.path.exists(done):
-            raise SystemExit(f"{p} has no .DONE marker")
+    completion = completion_from_status(sources, a.build_status) if a.build_status else None
+    if completion is None:
+        for p in sources:
+            done = p[:-3] + ".DONE"
+            if not os.path.exists(done):
+                raise SystemExit(f"{p} has no .DONE marker")
     frozen, commits, split_hash = preflight(sources, read_excluded(a.excluded_manifest))
     print(json.dumps({"frozen_inputs": frozen, "git_commits": commits}, indent=1), flush=True)
+    if completion:
+        for p in sources:
+            if sha256(p) != completion["species"][os.path.basename(p)[:-3]]["database_sha256"]:
+                raise SystemExit(f"{p}: database changed after completion validation")
     manifest = merge(a.out, sources, frozen, commits, split_hash, a.split_table, a.qc_flags, a.species_manifest)
+    if completion:
+        manifest["completion_evidence"] = completion
     with open(a.manifest, "w") as fh:
         json.dump(manifest, fh, indent=1, sort_keys=True)
     print(json.dumps({k: v for k, v in manifest.items() if k not in ("sources", "source_md5")}, indent=1))

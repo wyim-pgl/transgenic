@@ -1,0 +1,335 @@
+{
+  "checks": {
+    "Athaliana_references": true,
+    "Athaliana_remaining_row_fields": true,
+    "Bdistachyon_references": true,
+    "Bdistachyon_remaining_row_fields": true,
+    "Gmax_references": true,
+    "Gmax_remaining_row_fields": true,
+    "Osativa_references": true,
+    "Osativa_remaining_row_fields": true,
+    "Ppatens_references": true,
+    "Ppatens_remaining_row_fields": true,
+    "Ptrichocarpa_references": true,
+    "Ptrichocarpa_remaining_row_fields": true,
+    "Sbicolor_references": true,
+    "Sbicolor_remaining_row_fields": true,
+    "Sitalica_references": true,
+    "Sitalica_remaining_row_fields": true,
+    "Vvinifera_references": true,
+    "Vvinifera_remaining_row_fields": true
+  },
+  "rejections": {
+    "Athaliana": {
+      "mask_fraction_dropped": 140
+    },
+    "Bdistachyon": {
+      "transcript_cap": 43,
+      "mask_fraction_dropped": 132
+    },
+    "Gmax": {
+      "transcript_cap": 84,
+      "token_cap": 1,
+      "mask_fraction_dropped": 177
+    },
+    "Osativa": {
+      "mask_fraction_dropped": 53
+    },
+    "Ppatens": {
+      "transcript_cap": 161,
+      "mask_fraction_dropped": 286
+    },
+    "Ptrichocarpa": {
+      "transcript_cap": 26,
+      "mask_fraction_dropped": 80
+    },
+    "Sbicolor": {
+      "transcript_cap": 16,
+      "token_cap": 2,
+      "mask_fraction_dropped": 126
+    },
+    "Sitalica": {
+      "transcript_cap": 3,
+      "mask_fraction_dropped": 219
+    },
+    "Vvinifera": {
+      "no_cds": 6205,
+      "mask_fraction_dropped": 376
+    }
+  },
+  "source_references": {
+    "Athaliana": [
+      [
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Athaliana_167_TAIR10.fa",
+        "63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973",
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+        "529510b60756c9a1ae5a590ec4097fd4b9773649c29e6a5543553118bb042c38",
+        "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+        "isoform-only",
+        "gsf-order-v1",
+        "tile6144-v3",
+        "1.5.5"
+      ]
+    ],
+    "Bdistachyon": [
+      [
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Bdistachyon_314_v3.0.fa",
+        "95b797c18290952d730cbb6e0a94ef0dbb4a3c6ea0e4b986459d14d06e1ad6d0",
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Bdistachyon_314_v3.1.gene_exons.clean.gff3",
+        "fde5af49183ecffe0f1eab704a013eadb39e7eb459130051267b0f5c40950887",
+        "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+        "isoform-only",
+        "gsf-order-v1",
+        "tile6144-v3",
+        "1.5.5"
+      ]
+    ],
+    "Gmax": [
+      [
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Gmax_880_v6.0.fa",
+        "fdc8c5db423929d9a959505284c21d82e9834ee90679636a786c26d13525ee2b",
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Gmax_880_Wm82.a6.v1.gene_exons.clean.gff3",
+        "7eb1bfe9365588bd215677109c0b730950dfd1807fff2eccd391d3af4770297c",
+        "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+        "isoform-only",
+        "gsf-order-v1",
+        "tile6144-v3",
+        "1.5.5"
+      ]
+    ],
+    "Osativa": [
+      [
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Osativa_323_v7.0.fa",
+        "db8b7efb4df6ae33195143f3444b8816917441e1b964d150663ceeb2249506c4",
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Osativa_323_v7.0.gene_exons.exon.gff3",
+        "bc06a79b5ae845b2b276467861a85e3d640bb44d4d7bff38d33b808651c61ffe",
+        "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+        "isoform-only",
+        "gsf-order-v1",
+        "tile6144-v3",
+        "1.5.5"
+      ]
+    ],
+    "Ppatens": [
+      [
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Ppatens_318_v3.fa",
+        "6946bf40939b1b4302e76e413300394e901ae0a562f629bef8edfa0bde47fcd8",
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Ppatens_318_v3.3.gene_exons.clean.gff3",
+        "ca8069b3dca286487b9d55fd9d86597b0c4065cc94623e75311acf35bfaf8115",
+        "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+        "isoform-only",
+        "gsf-order-v1",
+        "tile6144-v3",
+        "1.5.5"
+      ]
+    ],
+    "Ptrichocarpa": [
+      [
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Ptrichocarpa_533_v4.0.fa",
+        "6504fbe7e1c4bcb64add2e3718a61c26821993fa13c2ca99ed176b997558464d",
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Ptrichocarpa_533_v4.1.gene_exons.clean.gff3",
+        "b78f3b8f0897f2ab350f69cad41622c6da7c8da76a3ea84ed01030d2feb4ed98",
+        "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+        "isoform-only",
+        "gsf-order-v1",
+        "tile6144-v3",
+        "1.5.5"
+      ]
+    ],
+    "Sbicolor": [
+      [
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Sbicolor_730_v5.0.fa",
+        "70de7265e636201371b831baeb7dd7c7680503de42e65291cbaa0cd62ed685bb",
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Sbicolor_730_v5.1.gene_exons.clean.gff3",
+        "ee41ce13164ade39d5ab6f258819999344b57311b1161358aa8e50ba2c7181e7",
+        "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+        "isoform-only",
+        "gsf-order-v1",
+        "tile6144-v3",
+        "1.5.5"
+      ]
+    ],
+    "Sitalica": [
+      [
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Sitalica_312_v2.fa",
+        "e95c37173f26fbf8aa51723a2bf18f1bf6e1ce44129f42a57ebb904595f31ac1",
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Sitalica_312_v2.2.gene_exons.clean.gff3",
+        "c2d0d0643bd98537d94c8f34c6c1602c500f90843f88ceb3ae1ea06e4c6c484c",
+        "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+        "isoform-only",
+        "gsf-order-v1",
+        "tile6144-v3",
+        "1.5.5"
+      ]
+    ],
+    "Vvinifera": [
+      [
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Vvinifera_T2T_ref.fa",
+        "15818cefc6df225baa84da3c9861891060a0f7bdc40f9c142a5123d474b96b0e",
+        "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Vvinifera_PN40024_5.1_on_T2T_ref.exon.gff3",
+        "526bbe0aff59a365bed2588448e692d7b973304616b9dfd564cc80629f11d78a",
+        "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7",
+        "isoform-only",
+        "gsf-order-v1",
+        "tile6144-v3",
+        "1.5.5"
+      ]
+    ]
+  },
+  "nominal": {
+    "Athaliana": [
+      [
+        "test",
+        91787,
+        3430
+      ],
+      [
+        "train",
+        213702,
+        0
+      ],
+      [
+        "valid",
+        29153,
+        0
+      ]
+    ],
+    "Bdistachyon": [
+      [
+        "test",
+        91787,
+        3430
+      ],
+      [
+        "train",
+        213702,
+        0
+      ],
+      [
+        "valid",
+        29153,
+        0
+      ]
+    ],
+    "Gmax": [
+      [
+        "test",
+        91787,
+        3430
+      ],
+      [
+        "train",
+        213702,
+        0
+      ],
+      [
+        "valid",
+        29153,
+        0
+      ]
+    ],
+    "Osativa": [
+      [
+        "test",
+        91787,
+        3430
+      ],
+      [
+        "train",
+        213702,
+        0
+      ],
+      [
+        "valid",
+        29153,
+        0
+      ]
+    ],
+    "Ppatens": [
+      [
+        "test",
+        91787,
+        3430
+      ],
+      [
+        "train",
+        213702,
+        0
+      ],
+      [
+        "valid",
+        29153,
+        0
+      ]
+    ],
+    "Ptrichocarpa": [
+      [
+        "test",
+        91787,
+        3430
+      ],
+      [
+        "train",
+        213702,
+        0
+      ],
+      [
+        "valid",
+        29153,
+        0
+      ]
+    ],
+    "Sbicolor": [
+      [
+        "test",
+        91787,
+        3430
+      ],
+      [
+        "train",
+        213702,
+        0
+      ],
+      [
+        "valid",
+        29153,
+        0
+      ]
+    ],
+    "Sitalica": [
+      [
+        "test",
+        91787,
+        3430
+      ],
+      [
+        "train",
+        213702,
+        0
+      ],
+      [
+        "valid",
+        29153,
+        0
+      ]
+    ],
+    "Vvinifera": [
+      [
+        "test",
+        91787,
+        3430
+      ],
+      [
+        "train",
+        213702,
+        0
+      ],
+      [
+        "valid",
+        29153,
+        0
+      ]
+    ]
+  },
+  "status": "PASS"
+}
