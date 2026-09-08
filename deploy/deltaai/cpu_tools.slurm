@@ -1,6 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=b1-cpu
-#SBATCH --account=CHANGE_ME            # Delta CPU allocation
+#SBATCH --account=CHANGE_ME            # Delta CPU allocation (bXXX-delta-cpu). DeltaAI has no CPU partition and
+#                                      # refuses jobs without a GPU, so this file cannot run there (A41 moved the
+#                                      # protein alignment to pronghorn; this is kept for Delta only).
 #SBATCH --partition=cpu
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -14,13 +16,14 @@
 #   apptainer pull $SCRATCH/containers/orthofinder.sif docker://quay.io/biocontainers/orthofinder:3.0.1b1--hdfd78af_0
 # Record the exact tags and `--version` output in the corresponding issue (protocol §3.3 item 5).
 set -euo pipefail
-module load apptainer
+: "${SCRATCH:?Delta-only script: set SCRATCH explicitly}"
+command -v apptainer >/dev/null 2>&1 || module load apptainer
 WORK=$SCRATCH/transgenic; C=$SCRATCH/containers
 TOOL=${TOOL:?minimap2|miniprot|orthofinder}
 case "$TOOL" in
   minimap2)   apptainer exec --bind "$WORK":/work $C/minimap2.sif minimap2 -t 32 -ax splice:hq -G 200000 --secondary=no --cs=long \
                 /work/genomes/${REF:?}.fa /work/evidence/${READS:?} > /work/aln/${OUT:?}.sam ;;
-  miniprot)   apptainer exec --bind "$WORK":/work $C/miniprot.sif miniprot -t 32 --gff -N 20 \
-                /work/genomes/${REF:?}.fa /work/proteins/orthodb_v12_viridiplantae.filtered.fa > /work/protein_alignments/${REF}.gff ;;
+  miniprot)   apptainer exec --bind "$WORK":/work $C/miniprot.sif miniprot -t 32 --gff --outs=0.97 -N 20 \
+                /work/genomes/${REF:?}.fa /work/proteins/odb12_Viridiplantae.filtered.fa.gz > /work/protein_alignments/${REF}.gff ;;
   orthofinder) apptainer exec --bind "$WORK":/work $C/orthofinder.sif orthofinder -t 32 -a 8 -f /work/proteomes ;;
 esac

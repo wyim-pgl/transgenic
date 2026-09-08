@@ -1,6 +1,6 @@
 # TransGenic on NCSA DeltaAI / Delta with NVIDIA NGC containers
 
-Purpose: run the B5 retraining seeds (configs/b5_400m_v1.json), the #18 throughput benchmark and the
+Purpose: run the B5 retraining seeds (configs/b5_400m_win_v3.json), the #18 throughput benchmark and the
 B7 inference on the ACCESS allocation without building a conda stack on the cluster. The GPU image is
 the NGC PyTorch container (multi-arch: works on DeltaAI's GH200/aarch64 and on Delta's A100/x86_64);
 the CPU tools (OrthoFinder, minimap2, miniprot) come from Biocontainers images. Apptainer is the
@@ -15,7 +15,7 @@ container runtime on both systems.
 | Fit for B5 | best: one seed per GPU, 96 GB lets micro-batch grow | good: A100 80 GB; avoid A40 |
 Everything below works on both; only the wheel architecture differs, which the NGC image hides.
 
-**Compute assignment (protocol A25, 2026-09-02):** all three B5 seeds (123 primary, 456/789 confirmatory) run on ACCESS with the variable-context recipe `configs/b5_400m_ctx_v2.json` (windows up to 129,024 nt); the lab RTX 4090 is for inference, B7 and development. `bench_b5.slurm` must be run once per window tier.
+**Compute assignment (protocol A25, 2026-09-02):** all three B5 seeds (123 primary, 456/789 confirmatory) run on ACCESS with the whole-window recipe `configs/b5_400m_win_v3.json` (A26/A27; supersedes `b5_400m_ctx_v2.json`, see protocol A42) (windows up to 129,024 nt); the lab RTX 4090 is for inference, B7 and development. `bench_b5.slurm` must be run once per window tier.
 Check the allocation's resource name in the ACCESS portal and record it in issue #18.
 
 ## 2. Build the GPU image (once, on a login node or locally)
@@ -35,8 +35,8 @@ repository itself in editable mode from a bind-mounted checkout. bitsandbytes is
 ```
 $SCRATCH/transgenic/                 bind-mounted as /work inside the container
   repo/                              git clone of wyim-pgl/transgenic (main)
-  db/b5_v1.duckdb                    immutable B5 database (built with scripts/build_b5_database.py)
-  db/b5_v1.duckdb.sha256
+  db/b5_full_a40_v1.db               immutable B5 database (A40 corpus; md5 dda7e78c880c993435654b57dcd1c498)
+  db/b5_full_a40_v1.db.sha256        the superseded b5_v1.duckdb name is retired -- see protocol A40
   hf/                                HF cache (LongSafari/hyenadna-large-1m-seqlen-hf); set HF_HOME=/work/hf
   runs/seed123 | seed456 | seed789   checkpoints + logs (train.err holds the epoch=N eval lines)
 ```
@@ -45,6 +45,9 @@ DuckDB reads from scratch (parallel file system); copy the DB once, verify its s
 ## 4. Jobs
 - `bench_b5.slurm` — #18: 300 optimizer steps on 1 GPU and on 4 GPUs (accelerate DDP), reports
   tokens/s, seconds/step, peak memory, and extrapolated hours/epoch for the B5 DB row count.
+  It measures `configs/b5_400m_win_v3.json`, the recipe `train_b5.slurm` actually trains, and
+  pins one window tier per run (`TIER=30720|61440|129024`); an unpinned run samples a tier
+  mixture and is not a per-tier number.
 - `train_b5.slurm` — one seed per job (`--export=SEED=456`), 1 node × 1 GPU by default; set
   `GPUS=4` for DDP. Resumable: re-submit with the same run dir. Epoch decisions: run
   `revision/scripts/60_epoch_budget.py --log runs/seedNNN/train.err` after each epoch.

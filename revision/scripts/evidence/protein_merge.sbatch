@@ -42,8 +42,15 @@ TMP=$GFF.merge.tmp
 REF=$(awk -F'\t' -v s="$SP" '$1==s{print $4}' "$MANIFEST")
 REF_MD5=$(md5sum "$REF" | cut -d' ' -f1)
 
-if [ -e "$DONE" ] && [ -s "$GFF" ] && gzip -t "$GFF" 2>/dev/null; then
-  echo "$SP already merged"; exit 0
+# A bare "merged before" is not enough: if the chunks were re-aligned with a different reference
+# or parameters, an old merged DONE must refuse, not skip. Same three-field check as the aligner.
+if [ -e "$DONE" ]; then
+  D_REF=$(awk -F= '$1=="ref_md5"{print $2}' "$DONE"); D_FAA=$(awk -F= '$1=="faa_md5"{print $2}' "$DONE")
+  D_PAR=$(sed -n 's/^params=//p' "$DONE")
+  [ "$D_REF" = "$REF_MD5" ] && [ "$D_FAA" = "$FAA_FROZEN_MD5" ] && [ "$D_PAR" = "$PARAMS" ] \
+    || { echo "REFUSED: $SP merged DONE was built from different inputs or parameters; retire it first" >&2; exit 6; }
+  if [ -s "$GFF" ] && gzip -t "$GFF" 2>/dev/null; then echo "$SP already merged"; exit 0; fi
+  echo "REFUSED: $SP merged DONE present but GFF missing or corrupt" >&2; exit 6
 fi
 
 # --- Gate: every chunk must be complete, and built from the same reference and parameters. ---

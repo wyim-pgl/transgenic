@@ -102,7 +102,7 @@ START=$(date -Is); SECONDS=0
       && mv "$IDX.tmp" "$IDX" || { rm -f "$IDX.tmp"; exit 4; }
   fi
 ) 9>"$OUT/$SP/.index.lock"
-[ -s "$IDX" ] || { echo "REFUSED: no index for $SP" >&2; exit 4; }
+[ -s "$IDX" ] || { echo "REFUSED: no index for $SP (build failed; see $OUT/$SP/miniprot.index.err)" >&2; exit 4; }
 
 # --- Alignment (A19.2 frozen parameters). ---
 set -o pipefail
