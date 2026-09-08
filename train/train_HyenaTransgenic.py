@@ -32,7 +32,13 @@ from transgenic.training.b5_runtime import (load_b5_config, model_kwargs, accumu
                                              CheckpointLayout, split_row_numbers, parse_args as _b5_parse_args, benchmark_summary,
                                              epoch_batches)
 from tqdm import tqdm
-import bitsandbytes as bnb                                  # Provides 8-bit quantized optimizers
+# 8-bit optimizers are the RTX 4090 path, not B5 (protocol: B5 uses plain AdamW; deploy/deltaai/transgenic.def
+# deliberately does not install bitsandbytes). An unconditional import here killed every container job at
+# this line on the GB10 test bed before a single row was read. Optional import; the 8-bit branch checks it.
+try:
+    import bitsandbytes as bnb                              # Provides 8-bit quantized optimizers
+except ImportError:                                         # B5 images do not ship it and do not need it
+    bnb = None
 from torch.nn.utils import clip_grad_norm_                  # Prevents gradient explosion
 from transformers import get_linear_schedule_with_warmup    # LR: warmup then linear decay to 0
 from accelerate import Accelerator                          # Handles mixed precision + multi-GPU
@@ -238,6 +244,9 @@ def train(
     if b5_config is not None and b5_config.get("optimizer", "AdamW") == "AdamW":
         optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=float(b5_config.get("weight_decay", 0.02)))
     else:
+        if bnb is None:
+            raise RuntimeError("this recipe asks for the 8-bit optimizer but bitsandbytes is not installed; "
+                               "B5 recipes set optimizer=AdamW and never reach this branch")
         optimizer = bnb.optim.AdamW8bit(
             model.parameters(),
             lr=lr,                                  # Peak learning rate

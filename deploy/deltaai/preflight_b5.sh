@@ -80,28 +80,32 @@ LINKS=$(find "$BUNDLE" -type l | wc -l)
 TOK=$("$PY" - "$REPO" <<'PYX' 2>&1
 import pathlib, sys
 repo = pathlib.Path(sys.argv[1]); sys.path.insert(0, str(repo / "src"))
+# The class is GFFTokenizer and <empty> exists only in the v3 vocabulary (A26). The earlier text imported
+# a name that does not exist, so the tokenised check had never run anywhere and every PASS was the source
+# scan below, mislabelled "import unavailable". Measured on the GB10 SIF, 2026-09-08.
+reason = ""
 try:
-    from transgenic.model.tokenization_transgenic import TransgenicTokenizer as T
-    toks = T().tokenize("<empty>")
+    from transgenic.model.tokenization_transgenic import GFFTokenizer as T
+    toks = T(vocab_version="v3").tokenize("<empty>")
     print("THREE" if list(toks) == ["<s>", "<empty>", "</s>"] else f"WRONG {toks}")
     raise SystemExit(0)
 except SystemExit:
     raise
-except Exception:
-    pass
-# 임포트가 안 되는 환경(torch 부재 등)에서는 정본 두 파일의 선언으로 낮춘 검사를 하고 그 사실을 말한다.
+except Exception as e:                       # torch absent, or a real defect: say which
+    reason = f"{type(e).__name__}: {e}"[:160]
+# 임포트가 안 되는 환경(torch 부재 등)에서는 정본 두 파일의 선언으로 낮춘 검사를 하고 그 이유를 말한다.
 tok = repo / "src" / "transgenic" / "model" / "tokenization_transgenic.py"
 con = repo / "src" / "transgenic" / "utils" / "gsf_contract.py"
 if not (tok.is_file() and con.is_file()):
     print("UNREADABLE tokenizer/contract source missing"); raise SystemExit(0)
 a = '["<s>", "<empty>", "</s>"]' in tok.read_text().replace("'", '"')
 b = "return 3" in con.read_text()
-print("THREE_SOURCE" if (a and b) else "MISSING")
+print(("THREE_SOURCE " + reason) if (a and b) else ("MISSING " + reason))
 PYX
 )
 case "$TOK" in
   THREE)        ok "tokenizer emits exactly <s> <empty> </s> (tokenised, #58 / A40)";;
-  THREE_SOURCE) ok "tokenizer declares <s> <empty> </s> (source check - import unavailable here, #58 / A40)";;
+  THREE_SOURCE*) ok "tokenizer declares <s> <empty> </s> (SOURCE CHECK ONLY - tokenised check failed: ${TOK#THREE_SOURCE }; #58 / A40)";;
   WRONG*)       bad "tokenizer emits $TOK, not three tokens (#58 / A40)";;
   MISSING*)     bad "tokenizer: the three-token empty target is not declared (#58 / A40)";;
   *)            bad "tokenizer: could not verify - $TOK";;
