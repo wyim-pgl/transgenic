@@ -6,14 +6,14 @@ set -uo pipefail
 T=$(cd "$(dirname "$0")" && pwd)
 OUT=$T/MANIFEST.tsv
 purpose() { case "$1" in
-  db)        echo "B5 frozen training database (272,224 rows; the training input)";;
+  db)        echo "B5 frozen training database (A40: 273,148 rows; the training input)";;
   splits)    echo "orthogroup split table - replaces random_split (#14)";;
   configs)   echo "frozen training recipe (A25/A26; win_v3 is canonical)";;
   manifests) echo "species manifest + dataset-role manifests frozen into protocol section 1";;
   qc)        echo "GeenuFF and Swiss-Prot flags for A22 loss masking";;
   protein)   echo "OrthoDB v12 Viridiplantae, leakage-filtered - C2 label resource (A19)";;
   freeze)    echo "freeze records of the B5 database (content hashes, provenance)";;
-  genomes)   echo "reference FASTA (symlink to Transgenic/genomes/)";;
+  genomes)   echo "reference FASTA (materialised in the bundle 2026-09-07; the bundle must survive rsync to ACCESS)";;
   *)         echo "-";; esac; }
 # Fail closed on a genome that is not one of the nine training species. Zmays and Slycopersicum are
 # the held-out test species; a test genome sitting in a folder called training_input is the kind of

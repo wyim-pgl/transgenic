@@ -29,10 +29,10 @@ fi
 CHAIN_MAX=${CHAIN_MAX:-8}; CHAIN_N=${CHAIN_N:-1}
 apptainer exec --nv --bind "$WORK":/work "$SIF" bash -lc "
   cd /work/repo && pip install -q -e . --no-deps &&
-  sha256sum -c /work/db/b5_v1.duckdb.sha256 &&
+  bash deploy/deltaai/preflight_b5.sh --bundle /work --repo /work/repo &&
   mkdir -p $RUN &&
   accelerate launch --num_processes=$GPUS --mixed_precision=bf16 train/train_HyenaTransgenic.py \
-    --config configs/b5_400m_win_v3.json --db /work/db/b5_v1.duckdb --seed $SEED --output-dir $RUN --resume auto \
+    --config configs/b5_400m_win_v3.json --db /work/db/b5_full_a40_v1.db --seed $SEED --output-dir $RUN --resume auto \
     --save-every-n-steps ${SAVE_EVERY:-200} 2>> $RUN/train.err
 " &
 TRAIN_PID=$!
