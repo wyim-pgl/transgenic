@@ -27,8 +27,8 @@ bash build.sh                    # -> $SCRATCH/containers/transgenic-ngc.sif
 ```
 `transgenic.def` starts from `nvcr.io/nvidia/pytorch:25.06-py3` (pin the tag you actually pulled in
 `build.sh`; the tag is recorded into the image at /opt/transgenic/IMAGE_INFO) and pip-installs
-transformers, accelerate, duckdb, safetensors, huggingface-hub, pandas, tqdm, wandb, pytest and the
-repository itself in editable mode from a bind-mounted checkout. bitsandbytes is **not** installed
+transformers, accelerate, duckdb, safetensors, huggingface-hub, pandas, tqdm, wandb, pytest ; the
+repository is bind-mounted at /work/repo and imported via PYTHONPATH=/work/repo/src (no runtime install). bitsandbytes is **not** installed
 (the B5 recipe uses plain AdamW; the 8-bit optimizer of the RTX 4090 script is not part of B5).
 
 ## 3. Data layout on the cluster

@@ -37,9 +37,13 @@ if [ -n "${SYNC_DEST:-}" ]; then
   trap 'wait $SYNC_PID 2>/dev/null' EXIT
 fi
 CHAIN_MAX=${CHAIN_MAX:-8}; CHAIN_N=${CHAIN_N:-1}
-# --writable-tmpfs: the SIF root is read-only and `pip install -e` writes to site-packages.
+# --writable-tmpfs: the SIF root is read-only; kept so library caches inside the image can write.
+# No runtime `pip install -e`. Measured on GB10 in the same SIF recipe: setuptools egg_info wants to write
+# src/transgenic.egg-info INTO the bind-mounted repo ("Cannot update time stamp of directory"), so
+# concurrent jobs race on one checkout and the trainer died at its first import. The package is a
+# src-layout namespace package; PYTHONPATH=/work/repo/src imports it with zero writes.
 apptainer exec --nv --writable-tmpfs --bind "$WORK":/work "$SIF" bash -lc "
-  cd /work/repo && pip install -q -e . --no-deps &&
+  cd /work/repo && export PYTHONPATH=/work/repo/src &&
   bash deploy/deltaai/preflight_b5.sh --bundle /work --repo /work/repo &&
   mkdir -p $RUN &&
   accelerate launch --num_processes=$GPUS --mixed_precision=bf16 train/train_HyenaTransgenic.py \

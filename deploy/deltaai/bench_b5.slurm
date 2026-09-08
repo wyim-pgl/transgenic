@@ -34,8 +34,12 @@ CONFIG=${CONFIG:-configs/b5_400m_win_v3.json}
 # unpinned run samples a mixture, which is not a per-tier number. --benchmark-tier pins it.
 TIER=${TIER:-129024}
 export NCCL_DEBUG=WARN OMP_NUM_THREADS=8
+# No runtime `pip install -e`. Measured on GB10 in the same SIF recipe: setuptools egg_info wants to write
+# src/transgenic.egg-info INTO the bind-mounted repo ("Cannot update time stamp of directory"), so
+# concurrent jobs race on one checkout and the trainer died at its first import. The package is a
+# src-layout namespace package; PYTHONPATH=/work/repo/src imports it with zero writes.
 apptainer exec --nv --writable-tmpfs --bind "$WORK":/work "$SIF" bash -lc "
-  cd /work/repo && pip install -q -e . --no-deps &&
+  cd /work/repo && export PYTHONPATH=/work/repo/src &&
   accelerate launch --num_processes=$GPUS --mixed_precision=bf16 train/train_HyenaTransgenic.py \
     --config $CONFIG --db $DB --seed 123 --benchmark-steps $STEPS --benchmark-tier $TIER --no-wandb \
     --output-dir /work/runs/bench-g$GPUS-t$TIER
