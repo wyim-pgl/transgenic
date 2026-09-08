@@ -67,10 +67,12 @@ STALE=$(ls "$BUNDLE"/db/*.db 2>/dev/null | grep -v "/$DB_BASE\$" || true)
 $STALE"
 
 # ---- 3. 번들이 ACCESS에서 성립하는가 (dangling 링크 없음) --------------------
-DANGLING=$(find "$BUNDLE" -type l ! -exec test -e {} \; -print 2>/dev/null)
+# repo/HFmodels is the HuggingFace cache: its snapshots/ -> blobs/ links are relative and intentional, and it
+# lives inside the bundle only because the repo is bind-mounted there. Not a transfer defect.
+DANGLING=$(find "$BUNDLE" -type l -not -path "*/HFmodels/*" ! -exec test -e {} \; -print 2>/dev/null)
 [ -z "$DANGLING" ] && ok "no dangling symlinks in the bundle" || bad "dangling symlinks:
 $DANGLING"
-LINKS=$(find "$BUNDLE" -type l | wc -l)
+LINKS=$(find "$BUNDLE" -type l -not -path "*/HFmodels/*" | wc -l)
 [ "$LINKS" -eq 0 ] && ok "bundle is self-contained (0 symlinks)" \
   || echo "NOTE  $LINKS symlink(s) still present — the transfer MUST materialise them (rsync -L). intent.md R2."
 
