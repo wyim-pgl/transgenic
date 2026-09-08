@@ -261,7 +261,21 @@ def _status_fixture(src, mod):
     return status
 
 
-@pytest.mark.parametrize('fault', ['missing', 'duplicate', 'failed', 'incomplete', 'wrong_db', 'stale_rejection', 'stale_manifest', 'invalid'])
+# every fault but 'invalid' has its own guard, so validation is left passing for those: a validator
+# that failed for all of them would let a deleted guard keep passing this test at the validation step.
+FAULT_GUARDS = {
+    'missing': ('build status species set is missing, duplicated, or unexpected', 0),
+    'duplicate': ('build status species set is missing, duplicated, or unexpected', 0),
+    'failed': ('build is not clean and complete', 0),
+    'incomplete': ('build is not clean and complete', 0),
+    'wrong_db': ('status names a different database', 0),
+    'stale_rejection': ('rejection evidence changed', 0),
+    'stale_manifest': ('build manifest evidence differs from database', 0),
+    'invalid': ('fresh species validation failed', 1),
+}
+
+
+@pytest.mark.parametrize('fault', sorted(FAULT_GUARDS))
 def test_status_completion_fails_closed(two_species, monkeypatch, fault):
     mod = _load(SCRIPT, 'merge_status_test')
     status = _status_fixture(two_species, mod)
@@ -275,9 +289,17 @@ def test_status_completion_fails_closed(two_species, monkeypatch, fault):
     if fault == 'stale_rejection': Path(row['rejection_json']).write_text('[1]')
     if fault == 'stale_manifest': Path(row['manifest']).write_text('{}')
     status.write_text(json.dumps(value))
-    monkeypatch.setattr(mod._b5, 'validate_b5_database', lambda p: {'ok': False, 'violations': ['bad']})
-    with pytest.raises(SystemExit):
+    expected, expected_calls = FAULT_GUARDS[fault]
+    calls = []
+    def validate(path):
+        calls.append(path)
+        ok = fault != 'invalid'
+        return {'ok': ok, 'violations': [] if ok else ['bad'], 'rows_by_species': {Path(path).stem: 1}}
+    monkeypatch.setattr(mod._b5, 'validate_b5_database', validate)
+    with pytest.raises(SystemExit) as raised:
         mod.completion_from_status([str(p) for p in sorted(two_species.glob('*.db'))], str(status))
+    assert expected in str(raised.value)
+    assert len(calls) == expected_calls
 
 
 def test_status_completion_records_current_evidence(two_species, monkeypatch):
