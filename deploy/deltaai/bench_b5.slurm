@@ -54,7 +54,12 @@ export NCCL_DEBUG=WARN OMP_NUM_THREADS=8
 # src/transgenic.egg-info INTO the bind-mounted repo ("Cannot update time stamp of directory"), so
 # concurrent jobs race on one checkout and the trainer died at its first import. The package is a
 # src-layout namespace package; PYTHONPATH=/work/repo/src imports it with zero writes.
-apptainer exec --nv --writable-tmpfs --bind "$WORK":/work "$SIF" bash -lc "
+# REPO_DIR: the checkout bound at /work/repo. Default is the bundle's repo/; experiments must point this at a
+# separate clone, because /work/repo is re-read by every link of a running A28 seed chain and must not move.
+REPO_DIR=${REPO_DIR:-$WORK/repo}
+[ -d "$REPO_DIR/.git" ] || { echo "REFUSED: REPO_DIR is not a git checkout: $REPO_DIR" >&2; exit 3; }
+echo "repo: $REPO_DIR @ $(git -C "$REPO_DIR" log --oneline -1 | cut -c1-60)"
+apptainer exec --nv --writable-tmpfs --bind "$WORK":/work --bind "$REPO_DIR":/work/repo "$SIF" bash -lc "
   cd /work/repo && export PYTHONPATH=/work/repo/src &&
   accelerate launch --num_processes=$GPUS --mixed_precision=bf16 train/train_HyenaTransgenic.py \
     --config $CONFIG --db $DB --seed 123 --benchmark-steps $STEPS --benchmark-tier $TIER --no-wandb \

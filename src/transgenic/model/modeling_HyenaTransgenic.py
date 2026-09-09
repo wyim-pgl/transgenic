@@ -727,7 +727,9 @@ class transgenicModel(TransgenicPreTrainedModel):
 		# Compress: (batch, seq_len, d_model) → permute → conv1d → permute → (batch, seq_len//6, 2*d_model)
 		downsampled = self.downsample(injected.permute(0, 2, 1)).permute(0, 2, 1)
 		# Create new attention mask for the downsampled sequence (all ones — no padding after compression)
-		attention_mask = torch.ones(downsampled.shape[0:2]).to(downsampled.device)
+		# Created on the tensor's device directly: a CPU tensor moved with .to() inside a compiled region is a
+		# known irritant for dynamo/AOTAutograd graphs. Same dtype (float32) and values as before.
+		attention_mask = torch.ones(downsampled.shape[0:2], device=downsampled.device)
 
 		# Wrap legacy tuple KV cache for newer transformers compatibility
 		if past_key_values is not None and isinstance(past_key_values, tuple):

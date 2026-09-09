@@ -232,7 +232,13 @@ def train(
     model = transgenicForConditionalGeneration(config)  # Instantiate the full seq2seq model
     print(f"Model params: {_count_parameters(model):,}", file=sys.stderr)
 
-    model.gradient_checkpointing_enable()       # Trade compute for memory: recompute activations
+    # TRANSGENIC_NO_GRAD_CKPT=1 is an EXPERIMENT switch only: gradient checkpointing plus torch.compile is the
+    # combination under which the 25.06 image's AOTAutograd partitioner asserts ("Node add_316 was invalid,
+    # but is output"). Never set it for a recipe run: peak memory is already 101 of 120 GB with checkpointing.
+    if not os.environ.get("TRANSGENIC_NO_GRAD_CKPT"):
+        model.gradient_checkpointing_enable()   # Trade compute for memory: recompute activations
+    else:
+        print("EXPERIMENT: gradient checkpointing DISABLED (TRANSGENIC_NO_GRAD_CKPT)", file=sys.stderr)
     model.to(device)                            # during backward instead of storing them
     model.train()                               # Set model to training mode (enables dropout etc.)
 
@@ -243,7 +249,18 @@ def train(
     #       Works on 4090, A100, H100, and other GPUs with >= 164KB shared memory per SM.
     if not os.environ.get("TRANSGENIC_NO_COMPILE"):
         try:
-            model = torch.compile(model)        # Lazy compilation: compiles on first forward pass
+            # TRANSGENIC_COMPILE_SCOPE selects what is compiled: model (default, whole graph) | decoder | encoder
+            # | none. Sub-module scopes exist to bisect the partitioner assertion; the default is unchanged.
+            _scope = os.environ.get("TRANSGENIC_COMPILE_SCOPE", "model")
+            if _scope == "model":
+                model = torch.compile(model)    # Lazy compilation: compiles on first forward pass
+            elif _scope == "decoder":
+                model.transgenic.decoder = torch.compile(model.transgenic.decoder)
+            elif _scope == "encoder":
+                model.transgenic.encoder = torch.compile(model.transgenic.encoder)
+            elif _scope != "none":
+                raise ValueError(f"TRANSGENIC_COMPILE_SCOPE={_scope!r}; expected model|decoder|encoder|none")
+            print(f"torch.compile scope: {_scope}", file=sys.stderr)
             # torch.compile() itself never fails here; Inductor/Triton fail at the FIRST FORWARD, outside this
             # try. suppress_errors turns that into a logged fallback to eager instead of a dead job
             # (measured: "libcuda.so cannot found!" killed a container run at step 0 on the GB10 test bed).
