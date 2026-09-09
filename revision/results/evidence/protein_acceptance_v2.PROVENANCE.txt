@@ -1,0 +1,16 @@
+protein_acceptance_v2.tsv -- A19.2 acceptance over the merged OrthoDB->genome miniprot alignments (issue #45), support_version 2
+supersedes protein_acceptance_v1.tsv (kept as the record of the version-1 leak): the per-alignment columns (alignments, accepted, accepted_fraction, proteins, mapping_ambiguous, rej_*) are identical to v1 by construction; coverage_intervals and introns_supported_by_2plus_organisms are lower because the accepted alignments of mapping_ambiguous proteins no longer give locus-specific support (A19.2: family level only; A43)
+protein resource: odb12_Viridiplantae.filtered.fa.gz md5 453cb32b02e0799950d7d5f4de5f62ac (section 1), 12,115,085 sequences, split into 6 chunks (evidence/protein/chunks_v1/MANIFEST.tsv)
+alignment: unchanged from v1 -- miniprot 0.18-r281, --gff --outs=0.97 -N 20 (A19.2), array 6153195 (54 chunk tasks, 0 failures), merge array 6153196, on pronghorn (A41); the same nine merged GFFs (gff_md5 below matches v1)
+acceptance: protein_accept.py (support_version 2, md5 5aa2769f1777e56121d8c60ea5f32588, commit 5bc4df8) via protein_accept.sbatch array 6156132; thresholds {"canonical": ["gc-ag", "gt-ag"], "coverage": 0.7, "identity": 0.3, "max_intron": 200000}
+version-1 outputs preserved at evidence/protein_alignments/<species>/accept_v1_ambiguous_leak/ (not to be used for labels)
+new columns: ambiguous_alignments_excluded (accepted alignments of mapping_ambiguous proteins removed before aggregation), ambiguous_blocks_excluded, ambiguous_introns_excluded, support_version
+Athaliana	gff_md5=96f87a553b28613316fb9cdf0bafaa08	summary_md5=f6f84f318b5fe47d6f771ba013a2b95a	accept_job=6156132_0	completed=2026-09-09T11:05:01-0700
+Bdistachyon	gff_md5=669c6ee87c547a12f6509d989c3dba3d	summary_md5=49fe0a4bef17c1fefc79ff8b1f462eb8	accept_job=6156132_1	completed=2026-09-09T11:04:55-0700
+Gmax	gff_md5=cdb5c3bb1a69e4c7b017a0c851586d29	summary_md5=e00e932da192405e9cad5aaa2f38f4de	accept_job=6156132_2	completed=2026-09-09T11:13:08-0700
+Osativa	gff_md5=08b51c7cfc2997c2fc6cf1463cd5f8be	summary_md5=f145f8a7287294934037e8738776e254	accept_job=6156132_3	completed=2026-09-09T11:05:04-0700
+Ppatens	gff_md5=b6ebc1d6149fb8c90ed83f7a8f93baad	summary_md5=c66e0345752cd9ac6a573fe01de15fb4	accept_job=6156132_4	completed=2026-09-09T11:04:33-0700
+Ptrichocarpa	gff_md5=508aa6dcc948c9785ae2347a5be1ca56	summary_md5=f29001f23ba8923ec09cd4a772901146	accept_job=6156132_5	completed=2026-09-09T11:08:58-0700
+Sbicolor	gff_md5=dbde172801d4781521ac2b990661987f	summary_md5=919830b01359925a09682c1ac1e6e22a	accept_job=6156132_6	completed=2026-09-09T11:05:03-0700
+Sitalica	gff_md5=0e17de830f3458c81b25b3366320ec77	summary_md5=629a5322715b7278eba2931dfc15ccaa	accept_job=6156132_7	completed=2026-09-09T11:04:56-0700
+Vvinifera	gff_md5=574bca35166e7ce3e69c75359bcfc4ff	summary_md5=da4a788e762534ef2cc8f3cda4ce4a82	accept_job=6156132_8	completed=2026-09-09T11:09:48-0700
