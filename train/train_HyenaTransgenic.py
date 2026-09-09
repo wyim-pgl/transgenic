@@ -16,6 +16,7 @@ os.environ.setdefault('PYTORCH_CUDA_ALLOC_CONF',           # Use CUDA async memo
                        'backend:cudaMallocAsync')           # Reduces alloc/dealloc overhead vs native
 
 import torch, gc, time, sys, math, json, argparse, glob, signal, shutil
+import torch._dynamo                                        # config flag is set in train(); importing there would make `torch` a local
 
 # Weights & Biases is optional: a benchmark or an offline run passes --no-wandb, and the ACCESS/DeltaAI
 # container does not ship it. Importing it at module load made `--no-wandb` fail with ModuleNotFoundError.
@@ -237,7 +238,6 @@ def train(
             # torch.compile() itself never fails here; Inductor/Triton fail at the FIRST FORWARD, outside this
             # try. suppress_errors turns that into a logged fallback to eager instead of a dead job
             # (measured: "libcuda.so cannot found!" killed a container run at step 0 on the GB10 test bed).
-            import torch._dynamo
             torch._dynamo.config.suppress_errors = True
             print("torch.compile (inductor) enabled; compile errors fall back to eager.", file=sys.stderr)
         except Exception as e:
