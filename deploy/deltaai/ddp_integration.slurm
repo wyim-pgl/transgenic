@@ -56,16 +56,42 @@ COMMON="--config configs/b5_400m_win_v3.json --db /work/runs/ddp_int/subset_$TIE
   --save-every-n-steps 2 --max-epochs 2 --patience 1 --output-dir /work/runs/ddp_int/run_$SLURM_JOB_ID --resume auto"
 
 # --- 1+2. first leg: train, then USR1 to ONE rank after the first latest_state exists ---
+# Observed 2026-09-09 (gh121, gh139): the FIRST accelerate launch of a fresh 4-GPU allocation died at its first
+# kernels with `CUDA error: unspecified launch failure`, and the identical second launch on the same node ran
+# clean. Until the cause is known, leg 1 is retried once on the same node when that signature appears before
+# any checkpoint exists (the chain script does the same across links, with the node excluded). ALLOC=native
+# runs the trainer on PyTorch's native allocator instead of cudaMallocAsync (train/train_HyenaTransgenic.py:15
+# uses setdefault, so an exported value wins) to test the allocator hypothesis.
+[ "${ALLOC:-async}" = native ] && export PYTORCH_CUDA_ALLOC_CONF=backend:native
 mkdir -p "$RUN"
-run_in "$COMMON" 2>> "$RUN/train.err" &
-LEG=$!
+LAUNCH_TRIES=0
+while :; do
+  LAUNCH_TRIES=$((LAUNCH_TRIES + 1)); ERR_OFF=$(stat -c %s "$RUN/train.err" 2>/dev/null || echo 0)
+  run_in "$COMMON" 2>> "$RUN/train.err" &
+  LEG=$!
+  sleep 60
+  if kill -0 $LEG 2>/dev/null; then break; fi                      # still alive after a minute: past the first kernels
+  wait $LEG; RC0=$?
+  if [ $RC0 -ne 0 ] && [ ! -d "$RUN/latest_state" ] && [ $LAUNCH_TRIES -lt ${LAUNCH_TRIES_MAX:-2} ] \
+     && tail -c +$((ERR_OFF + 1)) "$RUN/train.err" | grep -F "CUDA error: unspecified launch failure" > /dev/null; then
+    echo "leg1 launch failure (try $LAUNCH_TRIES, rc=$RC0) on $SLURM_NODELIST at $(date -Is); relaunching on the same node"
+    continue
+  fi
+  run_in "$COMMON" 2>> "$RUN/train.err" &   # died for another reason or budget spent: fall through with a live handle
+  LEG=$!
+  break
+done
+echo "leg1 launch tries=$LAUNCH_TRIES alloc=${ALLOC:-async}"
 n=0; while [ ! -d "$RUN/latest_state" ] && [ $n -lt 900 ]; do sleep 2; n=$((n+1)); kill -0 $LEG 2>/dev/null || break; done
 if [ -d "$RUN/latest_state" ]; then
   sleep 5
-  # one rank only: the highest-pid trainer process (a rank, not the launcher). pgrep -f from this script
-  # cannot match itself: the script's own cmdline is its path, not the pattern.
-  ONE=$(pgrep -f "python.*train/train_HyenaTransgenic.py" | sort -n | tail -1)
-  echo "USR1 -> single rank pid $ONE at $(date -Is)"; kill -USR1 "$ONE"
+  # one RANK only: the rank processes are the direct children of the accelerate launcher. Matching the trainer
+  # cmdline is not enough -- DataLoader workers are forked from the ranks and carry the same cmdline, and the
+  # highest pid was a worker in job 3119205 (the signal did nothing). pgrep -f from this script cannot match
+  # itself: the script's own cmdline is its path, not the pattern.
+  LAUNCHER=$(pgrep -f "accelerate launch --num_processes" | head -1)
+  ONE=$(pgrep -P "$LAUNCHER" | sort -n | tail -1)
+  echo "USR1 -> single rank pid $ONE (launcher $LAUNCHER, ranks: $(pgrep -P "$LAUNCHER" | tr '\n' ' ')) at $(date -Is)"; kill -USR1 "$ONE"
 fi
 wait $LEG; RC1=$?
 echo "leg1 rc=$RC1  latest_state=$( [ -d "$RUN/latest_state" ] && echo yes || echo no )  preempt_lines=$(grep -c 'exiting cleanly' "$RUN/train.err")"
@@ -83,4 +109,4 @@ VERDICT=PASS
 [ -d "$RUN/epoch_01" ] || VERDICT=FAIL
 grep -q 'exiting cleanly' "$RUN/train.err" || VERDICT=FAIL
 grep -q 'Traceback' "$RUN/train.err" && VERDICT=FAIL
-echo "DDP_INTEGRATION $VERDICT job=$SLURM_JOB_ID repo=$(git -C "$REPO_DIR" rev-parse --short HEAD) image=$(basename "$SIF")"
+echo "DDP_INTEGRATION $VERDICT job=$SLURM_JOB_ID repo=$(git -C "$REPO_DIR" rev-parse --short HEAD) image=$(basename "$SIF") alloc=${ALLOC:-async} launch_tries=$LAUNCH_TRIES"
