@@ -116,8 +116,10 @@ while :; do
   if wait "$TRAIN_PID"; then TRAIN_RC=0; break; else TRAIN_RC=$?; fi
   kill -0 "$TRAIN_PID" 2>/dev/null || break
 done
-[ -n "${WATCHDOG:-}" ] && kill "$WATCHDOG" 2>/dev/null
 # chain: resubmit unless finished, failed, or the chain limit is reached
+# (`|| true`: under set -e a failing command after the last && ends the script -- the watchdog had already
+#  exited after forcing the preemption and the link died here without resubmitting, rehearsal 3119991)
+[ -z "${WATCHDOG:-}" ] || kill "$WATCHDOG" 2>/dev/null || true
 if [ -f "$RUN_HOST/TRAINING_DONE" ]; then echo "training finished"
 elif [ -f "$RUN_HOST/FORCED_PREEMPT" ] && [ "$CHAIN_N" -lt "$CHAIN_MAX" ]; then
   rm -f "$RUN_HOST/FORCED_PREEMPT"
@@ -135,7 +137,7 @@ elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNC
   # The first retry stays on any node (the second launch on the same node worked 2/2); only a second failure
   # excludes the node, so good hardware is not thrown away for a per-allocation first-touch race.
   if [ "${LAUNCH_RETRY:-0}" -ge 1 ]; then export EXCLUDE_NODES="${EXCLUDE_NODES:+$EXCLUDE_NODES,}$SLURM_NODELIST"; fi
-  [ -n "${SYNC_PID:-}" ] && { kill "$SYNC_PID" 2>/dev/null; wait "$SYNC_PID" 2>/dev/null; }
+  [ -z "${SYNC_PID:-}" ] || { kill "$SYNC_PID" 2>/dev/null || true; wait "$SYNC_PID" 2>/dev/null || true; }
   echo "launch failure on $SLURM_NODELIST (rc=$TRAIN_RC); resubmitting chain job $CHAIN_N${EXCLUDE_NODES:+ with --exclude=$EXCLUDE_NODES} (retry $((${LAUNCH_RETRY:-0} + 1))/${LAUNCH_RETRY_MAX:-2})"
   sbatch --gpus-per-node=$GPUS ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$CHAIN_N,CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=$((${LAUNCH_RETRY:-0} + 1)) "$WORK/repo/deploy/deltaai/train_b5.slurm"
   exit 1

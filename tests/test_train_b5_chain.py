@@ -97,8 +97,9 @@ def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "
     stub = binq / "sbatch"
     stub.write_text('#!/bin/bash\necho "SBATCH_ARGS: $*"\necho "SBATCH_ENV_EXCLUDE: ${EXCLUDE_NODES:-<unset>}"\necho "Submitted batch job 999"\n')
     stub.chmod(0o755)
-    harness = "set -uo pipefail\n"
+    harness = "set -euo pipefail\n"        # the real script runs under errexit: a stray non-zero status must not end it
     harness += f'PATH="{binq}:$PATH"\nRUN_HOST="{run}"\nERR_OFF={off}\nTRAIN_RC={rc}\n'
+    harness += 'WATCHDOG=${WATCHDOG:-}\n'
     harness += 'WORK=/w; SEED=456; GPUS=4; SLURM_JOB_ID=1; SLURM_NODELIST=gh121\n'
     harness += 'CHAIN_N=${CHAIN_N:-1}; CHAIN_MAX=${CHAIN_MAX:-8}\n'
     harness += _decision_block()
@@ -208,3 +209,10 @@ def test_forced_preemption_resubmits_the_next_link_and_clears_the_marker(tmp_pat
 def test_forced_preemption_at_the_chain_limit_stays_terminal(tmp_path):
     r = _decide(tmp_path, rc=137, forced_preempt=True, env={"CHAIN_N": "8", "CHAIN_MAX": "8"})
     assert "SBATCH_ARGS:" not in r["out"] and r["failed_marker"]
+
+
+def test_a_finished_watchdog_does_not_end_the_link_under_errexit(tmp_path):
+    # rehearsal 3119991: `[ -n "$WATCHDOG" ] && kill $WATCHDOG` failed (the subshell had exited) and errexit
+    # killed the batch script before the resubmit decision.
+    r = _decide(tmp_path, rc=137, forced_preempt=True, env={"WATCHDOG": "999999"})
+    assert "SBATCH_ARGS:" in r["out"] and "CHAIN_N=2," in r["out"] and r["code"] == 0
