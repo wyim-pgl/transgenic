@@ -91,6 +91,8 @@ if [ -d "$RUN/latest_state" ]; then
   # itself: the script's own cmdline is its path, not the pattern.
   LAUNCHER=$(pgrep -f "accelerate launch --num_processes" | head -1)
   ONE=$(pgrep -P "$LAUNCHER" | sort -n | tail -1)
+  echo "process tree before the signal:"; ps -o pid,ppid,stat,etime,cmd --forest -g "$(ps -o pgid= -p "$LAUNCHER" | tr -d ' ')" 2>/dev/null | cut -c1-160 | head -40
+  echo "target cmdline: $(tr '\0' ' ' < /proc/$ONE/cmdline 2>/dev/null | cut -c1-160)"
   echo "USR1 -> single rank pid $ONE (launcher $LAUNCHER, ranks: $(pgrep -P "$LAUNCHER" | tr '\n' ' ')) at $(date -Is)"; kill -USR1 "$ONE"
 fi
 wait $LEG; RC1=$?
