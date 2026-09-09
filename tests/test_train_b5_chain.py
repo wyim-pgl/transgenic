@@ -160,7 +160,7 @@ def test_clean_link_resubmits_next_link_with_retry_reset_and_exclusions_kept(tmp
 
 
 # ---------------------------------------------------------------------------------------------------
-# USR1 forwarding (2026-09-09, job 3119780): the signal must reach the rank processes only -- not the
+# Pre-limit signal forwarding (2026-09-09, jobs 3119780/3119848/3119984): SIGTERM must reach the rank processes only -- not the
 # container, not the launcher, not the DataLoader workers that share the trainer's command line.
 # ---------------------------------------------------------------------------------------------------
 
@@ -176,7 +176,7 @@ def test_usr1_targets_only_the_ranks_under_the_launcher(tmp_path):
     train = tmp_path / "train"; train.mkdir()
     rank = train / "train_HyenaTransgenic.py"
     rank.write_text('#!/bin/bash\nif [ "${1:-}" = --worker ]; then sleep 30; exit 0; fi\n'
-                    'trap \'echo RANK_GOT_USR1 > "$OUT/got"; exit 0\' USR1\n'
+                    'trap \'echo RANK_GOT_TERM > "$OUT/got"; exit 0\' TERM\n'
                     f'bash "{rank}" --worker &\nwhile :; do sleep 0.2; done\n')
     launcher = tmp_path / "accelerate"
     launcher.write_text(f'#!/bin/bash\n# accelerate launch --num_processes=1 train/train_HyenaTransgenic.py\nbash "{rank}" &\nwait\n')
@@ -189,12 +189,12 @@ def test_usr1_targets_only_the_ranks_under_the_launcher(tmp_path):
     out = tmp_path / "out"; out.mkdir()
     harness = f'export OUT="{out}"\nbash "{container}" > /dev/null 2>&1 < /dev/null &\nTRAIN_PID=$!\nsleep 1\n' + _rank_finder()
     harness += ('R=$(_ranks); echo "RANKS=$R"; n=0; for p in $R; do n=$((n+1)); done; echo "NRANKS=$n"\n'
-                'for p in $R; do kill -USR1 "$p"; done\nsleep 1\n'
+                'for p in $R; do kill -TERM "$p"; done\nsleep 1\n'
                 'wait "$TRAIN_PID"; echo "CONTAINER_RC=$?"\n'
                 'for p in $(_descendants "$TRAIN_PID") "$TRAIN_PID"; do kill -KILL "$p" 2>/dev/null; done; true\n')
     res = subprocess.run(["bash", "-c", harness], capture_output=True, text=True, timeout=30)
     assert "NRANKS=1" in res.stdout, res.stdout + res.stderr
-    assert (out / "got").exists(), "the rank's USR1 handler did not fire"
+    assert (out / "got").exists(), "the rank's TERM handler did not fire"
     assert "CONTAINER_RC=0" in res.stdout, "the container/launcher must end cleanly after the rank exits (138 = launcher was signalled)"
 
 
