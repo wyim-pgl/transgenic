@@ -63,12 +63,22 @@ echo "repo: $REPO_DIR @ $(git -C "$REPO_DIR" log --oneline -1 | cut -c1-60)"
 # import after the GPU is allocated (round-1 bisection, 2026-09-09). Refuse before spending the slot.
 ls "$REPO_DIR"/HFmodels/hub/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/*/model.safetensors >/dev/null 2>&1 \
   || { echo "REFUSED: encoder cache missing under $REPO_DIR/HFmodels (see preflight_b5.sh)" >&2; exit 3; }
+# Driver-level memory ground truth (2026-09-09): torch.cuda.max_memory_allocated reported 101 GB on NGC 25.06 and
+# ~11 GB on 26.08 for the same eager recipe, so the number PyTorch keeps is not comparable across images. nvidia-smi
+# on the host samples memory.used every 2 s for the whole run; the per-GPU maximum is printed at the end.
+MEMLOG=$WORK/runs/mem-g$GPUS-t$TIER${OUTTAG:+-$OUTTAG}-$SLURM_JOB_ID.csv
+nvidia-smi --query-gpu=index,memory.used --format=csv,noheader,nounits -l 2 > "$MEMLOG" 2>/dev/null &
+SMI=$!
+RC=0
 apptainer exec --nv --writable-tmpfs --bind "$WORK":/work --bind "$REPO_DIR":/work/repo "$SIF" bash -lc "
   cd /work/repo && export PYTHONPATH=/work/repo/src &&
   accelerate launch --num_processes=$GPUS --mixed_precision=bf16 train/train_HyenaTransgenic.py \
     --config $CONFIG --db $DB --seed 123 --benchmark-steps $STEPS --benchmark-tier $TIER --no-wandb \
     --output-dir /work/runs/bench-g$GPUS-t$TIER${OUTTAG:+-$OUTTAG}
-"
+" || RC=$?
+kill $SMI 2>/dev/null || true
+echo "driver_peak_mem_mib_per_gpu: $(awk -F', ' '{if($2+0>m[$1])m[$1]=$2+0} END{for(i in m) printf "gpu%s=%d ", i, m[i]}' "$MEMLOG") samples=$(wc -l < "$MEMLOG")"
+exit $RC
 # Expected output: tokens/s, s/step, peak GB, hours/epoch (rows in DB / rows per step / 3600); paste into #18.
 # Run the full grid before sizing a seed:
 #   for t in 30720 61440 129024; do sbatch --export=ALL,TIER=$t deploy/deltaai/bench_b5.slurm; done
