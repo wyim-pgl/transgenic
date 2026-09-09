@@ -21,7 +21,12 @@
 set -euo pipefail
 : "${SCRATCH:=/work/nvme/bilv/$USER}"   # DeltaAI has no /scratch and no $SCRATCH. Docs: /work/hdd for large job I/O, /work/nvme for many small I/Os; both Lustre, 1 TB default
 command -v apptainer >/dev/null 2>&1 || module load apptainer   # DeltaAI ships /usr/bin/apptainer with no module
-WORK=$SCRATCH/transgenic; SIF=$SCRATCH/containers/transgenic-ngc.sif
+WORK=$SCRATCH/transgenic
+# SIF is an env override like STEPS/TIER (sbatch --export=ALL,SIF=...), so another NGC tag can be tried
+# without editing this file. The job prints which image it ran in; #18 must cite that line.
+SIF=${SIF:-$SCRATCH/containers/transgenic-ngc.sif}
+[ -s "$SIF" ] || { echo "REFUSED: SIF not found: $SIF" >&2; exit 3; }
+echo "image: $SIF"; apptainer exec "$SIF" cat /opt/transgenic/IMAGE_INFO 2>/dev/null || echo "image: (no IMAGE_INFO)"
 # SLURM_GPUS_ON_NODE is always a bare integer and is set for every request form.
 # SLURM_GPUS_PER_NODE echoes the submitter's string (can be nvidia_gh200_120gb:4) and is
 # unset for --gres=gpu:N or --gpus=N, which would silently run 1 process on 4 GPUs.
