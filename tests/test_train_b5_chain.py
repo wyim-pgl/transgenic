@@ -24,9 +24,9 @@ pytestmark = pytest.mark.skipif(shutil.which("bash") is None, reason="bash is re
 
 def _wait_loop() -> str:
     src = SCRIPT.read_text()
-    m = re.search(r"^TRAIN_RC=0\nwhile :; do\n.*?^done\n", src, re.S | re.M)
+    m = re.search(r"^  TRAIN_RC=0\n  while :; do\n.*?^  done\n", src, re.S | re.M)
     assert m, "wait loop not found in train_b5.slurm"
-    return m.group(0)
+    return "\n".join(line[2:] for line in m.group(0).splitlines()) + "\n"   # dedent the inner loop
 
 
 def _run(child: str, signal_after: float | None = None) -> str:
@@ -87,7 +87,7 @@ def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "
     """Run the decision block with a stub sbatch; return exit code, stdout, stub args/env, marker state."""
     run = tmp_path / "run"; run.mkdir()
     if forced_preempt:
-        (run / "FORCED_PREEMPT").write_text("")
+        (run / "FORCED_PREEMPT.1").write_text("")        # job-scoped marker; the harness uses SLURM_JOB_ID=1
     err = run / "train.err"
     err.write_text(err_before)
     off = err.stat().st_size
@@ -100,30 +100,30 @@ def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "
     harness = "set -euo pipefail\n"        # the real script runs under errexit: a stray non-zero status must not end it
     harness += f'PATH="{binq}:$PATH"\nRUN_HOST="{run}"\nERR_OFF={off}\nTRAIN_RC={rc}\n'
     harness += 'WATCHDOG=${WATCHDOG:-}\n'
-    harness += 'WORK=/w; SEED=456; GPUS=4; SLURM_JOB_ID=1; SLURM_NODELIST=gh121\n'
+    harness += 'WORK=/w; SEED=456; GPUS=4; SLURM_JOB_ID=1; SLURM_NODELIST=gh121\nFORCED="$RUN_HOST/FORCED_PREEMPT.$SLURM_JOB_ID"\n'
     harness += 'CHAIN_N=${CHAIN_N:-1}; CHAIN_MAX=${CHAIN_MAX:-8}\n'
     harness += _decision_block()
     out = subprocess.run(["bash", "-c", harness], capture_output=True, text=True, timeout=30,
                          env={**{"PATH": "/usr/bin:/bin"}, **(env or {})})
     return {"code": out.returncode, "out": out.stdout + out.stderr,
             "failed_marker": (run / "TRAINING_FAILED").exists(),
-            "forced_marker": (run / "FORCED_PREEMPT").exists()}
+            "forced_marker": (run / "FORCED_PREEMPT.1").exists()}
 
 
 LAUNCH = "  what():  CUDA error: unspecified launch failure\n"
 
 
-def test_launch_failure_in_this_attempt_resubmits_same_link_in_place_first(tmp_path):
+def test_launch_failure_after_the_in_allocation_relaunch_resubmits_same_link_elsewhere(tmp_path):
+    # the in-allocation relaunch already retried on this node; the cross-allocation retry excludes it
     r = _decide(tmp_path, rc=1, err_after="x\n" + LAUNCH)
-    assert "SBATCH_ARGS:" in r["out"] and "--exclude" not in r["out"] and "CHAIN_N=1," in r["out"]
+    assert "SBATCH_ARGS:" in r["out"] and "--exclude=gh121" in r["out"] and "CHAIN_N=1," in r["out"]
     assert "LAUNCH_RETRY=1" in r["out"] and "--dependency=afterany:1" in r["out"]
+    assert r["code"] != 0 and not r["failed_marker"]
 
 
-def test_second_launch_failure_excludes_the_node(tmp_path):
+def test_a_second_cross_allocation_launch_failure_is_terminal(tmp_path):
     r = _decide(tmp_path, rc=1, err_after=LAUNCH, env={"LAUNCH_RETRY": "1"})
-    assert "--exclude=gh121" in r["out"] and "LAUNCH_RETRY=2" in r["out"] and not r["failed_marker"]
-    assert r["code"] != 0, "the dead link must still exit non-zero"
-    assert not r["failed_marker"], "a retried link must not be marked TRAINING_FAILED"
+    assert "SBATCH_ARGS:" not in r["out"] and r["failed_marker"] and r["code"] != 0
 
 
 def test_launch_failure_text_from_a_previous_attempt_is_not_a_retry(tmp_path):
@@ -143,7 +143,7 @@ def test_retry_budget_is_bounded(tmp_path):
 
 
 def test_exclusions_accumulate_and_travel_in_the_environment(tmp_path):
-    r = _decide(tmp_path, rc=1, err_after=LAUNCH, env={"EXCLUDE_NODES": "gh062", "LAUNCH_RETRY": "1"})
+    r = _decide(tmp_path, rc=1, err_after=LAUNCH, env={"EXCLUDE_NODES": "gh062"})
     assert "--exclude=gh062,gh121" in r["out"]
     assert "SBATCH_ENV_EXCLUDE: gh062,gh121" in r["out"], "the comma list must reach sbatch via the environment, not --export"
     assert "EXCLUDE_NODES=" not in r["out"].split("SBATCH_ARGS:")[1].split("\n")[0]
@@ -206,9 +206,16 @@ def test_forced_preemption_resubmits_the_next_link_and_clears_the_marker(tmp_pat
     assert not r["failed_marker"] and not r["forced_marker"] and r["code"] == 0
 
 
-def test_forced_preemption_at_the_chain_limit_stays_terminal(tmp_path):
+def test_forced_preemption_at_the_chain_limit_stays_terminal_and_consumes_the_marker(tmp_path):
     r = _decide(tmp_path, rc=137, forced_preempt=True, env={"CHAIN_N": "8", "CHAIN_MAX": "8"})
-    assert "SBATCH_ARGS:" not in r["out"] and r["failed_marker"]
+    assert "SBATCH_ARGS:" not in r["out"] and r["code"] != 0 and not r["forced_marker"]
+
+
+def test_forced_preemption_wins_over_a_launch_error_signature_at_the_cap(tmp_path):
+    # Codex review: with both a forced marker and a fresh launch-failure signature at CHAIN_N=CHAIN_MAX the old
+    # ordering fell through to the launch retry and submitted the capped link again.
+    r = _decide(tmp_path, rc=137, forced_preempt=True, err_after=LAUNCH, env={"CHAIN_N": "8", "CHAIN_MAX": "8"})
+    assert "SBATCH_ARGS:" not in r["out"] and not r["forced_marker"]
 
 
 def test_a_finished_watchdog_does_not_end_the_link_under_errexit(tmp_path):

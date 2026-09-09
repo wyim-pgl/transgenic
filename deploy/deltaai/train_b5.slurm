@@ -62,19 +62,23 @@ CHAIN_MAX=${CHAIN_MAX:-8}; CHAIN_N=${CHAIN_N:-1}
 # kernel of a new allocation died with `unspecified launch failure` (gh062 x2, gh093, gh121, gh139) and the
 # identical second launch on the same node ran clean; a 1-GPU job showed it too, so it is not NCCL. The cheapest
 # mitigation is to let a throwaway process take that first touch. Its failure is logged and ignored.
-apptainer exec --nv "$SIF" python -c "import torch; torch.ones(1).cuda(); torch.cuda.synchronize(); print('gpu warm-up ok')" \
-  || echo "gpu warm-up failed (rc=$?); the trainer launch follows anyway"
-# Byte offset of train.err before THIS attempt: the retry test below reads only what this attempt appended.
-ERR_OFF=$(stat -c %s "$RUN_HOST/train.err" 2>/dev/null || echo 0)
-apptainer exec --nv --writable-tmpfs --bind "$WORK":/work "$SIF" bash -lc "
-  cd /work/repo && export PYTHONPATH=/work/repo/src &&
-  bash deploy/deltaai/preflight_b5.sh --bundle /work --repo /work/repo &&
-  mkdir -p $RUN &&
-  accelerate launch --num_processes=$GPUS --mixed_precision=bf16 train/train_HyenaTransgenic.py \
-    --config configs/b5_400m_win_v3.json --db /work/db/b5_full_a40_v1.db --seed $SEED --output-dir $RUN --resume auto \
-    --save-every-n-steps ${SAVE_EVERY:-200} 2>> $RUN/train.err
-" &
-TRAIN_PID=$!
+for _g in $(seq 0 $((GPUS - 1))); do
+  CUDA_VISIBLE_DEVICES=$_g apptainer exec --nv "$SIF" python -c "import torch; torch.ones(1).cuda(); torch.cuda.synchronize(); print('gpu warm-up ok: device $_g')" \
+    || echo "gpu warm-up failed on device $_g (rc=$?); the trainer launch follows anyway"
+done
+_launch() {   # start the container; TRAIN_PID and ERR_OFF (train.err size before THIS attempt) are set for the caller
+  ERR_OFF=$(stat -c %s "$RUN_HOST/train.err" 2>/dev/null || echo 0)
+  apptainer exec --nv --writable-tmpfs --bind "$WORK":/work "$SIF" bash -lc "
+    cd /work/repo && export PYTHONPATH=/work/repo/src &&
+    bash deploy/deltaai/preflight_b5.sh --bundle /work --repo /work/repo &&
+    mkdir -p $RUN &&
+    accelerate launch --num_processes=$GPUS --mixed_precision=bf16 train/train_HyenaTransgenic.py \
+      --config configs/b5_400m_win_v3.json --db /work/db/b5_full_a40_v1.db --seed $SEED --output-dir $RUN --resume auto \
+      --save-every-n-steps ${SAVE_EVERY:-200} 2>> $RUN/train.err
+  " &
+  TRAIN_PID=$!
+}
+_launch
 # The pre-limit USR1 must reach the trainer's Python handler and nothing else. Signalling the apptainer process
 # (and its children) killed the container instead: rc 138, the trainer never saw the signal, the link died with
 # nothing saved (job 3119780, 2026-09-09). The accelerate/torchrun launcher has no USR1 handler either. The rank
@@ -101,31 +105,47 @@ _ranks() {
 # The ranks get SIGTERM, not SIGUSR1: the trainer handles both identically (signal.signal for USR1 and TERM),
 # but a rank with torch.compile/dynamo active never ran its USR1 handler (rehearsals 3119848, 3119779,
 # probe 3119984) while the same rank saved and exited within a step on TERM (probe 3119984, 'signal 15 received').
-trap 'R=$(_ranks); echo "USR1: forwarding as SIGTERM to trainer ranks: ${R:-NONE FOUND}"; for p in $R; do kill -TERM "$p"; done;
+# A second USR1 is ignored (trap "" USR1 at entry), every kill is guarded (a rank that exits between discovery
+# and the kill must not end the script under errexit), and the marker is scoped to this job id.
+FORCED=$RUN_HOST/FORCED_PREEMPT.$SLURM_JOB_ID
+trap 'trap "" USR1; R=$(_ranks); echo "USR1: forwarding as SIGTERM to trainer ranks: ${R:-NONE FOUND}"; for p in $R; do kill -TERM "$p" 2>/dev/null || true; done;
       ( sleep "${USR1_GRACE:-600}"; if kill -0 "$TRAIN_PID" 2>/dev/null; then
           echo "trainer still running ${USR1_GRACE:-600}s after USR1; forcing preemption, the last latest_state resumes";
-          touch "$RUN_HOST/FORCED_PREEMPT"; for p in $(_ranks); do kill -KILL "$p" 2>/dev/null; done; fi ) & WATCHDOG=$!' USR1
+          touch "$FORCED"; for p in $(_ranks); do kill -KILL "$p" 2>/dev/null || true; done; fi ) & WATCHDOG=$!' USR1
 # `wait` returns 138 the moment the trapped USR1 arrives, and under set -e that would end the
 # script HERE, before the TRAINING_DONE/FAILED decision and the resubmit -- every seed would die
 # at 48 h with no next link. Re-wait while the trainer is still alive; keep its real exit code.
 # The exit code must be read in the `else` branch of the same `if`: after a failed condition the `if`
 # statement's own status is 0, so a `TRAIN_RC=$?` on the next line recorded 0 for every crash and the
 # chain resubmitted a dead trainer instead of marking TRAINING_FAILED (reproduced 2026-09-09, child exit 17).
-TRAIN_RC=0
+# In-allocation relaunch: a step-0 `unspecified launch failure` ran clean on the identical second launch on the
+# same node every time (2026-09-09, gh121/gh139/gh012...), so the first retry happens here, without a new
+# allocation; only if that fails too does the decision below resubmit elsewhere (node excluded).
+ATTEMPT=1
 while :; do
-  if wait "$TRAIN_PID"; then TRAIN_RC=0; break; else TRAIN_RC=$?; fi
-  kill -0 "$TRAIN_PID" 2>/dev/null || break
+  TRAIN_RC=0
+  while :; do
+    if wait "$TRAIN_PID"; then TRAIN_RC=0; break; else TRAIN_RC=$?; fi
+    kill -0 "$TRAIN_PID" 2>/dev/null || break
+  done
+  if [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$FORCED" ] && [ "$ATTEMPT" -lt "${LAUNCH_TRIES_MAX:-2}" ] \
+     && tail -c +$((ERR_OFF + 1)) "$RUN_HOST/train.err" 2>/dev/null | grep -F "CUDA error: unspecified launch failure" > /dev/null; then
+    ATTEMPT=$((ATTEMPT + 1)); echo "launch failure on $SLURM_NODELIST (rc=$TRAIN_RC); relaunching in this allocation (attempt $ATTEMPT)"
+    _launch; continue
+  fi
+  break
 done
 # chain: resubmit unless finished, failed, or the chain limit is reached
 # (`|| true`: under set -e a failing command after the last && ends the script -- the watchdog had already
 #  exited after forcing the preemption and the link died here without resubmitting, rehearsal 3119991)
 [ -z "${WATCHDOG:-}" ] || kill "$WATCHDOG" 2>/dev/null || true
 if [ -f "$RUN_HOST/TRAINING_DONE" ]; then echo "training finished"
-elif [ -f "$RUN_HOST/FORCED_PREEMPT" ] && [ "$CHAIN_N" -lt "$CHAIN_MAX" ]; then
-  rm -f "$RUN_HOST/FORCED_PREEMPT"
+elif [ -f "$FORCED" ]; then
+  rm -f "$FORCED"
+  if [ "$CHAIN_N" -ge "$CHAIN_MAX" ]; then echo "forced preemption (rc=$TRAIN_RC) at chain limit $CHAIN_MAX; not resubmitting"; exit 1; fi
   echo "forced preemption (rc=$TRAIN_RC); resubmitting chain job $((CHAIN_N + 1)) from the last latest_state"
   sbatch --gpus-per-node=$GPUS ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=0 "$WORK/repo/deploy/deltaai/train_b5.slurm"
-elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNCH_RETRY:-0}" -lt "${LAUNCH_RETRY_MAX:-2}" ] \
+elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNCH_RETRY:-0}" -lt "${LAUNCH_RETRY_MAX:-1}" ] \
      && tail -c +$((ERR_OFF + 1)) "$RUN_HOST/train.err" 2>/dev/null | grep -F "CUDA error: unspecified launch failure" > /dev/null; then
   # A node-side failure, not a code failure: `unspecified launch failure` has hit gh062 (x2), gh093 and gh121
   # (2026-09-08/09), always at the first kernels, and a retry on another node ran clean. Resubmit the SAME link
@@ -134,11 +154,10 @@ elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNC
   # the whole stream (grep -q + pipefail could fail the test on a match), the exclusion list travels in the
   # process environment (a comma inside --export=NAME=a,b splits into two variables), the retry waits for this
   # job to end, and this link still exits non-zero so sacct shows the death (the dependency is afterany).
-  # The first retry stays on any node (the second launch on the same node worked 2/2); only a second failure
-  # excludes the node, so good hardware is not thrown away for a per-allocation first-touch race.
-  if [ "${LAUNCH_RETRY:-0}" -ge 1 ]; then export EXCLUDE_NODES="${EXCLUDE_NODES:+$EXCLUDE_NODES,}$SLURM_NODELIST"; fi
+  # The in-allocation relaunch above already retried on this node; a second failure here excludes it.
+  export EXCLUDE_NODES="${EXCLUDE_NODES:+$EXCLUDE_NODES,}$SLURM_NODELIST"
   [ -z "${SYNC_PID:-}" ] || { kill "$SYNC_PID" 2>/dev/null || true; wait "$SYNC_PID" 2>/dev/null || true; }
-  echo "launch failure on $SLURM_NODELIST (rc=$TRAIN_RC); resubmitting chain job $CHAIN_N${EXCLUDE_NODES:+ with --exclude=$EXCLUDE_NODES} (retry $((${LAUNCH_RETRY:-0} + 1))/${LAUNCH_RETRY_MAX:-2})"
+  echo "launch failure on $SLURM_NODELIST twice (rc=$TRAIN_RC); resubmitting chain job $CHAIN_N with --exclude=$EXCLUDE_NODES (retry $((${LAUNCH_RETRY:-0} + 1))/${LAUNCH_RETRY_MAX:-1})"
   sbatch --gpus-per-node=$GPUS ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$CHAIN_N,CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=$((${LAUNCH_RETRY:-0} + 1)) "$WORK/repo/deploy/deltaai/train_b5.slurm"
   exit 1
 elif [ -f "$RUN_HOST/TRAINING_FAILED" ] || [ "$TRAIN_RC" -ne 0 ]; then
