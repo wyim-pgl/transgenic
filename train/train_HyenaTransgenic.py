@@ -31,7 +31,7 @@ def _wandb():
     return wandb
 from transgenic.training.b5_runtime import (load_b5_config, model_kwargs, accumulation_steps as _acc_steps, EarlyStopper,
                                              CheckpointLayout, split_row_numbers, parse_args as _b5_parse_args, benchmark_summary,
-                                             epoch_batches)
+                                             epoch_batches, resolve_checkpointing)
 from tqdm import tqdm
 # 8-bit optimizers are the RTX 4090 path, not B5 (protocol: B5 uses plain AdamW; deploy/deltaai/transgenic.def
 # deliberately does not install bitsandbytes). An unconditional import here killed every container job at
@@ -241,17 +241,19 @@ def train(
     model = transgenicForConditionalGeneration(config)  # Instantiate the full seq2seq model
     print(f"Model params: {_count_parameters(model):,}", file=sys.stderr)
 
-    # TRANSGENIC_NO_GRAD_CKPT=1 is an EXPERIMENT switch only: gradient checkpointing plus torch.compile is the
-    # combination under which the 25.06 image's AOTAutograd partitioner asserts ("Node add_316 was invalid,
-    # but is output"). Never set it for a recipe run: peak memory is already 101 of 120 GB with checkpointing.
-    if not os.environ.get("TRANSGENIC_NO_GRAD_CKPT"):
-        if os.environ.get("TRANSGENIC_CKPT_NONREENTRANT"):
-            # Non-reentrant torch.utils.checkpoint is the form torch.compile can partition; the reentrant
-            # default is what raises "Node ... was invalid, but is output" in the decoder (bisection 2026-09-09).
-            model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
-            print("gradient checkpointing: non-reentrant (TRANSGENIC_CKPT_NONREENTRANT)", file=sys.stderr)
-        else:
-            model.gradient_checkpointing_enable()   # Trade compute for memory: recompute activations
+    # Gradient checkpointing: non-reentrant by default (the form DDP accepts and torch.compile can partition;
+    # same recompute, same numerics). TRANSGENIC_CKPT_REENTRANT=1 restores the old form on 1 GPU only;
+    # TRANSGENIC_NO_GRAD_CKPT=1 is the compile-bisection switch and never a recipe setting (peak memory is
+    # already 101 of 120 GB with checkpointing; 129 kb OOMs without it). See resolve_checkpointing.
+    if os.environ.get("TRANSGENIC_CKPT_NONREENTRANT"):
+        print("TRANSGENIC_CKPT_NONREENTRANT is now the default and is ignored", file=sys.stderr)
+    _ckpt = resolve_checkpointing(os.environ, world_size)
+    if _ckpt == "nonreentrant":
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+        print("gradient checkpointing: non-reentrant (default)", file=sys.stderr)
+    elif _ckpt == "reentrant":
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": True})
+        print("gradient checkpointing: reentrant (TRANSGENIC_CKPT_REENTRANT, 1 GPU only)", file=sys.stderr)
     else:
         print("EXPERIMENT: gradient checkpointing DISABLED (TRANSGENIC_NO_GRAD_CKPT)", file=sys.stderr)
     model.to(device)                            # during backward instead of storing them
@@ -346,48 +348,77 @@ def train(
             global_step = int(meta.get("global_step", 0))
         print(f"Resumed from {resume_from_checkpoint}; epoch={start_epoch}, step={resume_step}, global_step={global_step}", file=sys.stderr)
 
+    # Checkpoint directory ownership under DDP. Every rank used to run the same rmtree / makedirs / rename on one
+    # shared directory (Codex review 2026-09-09): the second rank's makedirs raised FileExistsError, or its rmtree
+    # deleted files the first rank was still writing. Rank 0 now owns the directory and the metadata;
+    # accelerator.save_state is still called on EVERY rank, because Accelerate writes the per-process RNG state
+    # (random_states_<rank>.pkl) from each process and only the weights from the main one. The barriers make the
+    # tmp directory exist before anyone saves, make every rank's files exist before the rename, and keep a rank
+    # from starting the next step while the publish is in flight. On one GPU each barrier is a no-op and the
+    # sequence of filesystem operations is the one the 1-GPU seed already ran.
+    is_main = accelerator.is_main_process
+    barrier = accelerator.wait_for_everyone
+
     def _save_state(epoch: int, step: int, global_step: int, best_score):
         """Save full Accelerate state (model + optimizer + scheduler + RNG) for resuming."""
         ckpt_dir = os.path.join(checkpoint_path, f"accelerate_epoch{epoch}_step{global_step}")
-        os.makedirs(ckpt_dir, exist_ok=True)
-        accelerator.save_state(ckpt_dir)        # Saves everything needed to resume training
-        _write_json(os.path.join(ckpt_dir, "meta.json"), {
-            "epoch": epoch,                     # Epoch to resume from
-            "step": step,                       # Micro-batch step to resume from within epoch
-            "global_step": global_step,         # Total optimizer steps completed so far
-            "best_eval_score": None if best_score is None else float(best_score),
-        })
+        if is_main:
+            os.makedirs(ckpt_dir, exist_ok=True)
+        barrier()
+        accelerator.save_state(ckpt_dir)        # Saves everything needed to resume training (all ranks)
+        barrier()
+        if is_main:
+            _write_json(os.path.join(ckpt_dir, "meta.json"), {
+                "epoch": epoch,                     # Epoch to resume from
+                "step": step,                       # Micro-batch step to resume from within epoch
+                "global_step": global_step,         # Total optimizer steps completed so far
+                "best_eval_score": None if best_score is None else float(best_score),
+            })
+        barrier()
 
     def _save_best(score_name, score_val):
         """Save only model weights (safetensors) when a new best score is achieved (legacy layout)."""
-        save_model(accelerator.unwrap_model(model),  # unwrap removes Accelerate wrapper
-                   f"{checkpoint_path}/model.safetensors")
-        print(f"New best model saved with {score_name}={score_val}", file=sys.stderr)
+        if is_main:
+            save_model(accelerator.unwrap_model(model),  # unwrap removes Accelerate wrapper
+                       f"{checkpoint_path}/model.safetensors")
+            print(f"New best model saved with {score_name}={score_val}", file=sys.stderr)
+        barrier()
 
     def _save_epoch_b5(epoch_1based: int, eval_loss, train_loss, is_best: bool, global_step: int):
         """B5 layout: epoch_NN.tmp -> epoch_NN with model.safetensors, accelerate_state/, eval.json; best symlink."""
-        tmp = layout.begin_epoch(epoch_1based)
-        save_model(accelerator.unwrap_model(model), os.path.join(tmp, "model.safetensors"))
-        accelerator.save_state(os.path.join(tmp, "accelerate_state"))
-        _write_json(os.path.join(tmp, "meta.json"), {"epoch": epoch_1based, "step": 0, "global_step": global_step,
-                                                     "best_eval_score": stopper.best, "seed": seed})
-        layout.finish_epoch(epoch_1based, eval_loss, train_loss, extra={"global_step": global_step, "is_best": is_best,
-                            "stopper": stopper.state()}, is_best=is_best)
-        layout.write_state({"epoch": epoch_1based, "global_step": global_step, "stopper": stopper.state(), "seed": seed})
-        if os.path.isdir(layout.latest_state_dir()):
-            shutil.rmtree(layout.latest_state_dir(), ignore_errors=True)   # the epoch dir supersedes any mid-epoch state
+        tmp = layout.epoch_dir(epoch_1based) + ".tmp"
+        if is_main:
+            layout.begin_epoch(epoch_1based)                      # rmtree + makedirs of the .tmp dir
+            save_model(accelerator.unwrap_model(model), os.path.join(tmp, "model.safetensors"))
+        barrier()
+        accelerator.save_state(os.path.join(tmp, "accelerate_state"))   # all ranks
+        barrier()
+        if is_main:
+            _write_json(os.path.join(tmp, "meta.json"), {"epoch": epoch_1based, "step": 0, "global_step": global_step,
+                                                         "best_eval_score": stopper.best, "seed": seed})
+            layout.finish_epoch(epoch_1based, eval_loss, train_loss, extra={"global_step": global_step, "is_best": is_best,
+                                "stopper": stopper.state()}, is_best=is_best)
+            layout.write_state({"epoch": epoch_1based, "global_step": global_step, "stopper": stopper.state(), "seed": seed})
+            if os.path.isdir(layout.latest_state_dir()):
+                shutil.rmtree(layout.latest_state_dir(), ignore_errors=True)   # the epoch dir supersedes any mid-epoch state
+        barrier()
 
     def _save_latest_b5(epoch0: int, step: int, global_step: int):
         """Mid-epoch resumable state (A28): <run>/latest_state.tmp -> latest_state (atomic)."""
         tmp = layout.latest_state_dir() + ".tmp"
-        shutil.rmtree(tmp, ignore_errors=True)
-        os.makedirs(tmp)
-        accelerator.save_state(os.path.join(tmp, "accelerate_state"))
-        _write_json(os.path.join(tmp, "meta.json"), {"epoch": epoch0, "step": step, "global_step": global_step,
-                                                     "best_eval_score": stopper.best, "seed": seed, "stopper": stopper.state()})
-        shutil.rmtree(layout.latest_state_dir(), ignore_errors=True)
-        os.rename(tmp, layout.latest_state_dir())
-        print(f"latest_state saved at epoch {epoch0} step {step} global_step {global_step}", file=sys.stderr)
+        if is_main:
+            shutil.rmtree(tmp, ignore_errors=True)
+            os.makedirs(tmp)
+        barrier()
+        accelerator.save_state(os.path.join(tmp, "accelerate_state"))   # all ranks
+        barrier()
+        if is_main:
+            _write_json(os.path.join(tmp, "meta.json"), {"epoch": epoch0, "step": step, "global_step": global_step,
+                                                         "best_eval_score": stopper.best, "seed": seed, "stopper": stopper.state()})
+            shutil.rmtree(layout.latest_state_dir(), ignore_errors=True)
+            os.rename(tmp, layout.latest_state_dir())
+            print(f"latest_state saved at epoch {epoch0} step {step} global_step {global_step}", file=sys.stderr)
+        barrier()
 
     _stop_requested = {"flag": False}
 
@@ -501,9 +532,17 @@ def train(
 
                         # Save full resumable checkpoint every save_every_n_steps optimizer steps
                         if layout is not None:
-                            if (save_every_n_steps and global_step % save_every_n_steps == 0) or _stop_requested["flag"]:
+                            # The stop flag is process-local: each rank receives its own USR1 at its own moment. Combine
+                            # it across ranks at this optimizer boundary so every rank saves and returns together or
+                            # none does; a signal that lands on one rank after this point is picked up at the next
+                            # boundary (Codex review 2026-09-09). On one GPU the decision is the local flag.
+                            stop_now = bool(_stop_requested["flag"])
+                            if world_size > 1:
+                                stop_now = bool(accelerator.reduce(torch.tensor(int(stop_now), device=device),
+                                                                   reduction="max").item())
+                            if (save_every_n_steps and global_step % save_every_n_steps == 0) or stop_now:
                                 _save_latest_b5(epoch, step + 1, global_step)
-                            if _stop_requested["flag"]:
+                            if stop_now:
                                 print("exiting cleanly for the job chain (no TRAINING_DONE marker)", file=sys.stderr)
                                 if log_wandb:
                                     _wandb().finish()
@@ -547,13 +586,18 @@ def train(
 
             # ---- End of epoch: compute metrics ----
             seen = max(1, micro_done)                          # batches actually forwarded this run (A35)
+            if world_size > 1:
+                # Each rank forwarded a different shard; without this the no-eval best-model decision below
+                # branched into a collective on some ranks only (Codex review 2026-09-09). One GPU: unchanged.
+                total_loss = accelerator.reduce(torch.as_tensor(total_loss, dtype=torch.float32, device=device), reduction="sum")
+                seen = accelerator.reduce(torch.tensor(float(seen), device=device), reduction="sum")
             train_epoch_loss = total_loss / seen                # Average loss over the batches actually seen
             train_ppl = torch.exp(train_epoch_loss)             # Perplexity = exp(loss)
 
             if do_eval:
                 # Evaluation loop (no gradient computation needed)
-                eval_loss = 0
-                for batch in tqdm(eval_dl, miniters=10):
+                eval_loss = torch.zeros((), dtype=torch.float32, device=device)
+                for batch in tqdm(eval_dl, miniters=10, disable=not is_main):
                     with torch.no_grad():                       # Disable autograd (saves memory + speed)
                         outputs = model(
                             input_ids=batch[0].to(device, non_blocking=True),
@@ -563,31 +607,43 @@ def train(
                         )
                     eval_loss += outputs.loss.detach().float()
 
-                eval_epoch_loss = eval_loss / len(eval_dl)
+                # The prepared eval loader is sharded across ranks, so the per-rank sum over the per-rank length
+                # was a different number on every rank, and each rank then made its own best/stop decision
+                # (Codex review 2026-09-09: divergent early stopping, collective hang). Sum the loss and the batch
+                # count across ranks and divide once, so every rank sees the same value. On one GPU this is the
+                # old mean exactly. Accelerate's even_batches padding can repeat at most world_size-1 validation
+                # rows at the tail of the shard; those repeats are in both the numerator and the denominator.
+                eval_loss_sum = accelerator.reduce(eval_loss, reduction="sum")
+                eval_batches = accelerator.reduce(torch.tensor(float(len(eval_dl)), device=device), reduction="sum")
+                eval_epoch_loss = eval_loss_sum / eval_batches
                 eval_ppl = torch.exp(eval_epoch_loss)
-                print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}, {eval_ppl=}, {eval_epoch_loss=}", file=sys.stderr)
+                if is_main:
+                    print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}, {eval_ppl=}, {eval_epoch_loss=}", file=sys.stderr)
 
-                if log_wandb:
+                if log_wandb and is_main:
                     _wandb().log({"epoch_train_ppl": train_ppl, "epoch_train_loss": train_epoch_loss,
                                "epoch_eval_ppl": eval_ppl, "epoch_eval_loss": eval_epoch_loss})
 
-                # Save model if eval loss improved (best model selection)
+                # Save model if eval loss improved (best model selection). Every rank runs the same update on the
+                # same reduced value and reaches the same collective save; only the main process writes.
                 if layout is not None:
                     is_best, should_stop = stopper.update(epoch + 1, float(eval_epoch_loss))
                     best_eval_score = stopper.best
                     _save_epoch_b5(epoch + 1, float(eval_epoch_loss), float(train_epoch_loss), is_best, global_step)
-                    if is_best:
+                    if is_best and is_main:
                         print(f"New best validation loss {float(eval_epoch_loss):.6f} at epoch {epoch + 1}", file=sys.stderr)
                     if should_stop:
-                        print(f"Early stopping: no improvement for {patience} epochs (best epoch {stopper.best_epoch})", file=sys.stderr)
-                        layout.mark_done()
+                        if is_main:
+                            print(f"Early stopping: no improvement for {patience} epochs (best epoch {stopper.best_epoch})", file=sys.stderr)
+                            layout.mark_done()
                         break
                 elif best_eval_score is None or eval_epoch_loss < best_eval_score:
                     best_eval_score = eval_epoch_loss
                     _save_best("eval_epoch_loss", eval_epoch_loss)
             else:
                 # No eval: track best based on training loss instead
-                print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}", file=sys.stderr)
+                if is_main:
+                    print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}", file=sys.stderr)
                 if best_eval_score is None or train_epoch_loss < best_eval_score:
                     best_eval_score = train_epoch_loss
                     _save_best("train_epoch_loss", train_epoch_loss)
@@ -600,11 +656,17 @@ def train(
             torch.cuda.empty_cache()
             gc.collect()
             total_loss = 0                      # Reset for next epoch
-        if layout is not None:
+        if layout is not None and is_main:
             layout.mark_done()
 
     except KeyboardInterrupt:
-        # Graceful shutdown: save checkpoint with epoch+step so training can resume mid-epoch
+        # Graceful shutdown: save checkpoint with epoch+step so training can resume mid-epoch.
+        # Under DDP the interrupt is rank-local, and _save_state is a collective: a save from one rank while the
+        # others are in backward or another barrier hangs the job instead of ending it (Codex review 2026-09-09).
+        # Multi-GPU runs keep the last published checkpoint and exit; USR1/SIGTERM remain the clean stop path.
+        if world_size > 1:
+            print("KeyboardInterrupt on a DDP rank: not saving (collective); last published checkpoint stands", file=sys.stderr)
+            raise
         print("KeyboardInterrupt: saving resume checkpoint...", file=sys.stderr)
         _save_state(
             epoch=epoch if 'epoch' in locals() else 0,

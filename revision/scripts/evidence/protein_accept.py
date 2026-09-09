@@ -13,7 +13,12 @@ A19.2 accepts an alignment when ALL of:
     every intron        <= 200000 nt (from the gaps between consecutive CDS blocks)
 
 Equal-best multi-locus placements are flagged mapping_ambiguous (A19.2, family level only): a
-protein whose top alignment score is shared by more than one locus.
+protein whose top alignment score is shared by more than one locus. Their accepted alignments are
+counted in the per-alignment statistics and listed in <species>.alignments.tsv, but they contribute
+NOTHING to the locus-specific tables (<species>.tsv coverage, <species>.introns.tsv): support_version 2
+(2026-09-09) filters them out before aggregation. Version 1 emitted their blocks and introns during the
+streaming pass and only named the proteins afterwards, so 1.4-4.1 % of proteins per species gave
+locus-specific support the protocol reserves for family level (Codex review 2026-09-09).
 
 The independent support unit is the OrthoDB ORGANISM, not the sequence: headers are
 '<organism>:<serial>', so 1000413_0:000002 contributes as 1000413_0. Two proteins from one organism
@@ -32,6 +37,7 @@ import subprocess
 import sys
 from collections import defaultdict
 
+SUPPORT_VERSION = 2          # 2: mapping_ambiguous proteins excluded from the locus-specific tables
 CANONICAL = {("gt", "ag"), ("gc", "ag")}
 MAX_INTRON = 200_000
 MIN_IDENTITY = 0.30
@@ -98,7 +104,10 @@ def judge(paf, mrna_attrs, cds):
 
 
 def stream(gff, blocks_fh, introns_fh, alignments_fh):
-    """One pass. Emits one row per alignment, plus its CDS blocks and introns when accepted."""
+    """One pass. Emits one row per alignment, plus its CDS blocks and introns when accepted.
+
+    Block and intron rows carry the protein id as a trailing column: ambiguity is only known once every
+    alignment of a protein has been seen, so the rows are filtered afterwards (see filter_ambiguous)."""
     paf = None
     cur = None          # (mrna_id, attrs, score, chrom, strand)
     cds = []
@@ -127,9 +136,9 @@ def stream(gff, blocks_fh, introns_fh, alignments_fh):
                             f"{'accepted' if ok else 'rejected'}\t{','.join(reasons) or '.'}\n")
         if ok:
             for s, e in sorted(cds):
-                blocks_fh.write(f"{chrom}\t{s}\t{e}\t{org}\n")
+                blocks_fh.write(f"{chrom}\t{s}\t{e}\t{org}\t{prot}\n")
             for s, e, d, a in introns:
-                introns_fh.write(f"{chrom}\t{s}\t{e}\t{strand}\t{d}-{a}\t{org}\n")
+                introns_fh.write(f"{chrom}\t{s}\t{e}\t{strand}\t{d}-{a}\t{org}\t{prot}\n")
         cur, cds = None, []
 
     with _open(gff) as fh:
@@ -151,6 +160,22 @@ def stream(gff, blocks_fh, introns_fh, alignments_fh):
                 cds.append((int(f[3]), int(f[4])))
     flush()
     return per_protein, stats, rejected
+
+
+def filter_ambiguous(src_path, dst_path, ambiguous):
+    """Copy support rows whose trailing protein column is not in `ambiguous`, dropping that column.
+
+    Returns the number of rows removed. Streams line by line: the block file of one species is tens of
+    millions of rows, the ambiguous set at most a few hundred thousand ids."""
+    removed = 0
+    with open(src_path) as src, open(dst_path, "w") as dst:
+        for line in src:
+            body, _, prot = line.rstrip("\n").rpartition("\t")
+            if prot in ambiguous:
+                removed += 1
+                continue
+            dst.write(body + "\n")
+    return removed
 
 
 def sweep_organisms(sorted_blocks, out_fh):
@@ -231,17 +256,25 @@ def main():
     with open(base + ".mapping_ambiguous.txt", "w") as fh:
         for p in sorted(ambiguous):
             fh.write(p + "\n")
+    ambiguous_accepted = sum(sum(1 for r in rows if r[1]) for prot, rows in per_protein.items() if prot in ambiguous)
+
+    # Family level only: an ambiguous protein's accepted alignments leave the locus-specific tables here,
+    # before anything is aggregated. The tables below carry no protein identity, so this is the only place
+    # the exclusion can happen.
+    blocks_f, introns_f = base + ".blocks.filtered.tmp", base + ".introns.filtered.tmp"
+    blocks_removed = filter_ambiguous(blocks_p, blocks_f, ambiguous)
+    introns_removed = filter_ambiguous(introns_p, introns_f, ambiguous)
 
     env = dict(os.environ, LC_ALL="C")
     srt = base + ".blocks.sorted.tmp"
-    subprocess.run(["sort", "-k1,1", "-k2,2n", "-o", srt, blocks_p], check=True, env=env)
+    subprocess.run(["sort", "-k1,1", "-k2,2n", "-o", srt, blocks_f], check=True, env=env)
     with open(srt) as sf, open(base + ".tsv", "w") as of:
         of.write("chrom\tstart\tend\torganisms\n")
         intervals = sweep_organisms(sf, of)
 
     # A19.3: intron and splice-boundary classes only where >= 2 organisms place the boundary exactly.
     isrt = base + ".introns.sorted.tmp"
-    subprocess.run(["sort", "-k1,1", "-k2,2n", "-k3,3n", "-o", isrt, introns_p], check=True, env=env)
+    subprocess.run(["sort", "-k1,1", "-k2,2n", "-k3,3n", "-o", isrt, introns_f], check=True, env=env)
     supported = 0
     with open(isrt) as sf, open(base + ".introns.tsv", "w") as of:
         of.write("chrom\tstart\tend\tstrand\tmotif\torganisms\tn_organisms\n")
@@ -267,6 +300,11 @@ def main():
                "accepted_fraction": (stats["accepted"] / stats["alignments"]) if stats["alignments"] else 0.0,
                "proteins": len(per_protein), "mapping_ambiguous": len(ambiguous),
                "ambiguous_fraction": (len(ambiguous) / len(per_protein)) if per_protein else 0.0,
+               "support_version": SUPPORT_VERSION,
+               "support_excludes_mapping_ambiguous": True,
+               "ambiguous_alignments_excluded": ambiguous_accepted,
+               "ambiguous_blocks_excluded": blocks_removed,
+               "ambiguous_introns_excluded": introns_removed,
                "rejected_by_reason": dict(sorted(rejected.items())),
                "coverage_intervals": intervals,
                "introns_supported_by_2plus_organisms": supported}
@@ -275,7 +313,7 @@ def main():
     print(json.dumps(summary, indent=1, sort_keys=True))
 
     if not a.keep_intermediates:
-        for p in (blocks_p, introns_p, srt, isrt):
+        for p in (blocks_p, introns_p, blocks_f, introns_f, srt, isrt):
             os.unlink(p)
 
 

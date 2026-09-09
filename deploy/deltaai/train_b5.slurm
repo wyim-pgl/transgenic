@@ -72,15 +72,19 @@ trap 'echo "USR1: forwarding to trainer"; pkill -USR1 -P $TRAIN_PID 2>/dev/null;
 # `wait` returns 138 the moment the trapped USR1 arrives, and under set -e that would end the
 # script HERE, before the TRAINING_DONE/FAILED decision and the resubmit -- every seed would die
 # at 48 h with no next link. Re-wait while the trainer is still alive; keep its real exit code.
+# The exit code must be read in the `else` branch of the same `if`: after a failed condition the `if`
+# statement's own status is 0, so a `TRAIN_RC=$?` on the next line recorded 0 for every crash and the
+# chain resubmitted a dead trainer instead of marking TRAINING_FAILED (reproduced 2026-09-09, child exit 17).
 TRAIN_RC=0
 while :; do
-  if wait "$TRAIN_PID"; then TRAIN_RC=0; break; fi
-  TRAIN_RC=$?
+  if wait "$TRAIN_PID"; then TRAIN_RC=0; break; else TRAIN_RC=$?; fi
   kill -0 "$TRAIN_PID" 2>/dev/null || break
 done
 # chain: resubmit unless finished, failed, or the chain limit is reached
 if [ -f "$RUN_HOST/TRAINING_DONE" ]; then echo "training finished"
-elif [ -f "$RUN_HOST/TRAINING_FAILED" ] || [ "$TRAIN_RC" -ne 0 ]; then echo "training failed (rc=$TRAIN_RC); not resubmitting"; touch "$RUN_HOST/TRAINING_FAILED"
+elif [ -f "$RUN_HOST/TRAINING_FAILED" ] || [ "$TRAIN_RC" -ne 0 ]; then
+  echo "training failed (rc=$TRAIN_RC); not resubmitting"; touch "$RUN_HOST/TRAINING_FAILED"
+  exit 1    # sacct must show FAILED, not COMPLETED, for a link whose trainer died
 elif [ "$CHAIN_N" -ge "$CHAIN_MAX" ]; then echo "chain limit $CHAIN_MAX reached; not resubmitting"
 else
   echo "resubmitting chain job $((CHAIN_N + 1))"

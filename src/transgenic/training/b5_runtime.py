@@ -19,6 +19,28 @@ REQUIRED_CONFIG_KEYS = ("d_model_encoder", "d_model_decoder", "encoder_layers", 
 DEFAULT_PATIENCE = 3
 
 
+def resolve_checkpointing(env: Dict[str, str], world_size: int) -> str:
+    """Which gradient-checkpointing form the trainer enables: 'nonreentrant' (default), 'reentrant', or 'off'.
+
+    Non-reentrant torch.utils.checkpoint is the default since 2026-09-09: it is the only form DDP with
+    find_unused_parameters accepts (reentrant + DDP raised "Expected to mark a variable ready only once",
+    job 3117555) and it recomputes the same activations, so the 1-GPU numerics do not change.
+
+    TRANSGENIC_CKPT_REENTRANT=1 keeps the old form for the experiment record and is refused under DDP.
+    TRANSGENIC_NO_GRAD_CKPT=1 is the compile-bisection switch (never for a recipe run: 129 kb OOMs without it).
+    TRANSGENIC_CKPT_NONREENTRANT (the 2026-09-09 opt-in) is accepted as a no-op so old launch lines still run.
+    """
+    if env.get("TRANSGENIC_NO_GRAD_CKPT"):
+        return "off"
+    if env.get("TRANSGENIC_CKPT_REENTRANT"):
+        if world_size > 1:
+            raise RuntimeError("TRANSGENIC_CKPT_REENTRANT=1 with DDP (world size "
+                               f"{world_size}): reentrant checkpointing under find_unused_parameters fails at the "
+                               "first backward ('mark a variable ready only once', job 3117555). Unset it.")
+        return "reentrant"
+    return "nonreentrant"
+
+
 def epoch_batches(dataloader, epoch: int, resume_step: int = 0):
     """Replay an Accelerate loader's epoch, preserving absolute micro-batch indices.
 
