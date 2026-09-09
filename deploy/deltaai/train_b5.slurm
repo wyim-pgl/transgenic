@@ -75,8 +75,21 @@ apptainer exec --nv --writable-tmpfs --bind "$WORK":/work "$SIF" bash -lc "
     --save-every-n-steps ${SAVE_EVERY:-200} 2>> $RUN/train.err
 " &
 TRAIN_PID=$!
-# forward the pre-limit signal to the training process so it saves latest_state and exits cleanly
-trap 'echo "USR1: forwarding to trainer"; pkill -USR1 -P $TRAIN_PID 2>/dev/null; kill -USR1 $TRAIN_PID 2>/dev/null' USR1
+# The pre-limit USR1 must reach the trainer's Python handler and nothing else. Signalling the apptainer process
+# (and its children) killed the container instead: rc 138, the trainer never saw the signal, the link died with
+# nothing saved (job 3119780, 2026-09-09). The accelerate/torchrun launcher has no USR1 handler either. The rank
+# processes are the descendants of $TRAIN_PID whose command line is the trainer script AND whose parent is the
+# launcher; DataLoader workers share the command line but hang off a rank, so they are not signalled.
+_descendants() { local p; for p in $(pgrep -P "$1" 2>/dev/null); do echo "$p"; _descendants "$p"; done; }
+_ranks() {
+  local p pp
+  for p in $(_descendants "$TRAIN_PID"); do
+    tr '\0' ' ' < "/proc/$p/cmdline" 2>/dev/null | grep -q "train/train_HyenaTransgenic.py" || continue
+    pp=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' ')
+    tr '\0' ' ' < "/proc/$pp/cmdline" 2>/dev/null | grep -q "accelerate" && echo "$p"
+  done
+}
+trap 'R=$(_ranks); echo "USR1: forwarding to trainer ranks: ${R:-NONE FOUND}"; for p in $R; do kill -USR1 "$p"; done' USR1
 # `wait` returns 138 the moment the trapped USR1 arrives, and under set -e that would end the
 # script HERE, before the TRAINING_DONE/FAILED decision and the resubmit -- every seed would die
 # at 48 h with no next link. Re-wait while the trainer is still alive; keep its real exit code.

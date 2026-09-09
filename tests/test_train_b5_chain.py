@@ -153,3 +153,39 @@ def test_clean_link_resubmits_next_link_with_retry_reset_and_exclusions_kept(tmp
     r = _decide(tmp_path, rc=0, env={"EXCLUDE_NODES": "gh062,gh121"})
     assert "CHAIN_N=2," in r["out"] and "LAUNCH_RETRY=0" in r["out"] and "--exclude=gh062,gh121" in r["out"]
     assert r["code"] == 0 and not r["failed_marker"]
+
+
+# ---------------------------------------------------------------------------------------------------
+# USR1 forwarding (2026-09-09, job 3119780): the signal must reach the rank processes only -- not the
+# container, not the launcher, not the DataLoader workers that share the trainer's command line.
+# ---------------------------------------------------------------------------------------------------
+
+def _rank_finder() -> str:
+    src = SCRIPT.read_text()
+    m = re.search(r"^_descendants\(\) .*?^}\n", src, re.S | re.M)
+    assert m, "_descendants/_ranks not found in train_b5.slurm"
+    return m.group(0)
+
+
+def test_usr1_targets_only_the_ranks_under_the_launcher(tmp_path):
+    # Fake tree: container -> launcher ("accelerate launch") -> rank (trainer script) -> worker (same script).
+    train = tmp_path / "train"; train.mkdir()
+    rank = train / "train_HyenaTransgenic.py"
+    rank.write_text('#!/bin/bash\nif [ "${1:-}" = --worker ]; then sleep 30; exit 0; fi\n'
+                    'trap \'echo RANK_GOT_USR1 > "$OUT/got"; exit 0\' USR1\n'
+                    f'bash "{rank}" --worker &\nwhile :; do sleep 0.2; done\n')
+    launcher = tmp_path / "accelerate"
+    launcher.write_text(f'#!/bin/bash\n# accelerate launch --num_processes=1\nbash "{rank}" &\nwait\n')
+    container = tmp_path / "container"
+    container.write_text(f'#!/bin/bash\nbash "{launcher}" launch --num_processes=1 &\nwait\n')
+    for f in (rank, launcher, container):
+        f.chmod(0o755)
+    out = tmp_path / "out"; out.mkdir()
+    harness = f'export OUT="{out}"\nbash "{container}" > /dev/null 2>&1 < /dev/null &\nTRAIN_PID=$!\nsleep 1\n' + _rank_finder()
+    harness += ('R=$(_ranks); echo "RANKS=$R"; n=0; for p in $R; do n=$((n+1)); done; echo "NRANKS=$n"\n'
+                'for p in $R; do kill -USR1 "$p"; done\nsleep 1\n'
+                'kill -0 "$TRAIN_PID" 2>/dev/null && echo CONTAINER_ALIVE\n'
+                'for p in $(_descendants "$TRAIN_PID") "$TRAIN_PID"; do kill -KILL "$p" 2>/dev/null; done; true\n')
+    res = subprocess.run(["bash", "-c", harness], capture_output=True, text=True, timeout=30)
+    assert "NRANKS=1" in res.stdout, res.stdout + res.stderr
+    assert (out / "got").exists(), "the rank's USR1 handler did not fire"
