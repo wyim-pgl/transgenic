@@ -82,9 +82,12 @@ def _decision_block() -> str:
     return m.group(0)
 
 
-def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "", env: dict | None = None) -> dict:
+def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "", env: dict | None = None,
+            forced_preempt: bool = False) -> dict:
     """Run the decision block with a stub sbatch; return exit code, stdout, stub args/env, marker state."""
     run = tmp_path / "run"; run.mkdir()
+    if forced_preempt:
+        (run / "FORCED_PREEMPT").write_text("")
     err = run / "train.err"
     err.write_text(err_before)
     off = err.stat().st_size
@@ -102,7 +105,8 @@ def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "
     out = subprocess.run(["bash", "-c", harness], capture_output=True, text=True, timeout=30,
                          env={**{"PATH": "/usr/bin:/bin"}, **(env or {})})
     return {"code": out.returncode, "out": out.stdout + out.stderr,
-            "failed_marker": (run / "TRAINING_FAILED").exists()}
+            "failed_marker": (run / "TRAINING_FAILED").exists(),
+            "forced_marker": (run / "FORCED_PREEMPT").exists()}
 
 
 LAUNCH = "  what():  CUDA error: unspecified launch failure\n"
@@ -192,3 +196,15 @@ def test_usr1_targets_only_the_ranks_under_the_launcher(tmp_path):
     assert "NRANKS=1" in res.stdout, res.stdout + res.stderr
     assert (out / "got").exists(), "the rank's USR1 handler did not fire"
     assert "CONTAINER_RC=0" in res.stdout, "the container/launcher must end cleanly after the rank exits (138 = launcher was signalled)"
+
+
+def test_forced_preemption_resubmits_the_next_link_and_clears_the_marker(tmp_path):
+    # The watchdog killed a trainer that ignored USR1 (rc 137): not a failure, the next link resumes latest_state.
+    r = _decide(tmp_path, rc=137, forced_preempt=True)
+    assert "SBATCH_ARGS:" in r["out"] and "CHAIN_N=2," in r["out"] and "--dependency=afterany:1" in r["out"]
+    assert not r["failed_marker"] and not r["forced_marker"] and r["code"] == 0
+
+
+def test_forced_preemption_at_the_chain_limit_stays_terminal(tmp_path):
+    r = _decide(tmp_path, rc=137, forced_preempt=True, env={"CHAIN_N": "8", "CHAIN_MAX": "8"})
+    assert "SBATCH_ARGS:" not in r["out"] and r["failed_marker"]

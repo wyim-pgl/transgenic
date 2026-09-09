@@ -94,7 +94,14 @@ _ranks() {
     case "$(tr '\0' ' ' < "/proc/$pp/cmdline" 2>/dev/null)" in *accelerate*) echo "$p";; esac
   done
 }
-trap 'R=$(_ranks); echo "USR1: forwarding to trainer ranks: ${R:-NONE FOUND}"; for p in $R; do kill -USR1 "$p"; done' USR1
+# If the trainer does not exit within USR1_GRACE seconds of the signal (rehearsals 3119848/3119779: a rank under
+# torch.compile/dynamo never ran its Python handler), the watchdog kills the ranks and marks FORCED_PREEMPT, and the
+# decision below resubmits the next link from the last published latest_state (at most save_every_n_steps lost).
+# The pre-limit margin is 900 s (#SBATCH --signal), so 600 s leaves time for the kill and the sbatch.
+trap 'R=$(_ranks); echo "USR1: forwarding to trainer ranks: ${R:-NONE FOUND}"; for p in $R; do kill -USR1 "$p"; done;
+      ( sleep "${USR1_GRACE:-600}"; if kill -0 "$TRAIN_PID" 2>/dev/null; then
+          echo "trainer still running ${USR1_GRACE:-600}s after USR1; forcing preemption, the last latest_state resumes";
+          touch "$RUN_HOST/FORCED_PREEMPT"; for p in $(_ranks); do kill -KILL "$p" 2>/dev/null; done; fi ) & WATCHDOG=$!' USR1
 # `wait` returns 138 the moment the trapped USR1 arrives, and under set -e that would end the
 # script HERE, before the TRAINING_DONE/FAILED decision and the resubmit -- every seed would die
 # at 48 h with no next link. Re-wait while the trainer is still alive; keep its real exit code.
@@ -106,8 +113,13 @@ while :; do
   if wait "$TRAIN_PID"; then TRAIN_RC=0; break; else TRAIN_RC=$?; fi
   kill -0 "$TRAIN_PID" 2>/dev/null || break
 done
+[ -n "${WATCHDOG:-}" ] && kill "$WATCHDOG" 2>/dev/null
 # chain: resubmit unless finished, failed, or the chain limit is reached
 if [ -f "$RUN_HOST/TRAINING_DONE" ]; then echo "training finished"
+elif [ -f "$RUN_HOST/FORCED_PREEMPT" ] && [ "$CHAIN_N" -lt "$CHAIN_MAX" ]; then
+  rm -f "$RUN_HOST/FORCED_PREEMPT"
+  echo "forced preemption (rc=$TRAIN_RC); resubmitting chain job $((CHAIN_N + 1)) from the last latest_state"
+  sbatch --gpus-per-node=$GPUS ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=0 "$WORK/repo/deploy/deltaai/train_b5.slurm"
 elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNCH_RETRY:-0}" -lt "${LAUNCH_RETRY_MAX:-2}" ] \
      && tail -c +$((ERR_OFF + 1)) "$RUN_HOST/train.err" 2>/dev/null | grep -F "CUDA error: unspecified launch failure" > /dev/null; then
   # A node-side failure, not a code failure: `unspecified launch failure` has hit gh062 (x2), gh093 and gh121
