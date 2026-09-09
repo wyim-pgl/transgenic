@@ -175,17 +175,20 @@ def test_usr1_targets_only_the_ranks_under_the_launcher(tmp_path):
                     'trap \'echo RANK_GOT_USR1 > "$OUT/got"; exit 0\' USR1\n'
                     f'bash "{rank}" --worker &\nwhile :; do sleep 0.2; done\n')
     launcher = tmp_path / "accelerate"
-    launcher.write_text(f'#!/bin/bash\n# accelerate launch --num_processes=1\nbash "{rank}" &\nwait\n')
+    launcher.write_text(f'#!/bin/bash\n# accelerate launch --num_processes=1 train/train_HyenaTransgenic.py\nbash "{rank}" &\nwait\n')
     container = tmp_path / "container"
-    container.write_text(f'#!/bin/bash\nbash "{launcher}" launch --num_processes=1 &\nwait\n')
+    # like the real job: bash -lc "... accelerate launch ... train/train_HyenaTransgenic.py ..." wraps the launcher,
+    # and the launcher's own argv names the trainer script -- neither may be signalled (rehearsal 3119819).
+    container.write_text(f'#!/bin/bash\nbash -lc "bash \\"{launcher}\\" launch --num_processes=1 {rank}" &\nwait\n')
     for f in (rank, launcher, container):
         f.chmod(0o755)
     out = tmp_path / "out"; out.mkdir()
     harness = f'export OUT="{out}"\nbash "{container}" > /dev/null 2>&1 < /dev/null &\nTRAIN_PID=$!\nsleep 1\n' + _rank_finder()
     harness += ('R=$(_ranks); echo "RANKS=$R"; n=0; for p in $R; do n=$((n+1)); done; echo "NRANKS=$n"\n'
                 'for p in $R; do kill -USR1 "$p"; done\nsleep 1\n'
-                'kill -0 "$TRAIN_PID" 2>/dev/null && echo CONTAINER_ALIVE\n'
+                'wait "$TRAIN_PID"; echo "CONTAINER_RC=$?"\n'
                 'for p in $(_descendants "$TRAIN_PID") "$TRAIN_PID"; do kill -KILL "$p" 2>/dev/null; done; true\n')
     res = subprocess.run(["bash", "-c", harness], capture_output=True, text=True, timeout=30)
     assert "NRANKS=1" in res.stdout, res.stdout + res.stderr
     assert (out / "got").exists(), "the rank's USR1 handler did not fire"
+    assert "CONTAINER_RC=0" in res.stdout, "the container/launcher must end cleanly after the rank exits (138 = launcher was signalled)"

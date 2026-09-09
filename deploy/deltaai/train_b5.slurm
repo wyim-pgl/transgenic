@@ -84,9 +84,14 @@ _descendants() { local p; for p in $(pgrep -P "$1" 2>/dev/null); do echo "$p"; _
 _ranks() {
   local p pp
   for p in $(_descendants "$TRAIN_PID"); do
-    tr '\0' ' ' < "/proc/$p/cmdline" 2>/dev/null | grep -q "train/train_HyenaTransgenic.py" || continue
+    c=$(tr '\0' ' ' < "/proc/$p/cmdline" 2>/dev/null)
+    case "$c" in *train/train_HyenaTransgenic.py*) ;; *) continue;; esac
+    # the launcher's own command line also names the trainer script (rehearsal 3119819 signalled it and it
+    # died with 138, taking the rank with it), and so does the `bash -lc` wrapper: a rank is a python process
+    # whose command line does not contain "accelerate" and whose parent's does.
+    case "$c" in *accelerate*|*"bash -lc"*) continue;; esac
     pp=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d ' ')
-    tr '\0' ' ' < "/proc/$pp/cmdline" 2>/dev/null | grep -q "accelerate" && echo "$p"
+    case "$(tr '\0' ' ' < "/proc/$pp/cmdline" 2>/dev/null)" in *accelerate*) echo "$p";; esac
   done
 }
 trap 'R=$(_ranks); echo "USR1: forwarding to trainer ranks: ${R:-NONE FOUND}"; for p in $R; do kill -USR1 "$p"; done' USR1
