@@ -43,7 +43,7 @@ except ImportError:                                         # B5 images do not s
 from torch.nn.utils import clip_grad_norm_                  # Prevents gradient explosion
 from transformers import get_linear_schedule_with_warmup    # LR: warmup then linear decay to 0
 from accelerate import Accelerator                          # Handles mixed precision + multi-GPU
-from accelerate.utils import DataLoaderConfiguration
+from accelerate.utils import DataLoaderConfiguration, DistributedDataParallelKwargs
 from safetensors.torch import save_model                    # Fast, safe model serialization format
 
 # --- Project imports ---
@@ -62,9 +62,15 @@ def _count_parameters(model: torch.nn.Module) -> int:
 
 
 def _write_json(path: str, obj: dict):
-    """Write a dict to a JSON file (used for checkpoint metadata)."""
-    with open(path, "w", encoding="utf-8") as f:
+    """Write a dict to a JSON file atomically (used for checkpoint metadata and run_config.json).
+
+    Written to a per-process temporary file and renamed into place, so a concurrent reader -- another DDP rank
+    checking run_config.json -- sees either no file or a complete one, never a half-written one (job 3116413).
+    """
+    tmp = f"{path}.{os.getpid()}.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
         json.dump(obj, f, indent=2, sort_keys=True)
+    os.replace(tmp, path)
 
 
 def _read_json(path: str) -> dict:
@@ -171,7 +177,10 @@ def train(
 
     # A28 / #59: permutation must depend on the run seed and epoch, not the
     # mid-epoch RNG state restored by load_state. manual_seed below seeds the sampler at prepare.
-    accelerator = Accelerator(mixed_precision="bf16", dataloader_config=DataLoaderConfiguration(
+    # find_unused_parameters: the model has parameters that receive no gradient (indices 295-320, 503-528,
+    # 609-612 on every rank in the first 4-GPU bench, job 3116415); without this, DDP raises "Expected to have
+    # finished reduction in the prior iteration" at the second step. The 1-GPU path never sees this.
+    accelerator = Accelerator(mixed_precision="bf16", kwargs_handlers=[DistributedDataParallelKwargs(find_unused_parameters=True)], dataloader_config=DataLoaderConfiguration(
         use_seedable_sampler=True))
     device = accelerator.device                        # no loss scaling needed, native on Ampere+
     if torch.cuda.is_available():
@@ -605,7 +614,8 @@ if __name__ == '__main__':
         resume_ckpt = layout.resume_dir(args.resume)
         if args.resume and resume_ckpt:
             print(f"Resuming from {resume_ckpt}", file=sys.stderr)
-        if not os.path.exists(os.path.join(args.output_dir, "run_config.json")):
+        # Only the first local process writes the run record; the write itself is atomic (see _write_json).
+        if int(os.environ.get("LOCAL_RANK", "0")) == 0 and not os.path.exists(os.path.join(args.output_dir, "run_config.json")):
             _write_json(os.path.join(args.output_dir, "run_config.json"), run_cfg)
         train(
             train_data, eval_data,
