@@ -26,7 +26,7 @@ INT=$WORK/runs/ddp_int; RUN=$INT/run_$SLURM_JOB_ID; SUB=$INT/subset_30720.db
 TIER=${TIER:-30720}; NTRAIN=${NTRAIN:-480}; NVALID=${NVALID:-48}
 mkdir -p "$INT"
 export TRITON_LIBCUDA_PATH=/.singularity.d/libs HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 NCCL_DEBUG=WARN OMP_NUM_THREADS=8
-export TRANSGENIC_NO_COMPILE=1        # the compile attempt only costs minutes here; the recipe path is eager anyway
+export TRANSGENIC_NO_COMPILE=${TRANSGENIC_NO_COMPILE-1}   # default eager (25.06 falls back anyway); pass an empty value to compile on an image where it works (26.08)
 echo "repo: $REPO_DIR @ $(git -C "$REPO_DIR" log --oneline -1 | cut -c1-70)  image: $SIF"
 
 run_in() {   # run_in <python args...>: the trainer inside the container, 4 ranks
