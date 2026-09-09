@@ -58,6 +58,8 @@ CHAIN_MAX=${CHAIN_MAX:-8}; CHAIN_N=${CHAIN_N:-1}
 # src/transgenic.egg-info INTO the bind-mounted repo ("Cannot update time stamp of directory"), so
 # concurrent jobs race on one checkout and the trainer died at its first import. The package is a
 # src-layout namespace package; PYTHONPATH=/work/repo/src imports it with zero writes.
+# Byte offset of train.err before THIS attempt: the retry test below reads only what this attempt appended.
+ERR_OFF=$(stat -c %s "$RUN_HOST/train.err" 2>/dev/null || echo 0)
 apptainer exec --nv --writable-tmpfs --bind "$WORK":/work "$SIF" bash -lc "
   cd /work/repo && export PYTHONPATH=/work/repo/src &&
   bash deploy/deltaai/preflight_b5.sh --bundle /work --repo /work/repo &&
@@ -82,6 +84,20 @@ while :; do
 done
 # chain: resubmit unless finished, failed, or the chain limit is reached
 if [ -f "$RUN_HOST/TRAINING_DONE" ]; then echo "training finished"
+elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNCH_RETRY:-0}" -lt "${LAUNCH_RETRY_MAX:-2}" ] \
+     && tail -c +$((ERR_OFF + 1)) "$RUN_HOST/train.err" 2>/dev/null | grep -F "CUDA error: unspecified launch failure" > /dev/null; then
+  # A node-side failure, not a code failure: `unspecified launch failure` has hit gh062 (x2), gh093 and gh121
+  # (2026-09-08/09), always at the first kernels, and a retry on another node ran clean. Resubmit the SAME link
+  # once or twice with this node excluded, so a healthy checkout is not marked failed by a bad GPU; the trainer
+  # resumes from the last published checkpoint. Only this attempt's stderr is inspected (ERR_OFF), grep -F reads
+  # the whole stream (grep -q + pipefail could fail the test on a match), the exclusion list travels in the
+  # process environment (a comma inside --export=NAME=a,b splits into two variables), the retry waits for this
+  # job to end, and this link still exits non-zero so sacct shows the death (the dependency is afterany).
+  export EXCLUDE_NODES="${EXCLUDE_NODES:+$EXCLUDE_NODES,}$SLURM_NODELIST"
+  [ -n "${SYNC_PID:-}" ] && { kill "$SYNC_PID" 2>/dev/null; wait "$SYNC_PID" 2>/dev/null; }
+  echo "launch failure on $SLURM_NODELIST (rc=$TRAIN_RC); resubmitting chain job $CHAIN_N with --exclude=$EXCLUDE_NODES (retry $((${LAUNCH_RETRY:-0} + 1))/${LAUNCH_RETRY_MAX:-2})"
+  sbatch --gpus-per-node=$GPUS --exclude="$EXCLUDE_NODES" --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$CHAIN_N,CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=$((${LAUNCH_RETRY:-0} + 1)) "$WORK/repo/deploy/deltaai/train_b5.slurm"
+  exit 1
 elif [ -f "$RUN_HOST/TRAINING_FAILED" ] || [ "$TRAIN_RC" -ne 0 ]; then
   echo "training failed (rc=$TRAIN_RC); not resubmitting"; touch "$RUN_HOST/TRAINING_FAILED"
   exit 1    # sacct must show FAILED, not COMPLETED, for a link whose trainer died
@@ -90,7 +106,8 @@ else
   echo "resubmitting chain job $((CHAIN_N + 1))"
   # --gpus-per-node must be repeated on the command line: the directive is fixed at 1 and an
   # --export=GPUS alone would silently drop a 4-GPU chain to one GPU on the next link.
-  sbatch --gpus-per-node=$GPUS --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX "$WORK/repo/deploy/deltaai/train_b5.slurm"
+  # EXCLUDE_NODES (if any) is inherited through --export=ALL from this job's environment; LAUNCH_RETRY resets per link.
+  sbatch --gpus-per-node=$GPUS ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=0 "$WORK/repo/deploy/deltaai/train_b5.slurm"
 fi
 
 # After each epoch: python revision/scripts/60_epoch_budget.py --log $RUN/train.err --patience 3
