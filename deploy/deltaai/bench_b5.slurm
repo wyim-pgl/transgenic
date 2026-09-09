@@ -59,6 +59,10 @@ export NCCL_DEBUG=WARN OMP_NUM_THREADS=8
 REPO_DIR=${REPO_DIR:-$WORK/repo}
 [ -d "$REPO_DIR/.git" ] || { echo "REFUSED: REPO_DIR is not a git checkout: $REPO_DIR" >&2; exit 3; }
 echo "repo: $REPO_DIR @ $(git -C "$REPO_DIR" log --oneline -1 | cut -c1-60)"
+# The trainer loads the encoder from $REPO_DIR/HFmodels offline; a checkout without the cache dies at the first
+# import after the GPU is allocated (round-1 bisection, 2026-09-09). Refuse before spending the slot.
+ls "$REPO_DIR"/HFmodels/hub/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/*/model.safetensors >/dev/null 2>&1 \
+  || { echo "REFUSED: encoder cache missing under $REPO_DIR/HFmodels (see preflight_b5.sh)" >&2; exit 3; }
 apptainer exec --nv --writable-tmpfs --bind "$WORK":/work --bind "$REPO_DIR":/work/repo "$SIF" bash -lc "
   cd /work/repo && export PYTHONPATH=/work/repo/src &&
   accelerate launch --num_processes=$GPUS --mixed_precision=bf16 train/train_HyenaTransgenic.py \

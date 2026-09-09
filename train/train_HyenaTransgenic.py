@@ -182,6 +182,15 @@ def train(
     # finished reduction in the prior iteration" at the second step. The 1-GPU path never sees this.
     accelerator = Accelerator(mixed_precision="bf16", kwargs_handlers=[DistributedDataParallelKwargs(find_unused_parameters=True)], dataloader_config=DataLoaderConfiguration(
         use_seedable_sampler=True))
+    # The recipe's effective batch (96) is batch_size x accumulation_steps ACROSS all ranks. Every DDP rank runs
+    # its own accumulation loop, so the per-rank count is divided by the world size; without this, N GPUs
+    # trained at effective batch 96 x N (seen on the first 4-GPU bench, 2026-09-08). One GPU is unchanged.
+    world_size = accelerator.num_processes
+    if world_size > 1:
+        if accumulation_steps % world_size:
+            raise ValueError(f"accumulation_steps {accumulation_steps} is not divisible by the world size {world_size}")
+        accumulation_steps //= world_size
+        print(f"DDP world size {world_size}: per-rank accumulation {accumulation_steps}, effective batch unchanged", file=sys.stderr)
     device = accelerator.device                        # no loss scaling needed, native on Ampere+
     if torch.cuda.is_available():
         gpu_props = torch.cuda.get_device_properties(0)
@@ -483,9 +492,9 @@ def train(
                             if len(_bench_sec) >= benchmark_steps:
                                 peak = torch.cuda.max_memory_allocated() / 1e9 if torch.cuda.is_available() else None
                                 summary = benchmark_summary(_bench_sec, _bench_tok, len(train_data),
-                                                            batch_size * accumulation_steps, peak_mem_gb=peak)
+                                                            batch_size * accumulation_steps * world_size, peak_mem_gb=peak)
                                 summary.update({"window_nt": int(ii.shape[1]), "batch_size": batch_size,
-                                                "accumulation_steps": accumulation_steps, "rows_in_split": len(train_data),
+                                                "accumulation_steps": accumulation_steps, "world_size": world_size, "rows_in_split": len(train_data),
                                                 "device": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"})
                                 print(json.dumps(summary), flush=True)
                                 return summary
