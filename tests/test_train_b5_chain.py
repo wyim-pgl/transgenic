@@ -108,10 +108,15 @@ def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "
 LAUNCH = "  what():  CUDA error: unspecified launch failure\n"
 
 
-def test_launch_failure_in_this_attempt_resubmits_same_link_with_node_excluded(tmp_path):
+def test_launch_failure_in_this_attempt_resubmits_same_link_in_place_first(tmp_path):
     r = _decide(tmp_path, rc=1, err_after="x\n" + LAUNCH)
-    assert "SBATCH_ARGS:" in r["out"] and "--exclude=gh121" in r["out"] and "CHAIN_N=1," in r["out"]
+    assert "SBATCH_ARGS:" in r["out"] and "--exclude" not in r["out"] and "CHAIN_N=1," in r["out"]
     assert "LAUNCH_RETRY=1" in r["out"] and "--dependency=afterany:1" in r["out"]
+
+
+def test_second_launch_failure_excludes_the_node(tmp_path):
+    r = _decide(tmp_path, rc=1, err_after=LAUNCH, env={"LAUNCH_RETRY": "1"})
+    assert "--exclude=gh121" in r["out"] and "LAUNCH_RETRY=2" in r["out"] and not r["failed_marker"]
     assert r["code"] != 0, "the dead link must still exit non-zero"
     assert not r["failed_marker"], "a retried link must not be marked TRAINING_FAILED"
 
@@ -133,7 +138,7 @@ def test_retry_budget_is_bounded(tmp_path):
 
 
 def test_exclusions_accumulate_and_travel_in_the_environment(tmp_path):
-    r = _decide(tmp_path, rc=1, err_after=LAUNCH, env={"EXCLUDE_NODES": "gh062"})
+    r = _decide(tmp_path, rc=1, err_after=LAUNCH, env={"EXCLUDE_NODES": "gh062", "LAUNCH_RETRY": "1"})
     assert "--exclude=gh062,gh121" in r["out"]
     assert "SBATCH_ENV_EXCLUDE: gh062,gh121" in r["out"], "the comma list must reach sbatch via the environment, not --export"
     assert "EXCLUDE_NODES=" not in r["out"].split("SBATCH_ARGS:")[1].split("\n")[0]
@@ -141,7 +146,7 @@ def test_exclusions_accumulate_and_travel_in_the_environment(tmp_path):
 
 def test_signature_followed_by_a_large_log_still_matches(tmp_path):
     r = _decide(tmp_path, rc=1, err_after=LAUNCH + ("progress line\n" * 20000))
-    assert "SBATCH_ARGS:" in r["out"] and "--exclude=gh121" in r["out"]
+    assert "SBATCH_ARGS:" in r["out"] and "LAUNCH_RETRY=1" in r["out"]
 
 
 def test_clean_link_resubmits_next_link_with_retry_reset_and_exclusions_kept(tmp_path):

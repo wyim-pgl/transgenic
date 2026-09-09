@@ -58,6 +58,12 @@ CHAIN_MAX=${CHAIN_MAX:-8}; CHAIN_N=${CHAIN_N:-1}
 # src/transgenic.egg-info INTO the bind-mounted repo ("Cannot update time stamp of directory"), so
 # concurrent jobs race on one checkout and the trainer died at its first import. The package is a
 # src-layout namespace package; PYTHONPATH=/work/repo/src imports it with zero writes.
+# First GPU touch of a fresh allocation, outside the trainer (2026-09-09): on GH200 nodes the very first CUDA
+# kernel of a new allocation died with `unspecified launch failure` (gh062 x2, gh093, gh121, gh139) and the
+# identical second launch on the same node ran clean; a 1-GPU job showed it too, so it is not NCCL. The cheapest
+# mitigation is to let a throwaway process take that first touch. Its failure is logged and ignored.
+apptainer exec --nv "$SIF" python -c "import torch; torch.ones(1).cuda(); torch.cuda.synchronize(); print('gpu warm-up ok')" \
+  || echo "gpu warm-up failed (rc=$?); the trainer launch follows anyway"
 # Byte offset of train.err before THIS attempt: the retry test below reads only what this attempt appended.
 ERR_OFF=$(stat -c %s "$RUN_HOST/train.err" 2>/dev/null || echo 0)
 apptainer exec --nv --writable-tmpfs --bind "$WORK":/work "$SIF" bash -lc "
@@ -93,10 +99,12 @@ elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNC
   # the whole stream (grep -q + pipefail could fail the test on a match), the exclusion list travels in the
   # process environment (a comma inside --export=NAME=a,b splits into two variables), the retry waits for this
   # job to end, and this link still exits non-zero so sacct shows the death (the dependency is afterany).
-  export EXCLUDE_NODES="${EXCLUDE_NODES:+$EXCLUDE_NODES,}$SLURM_NODELIST"
+  # The first retry stays on any node (the second launch on the same node worked 2/2); only a second failure
+  # excludes the node, so good hardware is not thrown away for a per-allocation first-touch race.
+  if [ "${LAUNCH_RETRY:-0}" -ge 1 ]; then export EXCLUDE_NODES="${EXCLUDE_NODES:+$EXCLUDE_NODES,}$SLURM_NODELIST"; fi
   [ -n "${SYNC_PID:-}" ] && { kill "$SYNC_PID" 2>/dev/null; wait "$SYNC_PID" 2>/dev/null; }
-  echo "launch failure on $SLURM_NODELIST (rc=$TRAIN_RC); resubmitting chain job $CHAIN_N with --exclude=$EXCLUDE_NODES (retry $((${LAUNCH_RETRY:-0} + 1))/${LAUNCH_RETRY_MAX:-2})"
-  sbatch --gpus-per-node=$GPUS --exclude="$EXCLUDE_NODES" --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$CHAIN_N,CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=$((${LAUNCH_RETRY:-0} + 1)) "$WORK/repo/deploy/deltaai/train_b5.slurm"
+  echo "launch failure on $SLURM_NODELIST (rc=$TRAIN_RC); resubmitting chain job $CHAIN_N${EXCLUDE_NODES:+ with --exclude=$EXCLUDE_NODES} (retry $((${LAUNCH_RETRY:-0} + 1))/${LAUNCH_RETRY_MAX:-2})"
+  sbatch --gpus-per-node=$GPUS ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$CHAIN_N,CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=$((${LAUNCH_RETRY:-0} + 1)) "$WORK/repo/deploy/deltaai/train_b5.slurm"
   exit 1
 elif [ -f "$RUN_HOST/TRAINING_FAILED" ] || [ "$TRAIN_RC" -ne 0 ]; then
   echo "training failed (rc=$TRAIN_RC); not resubmitting"; touch "$RUN_HOST/TRAINING_FAILED"
