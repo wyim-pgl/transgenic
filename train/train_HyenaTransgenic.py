@@ -236,7 +236,13 @@ def train(
     # combination under which the 25.06 image's AOTAutograd partitioner asserts ("Node add_316 was invalid,
     # but is output"). Never set it for a recipe run: peak memory is already 101 of 120 GB with checkpointing.
     if not os.environ.get("TRANSGENIC_NO_GRAD_CKPT"):
-        model.gradient_checkpointing_enable()   # Trade compute for memory: recompute activations
+        if os.environ.get("TRANSGENIC_CKPT_NONREENTRANT"):
+            # Non-reentrant torch.utils.checkpoint is the form torch.compile can partition; the reentrant
+            # default is what raises "Node ... was invalid, but is output" in the decoder (bisection 2026-09-09).
+            model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+            print("gradient checkpointing: non-reentrant (TRANSGENIC_CKPT_NONREENTRANT)", file=sys.stderr)
+        else:
+            model.gradient_checkpointing_enable()   # Trade compute for memory: recompute activations
     else:
         print("EXPERIMENT: gradient checkpointing DISABLED (TRANSGENIC_NO_GRAD_CKPT)", file=sys.stderr)
     model.to(device)                            # during backward instead of storing them
