@@ -4,6 +4,7 @@ Run on pgl-gpu with its transgenic Python; local torch-free suites skip these.
 No model download or training database is needed.
 """
 import ast
+import importlib.util
 import json
 import subprocess
 import sys
@@ -100,3 +101,34 @@ def _worker():
 
 if __name__ == "__main__":
     _worker()
+
+
+def test_epoch_checkpoint_carries_the_unfinished_accumulation_window():
+    """2026-09-10: the epoch save records pending_micro and each rank's pending gradients; the resume path restores
+    them and starts micro_done from pending_micro, so a resume from an epoch checkpoint updates at the same
+    boundaries as uninterrupted training (198,828 rows -> 12 pending micro-batches on 1 GPU, 3 per rank on 4)."""
+    src = (ROOT / "train/train_HyenaTransgenic.py").read_text()
+    assert 'pending = micro_done % accumulation_steps' in src
+    assert '"pending_micro": pending' in src
+    assert '_save_pending_grads(accelerator.unwrap_model(model), tmp, accelerator.process_index)' in src
+    assert 'pending_micro = int(meta.get("pending_micro", 0))' in src
+    assert '_load_pending_grads(accelerator.unwrap_model(model), resume_from_checkpoint, accelerator.process_index)' in src
+    assert 'micro_done = pending_micro' in src
+    # the train-loss average divides by this epoch's micro-batches, not the cross-epoch accumulation counter
+    assert 'seen = max(1, epoch_micro)' in src and 'seen = max(1, micro_done)' not in src
+
+
+def test_pending_grads_round_trip(tmp_path):
+    torch = pytest.importorskip("torch")
+    spec = importlib.util.spec_from_file_location("train_mod", ROOT / "train/train_HyenaTransgenic.py")
+    # importing the trainer needs transformers/accelerate; skip where they are absent
+    pytest.importorskip("accelerate"); pytest.importorskip("transformers")
+    mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+    m = torch.nn.Linear(3, 2)
+    m.weight.grad = torch.ones_like(m.weight) * 0.5
+    m.bias.grad = None
+    assert mod._save_pending_grads(m, str(tmp_path), 0) == 1
+    m2 = torch.nn.Linear(3, 2)
+    assert mod._load_pending_grads(m2, str(tmp_path), 0) == 1
+    assert torch.equal(m2.weight.grad, torch.ones_like(m2.weight) * 0.5) and m2.bias.grad is None
+    assert mod._load_pending_grads(m2, str(tmp_path), 1) == 0

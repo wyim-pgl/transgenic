@@ -79,6 +79,42 @@ def _read_json(path: str) -> dict:
         return json.load(f)
 
 
+def _pending_grads_path(ckpt_dir: str, rank: int) -> str:
+    return os.path.join(ckpt_dir, "pending_grads", f"rank{rank}.safetensors")
+
+
+def _save_pending_grads(model, ckpt_dir: str, rank: int) -> int:
+    """Write this rank's parameter gradients (the unfinished accumulation window) under ckpt_dir; return the count.
+
+    An epoch ends inside an accumulation window whenever the number of training rows per rank is not a multiple
+    of the per-rank accumulation (A40: 198,828 rows -> 12 pending micro-batches on 1 GPU, 3 per rank on 4 GPUs).
+    Uninterrupted training carries those gradients into the next epoch; accelerator.save_state saves model and
+    optimizer state but not .grad, so a resume from the epoch checkpoint lost them and shifted every later update
+    boundary (Codex review 2026-09-10). Each rank writes its own file: under DDP the gradients are already
+    all-reduced, so the files are identical copies, and the per-rank layout stays correct if that ever changes.
+    """
+    from safetensors.torch import save_file
+    grads = {name: p.grad.detach().to("cpu").contiguous() for name, p in model.named_parameters() if p.grad is not None}
+    os.makedirs(os.path.dirname(_pending_grads_path(ckpt_dir, rank)), exist_ok=True)
+    save_file(grads, _pending_grads_path(ckpt_dir, rank))
+    return len(grads)
+
+
+def _load_pending_grads(model, ckpt_dir: str, rank: int) -> int:
+    """Restore this rank's pending gradients written by _save_pending_grads; return the count (0 if none)."""
+    from safetensors.torch import load_file
+    path = _pending_grads_path(ckpt_dir, rank)
+    if not os.path.exists(path):
+        return 0
+    grads = load_file(path)
+    n = 0
+    for name, p in model.named_parameters():
+        if name in grads:
+            p.grad = grads[name].to(device=p.device, dtype=p.dtype)
+            n += 1
+    return n
+
+
 def _find_latest_checkpoint(checkpoint_path: str) -> str | None:
     """Find the most recent Accelerate checkpoint by global_step in meta.json.
 
@@ -332,6 +368,7 @@ def train(
     # ---- Resume from checkpoint ----
     start_epoch = 0
     resume_step = 0                             # Micro-batch step to resume from (within start_epoch)
+    pending_micro = 0                           # micro-batches of the unfinished accumulation window (epoch checkpoint)
     global_step = 0                             # Total optimizer steps completed so far
     if resume_from_checkpoint is not None:
         state_dir = resume_from_checkpoint
@@ -346,6 +383,14 @@ def train(
             start_epoch = int(meta.get("epoch", meta.get("next_epoch", 0)))
             resume_step = int(meta.get("step", 0))
             global_step = int(meta.get("global_step", 0))
+            pending_micro = int(meta.get("pending_micro", 0))
+            if pending_micro:
+                n_restored = _load_pending_grads(accelerator.unwrap_model(model), resume_from_checkpoint, accelerator.process_index)
+                if n_restored == 0:
+                    raise RuntimeError(f"{resume_from_checkpoint} declares {pending_micro} pending micro-batches but has no "
+                                       f"pending_grads for rank {accelerator.process_index}; refusing to resume with a shifted "
+                                       "accumulation window")
+                print(f"restored {pending_micro} pending micro-batch(es) of gradients ({n_restored} tensors) from {resume_from_checkpoint}", file=sys.stderr)
         print(f"Resumed from {resume_from_checkpoint}; epoch={start_epoch}, step={resume_step}, global_step={global_step}", file=sys.stderr)
 
     # Checkpoint directory ownership under DDP. Every rank used to run the same rmtree / makedirs / rename on one
@@ -387,15 +432,19 @@ def train(
     def _save_epoch_b5(epoch_1based: int, eval_loss, train_loss, is_best: bool, global_step: int):
         """B5 layout: epoch_NN.tmp -> epoch_NN with model.safetensors, accelerate_state/, eval.json; best symlink."""
         tmp = layout.epoch_dir(epoch_1based) + ".tmp"
+        pending = micro_done % accumulation_steps                # unfinished accumulation window at the epoch end
         if is_main:
             layout.begin_epoch(epoch_1based)                      # rmtree + makedirs of the .tmp dir
             save_model(accelerator.unwrap_model(model), os.path.join(tmp, "model.safetensors"))
         barrier()
         accelerator.save_state(os.path.join(tmp, "accelerate_state"))   # all ranks
+        if pending:
+            n = _save_pending_grads(accelerator.unwrap_model(model), tmp, accelerator.process_index)   # all ranks
+            print(f"epoch {epoch_1based}: {pending} pending micro-batch(es) carried over; {n} gradient tensors saved for rank {accelerator.process_index}", file=sys.stderr)
         barrier()
         if is_main:
             _write_json(os.path.join(tmp, "meta.json"), {"epoch": epoch_1based, "step": 0, "global_step": global_step,
-                                                         "best_eval_score": stopper.best, "seed": seed})
+                                                         "best_eval_score": stopper.best, "seed": seed, "pending_micro": pending})
             layout.finish_epoch(epoch_1based, eval_loss, train_loss, extra={"global_step": global_step, "is_best": is_best,
                                 "stopper": stopper.state()}, is_best=is_best)
             layout.write_state({"epoch": epoch_1based, "global_step": global_step, "stopper": stopper.state(), "seed": seed})
@@ -443,13 +492,16 @@ def train(
     best_eval_score = None
     try:
         _max_seqlen = int((b5_config or {}).get("max_encoder_seqlen", 49152))
-        micro_done = 0                 # completed micro-batches (drives the optimizer step, A35)
+        micro_done = pending_micro     # completed micro-batches (drives the optimizer step, A35); carries across
+                                       # epochs, and across an epoch-checkpoint resume via pending_micro
+        epoch_micro = 0                # micro-batches forwarded in the current epoch (train-loss average)
         batch_skipped = 0              # legacy path only; the frozen recipe raises instead
         _bench_sec, _bench_tok, _bench_tokens, _bench_t0 = [], [], 0, time.perf_counter()
         if benchmark_steps and torch.cuda.is_available():
             torch.cuda.reset_peak_memory_stats()
         for epoch in range(start_epoch, num_epochs):
             total_loss = 0                      # Accumulated loss for epoch-level metrics
+            epoch_micro = 0
 
             skip = resume_step if epoch == start_epoch else 0
             for step, batch in tqdm(epoch_batches(train_dl, epoch, skip),
@@ -486,6 +538,7 @@ def train(
                     # DataLoader index would let a skipped batch shift the effective batch size silently (A35).
                     _bench_tokens += int(lab.numel())
                     micro_done += 1
+                    epoch_micro += 1
                     if micro_done % accumulation_steps == 0:
                         global_step += 1
                         # Clip gradients to prevent explosion (common in transformer training)
@@ -592,7 +645,10 @@ def train(
                     continue
 
             # ---- End of epoch: compute metrics ----
-            seen = max(1, micro_done)                          # batches actually forwarded this run (A35)
+            # epoch_micro, not micro_done: micro_done carries across epochs (and is what the accumulation keys on),
+            # so dividing by it under-reported the train loss from the second epoch on (seed 123's epoch>=2
+            # train_epoch_loss lines are reported / epoch_index too small; the validation loss was never affected).
+            seen = max(1, epoch_micro)                         # batches actually forwarded this epoch (A35)
             if world_size > 1:
                 # Each rank forwarded a different shard; without this the no-eval best-model decision below
                 # branched into a collective on some ranks only (Codex review 2026-09-09). One GPU: unchanged.

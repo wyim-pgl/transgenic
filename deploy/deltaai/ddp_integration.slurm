@@ -22,8 +22,8 @@ set -uo pipefail
 WORK=/work/nvme/bilv/wcyim/transgenic
 SIF=${SIF:-/work/nvme/bilv/wcyim/containers/transgenic-ngc.sif}
 REPO_DIR=${REPO_DIR:-$WORK/repo_dev}
-INT=$WORK/runs/ddp_int; RUN=$INT/run_$SLURM_JOB_ID; SUB=$INT/subset_30720.db
 TIER=${TIER:-30720}; NTRAIN=${NTRAIN:-480}; NVALID=${NVALID:-48}
+INT=$WORK/runs/ddp_int; RUN=$INT/run_$SLURM_JOB_ID; SUB=$INT/subset_${TIER}_${NTRAIN}.db
 mkdir -p "$INT"
 export TRITON_LIBCUDA_PATH=/.singularity.d/libs HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 NCCL_DEBUG=WARN OMP_NUM_THREADS=8
 export TRANSGENIC_NO_COMPILE=${TRANSGENIC_NO_COMPILE-1}   # default eager (25.06 falls back anyway); pass an empty value to compile on an image where it works (26.08)
@@ -40,7 +40,7 @@ if [ ! -s "$SUB" ]; then
   apptainer exec --bind "$WORK":/work "$SIF" python - "$TIER" "$NTRAIN" "$NVALID" <<'PY'
 import duckdb, sys
 tier, ntrain, nvalid = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
-src = "/work/db/b5_full_a40_v1.db"; dst = "/work/runs/ddp_int/subset_%d.db" % tier
+src = "/work/db/b5_full_a40_v1.db"; dst = "/work/runs/ddp_int/subset_%d_%d.db" % (tier, ntrain)
 con = duckdb.connect(dst)
 con.execute(f"ATTACH '{src}' AS src (READ_ONLY)")
 con.execute(f"""CREATE TABLE geneList AS
@@ -52,7 +52,7 @@ con.close()
 PY
 fi
 [ -s "$SUB" ] || { echo "REFUSED: no subset db"; exit 3; }
-COMMON="--config configs/b5_400m_win_v3.json --db /work/runs/ddp_int/subset_$TIER.db --seed 456 --no-wandb \
+COMMON="--config configs/b5_400m_win_v3.json --db /work/runs/ddp_int/subset_${TIER}_${NTRAIN}.db --seed 456 --no-wandb \
   --save-every-n-steps 2 --max-epochs 2 --patience 1 --output-dir /work/runs/ddp_int/run_$SLURM_JOB_ID --resume auto"
 
 # --- 1+2. first leg: train, then USR1 to ONE rank after the first latest_state exists ---
@@ -82,8 +82,17 @@ while :; do
   break
 done
 echo "leg1 launch tries=$LAUNCH_TRIES alloc=${ALLOC:-async}"
-n=0; while [ ! -d "$RUN/latest_state" ] && [ $n -lt 900 ]; do sleep 2; n=$((n+1)); kill -0 $LEG 2>/dev/null || break; done
-if [ -d "$RUN/latest_state" ]; then
+if [ "${KILL_AFTER_EPOCH:-0}" = 1 ]; then
+  # Epoch-checkpoint resume (2026-09-10): kill every rank right after epoch_01/ is published, so leg 2 resumes
+  # from the epoch directory and must restore the unfinished accumulation window (pending_grads) -- run with an
+  # NTRAIN that is not a multiple of 4 x 24 so the window is non-empty (e.g. NTRAIN=484: 121 rows per rank).
+  n=0; while [ ! -d "$RUN/epoch_01" ] && [ $n -lt 900 ]; do sleep 2; n=$((n+1)); kill -0 $LEG 2>/dev/null || break; done
+  if [ -d "$RUN/epoch_01" ]; then
+    LAUNCHER=$(pgrep -f "accelerate launch --num_processes" | head -1)
+    echo "epoch_01 published; KILL -> all ranks $(pgrep -P "$LAUNCHER" | tr '\n' ' ') at $(date -Is) (KILL_AFTER_EPOCH)"
+    for p in $(pgrep -P "$LAUNCHER"); do kill -KILL "$p" 2>/dev/null || true; done
+  fi
+elif n=0; while [ ! -d "$RUN/latest_state" ] && [ $n -lt 900 ]; do sleep 2; n=$((n+1)); kill -0 $LEG 2>/dev/null || break; done; [ -d "$RUN/latest_state" ]; then
   sleep 5
   # one RANK only: the rank processes are the direct children of the accelerate launcher. Matching the trainer
   # cmdline is not enough -- DataLoader workers are forked from the ranks and carry the same cmdline, and the
@@ -105,10 +114,22 @@ echo "leg2 rc=$RC2"
 grep -E 'Resuming from|epoch=|latest_state saved|Early stopping|Traceback|Error' "$RUN/train.err" | sort | uniq -c | head -20
 ls "$RUN"; cat "$RUN/trainer_state.json" 2>/dev/null
 VERDICT=PASS
-[ "$RC1" -eq 0 ] || VERDICT=FAIL
+if [ "${KILL_AFTER_EPOCH:-0}" = 1 ]; then
+  grep -q 'restored [0-9]* pending micro-batch' "$RUN/train.err" || VERDICT=FAIL       # the epoch-checkpoint resume path
+  grep -q 'Resumed from .*epoch_01' "$RUN/train.err" || VERDICT=FAIL
+  # NTRAIN=484 -> 121 rows per rank, 1 pending at accumulation 24: continuation updates at epoch-2 micro-batch 23
+  # (a reset counter would update at 24) and epoch_02 ends with 2 pending (Codex review 2026-09-10)
+  if [ "$NTRAIN" = 484 ]; then
+    grep -q 'latest_state saved at epoch 1 step 23 global_step 6' "$RUN/train.err" || { echo "FAIL: first epoch-2 update not at micro-batch 23"; VERDICT=FAIL; }
+    grep -q '"pending_micro": 2' "$RUN/epoch_02/meta.json" 2>/dev/null || { echo "FAIL: epoch_02 pending_micro != 2"; VERDICT=FAIL; }
+  fi
+  grep -E 'pending micro-batch\(es\) carried over|restored [0-9]+ pending|latest_state saved at epoch 1 step' "$RUN/train.err" | sort | uniq -c | head -6
+else
+  [ "$RC1" -eq 0 ] || VERDICT=FAIL
+  grep -q 'exiting cleanly' "$RUN/train.err" || VERDICT=FAIL
+fi
 [ "$RC2" -eq 0 ] || VERDICT=FAIL
 [ -f "$RUN/TRAINING_DONE" ] || VERDICT=FAIL
 [ -d "$RUN/epoch_01" ] || VERDICT=FAIL
-grep -q 'exiting cleanly' "$RUN/train.err" || VERDICT=FAIL
-grep -q 'Traceback' "$RUN/train.err" && VERDICT=FAIL
-echo "DDP_INTEGRATION $VERDICT job=$SLURM_JOB_ID repo=$(git -C "$REPO_DIR" rev-parse --short HEAD) image=$(basename "$SIF") alloc=${ALLOC:-async} launch_tries=$LAUNCH_TRIES"
+grep -v 'KILL_AFTER_EPOCH' "$RUN/train.err" | grep -q 'Traceback' && [ "${KILL_AFTER_EPOCH:-0}" != 1 ] && VERDICT=FAIL
+echo "DDP_INTEGRATION $VERDICT job=$SLURM_JOB_ID repo=$(git -C "$REPO_DIR" rev-parse --short HEAD) image=$(basename "$SIF") alloc=${ALLOC:-async} launch_tries=$LAUNCH_TRIES ntrain=$NTRAIN kill_after_epoch=${KILL_AFTER_EPOCH:-0}"
