@@ -79,7 +79,10 @@ LINKS=$(find "$BUNDLE" -type l -not -path "*/HFmodels/*" | wc -l)
 # ---- 4. tokenizer가 3토큰 빈 타깃을 낸다 (#58 / A40) -------------------------
 # 실제로 토큰화해서 길이를 잰다. 소스를 grep 하면 파일을 틀리게 고르고도 결론이 나온다 —
 # 이 검사 자체가 처음에 datasets.py 를 보고 "3토큰 없음"이라는 허위 실패를 냈다(quarantine.md §1g).
-TOK=$("$PY" - "$REPO" <<'PYX' 2>&1
+# stdout only, last line: torch 2.14 (NGC 26.08) prints an import-time warning on stderr
+# ("KernelPreference is an Enum subclass ... torch.compile") that turned a THREE into "could not verify"
+# and refused the launch (rehearsal 3124100, 2026-09-10). The check's own reasons are printed on stdout.
+TOK=$("$PY" - "$REPO" <<'PYX' 2>/dev/null | tail -n 1
 import pathlib, sys
 repo = pathlib.Path(sys.argv[1]); sys.path.insert(0, str(repo / "src"))
 # The class is GFFTokenizer and <empty> exists only in the v3 vocabulary (A26). The earlier text imported
