@@ -93,7 +93,7 @@ if [ -d "$RUN/latest_state" ]; then
   ONE=$(pgrep -P "$LAUNCHER" | sort -n | tail -1)
   echo "process tree before the signal:"; ps -o pid,ppid,stat,etime,cmd --forest -g "$(ps -o pgid= -p "$LAUNCHER" | tr -d ' ')" 2>/dev/null | cut -c1-160 | head -40
   echo "target cmdline: $(tr '\0' ' ' < /proc/$ONE/cmdline 2>/dev/null | cut -c1-160)"
-  echo "USR1 -> single rank pid $ONE (launcher $LAUNCHER, ranks: $(pgrep -P "$LAUNCHER" | tr '\n' ' ')) at $(date -Is)"; kill -USR1 "$ONE"
+  echo "TERM -> single rank pid $ONE (launcher $LAUNCHER, ranks: $(pgrep -P "$LAUNCHER" | tr '\n' ' ')) at $(date -Is)"; kill -TERM "$ONE"   # TERM, as the chain script sends it: a rank under dynamo never ran its USR1 handler (2026-09-09)
 fi
 wait $LEG; RC1=$?
 echo "leg1 rc=$RC1  latest_state=$( [ -d "$RUN/latest_state" ] && echo yes || echo no )  preempt_lines=$(grep -c 'exiting cleanly' "$RUN/train.err")"

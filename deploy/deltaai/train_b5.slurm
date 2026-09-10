@@ -25,7 +25,13 @@ WORK=$SCRATCH/transgenic
 # SIF is an env override like STEPS/TIER (sbatch --export=ALL,SIF=...), so another NGC tag can be tried
 # without editing this file. The job prints which image it ran in; #18 must cite that line.
 SIF=${SIF:-$SCRATCH/containers/transgenic-ngc.sif}
+# REPO_DIR (2026-09-10): the checkout bound at /work/repo inside the container. Seed 123 runs from the frozen
+# $WORK/repo (08f3e2b); seeds 456/789 run the DDP-fixed trainer from a second frozen checkout (A44), and the
+# frozen checkout must not change under a running chain. Exported so every resubmitted link uses the same one.
+export REPO_DIR=${REPO_DIR:-$WORK/repo}
 [ -s "$SIF" ] || { echo "REFUSED: SIF not found: $SIF" >&2; exit 3; }
+[ -d "$REPO_DIR/.git" ] || { echo "REFUSED: REPO_DIR is not a git checkout: $REPO_DIR" >&2; exit 3; }
+echo "repo: $REPO_DIR @ $(git -C "$REPO_DIR" log --oneline -1 | cut -c1-60)"
 echo "image: $SIF"; apptainer exec "$SIF" cat /opt/transgenic/IMAGE_INFO 2>/dev/null || echo "image: (no IMAGE_INFO)"
 # SLURM_GPUS_ON_NODE is always a bare integer and is set for every request form.
 # SLURM_GPUS_PER_NODE echoes the submitter's string (can be nvidia_gh200_120gb:4) and is
@@ -47,7 +53,7 @@ export NCCL_DEBUG=WARN OMP_NUM_THREADS=8 WANDB_MODE=${WANDB_MODE:-offline}
 # Needs a passphrase-less key on this host (RSYNC_SSH="ssh -i ~/.ssh/id_ed25519_sync") authorised on the destination.
 mkdir -p "$RUN_HOST"
 if [ -n "${SYNC_DEST:-}" ]; then
-  KEEP_LOCAL=${KEEP_LOCAL:-3} SYNC_OPTIMIZER=${SYNC_OPTIMIZER:-0} INTERVAL=${SYNC_INTERVAL:-300}     bash "$WORK/repo/deploy/deltaai/sync_watch.sh" "$RUN_HOST" "$SYNC_DEST" > "$RUN_HOST/sync.log" 2>&1 &
+  KEEP_LOCAL=${KEEP_LOCAL:-3} SYNC_OPTIMIZER=${SYNC_OPTIMIZER:-0} INTERVAL=${SYNC_INTERVAL:-300}     bash "$REPO_DIR/deploy/deltaai/sync_watch.sh" "$RUN_HOST" "$SYNC_DEST" > "$RUN_HOST/sync.log" 2>&1 &
   SYNC_PID=$!
   # the trainer itself writes TRAINING_DONE on a clean finish; on failure we only stop the watcher (no marker)
   trap 'wait $SYNC_PID 2>/dev/null' EXIT
@@ -68,7 +74,7 @@ for _g in $(seq 0 $((GPUS - 1))); do
 done
 _launch() {   # start the container; TRAIN_PID and ERR_OFF (train.err size before THIS attempt) are set for the caller
   ERR_OFF=$(stat -c %s "$RUN_HOST/train.err" 2>/dev/null || echo 0)
-  apptainer exec --nv --writable-tmpfs --bind "$WORK":/work "$SIF" bash -lc "
+  apptainer exec --nv --writable-tmpfs --bind "$WORK":/work --bind "$REPO_DIR":/work/repo "$SIF" bash -lc "
     cd /work/repo && export PYTHONPATH=/work/repo/src &&
     bash deploy/deltaai/preflight_b5.sh --bundle /work --repo /work/repo &&
     mkdir -p $RUN &&
@@ -144,7 +150,7 @@ elif [ -f "$FORCED" ]; then
   rm -f "$FORCED"
   if [ "$CHAIN_N" -ge "$CHAIN_MAX" ]; then echo "forced preemption (rc=$TRAIN_RC) at chain limit $CHAIN_MAX; not resubmitting"; exit 1; fi
   echo "forced preemption (rc=$TRAIN_RC); resubmitting chain job $((CHAIN_N + 1)) from the last latest_state"
-  sbatch --gpus-per-node=$GPUS ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=0 "$WORK/repo/deploy/deltaai/train_b5.slurm"
+  sbatch --gpus-per-node=$GPUS --cpus-per-task=${SLURM_CPUS_PER_TASK:-16} ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=0 "$REPO_DIR/deploy/deltaai/train_b5.slurm"
 elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNCH_RETRY:-0}" -lt "${LAUNCH_RETRY_MAX:-1}" ] \
      && tail -c +$((ERR_OFF + 1)) "$RUN_HOST/train.err" 2>/dev/null | grep -F "CUDA error: unspecified launch failure" > /dev/null; then
   # A node-side failure, not a code failure: `unspecified launch failure` has hit gh062 (x2), gh093 and gh121
@@ -158,7 +164,7 @@ elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNC
   export EXCLUDE_NODES="${EXCLUDE_NODES:+$EXCLUDE_NODES,}$SLURM_NODELIST"
   [ -z "${SYNC_PID:-}" ] || { kill "$SYNC_PID" 2>/dev/null || true; wait "$SYNC_PID" 2>/dev/null || true; }
   echo "launch failure on $SLURM_NODELIST twice (rc=$TRAIN_RC); resubmitting chain job $CHAIN_N with --exclude=$EXCLUDE_NODES (retry $((${LAUNCH_RETRY:-0} + 1))/${LAUNCH_RETRY_MAX:-1})"
-  sbatch --gpus-per-node=$GPUS ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$CHAIN_N,CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=$((${LAUNCH_RETRY:-0} + 1)) "$WORK/repo/deploy/deltaai/train_b5.slurm"
+  sbatch --gpus-per-node=$GPUS --cpus-per-task=${SLURM_CPUS_PER_TASK:-16} ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$CHAIN_N,CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=$((${LAUNCH_RETRY:-0} + 1)) "$REPO_DIR/deploy/deltaai/train_b5.slurm"
   exit 1
 elif [ -f "$RUN_HOST/TRAINING_FAILED" ] || [ "$TRAIN_RC" -ne 0 ]; then
   echo "training failed (rc=$TRAIN_RC); not resubmitting"; touch "$RUN_HOST/TRAINING_FAILED"
@@ -169,7 +175,7 @@ else
   # --gpus-per-node must be repeated on the command line: the directive is fixed at 1 and an
   # --export=GPUS alone would silently drop a 4-GPU chain to one GPU on the next link.
   # EXCLUDE_NODES (if any) is inherited through --export=ALL from this job's environment; LAUNCH_RETRY resets per link.
-  sbatch --gpus-per-node=$GPUS ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=0 "$WORK/repo/deploy/deltaai/train_b5.slurm"
+  sbatch --gpus-per-node=$GPUS --cpus-per-task=${SLURM_CPUS_PER_TASK:-16} ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=0 "$REPO_DIR/deploy/deltaai/train_b5.slurm"
 fi
 
 # After each epoch: python revision/scripts/60_epoch_budget.py --log $RUN/train.err --patience 3

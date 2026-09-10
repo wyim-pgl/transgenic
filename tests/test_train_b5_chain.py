@@ -100,7 +100,7 @@ def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "
     harness = "set -euo pipefail\n"        # the real script runs under errexit: a stray non-zero status must not end it
     harness += f'PATH="{binq}:$PATH"\nRUN_HOST="{run}"\nERR_OFF={off}\nTRAIN_RC={rc}\n'
     harness += 'WATCHDOG=${WATCHDOG:-}\n'
-    harness += 'WORK=/w; SEED=456; GPUS=4; SLURM_JOB_ID=1; SLURM_NODELIST=gh121\nFORCED="$RUN_HOST/FORCED_PREEMPT.$SLURM_JOB_ID"\n'
+    harness += 'WORK=/w; REPO_DIR=/w/repo; SEED=456; GPUS=4; SLURM_JOB_ID=1; SLURM_NODELIST=gh121\nFORCED="$RUN_HOST/FORCED_PREEMPT.$SLURM_JOB_ID"\n'
     harness += 'CHAIN_N=${CHAIN_N:-1}; CHAIN_MAX=${CHAIN_MAX:-8}\n'
     harness += _decision_block()
     out = subprocess.run(["bash", "-c", harness], capture_output=True, text=True, timeout=30,
