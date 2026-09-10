@@ -200,6 +200,8 @@ class CheckpointLayout:
         ls = self.latest_state_dir()
         if os.path.isdir(os.path.join(ls, "accelerate_state")):
             cands.append(ls)
+        elif os.path.isdir(os.path.join(ls + ".prev", "accelerate_state")):
+            cands.append(ls + ".prev")          # publication was interrupted between the two renames
         if not cands:
             return None
 

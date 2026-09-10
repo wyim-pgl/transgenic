@@ -223,3 +223,42 @@ def test_a_finished_watchdog_does_not_end_the_link_under_errexit(tmp_path):
     # killed the batch script before the resubmit decision.
     r = _decide(tmp_path, rc=137, forced_preempt=True, env={"WATCHDOG": "999999"})
     assert "SBATCH_ARGS:" in r["out"] and "CHAIN_N=2," in r["out"] and r["code"] == 0
+
+
+# ---------------------------------------------------------------------------------------------------
+# Runtime identity (A44, 2026-09-10): the first link records image/checkout/GPUs/CPUs/torch/policies and a later
+# link under a different identity is refused unless RUNTIME_OVERRIDE=1.
+# ---------------------------------------------------------------------------------------------------
+
+def _identity_block() -> str:
+    src = SCRIPT.read_text()
+    m = re.search(r"^IDENT=.*?^echo \"runtime identity: .*?\n", src, re.S | re.M)
+    assert m, "runtime identity block not found in train_b5.slurm"
+    return m.group(0)
+
+
+def _identity_run(tmp_path: Path, *, gpus: str, env: dict | None = None) -> subprocess.CompletedProcess:
+    run = tmp_path / "run"; run.mkdir(exist_ok=True)
+    sif = tmp_path / "img.sif"; sif.write_text("x"); (tmp_path / "img.sif.sha256").write_text("abc123  img.sif\n")
+    repo = tmp_path / "repo"
+    if not (repo / ".git").exists():
+        repo.mkdir(); subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        (repo / "f").write_text("1"); subprocess.run(["git", "-C", str(repo), "add", "f"], check=True)
+        subprocess.run(["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x"], check=True)
+    binq = tmp_path / "bin"; binq.mkdir(exist_ok=True)
+    (binq / "apptainer").write_text("#!/bin/bash\necho 2.14.0a0\n"); (binq / "apptainer").chmod(0o755)
+    harness = f'set -euo pipefail\nPATH="{binq}:$PATH"\nRUN_HOST="{run}"\nSIF="{sif}"\nREPO_DIR="{repo}"\nGPUS={gpus}\n' + _identity_block()
+    return subprocess.run(["bash", "-c", harness], capture_output=True, text=True, timeout=30,
+                          env={**{"PATH": "/usr/bin:/bin"}, **(env or {})})
+
+
+def test_runtime_identity_is_recorded_then_enforced(tmp_path):
+    first = _identity_run(tmp_path, gpus="4")
+    assert first.returncode == 0 and "runtime identity: sif=img.sif sif_sha256=abc123" in first.stdout
+    assert "gpus=4" in (tmp_path / "run" / "runtime_identity.txt").read_text()
+    same = _identity_run(tmp_path, gpus="4")
+    assert same.returncode == 0
+    changed = _identity_run(tmp_path, gpus="1")
+    assert changed.returncode == 3 and "REFUSED: runtime identity differs" in changed.stderr
+    forced = _identity_run(tmp_path, gpus="1", env={"RUNTIME_OVERRIDE": "1"})
+    assert forced.returncode == 0 and "gpus=1" in (tmp_path / "run" / "runtime_identity.txt").read_text()

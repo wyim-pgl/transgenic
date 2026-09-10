@@ -110,7 +110,8 @@ PYX
 )
 case "$TOK" in
   THREE)        ok "tokenizer emits exactly <s> <empty> </s> (tokenised, #58 / A40)";;
-  THREE_SOURCE*) ok "tokenizer declares <s> <empty> </s> (SOURCE CHECK ONLY - tokenised check failed: ${TOK#THREE_SOURCE }; #58 / A40)";;
+  THREE_SOURCE*) if [ "${PREFLIGHT_ALLOW_SOURCE:-0}" = 1 ]; then ok "tokenizer declares <s> <empty> </s> (SOURCE CHECK ONLY, PREFLIGHT_ALLOW_SOURCE=1 - tokenised check failed: ${TOK#THREE_SOURCE }; #58 / A40)";
+                 else bad "tokenizer: tokenised check failed (${TOK#THREE_SOURCE }); the source-only verdict is not accepted for a launch (set PREFLIGHT_ALLOW_SOURCE=1 to diagnose)"; fi;;
   WRONG*)       bad "tokenizer emits $TOK, not three tokens (#58 / A40)";;
   MISSING*)     bad "tokenizer: the three-token empty target is not declared (#58 / A40)";;
   *)            bad "tokenizer: could not verify - $TOK";;

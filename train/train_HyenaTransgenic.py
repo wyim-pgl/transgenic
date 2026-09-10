@@ -415,8 +415,15 @@ def train(
         if is_main:
             _write_json(os.path.join(tmp, "meta.json"), {"epoch": epoch0, "step": step, "global_step": global_step,
                                                          "best_eval_score": stopper.best, "seed": seed, "stopper": stopper.state()})
-            shutil.rmtree(layout.latest_state_dir(), ignore_errors=True)
-            os.rename(tmp, layout.latest_state_dir())
+            # Publish by renames only: the previous checkpoint is never deleted before the new one is in place
+            # (Codex 2026-09-10: rmtree-then-rename left only latest_state.tmp, which resume ignores, when a
+            # kill landed in between; resume_dir also accepts latest_state.prev while this window is open).
+            final, prev = layout.latest_state_dir(), layout.latest_state_dir() + ".prev"
+            shutil.rmtree(prev, ignore_errors=True)
+            if os.path.isdir(final):
+                os.rename(final, prev)
+            os.rename(tmp, final)
+            shutil.rmtree(prev, ignore_errors=True)
             print(f"latest_state saved at epoch {epoch0} step {step} global_step {global_step}", file=sys.stderr)
         barrier()
 

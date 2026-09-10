@@ -32,7 +32,8 @@ export REPO_DIR=${REPO_DIR:-$WORK/repo}
 [ -s "$SIF" ] || { echo "REFUSED: SIF not found: $SIF" >&2; exit 3; }
 [ -d "$REPO_DIR/.git" ] || { echo "REFUSED: REPO_DIR is not a git checkout: $REPO_DIR" >&2; exit 3; }
 echo "repo: $REPO_DIR @ $(git -C "$REPO_DIR" log --oneline -1 | cut -c1-60)"
-echo "image: $SIF"; apptainer exec "$SIF" cat /opt/transgenic/IMAGE_INFO 2>/dev/null || echo "image: (no IMAGE_INFO)"
+echo "image: $SIF"
+apptainer exec "$SIF" cat /opt/transgenic/IMAGE_INFO 2>/dev/null || echo "image: (no IMAGE_INFO)"
 # SLURM_GPUS_ON_NODE is always a bare integer and is set for every request form.
 # SLURM_GPUS_PER_NODE echoes the submitter's string (can be nvidia_gh200_120gb:4) and is
 # unset for --gres=gpu:N or --gpus=N, which would silently run 1 process on 4 GPUs.
@@ -72,6 +73,24 @@ for _g in $(seq 0 $((GPUS - 1))); do
   CUDA_VISIBLE_DEVICES=$_g apptainer exec --nv "$SIF" python -c "import torch; torch.ones(1).cuda(); torch.cuda.synchronize(); print('gpu warm-up ok: device $_g')" \
     || echo "gpu warm-up failed on device $_g (rc=$?); the trainer launch follows anyway"
 done
+# Runtime identity (A44, 2026-09-10): the first link records image, checkout, GPUs, CPUs, torch, checkpointing
+# and compile policy next to the run; every later link refuses to continue under a different identity
+# (run_config.json compares recipe fields only, so a changed SIF or checkout passed A28 silently).
+IDENT=$RUN_HOST/runtime_identity.txt
+_identity() {
+  local sha; sha=$(cut -d' ' -f1 "$SIF.sha256" 2>/dev/null); [ -n "$sha" ] || sha=$(sha256sum "$SIF" | cut -d' ' -f1)
+  printf 'sif=%s\nsif_sha256=%s\nrepo=%s\ngpus=%s\ncpus=%s\ntorch=%s\ncheckpointing=%s\ncompile=%s\n' \
+    "$(basename "$SIF")" "$sha" "$(git -C "$REPO_DIR" rev-parse HEAD)" "$GPUS" "${SLURM_CPUS_PER_TASK:-16}" \
+    "$(apptainer exec "$SIF" python -c 'import torch; print(torch.__version__)' 2>/dev/null || echo unknown)" \
+    "${TRANSGENIC_CKPT_REENTRANT:+reentrant}${TRANSGENIC_CKPT_REENTRANT:-nonreentrant}" "${TRANSGENIC_NO_COMPILE:+off}${TRANSGENIC_NO_COMPILE:-on}"
+}
+mkdir -p "$RUN_HOST"
+NEWID=$(_identity)
+if [ -s "$IDENT" ] && [ "$NEWID" != "$(cat "$IDENT")" ]; then
+  if [ "${RUNTIME_OVERRIDE:-0}" = 1 ]; then echo "runtime identity changed under RUNTIME_OVERRIDE=1; recording the new one"; echo "$NEWID" > "$IDENT"
+  else echo "REFUSED: runtime identity differs from the run's $IDENT (RUNTIME_OVERRIDE=1 to accept):" >&2; diff <(echo "$NEWID") "$IDENT" >&2 || true; exit 3; fi
+elif [ ! -s "$IDENT" ]; then echo "$NEWID" > "$IDENT"; fi
+echo "runtime identity: $(tr '\n' ' ' < "$IDENT")"
 _launch() {   # start the container; TRAIN_PID and ERR_OFF (train.err size before THIS attempt) are set for the caller
   ERR_OFF=$(stat -c %s "$RUN_HOST/train.err" 2>/dev/null || echo 0)
   apptainer exec --nv --writable-tmpfs --bind "$WORK":/work --bind "$REPO_DIR":/work/repo "$SIF" bash -lc "
