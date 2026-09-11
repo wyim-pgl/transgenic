@@ -85,7 +85,7 @@ def _decision_block() -> str:
 def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "", env: dict | None = None,
             forced_preempt: bool = False) -> dict:
     """Run the decision block with a stub sbatch; return exit code, stdout, stub args/env, marker state."""
-    run = tmp_path / "run"; run.mkdir()
+    run = tmp_path / "run"; run.mkdir(exist_ok=True)
     if forced_preempt:
         (run / "FORCED_PREEMPT.1").write_text("")        # job-scoped marker; the harness uses SLURM_JOB_ID=1
     err = run / "train.err"
@@ -93,7 +93,7 @@ def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "
     off = err.stat().st_size
     with err.open("a") as fh:
         fh.write(err_after)
-    binq = tmp_path / "bin"; binq.mkdir()
+    binq = tmp_path / "bin"; binq.mkdir(exist_ok=True)
     stub = binq / "sbatch"
     stub.write_text('#!/bin/bash\necho "SBATCH_ARGS: $*"\necho "SBATCH_ENV_EXCLUDE: ${EXCLUDE_NODES:-<unset>}"\necho "Submitted batch job 999"\n')
     stub.chmod(0o755)
@@ -223,6 +223,145 @@ def test_a_finished_watchdog_does_not_end_the_link_under_errexit(tmp_path):
     # killed the batch script before the resubmit decision.
     r = _decide(tmp_path, rc=137, forced_preempt=True, env={"WATCHDOG": "999999"})
     assert "SBATCH_ARGS:" in r["out"] and "CHAIN_N=2," in r["out"] and r["code"] == 0
+
+
+# ---------------------------------------------------------------------------------------------------
+# Pre-queued chain (A45, 2026-09-11; Codex review): with CHAIN_PRESUBMITTED=1 no branch may call sbatch; a finished
+# or failed run cancels the queued successors (found by --comment=seed$SEED), a node launch failure pushes the
+# exclusion onto them with scontrol update, and clean/forced boundaries simply end the link.
+# ---------------------------------------------------------------------------------------------------
+
+def _decide_pre(tmp_path: Path, *, rc: int, err_after: str = "", env: dict | None = None, forced_preempt: bool = False,
+                done: bool = False, successors: str = "7 seed456\n8 seed456\n9 seed789\n") -> dict:
+    """_decide with CHAIN_PRESUBMITTED=1 and stub squeue/scancel/scontrol; the stub queue lists `successors`."""
+    binq = tmp_path / "bin"; binq.mkdir(exist_ok=True)
+    (binq / "squeue").write_text(f'#!/bin/bash\nprintf "%s" "{successors}"\n')
+    (binq / "scancel").write_text('#!/bin/bash\necho "SCANCEL: $*"\n')
+    (binq / "scontrol").write_text('#!/bin/bash\necho "SCONTROL: $*"\n')
+    for f in ("squeue", "scancel", "scontrol"):
+        (binq / f).chmod(0o755)
+    if done:
+        run = tmp_path / "run"; run.mkdir(exist_ok=True); (run / "TRAINING_DONE").write_text("")
+    r = _decide(tmp_path, rc=rc, err_after=err_after, forced_preempt=forced_preempt,
+                env={**{"CHAIN_PRESUBMITTED": "1", "USER": "t"}, **(env or {})})
+    return r
+
+
+def test_presubmitted_clean_link_does_not_resubmit(tmp_path):
+    r = _decide_pre(tmp_path, rc=0)
+    assert "SBATCH_ARGS:" not in r["out"] and "SCANCEL" not in r["out"] and r["code"] == 0
+    assert "pre-queued next link continues" in r["out"]
+
+
+def test_presubmitted_forced_preemption_does_not_resubmit_and_clears_the_marker(tmp_path):
+    r = _decide_pre(tmp_path, rc=137, forced_preempt=True)
+    assert "SBATCH_ARGS:" not in r["out"] and r["code"] == 0 and not r["forced_marker"] and not r["failed_marker"]
+
+
+def test_presubmitted_finished_run_cancels_only_this_seeds_queued_links(tmp_path):
+    r = _decide_pre(tmp_path, rc=0, done=True)
+    assert "SCANCEL: 7" in r["out"] and "SCANCEL: 8" in r["out"] and "SCANCEL: 9" not in r["out"]
+    assert "SBATCH_ARGS:" not in r["out"] and r["code"] == 0
+
+
+def test_presubmitted_trainer_failure_marks_and_cancels_the_successors(tmp_path):
+    r = _decide_pre(tmp_path, rc=1, err_after="Traceback (most recent call last):\nValueError: boom\n")
+    assert r["failed_marker"] and r["code"] != 0 and "SCANCEL: 7" in r["out"] and "SBATCH_ARGS:" not in r["out"]
+
+
+def test_presubmitted_launch_failure_excludes_the_node_on_the_queued_links(tmp_path):
+    r = _decide_pre(tmp_path, rc=1, err_after="x\n" + LAUNCH, env={"EXCLUDE_NODES": "gh[062,093]"})
+    assert "SBATCH_ARGS:" not in r["out"] and r["code"] != 0 and not r["failed_marker"]
+    assert "SCONTROL: update JobId=7 ExcNodeList=gh[062,093],gh121" in r["out"]
+    assert "SCONTROL: update JobId=8 ExcNodeList=gh[062,093],gh121" in r["out"] and "JobId=9" not in r["out"]
+
+
+def test_presubmitted_mode_does_not_change_the_self_resubmitting_chain(tmp_path):
+    # CHAIN_PRESUBMITTED unset: the 2026-09-09/10 behaviour is byte-for-byte the same decision
+    r = _decide(tmp_path, rc=0)
+    assert "SBATCH_ARGS:" in r["out"] and "CHAIN_N=2," in r["out"]
+
+
+def _guard_block() -> str:
+    src = SCRIPT.read_text()
+    m = re.search(r'^if \[ -f "\$RUN_HOST/TRAINING_DONE" \]; then echo "training already finished.*?^export EXCLUDE_NODES\n', src, re.S | re.M)
+    assert m, "start-of-link guard block not found in train_b5.slurm"
+    return m.group(0)
+
+
+def _guard_run(tmp_path: Path, *, running_jobs: str = "", job_id: str = "5", exc: str = "(null)",
+               env: dict | None = None) -> subprocess.CompletedProcess:
+    run = tmp_path / "run"; run.mkdir(exist_ok=True)
+    binq = tmp_path / "bin"; binq.mkdir(exist_ok=True)
+    # squeue -j ID -h -o %T: RUNNING for a listed id, empty for a purged one; SQUEUE_FAIL=<text> simulates an outage
+    (binq / "squeue").write_text(f'#!/bin/bash\n[ -n "${{SQUEUE_FAIL:-}}" ] && {{ echo "$SQUEUE_FAIL"; exit 1; }}\nfor j in {running_jobs}; do [ "$j" = "$2" ] && echo RUNNING; done; true\n')
+    (binq / "scontrol").write_text(f'#!/bin/bash\necho "JobId={job_id} ExcNodeList={exc} NumNodes=1"\n')
+    for f in ("squeue", "scontrol"):
+        (binq / f).chmod(0o755)
+    harness = f'set -euo pipefail\nPATH="{binq}:$PATH"\nRUN_HOST="{run}"\nSLURM_JOB_ID={job_id}\n' + _guard_block() + 'echo "GUARD_PASSED exclude=[$EXCLUDE_NODES]"\n'
+    return subprocess.run(["bash", "-c", harness], capture_output=True, text=True, timeout=30,
+                          env={**{"PATH": "/usr/bin:/bin"}, **(env or {})})
+
+
+def test_guard_runs_before_anything_touches_the_gpus():
+    src = SCRIPT.read_text()
+    guard = src.index('if [ -f "$RUN_HOST/TRAINING_DONE" ]; then echo "training already finished')
+    assert guard < src.index("gpu warm-up ok") and guard < src.index("SYNC_DEST") and guard < src.index("_launch()")
+
+
+def test_guard_finished_run_exits_zero_without_starting(tmp_path):
+    (tmp_path / "run").mkdir(); (tmp_path / "run" / "TRAINING_DONE").write_text("")
+    r = _guard_run(tmp_path)
+    assert r.returncode == 0 and "nothing to do" in r.stdout and "GUARD_PASSED" not in r.stdout
+
+
+def test_guard_failed_run_is_refused(tmp_path):
+    (tmp_path / "run").mkdir(); (tmp_path / "run" / "TRAINING_FAILED").write_text("")
+    r = _guard_run(tmp_path)
+    assert r.returncode == 1 and "REFUSED" in r.stderr and "GUARD_PASSED" not in r.stdout
+
+
+def test_guard_refuses_while_another_link_of_the_seed_is_running(tmp_path):
+    (tmp_path / "run").mkdir(); (tmp_path / "run" / "LINK_ACTIVE.4").write_text("")
+    r = _guard_run(tmp_path, running_jobs="4")
+    assert r.returncode == 3 and "is still RUNNING" in r.stderr and "GUARD_PASSED" not in r.stdout
+    assert (tmp_path / "run" / "LINK_ACTIVE.4").exists(), "the running link's marker must be left alone"
+
+
+def test_guard_ignores_a_stale_marker_and_records_its_own(tmp_path):
+    (tmp_path / "run").mkdir(); (tmp_path / "run" / "LINK_ACTIVE.4").write_text("")
+    r = _guard_run(tmp_path, running_jobs="")
+    assert r.returncode == 0 and "GUARD_PASSED" in r.stdout
+    assert not (tmp_path / "run" / "LINK_ACTIVE.4").exists()
+    # the EXIT trap removes this link's own marker at the end of the harness
+    assert not (tmp_path / "run" / "LINK_ACTIVE.5").exists()
+
+
+def test_guard_fails_closed_when_squeue_cannot_answer(tmp_path):
+    # Codex 2026-09-11: an outage must not read as "not running"
+    (tmp_path / "run").mkdir(); (tmp_path / "run" / "LINK_ACTIVE.4").write_text("")
+    r = _guard_run(tmp_path, env={"SQUEUE_FAIL": "slurm_load_jobs error: Unable to contact slurm controller"})
+    assert r.returncode == 3 and "cannot confirm" in r.stderr and "GUARD_PASSED" not in r.stdout
+    assert (tmp_path / "run" / "LINK_ACTIVE.4").exists()
+
+
+def test_guard_treats_a_purged_job_id_as_stale(tmp_path):
+    (tmp_path / "run").mkdir(); (tmp_path / "run" / "LINK_ACTIVE.4").write_text("")
+    r = _guard_run(tmp_path, env={"SQUEUE_FAIL": "slurm_load_jobs error: Invalid job id specified"})
+    assert r.returncode == 0 and "GUARD_PASSED" in r.stdout and not (tmp_path / "run" / "LINK_ACTIVE.4").exists()
+
+
+def test_submit_chain_refuses_a_non_integer_seed(tmp_path):
+    r = subprocess.run(["bash", str(ROOT / "deploy" / "deltaai" / "submit_chain.sh"), "45,6"], capture_output=True, text=True,
+                       env={"PATH": "/usr/bin:/bin", "SIF": str(SCRIPT), "REPO_DIR": str(ROOT)}, timeout=30)
+    assert r.returncode == 3 and "SEED must be an integer" in r.stderr
+
+
+def test_guard_seeds_exclusions_from_the_submission(tmp_path):
+    r = _guard_run(tmp_path, exc="gh[062,093]")
+    assert "GUARD_PASSED exclude=[gh[062,093]]" in r.stdout
+    r2 = _guard_run(tmp_path)
+    assert "GUARD_PASSED exclude=[]" in r2.stdout
 
 
 # ---------------------------------------------------------------------------------------------------

@@ -18,6 +18,10 @@
 # One B5 seed per job chain (protocol A28): sbatch --export=ALL,SEED=456 deploy/deltaai/train_b5.slurm
 # The job saves a resumable latest_state every N optimizer steps and on SIGUSR1 (sent 15 min before the wall-clock
 # limit), then resubmits itself with --dependency=afterany until TRAINING_DONE (or TRAINING_FAILED) exists.
+# Pre-queued chain (A45, 2026-09-11): deploy/deltaai/submit_chain.sh submits every link of a seed up front, link k+1
+# with --dependency=afterany:<link k>, all links carrying --comment=seed$SEED and CHAIN_PRESUBMITTED=1. In that mode
+# this script never resubmits anything: a clean or forced boundary is followed by the already-queued next link, a
+# node launch failure is pushed onto the queued links as ExcNodeList, and a finished or failed run cancels them.
 set -euo pipefail
 : "${SCRATCH:=/work/nvme/bilv/$USER}"   # DeltaAI has no /scratch and no $SCRATCH. Docs: /work/hdd for large job I/O, /work/nvme for many small I/Os; both Lustre, 1 TB default
 command -v apptainer >/dev/null 2>&1 || module load apptainer   # DeltaAI ships /usr/bin/apptainer with no module
@@ -38,6 +42,35 @@ apptainer exec "$SIF" cat /opt/transgenic/IMAGE_INFO 2>/dev/null || echo "image:
 # SLURM_GPUS_PER_NODE echoes the submitter's string (can be nvidia_gh200_120gb:4) and is
 # unset for --gres=gpu:N or --gpus=N, which would silently run 1 process on 4 GPUs.
 SEED=${SEED:?set SEED=123|456|789}; GPUS=${SLURM_GPUS_ON_NODE:-${GPUS:-1}}; RUN=/work/runs/seed$SEED; RUN_HOST=$WORK/runs/seed$SEED
+# A link that starts after the run has ended must not touch the GPUs (a pre-queued link, or a stray resubmission):
+# the terminal markers are checked HERE, before the sync watcher, the GPU warm-up and the launch (Codex 2026-09-11).
+if [ -f "$RUN_HOST/TRAINING_DONE" ]; then echo "training already finished ($RUN_HOST/TRAINING_DONE); this link has nothing to do"; exit 0; fi
+if [ -f "$RUN_HOST/TRAINING_FAILED" ]; then echo "REFUSED: $RUN_HOST/TRAINING_FAILED exists; remove it deliberately before running another link" >&2; exit 1; fi
+# Two links of one seed must never share the run directory (both would resume latest_state and publish over each
+# other). LINK_ACTIVE.<jobid> names the running link; a marker left by a killed job is ignored once that job is no
+# longer running, so a crash does not lock the seed out.
+# The check fails closed (Codex 2026-09-11): a squeue outage is "cannot confirm", not "not running"; only a clean
+# empty answer or Slurm's own "Invalid job id" (the job has left the controller) marks the marker stale.
+for _m in "$RUN_HOST"/LINK_ACTIVE.*; do
+  [ -e "$_m" ] || continue
+  _j=${_m##*.}
+  [ "$_j" != "${SLURM_JOB_ID:-}" ] || continue
+  if _q=$(squeue -j "$_j" -h -o %T 2>&1); then
+    if [ -n "$_q" ]; then echo "REFUSED: link job $_j is still $_q on $RUN_HOST ($_m); this link (${SLURM_JOB_ID:-?}) exits without touching the run" >&2; exit 3; fi
+  else
+    case "$_q" in *"Invalid job id"*) ;;   # purged from the controller: stale marker
+      *) echo "REFUSED: cannot confirm that link job $_j ($_m) has ended (squeue: $_q); refusing rather than sharing $RUN_HOST" >&2; exit 3;; esac
+  fi
+  rm -f "$_m"
+done
+mkdir -p "$RUN_HOST"; touch "$RUN_HOST/LINK_ACTIVE.${SLURM_JOB_ID:-0}"
+trap 'rm -f "$RUN_HOST/LINK_ACTIVE.${SLURM_JOB_ID:-0}"' EXIT
+# The submission's own --exclude list seeds EXCLUDE_NODES, so a launch failure found later extends it instead of
+# replacing it (scontrol prints a hostlist such as gh[062,093]; sbatch --exclude and ExcNodeList accept that form).
+if [ -z "${EXCLUDE_NODES:-}" ] && [ -n "${SLURM_JOB_ID:-}" ]; then
+  EXCLUDE_NODES=$(scontrol show job "$SLURM_JOB_ID" 2>/dev/null | grep -oE 'ExcNodeList=[^ ]+' | cut -d= -f2 | grep -v '^(null)$' || true)
+fi
+export EXCLUDE_NODES
 # Triton must be told where apptainer --nv put the host driver. Inside the container the image's ldconfig
 # points at /usr/local/cuda/compat/lib/libcuda.so.1, which does not exist, while the real library is
 # bound at /.singularity.d/libs/libcuda.so.1; without this, torch.compile dies at the first forward with
@@ -57,7 +90,7 @@ if [ -n "${SYNC_DEST:-}" ]; then
   KEEP_LOCAL=${KEEP_LOCAL:-3} SYNC_OPTIMIZER=${SYNC_OPTIMIZER:-0} INTERVAL=${SYNC_INTERVAL:-300}     bash "$REPO_DIR/deploy/deltaai/sync_watch.sh" "$RUN_HOST" "$SYNC_DEST" > "$RUN_HOST/sync.log" 2>&1 &
   SYNC_PID=$!
   # the trainer itself writes TRAINING_DONE on a clean finish; on failure we only stop the watcher (no marker)
-  trap 'wait $SYNC_PID 2>/dev/null' EXIT
+  trap 'rm -f "$RUN_HOST/LINK_ACTIVE.${SLURM_JOB_ID:-0}"; wait $SYNC_PID 2>/dev/null' EXIT
 fi
 CHAIN_MAX=${CHAIN_MAX:-8}; CHAIN_N=${CHAIN_N:-1}
 # --writable-tmpfs: the SIF root is read-only; kept so library caches inside the image can write.
@@ -164,12 +197,33 @@ done
 # (`|| true`: under set -e a failing command after the last && ends the script -- the watchdog had already
 #  exited after forcing the preemption and the link died here without resubmitting, rehearsal 3119991)
 [ -z "${WATCHDOG:-}" ] || kill "$WATCHDOG" 2>/dev/null || true
-if [ -f "$RUN_HOST/TRAINING_DONE" ]; then echo "training finished"
+# Pre-queued chain helpers (A45): the successors of this link are my pending jobs that carry this seed's comment
+# (submit_chain.sh sets --comment=seed$SEED on every link). Nothing here resubmits; the queue already holds the chain.
+PRESUB=${CHAIN_PRESUBMITTED:-0}
+_successors() { squeue -u "${USER:-$(id -un)}" -h -t PD -o '%i %k' 2>/dev/null | awk -v c="seed$SEED" -v me="${SLURM_JOB_ID:-0}" '$2 == c && $1 != me { print $1 }'; }
+_cancel_successors() { local s; for s in $(_successors); do echo "cancelling pre-queued link $s (nothing left for it to do)"; scancel "$s" 2>/dev/null || true; done; }
+_exclude_on_successors() { local s; for s in $(_successors); do echo "pre-queued link $s now excludes $EXCLUDE_NODES"; scontrol update JobId="$s" ExcNodeList="$EXCLUDE_NODES" 2>/dev/null || echo "could not update ExcNodeList on $s"; done; }
+if [ -f "$RUN_HOST/TRAINING_DONE" ]; then
+  echo "training finished"
+  if [ "$PRESUB" = 1 ]; then _cancel_successors; fi
 elif [ -f "$FORCED" ]; then
   rm -f "$FORCED"
-  if [ "$CHAIN_N" -ge "$CHAIN_MAX" ]; then echo "forced preemption (rc=$TRAIN_RC) at chain limit $CHAIN_MAX; not resubmitting"; exit 1; fi
-  echo "forced preemption (rc=$TRAIN_RC); resubmitting chain job $((CHAIN_N + 1)) from the last latest_state"
-  sbatch --gpus-per-node=$GPUS --cpus-per-task=${SLURM_CPUS_PER_TASK:-16} ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=0 "$REPO_DIR/deploy/deltaai/train_b5.slurm"
+  if [ "$PRESUB" = 1 ]; then echo "forced preemption (rc=$TRAIN_RC); the pre-queued next link resumes the last latest_state"
+  else
+    if [ "$CHAIN_N" -ge "$CHAIN_MAX" ]; then echo "forced preemption (rc=$TRAIN_RC) at chain limit $CHAIN_MAX; not resubmitting"; exit 1; fi
+    echo "forced preemption (rc=$TRAIN_RC); resubmitting chain job $((CHAIN_N + 1)) from the last latest_state"
+    sbatch --gpus-per-node=$GPUS --cpus-per-task=${SLURM_CPUS_PER_TASK:-16} ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=0 "$REPO_DIR/deploy/deltaai/train_b5.slurm"
+  fi
+elif [ "$PRESUB" = 1 ] && [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] \
+     && tail -c +$((ERR_OFF + 1)) "$RUN_HOST/train.err" 2>/dev/null | grep -F "CUDA error: unspecified launch failure" > /dev/null; then
+  # Pre-queued chain: the same link is not resubmitted; the already-queued next link resumes the last published
+  # checkpoint (the same work), and it must not land on this node again. ExcNodeList of a pending job can be
+  # updated by its owner, which is how the exclusion reaches links that were submitted before the failure.
+  export EXCLUDE_NODES="${EXCLUDE_NODES:+$EXCLUDE_NODES,}$SLURM_NODELIST"
+  [ -z "${SYNC_PID:-}" ] || { kill "$SYNC_PID" 2>/dev/null || true; wait "$SYNC_PID" 2>/dev/null || true; }
+  echo "launch failure on $SLURM_NODELIST twice (rc=$TRAIN_RC); the pre-queued next link retries this work with --exclude=$EXCLUDE_NODES"
+  _exclude_on_successors
+  exit 1
 elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNCH_RETRY:-0}" -lt "${LAUNCH_RETRY_MAX:-1}" ] \
      && tail -c +$((ERR_OFF + 1)) "$RUN_HOST/train.err" 2>/dev/null | grep -F "CUDA error: unspecified launch failure" > /dev/null; then
   # A node-side failure, not a code failure: `unspecified launch failure` has hit gh062 (x2), gh093 and gh121
@@ -187,7 +241,9 @@ elif [ "$TRAIN_RC" -ne 0 ] && [ ! -f "$RUN_HOST/TRAINING_FAILED" ] && [ "${LAUNC
   exit 1
 elif [ -f "$RUN_HOST/TRAINING_FAILED" ] || [ "$TRAIN_RC" -ne 0 ]; then
   echo "training failed (rc=$TRAIN_RC); not resubmitting"; touch "$RUN_HOST/TRAINING_FAILED"
+  if [ "$PRESUB" = 1 ]; then _cancel_successors; fi
   exit 1    # sacct must show FAILED, not COMPLETED, for a link whose trainer died
+elif [ "$PRESUB" = 1 ]; then echo "link $CHAIN_N ended at its limit; the pre-queued next link continues from latest_state"
 elif [ "$CHAIN_N" -ge "$CHAIN_MAX" ]; then echo "chain limit $CHAIN_MAX reached; not resubmitting"
 else
   echo "resubmitting chain job $((CHAIN_N + 1))"
@@ -196,5 +252,6 @@ else
   # EXCLUDE_NODES (if any) is inherited through --export=ALL from this job's environment; LAUNCH_RETRY resets per link.
   sbatch --gpus-per-node=$GPUS --cpus-per-task=${SLURM_CPUS_PER_TASK:-16} ${EXCLUDE_NODES:+--exclude=$EXCLUDE_NODES} --dependency=afterany:$SLURM_JOB_ID --export=ALL,SEED=$SEED,GPUS=$GPUS,CHAIN_N=$((CHAIN_N + 1)),CHAIN_MAX=$CHAIN_MAX,LAUNCH_RETRY=0 "$REPO_DIR/deploy/deltaai/train_b5.slurm"
 fi
+exit 0   # every path that must end the link non-zero exits explicitly above (Codex 2026-09-11: no fall-through status)
 
 # After each epoch: python revision/scripts/60_epoch_budget.py --log $RUN/train.err --patience 3
