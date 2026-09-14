@@ -1,0 +1,68 @@
+# B6 work plan v1 — one model, two modes: de novo (sequence only) and evidence mode (sequence + aligned transcript/protein evidence)
+
+Status: work plan (not yet a frozen amendment). Author decision 2026-09-14: "de novo 모드 + 증거 모드로 방향을 정하고 진행". This plan incorporates the Codex adversarial reviews of 2026-09-14 (round 1, per-base auxiliary head: reject; round 2, evidence input channel: "reject the current specification; the direction merits a corrected pilot"). Every requirement below that came from those reviews is tagged [C1-n] / [C2-n] (round, finding number). Items marked FREEZE become text in amendment A46 before any B6 training run starts.
+
+## 1. Goal and claims
+- B5 (seed 123, running): the split-only retraining — reference GSF labels, sequence-only input. It stays the comparator for the leakage/context change and is **not modified** (A28).
+- B6: the same recipe plus an optional per-nucleotide **evidence channel**. Trained with channel dropout so one set of weights supports
+  - **de novo mode**: channel all-zero → sequence-only annotation; compared with Helixer/Tiberius and with B5;
+  - **evidence mode**: channel filled from the user's aligned ESTs/long reads/proteins → compared with BRAKER/MAKER/PASA-class tools.
+- Claims we will be able to make: (i) evidence-trained weights do not degrade de novo annotation beyond a pre-declared margin; (ii) supplying evidence at inference improves annotation, with a measured dose-response at fixed loci; (iii) completion mode (reference-prompted) works in both modes.
+- Claims we will NOT make: runtime/result neutrality between B5 and B6 (they differ in architecture and RNG; see controls), independence of A. thaliana ESTs (in-domain, locus-disjoint) [C1-8].
+
+## 2. Definitions to FREEZE (A46)
+1. Evidence sources and roles (A14 unchanged): training-side = nine training species' ESTs (A21-screened, A37 primary arm ≥ 100 nt; the ≥ 121 nt arm is a paired sensitivity arm wherever an EST-derived quantity is reported), ONT, Sequel II+ PacBio, protein alignments (A19/A43). Never: Z. mays, S. lycopersicum, A-ONT1, A-HiFi. Amends A9 (option J is now in scope as B6) and the scope sentence of A18 [C2-13].
+2. Observation schema = full C0 (IMPLEMENTATION_ORDER_B5_C0_C2_v1.md:34): `evidence_alignment`, `molecule_member`, `aligned_block` (ordered within a molecule), `junction_observation` (raw and ±3-nt-corrected coordinates for ONT, A20), `partial_chain`, `partial_chain_intron`, `junction`, `junction_support`, `chain_junction`; every row carries source, library, genotype stratum, role (`training_eligible` / `validation_only`), and provenance hashes [C1-9, C2-9].
+3. Molecule unit: EST = A11 clone-merged unit including all accession versions, mate reads and UniVec split parts; long read = A16 unit; protein = OrthoDB organism (A19). A molecule is one unit everywhere it appears [C1-7].
+4. Leakage exclusion (observation-level, before any raster) [C1-4, C1-5, C2-3, C2-5]:
+   a. Excluded intervals per species: strict held-out loci ± their seeded flank (A33: 50–150 nt, the exact seeded value per locus), test blocks (A29), genes of test orthogroups and, for training tiles, of valid orthogroups, A22 hard-flagged genes, A33 overlap components and decoy-masked genes, the `partial` span of any edge-crossing gene in a tile.
+   b. A molecule unit is dropped from ALL training-side tracks if any placement of any member (primary, supplementary, secondary-equivalent, `mapping_ambiguous`) overlaps an excluded interval on either strand. Because the frozen §3 command runs `--secondary=no` (est_align.sbatch:144), placements are recovered by a dedicated audit alignment (same command with `--secondary=yes -N 5`, used ONLY for exclusion, never for labels); molecules whose placements cannot be audited are excluded [C2-7].
+   c. Junction support at coordinates shared by an excluded gene and a neighbour is excluded [C1-5].
+   d. QC table (A16 completeness): per species/source — molecules in, excluded by cause (a–c), retained; for A. thaliana: molecules overlapping held-out loci = excluded count (retained must be 0).
+5. DNA masks: the tile builder's gene-containment mask leaves edge-crossing held-out DNA exposed (build_b5.py:561-567). B6 corpus build repairs this (mask the exposed span ± flank in train/valid tiles) and a **sequence-only comparator corpus is rebuilt with the same repair**, so B5-vs-B6 comparisons use identical DNA masking [C2-4]. Seed 123 (already running on the unrepaired corpus) is reported as is, with the exposure quantified.
+6. Tracks (per nucleotide, float16, built per tile from retained observations; observation→tile membership is kept so thinning re-rasterises) [C2-3]:
+   - per source (EST, ONT, PacBio) × strand: transcribed-block coverage log1p(molecules), clipped at log1p(64);
+   - per source × strand: donor and acceptor support log1p(molecules) on the boundary base;
+   - unknown-strand coverage (unoriented ESTs) per source;
+   - protein CDS coverage log1p(organisms) (phase channel deferred [C2-Q5]);
+   - source-availability mask per source (1 if the species/library has that source at all; dropped together with the source under dropout).
+   No reference-derived feature (no annotation-based junction snapping, no phase from the reference), no tile-wise normalisation [C2-Q5]. A18.4 weights are not used as input multipliers; counts and genotype/QC flags are separate channels.
+   RC tiles: coordinates reversed; donor/acceptor identity kept, strand channels swapped (tests/test_gsf_rc.py:26) [C2-new4].
+7. Model: `E = E_seq + Linear_noBias(K → d)(tracks)` applied to HyenaDNA's per-nucleotide states before the downsampling/skip path (modeling_HyenaTransgenic.py ~725) [C2-Q1]. Decoder, tokenizer, GSF target, grammar-constrained decoding (A24), tiling/stitching (A27) unchanged. Zero tracks ⇒ exact sequence-only path.
+8. Training: loss = L_GSF only. Channel dropout p = 0.5 per tile (frozen). When kept, the retained-molecule fraction is sampled from {0.01, 0.1, 0.5, 1} with a separate augmentation RNG stream (seeded; recorded); source-withholding (drop one source entirely) and library-withholding controls at a fixed rate. Stop rule: minimum de novo-mode validation L_GSF, patience 3, ceiling 22 (A18.6); one checkpoint (that best) is used for both modes; evidence-mode validation L_GSF is logged as a diagnostic [C2-Q4].
+9. Runtime identity adds: evidence DB sha256, track spec hash, p, thinning set, augmentation seed; resume whitelist extended (src/transgenic/training/b5_runtime.py:224) [C2-Q6].
+10. Validation evidence allocation [C2-new1, CRITICAL]: at every validation locus the evidence supplied as model INPUT and the evidence used to SCORE are disjoint sets, declared before inference: Z. mays — input = M-EST (screened today) + a declared subset of ONT/PacBio libraries; scoring = the remaining declared libraries (tier 1) and never the input set; A. thaliana strict held-out loci — input = A-EST (in-domain, locus-disjoint) + A-ONT2; scoring = A-ONT1 + A-HiFi (validation-only). The allocation is written into DATASET_ROLES with a new `b6_input` / `b6_score` column and hashed.
+11. Controls (pre-declared, same corpus, same initialisation, same data order, separate augmentation RNG) [C1-3, C2-Q2]:
+   - C1: B5 seed 123 (existing, unrepaired-mask corpus) — historical comparator;
+   - C1': sequence-only run on the repaired corpus (same seed as B6) — the matched comparator;
+   - C2: B6 architecture with tracks permanently zero (p = 1), **full duration**;
+   - C3: shuffled-evidence (tracks from a different tile of the same tier), matched budget;
+   - C4: presence-only tracks (binary), matched budget;
+   - C5: evidence-only reconstruction baseline (Protocol M splice-graph + ORF rule, no model) at the validation loci.
+12. Dose-response [C2-new2]: at a fixed panel of validation loci, evidence is thinned in nested subsets (fractions 1, 0.5, 0.1, 0.01, 0; 5 random draws each, same draws across modes) and re-rasterised; metrics per fraction with paired locus-bootstrap intervals. Coverage-bin summaries are descriptive only.
+13. Gates (pre-registered) [C2-Q7]: (G1) de novo-mode transcript-level F1 on the validation loci: lower 95 % paired-bootstrap bound of (B6 − C2) ≥ −1.0 percentage point; (G2) evidence gain: lower bound of (evidence mode − de novo mode) > 0 and of (evidence mode − C5) > 0; (G3) grammar violations (validate_gsf) in both modes ≤ B5's; abort rules: any leakage QC count ≠ 0, replay/RC/resume determinism test failure, memory abort. A run failing G1 or G2 is reported but not promoted to the main text. Headline model for the abstract: decided by the author in A46 before the run (default: B6, both modes reported).
+14. Reporting: A37 paired arms for every EST-derived number; both modes in every B1-era table; the dose-response figure; the completeness/leakage QC table; the training-coverage vs test-coverage distribution.
+
+## 3. Work packages, order and estimates
+
+| WP | Content | Depends on | Estimate | Verification |
+|---|---|---|---|---|
+| WP0 | A46 draft (all FREEZE items), DATASET_ROLES `b6_input`/`b6_score` columns, decision record | — | 0.5 d | Codex round 3 on the amendment text |
+| WP1 | Full C0 pipeline: BAM/PAF (+ audit alignment with secondaries) → C0 tables in DuckDB per species; molecule units (A11/A16); junction correction (A20); role flags; provenance; QC table | WP0 | 4–5 d | pytest on synthetic BAM/PAF fixtures (every rule of §2.3–2.4); Codex review of the diff; run on all 11 species on pronghorn (CPU arrays) |
+| WP2 | Leakage exclusion + DNA-mask repair: excluded-interval builder per species (A29/A31/A33/A22, held-out flanks, `partial` spans), molecule-wide exclusion, repaired tile builder; rebuild the corpus (A40 pipeline) → `b5_full_b6_v1.db` + matched sequence-only corpus (same DB, tracks ignored) | WP1 | 2 d + 1 d build | validator: 0 retained molecules at held-out loci; byte-identical geneList except masked spans; freeze JSON |
+| WP3 | Tracks + thinning: observation→tile membership table, rasteriser (float16 [L,K]), RC handling, nested thinning generator, dataset/collate (left-pad with DNA, datasets.py:728), side DB | WP2 | 2 d | unit tests (RC involution, thinning nesting, padding), memory benchmark of L×d at 129 kb |
+| WP4 | Model/trainer: bias-free projection, dropout/thinning schedule with its own RNG, runtime identity fields, resume whitelist, both-mode validation, compile/DDP 4-rank integration test (zero and non-zero tracks, generation parity, resume determinism) | WP3 | 2 d | tests/test_train_b5_chain.py-style tests + DeltaAI integration job |
+| WP5 | Pilot: 4-GPU, fixed step budget (~2 epochs), B6 vs C2 vs C1' on the repaired corpus; G1/G2 measured on a small locus panel with the disjoint evidence allocation | WP4 | ~3 × 25 GPU-h + queue | pilot report; go/no-go |
+| WP6 | Full runs: B6 (11-h pre-queued chain, A45), C2 full duration, C1' full duration; C3/C4 matched short; C5 baseline | WP5 go | 3 × 400 GPU-h + 2 short; budget check vs balance | A28/A45 chain rules |
+| WP7 | Evaluation: both modes × all B1-era benchmarks, dose-response, gates, A37 arms; B1 validation of completion-mode additions (reuses C0 tables) | WP6 | 3–4 d | pre-registered tables |
+
+Critical path ≈ WP0–WP4 ≈ 2 weeks, pilot ≈ 3–4 days incl. queue, full runs ≈ 1–2 weeks incl. queue, evaluation 1 week → ≈ 5–6 weeks. GPU budget: pilot ~75 GPU-h; full B6 + C2 + C1' ≈ 1,200 GPU-h + seed 123's remaining ~250 → exceeds the current balance (1,433 − ~200 spent); the author must top up ≈ 600 GPU-h or drop C1' (use C1 seed 123 as the only sequence-only comparator, accepting the mask difference, and run C2 full).
+
+## 4. Decisions still open for the author
+1. Budget: top up for C1' + C2 full runs, or accept C1 (seed 123) as the sole sequence-only comparator.
+2. Headline model (B6 de novo mode / evidence mode / B5) — must be in A46 before WP6.
+3. Validation evidence allocation for Z. mays: which ONT/PacBio libraries are input vs scoring (§2.10) — proposal: input = M-EST + Wang 2018 HQ (M-HQ18); scoring = M-FLNC (Wang 2020) + root-tip ONT (PRJNA822071).
+4. Whether the ≥ 121 nt EST arm is also used as an input-track arm (doubles track builds) or only in scoring tables (proposal: scoring only).
+
+## 5. What does not change
+Seed 123 chain (B5) continues; the B1 validation protocol (§3–9) is unchanged except the evidence allocation column; the GSF grammar, tokenizer, tiling, decoding and stitching rules (A24–A27) are unchanged.
