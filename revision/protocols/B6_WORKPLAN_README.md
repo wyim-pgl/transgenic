@@ -68,16 +68,16 @@ Two rules protect the results from circularity:
 | WP2 | Leakage exclusion + repair of a masking gap at window edges; rebuild the training corpus | 3 days | QC table with zero leakage |
 | WP3 | Evidence tracks, thinning, memory benchmark at the largest window (129 kb) | 2 days | the fused model fits in GPU memory |
 | WP4 | Model change (one linear projection, no bias) + trainer + 4-GPU tests incl. decoding with cache | 2–3 days | training and decoding behave identically with tracks on/off |
-| WP5 | Pilot on the pre-registered panel: B6 vs evidence-off control vs sequence-only control | 3–4 days | go/no-go on the gates |
-| WP6 | Full runs (B6, evidence-off control, sequence-only control; two short controls) | 1–2 weeks incl. queue | the reportable models |
+| WP5 | Pilot on the pre-registered panel: B6 vs evidence-off control | 3–4 days | go/no-go on the gates |
+| WP6 | Full runs (B6, evidence-off control; two short controls) | 1–2 weeks incl. queue | the reportable models |
 | WP7 | Evaluation in both modes, dose-response, maize/A. thaliana validation | 1 week | the tables and figures |
 
-Total ≈ 5–6 weeks after the MVP. GPU: the full runs need ≈ 350 GPU-hours more than the current allocation, or we
-drop the sequence-only control and use seed 123 in its place.
+Total ≈ 5–6 weeks after the MVP. GPU: with seed 123 as the sequence-only comparator (author decision 2026-09-14) the
+full runs fit the current allocation with ≈ 50 GPU-hours to spare.
 
 ## 6. Decisions the author still has to make (before WP6)
 
-1. Top up ≈ 350 GPU-hours, or drop the rebuilt sequence-only control (C1') and use seed 123 as the comparator.
+1. ~~Top up ≈ 350 GPU-hours, or drop the rebuilt sequence-only control (C1') and use seed 123 as the comparator.~~ Decided 2026-09-14: seed 123 is the sequence-only comparator; C1' is not run.
 2. Which model leads the abstract: B6 de novo mode, B6 evidence mode, or B5.
 3. For maize: which long-read libraries are model input and which are scoring (proposal: input = M-EST + Wang 2018
    HQ isoforms; scoring = Wang 2020 FLNC + root-tip ONT).
