@@ -1,6 +1,6 @@
 # B6 in plain language — teaching TransGenic to use transcript evidence, without giving up de novo annotation
 
-This page explains the B6 plan for anyone in the lab. The exact, frozen specification lives in
+한글판: [`B6_WORKPLAN_README.ko.md`](B6_WORKPLAN_README.ko.md). This page explains the B6 plan for anyone in the lab. The exact, frozen specification lives in
 [`B6_EVIDENCE_MODE_WORKPLAN_v1.md`](B6_EVIDENCE_MODE_WORKPLAN_v1.md) (v1.2, reviewed three times by Codex and once
 by Kimi K3 on 2026-09-14). Nothing in B6 changes the seed-123 run that is training now.
 
