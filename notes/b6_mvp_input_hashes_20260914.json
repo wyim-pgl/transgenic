@@ -1,0 +1,18 @@
+{
+  "notes/b6_mvp_data_implementation_plan_20260914.md": "57c1c9512e97d361afdda40bc8472012984a6bd2db086fd4683110ea49cb39d5",
+  "revision/protocols/B6_MVP_PILOT_v1.md": "734387b0a3251e7b0f47cf36bb0edc0dc51549a02f0c2d2579765d5445879c74",
+  "revision/protocols/B6_EVIDENCE_MODE_WORKPLAN_v1.md": "5ff2eb9d8775c1ecf2434f10786416d6a4a63741e0b862dfc36ca4143dfd3e0b",
+  "revision/protocols/B6_WORKPLAN_README.md": "ff88122ba20609786a1df9619a89dc48cd1c451edf00111f9aee0590d5c3ce2f",
+  "revision/protocols/PROTOCOL_B1_frozen_v1.md": "1d106e8959ca203d91eb56835948331e79aa78f8f5a15a7f5f8deed28fab3b27",
+  "revision/protocols/PROTOCOL_M_exploratory_v1.md": "e9153f57260e3d5315906127f0eaeea5f9ac766d3289c0e52be41f4988815ab8",
+  "revision/protocols/b6_eligible_loci_v1.tsv": "7ad895fcc25abf75c8fd682acd448c706c5d7f59c22da7c6aea0c8404219ecd6",
+  "revision/protocols/b6_eligible_loci_v1.tsv.sha256": "f2203007f2c7cf7c79533874142874c27ff98cd2ccfaab005e276e1cd71ba6c4",
+  "revision/protocols/b6_est_molecules_v1.tsv": "36de5b6827cdba2b27c72a663cfb4b2a8c46a567a1d31a6450f438be604e869c",
+  "revision/protocols/b6_est_molecules_v1.tsv.sha256": "ddd02e3e7e857b280128fbd3a8aa7ea54aee8adbf65ec335341a03f624716fd1",
+  "revision/protocols/b6_panels_v1.tsv": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243",
+  "revision/protocols/b6_panels_v1.tsv.sha256": "a1161a6bc5bc01b3134e8ddb293ba696a2679959863c059fc6e25a672ec7898c",
+  "revision/scripts/71_b6_panels.py": "b81ec50baf88e10147c92bba390df5c63daf9fafc644d772f78df6080d86391c",
+  "revision/scripts/72_mvp_select_loci.py": "eab68edb76a7bb4397b1bef413fc47d68b4889553715e9efefc6573d9264f0d1",
+  "revision/scripts/72a_est_molecules_per_locus.sh": "9e27472eb29798f8008275001293cfbf7dd23e67538127a5f35c146f6311b272",
+  "revision/scripts/tests/test_b6_panels.py": "ccce3b7892247d51eb188d99afd2cb811c73c2797c9922c2a97a4ee956fe176e"
+}

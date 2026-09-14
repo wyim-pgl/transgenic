@@ -1,8 +1,9 @@
 # B6 in plain language — teaching TransGenic to use transcript evidence, without giving up de novo annotation
 
-한글판: [`B6_WORKPLAN_README.ko.md`](B6_WORKPLAN_README.ko.md). This page explains the B6 plan for anyone in the lab. The exact, frozen specification lives in
-[`B6_EVIDENCE_MODE_WORKPLAN_v1.md`](B6_EVIDENCE_MODE_WORKPLAN_v1.md) (v1.2, reviewed three times by Codex and once
-by Kimi K3 on 2026-09-14). Nothing in B6 changes the seed-123 run that is training now.
+한글판: [`B6_WORKPLAN_README.ko.md`](B6_WORKPLAN_README.ko.md). This page explains the B6 plan for anyone in the lab. The detailed work plan is
+[`B6_EVIDENCE_MODE_WORKPLAN_v1.md`](B6_EVIDENCE_MODE_WORKPLAN_v1.md) (v1.2, work-plan reviews on 2026-09-14).
+The later specification is the **A46 v1.36 draft** in `PROTOCOL_B1_frozen_v1.md`, with the exploratory
+`B6_MVP_PILOT_v1.md` v1.2 draft. **A46 is not yet approved or frozen.** Nothing in B6 changes the seed-123 run.
 
 ## 1. Why we are doing this (one paragraph)
 
@@ -46,7 +47,7 @@ so a dedicated control run (same model, evidence permanently off) is part of the
 
 | Data | Used for training? | Used for scoring the results? |
 |---|---|---|
-| ESTs, ONT, PacBio (Sequel II+), proteins of the nine training species (incl. *A. thaliana*) | yes | *A. thaliana* ESTs only at held-out loci, labelled "in-domain" |
+| ESTs, ONT, PacBio (Sequel II+), proteins of the nine training species (incl. *A. thaliana*) | yes, after leakage exclusion | Held-out *A. thaliana* A-EST/A-ONT2 are **input**, labelled "in-domain", never scoring evidence at the same locus |
 | *Z. mays* and *S. lycopersicum* (withheld species) | never | yes (maize is the primary validation species) |
 | *A. thaliana* validation-only long reads (A-ONT1, A-HiFi) | never | yes (the independent tier) |
 
@@ -63,26 +64,35 @@ Two rules protect the results from circularity:
 
 | Step | What | Roughly | Proves |
 |---|---|---|---|
-| **MVP pilot** (1 week, exploratory) | *A. thaliana* only, ~20 held-out loci, evidence channel wired onto the current seed-123 checkpoint, short fine-tune, evidence on vs off, 3 seeds (~20 GPU-h) | week 1 | does the channel help at all? If not, stop here. |
-| WP0 | Write amendment A46 with every value fixed (seeds, hashes, commands, locus panels, thresholds); author approves | 1 day | nothing is built before the rules are frozen |
+| **MVP pilot** (1 week, exploratory) | *A. thaliana*, **50 held-out loci (20 core + 30; all evaluated)**, seed-123 checkpoint, 250 updates × 3 seeds, evidence on/off (≈ 18 GPU-h, +≈ 5.5 if a withholding run is needed) | week 1 | Apply the MVP's ordered STOP/GO/INCONCLUSIVE rule, not a simple positive/negative-effect test |
+| WP0 | Freeze A46 commands, tool-version provenance, seeds, thresholds, denominators, panel ids/counts/hashes and N_pilot; author approves; later-generated artefact hashes are recorded before use | 1 day | WP1 onward waits for approval; exploratory MVP is the exception |
 | WP1 | Evidence tables (C0) from the existing alignments: molecules, blocks, junctions, chains, roles, provenance | 4–5 days | also needed for the maize validation of the paper |
 | WP2 | Leakage exclusion + repair of a masking gap at window edges; rebuild the training corpus | 3 days | QC table with zero leakage |
 | WP3 | Evidence tracks, thinning, memory benchmark at the largest window (129 kb) | 2 days | the fused model fits in GPU memory |
 | WP4 | Model change (one linear projection, no bias) + trainer + 4-GPU tests incl. decoding with cache | 2–3 days | training and decoding behave identically with tracks on/off |
 | WP5 | Pilot on the pre-registered panel: B6 vs evidence-off control | 3–4 days | go/no-go on the gates |
-| WP6 | Full runs (B6, evidence-off control; two short controls) | 1–2 weeks incl. queue | the reportable models |
+| WP6 | Full runs (B6, evidence-off control; C3/C4/C6 short controls) | 1–2 weeks incl. queue | the reportable models |
 | WP7 | Evaluation in both modes, dose-response, maize/A. thaliana validation | 1 week | the tables and figures |
 
-Total ≈ 5–6 weeks after the MVP. GPU: with seed 123 as the sequence-only comparator (author decision 2026-09-14) the
-full runs fit the current allocation with ≈ 50 GPU-hours to spare.
+Panels are disjoint: **2,079 eligible → MVP 50 / pilot 300 / final 1,729**. The MVP primary improvement is
+`loss_off − loss_on`. Futility/STOP is evaluated before GO; missing independent structural scoring or an
+unassessable withholding check on that path means INCONCLUSIVE. See MVP §5.3 for the full rule.
 
-## 6. Decisions the author still has to make (before WP6)
+Total ≈ 5–6 weeks after the MVP. The earlier ≈ 50 GPU-hour margin excluded MVP and C6; it is not a current budget
+verification. Recheck the allocation with these costs and measured throughput before the full runs.
 
-1. ~~Top up ≈ 350 GPU-hours, or drop the rebuilt sequence-only control (C1') and use seed 123 as the comparator.~~ Decided 2026-09-14: seed 123 is the sequence-only comparator; C1' is not run.
-2. Which model leads the abstract: B6 de novo mode, B6 evidence mode, or B5.
-3. For maize: which long-read libraries are model input and which are scoring (proposal: input = M-EST + Wang 2018
-   HQ isoforms; scoring = Wang 2020 FLNC + root-tip ONT).
-4. Whether the 121-nt EST arm is also used as an input track (proposal: scoring tables only).
+## 6. Recorded decisions and remaining approval
+
+Recorded on 2026-09-14:
+1. Seed 123 is the sequence-only comparator; C1' is not run.
+2. B6 de novo leads the paper, evidence mode is reported alongside, B5 is supplementary. G1 failure alone restores
+   B5 as headline; G2 failure withholds only the evidence-mode claim.
+3. Maize input = M-EST + Wang 2018 HQ (M-HQ18); scoring = Wang 2020 FLNC (M-FLNC) + root-tip ONT.
+4. The 121-nt EST arm is for scoring/QC only, never input tracks.
+5. Route-B phase channels are included; route A is the cross-check and C6 is the phase-off control.
+
+**Still pending:** final review and explicit author approval of A46 and the revised MVP decision/independent-scoring
+wording. These recorded choices do not imply that the draft has been approved.
 
 ## 7. How to check progress
 
