@@ -14,7 +14,7 @@
 
 ## 2. 동결(FREEZE)할 정의 (A46)
 1. 증거 소스와 역할(A14 유지): 학습 측 = 학습 종 9종의 EST(A21 스크리닝, A37 primary arm ≥ 100 nt; ≥ 121 nt arm은 EST 유래 수치를 보고할 때마다 짝으로 보고하는 민감도 arm), ONT, Sequel II+ PacBio, 단백질 정렬(A19/A43). 절대 금지: Z. mays, S. lycopersicum, A-ONT1, A-HiFi. A9(옵션 J가 B6로 범위에 들어옴)와 A18의 범위 문장을 개정 [C2-13].
-2. 관측 스키마 = 전체 C0(IMPLEMENTATION_ORDER_B5_C0_C2_v1.md:34): `evidence_alignment`, `molecule_member`, `aligned_block`(분자 내 순서 있음), `junction_observation`(원시 좌표와 ONT ±3 nt 보정 좌표, A20), `partial_chain`, `partial_chain_intron`, `junction`, `junction_support`, `chain_junction`; 모든 행에 소스, 라이브러리, 유전형 층, 역할(`training_eligible`/`validation_only`), 출처 해시 [C1-9, C2-9].
+2. 관측 스키마 = 전체 C0(IMPLEMENTATION_ORDER_B5_C0_C2_v1.md:34), 경로 B용 `est_protein_hsp` 표 추가(est molecule_id, protein_id, protein_source ∈ {orthodb, swissprot}, protein_species, est_start, est_end, frame, evalue, bitscore, phase가 붙은 투영 게놈 구간) + 출처(diamond 버전, DB sha256, 명령): `evidence_alignment`, `molecule_member`, `aligned_block`(분자 내 순서 있음), `junction_observation`(원시 좌표와 ONT ±3 nt 보정 좌표, A20), `partial_chain`, `partial_chain_intron`, `junction`, `junction_support`, `chain_junction`; 모든 행에 소스, 라이브러리, 유전형 층, 역할(`training_eligible`/`validation_only`), 출처 해시 [C1-9, C2-9].
 3. 분자 단위: EST = A11 클론 병합 단위(모든 accession 버전, mate 리드, UniVec 분할 조각 포함); 장독 = A16 단위. 단백질: **지지 계수** 단위는 OrthoDB organism(A19), **누출 폐쇄** 단위는 단백질 쿼리 서열(그 모든 정렬, A43 mapping_ambiguous 포함) [C3-3]. 분자는 어디서든 한 단위다 [C1-7].
 4. 누출 배제(raster 이전, 관측 단위) [C1-4, C1-5, C2-3, C2-5]:
    a. 종별 배제 구간: strict held-out 유전자좌 ± 시드 플랭크(A33: 50~150 nt, 유전자좌별 정확한 시드값), test 블록(A29), test orthogroup 유전자와 (train 타일에서는) valid orthogroup 유전자, A22 하드 플래그 유전자, A33 겹침 성분·decoy 마스크 유전자, 타일 가장자리에 걸친 유전자의 `partial` 구간.
@@ -26,7 +26,8 @@
    - 소스(EST, ONT, PacBio) × 가닥별: 전사 블록 커버리지 log1p(분자 수), log1p(64)에서 클립;
    - 소스 × 가닥별: donor/acceptor 지지 log1p(분자 수), 경계 염기에 배치;
    - 소스별 unknown-strand 커버리지(방향 없는 EST);
-   - 단백질 CDS 커버리지 log1p(organism 수)(phase 채널은 보류 [C2-Q5]);
+   - 단백질 CDS 커버리지 log1p(organism 수);
+   - **phase 채널(저자 결정 2026-09-14, 경로 B 기본)**: EST 유래 판독 프레임 — 스크리닝된 각 EST를 교차 종 단백질에 `diamond blastx --frameshift 15 --evalue 1e-5 --min-orf 30 --max-target-seqs 25`(diamond ≥ 2.1.24)로 정렬(대상: 동결된 OrthoDB v12 Viridiplantae 집합(A19) + Swiss-Prot reviewed Viridiplantae(A30, 민감도 arm, QC에서 분리 집계)); HSP ≥ 30 aa마다 EST의 정렬 구간에 프레임을 주고, EST의 splice 정렬을 통해 게놈에 투영(인트론마다 길이 mod 3으로 재계산; 투영 후 한 EST 안에서 프레임이 모순되는 HSP는 버림) → phase {0,1,2} × 가닥 {+,−} 6채널, 값 log1p(EST 분자 수); 경로 A 교차 검증: 같은 교차 종 단백질의 miniprot CDS 블록이 주는 게놈 유래 phase; A와 B가 한 염기에서 다르면 두 phase 채널 모두 0(중립)으로 두고 QC에 불일치를 집계. 같은 종 단백질은 절대 사용 안 함(A19 교차 종 규칙) — 그 종의 Swiss-Prot/TAIR 유래 단백질은 참조 주석을 다시 새겨 넣는 셈; 배제 구간에 닿는 단백질 쿼리는 분자 단위 제거(§2.3 누출 폐쇄 단위) [K-author];
    - 소스별 availability 마스크(그 종/라이브러리에 해당 소스가 있으면 1; 드롭아웃 시 소스와 함께 제거).
    참조 유래 특징 금지(주석 기반 접합부 스냅 금지, 참조 phase 금지), 타일 단위 정규화 금지 [C2-Q5]. A18.4 가중치는 입력 배수로 쓰지 않음; 계수와 유전형/QC 플래그는 별도 채널.
    RC 타일: 좌표 반전; donor/acceptor 정체성은 유지, 가닥 채널만 교환(tests/test_gsf_rc.py:26) [C2-new4].
@@ -40,7 +41,8 @@
    - C2: B6 구조에 트랙 영구 0(p = 1), **전체 길이**;
    - C3: 증거 셔플(같은 티어의 다른 타일 트랙), 같은 예산;
    - C4: presence-only 트랙(이진), 같은 예산;
-   - C5: 증거 전용 재구성 기준선(Protocol M splice-graph + ORF 규칙, 모델 없음), 검증 유전자좌에서.
+   - C5: 증거 전용 재구성 기준선(Protocol M splice-graph + ORF 규칙, 모델 없음), 검증 유전자좌에서;
+   - C6: phase 채널을 0으로 둔 짧은 런 — 경로 B phase 채널의 기여.
 12. Dose-response [C2-new2]: 고정된 검증 유전자좌 패널에서 증거를 nested 부분집합으로 솎아(비율 1, 0.5, 0.1, 0.01, 0; 각 5회 무작위 추출, 모드 간 같은 추출) 재raster; 비율별 지표와 짝 유전자좌 bootstrap 구간. 커버리지 층 요약은 기술 통계일 뿐.
 13. 게이트(사전 등록, A46 동결) [C2-Q7, C3-5]: 지표 = GFFCompare v0.12.6 exact intron-chain 일치(단일 exon: exact CDS)의 전사체 수준 F1, 동결된 최종 패널(§2.10) 전체 pooled, 분모 = recall은 패널 유전자좌의 모든 참조 전사체, precision은 모든 예측 전사체, 모든 arm에 동일; 짝 유전자좌 bootstrap 2,000회, 시드 20260914, percentile 95 % 구간. (G1) de novo 모드: (B6 − C2) 하한 ≥ −1.0 pt. (G2) 증거 모드: (증거 − de novo) 하한 > 0 **그리고** (증거 − C5) 하한 > 0; C5는 같은 패널·같은 입력 증거·같은 분모로 평가(C5가 아무것도 내지 않는 유전자좌는 제외가 아니라 recall 0). (G3) 문법: 예측 전사체 1,000개당 `validate_gsf` 위반 ≤ B5 값 **그리고** 같은 모드에서 전사체 recall ≥ 0.9 × B5 recall — 빈 출력이나 최소 출력으로는 통과 불가. 중단 규칙: 누출 QC 수 ≠ 0, replay/RC/resume 결정성 실패, Dynamo 폴백, 메모리 중단. G1 또는 G2에 실패한 런은 보고하되 본문으로 올리지 않는다. abstract 대표 모델: 런 전에 저자가 A46에서 결정.
 14. 보고: EST 유래 수치마다 A37 짝 arm; B1 시대의 모든 표에 두 모드; dose-response 그림; 완전성/누출 QC 표; 학습 커버리지 vs 테스트 커버리지 분포.
@@ -52,7 +54,7 @@
 | WP | 내용 | 의존 | 추정 | 검증 |
 |---|---|---|---|---|
 | WP0 | 모든 FREEZE 값을 채운 A46 문안(§2 + §4 결정 종결), DATASET_ROLES `b6_input`/`b6_score` 열, 유전자좌 패널 추출·해시, 결정 기록; **저자 승인; 그 전엔 아무것도 시작 안 함** | — | 1일 | 개정 문안 Codex 리뷰; 저자 서명 |
-| WP1 | 전체 C0 파이프라인: BAM/PAF(+ secondary 포함 감사 정렬) → 종별 DuckDB C0 표; 분자 단위(A11/A16); 접합부 보정(A20); 역할 플래그; 출처; QC 표 | WP0 | 4~5일 | 합성 BAM/PAF fixture로 pytest(§2.3~2.4의 모든 규칙); diff Codex 리뷰; pronghorn CPU 배열로 11종 실행 |
+| WP1 | 전체 C0 파이프라인: BAM/PAF(+ secondary 포함 감사 정렬) → 종별 DuckDB C0 표; 분자 단위(A11/A16); 접합부 보정(A20); 역할 플래그; 출처; QC 표. **추가 EST phase(경로 B)**: Swiss-Prot reviewed Viridiplantae 다운로드(UniProt REST, taxonomy 33090, reviewed, sha256); diamond DB(OrthoDB 필터 FASTA는 evidence/protein/odb12_Viridiplantae.filtered.fa.gz에 이미 있음); 9종 스크리닝 EST의 diamond blastx를 pronghorn CPU 배열로(≈ 510만 쿼리); HSP → 프레임 → splice 투영 → `est_protein_hsp`; 경로 A/B 일치 QC | WP0 | 5~6일 | 합성 BAM/PAF fixture로 pytest(§2.3~2.4의 모든 규칙); diff Codex 리뷰; pronghorn CPU 배열로 11종 실행 |
 | WP2 | 누출 배제 + DNA 마스크 수리: 종별 배제 구간 빌더(A29/A31/A33/A22, held-out 플랭크, `partial` 구간), 분자 단위 배제, 수리된 타일 빌더; 코퍼스 재빌드(A40 파이프라인) → `b5_full_b6_v1.db` + 짝 맞춘 서열 전용 코퍼스(같은 DB, 트랙 무시) | WP1 | 2일 + 빌드 1일 | 검증기: held-out 유전자좌에 보존 분자 0; 마스크 구간 제외 geneList 바이트 동일; 동결 JSON |
 | WP3 | 트랙 + 솎아내기: 관측→타일 소속 표, raster(float16 [L,K]), RC 처리, nested 솎아내기 생성기, 데이터셋/collate(DNA와 함께 좌측 패딩, datasets.py:728), 사이드 DB. **융합 L×d 경로의 129 kb 메모리 벤치(K채널, 투영, compile + non-reentrant 체크포인팅, 4 rank)는 WP3 끝에 실행하며 WP4의 게이트: peak reserved > 100 GB면 트레이너 코드를 쓰기 전에 K 또는 융합 지점을 재설계** [K-2c] | WP2 | 2일 | 단위 테스트(RC 대합, 솎아내기 nested, 패딩), 메모리 벤치 보고 |
 | WP4 | 모델/트레이너: bias 없는 투영, 자체 RNG의 드롭아웃/솎아내기 일정, 런타임 정체성 필드, resume 화이트리스트, 두 모드 검증; 생성이 캐시/beam 디코딩에서 트랙을 전달해야 함(`prepare_inputs_for_generation`, modeling_HyenaTransgenic.py:1050-1060은 고정 키 집합 반환; 인코더는 `encoder_outputs is None`일 때 한 번 실행, :713-720) — WP4는 트랙 있는 beam/greedy 출력이 매 스텝 재인코딩하는 참조 구현과 같음을 명시적으로 시험하여 KV 캐시 버그가 증거를 조용히 0으로 만들지 못하게 함 [K-2a]; Dynamo 폴백 시 **실패**하는(train:317) compile/DDP 4-rank 통합 시험: 트랙 0·비0, 캐시 생성 parity, RC 타일, resume 결정성 | WP3 | 2~3일 | 단위 테스트 + DeltaAI 통합 잡 [C3-3] |
@@ -67,6 +69,7 @@
 2. 대표 모델(B6 de novo 모드 / 증거 모드 / B5) — WP6 전에 A46에 있어야 함.
 3. Z. mays 검증 증거 배분: 어느 ONT/PacBio 라이브러리가 입력이고 어느 것이 채점인지(§2.10) — 제안: 입력 = M-EST + Wang 2018 HQ(M-HQ18); 채점 = M-FLNC(Wang 2020) + root-tip ONT(PRJNA822071).
 4. ≥ 121 nt EST arm을 입력 트랙 arm으로도 쓸지(트랙 빌드 2배) 아니면 채점 표에만 쓸지(제안: 채점만).
+5. phase 채널: **결정(2026-09-14): 경로 B(EST × 단백질 diamond blastx) 채택; 경로 A(miniprot phase)는 교차 검증; phase-off ablation(C6, 짧은 런)으로 기여를 측정.**
 
 ## 5. 바뀌지 않는 것
 시드 123 체인(B5)은 계속된다; B1 검증 프로토콜(§3~9)은 증거 배분 열 외에는 불변; GSF 문법, 토크나이저, 타일링, 디코딩, 스티칭 규칙(A24~A27) 불변.

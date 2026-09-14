@@ -21,7 +21,8 @@ special, which is annotating from sequence alone. So B6 builds **one model with 
 ```
 
 - **Evidence tracks**: for every nucleotide, a few numbers that say "an EST/long read covers this base",
-  "a splice donor/acceptor is supported here by N molecules", "a protein aligns here". Fragments count exactly
+  "a splice donor/acceptor is supported here by N molecules", "a protein aligns here", and — from ESTs aligned to
+  proteins of other species with diamond blastx — "this base is in reading frame 0/1/2" (the phase channels). Fragments count exactly
   for the bases they cover; nothing has to be assembled into a full transcript. (This is why we dropped the earlier
   idea of adding EST-derived isoforms to the labels: more than 90 % of ESTs are fragments.)
 - **de novo mode**: the tracks are all zero. The model behaves like today's TransGenic.
