@@ -1,5 +1,7 @@
 # B6 work plan v1.2 — one model, two modes: de novo (sequence only) and evidence mode (sequence + aligned transcript/protein evidence)
 
+Plain-language overview for lab members: [`B6_WORKPLAN_README.md`](B6_WORKPLAN_README.md).
+
 Status: work plan v1.2 (Codex rounds 1–3 and Kimi K3 challenge applied, 2026-09-14; Kimi verdict approve-with-changes, items tagged [K-n]). **Construction rule: WP1 and everything after it start only after A46 has been approved by the author and frozen with every value, hash, command, seed, locus panel and threshold below recorded and no decision of §4 left open** [C3-2]. Author decision 2026-09-14: "de novo 모드 + 증거 모드로 방향을 정하고 진행". This plan incorporates the Codex adversarial reviews of 2026-09-14 (round 1, per-base auxiliary head: reject; round 2, evidence input channel: "reject the current specification; the direction merits a corrected pilot"). Every requirement below that came from those reviews is tagged [C1-n] / [C2-n] (round, finding number). Items marked FREEZE become text in amendment A46 before any B6 training run starts.
 
 ## 1. Goal and claims
