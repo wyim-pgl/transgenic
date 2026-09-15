@@ -231,10 +231,19 @@ def engine_version(diamond):
     diamond = Path(diamond)
     if not diamond.is_absolute() or not diamond.is_file():
         raise ValueError('provide an absolute real DIAMOND executable path')
-    version = subprocess.check_output([str(diamond), 'version'], text=True).strip()
-    if version != f'diamond version {VERSION}':
-        raise ValueError(f'unreviewed DIAMOND version: {version!r}; require {VERSION}')
-    return version
+    version = subprocess.check_output([str(diamond), 'version'], text=True,
+                                      stderr=subprocess.STDOUT).strip()
+    help_text = subprocess.check_output([str(diamond), 'help'], text=True,
+                                        stderr=subprocess.STDOUT)
+    banner = help_text.splitlines()[0] if help_text else ''
+    # `version` omits the build in DIAMOND 2.1.24; only help identifies .178.
+    release = re.fullmatch(r'diamond version (\d+\.\d+\.\d+(?:\.\d+)?)', version)
+    build = re.fullmatch(r'diamond v(\d+\.\d+\.\d+\.\d+) \(C\) .+', banner)
+    if (not release or not build or build[1] != VERSION
+            or release[1] not in (VERSION.rsplit('.', 1)[0], VERSION)):
+        raise ValueError(f'unreviewed DIAMOND version/help: {version!r} / {banner!r}; require {VERSION}')
+    # Both command identity lines flow into fixture and production provenance.
+    return version + '\n' + banner
 
 
 def execute(command, log):

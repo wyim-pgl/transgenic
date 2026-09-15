@@ -150,3 +150,33 @@ git diff --check
 ```
 
 No remote jobs or real DIAMOND execution performed for this correction. Controller scoped re-review and successful real fixture on 2.1.24.178 remain required before a production pilot. Production prerequisites are unchanged: complete frozen lineages for every observed taxid, independently reviewed for provenance/completeness; independently approved input identity/checksums for source, screened query, lineage and dataset roles, plus A19 filtering history and A21 screening evidence. No validation has been relaxed and no input identity or lineage approval is inferred from these local tests.
+
+## Scoped version-guard correction — job 6163393
+
+### Inline root-cause review before implementation
+
+Inspected detached base `071594049b73152778b58cc2908cf5eb539d71d8` in isolated worktree `/tmp/pi-agent-cb2fd26a-e84c-456-21f9f94f`. `engine_version()` actually uses exact string equality (not a substring test), requiring `diamond version 2.1.24.178`. Both production `run()` and `run_fixture()` call it before building/searching. Existing launcher tests do not exercise this guard; the getseq contract test patches it out.
+
+Controller-supplied real-job evidence (not independently executed here): job6163393 failed in this guard before search. The SAME binary reports `diamond version 2.1.24` for `version`, and first help line `diamond v2.1.24.178 (C) Max Planck Society ...`; reported binary SHA256 is `0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d`. Sacct: batch FAILED 1:0, MaxRSS1496K; extern OUT_OF_MEMORY 0:125, MaxRSS1480K. The primary logged failure is the version guard; these statuses do not establish a memory-sizing cause and no resource increase is proposed.
+
+Minimal correction planned: parse the version response and first help banner from the same explicit executable, require the exact reviewed four-part build `2.1.24.178` in help and a matching three-part release (or identical four-part build) in version, reject malformed/incompatible/conflicting tokens, and retain both identity lines in existing `diamond_version` provenance. Command failures remain failures. Add realistic command-output regression coverage before implementation; no fixture alignment-rule or Slurm changes.
+
+### Reproduced evidence and correction
+
+Local regression uses a clearly labeled executable CLI double, not DIAMOND: `version` emits `diamond version 2.1.24`; `help` emits `diamond v2.1.24.178 (C) Max Planck Society for the Advancement of Science` followed by usage text. The guard's actual subprocess path is exercised. Before implementation this reproduced `ValueError: unreviewed DIAMOND version: 'diamond version 2.1.24'; require 2.1.24.178`. Two further regression methods exposed acceptance of a conflicting help build and failure to check a failing help command.
+
+The fix uses anchored token parsing, not substring matching. It always checks both `[absolute_diamond_path, 'version']` and `[absolute_diamond_path, 'help']`, captures stdout/stderr, and propagates nonzero exits. Only release `2.1.24` or full build `2.1.24.178` paired with help build exactly `2.1.24.178` is accepted. Existing `diamond_version` provenance remains a string, now containing the version response followed by the help's first identity line; existing binary SHA256 recording is unchanged. Full help usage text is not stored. No fixture code, alignment assertions, search parameters or resource settings changed.
+
+Exact local commands/results, Python 3.8.20:
+
+```sh
+python3 -m pytest -q revision/scripts/tests/test_est_blastx.py -k engine_version
+# RED: 3 failed, 14 deselected in 0.26s (exit 1), before production edit.
+# GREEN: 3 passed, 14 deselected in 0.75s (exit 0).
+python3 -m pytest -q tests/test_orthodb_filter.py revision/scripts/tests/test_est_blastx.py revision/scripts/tests/test_est_blastx_fixture.py
+# 26 passed in 1.25s (exit 0).
+```
+
+Coverage includes compatible short/full versions, stdout/stderr banners, incompatible releases, conflicting full builds, prefix collisions (`.1780`), suffixed builds, absent/malformed/non-first banners, extra version tokens/lines, nonzero version/help commands and invalid executable paths. `command -v diamond` found no local executable: no real binary/hash verification or alignment run is claimed here, and no remote submission occurred. The controller-provided job evidence above remains distinct from these local contract tests. Ready for scoped diff review, then controller-only real fixture rerun in a fresh output directory; real-engine fixture success is still required before any production pilot.
+
+Additional checks: `python3 -m py_compile revision/scripts/evidence/est_blastx.py revision/scripts/evidence/est_blastx_fixture.py` and `bash -n revision/scripts/evidence/est_blastx_fixture.sbatch` exited 0. Initial `git diff --check` flagged a trailing blank line in this report; removed before final verification. Commit author: Won Yim `<wyim@unr.edu>`.

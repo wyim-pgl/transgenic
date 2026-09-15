@@ -33,6 +33,56 @@ class LauncherTests(unittest.TestCase):
         p.write_text(text)
         return p
 
+    def version_engine(self, version, banner, fail_command=None, stderr=False):
+        # CLI double only: never counts as real-DIAMOND alignment evidence.
+        engine = self.put('diamond', f'''#!{sys.executable}
+import sys
+outputs = {{'version': {version!r}, 'help': {banner!r}}}
+command = sys.argv[1]
+print(outputs[command], file=sys.stderr if {stderr!r} else sys.stdout)
+raise SystemExit(7 if command == {fail_command!r} else 0)
+''')
+        engine.chmod(0o755)
+        return engine
+
+    def test_engine_version_accepts_release_with_exact_help_build(self):
+        banner = 'diamond v2.1.24.178 (C) Max Planck Society for the Advancement of Science'
+        for token in ('2.1.24', '2.1.24.178'):
+            for stderr in (False, True):
+                with self.subTest(token=token, stderr=stderr):
+                    version = f'diamond version {token}'
+                    engine = self.version_engine(version, banner + '\nUsage: diamond COMMAND\n', stderr=stderr)
+                    self.assertEqual(self.m.engine_version(engine), version + '\n' + banner)
+
+    def test_engine_version_rejects_incompatible_conflicting_or_malformed_identity(self):
+        good = 'diamond v2.1.24.178 (C) Max Planck Society'
+        for version, banner in (
+            ('diamond version 2.1.23', good),
+            ('diamond version 2.1.24.177', good),
+            ('diamond version 2.1.24.178', good.replace('.178', '.179')),
+            ('diamond version 2.1.24', good.replace('.178', '.1780')),
+            ('diamond version 2.1.24', good.replace('.178', '.178-dev')),
+            ('diamond version 2.1.24', good.replace('.178', '')),
+            ('diamond version 2.1.24.178', ''),
+            ('diamond version 2.1.24.178', 'Usage: diamond\n' + good),
+            ('diamond version 2.1.24.178 extra', good),
+            ('diamond version 2.1.24\ndiamond version 2.1.23', good),
+        ):
+            with self.subTest(version=version, banner=banner):
+                with self.assertRaisesRegex(ValueError, 'unreviewed DIAMOND'):
+                    self.m.engine_version(self.version_engine(version, banner))
+
+    def test_engine_version_command_failures_and_invalid_paths_fail_closed(self):
+        for command in ('version', 'help'):
+            engine = self.version_engine('diamond version 2.1.24.178',
+                                         'diamond v2.1.24.178 (C) Max Planck Society', command)
+            with self.subTest(command=command):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    self.m.engine_version(engine)
+        for path in ('diamond', self.root / 'missing', self.root):
+            with self.assertRaises(ValueError):
+                self.m.engine_version(path)
+
     def test_source_specific_taxids_and_full_ids(self):
         self.assertEqual(self.m.subject_taxid('sp|Q1.2|NAME title OX=3702 GN=x', 'swissprot'), 3702)
         self.assertEqual(self.m.subject_taxid('39947_0:full.id\t39947_0', 'orthodb'), 39947)
