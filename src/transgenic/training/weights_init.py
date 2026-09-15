@@ -162,9 +162,14 @@ def load_weights_only(model: torch.nn.Module, init_from: os.PathLike[str] | str)
 
     run_root = checkpoint.parent
     run_config_path = _regular_file(run_root / "run_config.json", run_root, "run_config.json")
+    runtime_identity = run_root / "runtime_identity.txt"
     paths: dict[str, Path | None] = {
         "model.safetensors": weights,
         "run_config.json": run_config_path,
+        "runtime_identity.txt": (
+            _regular_file(runtime_identity, run_root, "runtime_identity.txt")
+            if os.path.lexists(runtime_identity) else None
+        ),
     }
     for name in ("config.json", "meta.json", "runtime.json"):
         candidate = checkpoint / name

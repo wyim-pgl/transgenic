@@ -136,7 +136,7 @@ class WeightsInitTests(unittest.TestCase):
             record = audit["files"][name]
             self.assertEqual(record["before"]["sha256"], hashlib.sha256(Path(record["path"]).read_bytes()).hexdigest())
             self.assertEqual(record["before"], record["after"])
-        for name in ("config.json", "meta.json", "runtime.json"):
+        for name in ("config.json", "meta.json", "runtime.json", "runtime_identity.txt"):
             self.assertIsNone(audit["files"][name])
         for side in ("source_semantics", "target_semantics"):
             manifest = audit[side]["fields"]
@@ -151,9 +151,33 @@ class WeightsInitTests(unittest.TestCase):
         self._write_json(self.epoch / "config.json", source_config)
         self._write_json(self.epoch / "meta.json", {"epoch": 4})
         self._write_json(self.epoch / "runtime.json", {"host": "test"})
+        runtime_identity = self.run / "runtime_identity.txt"
+        runtime_identity.write_text("SIF=test.sif\nSIF_SHA256=recorded-not-rehashed\n", encoding="utf-8")
         audit = self._load(path=self.epoch / "model.safetensors")
-        for name in ("config.json", "meta.json", "runtime.json"):
+        for name in ("config.json", "meta.json", "runtime.json", "runtime_identity.txt"):
             self.assertIsNotNone(audit["files"][name])
+        runtime_record = audit["files"]["runtime_identity.txt"]
+        self.assertEqual(runtime_record["path"], str(runtime_identity.resolve()))
+        self.assertEqual(runtime_record["before"]["sha256"], hashlib.sha256(runtime_identity.read_bytes()).hexdigest())
+        self.assertEqual(runtime_record["before"], runtime_record["after"])
+        self.assertNotIn("runtime_identity.txt", audit["implementation"])
+
+    def test_run_root_runtime_identity_change_during_load_fails(self):
+        import transgenic.training.weights_init as weights_init
+        runtime_identity = self.run / "runtime_identity.txt"
+        runtime_identity.write_text("SIF_SHA256=before\n", encoding="utf-8")
+        real_load_model = weights_init.load_model
+
+        def change_runtime(*args, **kwargs):
+            result = real_load_model(*args, **kwargs)
+            runtime_identity.write_text("SIF_SHA256=after\n", encoding="utf-8")
+            return result
+
+        target = self._model()
+        with patch.object(weights_init, "load_model", side_effect=change_runtime):
+            with self.assertRaisesRegex(RuntimeError, "runtime_identity.txt.*changed|changed.*runtime_identity.txt"):
+                weights_init.load_weights_only(target, self.epoch)
+        self.assertTrue(target._weights_init_poisoned)
 
     def test_stale_config_field_and_state_subtrees_are_never_read(self):
         (self.epoch / "accelerate_state").mkdir()

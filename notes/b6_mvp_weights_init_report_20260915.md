@@ -18,7 +18,7 @@
 The helper:
 
 1. Resolves the requested checkpoint directory or exact `model.safetensors` strictly, including `best` directory symlinks, and rejects dangling paths, wrong names, non-regular files, and weights symlinks escaping the canonical checkpoint root.
-2. Reads only the canonical weights file, parent `run_config.json`, and optional checkpoint-root `config.json`, `meta.json`, and `runtime.json`. The stale `run_config["config"]` path is provenance only. Accelerate, pending-gradient, optimizer, and RNG subtrees are not traversed.
+2. Reads only the canonical weights file, parent `run_config.json`, optional run-root `runtime_identity.txt`, and optional checkpoint-root `config.json`, `meta.json`, and `runtime.json`. The stale `run_config["config"]` path is provenance only. Accelerate, pending-gradient, optimizer, and RNG subtrees are not traversed.
 3. Requires the embedded recipe and `REQUIRED_CONFIG_KEYS` plus normalized `encoder_n_layer`. It reconstructs source semantics with the existing `b5_runtime.model_kwargs(recipe)` and `HyenaTransgenicConfig`; it does not instantiate a source model or invoke pretrained/network construction.
 4. Compares source and target serialized layout/forward semantics, allowing only evidence channels `0 -> 8`. Known semantic recipe extras may attest reconstructed values but cannot override the historical B5 mapping. An optional `config.json` is consistency evidence only; unknown Hugging Face bookkeeping keys are ignored.
 5. Records canonical recipe, semantic-manifest, source-file, and current B5/configuration implementation SHA256 hashes. Source file identity and bytes are checked before and after consumption.
@@ -96,6 +96,42 @@ PYTHONPATH=/tmp/b6-dataset-verify.D2Is9a/.testdeps:src \
 ```
 
 Result: exit 0, no output.
+
+## Round 1 scoped review fix
+
+- Review-fix branch: `b6-mvp-weights-init-review1`
+- Review base: `c760c26ef8d02ef9521c267dcb45130a9a338e32`
+
+Review found that the initial implementation tracked only checkpoint-root `runtime.json`, while the production B5 layout records runtime provenance in `runtime_identity.txt` beside the parent `run_config.json`. Based on the read-only production inventory in `notes/b6_mvp_runtime_preflight_20260915.md`, this omitted the actual available source-runtime record.
+
+The fix adds optional `run_root/runtime_identity.txt` to the same source-file audit map as weights and `run_config.json`. It is resolved as a regular file at the canonical run root, SHA256/identity snapshotted before and after loading, emitted as explicit `null` when absent, and causes a poisoned-target failure if it changes during loading. Checkpoint-root `runtime.json` remains supported. The text is treated as opaque provenance: it is not JSON-parsed, and hashing the record does not independently certify the SIF bytes named inside it. Its audit record remains under source `files`, separate from hashes of the current loader implementations under `implementation`.
+
+Test-first red command:
+
+```text
+PYTHONPATH=/tmp/b6-dataset-verify.D2Is9a/.testdeps:src \
+/home/wyim/miniconda3/envs/pdb/bin/python -m unittest -v tests.test_weights_init
+```
+
+Result before the source fix: **12 methods run; 1 failure and 2 errors**. The real-layout test and absent-value assertion raised `KeyError: 'runtime_identity.txt'`; the injected runtime-file change was not detected.
+
+Focused green with the same command: **12 passed, 0 failed, 0.633 s**.
+
+Round 1 regression command:
+
+```text
+PYTHONPATH=/tmp/b6-dataset-verify.D2Is9a/.testdeps:src \
+/home/wyim/miniconda3/envs/pdb/bin/python -m unittest -v \
+  tests.test_weights_init tests.test_mvp_metrics tests.test_mvp_model tests.test_mvp_dataset
+```
+
+Result: **46 passed, 0 failed, 53.174 s** (the original 45 tests plus the runtime-identity change test).
+
+Covering tests:
+
+- `test_success_from_best_is_alias_safe_zeroes_projection_and_audits_hashes`: absent run-root runtime is explicit `null`.
+- `test_exact_file_and_matching_optional_metadata_succeed`: production-shaped `run/epoch_04` layout tracks checkpoint `runtime.json` and run-root `runtime_identity.txt` independently, including an independently computed digest.
+- `test_run_root_runtime_identity_change_during_load_fails`: a real text-file byte change during alias-aware load trips the common post-consumption identity guard and leaves the target poisoned.
 
 ## Limitations and required follow-up
 
