@@ -127,3 +127,26 @@ python est_blastx.py run \
 
 7. Measure source scan/filter/makedb/search elapsed time, peak memory, temporary disk and query throughput in a controller-approved sequential pilot before scheduling more species. No nine-species array and no guessed 48-hour production allocation supplied here.
 8. Later increments own >=30-aa acceptance, BTOP-derived internal frame blocks, genome projection, leakage closure and A37 paired reporting. This increment does not claim those are complete or freeze A46.
+
+## Scoped reviewer-blocker correction — getseq CLI
+
+Based on detached `cc9735f` (`pi-agent-462c26cc-1192-466`), not main, in isolated worktree `/tmp/pi-agent-8d1bf61b-edb0-445-b3eba4d3`. Removed `--no-parse-seqids` from the fixture's `getseq` argv only: DIAMOND v2.1.24 does not support that option for this subcommand. Both `makedb` and `blastx` flags, the full-ID/sequence DB assertion, search-ID checks, traceback validation and all production guards are unchanged.
+
+Added `TracebackTests.test_getseq_argv_uses_supported_options`, which runs fixture setup/filtering and intercepts the emitted getseq argv at the execution boundary, requiring the executable, subcommand, DB and output arguments with no extra option. Engine-version/build/search calls are patched solely to reach this boundary; a sentinel stops execution before database inspection. This is an argv contract test, not a real-engine pass or a replacement for either source's full-ID assertion.
+
+Exact local covering commands/results (Python 3.8.20):
+
+```sh
+python3 -m pytest -q revision/scripts/tests/test_est_blastx_fixture.py::TracebackTests::test_getseq_argv_uses_supported_options
+# Before fix: 1 failed in 0.30s, exit 1.
+# Intended assertion: first extra argv element 6 was '--no-parse-seqids'.
+# After fix: 1 passed in 0.04s, exit 0.
+python3 -m pytest -q tests/test_orthodb_filter.py revision/scripts/tests/test_est_blastx.py revision/scripts/tests/test_est_blastx_fixture.py
+# 23 passed in 0.62s, exit 0 (previous 22 tests plus new regression).
+python3 -m py_compile revision/scripts/evidence/est_blastx.py revision/scripts/evidence/est_blastx_fixture.py
+bash -n revision/scripts/evidence/est_blastx_fixture.sbatch
+git diff --check
+# All exit 0.
+```
+
+No remote jobs or real DIAMOND execution performed for this correction. Controller scoped re-review and successful real fixture on 2.1.24.178 remain required before a production pilot. Production prerequisites are unchanged: complete frozen lineages for every observed taxid, independently reviewed for provenance/completeness; independently approved input identity/checksums for source, screened query, lineage and dataset roles, plus A19 filtering history and A21 screening evidence. No validation has been relaxed and no input identity or lineage approval is inferred from these local tests.

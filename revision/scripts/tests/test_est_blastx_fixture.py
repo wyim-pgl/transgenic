@@ -1,7 +1,9 @@
 """Hand-derived traceback contracts. These are NOT a substitute for the engine fixture."""
 import importlib.util
 from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'evidence/est_blastx_fixture.py'
 
@@ -47,6 +49,28 @@ class TracebackTests(unittest.TestCase):
             bad[column] = value
             with self.assertRaises(ValueError):
                 self.m.replay(bad, dna, 'MKA')
+
+    def test_getseq_argv_uses_supported_options(self):
+        # Contract-only interception: no DIAMOND output or engine pass is simulated.
+        class GetseqChecked(Exception):
+            pass
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out = root / 'fixture'
+            diamond = root / 'diamond'
+
+            def check_getseq(command, log):
+                self.assertEqual(command, [str(diamond), 'getseq', '--db',
+                                          str(out / 'orthodb/orthodb.dmnd'), '--out',
+                                          str(out / 'orthodb/database.getseq.fa')])
+                raise GetseqChecked
+
+            with patch.object(self.m.launcher, 'engine_version', return_value='contract-only'), \
+                 patch.object(self.m.launcher, 'build_and_search', return_value={}), \
+                 patch.object(self.m.launcher, 'execute', side_effect=check_getseq):
+                with self.assertRaises(GetseqChecked):
+                    self.m.run_fixture(diamond, out, root, 1)
 
     def test_fixture_has_required_cases_and_species_sources(self):
         data = self.m.fixture_data()

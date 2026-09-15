@@ -138,7 +138,7 @@ def run_fixture(diamond, out_dir, tmpdir, threads):
                     qc.update(launcher.build_and_search(diamond, filtered, query, sub, kind, threads, tmp, rich=True))
                 db_fasta = sub / 'database.getseq.fa'
                 getseq = [str(diamond), 'getseq', '--db', str(sub / f'{kind}.dmnd'),
-                          '--out', str(db_fasta), '--no-parse-seqids']
+                          '--out', str(db_fasta)]
                 launcher.write_json(sub / 'getseq.command.json', getseq)
                 launcher.execute(getseq, sub / 'getseq.log')
                 database = list(launcher.records(db_fasta))
