@@ -33,6 +33,8 @@ Data flow:
 """
 
 import duckdb, random, torch, sys, zlib, os
+import math
+from numbers import Integral, Real
 import pandas as pd
 import numpy as np
 import torch.nn.functional as F  # For F.pad (dynamic padding in collate functions)
@@ -172,7 +174,7 @@ class isoformDataHyena(Dataset):
 	    the inherited connection is closed and a fresh one is opened
 	  - Connections are closed in __del__ when the dataset is garbage-collected
 	"""
-	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None, split=None, gff_vocab_version="v2", window_len=None, strict=False):
+	def __init__(self, db, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False, exclude_prefix=None, split=None, gff_vocab_version="v2", window_len=None, strict=False, *, species=None, evidence_db=None, evidence_k=8, aug_seed=None, channel_dropout_p=0.5, thin_fractions=(0.01, 0.1, 0.5, 1.0), eval_fraction=None, return_tile_ids=False):
 		"""
 		Args:
 			db: Path to DuckDB database file.
@@ -186,6 +188,13 @@ class isoformDataHyena(Dataset):
 				being replaced by a randomly chosen different row. A frozen-recipe run must set
 				this: silently substituting a row removes one sample from a pre-registered study
 				and duplicates another, and the only trace is a line in a SLURM log.
+			species: Optional parameterized species_id filter in every selection branch.
+			evidence_db: Separate frozen C0-lite DB; enables strict Athaliana K=8 tracks.
+			aug_seed: Required integer; private CPU augmentation stream and molecule ranks.
+			channel_dropout_p: Whole-source dropout probability.
+			thin_fractions: Nonempty uniform choices of molecule retention fraction.
+			eval_fraction: Fixed retention fraction, with no augmentation RNG draws.
+			return_tile_ids: Append rn/has_evidence metadata (10-tuple instead of 9).
 			gff_vocab_version: Vocabulary version for the decoder GFF tokenizer.
 				Use "v1" (legacy 272 tokens) when pairing with the published
 				jlomas/HyenaTransgenic-* checkpoints (vocab_size 272); "v2"
@@ -194,7 +203,31 @@ class isoformDataHyena(Dataset):
 		self.db = db
 		self.mode = mode
 		self.split = split
-		self.strict = strict          # A35: raise instead of substituting a random row
+		self.evidence_db = evidence_db
+		self.species = species
+		self.return_tile_ids = return_tile_ids
+		self._evidence_con = self._evidence_pid = None
+		self._aug_generator = self._aug_key = None
+		self._validated_tiles = set()
+		if return_tile_ids and evidence_db is None:
+			raise ValueError('return_tile_ids requires evidence_db')
+		if evidence_db is not None:
+			if species != 'Athaliana' or isinstance(evidence_k, bool) or not isinstance(evidence_k, Integral) or evidence_k != 8:
+				raise ValueError('MVP evidence requires species=Athaliana and evidence_k=8')
+			if isinstance(aug_seed, bool) or not isinstance(aug_seed, Integral):
+				raise ValueError('evidence requires an explicit integer aug_seed')
+			try:
+				thin_fractions = tuple(thin_fractions)
+			except TypeError as exc:
+				raise ValueError('thin_fractions must be nonempty') from exc
+			values = (channel_dropout_p,) + thin_fractions + (() if eval_fraction is None else (eval_fraction,))
+			if not thin_fractions or any(isinstance(v, bool) or not isinstance(v, Real) or not math.isfinite(v) or not 0 <= v <= 1 for v in values):
+				raise ValueError('dropout and fractions must be finite values in [0,1]')
+		self.aug_seed = aug_seed
+		self.channel_dropout_p = channel_dropout_p
+		self.thin_fractions = thin_fractions
+		self.eval_fraction = eval_fraction
+		self.strict = strict or evidence_db is not None  # Never substitute evidence tile identities
 		self.dt = GFFTokenizer(vocab_version=gff_vocab_version)  # Decoder tokenizer for GFF annotation strings
 		self.gff_vocab_version = gff_vocab_version
 		self.global_attention = global_attention
@@ -216,22 +249,33 @@ class isoformDataHyena(Dataset):
 				if window_len:                      # #18: restrict to one tile tier (fin - start)
 					q += " AND fin - start = ?"
 					params.append(int(window_len))
+				if species is not None:
+					q += " AND species_id = ?"
+					params.append(species)
 				rows = con.sql(q + " ORDER BY rn", params=params).fetchall()
 				if not rows:
 					raise ValueError(f"no rows with split={split!r} in {db}; build it with scripts/build_b5_database.py")
 			elif exclude_prefix:
 				# SQL-level filtering: exclude genes whose name starts with the prefix
-				rows = con.sql("SELECT rn, gff FROM geneList WHERE geneModel NOT LIKE ? ORDER BY rn",
-					params=[f"{exclude_prefix}%"]).fetchall()
+				q = "SELECT rn, gff FROM geneList WHERE geneModel NOT LIKE ?"
+				params = [f"{exclude_prefix}%"]
+				if species is not None:
+					q += " AND species_id = ?"
+					params.append(species)
+				rows = con.sql(q + " ORDER BY rn", params=params).fetchall()
 			else:
-				rows = con.sql("SELECT rn, gff FROM geneList ORDER BY rn").fetchall()
+				q = "SELECT rn, gff FROM geneList"
+				params = []
+				if species is not None:
+					q += " WHERE species_id = ?"
+					params.append(species)
+				rows = con.sql(q + " ORDER BY rn", params=params).fetchall()
 			self._index_map = [row[0] for row in rows]  # List of valid row numbers
 
 			# Compute moderate isoform count rebalancing weights for training.
 			# Genes with multiple isoforms get a sqrt(isoform_count) weight boost.
 			# This gently upsamples multi-isoform genes without being drastic.
 			if mode == "train":
-				import math
 				weights = []
 				for row in rows:
 					gff_str = row[1] if row[1] else ""
@@ -277,13 +321,46 @@ class isoformDataHyena(Dataset):
 			self._worker_pid = pid  # Record which PID owns this connection
 		return self._con
 
+	def _get_evidence_connection(self):
+		pid = os.getpid()
+		if self._evidence_pid != pid or self._evidence_con is None:
+			if self._evidence_con is not None:
+				try:
+					self._evidence_con.close()
+				except Exception:
+					pass
+			self._evidence_con = duckdb.connect(self.evidence_db, config={'access_mode': 'READ_ONLY'})
+			self._evidence_pid = pid
+			self._validated_tiles.clear()
+		return self._evidence_con
+
+	def _get_aug_generator(self):
+		# Private CPU stream: fixed worker/order reproducibility, not exact resume.
+		worker = torch.utils.data.get_worker_info()
+		key = (os.getpid(), None if worker is None else (worker.id, worker.seed))
+		if self._aug_generator is None or self._aug_key != key:
+			seed = int(self.aug_seed) + (0 if worker is None else worker.seed)
+			self._aug_generator = torch.Generator(device='cpu').manual_seed(seed % (2**64))
+			self._aug_key = key
+		return self._aug_generator
+
+	def __getstate__(self):
+		state = self.__dict__.copy()
+		for name in ('_con', '_worker_pid', '_evidence_con', '_evidence_pid', '_aug_generator', '_aug_key'):
+			state[name] = None
+		state['_validated_tiles'] = set()
+		return state
+
 	def __del__(self):
-		"""Clean up the DuckDB connection when this dataset object is destroyed."""
-		if self._con is not None:
-			try:
-				self._con.close()
-			except Exception:
-				pass  # Ignore cleanup errors
+		"""Also safe when construction failed before opening either connection."""
+		for name in ('_con', '_evidence_con'):
+			con = getattr(self, name, None)
+			if con is not None:
+				try:
+					con.close()
+				except Exception:
+					pass
+				setattr(self, name, None)
 
 	def __len__(self):
 		"""Return the number of samples (after exclude_prefix filtering)."""
@@ -374,10 +451,40 @@ class isoformDataHyena(Dataset):
 		# Create attention mask: True for real nucleotide tokens, False for padding
 		attention_mask = (seqs["input_ids"] != self.encoder_tokenizer.pad_token_id)
 
-		if self.mode == "train":
-			return (seqs["input_ids"], attention_mask, labels, gm, chr, region_start, region_end, tx_count)
+		sample = (seqs['input_ids'], attention_mask, labels if self.mode == 'train' else None,
+			gm, chr, region_start, region_end, tx_count if self.mode == 'train' else 0)
+		if self.evidence_db is None:
+			return sample
+
+		from ..evidence.mvp_tracks import rasterise_est
+		metadata = con.execute('SELECT split, is_rc FROM geneList WHERE rn=?', [rn]).fetchall()
+		if len(metadata) != 1 or type(metadata[0][1]) is not bool:
+			raise ValueError(f'rn={rn}: requires explicit non-null boolean is_rc')
+		split, is_rc = metadata[0]
+		if region_end - region_start != len(region_seq) or len(region_seq) != seqs['input_ids'].shape[1]:
+			raise ValueError(f'rn={rn}: region, sequence and nucleotide token lengths must agree')
+		evidence_con = self._get_evidence_connection()
+		if rn not in self._validated_tiles:
+			expected = (rn, chr, region_start, region_end, split, is_rc)
+			frozen = evidence_con.execute('SELECT rn, chrom, start0, end0, split, is_rc FROM corpus_tile WHERE rn=?', [rn]).fetchall()
+			if frozen != [expected] or type(frozen[0][5]) is not bool:
+				raise ValueError(f'rn={rn}: evidence corpus_tile metadata mismatch')
+			self._validated_tiles.add(rn)
+		if self.eval_fraction is not None:
+			fraction, dropped = self.eval_fraction, False
 		else:
-			return (seqs["input_ids"], attention_mask, None, gm, chr, region_start, region_end, 0)
+			u = torch.rand(2, generator=self._get_aug_generator())
+			dropped = u[0].item() < self.channel_dropout_p
+			fraction = self.thin_fractions[int(u[1].item() * len(self.thin_fractions))]
+		tracks = rasterise_est(evidence_con, sequence=region_seq, chrom=chr,
+			offset=region_start, L=region_end-region_start, is_rc=is_rc,
+			keep_fraction=fraction, aug_seed=self.aug_seed, rn=rn,
+			population='retained', source_supplied=not dropped)
+		sample += (torch.from_numpy(np.ascontiguousarray(tracks, dtype=np.float16)),)
+		if self.return_tile_ids:
+			has_evidence = evidence_con.execute('SELECT EXISTS (SELECT 1 FROM tile_est WHERE rn=?)', [rn]).fetchone()[0]
+			sample += ({'rn': rn, 'has_evidence': has_evidence},)
+		return sample
 
 
 class segmentationDataset(Dataset):
@@ -714,9 +821,11 @@ def hyena_collate_fn(batch):
 
 	This is the PRIMARY collate function used during TransGenic training.
 	"""
-	# Unpack batch tuples (8 elements: seq, mask, labels, gm, chr, start, end, tx_count)
-	if len(batch[0]) == 8:
-		sequences, attention_masks, labels, gm, chr, region_start, region_end, tx_counts = zip(*batch)
+	arity = len(batch[0]) if batch else 0
+	if arity not in (7, 8, 9, 10) or any(len(sample) != arity for sample in batch):
+		raise ValueError('expected a nonempty batch with uniform tuple arity 7, 8, 9 or 10')
+	if arity >= 8:
+		sequences, attention_masks, labels, gm, chr, region_start, region_end, tx_counts = zip(*(sample[:8] for sample in batch))
 		tx_counts = torch.tensor(tx_counts, dtype=torch.float32)
 	else:
 		# Backward compatibility with 7-element tuples
@@ -724,8 +833,14 @@ def hyena_collate_fn(batch):
 		tx_counts = None
 
 	# LEFT-pad sequences to the longest sequence in the batch
-	max_len = max([seq.shape[1] for seq in sequences])
-	sequences = [F.pad(seq, (max_len - seq.shape[1], 0)) for seq in sequences]  # Left-pad
+	dna_max_len = max([seq.shape[1] for seq in sequences])
+	if arity >= 9:
+		for sample in batch:
+			t = sample[8]
+			if not isinstance(t, torch.Tensor) or t.dtype != torch.float16 or t.shape != (sample[0].shape[1], 8):
+				raise ValueError('evidence tracks must be float16 [DNA token length, 8]')
+		tracks = torch.stack([F.pad(sample[8], (0, 0, dna_max_len-sample[8].shape[0], 0)) for sample in batch])
+	sequences = [F.pad(seq, (dna_max_len - seq.shape[1], 0)) for seq in sequences]  # Left-pad
 	sequences = torch.cat(sequences)  # Stack into (batch_size, max_len)
 
 	# LEFT-pad attention masks to match
@@ -735,14 +850,20 @@ def hyena_collate_fn(batch):
 
 	# RIGHT-pad labels to the longest label in the batch
 	if None not in labels:
-		max_len = max([label.shape[1] for label in labels])
-		labels_padded = [F.pad(label, (0, max_len - label.shape[1]), value=-100) for label in labels]  # Right-pad with ignore index
+		label_max_len = max([label.shape[1] for label in labels])
+		labels_padded = [F.pad(label, (0, label_max_len - label.shape[1]), value=-100) for label in labels]  # Right-pad with ignore index
 		labels_padded = torch.cat(labels_padded)
 
 	if None not in labels:
-		return sequences, attention_masks, labels_padded, gm, chr, region_start, region_end, tx_counts
+		result = (sequences, attention_masks, labels_padded, gm, chr, region_start, region_end, tx_counts)
 	else:
-		return sequences, attention_masks, None, gm, chr, region_start, region_end, None
+		result = (sequences, attention_masks, None, gm, chr, region_start, region_end, None)
+	if arity >= 9:
+		result += (tracks,)
+	if arity == 10:
+		result += ({'rn': torch.tensor([s[9]['rn'] for s in batch], dtype=torch.int64),
+			'has_evidence': torch.tensor([s[9]['has_evidence'] for s in batch], dtype=torch.bool)},)
+	return result
 
 
 def hyenaMLM_collate_fn(batch):
