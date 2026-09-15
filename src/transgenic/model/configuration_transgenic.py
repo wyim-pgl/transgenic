@@ -95,8 +95,12 @@ class HyenaTransgenicConfig(PretrainedConfig):
 		allow_partial_encoder_load=True,          # Allow shape-filtered partial load for widened/deeper configs
 		unlink=False,                             # Whether to untie decoder embedding ↔ LM head weights
 		max_transcript_count=15,                  # Max transcript count for regression head
+		evidence_channels=0,                     # Optional per-base evidence channels (0 preserves B5)
 		**kwargs,
 	):
+		if isinstance(evidence_channels, bool) or not isinstance(evidence_channels, int) or evidence_channels < 0:
+			raise ValueError("evidence_channels must be a nonnegative integer")
+		self.evidence_channels = evidence_channels
 		# Store all hyperparameters as instance attributes
 		self.vocab_size = vocab_size
 		self.max_encoder_position_embeddings = max_encoder_position_embeddings

@@ -226,7 +226,10 @@ class TransgenicPreTrainedModel(PreTrainedModel):
 		"""Initialize weights for Linear and Embedding layers using normal distribution."""
 		std = self.config.init_std  # Default: 0.02
 		if isinstance(module, nn.Linear):
-			module.weight.data.normal_(mean=0.0, std=std)
+			if getattr(module, "_is_evidence_projection", False):
+				module.weight.data.zero_()
+			else:
+				module.weight.data.normal_(mean=0.0, std=std)
 			if module.bias is not None:
 				module.bias.data.zero_()
 		elif isinstance(module, nn.Embedding):
@@ -425,6 +428,12 @@ class HyenaEncoder(nn.Module):
 		# Instantiate with target architecture, then optionally load compatible
 		# pretrained weights by key+shape for widened/deeper variants.
 		self.hyena = AutoModel.from_config(HyenaConfig, trust_remote_code=True)
+		self.evidence_channels = config.evidence_channels
+		if self.evidence_channels > 0:
+			self.evidence_proj = nn.Linear(self.evidence_channels, HyenaConfig.d_model, bias=False)
+			# Parent post_init traversals must preserve the step-0 zero residual.
+			self.evidence_proj._is_evidence_projection = True
+			nn.init.zeros_(self.evidence_proj.weight)
 
 		if getattr(config, "load_pretrained_encoder", True):
 			try:
@@ -519,7 +528,7 @@ class HyenaEncoder(nn.Module):
 					"or set load_pretrained_encoder=False deliberately."
 				) from exc
 
-	def forward(self, input_ids, segLabels=None, *args, **kwargs):
+	def forward(self, input_ids, segLabels=None, *args, evidence_tracks=None, **kwargs):
 		"""
 		Args:
 			input_ids: DNA nucleotide token IDs, shape (batch, seq_len).
@@ -529,9 +538,20 @@ class HyenaEncoder(nn.Module):
 			HyenaModelOutput with last_hidden_state (batch, seq_len, d_model).
 		"""
 		output = self.hyena(input_ids)  # Run HyenaDNA forward pass
+		h = output.last_hidden_state
+		if evidence_tracks is not None:
+			if self.evidence_channels == 0:
+				raise ValueError("evidence_tracks supplied with evidence_channels=0")
+			if not isinstance(evidence_tracks, torch.Tensor) or not evidence_tracks.is_floating_point():
+				raise TypeError("evidence_tracks must be a floating-point tensor")
+			if evidence_tracks.shape != (*h.shape[:2], self.evidence_channels):
+				raise ValueError("evidence_tracks must have shape (batch, sequence_length, evidence_channels)")
+			if evidence_tracks.device != h.device:
+				raise ValueError("evidence_tracks must be on the encoder hidden-state device")
+			h = h + self.evidence_proj(evidence_tracks.to(dtype=h.dtype))
 
 		return HyenaModelOutput(
-			last_hidden_state=output.last_hidden_state,  # Per-nucleotide embeddings
+			last_hidden_state=h,  # Evidence fused before positional injection/downsampling
 			encoder_hidden_states=output.hidden_states    # Intermediate layer outputs (if requested)
 		)
 
@@ -676,6 +696,7 @@ class transgenicModel(TransgenicPreTrainedModel):
 		output_attentions: Optional[bool] = None,
 		output_hidden_states: Optional[bool] = None,
 		return_dict: Optional[bool] = None,
+		evidence_tracks: Optional[torch.Tensor] = None,
 	) -> Union[Tuple[torch.Tensor], LEDSeq2SeqModelOutput]:
 		"""Full encoder-decoder forward pass.
 
@@ -711,7 +732,7 @@ class transgenicModel(TransgenicPreTrainedModel):
 		# ── Encoder ──
 		if encoder_outputs is None:
 			# Fresh encoding: run HyenaDNA on DNA input
-			encoder_outputs = self.encoder(input_ids)
+			encoder_outputs = self.encoder(input_ids, evidence_tracks=evidence_tracks)
 			encoder_outputs.attention_mask = attention_mask
 		else:
 			# Pre-computed encoder outputs (during generation)
@@ -894,6 +915,7 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 		output_attentions: Optional[bool] = None,
 		output_hidden_states: Optional[bool] = None,
 		return_dict: Optional[bool] = None,
+		evidence_tracks: Optional[torch.Tensor] = None,
 	) -> Union[Tuple[torch.Tensor], LEDSeq2SeqLMOutput]:
 		"""Full forward pass with optional loss computation.
 
@@ -928,6 +950,7 @@ class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMi
 		# Run the encoder-decoder backbone
 		outputs = self.transgenic(
 			input_ids,
+			evidence_tracks=evidence_tracks,
 			attention_mask=attention_mask,
 			decoder_input_ids=decoder_input_ids,
 			decoder_attention_mask=decoder_attention_mask,
