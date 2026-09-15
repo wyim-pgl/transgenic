@@ -61,6 +61,12 @@ class LauncherTests(unittest.TestCase):
                 self.m.filter_source(source, 'orthodb', lin, 3702, self.root / 'out.fa')
             self.assertFalse((self.root / 'out.fa').exists())
 
+    def test_ncbi_cellular_root_lineage_is_accepted_without_taxid_one(self):
+        source = self.put('source.fa', '>4530_0:keep\nMEFG\n')
+        lin = self.put('lineage.tsv', '4530\t4530;4527;33090;2759;131567\n')
+        qc = self.m.filter_source(source, 'orthodb', lin, 3702, self.root / 'out.fa')
+        self.assertEqual(qc['sequences_out'], 1)
+
     def test_separate_output_and_explicit_search_tokens(self):
         for source in ('orthodb', 'swissprot'):
             cmd = self.m.search_command('/diamond', self.root / 'q.fa', self.root / f'{source}.dmnd', self.root / f'{source}.raw13.tsv', 4, self.root / 'tmp')

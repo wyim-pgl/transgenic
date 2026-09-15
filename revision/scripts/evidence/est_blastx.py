@@ -104,11 +104,13 @@ def observed_taxids(source, source_kind):
 
 def frozen_lineage(path, present):
     lineages = taxonomy.read_lineage(str(path))
-    # Self membership is essential for merged identifiers. Root membership catches
-    # truncated descendant snippets; taxonomic completeness still needs cache review.
-    bad = [t for t in present if t not in lineages or t not in lineages[t] or 1 not in lineages[t]]
+    # NCBI LineageEx commonly ends at cellular organisms (131567), omitting
+    # root (1). Reject local descendant snippets, but accept either full format.
+    # Endpoint/self checks do not replace review of complete taxonomy provenance.
+    bad = [t for t in present if t not in lineages or t not in lineages[t]
+           or not ({1, 131567} & set(lineages[t]))]
     if bad:
-        raise ValueError(f'missing/incomplete frozen lineage (self and root required): {sorted(bad)[:10]}')
+        raise ValueError(f'missing/incomplete frozen lineage (self and root/cellular ancestor required): {sorted(bad)[:10]}')
     return lineages
 
 
