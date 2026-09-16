@@ -345,7 +345,11 @@ def _audit_unit(layout, species, kind, species_root, batch_root, check, files):
                   'recorded': {k: provenance.get(k) for k in ('raw_hsps', 'hsps_lt_30aa')}})
     except ValueError as exc:
         check.add('raw13_contract', False, str(exc))
-    subjects = {h.split()[0] for h, _ in launcher.records(unit / f'{kind}.filtered.fa')}
+    try:
+        # records() validates lazily: catch evidence errors during consumption.
+        subjects = {h.split()[0] for h, _ in launcher.records(unit / f'{kind}.filtered.fa')}
+    except ValueError as exc:
+        raise EvidenceError(str(exc)) from exc
     unknown_subjects = set()
     with open(unit / f'{kind}.raw13.tsv') as raw:
         for line in raw:

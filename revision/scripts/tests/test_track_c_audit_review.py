@@ -200,6 +200,34 @@ def test_missing_code_fields_fail_in_integrated_inventory(tmp_path):
     assert rollup['failed_units'] == ['Gmax/swissprot']
 
 
+@pytest.mark.parametrize('contents', ['not FASTA\n', '', '>valid\nM\n>empty\n'],
+                         ids=['malformed', 'empty', 'valid-prefix-then-malformed'])
+def test_filtered_fasta_iteration_failure_preserves_all_unit_inventory(tmp_path, contents):
+    tree, sacct = make_audit_tree(tmp_path)
+    damaged = tree / audit.PILOT_DIR / 'orthodb' / 'orthodb.filtered.fa'
+    damaged.write_text(contents)
+    if contents.startswith('>valid'):
+        records = audit.launcher.records(damaged)
+        assert next(records) == ('valid', 'M')
+        with pytest.raises(ValueError, match='malformed FASTA record'):
+            next(records)
+    out = tmp_path / 'out'
+    with pytest.raises(ValueError, match='audit FAILED'):
+        audit.audit(tree, out, sacct)
+    rollup = json.loads((out / 'rollup.json').read_text())
+    assert rollup['units_audited'] == 18
+    assert rollup['failed_units'] == ['Sitalica/orthodb']
+    manifests = [json.loads(p.read_text()) for p in (out / 'units').glob('*.json')]
+    assert len(manifests) == 18
+    assert sum(m['status'] == 'PASS' for m in manifests) == 17
+    failed = next(m for m in manifests if m['unit'] == 'Sitalica/orthodb')
+    assert failed['files']['orthodb.filtered.fa'] == audit.launcher.sha256(damaged)
+    assert failed['checks']['done_gate']['status'] == 'PASS'
+    assert failed['checks']['provenance_hashes']['status'] == 'FAIL'
+    assert 'FASTA' in failed['checks']['malformed_or_unreadable']['detail']
+    assert (out / 'FAILED.json').is_file() and not (out / 'DONE').exists()
+
+
 def test_programmer_error_not_silently_treated_as_bad_input(tmp_path, monkeypatch):
     make_unit(tmp_path)
     def broken(*args, **kwargs):

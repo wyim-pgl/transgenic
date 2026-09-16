@@ -102,3 +102,18 @@ PYTHONPATH=.testdeps /home/wyim/micromamba/envs/kimicli/bin/python3.12 -m pytest
 **65 passed** (22 baseline + 43 recovery cases). Includes a complete synthetic 18-unit audit, both provenance layouts, failed accounting/preflight rollups preserving inventory, both-strand hand-built RICH17 diagnostic cases, 29/30/31 raw-boundary nonacceptance, and production gates creating no output.
 
 `bash -n` passed for both recovered sbatch templates; `py_compile` passed for all four Track C Python modules. Staged `git diff --check` initially caught one trailing whitespace line; corrected before the successful source commit. No full-repository, real-DIAMOND, Slurm or production-data test claim.
+
+## Round two — scoped filtered-FASTA iteration regression
+
+FIX_BASE: `b7547e2edc175f7eac9713c8465b5b20e396a86f`. Read `notes/recovery_20260916_1251/C.fix1_review.md` completely. Original five findings remain addressed. The sole production change wraps **consumption** of `launcher.records()` in the filtered-subject set comprehension, converting its expected validation `ValueError` into `EvidenceError`. The unit-wide exception boundary is unchanged; no blanket ValueError/TypeError catch, policy/provenance change or C2/C3 change was introduced.
+
+Three integrated 18-unit regressions cover malformed FASTA, empty FASTA, and one valid record followed by an empty record. The last case explicitly proves the generator yields a valid prefix before raising during later iteration. Each verifies 18 manifests, 17 passing units under the existing synthetic trust anchors, the failed unit's gathered hashes and prior checks, final rollup and FAILED marker, and no outer DONE. All three tests failed against FIX_BASE with escaping FASTA ValueError before the source fix. The existing programmer-TypeError propagation regression remains passing.
+
+Baseline: **116 passed**. Final exact command (same worktree):
+
+```sh
+PYTHONPATH=.testdeps /home/wyim/micromamba/envs/kimicli/bin/python3.12 -m pytest -q revision/scripts/tests/test_est_blastx.py revision/scripts/tests/test_est_blastx_fixture.py revision/scripts/tests/test_track_c_recovery.py revision/scripts/tests/test_track_c_audit_review.py
+bash -n revision/scripts/evidence/est_blastx_audit.sbatch revision/scripts/evidence/est_phase_accept_fixture.sbatch
+```
+
+Result: **119 passed**; both shell syntax checks and `git diff --check` passed. Source/tests/report are committed together; exact commit is available with `git log -1 -- notes/TRACK_C_RECOVERY_REPORT.md`. Existing missing pilot log receipt, real-data/identity limitations, `.extern` anomaly and C2/C3 gates are unchanged. No subagents, remote actions, main edits, merge or push. Controller scoped re-review remains pending.
