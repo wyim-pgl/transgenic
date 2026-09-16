@@ -4,14 +4,18 @@ from __future__ import annotations
 import json
 import os
 import sys
-from types import SimpleNamespace
-
 import torch
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 
 import transgenic.training.mvp_runtime as runtime
 from transgenic.training.mvp_runtime import MVPRecipe, build_optimizer, make_accelerator, run_fixed_updates
+
+
+class ToyOutput(dict):
+    def __init__(self, loss):
+        super().__init__(loss=loss)
+        self.loss = loss
 
 
 class ToyDataset(Dataset):
@@ -47,6 +51,7 @@ class ToyModel(torch.nn.Module):
         self.transgenic = torch.nn.Module()
         self.transgenic.encoder = torch.nn.Module()
         self.transgenic.encoder.evidence_proj = torch.nn.Linear(8, 1, bias=False)
+        self.unused = torch.nn.Parameter(torch.tensor([0.7]))
         self.mode = mode
         self.rank = rank
         self.forward_calls = 0
@@ -64,7 +69,7 @@ class ToyModel(torch.nn.Module):
             loss = loss * torch.tensor(float("nan"), device=loss.device)
         if self.mode == "nan_gradient" and self.rank == 1 and self.forward_calls == 2:
             loss.register_hook(lambda gradient: gradient * float("nan"))
-        return SimpleNamespace(loss=loss)
+        return ToyOutput(loss)
 
 
 def loader_for(accelerator, per_rank_length, *, invalid=False):
@@ -164,6 +169,11 @@ def run_success(case):
         "clip_calls": clip_count,
         "forward_calls": unwrapped.forward_calls,
         "parameters_synchronized": synchronized(accelerator, vector),
+        "ddp_find_unused_parameters": bool(
+            getattr(model, "find_unused_parameters", accelerator.ddp_handler.find_unused_parameters)
+        ),
+        "unused_trainable": unwrapped.unused.requires_grad,
+        "unused_unchanged": bool(torch.equal(unwrapped.unused.detach().cpu(), torch.tensor([0.7]))),
         "analytic_match": (bool(torch.allclose(vector, reference_core(accelerator.num_processes, recipe),
                                                 rtol=2e-6, atol=2e-7))
                            if not literal else None),
@@ -173,13 +183,101 @@ def run_success(case):
         print(json.dumps(summary, sort_keys=True))
 
 
+def optimizer_snapshot(model, optimizer):
+    groups = [
+        (group.get("name"), group.get("lr"), group.get("weight_decay"),
+         tuple(id(parameter) for parameter in group.get("params", [])))
+        for group in optimizer.param_groups
+    ]
+    parameters = parameter_vector(model).clone()
+    gradients = [None if parameter.grad is None else parameter.grad.detach().cpu().clone()
+                 for parameter in model.parameters()]
+    state_entries = len(getattr(optimizer, "optimizer", optimizer).state)
+    return groups, parameters, gradients, state_entries
+
+
+def run_optimizer_contract():
+    world = int(os.environ.get("WORLD_SIZE", "1"))
+    recipe = MVPRecipe(max_updates=2, warmup_updates=1, accumulation_steps=2,
+                       required_world_size=world)
+    accelerator = make_accelerator(recipe, cpu=True)
+    results = {}
+    for variant in ("reordered", "extra", "unrelated", "projection_unrelated",
+                    "duplicate", "missing", "no_params", "bad_decay"):
+        model = ToyModel(rank=accelerator.process_index)
+        optimizer = build_optimizer(model, recipe)
+        model, optimizer = accelerator.prepare(model, optimizer)
+        unwrapped = accelerator.unwrap_model(model)
+        unrelated = None
+        if accelerator.process_index == 1:
+            if variant == "reordered":
+                optimizer.param_groups[:] = optimizer.param_groups[::-1]
+            elif variant == "extra":
+                unrelated = torch.nn.Parameter(torch.tensor([9.0], device=accelerator.device))
+                extra = dict(optimizer.param_groups[0])
+                extra.update(name="extra", params=[unrelated])
+                optimizer.param_groups.append(extra)
+            elif variant == "unrelated":
+                unrelated = torch.nn.Parameter(torch.tensor([9.0], device=accelerator.device))
+                optimizer.param_groups[0]["params"][0] = unrelated
+            elif variant == "projection_unrelated":
+                unrelated = torch.nn.Parameter(torch.tensor([9.0], device=accelerator.device))
+                optimizer.param_groups[1]["params"][0] = unrelated
+            elif variant == "duplicate":
+                optimizer.param_groups[0]["params"].append(optimizer.param_groups[1]["params"][0])
+            elif variant == "missing":
+                optimizer.param_groups[0]["params"] = optimizer.param_groups[0]["params"][1:]
+            elif variant == "no_params":
+                del optimizer.param_groups[1]["params"]
+            elif variant == "bad_decay":
+                optimizer.param_groups[0]["weight_decay"] = recipe.weight_decay + 1
+        for parameter in unwrapped.parameters():
+            parameter.grad = torch.ones_like(parameter)
+        before = optimizer_snapshot(unwrapped, optimizer)
+        loader, _ = loader_for(accelerator, 3)
+        rejected = False
+        try:
+            run_fixed_updates(accelerator, model, optimizer, loader, recipe)
+        except (ValueError, RuntimeError, FloatingPointError):
+            rejected = True
+        after = optimizer_snapshot(unwrapped, optimizer)
+        no_writes = (before[0] == after[0] and torch.equal(before[1], after[1]) and
+                     all((left is None and right is None) or
+                         (left is not None and right is not None and torch.equal(left, right))
+                         for left, right in zip(before[2], after[2])) and
+                     before[3] == after[3])
+        rejected_flags = accelerator.gather(torch.tensor([int(rejected)], device=accelerator.device))
+        write_flags = accelerator.gather(torch.tensor([int(no_writes)], device=accelerator.device))
+        results[variant] = {
+            "all_ranks_rejected": bool(rejected_flags.sum().item() == world),
+            "no_writes": bool(write_flags.sum().item() == world),
+        }
+    accelerator.wait_for_everyone()
+    if accelerator.is_main_process:
+        print(json.dumps({"world_size": world, "variants": results}, sort_keys=True))
+
+
 def run_failure(case):
     world = int(os.environ.get("WORLD_SIZE", "1"))
     recipe = MVPRecipe(max_updates=2, warmup_updates=1, accumulation_steps=2,
                        required_world_size=world)
-    if case == "invalid_settings":
+    if case in {"invalid_settings", "invalid_ddp"}:
         from accelerate import Accelerator
-        accelerator = Accelerator(cpu=True)
+        if case == "invalid_ddp":
+            from accelerate.utils import DistributedDataParallelKwargs, GradientAccumulationPlugin
+            plugin = GradientAccumulationPlugin(
+                num_steps=recipe.accumulation_steps,
+                sync_with_dataloader=False,
+                adjust_scheduler=False,
+            )
+            accelerator = Accelerator(
+                cpu=True,
+                gradient_accumulation_plugin=plugin,
+                step_scheduler_with_optimizer=False,
+                kwargs_handlers=[DistributedDataParallelKwargs(find_unused_parameters=False)],
+            )
+        else:
+            accelerator = Accelerator(cpu=True)
     else:
         accelerator = make_accelerator(recipe, cpu=True)
     mode = case if case in {"nan_loss", "nan_gradient"} else "normal"
@@ -187,6 +285,26 @@ def run_failure(case):
     optimizer = build_optimizer(model, recipe)
     if case != "unprepared_components":
         model, optimizer = accelerator.prepare(model, optimizer)
+    unwrapped = accelerator.unwrap_model(model)
+    initial_parameters = parameter_vector(unwrapped).clone()
+    optimizer_step_calls = 0
+    original_step = optimizer.step
+
+    def observed_step(*args, **kwargs):
+        nonlocal optimizer_step_calls
+        optimizer_step_calls += 1
+        if case != "skipped":
+            return original_step(*args, **kwargs)
+
+    optimizer.step = observed_step
+    lr_installations = []
+    original_set_lrs = runtime._set_lrs
+
+    def observed_set_lrs(target, target_recipe, completed):
+        lr_installations.append(completed)
+        return original_set_lrs(target, target_recipe, completed)
+
+    runtime._set_lrs = observed_set_lrs
     if case == "empty":
         loader, _ = loader_for(accelerator, 0)
     elif case == "unequal":
@@ -213,9 +331,22 @@ def run_failure(case):
         rejected = True
     flags = accelerator.gather(torch.tensor([int(rejected)], device=accelerator.device))
     all_rejected = bool(flags.sum().item() == world)
+    unchanged = torch.equal(initial_parameters, parameter_vector(unwrapped))
+    unchanged_flags = accelerator.gather(torch.tensor([int(unchanged)], device=accelerator.device))
+    step_counts = accelerator.gather(torch.tensor([optimizer_step_calls], device=accelerator.device))
+    state = getattr(optimizer, "optimizer", optimizer).state
+    state_counts = accelerator.gather(torch.tensor([len(state)], device=accelerator.device))
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:
-        print(json.dumps({"case": case, "all_ranks_rejected": all_rejected}))
+        print(json.dumps({
+            "case": case,
+            "all_ranks_rejected": all_rejected,
+            "all_parameters_unchanged": bool(unchanged_flags.sum().item() == world),
+            "optimizer_step_calls_per_rank": step_counts.cpu().tolist(),
+            "optimizer_state_entries_per_rank": state_counts.cpu().tolist(),
+            "lr_installations": lr_installations,
+            "final_lrs": [group["lr"] for group in optimizer.param_groups],
+        }))
     if not all_rejected:
         raise SystemExit(2)
 
@@ -224,5 +355,7 @@ if __name__ == "__main__":
     selected = sys.argv[1]
     if selected in {"core", "literal"}:
         run_success(selected)
+    elif selected == "optimizer_contract":
+        run_optimizer_contract()
     else:
         run_failure(selected)

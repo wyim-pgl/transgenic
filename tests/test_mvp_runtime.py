@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 import torch
 
-from transgenic.training.mvp_runtime import MVPRecipe, build_optimizer, lr_scale
+from transgenic.training.mvp_runtime import MVPRecipe, build_optimizer, lr_scale, make_accelerator
 
 
 ROOT = Path(__file__).parents[1]
@@ -62,6 +62,15 @@ def test_optimizer_groups_are_named_disjoint_exhaustive_and_uniform_decay():
     del model.transgenic.encoder.evidence_proj
     with pytest.raises(ValueError, match="exactly one"):
         build_optimizer(model, recipe)
+
+
+def test_factory_rejects_conflicting_ddp_handler():
+    from accelerate.utils import DistributedDataParallelKwargs
+
+    recipe = MVPRecipe(required_world_size=1)
+    conflicting = DistributedDataParallelKwargs(find_unused_parameters=False)
+    with pytest.raises(ValueError, match="find_unused_parameters=True"):
+        make_accelerator(recipe, cpu=True, kwargs_handlers=[conflicting])
 
 
 def test_all_250_updates_match_post_step_lambdalr_parameters_and_state():
@@ -128,6 +137,19 @@ def test_actual_accelerate_cpu_gloo_core(ranks):
     assert record["clip_calls"] == 3
     assert record["analytic_match"] is True
     assert record["parameters_synchronized"] is True
+    assert record["ddp_find_unused_parameters"] is True
+    assert record["unused_trainable"] is True
+    assert record["unused_unchanged"] is True
+
+
+def test_collective_optimizer_contract_rejects_before_writes():
+    record = _probe(2, "optimizer_contract", timeout=40)
+    assert record["world_size"] == 2
+    assert record["variants"] == {
+        name: {"all_ranks_rejected": True, "no_writes": True}
+        for name in ("reordered", "extra", "unrelated", "projection_unrelated",
+                     "duplicate", "missing", "no_params", "bad_decay")
+    }
 
 
 def test_literal_four_rank_250_by_24_budget():
@@ -147,12 +169,21 @@ def test_literal_four_rank_250_by_24_budget():
 
 
 @pytest.mark.parametrize("case", ["nan_loss", "nan_gradient", "skipped", "empty",
-                                  "unequal", "invalid_settings", "invalid_batch",
+                                  "unequal", "invalid_settings", "invalid_ddp", "invalid_batch",
                                   "prepared_loader", "unprepared_components",
                                   "sampler_mismatch"])
 def test_collective_failures_and_contract_rejections(case):
     ranks = 2 if case in {"nan_loss", "nan_gradient", "empty", "unequal",
-                          "sampler_mismatch"} else 1
+                          "sampler_mismatch", "invalid_ddp"} else 1
     record = _probe(ranks, case)
     assert record["case"] == case
     assert record["all_ranks_rejected"] is True
+    if case in {"nan_loss", "nan_gradient"}:
+        assert record["optimizer_step_calls_per_rank"] == [0] * ranks
+        assert record["all_parameters_unchanged"] is True
+    if case == "skipped":
+        assert record["optimizer_step_calls_per_rank"] == [1]
+        assert record["all_parameters_unchanged"] is True
+        assert record["optimizer_state_entries_per_rank"] == [0]
+        assert record["lr_installations"] == [0]
+        assert record["final_lrs"] == [0, 0]

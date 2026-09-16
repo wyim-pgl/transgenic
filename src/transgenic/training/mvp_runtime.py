@@ -55,10 +55,17 @@ class MVPRecipe:
 
 
 def make_accelerator(recipe: MVPRecipe, **kwargs):
-    """Construct an Accelerator with the fixed runtime's required accumulation semantics."""
+    """Construct an Accelerator with the fixed runtime's required DDP/accumulation semantics."""
     from accelerate import Accelerator
-    from accelerate.utils import GradientAccumulationPlugin
+    from accelerate.utils import DistributedDataParallelKwargs, GradientAccumulationPlugin
 
+    handlers = list(kwargs.pop("kwargs_handlers", []) or [])
+    ddp_handlers = [handler for handler in handlers
+                    if isinstance(handler, DistributedDataParallelKwargs)]
+    if any(handler.find_unused_parameters is not True for handler in ddp_handlers):
+        raise ValueError("DDP handler must set find_unused_parameters=True")
+    if not ddp_handlers:
+        handlers.append(DistributedDataParallelKwargs(find_unused_parameters=True))
     plugin = GradientAccumulationPlugin(
         num_steps=recipe.accumulation_steps,
         sync_with_dataloader=False,
@@ -67,6 +74,7 @@ def make_accelerator(recipe: MVPRecipe, **kwargs):
     return Accelerator(
         gradient_accumulation_plugin=plugin,
         step_scheduler_with_optimizer=False,
+        kwargs_handlers=handlers,
         **kwargs,
     )
 
@@ -147,15 +155,54 @@ def _validate_accelerator(accelerator, model, optimizer, train_loader, recipe: M
     if optimizer not in getattr(accelerator, "_optimizers", []):
         errors.append("caller must prepare the optimizer")
     prepared_models = getattr(accelerator, "_models", [])
-    if (model not in prepared_models and
-            accelerator.unwrap_model(model) not in prepared_models):
+    unwrapped = accelerator.unwrap_model(model)
+    if model not in prepared_models and unwrapped not in prepared_models:
         errors.append("caller must prepare the model")
+    ddp_handler = getattr(accelerator, "ddp_handler", None)
+    if ddp_handler is None or ddp_handler.find_unused_parameters is not True:
+        errors.append("Accelerator DDP handler must set find_unused_parameters=True")
     if accelerator.num_processes > 1:
+        from torch.nn.parallel import DistributedDataParallel
+
+        if (not isinstance(model, DistributedDataParallel) or
+                model.find_unused_parameters is not True):
+            errors.append("prepared DDP model must set find_unused_parameters=True")
         sampler = getattr(train_loader, "sampler", None)
         if (not isinstance(sampler, DistributedSampler) or
                 sampler.num_replicas != accelerator.num_processes or
                 sampler.rank != accelerator.process_index):
             errors.append("DDP loader must have one rank-matched DistributedSampler")
+
+    groups = optimizer.param_groups
+    if len(groups) != 2 or [group.get("name") for group in groups] != ["backbone", "projection"]:
+        errors.append("optimizer groups must be exactly ordered backbone, projection")
+    else:
+        named = [(name, parameter) for name, parameter in unwrapped.named_parameters()
+                 if parameter.requires_grad]
+        projections = [parameter for name, parameter in named if name == _PROJECTION_NAME]
+        backbone_params = groups[0].get("params")
+        projection_params = groups[1].get("params")
+        if not isinstance(backbone_params, (list, tuple)):
+            errors.append("backbone optimizer group has no parameter list")
+            backbone_params = []
+        if not isinstance(projection_params, (list, tuple)):
+            errors.append("projection optimizer group has no parameter list")
+            projection_params = []
+        grouped = list(backbone_params) + list(projection_params)
+        grouped_ids = [id(parameter) for parameter in grouped]
+        trainable_ids = {id(parameter) for _, parameter in named}
+        if (len(projections) != 1 or len(projection_params) != 1 or
+                projection_params[0] is not projections[0]):
+            errors.append(f"projection group must contain exactly {_PROJECTION_NAME}")
+        if (len(grouped_ids) != len(set(grouped_ids)) or
+                set(grouped_ids) != trainable_ids):
+            errors.append("optimizer groups must be disjoint and exhaustive")
+        expected_backbone = {id(parameter) for name, parameter in named
+                             if name != _PROJECTION_NAME}
+        if {id(parameter) for parameter in backbone_params} != expected_backbone:
+            errors.append("backbone optimizer group contains unrelated or missing parameters")
+        if any(group.get("weight_decay") != recipe.weight_decay for group in groups):
+            errors.append("optimizer weight decay does not match recipe")
     if not _collective_true(accelerator, not errors):
         detail = "; ".join(errors) if errors else "invalid setting on another rank"
         raise ValueError(f"Accelerator ownership/settings invalid: {detail}")

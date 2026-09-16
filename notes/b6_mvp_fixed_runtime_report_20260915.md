@@ -106,7 +106,7 @@ PYTHONPATH="$PWD/src:$PWD/.testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps" \
 /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q --ignore=tests/test_mvp_runtime.py
 ```
 
-Result: **698 passed, 24 failed in 583.01 s**. The failures are outside this increment and include absent external `seqkit`, absent `/tmp/transgenic_comparison/genomes/Athaliana_167_TAIR10.fa.fai`, and existing environment/order-sensitive tests. This broad run is recorded, not represented as green; the required 46-test baseline above is green.
+Result: **698 passed, 24 failed in 583.01 s**. Confirmed causes among those failures include absent external `seqkit` and absent `/tmp/transgenic_comparison/genomes/Athaliana_167_TAIR10.fa.fai`; the remaining failures were not triaged, so no broader attribution is made. This broad run is recorded, not represented as green; the required 46-test baseline above is green.
 
 ## Limitations and concerns
 
@@ -115,3 +115,52 @@ Result: **698 passed, 24 failed in 583.01 s**. The failures are outside this inc
 - Sampler epoch transitions and a distinct loader RNG source are tested. Full dataset worker RNG, augmentation, and resume determinism are intentionally not claimed.
 - The caller must preserve the prepared-model/prepared-optimizer/unprepared-loader ownership contract when later CLI wiring is added. Preparing the loader would double-shard it and is rejected.
 - There is no checkpoint save/resume, CLI, publication record, bootstrap, or paired evaluator integration in this increment.
+
+## Round 1 scoped review fixes
+
+Review base: `227c6e372d0277bf133ddfc033faca3d3f98aa61`.
+
+### Finding 1 — required unused-parameter DDP semantics
+
+`make_accelerator` now installs `DistributedDataParallelKwargs(find_unused_parameters=True)` by default while preserving unrelated caller handlers. A caller-supplied DDP handler is accepted only when it also sets `find_unused_parameters=True`; a conflicting handler is rejected before Accelerator construction. Runtime preflight checks both the Accelerator DDP handler and, on multiple ranks, the actual prepared `DistributedDataParallel.find_unused_parameters` value collectively.
+
+The real CPU/Gloo probe model now includes a trainable parameter deliberately unused by `forward`. The existing 2- and 4-rank cases execute three synchronized updates (not a freeze/removal fallback), assert the DDP setting, and verify the unused parameter remains trainable and unchanged. A separate real 2-rank negative probe constructs otherwise-correct accumulation settings with `find_unused_parameters=False` and confirms collective runtime rejection. Before the fix, the 2-rank positive probe failed on its second forward with DDP's `Expected to have finished reduction in the prior iteration` error. A conflicting-handler unit test also failed red because the factory did not raise.
+
+### Finding 2 — optimizer contract before mutation
+
+Runtime preflight now collectively requires exactly two groups in stable `backbone`, `projection` order; exact projection-parameter identity from the unwrapped model; disjoint and exhaustive coverage of every trainable parameter; no unrelated/missing backbone parameters; and recipe-uniform weight decay. This validation runs before `zero_grad`, initial LR installation, or parameter updates.
+
+A real 2-rank probe corrupts only rank 1 in eight ways: reordered groups, an extra group, an unrelated backbone parameter, an unrelated projection parameter, duplicate assignment, a missing parameter, a missing `params` list, and wrong weight decay. Every variant must reject on all ranks without hanging, while parameters, gradients, optimizer state, LR/group metadata, and group membership remain byte-for-byte/identity unchanged. Before the fix, the original five malformed variants reached later runtime work and the no-write assertions failed; the missing-list case raised a rank-local `KeyError` and disconnected its peer.
+
+### Finding 3 — failure-path invariants
+
+The NaN-loss and nonfinite-gradient probes now assert zero optimizer calls and unchanged parameters on every rank. The CPU skipped-step seam replaces the optimizer call with an actual no-op and reports a skipped flag; it asserts one attempted call, unchanged parameters, empty optimizer state, only the initial `k=0` LR installation, and no LR progression. This verifies controller behavior but does not claim to certify a real GPU mixed-precision overflow.
+
+### Finding 4 — broad-suite wording
+
+The earlier broad-suite note now retains only the evidenced missing `seqkit` and `.fai` causes. The other broad-suite failures are explicitly untriaged. Per review scope, the broad suite was not rerun.
+
+### Round 1 verification
+
+Focused runtime suite:
+
+```text
+PYTHONPATH="$PWD/src:$PWD/.testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps" \
+/usr/bin/time -f 'DURATION %e s' \
+/home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_runtime.py
+```
+
+Result: **20 passed, 0 failed in 155.69 s**; wall time **156.58 s**.
+
+Required baseline:
+
+```text
+PYTHONPATH="$PWD/src:$PWD/.testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps" \
+/usr/bin/time -f 'DURATION %e s' \
+/home/wyim/miniconda3/envs/pdb/bin/python -m unittest -q \
+  tests.test_weights_init tests.test_mvp_metrics tests.test_mvp_model tests.test_mvp_dataset
+```
+
+Result: **46 passed, 0 failed in 55.113 s**; wall time **60.36 s**.
+
+Round 1 focused plus required baseline total: **66 passed, 0 failed**.
