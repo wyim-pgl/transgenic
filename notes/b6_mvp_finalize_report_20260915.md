@@ -3,7 +3,8 @@
 ## Scope and base
 
 - Branch: `won/b6-mvp-finalize`
-- Required base: `a314bf9343846d64d768f14d4ae4909beec08a40`
+- Required original base: `a314bf9343846d64d768f14d4ae4909beec08a40`
+- Scoped round-1 review base: `428e36edffc1175a6158ae83a43ecdb276ca11a8`
 - Native isolated worktree, CPU only. No main-worktree writes, remote actions, GPU actions, merge, or push.
 - Added only `mvp_finalize.py`, its focused tests and subprocess probe, this report, and the requested scoped wording correction. There is no CLI, bootstrap, GO/STOP policy, resume, or general checkpoint framework.
 - The exact neutral brief had SHA256 `ef3c585fb08df09ede59c7350cd0492281d0f6998517adc624f3ec7b80968943`. Graph mapping and focused graph queries preceded source edits. Graph files and the local dependency link are not committed.
@@ -12,12 +13,14 @@
 
 `evaluate_and_publish_final(accelerator, model, eval_loader, expected_rns, final_dir, *, metadata, training_summary)`:
 
-- validates the complete finite unique integer `expected_rns` inventory, metadata, training summary, model, unprepared batch-one finite loader, supported distributed type, and rank/world-matched `DistributedSampler(shuffle=False, drop_last=False)` before a forward;
+- accepts `expected_rns` only as a concrete `list`, `tuple`, or `range`; type and cheap length bounds are checked collectively before copying or inspecting elements, so arbitrary, throwing, or infinite iterators are never consumed;
+- validates the complete finite unique integer inventory, metadata, training summary, model, unprepared batch-one finite loader, supported distributed type, and rank/world-matched `DistributedSampler(shuffle=False, drop_last=False)` before a forward;
 - compares loader lengths and caller identity payloads across ranks, with `MVP_MAX_RECORDS = 100000` and `MVP_MAX_SERIALIZED_BYTES = 67108864` fail-closed bounds (both deliberately generous relative to 1,447 valid tiles and never truncating);
 - moves nested tensor inputs, including `rn` and `has_evidence` metadata, to the accelerator device and calls the reviewed `paired_metric_record` unchanged, preserving its unconditional off-then-on order and model mode restoration;
 - evaluates the original prepared/compiled model. It never unwraps to an eager target for evaluation;
-- gathers each rank's complete local record list once after local forwards, aggregates only on rank 0 with reviewed `aggregate_paired_records`, broadcasts the result/error, then publishes only on rank 0 and broadcasts a second publication status before the final all-rank barrier;
-- returns an identical paired summary on every rank. Padded `DistributedSampler` duplicates are checked and deduplicated by the reviewed metric aggregator.
+- canonicalizes each local record list under a caught error, exchanges only fixed-size error/length controls first, and rejects any local length, aggregate byte sum, or `world_size * max_length` padded transfer above the byte cap before transferring record bytes;
+- gathers records as exactly bounded padded `uint8` tensors rather than pickled Python records. Rank 0 decodes and calls reviewed `aggregate_paired_records`; the bounded canonical summary is broadcast as `uint8`, while small status objects carry no records;
+- publishes only on rank 0 and broadcasts publication status before the final all-rank barrier. Every rank returns the decoded identical summary; padded sampler duplicates remain checked by the reviewed aggregator.
 
 Replicated DDP and ordinary single-process evaluation are supported. FSDP, DeepSpeed, unknown wrappers, prepared evaluation loaders, and non-DDP multi-rank models are rejected. Only rank 0 unwraps for saving, using the pinned Accelerate 0.34.2 signature `unwrap_model(model, keep_fp32_wrapper=True)`. An exact Torch `OptimizedModule` is reduced once to `_orig_mod`; there is no recursive `.module` stripping. Wrapper-prefixed state keys are rejected.
 
@@ -26,12 +29,16 @@ Replicated DDP and ordinary single-process evaluation are supported. FSDP, DeepS
 The required top-level metadata keys are:
 
 - `identity_scope`: exactly `production` or `test`;
-- `initialization_audit`: `report_sha256` plus `verification`;
+- `initialization_audit`: `verification`, the complete returned `load_weights_only` `audit`, and `audit_sha256` over the included canonical audit;
 - `data_identities`: required `corpus`, `evidence`, and `panel` identity objects;
 - `sif_code_identity`: required `sif` and `code` identity objects;
-- `runtime_packages`, `normalized_recipe`, and `seed_augmentation`: nonempty JSON objects.
+- `runtime_packages`: exactly nonempty version strings for `python`, `torch`, `transformers`, `accelerate`, and `safetensors`;
+- `normalized_recipe`: exactly the nine `MVPRecipe` fields (`max_updates`, `warmup_updates`, `batch_size`, `accumulation_steps`, `required_world_size`, both LRs, weight decay, and clipping);
+- `seed_augmentation`: exactly integer `seed` and `aug_seed = 20260914 + seed`; production seeds are restricted to 1, 2, or 3.
 
-Each identity object has a 64-character lowercase hexadecimal `sha256` and `verification` equal to `recorded` or `independently_verified`. Thus a supplied/recorded digest is not represented as independently certified bytes. Production metadata accepts only `successful_updates=250` and `effective_batch_size=96`; lower positive budgets require explicit `identity_scope: test`. JSON is canonical (sorted compact keys, newline, `allow_nan=False`). The published `metadata.json` adds the validated `training_summary`.
+The embedded initialization audit must match the actual `b6-weights-init-v1` output contract: weights-only mode, concrete absolute resolved checkpoint/weights and source-file paths, unchanged recorded source weights/run-config SHA256 snapshots, source/target evidence semantics 0/8 with their bound semantic hashes, exact missing projection, no unexpected key, unsupported same-8 loading, and a verified-zero projection action. The wrapper digest prevents substituting a different embedded report. This records the successful loader audit; it does not claim these source files were independently rehashed during finalization.
+
+Each corpus/evidence/panel/SIF/code identity object has a 64-character lowercase hexadecimal `sha256` and `verification` equal to `recorded` or `independently_verified`. Finalization preserves that supplied distinction and does not promote a recorded digest to independent certification. `MVPRecipe` validates every recipe; production requires its exact defaults. `training_summary` must match recipe updates and `batch_size * accumulation_steps * required_world_size`; production therefore requires 250 and 96. Smaller valid recipes require explicit test scope. JSON is canonical (sorted compact keys, newline, `allow_nan=False`). The published `metadata.json` adds the validated training summary.
 
 ## Publication contract
 
@@ -67,11 +74,11 @@ PYTHONPATH="$PWD/src:$PWD/.testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps" \
 /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_finalize.py
 ```
 
-Result: **25 passed, 0 failed in 90.52 s**; wall time **91.46 s**.
+Round-1 result: **33 passed, 0 failed in 149.81 s**; wall time **150.72 s**.
 
-Coverage includes ordinary one-rank evaluation; actual two-rank CPU/Gloo runs with 3 items/2 ranks and 1 item/2 ranks; exact record fields and hand-derived equal-tile off/on primary and composite means; padded duplicate agreement; identical all-rank summaries; and missing, extra, inconsistent duplicate `rn`, and sampler-rank rejection before publication. The model is an actual lightweight `torch.compile(..., backend=eager)` wrapper prepared through Accelerate; backend invocation and exact forward counts prove evaluation used that wrapper, while rank 1 is configured to fail if saving tries to unwrap there. This is compile-path coverage, not an Inductor certification.
+Coverage includes ordinary one-rank evaluation; actual two-rank CPU/Gloo runs with 3 items/2 ranks and 1 item/2 ranks; exact record fields and hand-derived equal-tile off/on primary and composite means; padded duplicate agreement; identical all-rank summaries; and missing, extra, inconsistent duplicate `rn`, and sampler-rank rejection before publication. Three bounded-time two-rank cases make only rank 1 supply a noniterable, throwing iterable, or infinite generator and verify all ranks receive the same concrete-inventory rejection before forwarding. The model is an actual lightweight `torch.compile(..., backend=eager)` wrapper prepared through Accelerate; backend invocation and exact forward counts prove evaluation used that wrapper, while rank 1 is configured to fail if saving tries to unwrap there. This is compile-path coverage, not an Inductor certification.
 
-Publication tests cover required metadata and production budgets, nonfinite JSON, record bounds, canonical payloads, manifest sizes/hashes, clean state keys, tied safetensors reload, FSDP/DeepSpeed and unknown-wrapper rejection, all existing destination kinds, fault injection before payload/manifest/marker/rename, a destination appearing at rename, two concurrent publishers with exactly one winner, and collective committed durability errors after rename.
+Transport tests cover exact sum/padded byte boundaries and a real two-rank case where each canonical local payload is below a patched 1,000,000-byte limit but aggregate/padded transport exceeds it; a patched payload-transfer seam proves the payload collective is not called. Publication tests cover strict audit/package/recipe/seed metadata, production budgets, nonfinite JSON, record bounds, canonical payloads, manifest sizes/hashes, clean state keys, tied safetensors reload, FSDP/DeepSpeed and unknown-wrapper rejection, all existing destination kinds, local fault injection before payload/manifest/marker/rename, collective rank-0 write and rename failures with identical errors and no final artifact, a destination appearing at rename, two concurrent publishers with exactly one winner, and collective committed durability errors after rename.
 
 ### Existing 20-test runtime suite
 
@@ -81,7 +88,7 @@ PYTHONPATH="$PWD/src:$PWD/.testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps" \
 /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_runtime.py
 ```
 
-Result: **20 passed, 0 failed in 157.22 s**; wall time **158.25 s**.
+Round-1 result: **20 passed, 0 failed in 157.35 s**; wall time **158.34 s**.
 
 ### Required 46-test baseline
 
@@ -92,9 +99,9 @@ PYTHONPATH="$PWD/src:$PWD/.testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps" \
   tests.test_weights_init tests.test_mvp_metrics tests.test_mvp_model tests.test_mvp_dataset
 ```
 
-Result: **46 passed, 0 failed in 49.398 s**; wall time **54.60 s**.
+Round-1 result: **46 passed, 0 failed in 54.922 s**; wall time **60.44 s**.
 
-Total required evidence: **91 passed, 0 failed**.
+Round-1 required total: **99 passed, 0 failed**.
 
 Syntax compilation also exited 0 with no output:
 
@@ -111,7 +118,7 @@ PYTHONPATH="$PWD/src:$PWD/.testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps" \
 ## Limitations and concerns
 
 - Distributed tests are real CPU/Gloo and the compile test uses the eager backend. They do not certify GPU, mixed precision, Inductor, production model size, or the production filesystem.
-- Coordinated reachable Python validation, aggregation, and publication exceptions are normalized. Rank death, communicator failure, and arbitrary asymmetric DDP-forward exceptions are not recoverable here; launcher/process-group timeouts remain required. Equal padded workloads prevent ordinary forward-count mismatch.
+- Coordinated reachable Python validation, bounded transport, aggregation, and publication exceptions are normalized. Rank death, communicator failure, and arbitrary asymmetric DDP-forward exceptions are not recoverable here; launcher/process-group timeouts remain required. Equal padded workloads prevent ordinary forward-count mismatch.
 - Strict no-replace publication requires Linux libc/filesystem `renameat2(RENAME_NOREPLACE)`. Unsupported platforms/filesystems intentionally fail closed.
 - Parent fsync failure means namespace commit succeeded but crash durability is unknown. The artifact remains and cannot be retried at the same destination.
 - DDP synchronization is relied on for replicated parameter values. No all-rank state-dict materialization, all-rank manifests, training-state restoration, CLI, bootstrap, resume, or statistical bootstrap was added.

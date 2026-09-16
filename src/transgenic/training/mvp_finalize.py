@@ -7,6 +7,7 @@ remain launcher/process-group-timeout concerns.
 from __future__ import annotations
 
 import ctypes
+from dataclasses import asdict
 import errno
 import hashlib
 import json
@@ -26,6 +27,7 @@ from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data.distributed import DistributedSampler
 
 from .mvp_metrics import aggregate_paired_records, paired_metric_record
+from .mvp_runtime import MVPRecipe
 
 MVP_MAX_RECORDS = 100_000
 MVP_MAX_SERIALIZED_BYTES = 64 * 1024 * 1024
@@ -35,6 +37,8 @@ _REQUIRED_METADATA = {
     "runtime_packages", "normalized_recipe", "seed_augmentation",
 }
 _IDENTITY_VERIFICATIONS = {"recorded", "independently_verified"}
+_RUNTIME_PACKAGES = {"python", "torch", "transformers", "accelerate", "safetensors"}
+_PROJECTION_KEY = "transgenic.encoder.evidence_proj.weight"
 
 
 class PublicationDurabilityError(OSError):
@@ -65,19 +69,88 @@ def _identity(value: Any, name: str) -> None:
         raise ValueError(f"{name} verification must distinguish recorded from independently_verified")
 
 
+def _is_sha256(value: Any) -> bool:
+    return (isinstance(value, str) and len(value) == _SHA256_LENGTH and
+            all(character in "0123456789abcdef" for character in value))
+
+
+def _validate_initialization_audit(initialization: Any) -> None:
+    if not isinstance(initialization, dict) or initialization.get("verification") not in _IDENTITY_VERIFICATIONS:
+        raise ValueError("initialization_audit requires recorded or independently_verified provenance")
+    audit = initialization.get("audit")
+    if not isinstance(audit, dict):
+        raise ValueError("initialization_audit must embed the load_weights_only audit")
+    digest = initialization.get("audit_sha256")
+    if not _is_sha256(digest) or digest != hashlib.sha256(_canonical_json(audit)).hexdigest():
+        raise ValueError("initialization_audit audit_sha256 does not bind the embedded audit")
+    required = {"schema_version", "mode", "requested_path", "resolved_checkpoint_dir",
+                "resolved_weights_path", "files", "recipe", "source_semantics",
+                "target_semantics", "implementation", "compatibility", "load",
+                "provenance_caveat"}
+    if required - set(audit) or audit.get("schema_version") != "b6-weights-init-v1" or audit.get("mode") != "weights-only":
+        raise ValueError("initialization_audit is not a complete successful load_weights_only audit")
+    checkpoint = audit.get("resolved_checkpoint_dir")
+    weights = audit.get("resolved_weights_path")
+    if (not isinstance(checkpoint, str) or not Path(checkpoint).is_absolute() or
+            not isinstance(weights, str) or not Path(weights).is_absolute() or
+            Path(weights).parent != Path(checkpoint)):
+        raise ValueError("initialization_audit requires concrete resolved checkpoint and weights paths")
+    files = audit.get("files")
+    file_names = {"model.safetensors", "run_config.json", "runtime_identity.txt",
+                  "config.json", "meta.json", "runtime.json"}
+    if not isinstance(files, dict) or set(files) != file_names:
+        raise ValueError("initialization_audit files must match the load_weights_only source inventory")
+    for name in ("model.safetensors", "run_config.json"):
+        record = files.get(name)
+        if not isinstance(record, dict) or not isinstance(record.get("path"), str) or not Path(record["path"]).is_absolute():
+            raise ValueError(f"initialization_audit requires concrete {name} source path")
+        before, after = record.get("before"), record.get("after")
+        if (not isinstance(before, dict) or before != after or
+                not _is_sha256(before.get("sha256"))):
+            raise ValueError(f"initialization_audit requires stable actual {name} SHA256")
+    if files["model.safetensors"]["path"] != weights:
+        raise ValueError("initialization_audit weights path disagrees with files record")
+    for side, channels in (("source_semantics", 0), ("target_semantics", 8)):
+        semantics = audit.get(side)
+        fields = semantics.get("fields") if isinstance(semantics, dict) else None
+        encoded = json.dumps(fields, sort_keys=True, separators=(",", ":"),
+                             ensure_ascii=False).encode("utf-8") if isinstance(fields, dict) else b""
+        if (not fields or fields.get("evidence_channels", {}).get("value") != channels or
+                semantics.get("sha256") != hashlib.sha256(encoded).hexdigest()):
+            raise ValueError(f"initialization_audit {side} does not bind evidence_channels={channels}")
+    compatibility, load = audit.get("compatibility"), audit.get("load")
+    if (not isinstance(compatibility, dict) or compatibility.get("transition") != "evidence_channels:0->8" or
+            compatibility.get("same8_supported") is not False or
+            _PROJECTION_KEY not in str(compatibility.get("exception")) or
+            "zero" not in str(compatibility.get("exception")).lower()):
+        raise ValueError("initialization_audit compatibility must record the verified 0->8 zero projection action")
+    if (not isinstance(load, dict) or load.get("missing_keys") != [_PROJECTION_KEY] or
+            load.get("unexpected_keys") != []):
+        raise ValueError("initialization_audit load requires exact missing_keys projection and no unexpected_keys")
+    recipe_digest = audit.get("recipe", {}).get("canonical_sha256")
+    if not _is_sha256(recipe_digest):
+        raise ValueError("initialization_audit requires the source run_config recipe SHA256")
+    implementation = audit.get("implementation")
+    if not isinstance(implementation, dict) or set(implementation) != {"b5_runtime.py", "configuration_transgenic.py"}:
+        raise ValueError("initialization_audit requires the exact loader implementation identities")
+    for name, record in implementation.items():
+        if (not isinstance(record, dict) or not isinstance(record.get("path"), str) or
+                not Path(record["path"]).is_absolute() or not _is_sha256(record.get("sha256"))):
+            raise ValueError(f"initialization_audit implementation identity is invalid for {name}")
+
+
 def _validate_metadata(metadata: Any, training_summary: Any) -> None:
+    _canonical_json(metadata)
+    _canonical_json(training_summary)
     if not isinstance(metadata, dict):
         raise ValueError("metadata must be an object")
     missing = _REQUIRED_METADATA - set(metadata)
     if missing:
         raise ValueError(f"metadata missing required sections: {sorted(missing)}")
-    if metadata["identity_scope"] not in {"production", "test"}:
+    scope = metadata["identity_scope"]
+    if scope not in {"production", "test"}:
         raise ValueError("identity_scope must be production or test")
-    initialization = metadata["initialization_audit"]
-    if not isinstance(initialization, dict):
-        raise ValueError("initialization_audit must be an object")
-    _identity({"sha256": initialization.get("report_sha256"),
-               "verification": initialization.get("verification")}, "initialization audit report")
+    _validate_initialization_audit(metadata["initialization_audit"])
     data = metadata["data_identities"]
     if not isinstance(data, dict):
         raise ValueError("data_identities must be an object")
@@ -92,24 +165,39 @@ def _validate_metadata(metadata: Any, training_summary: Any) -> None:
         if name not in sif_code:
             raise ValueError(f"sif_code_identity missing {name}")
         _identity(sif_code[name], name)
-    for name in ("runtime_packages", "normalized_recipe", "seed_augmentation"):
-        if not isinstance(metadata[name], dict) or not metadata[name]:
-            raise ValueError(f"{name} must be a nonempty object")
+    packages = metadata["runtime_packages"]
+    if (not isinstance(packages, dict) or set(packages) != _RUNTIME_PACKAGES or
+            any(not isinstance(value, str) or not value.strip() for value in packages.values())):
+        raise ValueError(f"runtime_packages requires nonempty versions for {sorted(_RUNTIME_PACKAGES)}")
+    recipe_data = metadata["normalized_recipe"]
+    if not isinstance(recipe_data, dict) or set(recipe_data) != set(MVPRecipe.__dataclass_fields__):
+        raise ValueError("normalized_recipe requires the exact MVPRecipe runtime fields")
+    try:
+        recipe = MVPRecipe(**recipe_data)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"normalized_recipe is invalid: {error}") from error
+    if scope == "production" and recipe != MVPRecipe():
+        raise ValueError("production normalized_recipe must equal the fixed MVPRecipe")
+    seeds = metadata["seed_augmentation"]
+    seed = seeds.get("seed") if isinstance(seeds, dict) else None
+    if (set(seeds) != {"seed", "aug_seed"} if isinstance(seeds, dict) else True) or isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError("seed_augmentation requires integer seed and aug_seed")
+    if scope == "production" and seed not in {1, 2, 3}:
+        raise ValueError("production seed must be one of 1, 2, 3")
+    if seeds["aug_seed"] != 20260914 + seed:
+        raise ValueError("aug_seed must equal 20260914 + seed")
     if (not isinstance(training_summary, dict) or
             isinstance(training_summary.get("successful_updates"), bool) or
             not isinstance(training_summary.get("successful_updates"), Integral) or
             isinstance(training_summary.get("effective_batch_size"), bool) or
             not isinstance(training_summary.get("effective_batch_size"), Integral)):
         raise ValueError("training_summary requires integer successful_updates and effective_batch_size")
-    if metadata["identity_scope"] == "production" and (
-            training_summary["successful_updates"] != 250 or
-            training_summary["effective_batch_size"] != 96):
+    effective = recipe.batch_size * recipe.accumulation_steps * recipe.required_world_size
+    if (training_summary["successful_updates"] != recipe.max_updates or
+            training_summary["effective_batch_size"] != effective):
+        raise ValueError(f"training_summary must match normalized_recipe successful_updates {recipe.max_updates} and effective_batch_size {effective}")
+    if scope == "production" and (training_summary["successful_updates"] != 250 or effective != 96):
         raise ValueError("production training_summary requires successful_updates 250 and effective_batch_size 96")
-    if (training_summary["successful_updates"] <= 0 or
-            training_summary["effective_batch_size"] <= 0):
-        raise ValueError("test training budgets must be positive")
-    _canonical_json(metadata)
-    _canonical_json(training_summary)
 
 
 def _validate_bounds(records: list[dict]) -> bytes:
@@ -147,6 +235,62 @@ def _all_gather_objects(accelerator, value: Any) -> list[Any]:
     return gathered
 
 
+def _validate_transport_lengths(lengths: list[int]) -> int:
+    if not lengths or any(isinstance(length, bool) or not isinstance(length, int) or length < 0
+                          for length in lengths):
+        raise ValueError("record transport lengths must be nonnegative integers")
+    if any(length > MVP_MAX_SERIALIZED_BYTES for length in lengths):
+        raise ValueError("local paired record payload exceeds serialized byte cap")
+    if sum(lengths) > MVP_MAX_SERIALIZED_BYTES:
+        raise ValueError("aggregate paired record payload exceeds serialized byte cap")
+    maximum = max(lengths)
+    if len(lengths) * maximum > MVP_MAX_SERIALIZED_BYTES:
+        raise ValueError("padded paired record transport exceeds serialized byte cap")
+    return maximum
+
+
+def _transport_lengths(accelerator, local_error: Exception | None, payload: bytes) -> list[int]:
+    values = [int(local_error is not None), len(payload) if local_error is None else 0]
+    if accelerator.num_processes == 1:
+        rows = [values]
+    else:
+        control = torch.tensor(values, dtype=torch.int64, device=accelerator.device)
+        rows = accelerator.gather(control).reshape(accelerator.num_processes, 2).cpu().tolist()
+    if any(row[0] for row in rows):
+        raise ValueError("paired record collection or local serialization failed on at least one rank")
+    lengths = [int(row[1]) for row in rows]
+    _validate_transport_lengths(lengths)
+    return lengths
+
+
+def _gather_payload_bytes(accelerator, payload: bytes, lengths: list[int]) -> list[bytes]:
+    maximum = _validate_transport_lengths(lengths)
+    if accelerator.num_processes == 1:
+        return [payload]
+    padded = torch.zeros(maximum, dtype=torch.uint8, device=accelerator.device)
+    if payload:
+        source = torch.frombuffer(bytearray(payload), dtype=torch.uint8).to(accelerator.device)
+        padded[:len(payload)] = source
+    gathered = accelerator.gather(padded).reshape(accelerator.num_processes, maximum).cpu()
+    return [gathered[index, :length].contiguous().numpy().tobytes()
+            for index, length in enumerate(lengths)]
+
+
+def _broadcast_payload_bytes(accelerator, payload: bytes) -> bytes:
+    if accelerator.num_processes == 1:
+        return payload
+    size = torch.tensor([len(payload)], dtype=torch.int64, device=accelerator.device)
+    torch.distributed.broadcast(size, src=0)
+    length = int(size.item())
+    if length > MVP_MAX_SERIALIZED_BYTES:
+        raise ValueError("broadcast paired summary exceeds serialized byte cap")
+    tensor = torch.zeros(length, dtype=torch.uint8, device=accelerator.device)
+    if accelerator.is_main_process and payload:
+        tensor[:] = torch.frombuffer(bytearray(payload), dtype=torch.uint8).to(accelerator.device)
+    torch.distributed.broadcast(tensor, src=0)
+    return tensor.cpu().contiguous().numpy().tobytes()
+
+
 def _broadcast_status(accelerator, status: dict | None) -> dict:
     values = [status]
     broadcast_object_list(values, from_process=0)
@@ -165,16 +309,25 @@ def _collective_preflight(accelerator, operation) -> None:
             _raise_status(failure)
 
 
-def _validate_evaluation_inputs(accelerator, model, eval_loader, expected_rns,
+def _validated_inventory(expected_rns) -> list[int]:
+    if not isinstance(expected_rns, (list, tuple, range)):
+        raise ValueError("expected_rns must be a concrete list, tuple, or range")
+    length = len(expected_rns)
+    if length == 0 or length > MVP_MAX_RECORDS:
+        raise ValueError(f"expected_rns length must be within 1..MVP_MAX_RECORDS={MVP_MAX_RECORDS}")
+    if (any(isinstance(rn, bool) or not isinstance(rn, Integral) for rn in expected_rns) or
+            len(set(expected_rns)) != length):
+        raise ValueError("expected_rns must contain unique integers")
+    return list(expected_rns)
+
+
+def _validate_evaluation_inputs(accelerator, model, eval_loader, expected,
                                 metadata, training_summary) -> None:
     _validate_metadata(metadata, training_summary)
     if not isinstance(model, torch.nn.Module):
         raise ValueError("model must be a torch module")
-    expected = list(expected_rns)
-    if (not expected or len(expected) > MVP_MAX_RECORDS or
-            any(isinstance(rn, bool) or not isinstance(rn, Integral) for rn in expected) or
-            len(expected) != len(set(expected))):
-        raise ValueError("expected_rns must be a nonempty finite unique integer inventory within MVP_MAX_RECORDS")
+    if not isinstance(expected, list):
+        raise ValueError("expected_rns must be validated before evaluation")
     try:
         length = len(eval_loader)
     except TypeError as error:
@@ -352,12 +505,13 @@ def _publish_final(accelerator, model, paired_summary: dict, final_dir: Path | s
 def evaluate_and_publish_final(accelerator, model, eval_loader, expected_rns, final_dir, *,
                                metadata, training_summary):
     """Evaluate off/on pairs collectively, then publish once on rank zero."""
-    expected = list(expected_rns)
-    _collective_preflight(
-        accelerator,
-        lambda: _validate_evaluation_inputs(accelerator, model, eval_loader, expected,
-                                             metadata, training_summary),
-    )
+    expected = None
+    def validate_preflight():
+        nonlocal expected
+        expected = _validated_inventory(expected_rns)
+        _validate_evaluation_inputs(accelerator, model, eval_loader, expected,
+                                    metadata, training_summary)
+    _collective_preflight(accelerator, validate_preflight)
     lengths = _all_gather_objects(accelerator, len(eval_loader))
     if len(set(lengths)) != 1:
         raise ValueError(f"per-rank eval_loader lengths must be equal: {lengths}")
@@ -372,37 +526,43 @@ def evaluate_and_publish_final(accelerator, model, eval_loader, expected_rns, fi
             local_records.append(paired_metric_record(model, _to_device(batch, accelerator.device)))
         except Exception as error:
             local_error = local_error or error
+    payload = b""
     try:
-        _validate_bounds(local_records)
+        payload = _validate_bounds(local_records)
     except Exception as error:
         local_error = local_error or error
-    gathered = _all_gather_objects(accelerator, {"records": local_records,
-                                                  "error": _status(local_error) if local_error else None})
+    transport_lengths = _transport_lengths(accelerator, local_error, payload)
+    gathered_payloads = _gather_payload_bytes(accelerator, payload, transport_lengths)
     aggregate_status = None
+    summary_payload = b""
     if accelerator.is_main_process:
-        failure = next((item["error"] for item in gathered if item["error"] is not None), None)
-        if failure is not None:
-            aggregate_status = failure
-        else:
-            try:
-                records = [record for item in gathered for record in item["records"]]
-                _validate_bounds(records)
-                aggregate_status = _status(summary=aggregate_paired_records(records, expected))
-            except Exception as error:
-                aggregate_status = _status(error)
+        try:
+            records = []
+            for encoded in gathered_payloads:
+                decoded = json.loads(encoded)
+                if not isinstance(decoded, list):
+                    raise ValueError("gathered paired record payload must decode to a list")
+                records.extend(decoded)
+            _validate_bounds(records)
+            summary_payload = _canonical_json(aggregate_paired_records(records, expected))
+            if len(summary_payload) > MVP_MAX_SERIALIZED_BYTES:
+                raise ValueError("paired summary exceeds serialized byte cap")
+            aggregate_status = _status()
+        except Exception as error:
+            aggregate_status = _status(error)
     aggregate_status = _broadcast_status(accelerator, aggregate_status)
     _raise_status(aggregate_status)
-    summary = aggregate_status["summary"]
+    summary = json.loads(_broadcast_payload_bytes(accelerator, summary_payload))
 
     publication_status = None
     if accelerator.is_main_process:
         try:
             _publish_final(accelerator, model, summary, final_dir,
                            metadata=metadata, training_summary=training_summary)
-            publication_status = _status(summary=summary)
+            publication_status = _status()
         except Exception as error:
             publication_status = _status(error)
     publication_status = _broadcast_status(accelerator, publication_status)
     accelerator.wait_for_everyone()
     _raise_status(publication_status)
-    return publication_status["summary"]
+    return summary

@@ -1,6 +1,7 @@
 """Subprocess-only Accelerate CPU/Gloo probe for MVP finalization."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -70,14 +71,48 @@ class Model(torch.nn.Module):
 
 def metadata():
     identity = {"sha256": SHA, "verification": "recorded"}
+    source_fields = {"evidence_channels": {"value": 0}}
+    target_fields = {"evidence_channels": {"value": 8}}
+    digest = lambda value: hashlib.sha256(json.dumps(
+        value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    audit = {
+        "schema_version": "b6-weights-init-v1", "mode": "weights-only",
+        "requested_path": "/tmp/source/epoch", "resolved_checkpoint_dir": "/tmp/source/epoch",
+        "resolved_weights_path": "/tmp/source/epoch/model.safetensors",
+        "files": {
+            "model.safetensors": {"path": "/tmp/source/epoch/model.safetensors",
+                "before": {"sha256": SHA}, "after": {"sha256": SHA}},
+            "run_config.json": {"path": "/tmp/source/run_config.json",
+                "before": {"sha256": SHA}, "after": {"sha256": SHA}},
+            "runtime_identity.txt": None, "config.json": None, "meta.json": None,
+            "runtime.json": None},
+        "recipe": {"canonical_sha256": SHA},
+        "source_semantics": {"fields": source_fields, "sha256": digest(source_fields)},
+        "target_semantics": {"fields": target_fields, "sha256": digest(target_fields)},
+        "implementation": {
+            "b5_runtime.py": {"path": "/tmp/source/b5_runtime.py", "sha256": SHA},
+            "configuration_transgenic.py": {"path": "/tmp/source/configuration_transgenic.py", "sha256": SHA}},
+        "compatibility": {"transition": "evidence_channels:0->8",
+            "exception": "exactly missing transgenic.encoder.evidence_proj.weight; initialized to verified zeros",
+            "same8_supported": False},
+        "load": {"missing_keys": ["transgenic.encoder.evidence_proj.weight"],
+                 "unexpected_keys": [], "safetensors_metadata": None},
+        "provenance_caveat": "recorded loader output; source bytes are not re-certified here"}
+    recipe = {"max_updates": 2, "warmup_updates": 1, "batch_size": 1,
+              "accumulation_steps": 1, "required_world_size": 2,
+              "backbone_lr": 2e-5, "projection_lr": 2e-4,
+              "weight_decay": 0.02, "clip_grad_norm": 1.0}
     return {
         "identity_scope": "test",
-        "initialization_audit": {"report_sha256": SHA, "verification": "recorded"},
+        "initialization_audit": {"audit": audit,
+            "audit_sha256": hashlib.sha256(finalize._canonical_json(audit)).hexdigest(),
+            "verification": "recorded"},
         "data_identities": {name: dict(identity) for name in ("corpus", "evidence", "panel")},
         "sif_code_identity": {"sif": dict(identity), "code": dict(identity)},
-        "runtime_packages": {"torch": torch.__version__, "accelerate": "0.34.2"},
-        "normalized_recipe": {"batch_size": 1},
-        "seed_augmentation": {"seed": 7, "augmentation": "fixed"},
+        "runtime_packages": {name: "test-version" for name in
+                             ("python", "torch", "transformers", "accelerate", "safetensors")},
+        "normalized_recipe": recipe,
+        "seed_augmentation": {"seed": 1, "aug_seed": 20260915},
     }
 
 
@@ -103,20 +138,58 @@ def main(case):
     expected = list(range(size))
     if case == "missing":
         expected.append(77)
+    if accelerator.process_index == 1:
+        if case == "inventory-noniterable":
+            expected = object()
+        elif case == "inventory-throwing":
+            class ThrowingIterable:
+                def __iter__(self):
+                    raise AssertionError("inventory must not be consumed")
+            expected = ThrowingIterable()
+        elif case == "inventory-infinite":
+            import itertools
+            expected = (value for value in itertools.count())
     final = Path(os.environ["MVP_FINALIZE_TEST_DIR"]) / "final"
-    if case == "durability" and accelerator.is_main_process:
-        finalize._fsync_parent = lambda path: (_ for _ in ()).throw(OSError("injected fsync"))
+    payload_calls = 0
+    if case == "byte-cap":
+        finalize.MVP_MAX_SERIALIZED_BYTES = 1_000_000
+        original_metric = finalize.paired_metric_record
+        def padded_metric(*args, **kwargs):
+            record = original_metric(*args, **kwargs)
+            record["padding"] = "x" * 400_000
+            return record
+        finalize.paired_metric_record = padded_metric
+        def forbidden_payload(*args, **kwargs):
+            nonlocal payload_calls
+            payload_calls += 1
+            raise AssertionError("payload collective must not run")
+        finalize._gather_payload_bytes = forbidden_payload
+    if accelerator.is_main_process:
+        if case == "durability":
+            finalize._fsync_parent = lambda path: (_ for _ in ()).throw(OSError("injected fsync"))
+        elif case == "publish-write-fail":
+            finalize._write_payload_files = lambda *args, **kwargs: (_ for _ in ()).throw(OSError("injected write"))
+        elif case == "publish-rename-fail":
+            finalize._rename_noreplace = lambda *args, **kwargs: (_ for _ in ()).throw(OSError("injected rename"))
     failed = committed = False
+    error_info = None
     result = None
     try:
         result = evaluate_and_publish_final(accelerator, model, loader, expected, final,
             metadata=metadata(), training_summary={"successful_updates": 2, "effective_batch_size": 2})
     except PublicationDurabilityError as error:
         failed, committed = True, error.committed
-    except (ValueError, RuntimeError, FileExistsError):
+        error_info = (type(error).__name__, str(error), error.committed)
+    except (ValueError, RuntimeError, OSError) as error:
         failed = True
+        error_info = (type(error).__name__, str(error), False)
     flags = accelerator.gather(torch.tensor([int(failed), int(committed)], device=accelerator.device))
     summaries = [None] * 2
+    errors = [None] * 2
+    error_cases = {"publish-write-fail", "publish-rename-fail", "inventory-noniterable",
+                   "inventory-throwing", "inventory-infinite"}
+    if case in error_cases:
+        torch.distributed.all_gather_object(errors, error_info)
     if case.startswith("success-"):
         torch.distributed.all_gather_object(summaries, result)
     if accelerator.is_main_process:
@@ -136,6 +209,13 @@ def main(case):
         elif case == "durability":
             print(json.dumps({"case": case, "all_committed": bool(flags[1::2].sum().item() == 2),
                               "marker": (final / "TRAINING_DONE").is_file()}, sort_keys=True))
+        elif case == "byte-cap":
+            print(json.dumps({"case": case, "all_failed": bool(flags[0::2].sum().item() == 2),
+                              "payload_calls": payload_calls, "final_exists": final.exists()}, sort_keys=True))
+        elif case in error_cases:
+            print(json.dumps({"case": case, "all_failed": bool(flags[0::2].sum().item() == 2),
+                              "same_error": errors[0] == errors[1], "error": errors[0],
+                              "final_exists": final.exists()}, sort_keys=True))
         else:
             print(json.dumps({"case": case, "all_failed": bool(flags[0::2].sum().item() == 2),
                               "final_exists": final.exists()}, sort_keys=True))

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import itertools
 import json
 import math
 import os
@@ -23,10 +25,56 @@ DUCKDB_DEPS = Path("/tmp/b6-dataset-verify.D2Is9a/.testdeps")
 SHA = "1" * 64
 
 
-def metadata(scope="test"):
+def initialization_audit():
+    weights = {"path": "/tmp/source/epoch/model.safetensors",
+               "before": {"sha256": SHA}, "after": {"sha256": SHA}}
+    run_config = {"path": "/tmp/source/run_config.json",
+                  "before": {"sha256": SHA}, "after": {"sha256": SHA}}
+    source_fields = {"evidence_channels": {"value": 0}}
+    target_fields = {"evidence_channels": {"value": 8}}
+    digest = lambda value: hashlib.sha256(json.dumps(
+        value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    audit = {
+        "schema_version": "b6-weights-init-v1", "mode": "weights-only",
+        "requested_path": "/tmp/source/epoch", "resolved_checkpoint_dir": "/tmp/source/epoch",
+        "resolved_weights_path": "/tmp/source/epoch/model.safetensors",
+        "files": {"model.safetensors": weights, "run_config.json": run_config,
+                  "runtime_identity.txt": None, "config.json": None,
+                  "meta.json": None, "runtime.json": None},
+        "recipe": {"canonical_sha256": SHA},
+        "source_semantics": {"fields": source_fields, "sha256": digest(source_fields)},
+        "target_semantics": {"fields": target_fields, "sha256": digest(target_fields)},
+        "implementation": {
+            "b5_runtime.py": {"path": "/tmp/source/b5_runtime.py", "sha256": SHA},
+            "configuration_transgenic.py": {"path": "/tmp/source/configuration_transgenic.py", "sha256": SHA}},
+        "compatibility": {"transition": "evidence_channels:0->8",
+            "exception": "exactly missing transgenic.encoder.evidence_proj.weight; initialized to verified zeros",
+            "same8_supported": False},
+        "load": {"missing_keys": ["transgenic.encoder.evidence_proj.weight"],
+                 "unexpected_keys": [], "safetensors_metadata": None},
+        "provenance_caveat": "recorded loader output; source bytes are not re-certified here",
+    }
+    return {"audit": audit, "audit_sha256": hashlib.sha256(finalize._canonical_json(audit)).hexdigest(),
+            "verification": "recorded"}
+
+
+def recipe(scope="test", world=1):
+    if scope == "production":
+        return {"max_updates": 250, "warmup_updates": 12, "batch_size": 1,
+                "accumulation_steps": 24, "required_world_size": 4,
+                "backbone_lr": 2e-5, "projection_lr": 2e-4,
+                "weight_decay": 0.02, "clip_grad_norm": 1.0}
+    return {"max_updates": 2, "warmup_updates": 1, "batch_size": 1,
+            "accumulation_steps": 2 if world == 1 else 1, "required_world_size": world,
+            "backbone_lr": 2e-5, "projection_lr": 2e-4,
+            "weight_decay": 0.02, "clip_grad_norm": 1.0}
+
+
+def metadata(scope="test", world=1):
+    seed = 1
     return {
         "identity_scope": scope,
-        "initialization_audit": {"report_sha256": SHA, "verification": "recorded"},
+        "initialization_audit": initialization_audit(),
         "data_identities": {
             name: {"sha256": SHA, "verification": "recorded"}
             for name in ("corpus", "evidence", "panel")
@@ -35,9 +83,10 @@ def metadata(scope="test"):
             "sif": {"sha256": SHA, "verification": "recorded"},
             "code": {"sha256": SHA, "verification": "recorded"},
         },
-        "runtime_packages": {"torch": torch.__version__, "accelerate": "0.34.2"},
-        "normalized_recipe": {"batch_size": 1, "name": "mvp"},
-        "seed_augmentation": {"seed": 7, "augmentation": "fixed"},
+        "runtime_packages": {name: "test-version" for name in
+                             ("python", "torch", "transformers", "accelerate", "safetensors")},
+        "normalized_recipe": recipe(scope, world),
+        "seed_augmentation": {"seed": seed, "aug_seed": 20260914 + seed},
     }
 
 
@@ -143,9 +192,48 @@ def test_metadata_schema_and_production_budget_fail_closed(tmp_path):
     bad["data_identities"]["corpus"]["sha256"] = "not-a-digest"
     with pytest.raises(ValueError, match="SHA256"):
         publish(tmp_path, md=bad)
+    bad = metadata()
+    bad["runtime_packages"] = {"x": "1"}
+    with pytest.raises(ValueError, match="runtime_packages"):
+        publish(tmp_path, md=bad)
+    bad = metadata()
+    bad["normalized_recipe"] = {"x": 1}
+    with pytest.raises(ValueError, match="normalized_recipe"):
+        publish(tmp_path, md=bad)
+    bad = metadata()
+    bad["initialization_audit"]["audit"]["load"]["missing_keys"] = []
+    bad["initialization_audit"]["audit_sha256"] = hashlib.sha256(
+        finalize._canonical_json(bad["initialization_audit"]["audit"])).hexdigest()
+    with pytest.raises(ValueError, match="missing_keys"):
+        publish(tmp_path, md=bad)
     with pytest.raises(ValueError, match="250.*96"):
         publish(tmp_path, md=metadata("production"), train=summary("test"))
+    finalize._validate_metadata(metadata("production"), summary("production"))
     assert not any(tmp_path.iterdir())
+
+
+def test_expected_inventory_rejects_arbitrary_iterables_without_consuming(tmp_path):
+    class ThrowingIterable:
+        def __iter__(self):
+            raise AssertionError("must not consume")
+    candidates = [object(), ThrowingIterable(), (value for value in itertools.count())]
+    for index, candidate in enumerate(candidates):
+        model = SaveToy()
+        with pytest.raises(ValueError, match="list, tuple, or range"):
+            finalize.evaluate_and_publish_final(
+                LocalAccelerator(), model, DataLoader(OneDataset(), batch_size=1), candidate,
+                tmp_path / f"final-{index}", metadata=metadata(), training_summary=summary())
+        assert model.forward_calls == 0
+
+
+def test_transport_bounds_check_sum_and_padded_size_at_exact_boundary(monkeypatch):
+    monkeypatch.setattr(finalize, "MVP_MAX_SERIALIZED_BYTES", 6)
+    assert finalize._validate_transport_lengths([3, 3]) == 3
+    with pytest.raises(ValueError, match="aggregate"):
+        finalize._validate_transport_lengths([4, 3])
+    monkeypatch.setattr(finalize, "MVP_MAX_SERIALIZED_BYTES", 5)
+    with pytest.raises(ValueError, match="padded"):
+        finalize._validate_transport_lengths([3, 2])
 
 
 def test_nonfinite_json_and_bounds_are_rejected_before_staging(tmp_path, monkeypatch):
@@ -295,6 +383,27 @@ def test_real_two_rank_gloo_padded_paired_evaluation_and_compiled_path(tmp_path,
 def test_collective_inventory_and_loader_failures_prevent_publication(tmp_path, case):
     result = probe(tmp_path, case)
     assert result == {"all_failed": True, "case": case, "final_exists": False}
+
+
+@pytest.mark.parametrize("case", ["inventory-noniterable", "inventory-throwing", "inventory-infinite"])
+def test_one_rank_arbitrary_inventory_rejects_promptly_on_all_ranks(tmp_path, case):
+    result = probe(tmp_path, case, timeout=30)
+    assert result["all_failed"] and result["same_error"] and not result["final_exists"]
+    assert result["error"][0] == "ValueError" and "list, tuple, or range" in result["error"][1]
+
+
+def test_collective_byte_cap_rejects_before_payload_collective(tmp_path):
+    result = probe(tmp_path, "byte-cap")
+    assert result == {"all_failed": True, "case": "byte-cap", "payload_calls": 0,
+                      "final_exists": False}
+
+
+@pytest.mark.parametrize("case", ["publish-write-fail", "publish-rename-fail"])
+def test_collective_prerename_publication_errors_are_identical_and_leave_no_final(tmp_path, case):
+    result = probe(tmp_path, case)
+    assert result["case"] == case and result["all_failed"] and result["same_error"]
+    assert result["error"][0] == "OSError" and case.split("-")[1] in result["error"][1]
+    assert not result["error"][2] and not result["final_exists"]
 
 
 def test_collective_postrename_durability_error_has_committed_status_on_all_ranks(tmp_path):
