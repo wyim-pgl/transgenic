@@ -1,6 +1,11 @@
 # Track A: fail-closed launch tooling
 
-CPU implementation only. No GPU/SIF/Hyena readiness is certified here. The
+CPU-validated implementation only. No GPU/SIF/Hyena readiness is certified here.
+`real_probes.py` now implements five CUDA-only measurement modes; **resource_budget
+is still unimplemented and full readiness remains blocked**. See
+`notes/MVP_REAL_PROBES_REPORT.md` for exact CLI, actual SIF version pins, independent
+cache layout, nonzero-EST beam2 checks, CPU results and the smallest remaining task.
+The
 existing trainer and `mvp_cli_runtime.py:175-236` contract are unchanged.
 `--validate-only` bypasses readiness; use this tool's **check** command instead.
 The base consumer trusts operator receipt digests; this tooling additionally
@@ -12,8 +17,9 @@ Do not bypass it with a handcrafted readiness record.
 * Author-selected **concrete checkpoint**, its weights/run_config/runtime_identity
   SHA256 pins. No implicit epoch05 choice and no `best`, `latest`, or symlink.
 * Staging route, quota headroom, copy byte ceiling and reserve.
-* Reviewed real-runtime P1–P4 probe programs and their executable/import/source
-  identities. The bounded runner is infrastructure, **not a real Hyena probe**.
+* Independent review of `real_probes.py` and completion of its missing resource
+  mode. The bounded runner is infrastructure, **not a real Hyena probe**. Actual
+  SIF imports/config parsing and all GPU measurements remain untested.
 * Per-seed walltime authorization after measured P4 timings; submission approval.
 * An immutable snapshot including these scripts plus the f847cb8 training code;
   an f847cb8-only archive does not include these tools.
