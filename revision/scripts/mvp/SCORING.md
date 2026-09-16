@@ -6,7 +6,8 @@ or empirical results are supplied by these programs.
 ## Alignment driver
 
 `mvp_align_panel_longreads.py --help` lists required local inputs. Without
-`--execute`, it only validates. The explicit `--execute` mode invokes minimap2,
+`--execute`, it only performs preparatory schema/geometry/byte checks, not
+scientific input validation. The explicit `--execute` mode invokes minimap2,
 seqkit, samtools, the existing orientation sampler/scorer, and the junction
 wrapper locally. It never submits jobs. Run only in an authorized compute
 allocation after independent review and real-tool smoke tests.
@@ -15,9 +16,14 @@ Canonical roles are **ROOT/evidence/DATASET_ROLES.longread_v1.tsv**, not the
 repository copy. The one matching run must be reference Athaliana,
 `b1_validation_only`, with `local_fa_md5` matching fresh MD5 of the canonical
 actual read file. Only SRR28341943–45 and ERR13994458 are admitted. Missing HiFi
-manifest/read inputs fail; nothing is fetched or inferred. Supply reference/GFF
-MD5 values from the frozen species manifest. Existing training drivers are not
-modified or bypassed.
+manifest/read inputs fail; nothing is fetched or inferred. Reference/GFF MD5
+values are caller assertions: equality verifies bytes, not their frozen identity.
+An **external frozen-reference identity gate is required**, but not implemented
+here. No caller approval flag can establish that gate. Both return modes record
+`reference_identity_status=UNVERIFIED`, `scientific_input_validation=false`, and
+`external_frozen_reference_gate_required=true`. Operational promotion requires
+anchored reference and producer receipts, not self-supplied hashes. Existing
+training drivers are not modified or bypassed.
 
 Outputs require a fresh `ROOT/evidence/mvp_scoring_20260916/RUN` directory.
 No resume/reuse/overwrite is supported. ONT orientation lives under that run's
@@ -33,7 +39,10 @@ not 10,240: decimal 10 kb from §2, not a tile geometry constant. Boundary
 windows fail rather than shift. Pass1 selects MAPQ >=5 overlapping candidate
 reads; pass2 uses the full reference and frozen source-specific flags.
 `alignment.json` records commands, input/output MD5, run/source, and pending
-coverage status. It is not a scientific DONE. Failures retain FAILED.json;
+coverage status. Without execution the status is
+`PREPARATORY_BYTE_CHECKS_ONLY`; after commands it is
+`PREPARATORY_COMMANDS_COMPLETED`. Neither is full input validation or a
+scientific DONE. Failures retain FAILED.json;
 partial output is not reused. Orientation completion alone is not alignment
 completion.
 
@@ -62,7 +71,13 @@ support columns.
 `mvp_score.py --input counts.json --panels ... --out statistics.json` consumes:
 
 - `pairs`: exactly keys `"1"`, `"2"`, `"3"`, each a final deduplicated eval-pair
-  JSONL path. Rank-shard duplicates must be resolved upstream by the audited
+  JSONL path. Repeated resolved paths, symlinks to the same file, and samefile
+  aliases (including hardlinks) are rejected. Identical numbers in distinct
+  files remain allowed: different filenames/bytes do **not** prove three runs.
+  All score API and CLI outputs carry `pair_run_provenance_status=UNVERIFIED`,
+  `three_seed_identity_verified=false`, and `three_seed_policy_verified=false`.
+  Producer receipts binding seed/run, file hash, and final inventory remain
+  unimplemented. Rank-shard duplicates must be resolved upstream by the audited
   finalizer, not silently dropped here.
 - `loci`: exactly all 50 `gene_id` values, each with `seeds` keys `"1"/"2"/"3"`,
   each seed with `off`/`on` count objects.
@@ -71,6 +86,10 @@ support columns.
   Optionally every object also has `precision_tp`, `predicted`, `recall_tp`,
   `supported`. Partial structural inputs are rejected; unavailable is absence,
   never zero counts. Zero bootstrap denominators are UNASSESSABLE, not zero.
+  Recall true positives must be a subset of precision true positives (and thus
+  of predicted junctions). For each locus, `f1_reference` and supplied `supported`
+  must be frozen across all fractions and seeds. These consistency checks do
+  not authenticate the caller-supplied counts.
 
 This is a **count-input adapter**. It does not verify those counts against raw
 prediction/reference GFFs, run GFFCompare, or generate predictions. Input hashes

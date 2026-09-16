@@ -158,10 +158,13 @@ def test_prediction_selection_is_gene_overlap_not_junction_clipping():
 def test_real_score_cli_full_frozen_panel_missing_structural(tmp_path):
     panel = ROOT / 'revision/protocols/b6_panels_v1.tsv'
     loci = w.load_panel(panel)
-    pairfile = tmp_path / 'pairs.jsonl'
-    pairfile.write_text(json.dumps(record(1, .002)) + '\n')
+    pairs = {}
+    for seed in (1, 2, 3):
+        pairfile = tmp_path / f'pairs{seed}.jsonl'
+        pairfile.write_text(json.dumps(record(1, .002)) + '\n')
+        pairs[str(seed)] = str(pairfile)
     counts = dict(f1_tp=1, f1_predicted=2, f1_reference=2)
-    payload = dict(pairs={str(s): str(pairfile) for s in (1, 2, 3)},
+    payload = dict(pairs=pairs,
                    loci=[dict(gene_id=l.gene_id, seeds={str(s): dict(off=counts, on=counts) for s in (1, 2, 3)}) for l in loci])
     inp = tmp_path / 'input.json'; inp.write_text(json.dumps(payload))
     out = tmp_path / 'out.json'
@@ -172,9 +175,17 @@ def test_real_score_cli_full_frozen_panel_missing_structural(tmp_path):
     assert result['primary']['pooled_point'] == pytest.approx(.002)
     assert result['composite_delta_diagnostic'] == 99
     assert result['decision'] is None
+    assert_unverified_runs(result)
     assert result['structural_available'] is False
     assert result['readouts']['all50']['F1']['pooled']['point'] == 0
     assert result['readouts']['core20']['F1']['pooled']['n_loci'] == 20
+    blocked_out = tmp_path / 'blocked.json'
+    blocked = subprocess.run([sys.executable, str(ROOT / 'revision/scripts/mvp/mvp_score.py'),
+                              '--input', str(inp), '--panels', str(panel), '--out', str(blocked_out),
+                              '--final-decision'], capture_output=True, text=True)
+    assert blocked.returncode != 0
+    assert 'coverage policy pending' in blocked.stderr
+    assert not blocked_out.exists()
     payload['pairs']['01'] = str(pairfile)
     with pytest.raises(ValueError, match='seeds'):
         script('mvp_score').score(payload, loci)
@@ -187,3 +198,68 @@ def test_real_score_cli_full_frozen_panel_missing_structural(tmp_path):
     payload['loci'].pop()
     with pytest.raises(ValueError, match='inventory'):
         script('mvp_score').score(payload, loci)
+
+
+def assert_unverified_runs(result):
+    assert result['pair_run_provenance_status'] == 'UNVERIFIED'
+    assert result['three_seed_identity_verified'] is False
+    assert result['three_seed_policy_verified'] is False
+    assert result['decision'] is None
+
+
+def score_fixture(tmp_path):
+    pairs = {}
+    for seed in (1, 2, 3):
+        path = tmp_path / f'seed{seed}.jsonl'
+        path.write_text(json.dumps(record(1, .002)) + '\n')
+        pairs[str(seed)] = str(path)
+    counts = dict(f1_tp=1, f1_predicted=2, f1_reference=2,
+                  precision_tp=0, predicted=1, recall_tp=0, supported=10)
+    row = dict(gene_id='g', seeds={str(s): {f: dict(counts) for f in ('off', 'on')} for s in (1, 2, 3)})
+    return dict(pairs=pairs, loci=[row])
+
+
+def test_recall_true_positives_must_be_precision_subset(tmp_path):
+    payload = score_fixture(tmp_path)
+    payload['loci'][0]['seeds']['1']['on']['recall_tp'] = 1
+    with pytest.raises(ValueError, match='subset'):
+        script('mvp_score').score(payload, [locus()])
+
+
+@pytest.mark.parametrize('field', ['f1_reference', 'supported'])
+def test_frozen_denominator_cannot_change_across_seeds(tmp_path, field):
+    payload = score_fixture(tmp_path)
+    for fraction in ('off', 'on'):
+        payload['loci'][0]['seeds']['2'][fraction][field] = 200
+    with pytest.raises(ValueError, match='frozen'):
+        script('mvp_score').score(payload, [locus()])
+
+
+@pytest.mark.parametrize('alias', ['same', 'symlink', 'hardlink'])
+def test_pair_inputs_cannot_relabel_one_file(tmp_path, alias):
+    payload = score_fixture(tmp_path)
+    original = Path(payload['pairs']['1'])
+    if alias == 'same':
+        path = original.parent / '.' / original.name
+    else:
+        path = tmp_path / 'alias.jsonl'
+        if alias == 'symlink':
+            path.symlink_to(original)
+        else:
+            import os
+            os.link(original, path)
+    payload['pairs']['2'] = str(path)
+    with pytest.raises(ValueError, match='duplicate.*pair'):
+        script('mvp_score').score(payload, [locus()])
+
+
+def test_identical_numbers_distinct_files_not_verified_runs_and_zero_not_missing(tmp_path):
+    payload = score_fixture(tmp_path)
+    for pair in payload['loci'][0]['seeds'].values():
+        for counts in pair.values():
+            counts['supported'] = 0
+    result = script('mvp_score').score(payload, [locus()])
+    assert_unverified_runs(result)
+    assert result['structural_available'] is True
+    assert result['readouts']['all50']['R']['pooled']['status'] == 'UNASSESSABLE'
+    assert result['primary']['per_seed_point'] == pytest.approx([.002] * 3)

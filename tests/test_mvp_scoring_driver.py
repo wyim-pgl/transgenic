@@ -92,3 +92,56 @@ def test_real_orientation_scorer_nondefault_root_done_key_and_stale_rejection(tm
     (out / 'audit.json').write_text(json.dumps(result))
     with pytest.raises(ValueError):
         m.read_audit(out, key, 'SRR28341943')
+
+
+@pytest.mark.parametrize('execute', [False, True])
+def test_driver_self_attested_reference_is_never_scientifically_validated(tmp_path, monkeypatch, execute):
+    """Tool stand-ins exercise report publication, not biological alignment."""
+    from types import SimpleNamespace
+    from test_mvp_scoring import locus
+    m, root, reads, roles = setup_inputs(tmp_path)
+    roles.write_text(roles.read_text().replace('SRR28341943', 'ERR13994458'))
+    ref = root / 'alternative.fa'; ref.write_text('>Chr1\n' + 'A' * 60000 + '\n')
+    gff = root / 'alternative.gff'; gff.write_text('##gff-version 3\n')
+    panel = root / 'panel'; panel.write_text('test fixture')
+    # Keep this test small; the actual frozen-panel CLI test runs separately.
+    monkeypatch.setattr(m.w, 'load_panel', lambda path: [locus()])
+    calls = []
+
+    def external_tool(command, *, check, stderr, stdout=None):
+        calls.append(command)
+        if command[0] == 'minimap2':
+            if '-x' in command:
+                stdout.write('r\t100\t0\t100\t+\tChr1\t60000\t30000\t30100\t100\t100\t60\n')
+            else:
+                stdout.write('@HD\tVN:1.6\n')
+        elif command[0] == 'seqkit':
+            stdout.write('>r\nAAAA\n')
+        elif command[0] == 'samtools':
+            if command[1] == 'sort':
+                Path(command[3]).write_bytes(b'test BAM stand-in')
+            else:
+                assert command[1] == 'index'
+                Path(command[2] + '.bai').write_bytes(b'test index stand-in')
+        else:
+            assert command[1].endswith('mvp_junction_table.py')
+            Path(command[command.index('--out') + 1]).write_text('test table stand-in')
+            Path(command[command.index('--qc-out') + 1]).write_text('{}')
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(m.subprocess, 'run', external_tool)
+    args = SimpleNamespace(root=root, run='ERR13994458', reads=reads, ref=ref,
+                           ref_md5=m.digest(ref), gff=gff, gff_md5=m.digest(gff),
+                           panels=panel, threads=1, execute=execute)
+    result = m.execute(args)
+    assert result['reference_identity_status'] == 'UNVERIFIED'
+    assert result['scientific_input_validation'] is False
+    assert result['external_frozen_reference_gate_required'] is True
+    assert result['status'] == ('PREPARATORY_COMMANDS_COMPLETED' if execute else 'PREPARATORY_BYTE_CHECKS_ONLY')
+    if execute:
+        published = json.loads((m.output_directory(root, args.run) / 'alignment.json').read_text())
+        assert published == result
+        assert calls
+    else:
+        assert not calls
+        assert not m.output_directory(root, args.run).exists()

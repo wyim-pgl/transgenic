@@ -8,7 +8,10 @@ transcript counts; monoexonic exact CDS), and optionally precision_tp,
 predicted, recall_tp, supported (exact junction counts). All are integers.
 Structural counts must be present everywhere or nowhere, never filled as zero
 for missing evidence. F1 is percentage points; P/R are fractions.
-This adapter does not decode models or claim to run GFFCompare.
+This adapter does not decode models or claim to run GFFCompare. Pair paths
+must identify distinct files, but filenames and seed keys do not prove distinct
+runs. API and CLI outputs mark pair/run provenance UNVERIFIED and three-seed
+identity/policy unverified until anchored producer receipts are integrated.
 """
 import argparse
 import json
@@ -71,8 +74,14 @@ def metric(rows, fraction, name, seeds=(1, 2, 3)):
 def score(payload, panel):
     if set(payload['pairs']) != {'1', '2', '3'}:
         raise ValueError('exact seeds 1, 2, 3 required')
-    records = {int(s): [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
-               for s, path in payload['pairs'].items()}
+    paths = {s: Path(path).resolve(strict=True) for s, path in payload['pairs'].items()}
+    seen = []
+    for path in paths.values():
+        if any(path == previous or path.samefile(previous) for previous in seen):
+            raise ValueError('duplicate pair input file; seed labels do not establish run identity')
+        seen.append(path)
+    records = {int(s): [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+               for s, path in paths.items()}
     rns, delta = b.build_tiles(records)
     primary = b.tile_bootstrap(delta)
     composite = math.fsum(r['composite_loss_off'] - r['composite_loss_on']
@@ -86,6 +95,7 @@ def score(payload, panel):
     for row in loci:
         if set(row['seeds']) != {'1', '2', '3'}:
             raise ValueError('each locus must carry all three seeds')
+        frozen = {}
         for pair in row['seeds'].values():
             if set(pair) != {'off', 'on'}:
                 raise ValueError('paired fractions off/on required')
@@ -102,16 +112,19 @@ def score(payload, panel):
                 structural_flags.append(available)
                 if available and (c['precision_tp'] > c['predicted'] or c['recall_tp'] > c['supported']):
                     raise ValueError('junction numerator exceeds denominator')
-            if pair['off']['f1_reference'] != pair['on']['f1_reference']:
-                raise ValueError('reference denominator differs between fractions')
-            if 'supported' in pair['off'] and 'supported' in pair['on'] and pair['off']['supported'] != pair['on']['supported']:
-                raise ValueError('structural denominator differs between fractions')
+                if available and c['recall_tp'] > c['precision_tp']:
+                    raise ValueError('recall true positives must be a subset of precision true positives')
+                for field in ['f1_reference'] + (['supported'] if available else []):
+                    if c[field] != frozen.setdefault(field, c[field]):
+                        raise ValueError(f'{field} must be frozen across all fractions and seeds per locus')
     if any(structural_flags) != all(structural_flags):
         raise ValueError('partially missing structural scoring; do not encode missing as negative')
     result = dict(label='exploratory / MVP', panel_sha256=w.PANEL_SHA256,
                   primary=primary, composite_delta_diagnostic=composite,
                   structural_available=all(structural_flags), readouts={},
                   training_eligible=False,
+                  pair_run_provenance_status='UNVERIFIED',
+                  three_seed_identity_verified=False, three_seed_policy_verified=False,
                   decision=None, decision_status='BLOCKED_PENDING_COVERAGE_POLICY',
                   precision_rule='point_estimate_ge_0; interpretation pending author review')
     core = {l.gene_id for l in panel if l.panel == 'mvp_core'}
