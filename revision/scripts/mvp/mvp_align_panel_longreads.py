@@ -3,8 +3,11 @@
 
 Canonical roles: ROOT/evidence/DATASET_ROLES.longread_v1.tsv (not repo copy).
 Outputs only ROOT/evidence/mvp_scoring_20260916/RUN, fresh directory required.
-External commands run only with --execute; this file submits no jobs. Alignment
-completion is not coverage-policy approval or authorization for training.
+External commands run only with --execute; this file submits no jobs.
+Requires an EXTERNAL frozen-reference identity gate: caller MD5 values check
+bytes only, not frozen reference/GFF identity. This partial preparatory driver
+cannot establish scientific input validation, coverage approval, or training
+authorization. Operational promotion also requires anchored producer receipts.
 """
 import argparse
 import csv
@@ -151,8 +154,13 @@ def execute(args):
     w.windows_by_chromosome(loci, lengths)
     if args.threads < 1:
         raise ValueError('threads must be positive')
+    boundary = dict(reference_identity_status='UNVERIFIED',
+                    scientific_input_validation=False,
+                    external_frozen_reference_gate_required=True,
+                    training_eligible=False)
     if not args.execute:
-        return {'status': 'VALIDATED_ONLY', 'role': row, 'coverage_policy': 'PENDING'}
+        return dict(boundary, status='PREPARATORY_BYTE_CHECKS_ONLY',
+                    role=row, coverage_policy='PENDING')
     out = output_directory(root, args.run)
     out.mkdir(parents=True, exist_ok=False)
     roles = root / 'evidence/DATASET_ROLES.longread_v1.tsv'
@@ -192,11 +200,11 @@ def execute(args):
              '--out', str(out / 'junctions.tsv'), '--qc-out', str(out / 'junctions.qc.json')])
         if any(digest(p) != d for p, d in inputs.items()):
             raise ValueError('input mutated during scoring')
-        report = dict(label='exploratory / MVP', role=row, inputs_md5=inputs,
+        report = dict(boundary, label='exploratory / MVP', role=row, inputs_md5=inputs,
                       commands=commands, source=source, use_uf=uf, run=args.run,
                       panel_sha256=w.PANEL_SHA256, coverage_policy='PENDING',
                       outputs_md5={p.name: digest(p) for p in out.iterdir() if p.is_file()},
-                      training_eligible=False, status='SCORING_ALIGNMENT_COMPLETE')
+                      status='PREPARATORY_COMMANDS_COMPLETED')
         (out / 'alignment.json.tmp').write_text(json.dumps(report, indent=2))
         (out / 'alignment.json.tmp').rename(out / 'alignment.json')
         return report
@@ -207,8 +215,11 @@ def execute(args):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    for name in ('root', 'run', 'reads', 'ref', 'ref-md5', 'gff', 'gff-md5', 'panels'):
+    for name in ('root', 'run', 'reads', 'ref', 'gff', 'panels'):
         p.add_argument('--' + name, required=True)
+    for name in ('ref-md5', 'gff-md5'):
+        p.add_argument('--' + name, required=True,
+                       help='caller-supplied byte checksum only; external frozen-reference identity gate still required')
     p.add_argument('--threads', type=int, default=32)
     p.add_argument('--execute', action='store_true')
     print(json.dumps(execute(p.parse_args(argv)), indent=2))

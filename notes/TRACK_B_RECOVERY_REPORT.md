@@ -100,3 +100,64 @@ passing in the final run.
 No empirical efficacy, biological support rate, STOP/GO outcome, training
 readiness, author approval, or external-tool certification is claimed.
 Controller independent review remains required.
+
+## Round 1 review fixes (same worktree)
+
+Fix base: `200f1141708b4f913a7e05ae88661fce4abaf98e` (verified before edits).
+Read the complete controller-supplied `B.independent_review.md`; this section
+supersedes earlier wording that might imply scientific validation of pair/run
+or reference identities. No new worktree, remote execution, subagents, main
+edits, merge, or push.
+
+- **B1:** `score()` now rejects recall true positives exceeding precision true
+  positives; together with the existing precision-TP <= predicted check, recall
+  TP cannot exceed predicted junctions. Per-locus `f1_reference` and supplied
+  `supported` are frozen across **all six seed/fraction count objects**, not just
+  each off/on pair. Independent tests first failed for the subset rule and for
+  each cross-seed denominator. Zero support remains supplied evidence with an
+  undefined recall denominator (UNASSESSABLE); absent evidence remains absent.
+- **B2:** reject repeated resolved pair paths, symlink aliases, and samefile
+  aliases including hardlinks. Separate files with legitimately identical
+  numbers remain accepted. Updated the full-panel CLI fixture to create three
+  distinct files. All successful score API/CLI results now include
+  `pair_run_provenance_status=UNVERIFIED`,
+  `three_seed_identity_verified=false`, and
+  `three_seed_policy_verified=false`. File distinctness does not authenticate
+  three runs; no producer receipts or run identity approval were invented.
+- **B3:** retained the reviewer-approved minimal truthful-boundary option.
+  Caller MD5s still check bytes only. Both driver return modes and the executed
+  `alignment.json` explicitly state `reference_identity_status=UNVERIFIED`,
+  `scientific_input_validation=false`, and
+  `external_frozen_reference_gate_required=true`. Renamed statuses to
+  `PREPARATORY_BYTE_CHECKS_ONLY` and `PREPARATORY_COMMANDS_COMPLETED`.
+  Help and SCORING.md now explicitly require an external frozen-reference gate
+  and anchored reference/producer receipts before operational promotion.
+  No manifest schema or caller approval switch was introduced.
+
+### Round 1 verification
+
+Baseline covering command: **86 passed, 21 subtests passed**. New scoring
+regressions then failed independently (8 failures); after B1/B2 fixes they
+passed. Both new driver boundary cases failed before B3 metadata changes.
+
+Final covering command (same interpreter/PYTHONPATH as above):
+
+```sh
+PYTHONPATH=/tmp/b6-trackb-testdeps:src \
+  /home/wyim/miniconda3/envs/pdb/bin/python -m pytest \
+  tests/test_mvp_scoring.py tests/test_mvp_scoring_driver.py \
+  tests/test_mvp_metrics.py revision/scripts/tests/test_evidence_support.py -q
+```
+
+**95 passed, 21 subtests passed**. `git diff --check` passed.
+The driver boundary tests exercise `execute()` and published report contents
+with explicitly local external-tool stand-ins and a small panel fixture; they
+are not real alignment certification. The score CLI test uses the actual frozen
+panel and synthetic records, tests provenance markers, and verifies
+`--final-decision` still fails without producing a decision output.
+
+Remaining limitations are unchanged: count authenticity, actual seed/run
+identity, frozen reference/GFF identity, real-tool alignment, producer receipts,
+GPU decoding, and author coverage/withholding policy are not established. The
+unconditional final-decision block remains. This is still a **partial
+preparatory driver/adapter**, not operational or scientifically accepted.
