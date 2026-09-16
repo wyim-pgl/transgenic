@@ -1,0 +1,20 @@
+# revision/scripts/tests/test_track_c_audit_review.py
+
+- test_known_container_markers_cannot_hide_behind_children · function · L12-L29 — def test_known_container_markers_cannot_hide_behind_children(tmp_path, container, marker)
+- test_producer_identity_is_required_and_historically_bound · function · L35-L46 — def test_producer_identity_is_required_and_historically_bound(tmp_path, field, mutation)
+- test_self_hashed_arbitrary_binary_does_not_establish_approved_identity · function · L49-L55 — def test_self_hashed_arbitrary_binary_does_not_establish_approved_identity(tmp_path, monkeypatch): # Undo ONLY the fixture engine trust anchor; the real approved pin must reject it.
+- test_both_named_source_timing_files_required · function · L59-L67 — def test_both_named_source_timing_files_required(tmp_path, missing)
+- test_remaining8_requires_script_identity_and_every_named_log · function · L71-L82 — def test_remaining8_requires_script_identity_and_every_named_log(tmp_path, mutation)
+- test_timing_directory_is_failed_evidence_not_an_inventory_abort · function · L85-L91 — def test_timing_directory_is_failed_evidence_not_an_inventory_abort(tmp_path)
+- test_remaining8_empty_stderr_is_inventory_not_missing · function · L94-L99 — def test_remaining8_empty_stderr_is_inventory_not_missing(tmp_path)
+- test_arbitrary_pilot_log_cannot_resolve_missing_layout_receipt · function · L102-L108 — def test_arbitrary_pilot_log_cannot_resolve_missing_layout_receipt(tmp_path)
+- test_nested_unit_payload_is_not_blessed_by_nested_done · function · L111-L119 — def test_nested_unit_payload_is_not_blessed_by_nested_done(tmp_path)
+- test_json_shape_errors_preserve_hashes_and_continue_17_units · function · L124-L137 — def test_json_shape_errors_preserve_hashes_and_continue_17_units(tmp_path, malformed)
+- test_batch_inputs_schema_errors_are_failed_units_not_abort · function · L142-L152 — def test_batch_inputs_schema_errors_are_failed_units_not_abort(tmp_path, payload)
+- test_container_marker_presence_contract · function · L156-L165 — def test_container_marker_presence_contract(tmp_path, marker)
+- test_malformed_nested_producer_schema_preserves_prior_checks · function · L170-L179 — def test_malformed_nested_producer_schema_preserves_prior_checks(tmp_path, key, value)
+- test_unknown_approved_engine_identity_is_explicitly_unresolved · function · L182-L187 — def test_unknown_approved_engine_identity_is_explicitly_unresolved(tmp_path, monkeypatch)
+- test_missing_code_fields_fail_in_integrated_inventory · function · L190-L200 — def test_missing_code_fields_fail_in_integrated_inventory(tmp_path)
+- test_filtered_fasta_iteration_failure_preserves_all_unit_inventory · function · L205-L228 — def test_filtered_fasta_iteration_failure_preserves_all_unit_inventory(tmp_path, contents)
+- test_programmer_error_not_silently_treated_as_bad_input · function · L231-L237 — def test_programmer_error_not_silently_treated_as_bad_input(tmp_path, monkeypatch)
+- broken · function · L233-L234 — def broken(*args, **kwargs)

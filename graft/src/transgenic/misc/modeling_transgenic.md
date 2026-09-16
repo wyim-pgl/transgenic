@@ -1,0 +1,73 @@
+# src/transgenic/misc/modeling_transgenic.py
+
+- shift_tokens_right · function · L12-L25 — def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int)
+- LEDLearnedPositionalEmbedding · class · L28-L42 — class LEDLearnedPositionalEmbedding(nn.Embedding)
+- __init__ · method · L33-L34 — def __init__(self, num_embeddings: int, embedding_dim: int)
+- forward · method · L36-L42 — def forward(self, input_ids_shape: torch.Size, past_key_values_length: int = 0)
+- FiLMLayer · class · L44-L61 — class FiLMLayer(nn.Module)
+- __init__ · method · L45-L53 — def __init__(self, num_labels=2, hidden_dim=512, output_dim=768)
+- forward · method · L55-L61 — def forward(self, probabilities, encoder_output): # probabilities: (n, t, m) -> (batch, seqlen, classes)
+- LEDSeq2SeqLMOutput · class · L65-L129 — class LEDSeq2SeqLMOutput(ModelOutput)
+- LEDSeq2SeqModelOutput · class · L133-L198 — class LEDSeq2SeqModelOutput(ModelOutput)
+- NumberMaskEmbedTokens · class · L200-L225 — class NumberMaskEmbedTokens(nn.Embedding)
+- __init__ · method · L201-L203 — def __init__(self, num_embeddings, embedding_dim, padding_idx=0)
+- forward · method · L205-L216 — def forward(self, input_ids): # Create a mask for numerical tokens and embed it
+- create_numerical_mask · method · L218-L225 — def create_numerical_mask(self, input_ids): # Create a binary mask where 1 indicates a numerical token and 0 otherwise
+- segmented_sequence_embeddings · class · L227-L363 — class segmented_sequence_embeddings(EsmForMaskedLM)
+- __init__ · method · L228-L250 — def __init__(self, e_model, s_model, numSegClasses, outputSize = 768, do_segment=False)
+- forward · method · L252-L363 — def forward(self, input_ids, attention_mask=None, segLabels=None, **kwargs)
+- TransgenicPreTrainedModel · class · L365-L389 — class TransgenicPreTrainedModel(PreTrainedModel)
+- _init_weights · method · L370-L379 — def _init_weights(self, module)
+- dummy_inputs · method · L382-L389 — def dummy_inputs(self)
+- transgenicModel · class · L391-L520 — class transgenicModel(TransgenicPreTrainedModel)
+- __init__ · method · L394-L406 — def __init__(self, config)
+- get_input_embeddings · method · L408-L409 — def get_input_embeddings(self)
+- set_input_embeddings · method · L411-L413 — def set_input_embeddings(self, value)
+- get_encoder · method · L415-L416 — def get_encoder(self)
+- get_decoder · method · L418-L419 — def get_decoder(self)
+- forward · method · L427-L520 — def forward( self, input_ids: Optional[torch.LongTensor] = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, global_attention_mask: Optional[torch.FloatTensor] = None, past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None, ) -> Union[Tuple[torch.Tensor], LEDSeq2SeqModelOutput]
+- transgenicForConditionalGeneration · class · L522-L720 — class transgenicForConditionalGeneration(TransgenicPreTrainedModel)
+- __init__ · method · L527-L537 — def __init__(self, config, unlink=False)
+- get_encoder · method · L539-L540 — def get_encoder(self)
+- get_decoder · method · L542-L543 — def get_decoder(self)
+- resize_token_embeddings · method · L545-L548 — def resize_token_embeddings(self, new_num_tokens: int, pad_to_multiple_of: Optional[int] = None) -> nn.Embedding
+- _resize_final_logits_bias · method · L550-L557 — def _resize_final_logits_bias(self, new_num_tokens: int) -> None
+- get_output_embeddings · method · L559-L560 — def get_output_embeddings(self)
+- set_output_embeddings · method · L562-L563 — def set_output_embeddings(self, new_embeddings)
+- initialize_weights · method · L565-L572 — def initialize_weights(self)
+- forward · method · L577-L676 — def forward( self, input_ids: Optional[torch.LongTensor] = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, global_attention_mask: Optional[torch.FloatTensor] = None, past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, labels: Optional[torch.LongTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None, ) -> Union[Tuple[torch.Tensor], LEDSeq2SeqLMOutput]
+- prepare_inputs_for_generation · method · L678-L706 — def prepare_inputs_for_generation( self, decoder_input_ids, past_key_values=None, attention_mask=None, global_attention_mask=None, head_mask=None, decoder_head_mask=None, cross_attn_head_mask=None, use_cache=None, encoder_outputs=None, **kwargs, ): # cut decoder_input_ids if past is used
+- prepare_decoder_input_ids_from_labels · method · L708-L709 — def prepare_decoder_input_ids_from_labels(self, labels: torch.Tensor)
+- _reorder_cache · method · L712-L720 — def _reorder_cache(past_key_values, beam_idx)
+- transgenicModelT5 · class · L722-L815 — class transgenicModelT5(TransgenicPreTrainedModel)
+- __init__ · method · L724-L730 — def __init__(self, config)
+- get_input_embeddings · method · L732-L733 — def get_input_embeddings(self)
+- set_input_embeddings · method · L735-L736 — def set_input_embeddings(self, value)
+- get_encoder · method · L738-L739 — def get_encoder(self)
+- get_decoder · method · L741-L742 — def get_decoder(self)
+- forward · method · L744-L815 — def forward( self, input_ids: Optional[torch.LongTensor] = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, global_attention_mask: Optional[torch.FloatTensor] = None, past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None, ) -> Union[Tuple[torch.Tensor], LEDSeq2SeqModelOutput]
+- transgenicForConditionalGenerationT5 · class · L817-L1009 — class transgenicForConditionalGenerationT5(TransgenicPreTrainedModel)
+- __init__ · method · L822-L831 — def __init__(self, config, unlink=False)
+- get_encoder · method · L833-L834 — def get_encoder(self)
+- get_decoder · method · L836-L837 — def get_decoder(self)
+- resize_token_embeddings · method · L839-L842 — def resize_token_embeddings(self, new_num_tokens: int, pad_to_multiple_of: Optional[int] = None) -> nn.Embedding
+- _resize_final_logits_bias · method · L844-L851 — def _resize_final_logits_bias(self, new_num_tokens: int) -> None
+- get_output_embeddings · method · L853-L854 — def get_output_embeddings(self)
+- set_output_embeddings · method · L856-L857 — def set_output_embeddings(self, new_embeddings)
+- initialize_weights · method · L859-L864 — def initialize_weights(self)
+- forward · method · L866-L965 — def forward( self, input_ids: Optional[torch.LongTensor] = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, global_attention_mask: Optional[torch.FloatTensor] = None, past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, labels: Optional[torch.LongTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None, ) -> Union[Tuple[torch.Tensor], LEDSeq2SeqLMOutput]
+- prepare_inputs_for_generation · method · L967-L995 — def prepare_inputs_for_generation( self, decoder_input_ids, past_key_values=None, attention_mask=None, global_attention_mask=None, head_mask=None, decoder_head_mask=None, cross_attn_head_mask=None, use_cache=None, encoder_outputs=None, **kwargs, ): # cut decoder_input_ids if past is used
+- prepare_decoder_input_ids_from_labels · method · L997-L998 — def prepare_decoder_input_ids_from_labels(self, labels: torch.Tensor)
+- _reorder_cache · method · L1001-L1009 — def _reorder_cache(past_key_values, beam_idx)
+- TransgenicWithValueHead · class · L1012-L1015 — class TransgenicWithValueHead(AutoModelForSeq2SeqLMWithValueHead)
+- __init__ · method · L1013-L1015 — def __init__(self, base_model)
+- HausdorffDistanceLoss · class · L1017-L1091 — class HausdorffDistanceLoss(nn.Module)
+- __init__ · method · L1018-L1020 — def __init__(self, alpha=0.01)
+- forward · method · L1022-L1055 — def forward(self, pred, target)
+- _extract_boundaries · method · L1057-L1070 — def _extract_boundaries(self, binary_sequence)
+- _pairwise_distance · method · L1072-L1091 — def _pairwise_distance(self, points1, points2)
+- BoundaryLoss · class · L1094-L1136 — class BoundaryLoss(nn.Module)
+- __init__ · method · L1095-L1116 — def __init__(self, alpha=0.01, beta=1.0, numSegClasses=14, device=torch.device("cuda"))
+- forward · method · L1118-L1136 — def forward(self, pred, target)
+- numeric_token_loss · function · L1175-L1194 — def numeric_token_loss(logits, label)
+- HybridLoss · function · L1197-L1199 — def HybridLoss(logits, label, alpha=1, beta=0.01)

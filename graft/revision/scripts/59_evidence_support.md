@@ -1,0 +1,46 @@
+# revision/scripts/59_evidence_support.py
+
+- EvidenceError · class · L24-L25 — class EvidenceError(ValueError)
+- RuleUnresolved · class · L28-L29 — class RuleUnresolved(EvidenceError)
+- require · function · L52-L54 — def require(condition, message)
+- digest · function · L57-L62 — def digest(path, algorithm="sha256")
+- open_text · function · L65-L66 — def open_text(path)
+- sam_lines · function · L69-L84 — def sam_lines(path, samtools="samtools")
+- Alignment · class · L88-L104 — class Alignment
+- read_strand · method · L103-L104 — def read_strand(self)
+- parse_sam · function · L107-L142 — def parse_sam(line)
+- transcript_strand · function · L145-L160 — def transcript_strand(aln, uf=False, oriented_strand=None)
+- Edit · class · L164-L167 — class Edit
+- parse_cs · function · L170-L190 — def parse_cs(aln)
+- anchor_ok · function · L193-L214 — def anchor_ok(edits, index, direction, width, max_mismatch, exclusion)
+- canonical · function · L217-L224 — def canonical(genome, contig, intron, strand)
+- correct_junction · function · L227-L238 — def correct_junction(genome, contig, raw, strand, source)
+- Junction · class · L242-L247 — class Junction
+- call_junctions · function · L250-L269 — def call_junctions(aln, genome, strand, source)
+- alignment_rejection · function · L272-L288 — def alignment_rejection(records, mapq=20)
+- wilson · function · L291-L300 — def wilson(successes, total)
+- Addition · class · L304-L339 — class Addition
+- __post_init__ · method · L322-L339 — def __post_init__(self)
+- Observation · class · L343-L364 — class Observation
+- chain · method · L361-L364 — def chain(self): # Keeping failed calls in the structure prevents deletion of a bad extra intron # from manufacturing an otherwise exact chain.
+- overlaps · function · L367-L371 — def overlaps(obs, addition)
+- spanning · function · L374-L375 — def spanning(obs, start, end)
+- callable_dimensions · function · L378-L390 — def callable_dimensions(addition, observations)
+- chain_witness · function · L393-L404 — def chain_witness(addition, obs)
+- normalize_clone · function · L407-L410 — def normalize_clone(value)
+- pcr_components · function · L413-L438 — def pcr_components(pcr)
+- pcr_diagnostics · function · L441-L464 — def pcr_diagnostics(observations, additions, specs)
+- counts · function · L451-L453 — def counts(groups)
+- assign_molecules · function · L467-L520 — def assign_molecules(observations)
+- support_counts · function · L523-L539 — def support_counts(observations)
+- score_addition · function · L542-L600 — def score_addition(addition, observations)
+- table_inputs · function · L603-L631 — def table_inputs(rows)
+- score_scopes · function · L634-L662 — def score_scopes(additions, observations, run_specs)
+- load_genome · function · L665-L681 — def load_genome(path)
+- read_roles · function · L684-L694 — def read_roles(paths)
+- observation_from_records · function · L697-L754 — def observation_from_records(records, spec, metadata, genome, role)
+- load_run · function · L757-L773 — def load_run(spec, metadata, genome, role, samtools="samtools"): # Name grouping must precede the primary-only filter, or a later supplementary # record cannot invalidate a primary already counted. No SAM is written to disk.
+- write_csv · function · L776-L783 — def write_csv(path, rows)
+- main · function · L786-L797 — def main(argv=None)
+- execute · function · L800-L944 — def execute(config_path, output, samtools="samtools")
+- checked · function · L812-L819 — def checked(entry)
