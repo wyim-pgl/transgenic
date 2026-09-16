@@ -595,7 +595,7 @@ def _publish_final(accelerator, model, paired_summary: dict, final_dir: Path | s
 
 
 def evaluate_and_publish_final(accelerator, model, eval_loader, expected_rns, final_dir, *,
-                               metadata, training_summary):
+                               metadata, training_summary, prepublication_check=None):
     """Evaluate off/on pairs collectively, then publish once on rank zero."""
     expected = None
     def validate_preflight():
@@ -645,6 +645,8 @@ def evaluate_and_publish_final(accelerator, model, eval_loader, expected_rns, fi
     aggregate_status = _broadcast_status(accelerator, aggregate_status)
     _raise_status(aggregate_status)
     summary = json.loads(_broadcast_payload_bytes(accelerator, summary_payload))
+    if prepublication_check is not None:
+        _collective_preflight(accelerator, prepublication_check)
 
     publication_status = None
     if accelerator.is_main_process:

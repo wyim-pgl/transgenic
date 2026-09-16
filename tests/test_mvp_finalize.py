@@ -180,6 +180,33 @@ def test_single_rank_ordinary_loader_preserves_mode_and_publishes(tmp_path):
     assert (tmp_path / "final" / "TRAINING_DONE").is_file()
 
 
+def test_prepublication_check_runs_after_aggregation_before_filesystem(tmp_path):
+    final = tmp_path / "final"
+    observed = []
+
+    def check():
+        observed.append(not final.exists() and not list(tmp_path.glob(".final.staging-*")))
+
+    result = finalize.evaluate_and_publish_final(
+        LocalAccelerator(), SaveToy(), DataLoader(OneDataset(), batch_size=1), [11], final,
+        metadata=metadata(), training_summary=summary(), prepublication_check=check)
+    assert observed == [True]
+    assert result["pair_count"] == 1 and final.is_dir()
+
+
+def test_prepublication_check_failure_leaves_no_artifact(tmp_path):
+    final = tmp_path / "final"
+
+    def reject():
+        raise ValueError("identity changed during evaluation")
+
+    with pytest.raises(ValueError, match="identity changed during evaluation"):
+        finalize.evaluate_and_publish_final(
+            LocalAccelerator(), SaveToy(), DataLoader(OneDataset(), batch_size=1), [11], final,
+            metadata=metadata(), training_summary=summary(), prepublication_check=reject)
+    assert not final.exists() and not list(tmp_path.iterdir())
+
+
 @pytest.mark.parametrize("distributed_type", ["FSDP", "DEEPSPEED"])
 def test_sharded_distributed_types_are_rejected(distributed_type):
     accelerator = LocalAccelerator()

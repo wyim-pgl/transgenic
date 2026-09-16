@@ -20,6 +20,12 @@ _SCOPE = "exploratory_mvp_candidate"
 _INVENTORY_SCOPE = "exploratory_mvp_candidate"
 _RECEIPTS_SCOPE = "exploratory_mvp_candidate"
 _SHA_LEN = 64
+_ACCEPTANCE_CHECKS = {
+    "artifact_identity", "bam_identity", "corpus_identity", "inventory_counts",
+    "inventory_exact_match", "panel_generation_ancestry_measured", "panel_identity",
+    "production_remains_false", "qc_gate", "reference_identity", "source_commit", "success_pass",
+}
+_RECEIPT_LOCATIONS = {"local_git_object", "local_parent_repo", "pronghorn"}
 
 
 @dataclass(frozen=True)
@@ -131,9 +137,9 @@ def validate_candidate_records(
             any(decision.get(name) is not False for name in false_flags)):
         raise ValueError("technical acceptance is required and all production flags must remain false")
     checks = acceptance.get("checks")
-    if (not isinstance(checks, dict) or not checks or
+    if (not isinstance(checks, dict) or set(checks) != _ACCEPTANCE_CHECKS or
             any(value is not True for value in checks.values())):
-        raise ValueError("all technical acceptance checks must be true")
+        raise ValueError("acceptance requires the exact technical acceptance checks, all true")
     qc = acceptance.get("qc")
     if not isinstance(qc, dict):
         raise ValueError("acceptance QC is missing")
@@ -164,8 +170,9 @@ def validate_candidate_records(
         raise ValueError("receipts must be schema 1 exploratory_mvp_candidate")
     receipt_rows = receipts.get("receipts")
     if (not isinstance(receipt_rows, list) or receipts.get("receipt_count") != len(receipt_rows) or
-            any(not isinstance(row, dict) or not {"path", "sha256", "bytes", "location"} <= set(row) or
-                not isinstance(row["path"], str) or not isinstance(row["bytes"], int) or row["bytes"] < 0 or
+            any(not isinstance(row, dict) or set(row) != {"path", "sha256", "bytes", "location"} or
+                not isinstance(row["path"], str) or type(row["bytes"]) is not int or row["bytes"] < 0 or
+                row["location"] not in _RECEIPT_LOCATIONS or
                 _digest(row["sha256"], "receipt SHA256") != row["sha256"] for row in receipt_rows)):
         raise ValueError("receipt inventory is malformed")
     summary = acceptance.get("inventory_summary")

@@ -1,7 +1,7 @@
 """Heavy preflight and execution for the exploratory MVP CLI."""
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 import hashlib
 from importlib import metadata as package_metadata
 import json
@@ -20,6 +20,31 @@ _REQUIRED_EVIDENCE = {
 }
 
 
+@dataclass(frozen=True)
+class _VerifiedInputs:
+    db: Path
+    evidence: Path
+    panel: Path
+    sif: Path
+    config: Path
+    weights: Path
+    run_config: Path
+    readiness: Path
+    final: Path
+    snapshots: tuple[tuple[str, tuple[int, int, int, int, int]], ...]
+
+
+@dataclass(frozen=True)
+class _TestExecution:
+    """Private programmatic injection for CPU integration tests; never exposed by the CLI."""
+    recipe: MVPRecipe
+    compile_backend: Any
+    cpu: bool = True
+    fail_phase: str | None = None
+    fail_rank: int = 1
+    mutate_before_final_recheck: Any = None
+
+
 def _snapshot_hash(value: os.PathLike[str] | str, label: str) -> tuple[Path, str]:
     path = _regular_file(value, label)
     before = path.stat()
@@ -34,10 +59,30 @@ def _snapshot_hash(value: os.PathLike[str] | str, label: str) -> tuple[Path, str
     return path, digest.hexdigest()
 
 
+def _stat_identity(path: Path) -> tuple[int, int, int, int, int]:
+    item = path.stat()
+    return item.st_dev, item.st_ino, item.st_size, item.st_mtime_ns, item.st_ctime_ns
+
+
 def _reject_wal(path: Path, label: str) -> None:
     wal = Path(str(path) + ".wal")
     if os.path.lexists(wal):
         raise ValueError(f"{label} has a WAL beside it: {wal}")
+
+
+def _close_dataset(dataset) -> None:
+    """Idempotently close this dataset's supported DuckDB handles."""
+    if dataset is None:
+        return
+    close = getattr(dataset, "close", None)
+    if callable(close):
+        close()
+        return
+    for name in ("_con", "_evidence_con"):
+        connection = getattr(dataset, name, None)
+        if connection is not None:
+            connection.close()
+            setattr(dataset, name, None)
 
 
 def verify_candidate_artifacts(candidate: CandidateRecords, db_value, evidence_value, panel_value) -> dict:
@@ -69,6 +114,15 @@ def verify_candidate_artifacts(candidate: CandidateRecords, db_value, evidence_v
             "SELECT rn, chrom, start0, end0, split, is_rc FROM corpus_tile "
             "WHERE split IN ('train','valid') ORDER BY rn"
         ).fetchall()
+        test_rns = [row[0] for row in con.execute(
+            "SELECT rn FROM corpus_tile WHERE split='test' ORDER BY rn"
+        ).fetchall()]
+    counts = candidate.inventory.get("counts", {})
+    all_splits = counts.get("evidence_corpus_tile_all_splits", {}) if isinstance(counts, dict) else {}
+    if (all_splits and (all_splits.get("test") != len(test_rns) or
+            len(test_rns) != len(set(test_rns)) or
+            set(test_rns) & {row[0] for row in evidence_rows})):
+        raise ValueError("candidate test inventory count does not match unique evidence corpus_tile identities")
     frozen = [(row["rn"], row["chromosome"], row["start0"], row["end0"],
                row["split"], row["is_rc"]) for row in candidate.inventory["records"]]
     if corpus_rows != frozen or evidence_rows != frozen:
@@ -81,20 +135,33 @@ def verify_candidate_artifacts(candidate: CandidateRecords, db_value, evidence_v
     }
 
 
+def _expected_code_files() -> tuple[Path, ...]:
+    """Exact project-owned Python closure for this checkout; dependencies are version-bound separately."""
+    root = Path(__file__).resolve().parents[3]
+    package = Path(__file__).resolve().parents[1]
+    return tuple(sorted((*package.rglob("*.py"), root / "train" / "train_HyenaTransgenic_MVP.py"),
+                        key=lambda path: path.as_posix()))
+
+
 def _manifest_files(path: Path) -> None:
     try:
         manifest = json.loads(path.read_text())
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError("consumed code manifest is not valid JSON") from error
-    files = manifest.get("files") if isinstance(manifest, dict) else None
-    if not isinstance(files, dict) or not files:
-        raise ValueError("consumed code manifest requires a nonempty files object")
+    if not isinstance(manifest, dict) or set(manifest) != {"files", "external_packages"}:
+        raise ValueError("consumed code manifest requires exact files and external_packages objects")
+    files = manifest["files"]
+    expected_paths = {str(source) for source in _expected_code_files()}
+    if not isinstance(files, dict) or set(files) != expected_paths:
+        raise ValueError("consumed code manifest does not match the exact executed source set")
     for source, expected in files.items():
-        if not isinstance(source, str) or not Path(source).is_absolute():
-            raise ValueError("consumed code manifest paths must be absolute")
         _, measured = _snapshot_hash(source, "consumed code file")
         if measured != _digest(expected, "consumed code SHA256"):
             raise ValueError(f"consumed code identity mismatch: {source}")
+    expected_versions = {name: package_metadata.version(name) for name in
+                         ("accelerate", "duckdb", "safetensors", "torch", "transformers")}
+    if manifest["external_packages"] != expected_versions:
+        raise ValueError("consumed code manifest external package versions do not match runtime")
 
 
 def validate_launch_readiness(readiness_value, readiness_sha256: str,
@@ -205,11 +272,29 @@ def compile_bound_forward(model, backend="inductor"):
     return model
 
 
-def execute(args, candidate: CandidateRecords, *, validate_only: bool) -> dict:
+def _validate_initialization_readiness(audit, readiness, weights: Path, run_config: Path) -> None:
+    source = readiness["bindings"]["source_checkpoint"]
+    files = audit.get("files", {})
+    expected = (("model.safetensors", weights, source["weights_sha256"]),
+                ("run_config.json", run_config, source["run_config_sha256"]))
+    if (audit.get("resolved_weights_path") != str(weights) or
+            audit.get("resolved_checkpoint_dir") != str(weights.parent)):
+        raise ValueError("load_weights_only resolved paths disagree with readiness")
+    for name, path, digest in expected:
+        record = files.get(name, {})
+        if (record.get("path") != str(path) or
+                record.get("before", {}).get("sha256") != digest or
+                record.get("after", {}).get("sha256") != digest):
+            raise ValueError(f"load_weights_only {name} audit disagrees with readiness")
+
+
+def execute(args, candidate: CandidateRecords, *, validate_only: bool,
+            _test: _TestExecution | None = None) -> dict:
     """Run validation, or the fixed public recipe after readiness authorization."""
-    recipe = MVPRecipe()
+    recipe = _test.recipe if _test is not None else MVPRecipe()
     final = _validate_output(args.output_dir)
     artifacts = verify_candidate_artifacts(candidate, args.db, args.evidence_db, args.panel)
+    db, evidence, panel = (Path(artifacts["paths"][name]) for name in ("corpus", "evidence", "panel"))
     sif, _ = _snapshot_hash(args.sif, "SIF")
     config_path, _ = _snapshot_hash(args.config, "config")
     weights, run_config = _source_paths(args.init_from)
@@ -220,16 +305,26 @@ def execute(args, candidate: CandidateRecords, *, validate_only: bool) -> dict:
             "production_authorized": False, "candidate_identities": candidate.identities,
             "counts": {"train": len(artifacts["train_rns"]), "valid": len(artifacts["valid_rns"])},
         }
+    readiness_path, _ = _snapshot_hash(args.launch_readiness, "launch readiness")
     readiness = validate_launch_readiness(
-        args.launch_readiness, args.launch_readiness_sha256, candidate,
-        (args.db, args.evidence_db, args.panel, sif, config_path, weights, run_config),
+        readiness_path, args.launch_readiness_sha256, candidate,
+        (db, evidence, panel, sif, config_path, weights, run_config),
         seed=args.seed, recipe=recipe,
     )
-    return _train(args, candidate, artifacts, final, recipe, weights, run_config, readiness)
+    paths = {"db": db, "evidence": evidence, "panel": panel, "sif": sif,
+             "config": config_path, "weights": weights, "run_config": run_config,
+             "readiness": readiness_path}
+    verified = _VerifiedInputs(
+        db, evidence, panel, sif, config_path, weights, run_config, readiness_path, final,
+        tuple((name, _stat_identity(path)) for name, path in paths.items()),
+    )
+    return _train(args.seed, args.num_workers, candidate, artifacts, verified, recipe,
+                  readiness, args.launch_readiness_sha256, _test=_test)
 
 
-def _train(args, candidate, artifacts, final, recipe, weights, run_config, readiness) -> dict:
-    """Construct and run the reviewed runtime only after every external gate."""
+def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, recipe,
+           readiness, readiness_sha256, *, _test: _TestExecution | None = None) -> dict:
+    """Construct and run the reviewed runtime only from canonical verified bindings."""
     import torch
     from torch.utils.data import DataLoader
     from torch.utils.data.distributed import DistributedSampler
@@ -238,7 +333,7 @@ def _train(args, candidate, artifacts, final, recipe, weights, run_config, readi
     from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
     from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration
     from transgenic.training.b5_runtime import load_b5_config, model_kwargs, resolve_checkpointing
-    from transgenic.training.mvp_finalize import evaluate_and_publish_final
+    from transgenic.training.mvp_finalize import _collective_preflight, evaluate_and_publish_final
     from transgenic.training.mvp_runtime import build_optimizer, make_accelerator, run_fixed_updates
     from transgenic.training.weights_init import load_weights_only
 
@@ -249,72 +344,165 @@ def _train(args, candidate, artifacts, final, recipe, weights, run_config, readi
         raise ValueError(f"MVP refuses checkpoint/compile override environment variables: {present}")
     if resolve_checkpointing(os.environ, recipe.required_world_size) != "nonreentrant":
         raise ValueError("MVP requires nonreentrant gradient checkpointing")
-    accelerator = make_accelerator(recipe, mixed_precision="bf16")
-    require_matching_identity(accelerator,
-                              {"candidate": candidate.identities, "artifacts": artifacts["sha256"]})
-    torch.manual_seed(args.seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(args.seed)
-    cfg_data = load_b5_config(str(args.config))
-    config = HyenaTransgenicConfig(**model_kwargs(cfg_data), evidence_channels=8)
-    model = transgenicForConditionalGeneration(config)
-    initialization = load_weights_only(model, args.init_from)
-    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
-    optimizer = build_optimizer(model, recipe)
-    compile_bound_forward(model)
-    model, optimizer = accelerator.prepare(model, optimizer)
 
-    aug_seed = 20260914 + args.seed
-    train_ds = isoformDataHyena(args.db, mode="train", split="train", strict=True,
-        species="Athaliana", evidence_db=args.evidence_db, evidence_k=8,
-        aug_seed=aug_seed, return_tile_ids=True)
-    valid_ds = isoformDataHyena(args.db, mode="train", split="valid", strict=True,
-        species="Athaliana", evidence_db=args.evidence_db, evidence_k=8,
-        aug_seed=aug_seed, eval_fraction=1, return_tile_ids=True)
-    if train_ds._index_map != artifacts["train_rns"] or valid_ds._index_map != artifacts["valid_rns"]:
-        raise ValueError("dataset index map does not match accepted inventory")
-    rank = accelerator.process_index
-    train_generator = torch.Generator().manual_seed(aug_seed + 10_000 * rank)
-    valid_generator = torch.Generator().manual_seed(aug_seed + 1_000_000 + rank)
-    if args.num_workers == 0:
-        train_ds._aug_generator = torch.Generator().manual_seed(aug_seed + rank)
-        train_ds._aug_key = (os.getpid(), None)
-    train_sampler = DistributedSampler(train_ds, num_replicas=accelerator.num_processes,
-        rank=rank, shuffle=True, seed=args.seed)
-    valid_sampler = DistributedSampler(valid_ds, num_replicas=accelerator.num_processes,
-        rank=rank, shuffle=False, drop_last=False)
-    loader_args = {"batch_size": 1, "num_workers": args.num_workers,
-                   "collate_fn": hyena_collate_fn, "pin_memory": True}
-    train_loader = DataLoader(train_ds, sampler=train_sampler, generator=train_generator, **loader_args)
-    valid_loader = DataLoader(valid_ds, sampler=valid_sampler, generator=valid_generator, **loader_args)
-    summary = run_fixed_updates(accelerator, model, optimizer, train_loader, recipe)
-    metadata = {
-        "identity_scope": "production",  # Finalizer identity shape only; not authorization.
-        "runtime_profile": "mvp_fixed_250x96", "authorization_scope": "exploratory_mvp",
-        "production_authorized": False, "output_use": OUTPUT_USE,
-        "initialization_audit": {"audit": initialization,
-            "audit_sha256": hashlib.sha256((json.dumps(initialization, sort_keys=True,
-                separators=(",", ":")) + "\n").encode()).hexdigest(), "verification": "independently_verified"},
-        "data_identities": {name: {"sha256": value, "verification": "independently_verified"}
-                            for name, value in artifacts["sha256"].items()},
-        "sif_code_identity": {"sif": {"sha256": _snapshot_hash(args.sif, "SIF")[1], "verification": "independently_verified"},
-                              "code": {"sha256": readiness["bindings"]["consumed_code_manifest"]["sha256"],
-                                       "verification": "independently_verified"}},
-        "runtime_packages": _versions(), "normalized_recipe": asdict(recipe),
-        "seed_augmentation": {"seed": args.seed, "aug_seed": aug_seed},
-        "runtime_contract": {"compile": "bound_forward_inductor_no_fallback", "precision": "bf16",
-            "checkpointing": "nonreentrant", "construction_order": "weights_optimizer_compile_prepare",
-            "rank_augmentation": "aug_seed+rank only for private dropout/thinning stream when num_workers=0"},
-    }
-    # Safety contract: reread all mutable external identities immediately before publication.
-    final_artifacts = verify_candidate_artifacts(candidate, args.db, args.evidence_db, args.panel)
-    if final_artifacts["sha256"] != artifacts["sha256"]:
-        raise ValueError("candidate artifact identity changed during training")
-    validate_launch_readiness(
-        args.launch_readiness, args.launch_readiness_sha256, candidate,
-        (args.db, args.evidence_db, args.panel, args.sif, args.config, weights, run_config),
-        seed=args.seed, recipe=recipe,
+    snapshots = dict(inputs.snapshots)
+    paths = {name: getattr(inputs, name) for name in snapshots}
+
+    def unchanged(names):
+        for name in names:
+            if _stat_identity(paths[name]) != snapshots[name]:
+                raise ValueError(f"verified {name} identity changed at an open boundary")
+        _reject_wal(inputs.db, "corpus DB")
+        _reject_wal(inputs.evidence, "evidence DB")
+
+    def phase(accelerator, name, operation):
+        def checked():
+            if (_test is not None and _test.fail_phase == name and
+                    accelerator.process_index == _test.fail_rank):
+                raise RuntimeError(f"injected {name} setup failure")
+            operation()
+        try:
+            _collective_preflight(accelerator, checked)
+        except Exception as error:
+            raise type(error)(f"{name} phase failed: {error}") from error
+
+    accelerator = make_accelerator(
+        recipe, mixed_precision="no" if _test is not None else "bf16",
+        **({"cpu": True} if _test is not None and _test.cpu else {}),
     )
-    evaluate_and_publish_final(accelerator, model, valid_loader, artifacts["valid_rns"], final,
-                               metadata=metadata, training_summary=summary)
-    return {"status": "complete", "output_use": OUTPUT_USE, "final": str(final)}
+    train_ds = valid_ds = None
+    body_failed = False
+    try:
+        phase(accelerator, "identity", lambda: require_matching_identity(
+            accelerator, {"candidate": candidate.identities, "artifacts": artifacts["sha256"]}))
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+        cfg = {}
+        def configure():
+            unchanged(("config",))
+            cfg["data"] = load_b5_config(str(inputs.config))
+            unchanged(("config",))
+        phase(accelerator, "config", configure)
+
+        state = {}
+        def initialize():
+            unchanged(("weights", "run_config"))
+            config_kwargs = model_kwargs(cfg["data"])
+            if _test is not None:
+                config_kwargs["load_pretrained_encoder"] = False
+            config = HyenaTransgenicConfig(**config_kwargs, evidence_channels=8)
+            state["model"] = transgenicForConditionalGeneration(config)
+            state["initialization"] = load_weights_only(state["model"], inputs.weights.parent)
+            state["model"].gradient_checkpointing_enable(
+                gradient_checkpointing_kwargs={"use_reentrant": False})
+            unchanged(("weights", "run_config"))
+        phase(accelerator, "initialization", initialize)
+
+        def final_readiness():
+            unchanged(tuple(paths))
+            if _snapshot_hash(inputs.config, "config")[1] != readiness["bindings"]["config_sha256"]:
+                raise ValueError("loaded config bytes disagree with readiness")
+            _validate_initialization_readiness(
+                state["initialization"], readiness, inputs.weights, inputs.run_config)
+        phase(accelerator, "final-readiness", final_readiness)
+
+        def compile_setup():
+            state["optimizer"] = build_optimizer(state["model"], recipe)
+            compile_bound_forward(state["model"],
+                                  backend=_test.compile_backend if _test is not None else "inductor")
+        phase(accelerator, "compile", compile_setup)
+        model, optimizer = accelerator.prepare(state["model"], state["optimizer"])
+
+        aug_seed = 20260914 + seed
+        loaders = {}
+        def datasets():
+            nonlocal train_ds, valid_ds
+            unchanged(("db", "evidence"))
+            train_ds = isoformDataHyena(str(inputs.db), mode="train", split="train", strict=True,
+                species="Athaliana", evidence_db=str(inputs.evidence), evidence_k=8,
+                aug_seed=aug_seed, return_tile_ids=True)
+            valid_ds = isoformDataHyena(str(inputs.db), mode="train", split="valid", strict=True,
+                species="Athaliana", evidence_db=str(inputs.evidence), evidence_k=8,
+                aug_seed=aug_seed, eval_fraction=1, return_tile_ids=True)
+            unchanged(("db", "evidence"))
+            if train_ds._index_map != artifacts["train_rns"] or valid_ds._index_map != artifacts["valid_rns"]:
+                raise ValueError("dataset index map does not match accepted inventory")
+            rank = accelerator.process_index
+            if num_workers == 0:
+                train_ds._aug_generator = torch.Generator().manual_seed(aug_seed + rank)
+                train_ds._aug_key = (os.getpid(), None)
+            loader_args = {"batch_size": 1, "num_workers": num_workers,
+                           "collate_fn": hyena_collate_fn, "pin_memory": True}
+            loaders["train"] = DataLoader(train_ds, sampler=DistributedSampler(
+                train_ds, num_replicas=accelerator.num_processes, rank=rank,
+                shuffle=True, seed=seed),
+                generator=torch.Generator().manual_seed(aug_seed + 10_000 * rank), **loader_args)
+            loaders["valid"] = DataLoader(valid_ds, sampler=DistributedSampler(
+                valid_ds, num_replicas=accelerator.num_processes, rank=rank,
+                shuffle=False, drop_last=False),
+                generator=torch.Generator().manual_seed(aug_seed + 1_000_000 + rank), **loader_args)
+        phase(accelerator, "dataset", datasets)
+
+        summary = run_fixed_updates(accelerator, model, optimizer, loaders["train"], recipe)
+        initialization = state["initialization"]
+        metadata = {
+            "identity_scope": "test" if _test is not None else "production",
+            "runtime_profile": "mvp_fixed_250x96", "authorization_scope": "exploratory_mvp",
+            "production_authorized": False, "output_use": OUTPUT_USE,
+            "initialization_audit": {"audit": initialization,
+                "audit_sha256": hashlib.sha256((json.dumps(initialization, sort_keys=True,
+                    separators=(",", ":")) + "\n").encode()).hexdigest(),
+                "verification": "independently_verified"},
+            "data_identities": {name: {"sha256": value, "verification": "independently_verified"}
+                                for name, value in artifacts["sha256"].items()},
+            "sif_code_identity": {"sif": {"sha256": _snapshot_hash(inputs.sif, "SIF")[1],
+                                            "verification": "independently_verified"},
+                                  "code": {"sha256": readiness["bindings"]["consumed_code_manifest"]["sha256"],
+                                           "verification": "independently_verified"}},
+            "runtime_packages": _versions(), "normalized_recipe": asdict(recipe),
+            "seed_augmentation": {"seed": seed, "aug_seed": aug_seed},
+            "runtime_contract": {"compile": "bound_forward_inductor_no_fallback", "precision": "bf16",
+                "checkpointing": "nonreentrant", "construction_order": "weights_optimizer_compile_prepare",
+                "rank_augmentation": "aug_seed+rank only for private dropout/thinning stream when num_workers=0"},
+        }
+
+        def prepublication_check():
+            # Evaluation is complete; release read handles before the final independent DB audit.
+            _close_dataset(train_ds)
+            _close_dataset(valid_ds)
+            if _test is not None and _test.mutate_before_final_recheck is not None:
+                if accelerator.is_main_process:
+                    _test.mutate_before_final_recheck()
+                accelerator.wait_for_everyone()
+            unchanged(tuple(paths))
+            final_artifacts = verify_candidate_artifacts(candidate, inputs.db, inputs.evidence, inputs.panel)
+            if final_artifacts["sha256"] != artifacts["sha256"]:
+                raise ValueError("candidate artifact identity changed during evaluation")
+            validate_launch_readiness(
+                inputs.readiness, readiness_sha256, candidate,
+                (inputs.db, inputs.evidence, inputs.panel, inputs.sif, inputs.config,
+                 inputs.weights, inputs.run_config), seed=seed, recipe=recipe)
+
+        evaluate_and_publish_final(
+            accelerator, model, loaders["valid"], artifacts["valid_rns"], inputs.final,
+            metadata=metadata, training_summary=summary,
+            prepublication_check=prepublication_check)
+        return {"status": "complete", "output_use": OUTPUT_USE, "final": str(inputs.final)}
+    except BaseException:
+        body_failed = True
+        raise
+    finally:
+        cleanup_errors = []
+        for dataset in (train_ds, valid_ds):
+            try:
+                _close_dataset(dataset)
+            except Exception as error:
+                cleanup_errors.append(error)
+        try:
+            accelerator.end_training()
+        except Exception as error:
+            cleanup_errors.append(error)
+        if cleanup_errors and not body_failed:
+            raise cleanup_errors[0]

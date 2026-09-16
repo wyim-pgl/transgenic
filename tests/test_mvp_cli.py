@@ -16,6 +16,9 @@ from transgenic.training.mvp_cli import (
     validate_candidate_records,
 )
 from transgenic.training.mvp_cli_runtime import (
+    _expected_code_files,
+    _manifest_files,
+    _validate_initialization_readiness,
     compile_bound_forward,
     verify_candidate_artifacts,
     validate_launch_readiness,
@@ -131,6 +134,29 @@ def test_candidate_rejects_malformed_source_count_as_validation_error(tmp_path):
         validate_candidate_records(path, digest, INVENTORY, RECEIPTS)
 
 
+def test_candidate_rejects_fabricated_check_even_when_true(tmp_path):
+    acceptance = json.loads(ACCEPTANCE.read_text())
+    acceptance["checks"]["fabricated_pass"] = True
+    path = tmp_path / "acceptance.json"
+    canonical(path, acceptance)
+    with pytest.raises(ValueError, match="exact technical acceptance checks"):
+        validate_candidate_records(path, hashlib.sha256(path.read_bytes()).hexdigest(), INVENTORY, RECEIPTS)
+
+
+def test_candidate_rejects_boolean_receipt_location_with_recomputed_bindings(tmp_path):
+    acceptance = json.loads(ACCEPTANCE.read_text())
+    receipts = json.loads(RECEIPTS.read_text())
+    receipts["receipts"][0]["location"] = False
+    receipts_path = tmp_path / "receipts.json"
+    canonical(receipts_path, receipts)
+    acceptance["companions"]["receipts"]["sha256"] = hashlib.sha256(receipts_path.read_bytes()).hexdigest()
+    acceptance_path = tmp_path / "acceptance.json"
+    canonical(acceptance_path, acceptance)
+    with pytest.raises(ValueError, match="receipt inventory"):
+        validate_candidate_records(acceptance_path, hashlib.sha256(acceptance_path.read_bytes()).hexdigest(),
+                                   INVENTORY, receipts_path)
+
+
 def tiny_candidate(tmp_path):
     import duckdb
 
@@ -166,6 +192,10 @@ def test_candidate_artifacts_bind_hashes_and_exact_metadata(tmp_path):
 
 def test_candidate_artifacts_reject_wal_and_metadata_mutation(tmp_path):
     candidate, db, evidence, panel = tiny_candidate(tmp_path)
+    alias = tmp_path / "corpus-alias.db"
+    alias.symlink_to(db)
+    with pytest.raises(ValueError, match="regular file"):
+        verify_candidate_artifacts(candidate, alias, evidence, panel)
     Path(str(db) + ".wal").write_text("mutable")
     with pytest.raises(ValueError, match="WAL"):
         verify_candidate_artifacts(candidate, db, evidence, panel)
@@ -173,6 +203,42 @@ def test_candidate_artifacts_reject_wal_and_metadata_mutation(tmp_path):
     candidate.inventory["records"][0]["chromosome"] = "Chr9"
     with pytest.raises(ValueError, match="metadata"):
         verify_candidate_artifacts(candidate, db, evidence, panel)
+
+
+def test_candidate_artifacts_reject_fabricated_test_count(tmp_path):
+    candidate, db, evidence, panel = tiny_candidate(tmp_path)
+    candidate.inventory["counts"] = {
+        "total": 2, "train": 1, "valid": 1,
+        "evidence_corpus_tile_all_splits": {"train": 1, "valid": 1, "test": 999999},
+    }
+    with pytest.raises(ValueError, match="test inventory count"):
+        verify_candidate_artifacts(candidate, db, evidence, panel)
+
+
+def test_code_manifest_requires_exact_checkout_sources_and_external_versions(tmp_path):
+    files = _expected_code_files()
+    manifest = tmp_path / "manifest.json"
+    canonical(manifest, {
+        "files": {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in files},
+        "external_packages": {"accelerate": "0", "duckdb": "0", "safetensors": "0",
+                              "torch": "0", "transformers": "0"},
+    })
+    with pytest.raises(ValueError, match="external package version"):
+        _manifest_files(manifest)
+    from importlib.metadata import version
+    canonical(manifest, {
+        "files": {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in files},
+        "external_packages": {name: version(name) for name in
+                              ("accelerate", "duckdb", "safetensors", "torch", "transformers")},
+    })
+    _manifest_files(manifest)
+    fake = tmp_path / "pass.py"
+    fake.write_text("pass\n")
+    value = json.loads(manifest.read_text())
+    value["files"] = {str(fake.resolve()): hashlib.sha256(fake.read_bytes()).hexdigest()}
+    canonical(manifest, value)
+    with pytest.raises(ValueError, match="exact executed source set"):
+        _manifest_files(manifest)
 
 
 def readiness_record(paths, candidate, seed=1):
@@ -202,6 +268,24 @@ def readiness_record(paths, candidate, seed=1):
     }
 
 
+def test_load_audit_checkpoint_mismatch_is_rejected_before_optimizer(tmp_path):
+    checkpoint = tmp_path / "epoch"
+    checkpoint.mkdir()
+    weights, run_config = checkpoint / "model.safetensors", tmp_path / "run_config.json"
+    weights.write_bytes(b"weights")
+    run_config.write_bytes(b"config")
+    readiness = {"bindings": {"source_checkpoint": {
+        "weights_sha256": hashlib.sha256(weights.read_bytes()).hexdigest(),
+        "run_config_sha256": hashlib.sha256(run_config.read_bytes()).hexdigest(),
+    }}}
+    audit = {"resolved_weights_path": str(weights), "resolved_checkpoint_dir": str(checkpoint),
+             "files": {"model.safetensors": {"path": str(weights), "after": {"sha256": "0" * 64}},
+                       "run_config.json": {"path": str(run_config), "after": {
+                           "sha256": readiness["bindings"]["source_checkpoint"]["run_config_sha256"]}}}}
+    with pytest.raises(ValueError, match="model.safetensors audit disagrees"):
+        _validate_initialization_readiness(audit, readiness, weights, run_config)
+
+
 def test_bound_forward_compile_has_no_eager_fallback():
     import torch
 
@@ -218,21 +302,36 @@ def test_bound_forward_compile_has_no_eager_fallback():
     assert torch._dynamo.config.suppress_errors is False
 
 
-def test_actual_two_rank_tiny_training_to_atomic_final(tmp_path):
+def run_two_rank_probe(tmp_path, case):
     env = dict(os.environ)
     env["MVP_CLI_TEST_DIR"] = str(tmp_path)
-    env["PYTHONPATH"] = ".testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps:src"
+    env["PYTHONPATH"] = ".testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps:src:tests"
     command = ["/home/wyim/miniconda3/envs/pdb/bin/torchrun", "--standalone", "--nproc-per-node=2",
-               "tests/mvp_cli_probe.py"]
-    result = subprocess.run(command, env=env, text=True, capture_output=True, timeout=90)
+               "tests/mvp_cli_probe.py", case]
+    result = subprocess.run(command, env=env, text=True, capture_output=True, timeout=120)
     assert result.returncode == 0, result.stderr
-    output = json.loads([line for line in result.stdout.splitlines() if line.startswith("{")][-1])
-    assert output == {
-        "all_rank_rng_distinct": True, "asymmetric_identity_all_failed": True,
-        "audit_bound": True, "backend_called": True,
-        "epochs_crossed": 3, "marker": True, "saved_keys_clean": True,
-        "successful_updates": 2, "world_size": 2,
+    return json.loads([line for line in result.stdout.splitlines() if line.startswith("{")][-1])
+
+
+def test_actual_two_rank_execute_train_to_atomic_test_scope_final(tmp_path):
+    assert run_two_rank_probe(tmp_path, "success") == {
+        "all_succeeded": True, "backend_called": True, "canonical_audit": True,
+        "identity_scope": "test", "marker": True, "saved_keys_clean": True, "world_size": 2,
     }
+
+
+def test_actual_two_rank_single_rank_setup_failure_rejects_all_and_cleans_up(tmp_path):
+    output = run_two_rank_probe(tmp_path, "failure")
+    assert output["all_rejected"] and output["no_artifact"] and output["dataset_closed"]
+    assert output["world_size"] == 2
+    assert all("dataset phase failed" in error for error in output["errors"])
+
+
+def test_actual_two_rank_evaluation_time_mutation_rejects_without_artifact(tmp_path):
+    output = run_two_rank_probe(tmp_path, "mutation")
+    assert output["all_rejected"] and output["no_artifact"] and output["dataset_closed"]
+    assert output["world_size"] == 2
+    assert all("identity changed" in error for error in output["errors"])
 
 
 def test_launch_readiness_binds_recipe_sources_and_evidence(tmp_path):
@@ -241,12 +340,17 @@ def test_launch_readiness_binds_recipe_sources_and_evidence(tmp_path):
     init = tmp_path / "init"
     init.mkdir()
     weights, run_config = init / "model.safetensors", init / "run_config.json"
-    code = tmp_path / "code.py"
     manifest = tmp_path / "code-manifest.json"
     for path, payload in ((sif, b"sif"), (config, b"{}\n"), (weights, b"weights"),
-                          (run_config, b'{"seed":123}\n'), (code, b"pass\n")):
+                          (run_config, b'{"seed":123}\n')):
         path.write_bytes(payload)
-    canonical(manifest, {"files": {str(code.resolve()): hashlib.sha256(code.read_bytes()).hexdigest()}})
+    from importlib.metadata import version
+    code_files = _expected_code_files()
+    canonical(manifest, {
+        "files": {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in code_files},
+        "external_packages": {name: version(name) for name in
+                              ("accelerate", "duckdb", "safetensors", "torch", "transformers")},
+    })
     paths = (db, evidence, panel, sif, config, weights, run_config, manifest)
     readiness = tmp_path / "readiness.json"
     canonical(readiness, readiness_record(paths, candidate))
@@ -259,7 +363,11 @@ def test_launch_readiness_binds_recipe_sources_and_evidence(tmp_path):
         validate_launch_readiness(readiness, hashlib.sha256(readiness.read_bytes()).hexdigest(),
                                   candidate, paths[:-1], seed=1, recipe=MVPRecipe())
     canonical(readiness, readiness_record(paths, candidate))
-    code.write_text("changed\n")
-    with pytest.raises(ValueError, match="consumed code"):
+    value = json.loads(manifest.read_text())
+    value["files"].pop(next(iter(value["files"])))
+    canonical(manifest, value)
+    tampered = readiness_record(paths, candidate)
+    canonical(readiness, tampered)
+    with pytest.raises(ValueError, match="exact executed source set"):
         validate_launch_readiness(readiness, hashlib.sha256(readiness.read_bytes()).hexdigest(),
                                   candidate, paths[:-1], seed=1, recipe=MVPRecipe())
