@@ -1,5 +1,8 @@
 # MVP score provenance implementation report
 
+**Latest: round-1 review fixes are documented below. That section supersedes
+initial provenance-check and synthetic-loader-fixture descriptions.**
+
 ## Identity / status
 
 - Worktree `/tmp/b6-p2-scoring-1535144`, branch `b6-p2-scoring-1535144`.
@@ -138,3 +141,138 @@ CPU verification, not the complete repository test suite.
 
 Controller should review these gaps before operational promotion. The unchanged
 training path can proceed through its own approved gates independently.
+
+## Round 1: five independent-review corrections
+
+- Fix base verified: `8803afb44189e7510e67e39976676dcad664c164`.
+- Implementation commit: **`64b6d5bf2494bb5b23e061c6c0917b4bbafcdbb9`**.
+- Read the complete controller review at
+  `notes/recovery_20260916_1251/B.producer.independent_review.md` in main,
+  read-only. No main changes, other-worker files, trainer/finalizer changes,
+  metric math/policy changes, SSH, jobs, subagents, merges or pushes.
+- **350 transport schema unchanged**. Controller independent re-review is
+  required; no operational promotion is claimed.
+
+### R1: exact bound training source/package inventories
+
+`verify_training_code` locates the training checkout through the audited
+`src/transgenic/training/b5_runtime.py` implementation path. It enforces the
+existing training rule: all Python files beneath that checkout's
+`src/transgenic`, plus `train/train_HyenaTransgenic_MVP.py`, exactly, with
+canonical paths and matching bytes. This is **not** the current scoring
+checkout's potentially expanded source set. It requires exactly the five
+recorded external packages (accelerate, duckdb, safetensors, torch,
+transformers), each a nonempty version string. All four shared package fields
+must equal finalizer metadata. Duckdb is mandatory but cannot be cross-compared
+because the unchanged finalizer runtime-package schema omits it. Historical
+version strings are not compared with the installed scoring runtime.
+
+The two initialization implementation paths/hashes must identify their exact
+locations in that consumed code inventory. Semantic reconstruction uses the
+existing weights_init implementation only when its own code, b5_runtime, and
+configuration_transgenic bytes equal the bound training copies. A different
+historical semantic implementation fails closed for a reviewed verifier adapter;
+no arbitrary source from a supplied checkout is imported or executed.
+
+Tests reject one-file and omitted-loader manifests and incomplete/extra/blank
+package schemas. The positive relocated-checkout test includes an extra
+training module absent from the scorer checkout and historical package strings;
+it succeeds. Adding an unlisted module or deleting a listed module fails.
+
+### R2: source bytes versus actual initialization claims
+
+The verifier now requires canonical source checkpoint/run-config/optional-file
+paths, a real embedded source recipe with the loader's required fields and
+zero evidence channels, and the canonical digest of **run_config['recipe']**
+using `weights_init._canonical`/`_sha256_bytes`. It reconstructs source semantic
+fields and origins through the actual `model_kwargs`, HyenaTransgenicConfig,
+`_manifest`, and `_manifest_record`; source recipe contradictions and present
+optional source-config semantic fields are checked. Source safetensors must
+open as a nonempty zero-channel file without an evidence projection, and their
+metadata must equal the audit. Source/target semantic equality is rechecked.
+This does not instantiate or reload a full-size model.
+
+The positive fixture is no longer a shape-only hand-built initialization audit:
+it creates actual tiny Transgenic/LED models, saves the zero-channel source,
+and runs the **real `load_weights_only`**, then the real finalizer publisher.
+Only the remote Hyena factory uses the existing local embedding test double;
+there is no download, training, GPU, or forward pass. Production-labelled
+hardware/update metadata remain explicit synthetic test declarations, not
+measurements. The full350 test still stubs biological/candidate/tool authority.
+
+Seed-123 remains a byte-consistent **declared initialization source**, not proof
+of the intended historical **best** selection. A trusted concrete source pin
+for that historical choice remains an operational prerequisite; the result's
+provenance caveat now says this explicitly. No new self-attestation switch or
+checkpoint-authority schema was added.
+
+### R3/R4: no silent ID collapse or missing-decode-as-zero
+
+Preflight rejects noncanonical attribute keys and ID/Parent tokens. The supported
+canonical identifier alphabet is `[A-Za-z0-9_.:-]+`; Parent may be a comma-separated
+list of unique such IDs. Literal whitespace (including nonbreaking spaces),
+empty identifiers, and silent percent/other normalization are not repaired.
+Parsed gene and per-gene transcript identity sets must exactly conserve the
+preflight inventories. Tests include the reviewer's two-transcript whitespace
+collision, additional whitespace forms, and simulated parser inventory loss.
+
+A zero-byte, whitespace-only, or comment-only empty file now fails. A completed
+zero-transcript output must include the exact `##gff-version 3` header; genuine
+header-only GFF3 remains valid. Decoder owners must still publish transport only
+after successful completion, not convert failed generation into header-only
+biological zero. Transport field names/counts and existing nonempty GFF inputs
+have not been changed.
+
+### R5: final config JSON and audited target semantics
+
+`config.json` is read through the duplicate-key-rejecting JSON reader, must be
+an object containing audited semantic fields, and must reconstruct the target
+semantic manifest exactly. Raw versus reconstructed values are checked to
+prevent silent configuration normalization. The source/target relation is
+checked with the existing loader helper, including the allowed 0-to-8 channel
+transition. Tests reject invalid JSON, non-object JSON, duplicate keys, and
+valid JSON with inconsistent target dimensions.
+
+### Actual round-1 validation
+
+Before implementation, the new review suite had **22 substantive missing-guard
+failures** (invalid artifacts were accepted) and one additional expected-exception
+type mismatch in the bound-checkout deletion test. The strengthened real-loader
+positive fixture first passed the unchanged 20 producer/integration tests.
+
+Final fresh commands, from the B worktree:
+
+```sh
+PYTHONPATH=/tmp/b6-trackb-testdeps:src \
+  /home/wyim/miniconda3/envs/pdb/bin/python -m pytest \
+  tests/test_mvp_score_producer_review.py -q
+# 27 passed, 42.05 s
+
+PYTHONPATH=/tmp/b6-trackb-testdeps:src \
+  /home/wyim/miniconda3/envs/pdb/bin/python -m pytest \
+  tests/test_mvp_score_producer.py tests/test_mvp_score_producer_integration.py \
+  tests/test_mvp_scoring.py tests/test_mvp_scoring_driver.py \
+  tests/test_mvp_metrics.py revision/scripts/tests/test_evidence_support.py -q
+# 115 passed, 21 subtests passed, 29.19 s
+
+PYTHONPATH=/tmp/b6-p2-readiness-1535112/.testdeps:/tmp/b6-trackb-testdeps:src \
+  /home/wyim/miniconda3/envs/pdb/bin/python -m pytest \
+  tests/test_mvp_cli.py -k candidate -q
+# 16 passed, 29 deselected, 24.11 s
+```
+
+One intermediate full350 regression exposed nondeterministic safetensors
+alias-metadata key ordering when independently saving equal source tensors.
+Tensor payloads matched but file bytes did not. The fixture was corrected to
+make all three runs consume **one serialized baseline**, as the real contract
+requires; no production identity check was weakened. The complete regression
+command then passed. Compileall for the producer and three task test modules
+and `git diff --check` also passed. Graft queried before edits and refreshed.
+Advisor was attempted but unavailable due to client/model-version mismatch;
+no advisor review is claimed.
+
+**Unchanged blockers:** real GFFCompare behavior and frozen-reference smoke,
+duplicate-isoform multiplicity policy, independent read-splice provenance,
+coverage/HiFi author policy, withholding, historical seed-123 best pin, and
+operational decoder execution remain unverified/unresolved. All previous
+non-authority and non-empirical limitations remain in force.
