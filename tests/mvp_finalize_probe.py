@@ -71,8 +71,12 @@ class Model(torch.nn.Module):
 
 def metadata():
     identity = {"sha256": SHA, "verification": "recorded"}
-    source_fields = {"evidence_channels": {"value": 0}}
-    target_fields = {"evidence_channels": {"value": 8}}
+    source_fields = {name: {"value": None, "provenance": "config-default"}
+                     for name in finalize._AUDIT_SEMANTIC_FIELDS}
+    target_fields = {name: {"value": None, "provenance": "target-config"}
+                     for name in finalize._AUDIT_SEMANTIC_FIELDS}
+    source_fields["evidence_channels"]["value"] = 0
+    target_fields["evidence_channels"]["value"] = 8
     digest = lambda value: hashlib.sha256(json.dumps(
         value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     audit = {
@@ -81,9 +85,11 @@ def metadata():
         "resolved_weights_path": "/tmp/source/epoch/model.safetensors",
         "files": {
             "model.safetensors": {"path": "/tmp/source/epoch/model.safetensors",
-                "before": {"sha256": SHA}, "after": {"sha256": SHA}},
+                "before": {"sha256": SHA, "size": 1, "device": 1, "inode": 1, "mtime_ns": 1},
+                "after": {"sha256": SHA, "size": 1, "device": 1, "inode": 1, "mtime_ns": 1}},
             "run_config.json": {"path": "/tmp/source/run_config.json",
-                "before": {"sha256": SHA}, "after": {"sha256": SHA}},
+                "before": {"sha256": SHA, "size": 1, "device": 1, "inode": 1, "mtime_ns": 1},
+                "after": {"sha256": SHA, "size": 1, "device": 1, "inode": 1, "mtime_ns": 1}},
             "runtime_identity.txt": None, "config.json": None, "meta.json": None,
             "runtime.json": None},
         "recipe": {"canonical_sha256": SHA},
@@ -149,6 +155,11 @@ def main(case):
         elif case == "inventory-infinite":
             import itertools
             expected = (value for value in itertools.count())
+        elif case == "inventory-subclass":
+            class HostileList(list):
+                def __iter__(self):
+                    raise AssertionError("list subclass must not be consumed")
+            expected = HostileList(range(size))
     final = Path(os.environ["MVP_FINALIZE_TEST_DIR"]) / "final"
     payload_calls = 0
     if case == "byte-cap":
@@ -163,7 +174,7 @@ def main(case):
             nonlocal payload_calls
             payload_calls += 1
             raise AssertionError("payload collective must not run")
-        finalize._gather_payload_bytes = forbidden_payload
+        finalize._gather_record_payload_bytes = forbidden_payload
     if accelerator.is_main_process:
         if case == "durability":
             finalize._fsync_parent = lambda path: (_ for _ in ()).throw(OSError("injected fsync"))
@@ -171,6 +182,19 @@ def main(case):
             finalize._write_payload_files = lambda *args, **kwargs: (_ for _ in ()).throw(OSError("injected write"))
         elif case == "publish-rename-fail":
             finalize._rename_noreplace = lambda *args, **kwargs: (_ for _ in ()).throw(OSError("injected rename"))
+    object_calls = 0
+    real_all_gather_object = torch.distributed.all_gather_object
+    real_broadcast_object_list = torch.distributed.broadcast_object_list
+    if case == "huge-status":
+        def forbidden_object_collective(*args, **kwargs):
+            nonlocal object_calls
+            object_calls += 1
+            raise AssertionError("status must not use an object collective")
+        torch.distributed.all_gather_object = forbidden_object_collective
+        torch.distributed.broadcast_object_list = forbidden_object_collective
+        if accelerator.process_index == 1:
+            finalize._validate_evaluation_inputs = lambda *args, **kwargs: (_ for _ in ()).throw(
+                ValueError("x" * 100_000))
     failed = committed = False
     error_info = None
     result = None
@@ -183,11 +207,14 @@ def main(case):
     except (ValueError, RuntimeError, OSError) as error:
         failed = True
         error_info = (type(error).__name__, str(error), False)
+    finally:
+        torch.distributed.all_gather_object = real_all_gather_object
+        torch.distributed.broadcast_object_list = real_broadcast_object_list
     flags = accelerator.gather(torch.tensor([int(failed), int(committed)], device=accelerator.device))
     summaries = [None] * 2
     errors = [None] * 2
     error_cases = {"publish-write-fail", "publish-rename-fail", "inventory-noniterable",
-                   "inventory-throwing", "inventory-infinite"}
+                   "inventory-throwing", "inventory-infinite", "inventory-subclass", "huge-status"}
     if case in error_cases:
         torch.distributed.all_gather_object(errors, error_info)
     if case.startswith("success-"):
@@ -213,9 +240,12 @@ def main(case):
             print(json.dumps({"case": case, "all_failed": bool(flags[0::2].sum().item() == 2),
                               "payload_calls": payload_calls, "final_exists": final.exists()}, sort_keys=True))
         elif case in error_cases:
-            print(json.dumps({"case": case, "all_failed": bool(flags[0::2].sum().item() == 2),
-                              "same_error": errors[0] == errors[1], "error": errors[0],
-                              "final_exists": final.exists()}, sort_keys=True))
+            output = {"case": case, "all_failed": bool(flags[0::2].sum().item() == 2),
+                      "same_error": errors[0] == errors[1], "error": errors[0],
+                      "final_exists": final.exists()}
+            if case == "huge-status":
+                output["object_calls"] = object_calls
+            print(json.dumps(output, sort_keys=True))
         else:
             print(json.dumps({"case": case, "all_failed": bool(flags[0::2].sum().item() == 2),
                               "final_exists": final.exists()}, sort_keys=True))

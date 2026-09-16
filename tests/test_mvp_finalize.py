@@ -26,12 +26,17 @@ SHA = "1" * 64
 
 
 def initialization_audit():
+    snapshot = {"sha256": SHA, "size": 1, "device": 1, "inode": 1, "mtime_ns": 1}
     weights = {"path": "/tmp/source/epoch/model.safetensors",
-               "before": {"sha256": SHA}, "after": {"sha256": SHA}}
+               "before": dict(snapshot), "after": dict(snapshot)}
     run_config = {"path": "/tmp/source/run_config.json",
-                  "before": {"sha256": SHA}, "after": {"sha256": SHA}}
-    source_fields = {"evidence_channels": {"value": 0}}
-    target_fields = {"evidence_channels": {"value": 8}}
+                  "before": dict(snapshot), "after": dict(snapshot)}
+    source_fields = {name: {"value": None, "provenance": "config-default"}
+                     for name in finalize._AUDIT_SEMANTIC_FIELDS}
+    target_fields = {name: {"value": None, "provenance": "target-config"}
+                     for name in finalize._AUDIT_SEMANTIC_FIELDS}
+    source_fields["evidence_channels"]["value"] = 0
+    target_fields["evidence_channels"]["value"] = 8
     digest = lambda value: hashlib.sha256(json.dumps(
         value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     audit = {
@@ -216,7 +221,10 @@ def test_expected_inventory_rejects_arbitrary_iterables_without_consuming(tmp_pa
     class ThrowingIterable:
         def __iter__(self):
             raise AssertionError("must not consume")
-    candidates = [object(), ThrowingIterable(), (value for value in itertools.count())]
+    class HostileList(list):
+        def __iter__(self):
+            raise AssertionError("list subclass must not be consumed")
+    candidates = [object(), ThrowingIterable(), (value for value in itertools.count()), HostileList([11])]
     for index, candidate in enumerate(candidates):
         model = SaveToy()
         with pytest.raises(ValueError, match="list, tuple, or range"):
@@ -224,6 +232,50 @@ def test_expected_inventory_rejects_arbitrary_iterables_without_consuming(tmp_pa
                 LocalAccelerator(), model, DataLoader(OneDataset(), batch_size=1), candidate,
                 tmp_path / f"final-{index}", metadata=metadata(), training_summary=summary())
         assert model.forward_calls == 0
+
+
+def test_initialization_audit_requires_full_snapshots_and_exact_semantics():
+    for mutation, match in (("snapshot", "snapshot"), ("semantics", "semantic field set")):
+        md = metadata()
+        audit = md["initialization_audit"]["audit"]
+        if mutation == "snapshot":
+            audit["files"]["model.safetensors"]["before"].pop("size")
+            audit["files"]["model.safetensors"]["after"].pop("size")
+        else:
+            for side in ("source_semantics", "target_semantics"):
+                audit[side]["fields"].pop("dropout")
+                audit[side]["sha256"] = hashlib.sha256(json.dumps(
+                    audit[side]["fields"], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        md["initialization_audit"]["audit_sha256"] = hashlib.sha256(
+            finalize._canonical_json(audit)).hexdigest()
+        with pytest.raises(ValueError, match=match):
+            finalize._validate_metadata(md, summary())
+
+
+def test_real_load_weights_only_audit_is_accepted_by_finalize(tmp_path):
+    from tests.test_weights_init import WeightsInitTests
+    case = WeightsInitTests("test_success_from_best_is_alias_safe_zeroes_projection_and_audits_hashes")
+    case.setUp()
+    try:
+        audit = case._load()
+        md = metadata()
+        md["initialization_audit"] = {
+            "audit": audit, "audit_sha256": hashlib.sha256(finalize._canonical_json(audit)).hexdigest(),
+            "verification": "recorded"}
+        result = finalize.evaluate_and_publish_final(
+            LocalAccelerator(), SaveToy(), DataLoader(OneDataset(), batch_size=1), [11],
+            tmp_path / "final", metadata=md, training_summary=summary())
+        assert result["pair_count"] == 1 and (tmp_path / "final" / "TRAINING_DONE").is_file()
+    finally:
+        case.doCleanups()
+
+
+def test_status_schema_marks_utf8_diagnostic_truncation():
+    status = finalize._status(ValueError("é" * 10_000))
+    assert status["truncated"] is True
+    assert status["message"].endswith("...[diagnostic truncated]")
+    assert len(status["message"].encode()) <= finalize.MVP_STATUS_MESSAGE_MAX_BYTES
+    assert finalize._decode_status(finalize._status_bytes(status)) == status
 
 
 def test_transport_bounds_check_sum_and_padded_size_at_exact_boundary(monkeypatch):
@@ -385,11 +437,20 @@ def test_collective_inventory_and_loader_failures_prevent_publication(tmp_path, 
     assert result == {"all_failed": True, "case": case, "final_exists": False}
 
 
-@pytest.mark.parametrize("case", ["inventory-noniterable", "inventory-throwing", "inventory-infinite"])
+@pytest.mark.parametrize("case", ["inventory-noniterable", "inventory-throwing",
+                                  "inventory-infinite", "inventory-subclass"])
 def test_one_rank_arbitrary_inventory_rejects_promptly_on_all_ranks(tmp_path, case):
     result = probe(tmp_path, case, timeout=30)
     assert result["all_failed"] and result["same_error"] and not result["final_exists"]
     assert result["error"][0] == "ValueError" and "list, tuple, or range" in result["error"][1]
+
+
+def test_huge_status_is_bounded_identically_without_object_collectives(tmp_path):
+    result = probe(tmp_path, "huge-status", timeout=30)
+    assert result["all_failed"] and result["same_error"] and not result["final_exists"]
+    assert result["object_calls"] == 0 and result["error"][0] == "ValueError"
+    assert result["error"][1].endswith("...[diagnostic truncated]")
+    assert len(result["error"][1].encode()) <= finalize.MVP_STATUS_MESSAGE_MAX_BYTES
 
 
 def test_collective_byte_cap_rejects_before_payload_collective(tmp_path):

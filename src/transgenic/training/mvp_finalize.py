@@ -20,17 +20,20 @@ import tempfile
 from typing import Any
 
 import torch
-from accelerate.utils import broadcast_object_list
 from safetensors import safe_open
 from safetensors.torch import save_model
 from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data.distributed import DistributedSampler
 
+from . import weights_init as _weights_init
 from .mvp_metrics import aggregate_paired_records, paired_metric_record
 from .mvp_runtime import MVPRecipe
 
 MVP_MAX_RECORDS = 100_000
 MVP_MAX_SERIALIZED_BYTES = 64 * 1024 * 1024
+MVP_STATUS_MESSAGE_MAX_BYTES = 2048
+MVP_STATUS_PATH_MAX_BYTES = 4096
+_STATUS_TRUNCATION_MARKER = "...[diagnostic truncated]"
 _SHA256_LENGTH = 64
 _REQUIRED_METADATA = {
     "identity_scope", "initialization_audit", "data_identities", "sif_code_identity",
@@ -38,7 +41,11 @@ _REQUIRED_METADATA = {
 }
 _IDENTITY_VERIFICATIONS = {"recorded", "independently_verified"}
 _RUNTIME_PACKAGES = {"python", "torch", "transformers", "accelerate", "safetensors"}
-_PROJECTION_KEY = "transgenic.encoder.evidence_proj.weight"
+_PROJECTION_KEY = _weights_init._PROJECTION_KEY
+_AUDIT_SEMANTIC_FIELDS = set(_weights_init._SEMANTIC_FIELDS) - {
+    "layer_norm_eps", "normalize_before", "scale_embedding",
+}
+_AUDIT_SNAPSHOT_FIELDS = {"sha256", "size", "device", "inode", "mtime_ns"}
 
 
 class PublicationDurabilityError(OSError):
@@ -87,8 +94,12 @@ def _validate_initialization_audit(initialization: Any) -> None:
                 "resolved_weights_path", "files", "recipe", "source_semantics",
                 "target_semantics", "implementation", "compatibility", "load",
                 "provenance_caveat"}
-    if required - set(audit) or audit.get("schema_version") != "b6-weights-init-v1" or audit.get("mode") != "weights-only":
-        raise ValueError("initialization_audit is not a complete successful load_weights_only audit")
+    if set(audit) != required or audit.get("schema_version") != _weights_init._SCHEMA_VERSION or audit.get("mode") != "weights-only":
+        raise ValueError("initialization_audit is not the complete load_weights_only audit schema")
+    if not isinstance(audit.get("requested_path"), str) or not audit["requested_path"]:
+        raise ValueError("initialization_audit requested_path must be recorded")
+    if not isinstance(audit.get("provenance_caveat"), str) or not audit["provenance_caveat"]:
+        raise ValueError("initialization_audit provenance_caveat must be recorded")
     checkpoint = audit.get("resolved_checkpoint_dir")
     weights = audit.get("resolved_weights_path")
     if (not isinstance(checkpoint, str) or not Path(checkpoint).is_absolute() or
@@ -100,24 +111,41 @@ def _validate_initialization_audit(initialization: Any) -> None:
                   "config.json", "meta.json", "runtime.json"}
     if not isinstance(files, dict) or set(files) != file_names:
         raise ValueError("initialization_audit files must match the load_weights_only source inventory")
-    for name in ("model.safetensors", "run_config.json"):
-        record = files.get(name)
-        if not isinstance(record, dict) or not isinstance(record.get("path"), str) or not Path(record["path"]).is_absolute():
+    for name, record in files.items():
+        if record is None:
+            if name in {"model.safetensors", "run_config.json"}:
+                raise ValueError(f"initialization_audit requires {name}")
+            continue
+        if (not isinstance(record, dict) or set(record) != {"path", "before", "after"} or
+                not isinstance(record["path"], str) or not Path(record["path"]).is_absolute()):
             raise ValueError(f"initialization_audit requires concrete {name} source path")
-        before, after = record.get("before"), record.get("after")
-        if (not isinstance(before, dict) or before != after or
-                not _is_sha256(before.get("sha256"))):
-            raise ValueError(f"initialization_audit requires stable actual {name} SHA256")
+        before, after = record["before"], record["after"]
+        if (not isinstance(before, dict) or set(before) != _AUDIT_SNAPSHOT_FIELDS or before != after or
+                not _is_sha256(before.get("sha256")) or
+                any(isinstance(before[field], bool) or not isinstance(before[field], int) or before[field] < 0
+                    for field in _AUDIT_SNAPSHOT_FIELDS - {"sha256"})):
+            raise ValueError(f"initialization_audit {name} snapshot is incomplete or unstable")
     if files["model.safetensors"]["path"] != weights:
         raise ValueError("initialization_audit weights path disagrees with files record")
+    semantic_fields = {}
     for side, channels in (("source_semantics", 0), ("target_semantics", 8)):
         semantics = audit.get(side)
         fields = semantics.get("fields") if isinstance(semantics, dict) else None
         encoded = json.dumps(fields, sort_keys=True, separators=(",", ":"),
                              ensure_ascii=False).encode("utf-8") if isinstance(fields, dict) else b""
-        if (not fields or fields.get("evidence_channels", {}).get("value") != channels or
+        expected_origin = {"target-config"} if side == "target_semantics" else {
+            "recipe-explicit", "mapping-derived", "config-default"}
+        if (not isinstance(semantics, dict) or set(semantics) != {"fields", "sha256"} or
+                not isinstance(fields, dict) or set(fields) != _AUDIT_SEMANTIC_FIELDS or
+                any(not isinstance(entry, dict) or set(entry) != {"value", "provenance"} or
+                    entry["provenance"] not in expected_origin for entry in fields.values()) or
+                fields["evidence_channels"]["value"] != channels or
                 semantics.get("sha256") != hashlib.sha256(encoded).hexdigest()):
-            raise ValueError(f"initialization_audit {side} does not bind evidence_channels={channels}")
+            raise ValueError(f"initialization_audit {side} semantic field set/origins are invalid")
+        semantic_fields[side] = fields
+    for name in _AUDIT_SEMANTIC_FIELDS - {"evidence_channels"}:
+        if semantic_fields["source_semantics"][name]["value"] != semantic_fields["target_semantics"][name]["value"]:
+            raise ValueError(f"initialization_audit source/target semantic drift for {name}")
     compatibility, load = audit.get("compatibility"), audit.get("load")
     if (not isinstance(compatibility, dict) or compatibility.get("transition") != "evidence_channels:0->8" or
             compatibility.get("same8_supported") is not False or
@@ -209,30 +237,60 @@ def _validate_bounds(records: list[dict]) -> bytes:
     return payload
 
 
-def _status(error: BaseException | None = None, **values: Any) -> dict:
+def _bounded_text(value: str, limit: int) -> tuple[str, bool]:
+    encoded = value.encode("utf-8", errors="replace")
+    if len(encoded) <= limit:
+        return value, False
+    marker = _STATUS_TRUNCATION_MARKER.encode("utf-8")
+    prefix = encoded[:limit - len(marker)].decode("utf-8", errors="ignore")
+    return prefix + _STATUS_TRUNCATION_MARKER, True
+
+
+def _status(error: BaseException | None = None) -> dict:
     if error is None:
-        return {"ok": True, **values}
-    return {"ok": False, "kind": type(error).__name__, "message": str(error),
-            "committed": bool(getattr(error, "committed", False)),
-            "final_dir": str(getattr(error, "final_dir", ""))}
+        return {"ok": True, "kind": "", "message": "", "truncated": False,
+                "committed": False, "final_dir": ""}
+    classes = {"ValueError", "RuntimeError", "FileExistsError", "OSError",
+               "PublicationDurabilityError"}
+    original_kind = type(error).__name__
+    kind = original_kind if original_kind in classes else "RuntimeError"
+    text = str(error)
+    if kind == "RuntimeError" and original_kind != "RuntimeError":
+        text = f"{original_kind}: {text}"
+    message, truncated = _bounded_text(text, MVP_STATUS_MESSAGE_MAX_BYTES)
+    final_dir = str(getattr(error, "final_dir", ""))
+    if len(final_dir.encode("utf-8", errors="replace")) > MVP_STATUS_PATH_MAX_BYTES:
+        raise RuntimeError("committed publication path exceeds bounded status schema")
+    return {"ok": False, "kind": kind, "message": message, "truncated": truncated,
+            "committed": bool(getattr(error, "committed", False)), "final_dir": final_dir}
+
+
+def _status_bytes(status: dict) -> bytes:
+    expected = {"ok", "kind", "message", "truncated", "committed", "final_dir"}
+    if (not isinstance(status, dict) or set(status) != expected or
+            type(status["ok"]) is not bool or type(status["truncated"]) is not bool or
+            type(status["committed"]) is not bool or
+            any(not isinstance(status[name], str) for name in ("kind", "message", "final_dir")) or
+            len(status["message"].encode("utf-8")) > MVP_STATUS_MESSAGE_MAX_BYTES or
+            len(status["final_dir"].encode("utf-8")) > MVP_STATUS_PATH_MAX_BYTES):
+        raise ValueError("invalid bounded status schema")
+    return _canonical_json(status)
+
+
+def _decode_status(payload: bytes) -> dict:
+    status = json.loads(payload)
+    _status_bytes(status)
+    return status
 
 
 def _raise_status(status: dict) -> None:
     if status["ok"]:
         return
-    if status.get("committed"):
+    if status["committed"]:
         raise PublicationDurabilityError(status["message"], status["final_dir"])
     classes = {"ValueError": ValueError, "RuntimeError": RuntimeError,
                "FileExistsError": FileExistsError, "OSError": OSError}
-    raise classes.get(status.get("kind"), RuntimeError)(status["message"])
-
-
-def _all_gather_objects(accelerator, value: Any) -> list[Any]:
-    if accelerator.num_processes == 1:
-        return [value]
-    gathered = [None] * accelerator.num_processes
-    torch.distributed.all_gather_object(gathered, value)
-    return gathered
+    raise classes.get(status["kind"], RuntimeError)(status["message"])
 
 
 def _validate_transport_lengths(lengths: list[int]) -> int:
@@ -276,6 +334,10 @@ def _gather_payload_bytes(accelerator, payload: bytes, lengths: list[int]) -> li
             for index, length in enumerate(lengths)]
 
 
+def _gather_record_payload_bytes(accelerator, payload: bytes, lengths: list[int]) -> list[bytes]:
+    return _gather_payload_bytes(accelerator, payload, lengths)
+
+
 def _broadcast_payload_bytes(accelerator, payload: bytes) -> bytes:
     if accelerator.num_processes == 1:
         return payload
@@ -291,26 +353,43 @@ def _broadcast_payload_bytes(accelerator, payload: bytes) -> bytes:
     return tensor.cpu().contiguous().numpy().tobytes()
 
 
+def _collect_statuses(accelerator, status: dict) -> list[dict]:
+    payload = _status_bytes(status)
+    lengths = _transport_lengths(accelerator, None, payload)
+    return [_decode_status(item) for item in _gather_payload_bytes(accelerator, payload, lengths)]
+
+
 def _broadcast_status(accelerator, status: dict | None) -> dict:
-    values = [status]
-    broadcast_object_list(values, from_process=0)
-    return values[0]
+    payload = _status_bytes(status) if accelerator.is_main_process else b""
+    return _decode_status(_broadcast_payload_bytes(accelerator, payload))
 
 
 def _collective_preflight(accelerator, operation) -> None:
     try:
         operation()
-        local = None
+        local = _status()
     except Exception as error:
         local = _status(error)
-    failures = _all_gather_objects(accelerator, local)
-    for failure in failures:
-        if failure is not None:
-            _raise_status(failure)
+    for status in _collect_statuses(accelerator, local):
+        if not status["ok"]:
+            _raise_status(status)
+
+
+def _all_ints(accelerator, value: int) -> list[int]:
+    if accelerator.num_processes == 1:
+        return [value]
+    tensor = torch.tensor([value], dtype=torch.int64, device=accelerator.device)
+    return [int(item) for item in accelerator.gather(tensor).cpu().tolist()]
+
+
+def _all_fixed_payloads_equal(accelerator, payload: bytes) -> bool:
+    gathered = _gather_payload_bytes(accelerator, payload,
+                                     [len(payload)] * accelerator.num_processes)
+    return len(set(gathered)) == 1
 
 
 def _validated_inventory(expected_rns) -> list[int]:
-    if not isinstance(expected_rns, (list, tuple, range)):
+    if type(expected_rns) not in (list, tuple, range):
         raise ValueError("expected_rns must be a concrete list, tuple, or range")
     length = len(expected_rns)
     if length == 0 or length > MVP_MAX_RECORDS:
@@ -474,6 +553,8 @@ def _fsync_parent(final_dir: Path) -> None:
 def _publish_final(accelerator, model, paired_summary: dict, final_dir: Path | str, *,
                    metadata: dict, training_summary: dict) -> dict:
     final = Path(final_dir)
+    if len(str(final).encode("utf-8", errors="replace")) > MVP_STATUS_PATH_MAX_BYTES:
+        raise ValueError("final_dir exceeds bounded publication-status path limit")
     _validate_metadata(metadata, training_summary)
     records = paired_summary.get("records") if isinstance(paired_summary, dict) else None
     if not isinstance(records, list):
@@ -512,12 +593,12 @@ def evaluate_and_publish_final(accelerator, model, eval_loader, expected_rns, fi
         _validate_evaluation_inputs(accelerator, model, eval_loader, expected,
                                     metadata, training_summary)
     _collective_preflight(accelerator, validate_preflight)
-    lengths = _all_gather_objects(accelerator, len(eval_loader))
+    lengths = _all_ints(accelerator, len(eval_loader))
     if len(set(lengths)) != 1:
         raise ValueError(f"per-rank eval_loader lengths must be equal: {lengths}")
     identity = hashlib.sha256(_canonical_json({"expected_rns": expected, "metadata": metadata,
                                                "training_summary": training_summary})).hexdigest()
-    if len(set(_all_gather_objects(accelerator, identity))) != 1:
+    if not _all_fixed_payloads_equal(accelerator, identity.encode("ascii")):
         raise ValueError("expected inventory, metadata, and training summary differ across ranks")
     local_records = []
     local_error = None
@@ -532,7 +613,7 @@ def evaluate_and_publish_final(accelerator, model, eval_loader, expected_rns, fi
     except Exception as error:
         local_error = local_error or error
     transport_lengths = _transport_lengths(accelerator, local_error, payload)
-    gathered_payloads = _gather_payload_bytes(accelerator, payload, transport_lengths)
+    gathered_payloads = _gather_record_payload_bytes(accelerator, payload, transport_lengths)
     aggregate_status = None
     summary_payload = b""
     if accelerator.is_main_process:
