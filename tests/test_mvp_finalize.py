@@ -1,0 +1,302 @@
+from __future__ import annotations
+
+import json
+import math
+import os
+from pathlib import Path
+import subprocess
+import threading
+from types import SimpleNamespace
+
+import pytest
+import torch
+from safetensors.torch import load_model
+from torch.utils.data import DataLoader, Dataset
+
+from transgenic.training import mvp_finalize as finalize
+
+ROOT = Path(__file__).parents[1]
+PYTHON = "/home/wyim/miniconda3/envs/pdb/bin/python"
+TORCHRUN = str(Path(PYTHON).with_name("torchrun"))
+DEPS = ROOT / ".testdeps"
+DUCKDB_DEPS = Path("/tmp/b6-dataset-verify.D2Is9a/.testdeps")
+SHA = "1" * 64
+
+
+def metadata(scope="test"):
+    return {
+        "identity_scope": scope,
+        "initialization_audit": {"report_sha256": SHA, "verification": "recorded"},
+        "data_identities": {
+            name: {"sha256": SHA, "verification": "recorded"}
+            for name in ("corpus", "evidence", "panel")
+        },
+        "sif_code_identity": {
+            "sif": {"sha256": SHA, "verification": "recorded"},
+            "code": {"sha256": SHA, "verification": "recorded"},
+        },
+        "runtime_packages": {"torch": torch.__version__, "accelerate": "0.34.2"},
+        "normalized_recipe": {"batch_size": 1, "name": "mvp"},
+        "seed_augmentation": {"seed": 7, "augmentation": "fixed"},
+    }
+
+
+def summary(scope="test"):
+    if scope == "production":
+        return {"successful_updates": 250, "effective_batch_size": 96}
+    return {"successful_updates": 2, "effective_batch_size": 2}
+
+
+class Config:
+    def to_dict(self):
+        return {"model_type": "toy", "hidden_size": 2}
+
+
+class SaveToy(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.shared = torch.nn.Linear(2, 2, bias=False)
+        self.alias = self.shared
+        self.config = Config()
+        self.forward_calls = 0
+
+    def forward(self, input_ids, attention_mask=None, labels=None, evidence_tracks=None):
+        self.forward_calls += 1
+        signal = evidence_tracks.float().mean(dim=(1, 2)) * self.shared.weight[0, 0]
+        logits = torch.zeros((input_ids.shape[0], input_ids.shape[1], 273))
+        logits[..., 2] = signal[:, None]
+        loss = -logits.log_softmax(-1).gather(-1, labels.unsqueeze(-1)).mean()
+        return SimpleNamespace(logits=logits, loss=loss)
+
+
+class OneDataset(Dataset):
+    def __len__(self):
+        return 1
+
+    def __getitem__(self, index):
+        return (torch.tensor([0]), torch.ones(1, dtype=torch.bool), torch.tensor([2]),
+                index, "chr", 0, 1, torch.tensor(1.0), torch.ones((1, 8)),
+                {"rn": 11, "has_evidence": True})
+
+
+class EmptyDataset(Dataset):
+    def __len__(self):
+        return 0
+
+    def __getitem__(self, index):
+        raise IndexError(index)
+
+
+class LocalAccelerator:
+    num_processes = 1
+    process_index = 0
+    is_main_process = True
+    device = torch.device("cpu")
+    distributed_type = SimpleNamespace(name="NO")
+
+    def unwrap_model(self, model, keep_fp32_wrapper=True):
+        assert keep_fp32_wrapper is True
+        return model
+
+    def wait_for_everyone(self):
+        pass
+
+
+def publish(tmp_path, *, final_name="final", md=None, train=None):
+    model = SaveToy()
+    loader = DataLoader(EmptyDataset(), batch_size=1)
+    paired = {"primary_delta": 1.0, "composite_delta": 2.0, "pair_count": 1,
+              "records": [{"rn": 1, "has_evidence": True, "loss_off": 2.0,
+                           "loss_on": 1.0, "composite_loss_off": 3.0,
+                           "composite_loss_on": 1.0, "ce_numerator_off": 2.0,
+                           "ce_denominator_off": 1.0, "ce_numerator_on": 1.0,
+                           "ce_denominator_on": 1.0}]}
+    return finalize._publish_final(LocalAccelerator(), model, paired, tmp_path / final_name,
+                                   metadata=md or metadata(), training_summary=train or summary())
+
+
+def test_single_rank_ordinary_loader_preserves_mode_and_publishes(tmp_path):
+    model = SaveToy().eval()
+    result = finalize.evaluate_and_publish_final(
+        LocalAccelerator(), model, DataLoader(OneDataset(), batch_size=1), [11], tmp_path / "final",
+        metadata=metadata(), training_summary=summary())
+    assert [row["rn"] for row in result["records"]] == [11]
+    assert result["pair_count"] == 1 and model.forward_calls == 2 and not model.training
+    assert (tmp_path / "final" / "TRAINING_DONE").is_file()
+
+
+@pytest.mark.parametrize("distributed_type", ["FSDP", "DEEPSPEED"])
+def test_sharded_distributed_types_are_rejected(distributed_type):
+    accelerator = LocalAccelerator()
+    accelerator.distributed_type = SimpleNamespace(name=distributed_type)
+    with pytest.raises(ValueError, match="replicated DDP"):
+        finalize._validate_evaluation_inputs(
+            accelerator, SaveToy(), DataLoader(OneDataset(), batch_size=1), [11], metadata(), summary())
+
+
+def test_metadata_schema_and_production_budget_fail_closed(tmp_path):
+    bad = metadata()
+    del bad["data_identities"]["panel"]
+    with pytest.raises(ValueError, match="panel"):
+        publish(tmp_path, md=bad)
+    bad = metadata()
+    bad["data_identities"]["corpus"]["sha256"] = "not-a-digest"
+    with pytest.raises(ValueError, match="SHA256"):
+        publish(tmp_path, md=bad)
+    with pytest.raises(ValueError, match="250.*96"):
+        publish(tmp_path, md=metadata("production"), train=summary("test"))
+    assert not any(tmp_path.iterdir())
+
+
+def test_nonfinite_json_and_bounds_are_rejected_before_staging(tmp_path, monkeypatch):
+    bad = metadata()
+    bad["normalized_recipe"]["lr"] = float("nan")
+    with pytest.raises(ValueError, match="finite JSON"):
+        publish(tmp_path, md=bad)
+    monkeypatch.setattr(finalize, "MVP_MAX_RECORDS", 0)
+    with pytest.raises(ValueError, match="MVP_MAX_RECORDS"):
+        publish(tmp_path)
+    assert not any(tmp_path.iterdir())
+
+
+def test_atomic_payload_manifest_marker_and_tied_reload(tmp_path):
+    result = publish(tmp_path)
+    final = tmp_path / "final"
+    assert result["primary_delta"] == 1.0
+    assert (final / "TRAINING_DONE").is_file()
+    names = {"metadata.json", "paired_records.jsonl", "paired_summary.json",
+             "model.safetensors", "config.json"}
+    manifest = json.loads((final / "manifest.json").read_text())
+    assert set(manifest["files"]) == names
+    for name in names:
+        entry = manifest["files"][name]
+        assert entry["size"] == (final / name).stat().st_size
+        assert len(entry["sha256"]) == 64
+    assert json.loads((final / "metadata.json").read_text())["training_summary"] == summary()
+    restored = SaveToy()
+    missing, unexpected = load_model(restored, final / "model.safetensors")
+    assert not missing and not unexpected
+    assert restored.shared is restored.alias
+    assert not list(tmp_path.glob(".final.staging-*"))
+
+
+@pytest.mark.parametrize("existing", ["file", "empty", "nonempty", "symlink"])
+def test_existing_destinations_are_unchanged(tmp_path, existing):
+    final = tmp_path / "final"
+    if existing == "file":
+        final.write_text("keep")
+    elif existing == "empty":
+        final.mkdir()
+    elif existing == "nonempty":
+        final.mkdir(); (final / "keep").write_text("keep")
+    else:
+        target = tmp_path / "target"; target.write_text("keep"); final.symlink_to(target)
+    before = (final.lstat().st_mode, final.read_text() if final.is_file() else None)
+    with pytest.raises(FileExistsError):
+        publish(tmp_path)
+    assert (final.lstat().st_mode, final.read_text() if final.is_file() else None) == before
+
+
+@pytest.mark.parametrize("point", ["payload", "manifest", "marker", "rename"])
+def test_prerename_faults_leave_no_final_or_staging(tmp_path, monkeypatch, point):
+    target = {"payload": "_write_payload_files", "manifest": "_write_manifest",
+              "marker": "_write_done_marker", "rename": "_rename_noreplace"}[point]
+    original = getattr(finalize, target)
+    def fail(*args, **kwargs):
+        raise OSError(f"injected {point}")
+    monkeypatch.setattr(finalize, target, fail)
+    with pytest.raises(OSError, match=point):
+        publish(tmp_path)
+    assert not (tmp_path / "final").exists()
+    assert not list(tmp_path.glob(".final.staging-*"))
+    monkeypatch.setattr(finalize, target, original)
+
+
+def test_race_at_rename_never_overwrites_winner(tmp_path, monkeypatch):
+    def race(source, destination):
+        destination.mkdir()
+        (destination / "winner").write_text("keep")
+        raise FileExistsError(destination)
+    monkeypatch.setattr(finalize, "_rename_noreplace", race)
+    with pytest.raises(FileExistsError):
+        publish(tmp_path)
+    assert (tmp_path / "final" / "winner").read_text() == "keep"
+    assert not list(tmp_path.glob(".final.staging-*"))
+
+
+def test_concurrent_publishers_have_exactly_one_winner(tmp_path):
+    outcomes = []
+    def worker():
+        try:
+            publish(tmp_path)
+            outcomes.append("won")
+        except FileExistsError:
+            outcomes.append("lost")
+    threads = [threading.Thread(target=worker) for _ in range(2)]
+    for thread in threads: thread.start()
+    for thread in threads: thread.join()
+    assert sorted(outcomes) == ["lost", "won"]
+    assert (tmp_path / "final" / "TRAINING_DONE").is_file()
+
+
+def test_parent_fsync_failure_is_committed_and_never_cleaned(tmp_path, monkeypatch):
+    monkeypatch.setattr(finalize, "_fsync_parent", lambda path: (_ for _ in ()).throw(OSError("fsync")))
+    with pytest.raises(finalize.PublicationDurabilityError) as caught:
+        publish(tmp_path)
+    assert caught.value.committed is True and caught.value.final_dir == tmp_path / "final"
+    assert (tmp_path / "final" / "TRAINING_DONE").is_file()
+    with pytest.raises(FileExistsError):
+        publish(tmp_path)
+
+
+def test_unknown_save_wrapper_is_rejected(tmp_path):
+    class Wrapper(torch.nn.Module):
+        def __init__(self):
+            super().__init__(); self.module = SaveToy()
+    paired = {"primary_delta": 0.0, "composite_delta": 0.0, "pair_count": 0, "records": []}
+    with pytest.raises(ValueError, match="wrapper"):
+        finalize._publish_final(LocalAccelerator(), Wrapper(), paired, tmp_path / "final",
+                                metadata=metadata(), training_summary=summary())
+
+
+def probe(tmp_path, case, ranks=2, timeout=120):
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join((str(ROOT / "src"), str(DEPS), str(DUCKDB_DEPS)))
+    env["MVP_FINALIZE_TEST_DIR"] = str(tmp_path)
+    command = [TORCHRUN, "--standalone", f"--nproc-per-node={ranks}",
+               str(ROOT / "tests" / "mvp_finalize_probe.py"), case]
+    result = subprocess.run(command, cwd=ROOT, env=env, text=True, capture_output=True,
+                            timeout=timeout)
+    assert result.returncode == 0, f"{command}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    records = [json.loads(line) for line in result.stdout.splitlines() if line.startswith("{")]
+    assert records
+    return records[-1]
+
+
+@pytest.mark.parametrize("size", [3, 1])
+def test_real_two_rank_gloo_padded_paired_evaluation_and_compiled_path(tmp_path, size):
+    result = probe(tmp_path, f"success-{size}")
+    assert result["world_size"] == 2
+    assert result["rns"] == list(range(size))
+    assert result["pair_count"] == size
+    expected = sum(math.log(273) - (math.log(math.exp(0.05 * (i + 1)) + 272) - 0.05 * (i + 1))
+                   for i in range(size)) / size
+    assert result["primary_delta"] == pytest.approx(expected, rel=2e-5)
+    assert result["composite_delta"] == pytest.approx(expected, rel=2e-5)
+    assert result["record_fields"] == ["ce_denominator_off", "ce_denominator_on",
+        "ce_numerator_off", "ce_numerator_on", "composite_loss_off", "composite_loss_on",
+        "has_evidence", "loss_off", "loss_on", "rn"]
+    assert result["same_summary"] and result["backend_calls"] > 0
+    assert result["compiled_forwards"] == 2 * ((size + 1) // 2)
+    assert result["saved_keys_clean"] and result["tied_reload"] and result["marker"]
+
+
+@pytest.mark.parametrize("case", ["missing", "extra", "inconsistent", "bad_sampler"])
+def test_collective_inventory_and_loader_failures_prevent_publication(tmp_path, case):
+    result = probe(tmp_path, case)
+    assert result == {"all_failed": True, "case": case, "final_exists": False}
+
+
+def test_collective_postrename_durability_error_has_committed_status_on_all_ranks(tmp_path):
+    result = probe(tmp_path, "durability")
+    assert result == {"all_committed": True, "case": "durability", "marker": True}
