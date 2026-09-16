@@ -36,7 +36,10 @@ def test_full_producer_actual_finalizer_frozen_panel_synthetic_biology(tmp_path,
     runs, checkpoints = {}, {}
     for seed in (1,2,3):
         run = tmp_path/f'seed{seed}'; run.mkdir()
-        final, _, code = finalized_fixture(run,seed,hashes)
+        # Three runs consume ONE serialized baseline. Re-saving equal tensors
+        # can reorder safetensors alias metadata and change its byte identity.
+        shared_source = tmp_path/'seed1/source/model.safetensors' if seed > 1 else None
+        final, _, code = finalized_fixture(run,seed,hashes,source_weights=shared_source)
         runs[str(seed)] = {'final':str(final),'code_manifest':str(code)}
         checkpoints[seed] = w.sha256_file(final/'model.safetensors')
     checkpoints[123] = w.sha256_file(tmp_path/'seed1/source/model.safetensors')

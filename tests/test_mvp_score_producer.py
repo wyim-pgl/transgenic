@@ -154,27 +154,42 @@ def test_actual_commit_anchor_wrong_reference_and_missing_anchor(tmp_path,monkey
     with pytest.raises(subprocess.CalledProcessError): p.frozen_reference(fasta,fasta)
 
 
-def finalized_fixture(tmp_path, seed=1, hashes=None):
+def finalized_fixture(tmp_path, seed=1, hashes=None, source_weights=None):
     import test_mvp_finalize as f
     md = f.metadata('production')
     md['seed_augmentation'] = {'seed':seed, 'aug_seed':20260914+seed}
     if hashes is not None:
         md['data_identities'] = {k:{'sha256':v,'verification':'recorded'} for k,v in hashes.items()}
+    import shutil
+    import torch
+    from test_weights_init import WeightsInitTests
+    from test_mvp_scoring import record
+    from transgenic.training import weights_init as wi
+    from transgenic.training.mvp_cli_runtime import _expected_code_files
+    from transgenic.training.mvp_metrics import aggregate_paired_records
     source = tmp_path/'source'; source.mkdir()
-    (source/'model.safetensors').write_bytes(b'explicit synthetic source')
-    dump(source/'run_config.json',{'seed':123})
-    audit = md['initialization_audit']['audit']
-    audit['resolved_checkpoint_dir'] = str(source)
-    audit['resolved_weights_path'] = str(source/'model.safetensors')
-    for name in ('model.safetensors','run_config.json'):
-        identity = p.file_identity(source/name)
-        snap = {'sha256':identity['sha256'],'size':identity['size'],'device':1,'inode':1,'mtime_ns':1}
-        audit['files'][name] = {'path':identity['path'],'before':snap,'after':dict(snap)}
-    md['initialization_audit']['audit_sha256'] = hashlib.sha256(f.finalize._canonical_json(audit)).hexdigest()
-    code = dump(tmp_path/'code.json',{'files':{str(Path(__file__)):w.sha256_file(__file__)},
-                                    'external_packages':{'torch':'test-version','duckdb':'test-version'}})
-    md['sif_code_identity']['code']['sha256'] = w.sha256_file(code)
-    f.publish(tmp_path,md=md,train=f.summary('production'))
+    # Real tiny Transgenic model/LED decoder, only the remote Hyena factory is
+    # replaced by the existing local embedding fixture. No download/forward/GPU.
+    case = WeightsInitTests()
+    with torch.random.fork_rng(devices=[]):
+        torch.manual_seed(123)
+        try:
+            case.setUp()
+            shutil.copyfile(source_weights or case.epoch/'model.safetensors', source/'model.safetensors')
+            dump(tmp_path/'run_config.json',case.run_config)
+            dump(source/'config.json',case.source.config.to_dict())
+            model = case._model(8)
+            audit = wi.load_weights_only(model, source)
+            md['initialization_audit'] = {'audit':audit, 'verification':'recorded',
+                'audit_sha256':hashlib.sha256(f.finalize._canonical_json(audit)).hexdigest()}
+            code = dump(tmp_path/'code.json',{'files':{str(path):w.sha256_file(path) for path in _expected_code_files()},
+                'external_packages':{name:'test-version' for name in ('accelerate','duckdb','safetensors','torch','transformers')}})
+            md['sif_code_identity']['code']['sha256'] = w.sha256_file(code)
+            f.finalize._publish_final(f.LocalAccelerator(), model,
+                aggregate_paired_records([record(1,1)], [1]), tmp_path/'final',
+                metadata=md, training_summary=f.summary('production'))
+        finally:
+            case.doCleanups()
     hashes = {k:v['sha256'] for k,v in md['data_identities'].items()}
     return tmp_path/'final',hashes,code
 
