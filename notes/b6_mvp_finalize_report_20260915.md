@@ -6,6 +6,7 @@
 - Required original base: `a314bf9343846d64d768f14d4ae4909beec08a40`
 - Scoped round-1 review base: `428e36edffc1175a6158ae83a43ecdb276ca11a8`
 - Scoped round-2 review base: `efee9e52bbaca52260619763b2b4b0b6e51e3e93`
+- Scoped round-3 review base: `3fe33cb751c79396cafbc6d9e45c2d32fab0ad3f`
 - Native isolated worktree, CPU only. No main-worktree writes, remote actions, GPU actions, merge, or push.
 - Added only `mvp_finalize.py`, its focused tests and subprocess probe, this report, and the requested scoped wording correction. There is no CLI, bootstrap, GO/STOP policy, resume, or general checkpoint framework.
 - The exact neutral brief had SHA256 `ef3c585fb08df09ede59c7350cd0492281d0f6998517adc624f3ec7b80968943`. Graph mapping and focused graph queries preceded source edits. Graph files and the local dependency link are not committed.
@@ -38,7 +39,7 @@ The required top-level metadata keys are:
 - `normalized_recipe`: exactly the nine `MVPRecipe` fields (`max_updates`, `warmup_updates`, `batch_size`, `accumulation_steps`, `required_world_size`, both LRs, weight decay, and clipping);
 - `seed_augmentation`: exactly integer `seed` and `aug_seed = 20260914 + seed`; production seeds are restricted to 1, 2, or 3.
 
-The embedded initialization audit must match the actual `b6-weights-init-v1` output contract: exact top-level and six-file inventory; complete `sha256/size/device/inode/mtime_ns` snapshots; concrete absolute paths; unchanged source snapshots; exact current semantic field set with `value` and valid source/target provenance; matching source/target semantics except evidence channels 0/8; recomputed manifest hashes; exact missing projection, no unexpected key, unsupported same-8 loading, and a verified-zero projection action. A focused integration test runs the real tiny `load_weights_only` path and passes its returned audit into finalization. The wrapper digest binds the included report, but the schema and caller-supplied digest do not prove authenticity or independently attest bytes. Finalization records the successful loader audit and does not rehash those source files.
+The embedded initialization audit must match the actual `b6-weights-init-v1` output contract: exact top-level and six-file inventory; complete `sha256/size/device/inode/mtime_ns` snapshots; concrete absolute paths; unchanged source snapshots; exact current semantic field set with `value` and valid source/target provenance; matching source/target semantics except evidence channels 0/8; recomputed manifest hashes; exact missing projection, no unexpected key, unsupported same-8 loading, and a verified-zero projection action. Nested contracts are exact: `recipe` contains only `canonical_sha256`; `compatibility` contains only `transition`, `exception`, and `same8_supported`; `load` contains only `missing_keys`, `unexpected_keys`, and `safetensors_metadata`; implementation is exactly the two reviewed filenames and each record contains only `path` and `sha256`. Safetensors metadata is either `None` or a string-to-string map, matching the pinned API return. A focused integration test runs the real tiny `load_weights_only` path and passes its returned audit into finalization. The wrapper digest binds the included report, but the schema and caller-supplied digest do not prove authenticity or independently attest bytes. Finalization records the successful loader audit and does not rehash those source files.
 
 Each corpus/evidence/panel/SIF/code identity object has a 64-character lowercase hexadecimal `sha256` and `verification` equal to `recorded` or `independently_verified`. Finalization preserves that supplied distinction and does not promote a recorded digest to independent certification. `MVPRecipe` validates every recipe; production requires its exact defaults. `training_summary` must match recipe updates and `batch_size * accumulation_steps * required_world_size`; production therefore requires 250 and 96. Smaller valid recipes require explicit test scope. JSON is canonical (sorted compact keys, newline, `allow_nan=False`). The published `metadata.json` adds the validated training summary.
 
@@ -76,11 +77,11 @@ PYTHONPATH="$PWD/src:$PWD/.testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps" \
 /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_finalize.py
 ```
 
-Round-2 result: **38 passed, 0 failed in 187.27 s**; wall time **188.29 s**.
+Round-3 result: **39 passed, 0 failed in 184.10 s**; wall time **185.11 s**.
 
 Coverage includes ordinary one-rank evaluation; actual two-rank CPU/Gloo runs with 3 items/2 ranks and 1 item/2 ranks; exact record fields and hand-derived equal-tile off/on primary and composite means; padded duplicate agreement; identical all-rank summaries; and missing, extra, inconsistent duplicate `rn`, and sampler-rank rejection before publication. Four bounded-time two-rank cases make only rank 1 supply a noniterable, throwing iterable, infinite generator, or hostile `list` subclass and verify all ranks receive the same concrete-inventory rejection before forwarding. A huge one-rank exception produces the same capped marked diagnostic on both ranks while patched object collectives remain unused. The model is an actual lightweight `torch.compile(..., backend=eager)` wrapper prepared through Accelerate; backend invocation and exact forward counts prove evaluation used that wrapper, while rank 1 is configured to fail if saving tries to unwrap there. This is compile-path coverage, not an Inductor certification.
 
-Transport tests cover exact sum/padded byte boundaries and a real two-rank case where each canonical local payload is below a patched 1,000,000-byte limit but aggregate/padded transport exceeds it; a patched payload-transfer seam proves the payload collective is not called. Publication tests cover strict audit/package/recipe/seed metadata, production budgets, nonfinite JSON, record bounds, canonical payloads, manifest sizes/hashes, clean state keys, tied safetensors reload, FSDP/DeepSpeed and unknown-wrapper rejection, all existing destination kinds, local fault injection before payload/manifest/marker/rename, collective rank-0 write and rename failures with identical errors and no final artifact, a destination appearing at rename, two concurrent publishers with exactly one winner, and collective committed durability errors after rename.
+Transport tests cover exact sum/padded byte boundaries and a real two-rank case where each canonical local payload is below a patched 1,000,000-byte limit but aggregate/padded transport exceeds it; a patched payload-transfer seam proves the payload collective is not called. Publication tests cover strict audit/package/recipe/seed metadata, production budgets, nonfinite JSON, record bounds, canonical payloads, manifest sizes/hashes, clean state keys, tied safetensors reload, FSDP/DeepSpeed and unknown-wrapper rejection, all existing destination kinds, local fault injection before payload/manifest/marker/rename, collective rank-0 write and rename failures with identical errors and no final artifact, a destination appearing at rename, two concurrent publishers with exactly one winner, and collective committed durability errors after rename. Round 3 mutates a real loader audit by removing every required recipe/compatibility/load/implementation-record field, adding extras to each nested section, changing implementation filenames, and supplying invalid safetensors metadata; every recomputed wrapper is rejected while the unmodified real audit remains accepted.
 
 ### Existing 20-test runtime suite
 
@@ -101,9 +102,9 @@ PYTHONPATH="$PWD/src:$PWD/.testdeps:/tmp/b6-dataset-verify.D2Is9a/.testdeps" \
   tests.test_weights_init tests.test_mvp_metrics tests.test_mvp_model tests.test_mvp_dataset
 ```
 
-Round-2 result: **46 passed, 0 failed in 49.205 s**; wall time **54.62 s**.
+Round-3 result: **46 passed, 0 failed in 46.646 s**; wall time **52.23 s**.
 
-Round-2 required total: **104 passed, 0 failed**.
+Round-3 scoped total: **85 passed, 0 failed**. The unrelated 20-test runtime suite was not rerun because this round changed only nested initialization-audit validation and its tests; its most recent round-2 result above remains recorded.
 
 Syntax compilation also exited 0 with no output:
 

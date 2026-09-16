@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import itertools
 import json
@@ -209,7 +210,7 @@ def test_metadata_schema_and_production_budget_fail_closed(tmp_path):
     bad["initialization_audit"]["audit"]["load"]["missing_keys"] = []
     bad["initialization_audit"]["audit_sha256"] = hashlib.sha256(
         finalize._canonical_json(bad["initialization_audit"]["audit"])).hexdigest()
-    with pytest.raises(ValueError, match="missing_keys"):
+    with pytest.raises(ValueError, match="initialization_audit load"):
         publish(tmp_path, md=bad)
     with pytest.raises(ValueError, match="250.*96"):
         publish(tmp_path, md=metadata("production"), train=summary("test"))
@@ -250,6 +251,46 @@ def test_initialization_audit_requires_full_snapshots_and_exact_semantics():
             finalize._canonical_json(audit)).hexdigest()
         with pytest.raises(ValueError, match=match):
             finalize._validate_metadata(md, summary())
+
+
+def test_real_initialization_audit_rejects_nested_key_drift_and_bad_metadata():
+    from tests.test_weights_init import WeightsInitTests
+    case = WeightsInitTests("test_success_from_best_is_alias_safe_zeroes_projection_and_audits_hashes")
+    case.setUp()
+    try:
+        original = case._load()
+        mutations = [
+            ("recipe missing", lambda audit: audit["recipe"].pop("canonical_sha256")),
+            ("recipe extra", lambda audit: audit["recipe"].update(extra="x")),
+            *[(f"compatibility missing {key}", lambda audit, key=key: audit["compatibility"].pop(key))
+              for key in ("transition", "exception", "same8_supported")],
+            ("compatibility extra", lambda audit: audit["compatibility"].update(extra="x")),
+            *[(f"load missing {key}", lambda audit, key=key: audit["load"].pop(key))
+              for key in ("missing_keys", "unexpected_keys", "safetensors_metadata")],
+            ("load extra", lambda audit: audit["load"].update(extra="x")),
+            ("load bad metadata", lambda audit: audit["load"].update(safetensors_metadata={"key": 1})),
+            *[(f"implementation missing {key}",
+               lambda audit, key=key: audit["implementation"]["b5_runtime.py"].pop(key))
+              for key in ("path", "sha256")],
+            ("implementation record extra", lambda audit:
+                audit["implementation"]["b5_runtime.py"].update(extra="x")),
+            ("implementation filename missing", lambda audit:
+                audit["implementation"].pop("b5_runtime.py")),
+            ("implementation filename extra", lambda audit:
+                audit["implementation"].update({"extra.py": {"path": "/tmp/x", "sha256": SHA}})),
+        ]
+        for _, mutate in mutations:
+            audit = copy.deepcopy(original)
+            mutate(audit)
+            md = metadata()
+            md["initialization_audit"] = {
+                "audit": audit,
+                "audit_sha256": hashlib.sha256(finalize._canonical_json(audit)).hexdigest(),
+                "verification": "recorded"}
+            with pytest.raises(ValueError, match="initialization_audit"):
+                finalize._validate_metadata(md, summary())
+    finally:
+        case.doCleanups()
 
 
 def test_real_load_weights_only_audit_is_accepted_by_finalize(tmp_path):

@@ -147,23 +147,34 @@ def _validate_initialization_audit(initialization: Any) -> None:
         if semantic_fields["source_semantics"][name]["value"] != semantic_fields["target_semantics"][name]["value"]:
             raise ValueError(f"initialization_audit source/target semantic drift for {name}")
     compatibility, load = audit.get("compatibility"), audit.get("load")
-    if (not isinstance(compatibility, dict) or compatibility.get("transition") != "evidence_channels:0->8" or
-            compatibility.get("same8_supported") is not False or
-            _PROJECTION_KEY not in str(compatibility.get("exception")) or
-            "zero" not in str(compatibility.get("exception")).lower()):
-        raise ValueError("initialization_audit compatibility must record the verified 0->8 zero projection action")
-    if (not isinstance(load, dict) or load.get("missing_keys") != [_PROJECTION_KEY] or
-            load.get("unexpected_keys") != []):
-        raise ValueError("initialization_audit load requires exact missing_keys projection and no unexpected_keys")
-    recipe_digest = audit.get("recipe", {}).get("canonical_sha256")
-    if not _is_sha256(recipe_digest):
-        raise ValueError("initialization_audit requires the source run_config recipe SHA256")
+    if (not isinstance(compatibility, dict) or
+            set(compatibility) != {"transition", "exception", "same8_supported"} or
+            compatibility["transition"] != "evidence_channels:0->8" or
+            not isinstance(compatibility["exception"], str) or
+            compatibility["same8_supported"] is not False or
+            _PROJECTION_KEY not in compatibility["exception"] or
+            "zero" not in compatibility["exception"].lower()):
+        raise ValueError("initialization_audit compatibility must exactly record the verified 0->8 zero projection action")
+    metadata_value = load.get("safetensors_metadata") if isinstance(load, dict) else None
+    if (not isinstance(load, dict) or
+            set(load) != {"missing_keys", "unexpected_keys", "safetensors_metadata"} or
+            load["missing_keys"] != [_PROJECTION_KEY] or load["unexpected_keys"] != [] or
+            (metadata_value is not None and
+             (not isinstance(metadata_value, dict) or
+              any(not isinstance(key, str) or not isinstance(value, str)
+                  for key, value in metadata_value.items())))):
+        raise ValueError("initialization_audit load must exactly match missing/unexpected keys and string safetensors metadata")
+    recipe = audit.get("recipe")
+    if (not isinstance(recipe, dict) or set(recipe) != {"canonical_sha256"} or
+            not _is_sha256(recipe["canonical_sha256"])):
+        raise ValueError("initialization_audit recipe must contain only the source run_config canonical_sha256")
     implementation = audit.get("implementation")
     if not isinstance(implementation, dict) or set(implementation) != {"b5_runtime.py", "configuration_transgenic.py"}:
         raise ValueError("initialization_audit requires the exact loader implementation identities")
     for name, record in implementation.items():
-        if (not isinstance(record, dict) or not isinstance(record.get("path"), str) or
-                not Path(record["path"]).is_absolute() or not _is_sha256(record.get("sha256"))):
+        if (not isinstance(record, dict) or set(record) != {"path", "sha256"} or
+                not isinstance(record["path"], str) or not Path(record["path"]).is_absolute() or
+                not _is_sha256(record["sha256"])):
             raise ValueError(f"initialization_audit implementation identity is invalid for {name}")
 
 
