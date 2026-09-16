@@ -23,8 +23,9 @@ preflight_20260914/ siblings and tmp/ dirs -- receives an explicit fail-closed
 disposition (DONE / FAILED.json / NEITHER); contradictions, NEITHER and any
 tmp/ directory require reconciliation and fail, never silently skipped.  run.sbatch and slurm .out logs are hashed into
 the manifest. Wrapper bytes must match the archived historical scripts; all
-remaining8 logs are required. The unavailable pilot submission log-layout
-receipt is an explicit UNRESOLVED FAIL, not a guessed Slurm default.
+remaining8 logs are required. Pilot log names require the pinned recovered
+submission receipt. Historical directories require an external reviewed manifest;
+missing or invalid evidence remains UNRESOLVED FAIL, never a guessed default.
 Container-owned markers are checked even when their child layouts are known;
 normal containers need no DONE. sacct evidence is embedded VERBATIM from a capture;
 the persisting `.extern OUT_OF_MEMORY 0:125` anomaly is recorded as UNRESOLVED
@@ -38,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime
 import io
 import hashlib
 import importlib.util
@@ -76,6 +78,14 @@ APPROVED_DIAMOND_SHA256 = '0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f08
 APPROVED_WRAPPER_SHA256 = {
     'pilot': '8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a',
     'remaining8': '4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c'}
+
+
+HISTORICAL_ROOT = Path('/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx')
+PILOT_RECEIPT_SHA256 = 'f45de648f3491133890420fdb4a374299a55a169d199eaf4dc79c608e7ed7b23'
+PREFLIGHT_DIR = 'preflight_20260914'
+PREFLIGHT_WRAPPER_SHA256 = 'dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318'
+LINEAGE_SHA256 = {'orthodb': '812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5',
+                  'swissprot': '402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce'}
 
 
 class EvidenceError(ValueError):
@@ -439,7 +449,182 @@ def audit_container_markers(root, check):
     check.add(f'container_markers:{root}', ok, detail)
 
 
-def scan_dispositions(root, known, check):
+def require_evidence(ok, message):
+    if not ok:
+        raise EvidenceError(message)
+
+
+def regular_path(path):
+    return (path.is_absolute() and path.is_file()
+            and not any(p.is_symlink() for p in (path, *path.parents)))
+
+
+def historical_snapshot(path):
+    """Exact small historical tree; never follows links or accepts special files."""
+    require_evidence(not any(p.is_symlink() for p in (path, *path.parents)), f'symlink: {path}')
+    st = path.stat()
+    require_evidence(path.is_dir() or path.is_file(), f'unsupported kind: {path}')
+    result = {'kind': 'directory' if path.is_dir() else 'file', 'uid': st.st_uid, 'gid': st.st_gid}
+    if path.is_dir():
+        names = {p.name for p in path.iterdir()}
+        require_evidence(not any(n.startswith('FAILED') for n in names), f'failed marker: {path}')
+        require_evidence(not any(n.startswith('DONE') and n != 'DONE' for n in names),
+                         f'unknown DONE marker: {path}')
+        if 'DONE' in names:
+            require_evidence(regular_path(path / 'DONE') and (path / 'DONE').read_text() == DONE_TEXT,
+                             f'invalid DONE: {path}')
+        result['children'] = {n: historical_snapshot(path / n) for n in sorted(names)}
+    else:
+        require_evidence(st.st_size <= 1024 * 1024, f'not a small historical receipt: {path}')
+        result['sha256'] = launcher.sha256(path)
+    return result
+
+
+def reconciliation_paths(root):
+    """Closed path-to-producer map, not a user-extensible waiver pattern."""
+    pilot, batch, pre = root / PILOT_DIR, root / REMAINING8_DIR, root / PREFLIGHT_DIR
+    allowed = {}
+    for name in ('tmp', 'execution.lock', 'submission.lock'):
+        allowed[str(pilot / name)] = (['6163851'], pilot / 'run.sbatch', APPROVED_WRAPPER_SHA256['pilot'])
+    jobs = [f'6164049_{i}' for i in range(8)]
+    allowed[str(batch / 'submission.lock')] = (jobs, batch / 'run.sbatch', APPROVED_WRAPPER_SHA256['remaining8'])
+    # Task-to-species identity is recorded in all eight historical stdout logs.
+    for i, species in enumerate(REMAINING8_SPECIES):
+        allowed[str(batch / species / 'tmp')] = ([f'6164049_{i}'], batch / 'run.sbatch', APPROVED_WRAPPER_SHA256['remaining8'])
+    for name in ('', 'logs', 'receipts', 'submission.lock', 'tmp', 'xdg-cache', 'execution.lock'):
+        allowed[str(pre / name)] = (['6163397'], pre / 'prepare.sbatch', PREFLIGHT_WRAPPER_SHA256)
+    return allowed
+
+
+def bound_capture(record, root):
+    require_evidence(type(record) is dict and set(record) == {'path', 'sha256'}, 'invalid capture binding')
+    require_evidence(type(record['path']) is str and type(record['sha256']) is str, 'invalid capture fields')
+    path = Path(record['path'])
+    source = Path(__file__).resolve().parents[3]
+    require_evidence(regular_path(path) and path == path.resolve() and
+                     root not in path.parents and source not in path.parents,
+                     'manifest/captures must be regular files outside input and source trees')
+    require_evidence(launcher.sha256(path) == record['sha256'], f'capture hash mismatch: {path}')
+    return path.read_text()
+
+
+def completed_jobs(text, jobs):
+    reader = csv.DictReader(io.StringIO(text), delimiter='|')
+    require_evidence(reader.fieldnames and {'JobID', 'State', 'ExitCode'} <= set(reader.fieldnames),
+                     'invalid reconciliation accounting header')
+    rows = list(reader)
+    require_evidence(all(r['State'] in ('COMPLETED', 'OUT_OF_MEMORY', 'FAILED', 'CANCELLED',
+                                        'TIMEOUT', 'NODE_FAIL', 'PREEMPTED', 'BOOT_FAIL', 'DEADLINE')
+                         for r in rows), 'active/unknown state in accounting capture')
+    for job in jobs:
+        for suffix in ('', '.batch', '.extern'):
+            matched = [r for r in rows if r['JobID'] == job + suffix]
+            expected = ('OUT_OF_MEMORY', '0:125') if suffix == '.extern' else ('COMPLETED', '0:0')
+            require_evidence(len(matched) == 1 and (matched[0]['State'], matched[0]['ExitCode']) == expected,
+                             f'uncompleted/ambiguous historical accounting: {job + suffix}')
+
+
+def preflight_evidence(pre):
+    listings = {
+        '': set(('accounting-bounded-check.txt batch.exitcode duplicate-check-correct-user.txt '
+                 'duplicate-check.txt execution.lock expected-sources.sha256 independent_lineage_audit.json '
+                 'jobid lineage_ncbi.baseline.tsv logs orthodb prepare.sbatch receipts reviewed-small-files.sha256 '
+                 'sbatch-receipt.json source-hash-attestation.txt submission.lock swissprot tmp xdg-cache').split()),
+        'receipts': {'DB.sha256', 'PROVENANCE.txt', 'SOURCE_COMMIT.txt', 'build_dbs.sh',
+                     'swissprot_viridiplantae_reviewed.fa.gz.sha256'},
+        'logs': {'slurm-6163397.out', 'slurm-6163397.err'},
+        'orthodb': {'DONE', 'lineage.tsv', 'provenance.json'},
+        'swissprot': {'DONE', 'lineage.tsv', 'provenance.json'}}
+    for name, expected in listings.items():
+        require_evidence({p.name for p in (pre / name).iterdir()} == expected,
+                         f'unknown/missing preflight entry: {pre / name}')
+    require_evidence(regular_path(pre / 'jobid') and (pre / 'jobid').read_text() == '6163397\n', 'preflight jobid')
+    require_evidence(json.loads((pre / 'sbatch-receipt.json').read_text()) ==
+                     {'returncode': 0, 'stdout': '6163397\n', 'stderr': ''}, 'preflight submission receipt')
+    require_evidence((pre / 'batch.exitcode').read_text() == '0\n', 'preflight batch exit')
+    for kind, digest in LINEAGE_SHA256.items():
+        unit = pre / kind
+        require_evidence(disposition(unit)['ok'], f'preflight source incomplete: {kind}')
+        require_evidence(launcher.sha256(unit / 'lineage.tsv') == digest, f'preflight lineage changed: {kind}')
+        prov = json.loads((unit / 'provenance.json').read_text())
+        require_evidence(type(prov) is dict and prov.get('lineage_sha256') == digest,
+                         f'preflight provenance lineage mismatch: {kind}')
+
+
+def load_reconciliation(path, digest, root, sacct_text, check):
+    """All-or-nothing external evidence validation; malformed input preserves unit audit."""
+    try:
+        require_evidence(path is not None and digest is not None, 'UNRESOLVED reconciliation manifest absent')
+        require_evidence(root == HISTORICAL_ROOT, 'reconciliation historical root mismatch')
+        text = bound_capture({'path': str(path), 'sha256': digest}, root)
+        data = json.loads(text)
+        require_evidence(type(data) is dict and set(data) ==
+                         {'schema', 'blastx_root', 'accounting', 'queue', 'entries'}, 'invalid manifest fields')
+        require_evidence(data['schema'] == 'est-c1-reconciliation-v1' and data['blastx_root'] == str(root),
+                         'manifest version/root mismatch')
+        accounting = bound_capture(data['accounting'], root)
+        queue = json.loads(bound_capture(data['queue'], root))
+        require_evidence(type(queue) is dict and set(queue) == {'captured_at', 'command', 'stdout', 'returncode'},
+                         'invalid queue capture')
+        require_evidence(type(queue['returncode']) is int and queue['returncode'] == 0 and
+                         queue['command'] == 'squeue --noheader --format=%i|%T|%j' and
+                         type(queue['stdout']) is str and type(queue['captured_at']) is str, 'invalid queue command/result')
+        captured = datetime.datetime.fromisoformat(queue['captured_at'])
+        require_evidence(captured.tzinfo is not None, 'queue timestamp lacks timezone')
+        age = (datetime.datetime.now(datetime.timezone.utc) - captured).total_seconds()
+        require_evidence(0 <= age <= 3600, 'stale/future queue capture')
+        for line in queue['stdout'].splitlines():
+            fields = line.strip().split('|')
+            require_evidence(len(fields) == 3 and all(fields), 'malformed queue row')
+            job, _, name = fields
+            require_evidence(not job.startswith(('6163851', '6164049', '6163397')) and
+                             not any(s in name.lower() for s in ('blastx', 'lineage', 'est_')),
+                             'active/queued historical or EST job evidence')
+        require_evidence(type(data['entries']) is list and data['entries'], 'empty/invalid entries')
+        allowed, reconciled = reconciliation_paths(root), {}
+        for entry in data['entries']:
+            require_evidence(type(entry) is dict and set(entry) ==
+                             {'path', 'jobids', 'wrapper', 'wrapper_sha256', 'snapshot'}, 'invalid entry fields')
+            name = entry['path']
+            require_evidence(type(name) is str and name in allowed and name not in reconciled,
+                             'unknown/duplicate historical path')
+            jobs, wrapper, pin = allowed[name]
+            require_evidence(entry['jobids'] == jobs and entry['wrapper'] == str(wrapper) and
+                             entry['wrapper_sha256'] == pin and regular_path(wrapper) and launcher.sha256(wrapper) == pin,
+                             'historical job/wrapper binding mismatch')
+            completed_jobs(accounting, jobs)
+            if jobs != ['6163397']:
+                completed_jobs(sacct_text, jobs)
+            target = Path(name)
+            fresh = historical_snapshot(target)
+            require_evidence(fresh == entry['snapshot'], f'changed kind/owner/listing/child hash: {name}')
+            pre = root / PREFLIGHT_DIR
+            if target == pre or pre in target.parents:
+                # All preflight dispositions depend on the full recursively bound root.
+                pre_paths = {p for p in allowed if p == str(pre) or str(pre) + '/' in p}
+                supplied = {e['path'] for e in data['entries'] if type(e) is dict and type(e.get('path')) is str}
+                require_evidence(pre_paths <= supplied, 'all preflight container/sentinel snapshots required')
+                preflight_evidence(pre)
+            if target.name in ('tmp', 'xdg-cache') or target == root / PILOT_DIR / 'execution.lock' or target == pre / 'submission.lock':
+                require_evidence(fresh['kind'] == 'directory' and fresh['children'] == {}, 'historical scratch/sentinel not empty')
+            elif target == pre / 'execution.lock':
+                require_evidence(fresh['kind'] == 'file' and target.read_bytes() == b'', 'preflight flock sentinel kind/content')
+            elif target.name == 'submission.lock':
+                expected_job = '6163851' if target.parent.name == PILOT_DIR else '6164049'
+                require_evidence(fresh['kind'] == 'directory' and set(fresh['children']) == {'jobid'} and
+                                 (target / 'jobid').read_text() == expected_job + '\n', 'submission sentinel listing/jobid')
+            else:
+                require_evidence(fresh['kind'] == 'directory', 'historical container kind')
+            reconciled[name] = fresh
+        check.add('historical_reconciliation', True, {'manifest': str(path), 'sha256': digest,
+                  'evidence': data, 'note': 'historical dispositions only; extern and scientific gates unresolved'})
+        return reconciled
+    except (OSError, ValueError, UnicodeError) as exc:
+        check.add('historical_reconciliation', False, {'manifest': str(path), 'error': str(exc)})
+        return {}
+
+
+def scan_dispositions(root, known, check, reconciled=None):
     """Must-fix 3: EVERY sibling dir (preflight_20260914/, tmp/, ...) gets an
     explicit disposition; NEITHER and unreconciled tmp/ are failures."""
     audit_container_markers(root, check)
@@ -460,6 +645,14 @@ def scan_dispositions(root, known, check):
                 contents = sorted(p.name for p in entry.iterdir())
                 state.update(ok=False, entries=contents,
                              note='tmp requires explicit reconciliation; never silently skipped')
+            if reconciled and str(entry) in reconciled and state['disposition'] == 'NEITHER':
+                # Recheck bytes at use, not merely when loading the manifest.
+                try:
+                    same = historical_snapshot(entry) == reconciled[str(entry)]
+                except (OSError, EvidenceError, UnicodeError):
+                    same = False
+                state.update(ok=same, reconciled=same,
+                             note='exact historical evidence; no DONE inferred or written')
             entries[key] = state
             visit(entry)
     visit(root)
@@ -468,7 +661,7 @@ def scan_dispositions(root, known, check):
     return entries
 
 
-def hash_batch_artifacts(root, check_name, check):
+def hash_batch_artifacts(root, check_name, check, pilot_receipt=None):
     """Bind wrapper bytes; require receipt-backed log names, never Slurm defaults."""
     layout = check_name.rsplit(':', 1)[-1]
     if layout not in APPROVED_WRAPPER_SHA256:
@@ -488,9 +681,28 @@ def hash_batch_artifacts(root, check_name, check):
         missing = sorted(required - set(hashed))
         check.add(check_name + ':logs', not missing, {'missing': missing})
     else:
-        check.add(check_name + ':logs', False,
-                  'UNRESOLVED pilot log-layout receipt: wrapper has no output/error directives; '
-                  'submission paths unavailable locally. Arbitrary .out/.err files cannot satisfy it.')
+        detail = {'required': ['slurm-6163851.out', 'slurm-6163851.err']}
+        try:
+            require_evidence(pilot_receipt is not None, 'UNRESOLVED pilot log-layout receipt absent')
+            receipt = Path(pilot_receipt)
+            require_evidence(regular_path(receipt) and launcher.sha256(receipt) == PILOT_RECEIPT_SHA256,
+                             'UNRESOLVED recovered pilot receipt hash/source mismatch')
+            # Whole-extract pin binds source session, raw-record hashes, call/result,
+            # command paths and jobid. No shell execution or substring-based approval.
+            records = json.loads(receipt.read_text())
+            detail.update(receipt_sha256=PILOT_RECEIPT_SHA256, source=records[0]['source'],
+                          record_lines=[r['line'] for r in records], jobid='6163851')
+            require_evidence(root == HISTORICAL_ROOT / PILOT_DIR, 'pilot historical path mismatch')
+            jobid = root / 'submission.lock/jobid'
+            require_evidence(regular_path(jobid) and jobid.read_text() == '6163851\n', 'pilot jobid mismatch')
+            require_evidence(hashed.get('run.sbatch') == APPROVED_WRAPPER_SHA256['pilot'],
+                             'pilot producing wrapper mismatch')
+            require_evidence(all(name in hashed for name in detail['required']), 'pilot log missing')
+            ok = True
+        except (OSError, ValueError, UnicodeError) as exc:
+            ok = False
+            detail['error'] = str(exc)
+        check.add(check_name + ':logs', ok, detail)
     check.add(check_name + ':inventory', True, hashed)
     return hashed
 
@@ -517,7 +729,8 @@ def audit_accounting(text, check):
             check.add('accounting:' + key, ok, matches)
 
 
-def audit(blastx_root, out_dir, sacct_file):
+def audit(blastx_root, out_dir, sacct_file, pilot_receipt=None,
+          reconciliation_manifest=None, reconciliation_sha256=None):
     blastx_root = Path(blastx_root).resolve()
     output = Path(out_dir).resolve()
     if output == blastx_root or blastx_root in output.parents:
@@ -530,6 +743,8 @@ def audit(blastx_root, out_dir, sacct_file):
         (out / 'units').mkdir()
         check = Check()
         audit_accounting(sacct_text, check)
+        reconciled = load_reconciliation(reconciliation_manifest, reconciliation_sha256,
+                                         blastx_root, sacct_text, check)
         units = []
         pilot_root = blastx_root / PILOT_DIR
         batch_root = blastx_root / REMAINING8_DIR
@@ -541,13 +756,13 @@ def audit(blastx_root, out_dir, sacct_file):
             raise ValueError(f'audit FAILED: {check.failed()}')
         # Pilot layout: unit dirs + query.sha256 at species root.
         audit_species_root('Sitalica', pilot_root, 'Sitalica', check)
-        hash_batch_artifacts(pilot_root, 'batch_artifacts:pilot', check)
-        scan_dispositions(pilot_root, set(SOURCES), check)
+        hash_batch_artifacts(pilot_root, 'batch_artifacts:pilot', check, pilot_receipt)
+        scan_dispositions(pilot_root, set(SOURCES), check, reconciled)
         for kind in SOURCES:
             units.append(audit_unit('pilot', 'Sitalica', kind, pilot_root, pilot_root))
         # remaining8 layout: <batch>/<species>/<kind>; inputs at the batch root.
         hash_batch_artifacts(batch_root, 'batch_artifacts:remaining8', check)
-        scan_dispositions(batch_root, set(REMAINING8_SPECIES) | {'logs'}, check)
+        scan_dispositions(batch_root, set(REMAINING8_SPECIES) | {'logs'}, check, reconciled)
         if (batch_root / 'logs').is_dir():
             scan_dispositions(batch_root / 'logs', set(), check)
         for species in REMAINING8_SPECIES:
@@ -556,12 +771,20 @@ def audit(blastx_root, out_dir, sacct_file):
                 check.add(f'{species}:species_root', False, f'missing {species_root}')
                 continue
             audit_species_root(species, species_root, species, check)
-            scan_dispositions(species_root, set(SOURCES), check)
+            scan_dispositions(species_root, set(SOURCES), check, reconciled)
             for kind in SOURCES:
                 units.append(audit_unit('remaining8', species, kind, species_root, batch_root))
         # Sibling dirs of the two batch roots (e.g. preflight_20260914/) --
         # enumerated with explicit dispositions, never silently skipped.
-        scan_dispositions(blastx_root, {PILOT_DIR, REMAINING8_DIR}, check)
+        scan_dispositions(blastx_root, {PILOT_DIR, REMAINING8_DIR}, check, reconciled)
+        # Unit hashing can take hours: detect changes since the initial small-tree binding.
+        for name, expected in reconciled.items():
+            try:
+                unchanged = historical_snapshot(Path(name)) == expected
+                detail = 'unchanged historical snapshot'
+            except (OSError, EvidenceError, UnicodeError) as exc:
+                unchanged, detail = False, str(exc)
+            check.add('reconciliation_final:' + name, unchanged, detail)
         for unit in units:
             launcher.write_json(out / 'units' / (unit['unit'].replace('/', '_') + '.json'), unit)
         failed_units = [u['unit'] for u in units if u['status'] != 'PASS']
@@ -589,13 +812,17 @@ def main(argv=None):
     p.add_argument('--out-dir', type=Path, required=True)
     p.add_argument('--sacct-file', type=Path, required=True,
                    help='sacct -P --format=JobID,State,ExitCode, with header; all allocation/batch/extern rows')
+    p.add_argument('--pilot-submission-receipt', type=Path)
+    p.add_argument('--reconciliation-manifest', type=Path)
+    p.add_argument('--reconciliation-sha256', help='independently reviewed manifest digest; no automatic waiver')
     args = p.parse_args(argv)
 
     def interrupted(signum, _frame):
         raise SystemExit(128 + signum)
     signal.signal(signal.SIGTERM, interrupted)
     signal.signal(signal.SIGINT, interrupted)
-    audit(args.blastx_root, args.out_dir, args.sacct_file)
+    audit(args.blastx_root, args.out_dir, args.sacct_file, args.pilot_submission_receipt,
+          args.reconciliation_manifest, args.reconciliation_sha256)
     return 0
 
 
