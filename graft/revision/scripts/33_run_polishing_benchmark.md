@@ -1,0 +1,56 @@
+# revision/scripts/33_run_polishing_benchmark.py
+
+- is_locked_arm · function · L182-L183 — def is_locked_arm(tool: str) -> bool
+- base_tool · function · L186-L188 — def base_tool(tool: str) -> str
+- prompt_script_for · function · L191-L192 — def prompt_script_for(tool: str) -> str
+- is_scratch_name · function · L286-L293 — def is_scratch_name(name: str) -> bool
+- assert_not_scratch · function · L296-L298 — def assert_not_scratch(path: object) -> None
+- _gff_attr · function · L310-L317 — def _gff_attr(attributes: str, key: str) -> str | None
+- ParsingErrors · class · L329-L338 — class ParsingErrors
+- parse_parsing_errors · function · L341-L353 — def parse_parsing_errors(text: str) -> ParsingErrors
+- parse_output_written · function · L356-L361 — def parse_output_written(text: str) -> str | None
+- preprocess_skips_as_oversized · function · L368-L397 — def preprocess_skips_as_oversized(start: int, fin: int) -> bool
+- count_gff3_features · function · L404-L416 — def count_gff3_features(path: Path, feature: str = "gene") -> int
+- md5_file · function · L419-L424 — def md5_file(path: Path) -> str
+- LossTooHigh · class · L431-L432 — class LossTooHigh(RuntimeError)
+- check_loss · function · L435-L449 — def check_loss(genes_in: int, genes_out: int, max_loss_fraction: float, context: str) -> None
+- build_remote_env_setup · function · L456-L461 — def build_remote_env_setup() -> str
+- build_local_subset · function · L464-L614 — def build_local_subset(tool: str, chrom: str, input_path: Path, subset_path: Path) -> dict
+- _expand_to_descendants · function · L523-L534 — def _expand_to_descendants(excluded: set[str]) -> None
+- build_prompt_mode_command · function · L617-L650 — def build_prompt_mode_command(remote_gff: str, remote_output: str, remote_db: str, remote_log: str, tool: str = "") -> str
+- build_chunk_remote_command · function · L653-L669 — def build_chunk_remote_command(tool: str, chrom: str) -> dict
+- build_ssh_argv · function · L672-L673 — def build_ssh_argv(remote_command: str, host: str = HOST) -> list[str]
+- build_rsync_fetch_argv · function · L676-L677 — def build_rsync_fetch_argv(remote_path: str, local_path: Path, host: str = HOST) -> list[str]
+- build_rsync_push_argv · function · L680-L681 — def build_rsync_push_argv(local_path: Path, remote_path: str, host: str = HOST) -> list[str]
+- default_ssh_run · function · L690-L691 — def default_ssh_run(argv: list[str]) -> subprocess.CompletedProcess
+- default_rsync_fetch · function · L694-L699 — def default_rsync_fetch(remote_path: str, local_path: Path, host: str = HOST) -> None
+- default_rsync_push · function · L702-L706 — def default_rsync_push(local_path: Path, remote_path: str, host: str = HOST) -> None
+- _read_remote_md5 · function · L709-L714 — def _read_remote_md5(remote_path: str, *, ssh_run, host: str) -> str
+- fetch_and_verify · function · L717-L734 — def fetch_and_verify(remote_path: str, local_path: Path, *, ssh_run=default_ssh_run, fetch=default_rsync_fetch, host: str = HOST) -> str
+- push_and_verify · function · L737-L749 — def push_and_verify(local_path: Path, remote_path: str, *, ssh_run=default_ssh_run, push=default_rsync_push, host: str = HOST) -> str
+- write_json · function · L756-L758 — def write_json(path: Path, data: dict) -> None
+- load_json · function · L761-L767 — def load_json(path: Path) -> dict | None
+- chunk_provenance_path · function · L786-L787 — def chunk_provenance_path(tool: str, chrom: str) -> Path
+- chunk_output_path · function · L790-L791 — def chunk_output_path(tool: str, chrom: str) -> Path
+- chunk_is_done · function · L794-L832 — def chunk_is_done(tool: str, chrom: str, expected_genes_in: int) -> bool
+- run_remote_chunk · function · L839-L1042 — def run_remote_chunk(tool: str, chrom: str, max_loss_fraction: float, *, ssh_run=default_ssh_run, fetch=default_rsync_fetch, push=default_rsync_push, host: str = HOST, max_unexplained_missing_loci: int = DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI) -> dict
+- _finish · function · L880-L885 — def _finish(status: str, reason: str | None = None) -> dict
+- ensure_chunk · function · L1045-L1080 — def ensure_chunk(tool: str, chrom: str, max_loss_fraction: float, *, ssh_run=default_ssh_run, fetch=default_rsync_fetch, push=default_rsync_push, host: str = HOST, force: bool = False, max_unexplained_missing_loci: int = DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI) -> dict
+- merge_gff3_files · function · L1087-L1103 — def merge_gff3_files(paths: list[Path], out_path: Path) -> int
+- _load_module · function · L1106-L1110 — def _load_module(name: str, path: Path) -> ModuleType
+- standardize_output · function · L1113-L1142 — def standardize_output(raw_path: Path, out_path: Path, tool: str, genome_dir: Path = LOCAL_GENOME_DIR, script_path: Path = STANDARDIZE_SCRIPT) -> None
+- filter_top_beam · function · L1145-L1156 — def filter_top_beam(in_path: Path, out_path: Path, script_path: Path = BEAM1_FILTER_SCRIPT) -> None
+- _first_attribute_value · function · L1163-L1175 — def _first_attribute_value(attributes: str) -> str | None
+- _gff_ids · function · L1178-L1193 — def _gff_ids(path: Path, feature: str) -> set[str]
+- _gff_first_attr_values · function · L1196-L1212 — def _gff_first_attr_values(path: Path, feature: str) -> set[str]
+- _gff_gm_values · function · L1215-L1232 — def _gff_gm_values(path: Path) -> set[str]
+- write_missing_loci_manifest · function · L1251-L1358 — def write_missing_loci_manifest(chunk_results: list[dict], final_path: Path, out_path: Path) -> dict
+- _reason · function · L1335-L1340 — def _reason(locus: str) -> str
+- get_host_git_commit · function · L1365-L1370 — def get_host_git_commit(*, ssh_run=default_ssh_run, host: str = HOST) -> str
+- get_and_verify_host_commit · function · L1373-L1391 — def get_and_verify_host_commit(*, ssh_run=default_ssh_run, host: str = HOST) -> str
+- verify_host_genome · function · L1394-L1403 — def verify_host_genome(*, ssh_run=default_ssh_run, host: str = HOST) -> str
+- verify_host_input · function · L1406-L1419 — def verify_host_input(tool: str, *, ssh_run=default_ssh_run, host: str = HOST) -> str
+- _is_full_genome · function · L1426-L1427 — def _is_full_genome(chromosomes: tuple[str, ...]) -> bool
+- output_stub · function · L1430-L1441 — def output_stub(tool: str, chromosomes: tuple[str, ...]) -> str
+- run_tool_pipeline · function · L1444-L1647 — def run_tool_pipeline(tool: str, *, chromosomes: tuple[str, ...] = CHROMOSOMES, max_loss_fraction: float = DEFAULT_MAX_LOSS_FRACTION, ssh_run=default_ssh_run, fetch=default_rsync_fetch, push=default_rsync_push, host: str = HOST, force: bool = False, skip_preflight: bool = False, acknowledge_high_loss_threshold: bool = False, max_unexplained_missing_loci: int = DEFAULT_MAX_UNEXPLAINED_MISSING_LOCI, invocation_args: dict | None = None) -> dict
+- main · function · L1654-L1725 — def main(argv: list[str] | None = None) -> int

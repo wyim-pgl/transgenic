@@ -1,0 +1,22 @@
+# tests/test_mvp_model.py
+
+- tiny_config · function · L15-L25 — def tiny_config(**kwargs)
+- TinyHyena · class · L28-L34 — class TinyHyena(nn.Module)
+- __init__ · method · L29-L31 — def __init__(self, config)
+- forward · method · L33-L34 — def forward(self, input_ids)
+- MVPModelTests · class · L37-L220 — class MVPModelTests(unittest.TestCase)
+- setUpClass · method · L39-L41 — def setUpClass(cls)
+- tearDownClass · method · L44-L45 — def tearDownClass(cls)
+- setUp · method · L47-L57 — def setUp(self)
+- model · method · L59-L60 — def model(self, **kwargs)
+- test_config_validation_roundtrip · method · L62-L70 — def test_config_validation_roundtrip(self)
+- test_disabled_keys_rng_match_preincrement_baseline · method · L72-L81 — def test_disabled_keys_rng_match_preincrement_baseline(self): # Captured from abca40f, torch 2.6.0 / transformers 4.46.3.
+- test_projection_zero_after_nested_initialization · method · L83-L90 — def test_projection_zero_after_nested_initialization(self)
+- test_step_zero_bitwise_equal_after_shared_weights_loaded · method · L92-L102 — def test_step_zero_bitwise_equal_after_shared_weights_loaded(self)
+- test_nonzero_fusion_before_position_and_downsampling_and_gradient · method · L104-L127 — def test_nonzero_fusion_before_position_and_downsampling_and_gradient(self)
+- test_zero_projection_receives_training_loss_gradient · method · L129-L135 — def test_zero_projection_receives_training_loss_gradient(self)
+- test_invalid_tracks_fail_explicitly · method · L137-L145 — def test_invalid_tracks_fail_explicitly(self)
+- test_precomputed_states_not_fused_twice · method · L147-L158 — def test_precomputed_states_not_fused_twice(self)
+- test_generation_tracks_once_cache_and_teacher_forcing_agree · method · L160-L185 — def test_generation_tracks_once_cache_and_teacher_forcing_agree(self)
+- test_checkpoint_roundtrips_preserve_aliases_and_learned_projection · method · L187-L211 — def test_checkpoint_roundtrips_preserve_aliases_and_learned_projection(self)
+- test_baseline_actual_wrappers · method · L213-L220 — def test_baseline_actual_wrappers(self)

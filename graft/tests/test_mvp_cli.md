@@ -1,0 +1,22 @@
+# tests/test_mvp_cli.py
+
+- canonical · function · L32-L33 — def canonical(path: Path, value: dict) -> None
+- test_help_is_lazy_and_keeps_experimental_label · function · L36-L47 — def test_help_is_lazy_and_keeps_experimental_label()
+- test_public_parser_rejects_non_mvp_options · function · L53-L55 — def test_public_parser_rejects_non_mvp_options(option)
+- test_public_parser_rejects_unapproved_seed · function · L59-L61 — def test_public_parser_rejects_unapproved_seed(seed)
+- test_actual_mode_without_readiness_stops_before_file_or_runtime_access · function · L64-L76 — def test_actual_mode_without_readiness_stops_before_file_or_runtime_access()
+- test_real_candidate_companions_validate_without_production_authorization · function · L79-L92 — def test_real_candidate_companions_validate_without_production_authorization()
+- test_candidate_rejects_production_scope_even_if_technically_accepted · function · L95-L102 — def test_candidate_rejects_production_scope_even_if_technically_accepted(tmp_path)
+- test_candidate_rejects_companion_digest_mismatch · function · L105-L111 — def test_candidate_rejects_companion_digest_mismatch(tmp_path)
+- test_candidate_rejects_invalid_qc_reconciliation · function · L114-L121 — def test_candidate_rejects_invalid_qc_reconciliation(tmp_path)
+- test_candidate_rejects_malformed_source_count_as_validation_error · function · L124-L131 — def test_candidate_rejects_malformed_source_count_as_validation_error(tmp_path)
+- tiny_candidate · function · L134-L157 — def tiny_candidate(tmp_path)
+- test_candidate_artifacts_bind_hashes_and_exact_metadata · function · L160-L164 — def test_candidate_artifacts_bind_hashes_and_exact_metadata(tmp_path)
+- test_candidate_artifacts_reject_wal_and_metadata_mutation · function · L167-L175 — def test_candidate_artifacts_reject_wal_and_metadata_mutation(tmp_path)
+- readiness_record · function · L178-L202 — def readiness_record(paths, candidate, seed=1)
+- test_bound_forward_compile_has_no_eager_fallback · function · L205-L218 — def test_bound_forward_compile_has_no_eager_fallback()
+- Model · class · L208-L210 — class Model(torch.nn.Module)
+- forward · method · L209-L210 — def forward(self, value)
+- raising_backend · function · L212-L213 — def raising_backend(graph, inputs)
+- test_actual_two_rank_tiny_training_to_atomic_final · function · L221-L235 — def test_actual_two_rank_tiny_training_to_atomic_final(tmp_path)
+- test_launch_readiness_binds_recipe_sources_and_evidence · function · L238-L265 — def test_launch_readiness_binds_recipe_sources_and_evidence(tmp_path)

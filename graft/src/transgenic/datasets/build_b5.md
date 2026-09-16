@@ -1,0 +1,23 @@
+# src/transgenic/datasets/build_b5.py
+
+- _load_gsf_contract · function · L22-L37 — def _load_gsf_contract()
+- rejection_class · function · L51-L71 — def rejection_class(reason: str) -> str
+- tier_margin_summary · function · L74-L95 — def tier_margin_summary(con, species_id: str, genome: Dict[str, str]) -> Dict
+- sha256 · function · L98-L103 — def sha256(path: str) -> str
+- load_fasta · function · L106-L119 — def load_fasta(path: str) -> Dict[str, str]
+- revcomp · function · L122-L123 — def revcomp(seq: str) -> str
+- validate_cds · function · L126-L143 — def validate_cds(gsf: str, seq: str) -> Tuple[bool, str]
+- ensure_schema · function · L146-L163 — def ensure_schema(con: duckdb.DuckDBPyConnection) -> None
+- read_split_table · function · L166-L171 — def read_split_table(path: str) -> Tuple[Dict[Tuple[str, str], Dict[str, str]], str]
+- _window_for · function · L174-L190 — def _window_for(gene: gc.Gene, chrom_len: int, max_len: int, policy: str = gc.WINDOW_POLICY, rng=None, tier_up_prob: float = 0.0)
+- loss_mask_decision · function · L193-L212 — def loss_mask_decision(gene_flags: Dict[str, set], transcript_ids) -> Tuple[float, List[str], List[str]]
+- read_qc_flags · function · L215-L231 — def read_qc_flags(path) -> Dict[Tuple[str, str], Dict[str, set]]
+- token_cap_for · function · L234-L237 — def token_cap_for(window_policy: str) -> int
+- flags_for_gene · function · L240-L251 — def flags_for_gene(qc_flags, species_id: str, gene) -> Dict[str, set]
+- build_species · function · L254-L275 — def build_species(con, species_id: str, fasta: str, gff: str, split_rows: Dict[Tuple[str, str], Dict[str, str]], split_sha: str, rc: str = "none", add_extra: int = 0, seed: int = 123, max_len: int = gc.MAX_WINDOW, clean: bool = False, mode: str = "train", git_commit: str = "", fasta_sha: Optional[str] = None, gff_sha: Optional[str] = None, allow_missing_split: bool = False, qc_flags: Optional[Dict[Tuple[str, str], Dict[str, set]]] = None, window_policy: str = gc.WINDOW_POLICY, tier_up_prob: float = 0.0) -> Dict
+- _build_species_body · function · L278-L367 — def _build_species_body(con, species_id, fasta, gff, split_rows, split_sha, rc, add_extra, seed, max_len, clean, mode, git_commit, fasta_sha, gff_sha, allow_missing_split, qc_flags, genome, rng, inserted, rc_rows, rejected, window_policy=gc.WINDOW_POLICY, tier_up_prob=0.0)
+- read_species_manifest · function · L370-L372 — def read_species_manifest(path: str) -> List[Dict[str, str]]
+- build_b5_database · function · L375-L411 — def build_b5_database(db: str, species_manifest: str, split_table: str, rc: str = "isoform-only", add_extra: int = 0, seed: int = 123, max_len: int = gc.MAX_WINDOW, clean: bool = False, excluded_species: Iterable[str] = ("Zmays",), verify_md5: bool = True, only_species: Optional[Set[str]] = None, git_commit: str = "", qc_flags_path: Optional["str | List[str]"] = None, window_policy: str = gc.WINDOW_POLICY, tier_up_prob: float = 0.0) -> List[Dict]
+- validate_b5_database · function · L414-L485 — def validate_b5_database(db: str, excluded_species: Iterable[str] = ("Zmays",), maize_patterns: Tuple[str, ...] = ("Zm", "GRMZM")) -> Dict
+- _tile_split · function · L488-L496 — def _tile_split(splits: List[Optional[str]], strict: bool) -> Optional[str]
+- _build_species_tiles · function · L499-L642 — def _build_species_tiles(con, species_id, fasta, gff, split_rows, split_sha, rc, seed, clean, mode, git_commit, fasta_sha, gff_sha, allow_missing_split, qc_flags, genome, rng, rejected, tier_up_prob)

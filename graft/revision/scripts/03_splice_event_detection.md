@@ -1,0 +1,32 @@
+# revision/scripts/03_splice_event_detection.py
+
+- Exon · class · L36-L54 — class Exon
+- __hash__ · method · L43-L44 — def __hash__(self)
+- __eq__ · method · L46-L50 — def __eq__(self, other)
+- length · method · L53-L54 — def length(self)
+- Intron · class · L58-L72 — class Intron
+- __hash__ · method · L65-L66 — def __hash__(self)
+- __eq__ · method · L68-L72 — def __eq__(self, other)
+- Transcript · class · L76-L100 — class Transcript
+- introns · method · L85-L100 — def introns(self) -> List[Intron]
+- SpliceEvent · class · L104-L133 — class SpliceEvent
+- __hash__ · method · L121-L122 — def __hash__(self)
+- __eq__ · method · L124-L128 — def __eq__(self, other)
+- event_id · method · L131-L133 — def event_id(self) -> str
+- EventComparisonResult · class · L137-L160 — class EventComparisonResult
+- recall · method · L145-L148 — def recall(self) -> float
+- precision · method · L151-L154 — def precision(self) -> float
+- f1 · method · L157-L160 — def f1(self) -> float
+- parse_gtf · function · L163-L256 — def parse_gtf(gtf_path: Path) -> Dict[str, List[Transcript]]
+- detect_exon_skipping · function · L259-L309 — def detect_exon_skipping(gene_transcripts: List[Transcript]) -> Set[SpliceEvent]
+- donor_site · function · L312-L320 — def donor_site(intron: Intron) -> int
+- acceptor_site · function · L323-L325 — def acceptor_site(intron: Intron) -> int
+- detect_alternative_5ss · function · L328-L364 — def detect_alternative_5ss(gene_transcripts: List[Transcript]) -> Set[SpliceEvent]
+- detect_alternative_3ss · function · L367-L401 — def detect_alternative_3ss(gene_transcripts: List[Transcript]) -> Set[SpliceEvent]
+- detect_intron_retention · function · L404-L439 — def detect_intron_retention(gene_transcripts: List[Transcript]) -> Set[SpliceEvent]
+- detect_all_events · function · L442-L468 — def detect_all_events(genes: Dict[str, List[Transcript]]) -> Dict[str, Set[SpliceEvent]]
+- compare_events · function · L471-L497 — def compare_events( ref_events: Dict[str, Set[SpliceEvent]], pred_events: Dict[str, Set[SpliceEvent]] ) -> Dict[str, EventComparisonResult]
+- generate_event_report · function · L500-L540 — def generate_event_report( results: Dict[str, EventComparisonResult], output_path: Path )
+- print_results_table · function · L543-L598 — def print_results_table(results: Dict[str, EventComparisonResult])
+- save_events_to_bed · function · L601-L619 — def save_events_to_bed( events: Dict[str, Set[SpliceEvent]], output_dir: Path, prefix: str )
+- main · function · L631-L689 — def main(reference: str, predicted: str, output_dir: str, prefix: str)

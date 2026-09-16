@@ -1,0 +1,21 @@
+# tests/mvp_finalize_probe.py
+
+- Config · class · L23-L25 — class Config
+- to_dict · method · L24-L25 — def to_dict(self)
+- PairedDataset · class · L28-L47 — class PairedDataset(Dataset)
+- __init__ · method · L29-L30 — def __init__(self, size, case)
+- __len__ · method · L32-L33 — def __len__(self)
+- __getitem__ · method · L35-L47 — def __getitem__(self, index)
+- Model · class · L50-L69 — class Model(torch.nn.Module)
+- __init__ · method · L51-L59 — def __init__(self, rank=0, inconsistent=False)
+- forward · method · L61-L69 — def forward(self, input_ids, attention_mask=None, labels=None, evidence_tracks=None)
+- metadata · function · L72-L122 — def metadata()
+- main · function · L125-L251 — def main(case)
+- backend · function · L136-L138 — def backend(graph, example_inputs)
+- ThrowingIterable · class · L151-L153 — class ThrowingIterable
+- __iter__ · method · L152-L153 — def __iter__(self)
+- HostileList · class · L159-L161 — class HostileList(list)
+- __iter__ · method · L160-L161 — def __iter__(self)
+- padded_metric · function · L168-L171 — def padded_metric(*args, **kwargs)
+- forbidden_payload · function · L173-L176 — def forbidden_payload(*args, **kwargs)
+- forbidden_object_collective · function · L189-L192 — def forbidden_object_collective(*args, **kwargs)

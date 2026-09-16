@@ -1,0 +1,39 @@
+# src/transgenic/training/mvp_finalize.py
+
+- PublicationDurabilityError · class · L51-L57 — class PublicationDurabilityError(OSError)
+- __init__ · method · L54-L57 — def __init__(self, message: str, final_dir: Path | str)
+- _canonical_json · function · L60-L65 — def _canonical_json(value: Any) -> bytes
+- _identity · function · L68-L76 — def _identity(value: Any, name: str) -> None
+- _is_sha256 · function · L79-L81 — def _is_sha256(value: Any) -> bool
+- _validate_initialization_audit · function · L84-L178 — def _validate_initialization_audit(initialization: Any) -> None
+- _validate_metadata · function · L181-L239 — def _validate_metadata(metadata: Any, training_summary: Any) -> None
+- _validate_bounds · function · L242-L248 — def _validate_bounds(records: list[dict]) -> bytes
+- _bounded_text · function · L251-L257 — def _bounded_text(value: str, limit: int) -> tuple[str, bool]
+- _status · function · L260-L276 — def _status(error: BaseException | None = None) -> dict
+- _status_bytes · function · L279-L288 — def _status_bytes(status: dict) -> bytes
+- _decode_status · function · L291-L294 — def _decode_status(payload: bytes) -> dict
+- _raise_status · function · L297-L304 — def _raise_status(status: dict) -> None
+- _validate_transport_lengths · function · L307-L318 — def _validate_transport_lengths(lengths: list[int]) -> int
+- _transport_lengths · function · L321-L332 — def _transport_lengths(accelerator, local_error: Exception | None, payload: bytes) -> list[int]
+- _gather_payload_bytes · function · L335-L345 — def _gather_payload_bytes(accelerator, payload: bytes, lengths: list[int]) -> list[bytes]
+- _gather_record_payload_bytes · function · L348-L349 — def _gather_record_payload_bytes(accelerator, payload: bytes, lengths: list[int]) -> list[bytes]
+- _broadcast_payload_bytes · function · L352-L364 — def _broadcast_payload_bytes(accelerator, payload: bytes) -> bytes
+- _collect_statuses · function · L367-L370 — def _collect_statuses(accelerator, status: dict) -> list[dict]
+- _broadcast_status · function · L373-L375 — def _broadcast_status(accelerator, status: dict | None) -> dict
+- _collective_preflight · function · L378-L386 — def _collective_preflight(accelerator, operation) -> None
+- _all_ints · function · L389-L393 — def _all_ints(accelerator, value: int) -> list[int]
+- _all_fixed_payloads_equal · function · L396-L399 — def _all_fixed_payloads_equal(accelerator, payload: bytes) -> bool
+- _validated_inventory · function · L402-L411 — def _validated_inventory(expected_rns) -> list[int]
+- _validate_evaluation_inputs · function · L414-L438 — def _validate_evaluation_inputs(accelerator, model, eval_loader, expected, metadata, training_summary) -> None
+- _to_device · function · L441-L450 — def _to_device(value: Any, device) -> Any
+- _save_target · function · L453-L468 — def _save_target(accelerator, model)
+- _write_sync · function · L471-L475 — def _write_sync(path: Path, payload: bytes) -> None
+- _sha256 · function · L478-L483 — def _sha256(path: Path) -> str
+- _write_payload_files · function · L486-L506 — def _write_payload_files(stage: Path, target, paired_summary: dict, metadata: dict, training_summary: dict) -> list[str]
+- _write_manifest · function · L509-L526 — def _write_manifest(stage: Path, names: list[str]) -> None
+- _write_done_marker · function · L529-L535 — def _write_done_marker(stage: Path) -> None
+- _rename_noreplace · function · L538-L553 — def _rename_noreplace(source: Path, destination: Path) -> None
+- _fsync_parent · function · L556-L561 — def _fsync_parent(final_dir: Path) -> None
+- _publish_final · function · L564-L594 — def _publish_final(accelerator, model, paired_summary: dict, final_dir: Path | str, *, metadata: dict, training_summary: dict) -> dict
+- evaluate_and_publish_final · function · L597-L660 — def evaluate_and_publish_final(accelerator, model, eval_loader, expected_rns, final_dir, *, metadata, training_summary)
+- validate_preflight · function · L601-L605 — def validate_preflight()

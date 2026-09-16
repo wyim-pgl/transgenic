@@ -1,0 +1,47 @@
+# src/transgenic/model/modeling_HyenaTransgenic.py
+
+- LegacyCacheWrapper · class · L54-L91 — class LegacyCacheWrapper
+- __init__ · method · L61-L68 — def __init__(self, past_key_values)
+- get_seq_length · method · L70-L75 — def get_seq_length(self, layer_idx=0)
+- __iter__ · method · L77-L79 — def __iter__(self)
+- __getitem__ · method · L81-L83 — def __getitem__(self, idx)
+- __len__ · method · L85-L87 — def __len__(self)
+- to_legacy_cache · method · L89-L91 — def to_legacy_cache(self)
+- shift_tokens_right · function · L98-L123 — def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int)
+- init_weights · function · L126-L153 — def init_weights(m)
+- LEDSeq2SeqLMOutput · class · L163-L180 — class LEDSeq2SeqLMOutput(ModelOutput)
+- LEDSeq2SeqModelOutput · class · L184-L200 — class LEDSeq2SeqModelOutput(ModelOutput)
+- HyenaModelOutput · class · L204-L210 — class HyenaModelOutput(ModelOutput)
+- TransgenicPreTrainedModel · class · L217-L249 — class TransgenicPreTrainedModel(PreTrainedModel)
+- _init_weights · method · L225-L238 — def _init_weights(self, module)
+- dummy_inputs · method · L241-L249 — def dummy_inputs(self)
+- HyenaDownsampleWithRelPosBias · class · L256-L393 — class HyenaDownsampleWithRelPosBias(nn.Module)
+- __init__ · method · L289-L335 — def __init__(self, in_channels, out_channels=None)
+- forward · method · L337-L393 — def forward(self, x)
+- HyenaEncoder · class · L400-L556 — class HyenaEncoder(nn.Module)
+- __init__ · method · L411-L529 — def __init__(self, config)
+- _adapt_tensor_shape · function · L445-L466 — def _adapt_tensor_shape(src: torch.Tensor, tgt: torch.Tensor) -> Optional[torch.Tensor]: # Adapt pretrained tensor into target shape via per-dimension tiling/truncation. # This preserves learned structure much better than random init for widened models.
+- forward · method · L531-L556 — def forward(self, input_ids, segLabels=None, *args, evidence_tracks=None, **kwargs)
+- SinusoidalPositionalEmbedding · class · L563-L606 — class SinusoidalPositionalEmbedding(torch.nn.Module)
+- __init__ · method · L577-L595 — def __init__(self, max_len, d_model)
+- forward · method · L597-L606 — def forward(self, x)
+- transgenicModel · class · L613-L796 — class transgenicModel(TransgenicPreTrainedModel)
+- __init__ · method · L629-L666 — def __init__(self, config)
+- get_input_embeddings · method · L668-L669 — def get_input_embeddings(self)
+- set_input_embeddings · method · L671-L673 — def set_input_embeddings(self, value)
+- get_encoder · method · L675-L676 — def get_encoder(self)
+- get_decoder · method · L678-L679 — def get_decoder(self)
+- forward · method · L681-L796 — def forward( self, input_ids: Optional[torch.LongTensor] = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, global_attention_mask: Optional[torch.FloatTensor] = None, past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None, evidence_tracks: Optional[torch.Tensor] = None, ) -> Union[Tuple[torch.Tensor], LEDSeq2SeqModelOutput]
+- transgenicForConditionalGeneration · class · L803-L1107 — class transgenicForConditionalGeneration(TransgenicPreTrainedModel, GenerationMixin)
+- __init__ · method · L821-L855 — def __init__(self, config, unlink=False)
+- get_encoder · method · L857-L858 — def get_encoder(self)
+- get_decoder · method · L860-L861 — def get_decoder(self)
+- resize_token_embeddings · method · L863-L867 — def resize_token_embeddings(self, new_num_tokens: int, pad_to_multiple_of: Optional[int] = None) -> nn.Embedding
+- _resize_final_logits_bias · method · L869-L878 — def _resize_final_logits_bias(self, new_num_tokens: int) -> None
+- get_output_embeddings · method · L880-L881 — def get_output_embeddings(self)
+- set_output_embeddings · method · L883-L884 — def set_output_embeddings(self, new_embeddings)
+- initialize_weights · method · L886-L896 — def initialize_weights(self)
+- forward · method · L898-L1045 — def forward( self, input_ids: Optional[torch.LongTensor] = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, global_attention_mask: Optional[torch.FloatTensor] = None, past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, labels: Optional[torch.LongTensor] = None, transcript_counts: Optional[torch.FloatTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None, evidence_tracks: Optional[torch.Tensor] = None, ) -> Union[Tuple[torch.Tensor], LEDSeq2SeqLMOutput]
+- prepare_inputs_for_generation · method · L1047-L1084 — def prepare_inputs_for_generation( self, decoder_input_ids, past_key_values=None, attention_mask=None, global_attention_mask=None, head_mask=None, decoder_head_mask=None, cross_attn_head_mask=None, use_cache=None, encoder_outputs=None, **kwargs, )
+- prepare_decoder_input_ids_from_labels · method · L1086-L1088 — def prepare_decoder_input_ids_from_labels(self, labels: torch.Tensor)
+- _reorder_cache · method · L1091-L1107 — def _reorder_cache(past_key_values, beam_idx)

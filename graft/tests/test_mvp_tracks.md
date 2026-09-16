@@ -1,0 +1,15 @@
+# tests/test_mvp_tracks.py
+
+- raster · function · L15-L20 — def raster()
+- database · function · L23-L29 — def database()
+- add · function · L32-L39 — def add(con, mid='m', strand='-', blocks=((1050,1100),(1200,1250)), junctions=((1100,1199),), cause=None)
+- tracks · function · L42-L45 — def tracks(con, **kwargs)
+- test_minus_junction_identity_at_nonzero_offset_and_rc · function · L49-L61 — def test_minus_junction_identity_at_nonzero_offset_and_rc(rn)
+- test_junction_query_is_not_restricted_to_overlapping_blocks · function · L64-L70 — def test_junction_query_is_not_restricted_to_overlapping_blocks()
+- test_distinct_molecules_not_block_or_junction_rows_and_coverage_clipping · function · L73-L84 — def test_distinct_molecules_not_block_or_junction_rows_and_coverage_clipping()
+- test_unknown_and_conflicting_coverage_never_directional_junctions · function · L87-L91 — def test_unknown_and_conflicting_coverage_never_directional_junctions()
+- test_source_empty_dropped_fraction_zero_and_output_oriented_mask · function · L95-L105 — def test_source_empty_dropped_fraction_zero_and_output_oriented_mask(rc)
+- test_retained_heldout_and_no_primary_populations_do_not_mix · function · L108-L120 — def test_retained_heldout_and_no_primary_populations_do_not_mix()
+- test_exact_hash_nested_order_and_tile_stability · function · L123-L141 — def test_exact_hash_nested_order_and_tile_stability()
+- test_bad_interface_arguments_fail_closed · function · L146-L148 — def test_bad_interface_arguments_fail_closed(kwargs)
+- test_real_bam_to_tracks_and_129024_cpu_smoke · function · L151-L165 — def test_real_bam_to_tracks_and_129024_cpu_smoke(tmp_path)
