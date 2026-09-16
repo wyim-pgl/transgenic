@@ -129,6 +129,11 @@ python -m pytest revision/scripts/tests/test_est_blastx.py \
   revision/scripts/tests/test_est_hsp_expanded.py -q
 ```
 
+Verified result: **35 CPU tests passed** (13 new diagnostic tests and 22 historical
+launcher/fixture tests). The fetched first-job read-only recheck also completed
+successfully for all 12 rows. Historical source/gate files have zero diff from
+the pinned base.
+
 The expanded family has **not** run on DIAMOND. No fabricated raw17, relaxed
 flags, or CPU-generated engine success is used. CPU tests cannot prove trace
 elicitation or installed-engine behavior. Strategic advisor consultation was
@@ -138,8 +143,21 @@ execution remain mandatory.
 
 ## Controller execution handoff
 
+Source/test implementation commit:
+`a98f5c0cc08e6f6a5ac27905d71a4478e9a0e789`.
 Use the companion `est_hsp_expanded_20260916_1541.sbatch` after reviewing source
-and pins. Hard allocation: **2 CPUs, 4 GB, 30 minutes**, no GPU/array/network or
+and pins. The wrapper is a subsequent documentation-only commit and stages the
+source commit above. Complete non-stdlib runtime import pins measured after that
+source commit:
+
+| File under revision/scripts | SHA256 |
+|---|---|
+| evidence/est_hsp_expanded.py | `aaa8348b4e5d47d43c065857e3bb06509f63086a6d2c79f35f93e88bc211b3e4` |
+| evidence/est_blastx.py | `5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291` |
+| 64_orthodb_filter.py | `32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302` |
+
+The interpreter itself has no project imports. The separate read-only recheck
+script is not imported by the engine runner and is not part of its closure. Hard allocation: **2 CPUs, 4 GB, 30 minutes**, no GPU/array/network or
 production inputs. This is a bounded estimate for 144 short synthetic queries,
 not measured runtime/RSS. Do not increase automatically on failure.
 
