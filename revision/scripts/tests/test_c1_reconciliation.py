@@ -283,3 +283,98 @@ def test_integration_retains_18_units_and_semantic_gates(tmp_path, monkeypatch, 
     assert result['status'] == ('PASS' if valid else 'FAIL')
     assert not result['clean_accounting'] and not result['accepted_phase_evidence'] and not result['production_authorized']
     assert 'UNRESOLVED' in result['sacct_note']
+
+
+@pytest.mark.parametrize('malformed', ['csv_field', 'deep_json'])
+def test_parser_limits_preserve_18_unit_inventory(tmp_path, monkeypatch, malformed):
+    tree, sacct, _, path, data = manifest_fixture(tmp_path, monkeypatch)
+    if malformed == 'csv_field':
+        capture = tmp_path / 'oversized-accounting.psv'
+        capture.write_text('JobID|State|ExitCode\n' + 'x' * (audit.csv.field_size_limit() + 1)
+                           + '|COMPLETED|0:0\n')
+        data['accounting'] = {'path': str(capture), 'sha256': audit.launcher.sha256(capture)}
+        path.write_text(json.dumps(data))
+    else:
+        path.write_text('[' * 1100 + '0' + ']' * 1100)
+    out = tmp_path / 'out'
+    with pytest.raises(ValueError, match='audit FAILED'):
+        audit.audit(tree, out, sacct, RECEIPT, path, audit.launcher.sha256(path))
+    result = json.loads((out / 'rollup.json').read_text())
+    assert result['status'] == 'FAIL' and result['units_audited'] == 18
+    assert result['failed_units'] == []
+    assert result['tree_checks']['historical_reconciliation']['status'] == 'FAIL'
+    assert len(list((out / 'units').glob('*.json'))) == 18
+    assert (out / 'FAILED.json').exists() and not (out / 'DONE').exists()
+
+
+@pytest.mark.parametrize('target', ['pilot_wrapper', 'array_wrapper', 'pilot_log', 'array_log'])
+@pytest.mark.parametrize('mutation', ['bytes', 'delete', 'symlink'])
+def test_late_producer_artifact_changes_preserve_failed_inventory(tmp_path, monkeypatch, target, mutation):
+    tree, sacct, root, path, _ = manifest_fixture(tmp_path, monkeypatch)
+    batch = tree / audit.REMAINING8_DIR
+    artifact = {'pilot_wrapper': root / 'run.sbatch', 'array_wrapper': batch / 'run.sbatch',
+                'pilot_log': root / 'slurm-6163851.out',
+                'array_log': batch / 'logs/6164049_0.err'}[target]
+    original = audit.audit_unit
+    mutated = False
+    def mutate_after_binding(*args):
+        nonlocal mutated
+        if not mutated:
+            before = artifact.read_bytes()
+            if mutation == 'bytes':
+                # Equal length where possible: size checks alone cannot detect this.
+                artifact.write_bytes(b'x' * len(before) if before else b'changed')
+            else:
+                artifact.unlink()
+                if mutation == 'symlink':
+                    replacement = tmp_path / 'replacement'
+                    replacement.write_bytes(before)
+                    artifact.symlink_to(replacement)
+            mutated = True
+        return original(*args)
+    monkeypatch.setattr(audit, 'audit_unit', mutate_after_binding)
+    out = tmp_path / 'out'
+    with pytest.raises(ValueError, match='audit FAILED'):
+        audit.audit(tree, out, sacct, RECEIPT, path, audit.launcher.sha256(path))
+    result = json.loads((out / 'rollup.json').read_text())
+    assert result['status'] == 'FAIL' and result['units_audited'] == 18
+    assert result['failed_units'] == []
+    assert result['tree_checks']['batch_artifact_final:' + str(artifact)]['status'] == 'FAIL'
+    assert len(list((out / 'units').glob('*.json'))) == 18
+    assert (out / 'FAILED.json').exists() and not (out / 'DONE').exists()
+
+
+def test_final_checks_do_not_rehash_payload_or_age_out_queue(tmp_path, monkeypatch):
+    tree, sacct, _, path, _ = manifest_fixture(tmp_path, monkeypatch)
+    original_unit, original_hash = audit.audit_unit, audit.launcher.sha256
+    real_datetime = audit.datetime.datetime
+    class Later(real_datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return real_datetime.now(tz) + audit.datetime.timedelta(hours=2)
+    count = 0
+    def no_payload_hash(path):
+        assert not str(path).endswith(('.raw13.tsv', '.dmnd', '.filtered.fa'))
+        return original_hash(path)
+    def finish_units(*args):
+        nonlocal count
+        result = original_unit(*args)
+        count += 1
+        if count == 18:
+            monkeypatch.setattr(audit.datetime, 'datetime', Later)
+            monkeypatch.setattr(audit.launcher, 'sha256', no_payload_hash)
+        return result
+    monkeypatch.setattr(audit, 'audit_unit', finish_units)
+    result = audit.audit(tree, tmp_path / 'out', sacct, RECEIPT, path, original_hash(path))
+    assert result['status'] == 'PASS' and result['units_audited'] == 18
+    final = [c for name, c in result['tree_checks'].items() if name.startswith('batch_artifact_final:')]
+    assert len(final) == 20 and all(c['status'] == 'PASS' for c in final)
+
+
+def test_reconciliation_programmer_error_still_propagates(tmp_path, monkeypatch):
+    tree, sacct, _, path, _ = manifest_fixture(tmp_path, monkeypatch)
+    def broken(*args):
+        raise TypeError('programmer defect')
+    monkeypatch.setattr(audit, 'completed_jobs', broken)
+    with pytest.raises(TypeError, match='programmer defect'):
+        audit.load_reconciliation(path, audit.launcher.sha256(path), tree, sacct.read_text(), audit.Check())

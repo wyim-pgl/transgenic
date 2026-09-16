@@ -619,7 +619,8 @@ def load_reconciliation(path, digest, root, sacct_text, check):
         check.add('historical_reconciliation', True, {'manifest': str(path), 'sha256': digest,
                   'evidence': data, 'note': 'historical dispositions only; extern and scientific gates unresolved'})
         return reconciled
-    except (OSError, ValueError, UnicodeError) as exc:
+    except (OSError, ValueError, UnicodeError, csv.Error, RecursionError) as exc:
+        # External CSV/JSON parser limits are failed evidence, not an inventory abort.
         check.add('historical_reconciliation', False, {'manifest': str(path), 'error': str(exc)})
         return {}
 
@@ -661,6 +662,11 @@ def scan_dispositions(root, known, check, reconciled=None):
     return entries
 
 
+def required_batch_logs(layout):
+    return ({f'logs/6164049_{i}.{ext}' for i in range(8) for ext in ('out', 'err')}
+            if layout == 'remaining8' else {'slurm-6163851.out', 'slurm-6163851.err'})
+
+
 def hash_batch_artifacts(root, check_name, check, pilot_receipt=None):
     """Bind wrapper bytes; require receipt-backed log names, never Slurm defaults."""
     layout = check_name.rsplit(':', 1)[-1]
@@ -669,7 +675,7 @@ def hash_batch_artifacts(root, check_name, check, pilot_receipt=None):
     hashed = {}
     for pattern in ('*.sbatch', '*.out', '*.err', 'logs/*.out', 'logs/*.err'):
         for p in sorted(root.glob(pattern)):
-            if p.is_file() and not p.is_symlink():
+            if regular_path(p):
                 hashed[str(p.relative_to(root))] = launcher.sha256(p)
     scripts = [name for name, digest in hashed.items()
                if name.endswith('.sbatch') and digest == APPROVED_WRAPPER_SHA256[layout]]
@@ -677,11 +683,11 @@ def hash_batch_artifacts(root, check_name, check, pilot_receipt=None):
               {'approved_sha256': APPROVED_WRAPPER_SHA256[layout], 'matched': scripts})
     if layout == 'remaining8':
         # notes/RESTART_HANDOFF_20260915.md:38 records these submission paths.
-        required = {f'logs/6164049_{i}.{ext}' for i in range(8) for ext in ('out', 'err')}
+        required = required_batch_logs(layout)
         missing = sorted(required - set(hashed))
         check.add(check_name + ':logs', not missing, {'missing': missing})
     else:
-        detail = {'required': ['slurm-6163851.out', 'slurm-6163851.err']}
+        detail = {'required': sorted(required_batch_logs(layout))}
         try:
             require_evidence(pilot_receipt is not None, 'UNRESOLVED pilot log-layout receipt absent')
             receipt = Path(pilot_receipt)
@@ -754,14 +760,27 @@ def audit(blastx_root, out_dir, sacct_file, pilot_receipt=None,
             launcher.write_json(out / 'rollup.json',
                                 {'status': 'FAIL', 'checks': check.results})
             raise ValueError(f'audit FAILED: {check.failed()}')
+        # Bind BOTH producers before any expensive unit hashing; only these small
+        # wrappers/receipt-backed logs are rehashed at the end (never unit payloads).
+        batch_bindings = {}
+        for root, layout in ((pilot_root, 'pilot'), (batch_root, 'remaining8')):
+            hashes = hash_batch_artifacts(root, 'batch_artifacts:' + layout, check, pilot_receipt)
+            for name in sorted({'run.sbatch'} | required_batch_logs(layout)):
+                path = root / name
+                try:
+                    digest = hashes.get(name)
+                    require_evidence(digest is not None and regular_path(path), f'missing/nonregular artifact: {path}')
+                    if name == 'run.sbatch':
+                        require_evidence(digest == APPROVED_WRAPPER_SHA256[layout], 'producing wrapper pin mismatch')
+                    batch_bindings[path] = (digest, path.stat().st_size)
+                except (OSError, EvidenceError) as exc:
+                    check.add('batch_artifact_binding:' + str(path), False, str(exc))
         # Pilot layout: unit dirs + query.sha256 at species root.
         audit_species_root('Sitalica', pilot_root, 'Sitalica', check)
-        hash_batch_artifacts(pilot_root, 'batch_artifacts:pilot', check, pilot_receipt)
         scan_dispositions(pilot_root, set(SOURCES), check, reconciled)
         for kind in SOURCES:
             units.append(audit_unit('pilot', 'Sitalica', kind, pilot_root, pilot_root))
         # remaining8 layout: <batch>/<species>/<kind>; inputs at the batch root.
-        hash_batch_artifacts(batch_root, 'batch_artifacts:remaining8', check)
         scan_dispositions(batch_root, set(REMAINING8_SPECIES) | {'logs'}, check, reconciled)
         if (batch_root / 'logs').is_dir():
             scan_dispositions(batch_root / 'logs', set(), check)
@@ -785,6 +804,14 @@ def audit(blastx_root, out_dir, sacct_file, pilot_receipt=None,
             except (OSError, EvidenceError, UnicodeError) as exc:
                 unchanged, detail = False, str(exc)
             check.add('reconciliation_final:' + name, unchanged, detail)
+        for path, (digest, size) in batch_bindings.items():
+            try:
+                unchanged = (regular_path(path) and path.stat().st_size == size
+                             and launcher.sha256(path) == digest)
+                detail = {'initial_sha256': digest, 'initial_size': size}
+            except OSError as exc:
+                unchanged, detail = False, str(exc)
+            check.add('batch_artifact_final:' + str(path), unchanged, detail)
         for unit in units:
             launcher.write_json(out / 'units' / (unit['unit'].replace('/', '_') + '.json'), unit)
         failed_units = [u['unit'] for u in units if u['status'] != 'PASS']

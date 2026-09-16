@@ -70,3 +70,22 @@ git diff --check
 TDD: initial32 new cases failed on missing APIs; later negative tests reproduced missing preflight-lock coverage, self-consistent broadened receipt listings, late mutation acceptance, active extra accounting steps and noncanonical capture paths before fixes.56new tests cover pilot positive/negative bindings, manifest mutations, preflight full small tree, actual array task bindings and18unit integrated PASS/FAIL with semantic gates false.119original tests remain unchanged. Tests use synthetic anchors only through pytest monkeypatch; production exposes no anchor override.
 
 Graft orientation/query/caller output estimated **885,659 tokens saved** (tool estimate). No claim of independent code review or production C1 success is made.
+
+## Round1 review fixes (FIX_BASE 21456324923c2c84610bd63e8b6ae868eae2f535)
+
+Read the complete independent review at main `notes/est_execution_20260916_1530/c1_reconcile.independent_review.md`; reproduced both P2 findings before edits.
+
+- **R1:** `load_reconciliation` now also catches the specific `csv.Error` and `RecursionError` evidence/parser failures. Overlimit CSV fields and deeply nested JSON produce failed `historical_reconciliation`, rollup FAIL, FAILED.json and all18 unit reports. No blanket Exception catch; a TypeError programmer-defect regression still propagates.
+- **R2:** both batch artifact inventories are captured before the first expensive unit audit. Exact pilot/array `run.sbatch` identities must match their existing historical pins. The two wrappers and18 receipt-backed required logs retain initial digest/size and are rechecked before rollup with regular-file/no-symlink-ancestor checks. Size changes fail before hashing, so a grown artifact is not needlessly reread. Deleted files, same-byte symlinks and equal-size content mutations fail while preserving all18 unit reports. No large unit payload is rehashed by this final check.
+- Queue freshness remains initial-only. A positive integration test advances the clock two hours after the18th unit and forbids further raw13/DMND/filtered-FASTA hashing; the final20 small-file checks still PASS. This is not continuous writer exclusion or a new scheduler policy.
+
+TDD RED:14 failures (two parser-limit reproductions and12 producer-artifact mutation cases),57 passed. Added two guard cases for programmer-error propagation and no end-time queue aging/payload rehash. Final full regression command:
+
+```sh
+PYTHONPATH=.testdeps /home/wyim/miniconda3/envs/agent-reach/bin/python -m pytest revision/scripts/tests/test_est_blastx.py revision/scripts/tests/test_est_blastx_fixture.py revision/scripts/tests/test_track_c_recovery.py revision/scripts/tests/test_track_c_audit_review.py revision/scripts/tests/test_c1_reconciliation.py -q --tb=short
+# 191 passed in 12.95s (175 previous +16 new)
+git diff --check
+# exit0
+```
+
+Only auditor, reconciliation tests and this report changed. No real manifest, policy/authorization, remote state, job or deployed snapshot changed. Baseline6165461 remains untouched; all19 operationally unbound paths and scientific/extern limitations above remain unchanged. Independent controller re-review is pending. Round1 graft query estimated52,687 tokens saved.
