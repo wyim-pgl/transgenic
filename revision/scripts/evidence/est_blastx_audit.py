@@ -5,22 +5,28 @@ Audits the 9-species x 2-source raw13 units produced by est_blastx.py under
   <blastx-root>/sitalica_pilot_20260914/          (pilot layout)
   <blastx-root>/remaining8_20260915/<species>/    (batch layout)
 per unit checks (a)-(f):
-  (a) sha256 every unit file; recomputed raw13/dmnd/filtered hashes must equal
+  (a) sha256 every immediate regular unit file; nested directories are unresolved
+      FAIL (closed, flat inventory). Recomputed raw13/dmnd/filtered hashes must equal
       the values recorded inside provenance.json;
   (b) re-run the exact validate_raw() row contract over raw13 and reconcile
       raw_hsps / hsps_lt_30aa with provenance;
   (c) commands.json argv must equal the frozen makedb/search command tokens;
+      producer code and engine hashes bind to historical approved identities;
   (d) resolve the query FASTA for BOTH provenance layouts (pilot: query.sha256
       at the species root; remaining8: inputs.json + inputs.sha256 at the batch
       root), re-hash it, and require qseqid set <= query record IDs.  An
       unresolvable query file is a HARD FAIL, never a skip;
-  (e) species batch.exitcode must be 0; timing files are hashed and recorded;
+  (e) species batch.exitcode must be 0; both SOURCE.time.txt files are required;
   (f) DONE-presence gate: absence of DONE always means incomplete.
 Additionally EVERY directory entry under the scanned roots -- including
 preflight_20260914/ siblings and tmp/ dirs -- receives an explicit fail-closed
 disposition (DONE / FAILED.json / NEITHER); contradictions, NEITHER and any
 tmp/ directory require reconciliation and fail, never silently skipped.  run.sbatch and slurm .out logs are hashed into
-the manifest.  sacct evidence is embedded VERBATIM from a login-node capture;
+the manifest. Wrapper bytes must match the archived historical scripts; all
+remaining8 logs are required. The unavailable pilot submission log-layout
+receipt is an explicit UNRESOLVED FAIL, not a guessed Slurm default.
+Container-owned markers are checked even when their child layouts are known;
+normal containers need no DONE. sacct evidence is embedded VERBATIM from a capture;
 the persisting `.extern OUT_OF_MEMORY 0:125` anomaly is recorded as UNRESOLVED
 -- this audit never claims clean accounting.
 
@@ -58,6 +64,96 @@ DONE_TEXT = 'Outputs and QC complete; see provenance.json\n'
 SACCT_NOTE = ('.extern OUT_OF_MEMORY 0:125 across all 9 jobs is a recorded, '
               'UNRESOLVED anomaly; allocation/.batch COMPLETED 0:0 is the only '
               'accounting claim made.  No clean-accounting claim.')
+
+
+# Historical trust anchors, NOT hashes of the current auditor or caller-supplied code.
+# Launcher/helper bytes verified from git 950cf4cd9ef55db276ffa1b713d8925ed6dd6dd2.
+# Engine pin and wrapper byte identities: notes/b6_{sitalica_blastx_20260914,
+# eight_species_blastx_20260915}.sbatch. No binary is executed by this auditor.
+APPROVED_LAUNCHER_SHA256 = '5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291'
+APPROVED_HELPER_SHA256 = '32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302'
+APPROVED_DIAMOND_SHA256 = '0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d'
+APPROVED_WRAPPER_SHA256 = {
+    'pilot': '8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a',
+    'remaining8': '4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c'}
+
+
+class EvidenceError(ValueError):
+    """Invalid external evidence, as distinct from a programming error."""
+
+
+def evidence_call(function, *args, **kwargs):
+    """The historical launcher's validation APIs signal bad input with ValueError."""
+    try:
+        return function(*args, **kwargs)
+    except ValueError as exc:
+        raise EvidenceError(str(exc)) from exc
+
+
+def validate_provenance(value):
+    if type(value) is not dict:
+        raise EvidenceError('provenance must be a JSON object')
+    inputs = value.get('inputs')
+    keys = set('species source_kind source source_sha256 query query_sha256 lineage lineage_sha256 roles roles_sha256'.split())
+    if type(inputs) is not dict or set(inputs) != keys or any(
+            type(v) is not str or not v for v in inputs.values()):
+        raise EvidenceError('inputs must contain exactly the producer string fields')
+    hash_keys = ('raw_sha256 db_sha256 filtered_fasta_sha256 screening_summary_sha256 '
+                 'screening_done_sha256 source_sha256 lineage_sha256 diamond_sha256 '
+                 'launcher_sha256 taxonomy_helper_sha256').split()
+    for key in hash_keys:
+        if type(value.get(key)) is not str or not re.fullmatch('[0-9a-f]{64}', value[key]):
+            raise EvidenceError(f'invalid or missing producer hash: {key}')
+    for key in ('source', 'source_kind', 'lineage', 'diamond_version'):
+        if type(value.get(key)) is not str or not value[key]:
+            raise EvidenceError(f'invalid or missing producer string: {key}')
+    for key in ('queries', 'species_root', 'sequences_in', 'sequences_out',
+                'sequences_excluded', 'raw_hsps', 'hsps_lt_30aa'):
+        if type(value.get(key)) is not int or value[key] < 0:
+            raise EvidenceError(f'invalid or missing producer count: {key}')
+    for key in ('retained_taxids', 'excluded_taxids'):
+        if type(value.get(key)) is not list or any(type(x) is not int or x < 1 for x in value[key]):
+            raise EvidenceError(f'invalid producer taxid list: {key}')
+    counts = value.get('counts_by_taxid')
+    if type(counts) is not dict or any(
+            not re.fullmatch('[0-9]+', taxid) or type(row) is not dict or set(row) != {'in', 'out'}
+            or any(type(n) is not int or n < 0 for n in row.values())
+            for taxid, row in counts.items()):
+        raise EvidenceError('invalid counts_by_taxid object')
+    if type(value.get('fields')) is not list or any(type(x) is not str for x in value['fields']):
+        raise EvidenceError('invalid raw fields list')
+    if type(value.get('elapsed_seconds')) not in (int, float):
+        raise EvidenceError('invalid elapsed_seconds type')
+    return value
+
+
+def batch_inputs(path):
+    value = json.loads(path.read_text())
+    if type(value) is not list or any(type(row) is not dict for row in value):
+        raise EvidenceError('batch inputs.json must be a list of objects')
+    for row in value:
+        if any(type(row.get(k)) is not str or not row[k] for k in ('species', 'query', 'query_md5')):
+            raise EvidenceError('batch species/query/query_md5 must be nonempty strings')
+        if not re.fullmatch('[0-9a-f]{32}', row['query_md5']):
+            raise EvidenceError('invalid batch query_md5')
+    return value
+
+
+def producer_identity(provenance, check):
+    version = provenance['diamond_version']
+    lines = version.split('\n')
+    # Exact accepted release/build contract of 950cf4c: no current binary probes.
+    version_ok = (len(lines) == 2 and re.fullmatch(r'diamond version 2\.1\.24(?:\.178)?', lines[0])
+                  and re.fullmatch(r'diamond v2\.1\.24\.178 \(C\) .+', lines[1]))
+    expected = {'launcher_sha256': APPROVED_LAUNCHER_SHA256,
+                'taxonomy_helper_sha256': APPROVED_HELPER_SHA256,
+                'diamond_sha256': APPROVED_DIAMOND_SHA256}
+    ok = bool(version_ok) and all(expected.values()) and all(provenance[k] == v for k, v in expected.items())
+    check.add('historical_producer_identity', ok, {
+        'expected': expected, 'recorded': {k: provenance[k] for k in expected},
+        'diamond_version': version,
+        'authority': 'git 950cf4c launcher/helper; archived launch wrappers engine pin',
+        'note': 'UNRESOLVED if mismatched/missing; no independent version-banner receipt or binary execution'})
 
 
 def md5(path):
@@ -123,8 +219,7 @@ def resolve_query(layout, species, species_root, batch_root, provenance, check):
     if launcher.sha256(inputs_json) != digest:
         check.add('query_resolution', False, 'inputs.json does not match inputs.sha256')
         return None
-    entries = [e for e in json.loads(inputs_json.read_text())
-               if isinstance(e, dict) and e.get('species') == species]
+    entries = [e for e in batch_inputs(inputs_json) if e['species'] == species]
     if len(entries) != 1:
         check.add('query_resolution', False, f'{len(entries)} inputs.json entries for {species}')
         return None
@@ -181,18 +276,17 @@ def expected_commands(recorded):
 
 
 def audit_unit(layout, species, kind, species_root, batch_root):
+    check, files = Check(), {}
     try:
-        return _audit_unit(layout, species, kind, species_root, batch_root)
-    except (OSError, ValueError, TypeError, KeyError, IndexError) as exc:
+        return _audit_unit(layout, species, kind, species_root, batch_root, check, files)
+    except (OSError, EvidenceError, json.JSONDecodeError, UnicodeError) as exc:
+        check.add('malformed_or_unreadable', False, str(exc))
         return {'unit': f'{species}/{kind}', 'layout': layout, 'status': 'FAIL',
-                'checks': {'malformed_or_unreadable': {'status': 'FAIL', 'detail': str(exc)}},
-                'files': {}}
+                'checks': check.results, 'files': files}
 
 
-def _audit_unit(layout, species, kind, species_root, batch_root):
-    unit = species_root / kind if layout == 'remaining8' else species_root / kind
-    check = Check()
-    files = {}
+def _audit_unit(layout, species, kind, species_root, batch_root, check, files):
+    unit = species_root / kind
     # (f) DONE gate first: absence of DONE always means incomplete.
     done = unit / 'DONE'
     if not unit.is_dir():
@@ -200,6 +294,9 @@ def _audit_unit(layout, species, kind, species_root, batch_root):
         return {'unit': f'{species}/{kind}', 'checks': check.results, 'files': files,
                 'status': 'FAIL'}
     scan_dispositions(unit, set(), check)
+    nested = sorted(p.name for p in unit.iterdir() if p.is_dir())
+    check.add('closed_unit_inventory', not nested,
+              {'UNRESOLVED_nested_directories': nested})
     check.add('done_gate', disposition(unit)['ok'],
               {'present': done.is_file()})
     if (unit / 'FAILED.json').exists():
@@ -207,17 +304,18 @@ def _audit_unit(layout, species, kind, species_root, batch_root):
     provenance = None
     prov_path = unit / 'provenance.json'
     expected = set(UNIT_FILES) | {f'{kind}.dmnd', f'{kind}.filtered.fa', f'{kind}.raw13.tsv'}
-    present = {p.name for p in unit.iterdir() if p.is_file()}
+    present = {p.name for p in unit.iterdir() if p.is_file() and not p.is_symlink()}
     check.add('required_files', expected <= present, {'missing': sorted(expected - present)})
     # (a) hash every file present; compare recorded hashes afterwards.
     for name in sorted(present):
         files[name] = launcher.sha256(unit / name)
     if prov_path.is_file():
-        provenance = json.loads(prov_path.read_text())
+        provenance = validate_provenance(json.loads(prov_path.read_text()))
     if provenance is None or expected - present:
         check.add('provenance_hashes', False, 'provenance.json or required files absent')
         return {'unit': f'{species}/{kind}', 'checks': check.results, 'files': files,
                 'status': 'FAIL'}
+    producer_identity(provenance, check)
     hash_pairs = {f'{kind}.raw13.tsv': 'raw_sha256', f'{kind}.dmnd': 'db_sha256',
                   f'{kind}.filtered.fa': 'filtered_fasta_sha256'}
     mismatched = {n: {'fresh': files[n], 'recorded': provenance.get(key)}
@@ -227,10 +325,10 @@ def _audit_unit(layout, species, kind, species_root, batch_root):
     inputs = provenance['inputs']
     check.add('input_identity', inputs['species'] == species and inputs['source_kind'] == kind,
               {'species': inputs['species'], 'source_kind': inputs['source_kind']})
-    input_qc = launcher.production_inputs(**inputs)
+    input_qc = evidence_call(launcher.production_inputs, **inputs)
     check.add('screening', all(provenance.get(k) == v for k, v in input_qc.items()), input_qc)
     with tempfile.TemporaryDirectory(prefix='blastx-audit-filter-') as scratch:
-        filter_qc = launcher.filter_source(inputs['source'], kind, inputs['lineage'],
+        filter_qc = evidence_call(launcher.filter_source, inputs['source'], kind, inputs['lineage'],
                                           launcher.SPECIES[species], Path(scratch) / 'filtered.fa')
     check.add('presearch_exclusion', all(provenance.get(k) == v for k, v in filter_qc.items()),
               filter_qc)
@@ -251,7 +349,10 @@ def _audit_unit(layout, species, kind, species_root, batch_root):
     unknown_subjects = set()
     with open(unit / f'{kind}.raw13.tsv') as raw:
         for line in raw:
-            subject = line.rstrip('\n').split('\t')[2]
+            columns = line.rstrip('\n').split('\t')
+            if len(columns) != 13:
+                raise EvidenceError('malformed raw13 subject row')
+            subject = columns[2]
             if subject not in subjects:
                 unknown_subjects.add(subject)
     check.add('subjects_presearch_filtered', not unknown_subjects, sorted(unknown_subjects)[:10])
@@ -277,14 +378,11 @@ def _audit_unit(layout, species, kind, species_root, batch_root):
     # (d) query resolution across both layouts + qseqid subset.
     expected_md5 = None
     if layout == 'remaining8':
-        try:
-            for e in json.loads((batch_root / 'inputs.json').read_text()):
-                if isinstance(e, dict) and e.get('species') == species:
-                    expected_md5 = e.get('query_md5')
-        except (OSError, ValueError):
-            pass
-    query_path = resolve_query(layout, species, species_root, batch_root, provenance, check)
-    audit_query_file(query_path, provenance, expected_md5, unit / f'{kind}.raw13.tsv', check)
+        for e in batch_inputs(batch_root / 'inputs.json'):
+            if e['species'] == species:
+                expected_md5 = e['query_md5']
+    query_path = evidence_call(resolve_query, layout, species, species_root, batch_root, provenance, check)
+    evidence_call(audit_query_file, query_path, provenance, expected_md5, unit / f'{kind}.raw13.tsv', check)
     status = 'FAIL' if check.failed() else 'PASS'
     return {'unit': f'{species}/{kind}', 'layout': layout, 'checks': check.results,
             'files': files, 'status': status}
@@ -296,10 +394,14 @@ def audit_species_root(species, species_root, check_prefix, check):
     ok = exitcode.is_file() and exitcode.read_text().strip() == '0'
     check.add(f'{check_prefix}:batch_exitcode', ok,
               exitcode.read_text().strip() if exitcode.is_file() else 'missing batch.exitcode')
-    timing = {p.name: launcher.sha256(p) for p in sorted(species_root.glob('*.time.txt'))}
-    check.add(f'{check_prefix}:timing_files', bool(timing) and all(
-        (species_root / name).stat().st_size > 0 for name in timing),
-              timing or 'missing timing evidence')
+    timing = {p.name: launcher.sha256(p) for p in sorted(species_root.glob('*.time.txt'))
+              if p.is_file() and not p.is_symlink()}
+    required = {f'{kind}.time.txt' for kind in SOURCES}
+    missing = sorted(required - set(timing))
+    invalid = sorted(name for name in required & set(timing)
+                     if (species_root / name).is_symlink() or (species_root / name).stat().st_size == 0)
+    check.add(f'{check_prefix}:timing_files', not missing and not invalid,
+              {'hashes': timing, 'missing': missing, 'invalid': invalid})
     return timing
 
 
@@ -316,9 +418,27 @@ def disposition(path):
     return {'disposition': 'NEITHER', 'ok': False}
 
 
+def audit_container_markers(root, check):
+    """Containers need no DONE, but present invalid/failed markers cannot be ignored."""
+    markers = [root / name for name in ('DONE', 'FAILED.json')]
+    present = [p for p in markers if p.exists() or p.is_symlink()]
+    ok = not present
+    detail = 'NO_MARKERS_REQUIRED'
+    if present:
+        try:
+            ok = (len(present) == 1 and present[0].name == 'DONE'
+                  and not present[0].is_symlink() and present[0].is_file()
+                  and present[0].read_text() == DONE_TEXT)
+            detail = {'present': [p.name for p in present], 'valid_done_only': ok}
+        except (OSError, UnicodeError) as exc:
+            ok, detail = False, str(exc)
+    check.add(f'container_markers:{root}', ok, detail)
+
+
 def scan_dispositions(root, known, check):
     """Must-fix 3: EVERY sibling dir (preflight_20260914/, tmp/, ...) gets an
     explicit disposition; NEITHER and unreconciled tmp/ are failures."""
+    audit_container_markers(root, check)
     entries = {}
 
     def visit(parent):
@@ -345,12 +465,29 @@ def scan_dispositions(root, known, check):
 
 
 def hash_batch_artifacts(root, check_name, check):
-    """Reviewer suggestion: run.sbatch + slurm .out logs join the manifest."""
+    """Bind wrapper bytes; require receipt-backed log names, never Slurm defaults."""
+    layout = check_name.rsplit(':', 1)[-1]
+    if layout not in APPROVED_WRAPPER_SHA256:
+        raise ValueError(f'unknown batch layout: {layout}')
     hashed = {}
-    for pattern in ('run.sbatch', 'slurm-*.out', 'slurm-*.err', 'logs/*.out', 'logs/*.err'):
+    for pattern in ('*.sbatch', '*.out', '*.err', 'logs/*.out', 'logs/*.err'):
         for p in sorted(root.glob(pattern)):
-            hashed[str(p.relative_to(root))] = launcher.sha256(p)
-    check.add(check_name, bool(hashed), hashed or 'no batch artifacts found')
+            if p.is_file() and not p.is_symlink():
+                hashed[str(p.relative_to(root))] = launcher.sha256(p)
+    scripts = [name for name, digest in hashed.items()
+               if name.endswith('.sbatch') and digest == APPROVED_WRAPPER_SHA256[layout]]
+    check.add(check_name + ':script', bool(scripts),
+              {'approved_sha256': APPROVED_WRAPPER_SHA256[layout], 'matched': scripts})
+    if layout == 'remaining8':
+        # notes/RESTART_HANDOFF_20260915.md:38 records these submission paths.
+        required = {f'logs/6164049_{i}.{ext}' for i in range(8) for ext in ('out', 'err')}
+        missing = sorted(required - set(hashed))
+        check.add(check_name + ':logs', not missing, {'missing': missing})
+    else:
+        check.add(check_name + ':logs', False,
+                  'UNRESOLVED pilot log-layout receipt: wrapper has no output/error directives; '
+                  'submission paths unavailable locally. Arbitrary .out/.err files cannot satisfy it.')
+    check.add(check_name + ':inventory', True, hashed)
     return hashed
 
 
@@ -432,7 +569,8 @@ def audit(blastx_root, out_dir, sacct_file):
                   'sacct_note': SACCT_NOTE, 'clean_accounting': False,
                   'accepted_phase_evidence': False, 'production_authorized': False,
                   'audit_script_sha256': launcher.sha256(__file__),
-                  'launcher_sha256': launcher.sha256(launcher.__file__)}
+                  'audit_runtime_launcher_sha256': launcher.sha256(launcher.__file__),
+                  'audit_runtime_taxonomy_helper_sha256': launcher.sha256(launcher.HELPER)}
         launcher.write_json(out / 'rollup.json', rollup)
         if status != 'PASS':
             raise ValueError(f'audit FAILED: units={failed_units} '

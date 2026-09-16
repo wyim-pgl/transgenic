@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import gzip
+import hashlib
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -20,6 +21,16 @@ def load(name):
 audit = load('est_blastx_audit')
 accept = load('est_phase_accept')
 pin = load('est_phase_accept_fixture')
+
+
+@pytest.fixture(autouse=True)
+def synthetic_identity(monkeypatch):
+    # Fixture-only trust anchors. No production override or executable invocation.
+    monkeypatch.setattr(audit, 'APPROVED_DIAMOND_SHA256', hashlib.sha256(
+        b'fixture-engine-not-executed').hexdigest(), raising=False)
+    monkeypatch.setattr(audit, 'APPROVED_WRAPPER_SHA256', dict.fromkeys(
+        ('pilot', 'remaining8'), hashlib.sha256(b'# fixture; never submitted\n').hexdigest()),
+        raising=False)
 
 
 @pytest.mark.parametrize('entrypoint', ['stream', 'run'])
@@ -183,7 +194,10 @@ def make_unit(root, species='Sitalica', kind='orthodb', inputs_root=None):
     (unit / 'DONE').write_text(audit.DONE_TEXT)
     qc.update(audit.launcher.validate_raw(raw), inputs=inputs, elapsed_seconds=1.0,
               fields=audit.launcher.RAW13, raw_sha256=audit.launcher.sha256(raw),
-              db_sha256=audit.launcher.sha256(db), diamond_sha256=audit.launcher.sha256(diamond))
+              db_sha256=audit.launcher.sha256(db), diamond_sha256=audit.launcher.sha256(diamond),
+              diamond_version='diamond version 2.1.24\ndiamond v2.1.24.178 (C) fixture',
+              launcher_sha256='5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291',
+              taxonomy_helper_sha256='32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302')
     (unit / 'provenance.json').write_text(json.dumps(qc))
     (root / 'query.sha256').write_text(inputs['query_sha256'] + '  ' + str(query) + '\n')
     return unit
@@ -272,7 +286,7 @@ def test_boundary_lengths_remain_raw_not_accepted(tmp_path, length):
     assert not (tmp_path / 'out').exists()
 
 
-def test_full_18_unit_audit_and_preflight_failure(tmp_path):
+def make_audit_tree(tmp_path):
     tree = tmp_path / 'blastx'
     entries = []
     for species in ('Sitalica',) + audit.REMAINING8_SPECIES:
@@ -282,7 +296,8 @@ def test_full_18_unit_audit_and_preflight_failure(tmp_path):
         query = json.loads((unit / 'provenance.json').read_text())['inputs']['query']
         entries.append({'species': species, 'query': query, 'query_md5': audit.md5(query)})
         (root / 'batch.exitcode').write_text('0')
-        (root / 'batch.time.txt').write_text('elapsed=1')
+        for kind in audit.SOURCES:
+            (root / f'{kind}.time.txt').write_text('fixture timing')
     batch = tree / audit.REMAINING8_DIR
     (batch / 'inputs.json').write_text(json.dumps(entries[1:]))
     (batch / 'inputs.sha256').write_text(audit.launcher.sha256(batch / 'inputs.json') + '  inputs.json\n')
@@ -294,8 +309,22 @@ def test_full_18_unit_audit_and_preflight_failure(tmp_path):
         lines.extend([f'{job}|COMPLETED|0:0', f'{job}.batch|COMPLETED|0:0',
                       f'{job}.extern|OUT_OF_MEMORY|0:125'])
     sacct.write_text('\n'.join(lines))
-    result = audit.audit(tree, tmp_path / 'out', sacct)
-    assert result['status'] == 'PASS' and result['units_audited'] == 18
+    (batch / 'logs').mkdir()
+    for i in range(8):
+        for ext in ('out', 'err'):
+            (batch / 'logs' / f'6164049_{i}.{ext}').write_text('' if ext == 'err' else 'fixture log')
+    return tree, sacct
+
+
+def test_full_18_unit_audit_and_preflight_failure(tmp_path):
+    tree, sacct = make_audit_tree(tmp_path)
+    lines = sacct.read_text().splitlines()
+    # The locally unavailable pilot log receipt cannot be fabricated by this fixture.
+    with pytest.raises(ValueError, match='audit FAILED'):
+        audit.audit(tree, tmp_path / 'out', sacct)
+    result = json.loads((tmp_path / 'out' / 'rollup.json').read_text())
+    assert result['status'] == 'FAIL' and result['units_audited'] == 18
+    assert result['failed_units'] == []
     assert result['clean_accounting'] is False
     assert result['accepted_phase_evidence'] is False
     sacct.write_text('\n'.join(lines[:-1]))
