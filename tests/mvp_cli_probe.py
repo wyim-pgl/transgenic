@@ -1,6 +1,7 @@
 """Two-rank production execute/_train integration using only private CPU test injection."""
 from __future__ import annotations
 
+from contextlib import nullcontext
 import hashlib
 from importlib.metadata import version
 import json
@@ -22,6 +23,7 @@ from test_mvp_model import TinyHyena
 from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
 from transgenic.model import modeling_HyenaTransgenic as modeling
 from transgenic.training.mvp_cli import CandidateRecords
+from transgenic.training import mvp_cli_runtime as cli_runtime
 from transgenic.training.mvp_cli_runtime import (
     _TestExecution, _expected_code_files, execute,
 )
@@ -196,8 +198,16 @@ def main():
             observation=observation,
         )
         error = None
+        original_collector = cli_runtime._collect_local_hardware
+        def hardware_collector(accelerator):
+            if case == "hardware-failure" and accelerator.process_index == 1:
+                raise RuntimeError("injected UUID probe failure")
+            return original_collector(accelerator)
+        collector_patch = (patch.object(cli_runtime, "_collect_local_hardware", hardware_collector)
+                           if case == "hardware-failure" else nullcontext())
         try:
-            execute(args, candidate, validate_only=False, _test=injection)
+            with collector_patch:
+                execute(args, candidate, validate_only=False, _test=injection)
         except Exception as caught:
             error = str(caught)
         result_path = root / f"result-{rank}.json"
@@ -234,8 +244,16 @@ def main():
                     for item in streams
                 )
                 pairwise_generators = all(len(set(item.values())) == 3 for item in generator_ids)
+                hardware = metadata["runtime_hardware"]
                 payload = {"all_succeeded": errors == [None, None],
                            "augmentation_streams": streams,
+                           "cpu_rank_facts_recorded": all(
+                               fact["rank"] == fact["local_rank"] and
+                               fact["distributed_type"] == "MULTI_CPU" and
+                               fact["device_type"] == "cpu" and
+                               fact["current_cuda_device"] is None and
+                               fact["device_uuid"] is None
+                               for fact in hardware["ranks"]),
                            "backend_called": all(item["backend_called"] for item in results),
                            "canonical_audit": metadata["initialization_audit"]["audit"]["resolved_weights_path"] ==
                                               str((root / "source/epoch_01/model.safetensors").resolve()),
@@ -245,6 +263,14 @@ def main():
                            "marker": (root / "final/TRAINING_DONE").is_file(),
                            "pairwise_distinct_generators": pairwise_generators,
                            "pairwise_distinct_stream_seeds_per_rank": pairwise_seeds,
+                           "runtime_hardware": {
+                               "measurement": hardware["measurement"],
+                               "test_hardware": hardware["test_hardware"],
+                               "world_size": hardware["world_size"],
+                               "distributed_type": hardware["distributed_type"],
+                               "device_type": hardware["device_type"],
+                               "distinct_device_uuids": hardware["distinct_device_uuids"],
+                           },
                            "runtime_contract": metadata["runtime_contract"],
                            "saved_keys_clean": clean,
                            "successful_updates": training["successful_updates"],
@@ -252,6 +278,10 @@ def main():
                            "world_size": 2}
             else:
                 payload = {"all_rejected": all(errors), "errors": errors,
+                           "backend_called": any(item["backend_called"] for item in results),
+                           "model_construction_started": any(
+                               item["observation"].get("model_construction_started", False)
+                               for item in results),
                            "no_artifact": not (root / "final").exists(), "dataset_closed": writable,
                            "world_size": 2}
             print(json.dumps(payload, sort_keys=True))

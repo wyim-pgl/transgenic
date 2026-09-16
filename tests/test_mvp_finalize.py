@@ -76,6 +76,25 @@ def recipe(scope="test", world=1):
             "weight_decay": 0.02, "clip_grad_norm": 1.0}
 
 
+def runtime_hardware(scope="test", world=1):
+    gpu = scope == "production"
+    return {
+        "measurement": "runtime_observation", "test_hardware": not gpu,
+        "world_size": world, "distributed_type": "MULTI_GPU" if gpu else ("MULTI_CPU" if world > 1 else "NO"),
+        "device_type": "cuda" if gpu else "cpu",
+        "distinct_device_uuids": gpu,
+        "ranks": [{"rank": rank, "local_rank": rank, "world_size": world,
+                   "distributed_type": "MULTI_GPU" if gpu else ("MULTI_CPU" if world > 1 else "NO"),
+                   "device_type": "cuda" if gpu else "cpu", "device_index": rank if gpu else None,
+                   "current_cuda_device": rank if gpu else None, "cuda_available": gpu,
+                   "cuda_device_count": world if gpu else 0, "device_name": f"GPU {rank}" if gpu else None,
+                   "device_uuid": f"GPU-{rank}" if gpu else None,
+                   "capability": [8, 0] if gpu else None, "bf16_supported": gpu,
+                   "torch_version": "test-version", "torch_cuda_version": "12.4" if gpu else None,
+                   "cudnn_version": 90100 if gpu else None} for rank in range(world)],
+    }
+
+
 def metadata(scope="test", world=1):
     seed = 1
     return {
@@ -93,6 +112,7 @@ def metadata(scope="test", world=1):
                              ("python", "torch", "transformers", "accelerate", "safetensors")},
         "normalized_recipe": recipe(scope, world),
         "seed_augmentation": {"seed": seed, "aug_seed": 20260914 + seed},
+        "runtime_hardware": runtime_hardware(scope, 4 if scope == "production" else world),
     }
 
 
@@ -251,6 +271,14 @@ def test_metadata_schema_and_production_budget_fail_closed(tmp_path):
     bad["normalized_recipe"] = {"x": 1}
     with pytest.raises(ValueError, match="normalized_recipe"):
         publish(tmp_path, md=bad)
+    bad = metadata()
+    del bad["runtime_hardware"]
+    with pytest.raises(ValueError, match="runtime_hardware"):
+        publish(tmp_path, md=bad)
+    bad = metadata("production")
+    bad["runtime_hardware"]["test_hardware"] = True
+    with pytest.raises(ValueError, match="production runtime_hardware"):
+        publish(tmp_path, md=bad, train=summary("production"))
     bad = metadata()
     bad["initialization_audit"]["audit"]["load"]["missing_keys"] = []
     bad["initialization_audit"]["audit_sha256"] = hashlib.sha256(

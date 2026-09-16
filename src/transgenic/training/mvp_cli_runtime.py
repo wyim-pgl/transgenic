@@ -284,6 +284,142 @@ def compile_bound_forward(model, backend="inductor"):
     return model
 
 
+_HARDWARE_FACT_MAX_BYTES = 16 * 1024
+
+
+def _collect_local_hardware(accelerator) -> dict[str, Any]:
+    """Measure this rank's actual Accelerator/Torch device topology."""
+    import torch
+
+    device = accelerator.device
+    distributed = getattr(accelerator.distributed_type, "name", str(accelerator.distributed_type))
+    fact = {
+        "rank": accelerator.process_index,
+        "local_rank": accelerator.local_process_index,
+        "world_size": accelerator.num_processes,
+        "distributed_type": distributed,
+        "device_type": device.type,
+        "device_index": device.index,
+        "current_cuda_device": None,
+        "cuda_available": torch.cuda.is_available(),
+        "cuda_device_count": torch.cuda.device_count(),
+        "device_name": None,
+        "device_uuid": None,
+        "capability": None,
+        "bf16_supported": False,
+        "torch_version": str(torch.__version__),
+        "torch_cuda_version": torch.version.cuda,
+        "cudnn_version": torch.backends.cudnn.version(),
+    }
+    if fact["cuda_available"] and device.type == "cuda":
+        current = torch.cuda.current_device()
+        properties = torch.cuda.get_device_properties(device)
+        uuid = getattr(properties, "uuid", None)
+        if uuid is None or not str(uuid).strip():
+            raise RuntimeError("CUDA device UUID unavailable from torch.cuda.get_device_properties(...).uuid")
+        try:
+            bf16 = torch.cuda.is_bf16_supported(including_emulation=False)
+        except TypeError as error:
+            raise RuntimeError("installed Torch cannot measure native bf16 support without emulation") from error
+        fact.update({
+            "current_cuda_device": current,
+            "device_name": properties.name,
+            "device_uuid": str(uuid).strip(),
+            "capability": [properties.major, properties.minor],
+            "bf16_supported": bf16,
+        })
+    return fact
+
+
+def _collect_runtime_hardware(accelerator, *, _collector=None) -> list[dict[str, Any]]:
+    """Collect one bounded canonical hardware observation from every rank."""
+    import torch
+    from transgenic.training.mvp_finalize import _collective_preflight
+
+    collector = _collector or _collect_local_hardware
+    local = {}
+
+    def probe():
+        fact = collector(accelerator)
+        payload = json.dumps(fact, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+        if len(payload) > _HARDWARE_FACT_MAX_BYTES:
+            raise RuntimeError(f"runtime hardware fact exceeds {_HARDWARE_FACT_MAX_BYTES} bytes")
+        local["payload"] = payload
+
+    try:
+        _collective_preflight(accelerator, probe)
+    except Exception as error:
+        raise type(error)(f"hardware probe phase failed: {error}") from error
+
+    payload = local["payload"]
+    frame = torch.zeros(4 + _HARDWARE_FACT_MAX_BYTES, dtype=torch.uint8, device=accelerator.device)
+    encoded_length = len(payload).to_bytes(4, "big")
+    frame[:4] = torch.tensor(list(encoded_length), dtype=torch.uint8, device=accelerator.device)
+    if payload:
+        frame[4:4 + len(payload)] = torch.frombuffer(bytearray(payload), dtype=torch.uint8).to(accelerator.device)
+    gathered = accelerator.gather(frame).reshape(accelerator.num_processes, -1).cpu()
+    facts = []
+    for row in gathered:
+        length = int.from_bytes(row[:4].contiguous().numpy().tobytes(), "big")
+        if length > _HARDWARE_FACT_MAX_BYTES:
+            raise RuntimeError("gathered runtime hardware fact exceeds its bounded frame")
+        raw = row[4:4 + length].contiguous().numpy().tobytes()
+        try:
+            fact = json.loads(raw)
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise RuntimeError("gathered runtime hardware fact is not valid UTF-8 JSON") from error
+        if not isinstance(fact, dict):
+            raise RuntimeError("gathered runtime hardware fact must be an object")
+        facts.append(fact)
+    return facts
+
+
+def _validate_public_hardware(facts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Require the explicit single-node four-GPU public execution topology."""
+    if len(facts) != 4:
+        raise RuntimeError("public MVP requires measured world size 4")
+    by_rank = {fact.get("rank"): fact for fact in facts if isinstance(fact, dict)}
+    if set(by_rank) != set(range(4)) or len(by_rank) != 4:
+        raise RuntimeError("public MVP requires exactly ranks 0..3")
+    ordered = [by_rank[rank] for rank in range(4)]
+    for rank, fact in enumerate(ordered):
+        if fact.get("world_size") != 4:
+            raise RuntimeError("public MVP requires measured world size 4 on every rank")
+        if fact.get("distributed_type") != "MULTI_GPU":
+            raise RuntimeError("public MVP requires Accelerator MULTI_GPU on every rank")
+        if fact.get("device_type") != "cuda" or fact.get("cuda_available") is not True:
+            raise RuntimeError("public MVP requires an actual CUDA device on every rank")
+        if (fact.get("local_rank"), fact.get("device_index"), fact.get("current_cuda_device")) != (rank, rank, rank):
+            raise RuntimeError("public MVP requires rank/local-rank/device mapping 0..3 on one node")
+        if fact.get("cuda_device_count") != 4:
+            raise RuntimeError("public MVP requires all four CUDA devices visible on every rank")
+        if fact.get("bf16_supported") is not True:
+            raise RuntimeError("public MVP requires native bf16 support on every GPU")
+        uuid = fact.get("device_uuid")
+        if not isinstance(uuid, str) or not uuid.strip():
+            raise RuntimeError("public MVP CUDA device UUID unavailable; distinct devices cannot be established")
+        if uuid.upper().startswith("MIG-"):
+            raise RuntimeError("public MVP cannot establish distinct physical GPUs from MIG device UUIDs")
+    if len({fact["device_uuid"] for fact in ordered}) != 4:
+        raise RuntimeError("public MVP requires four distinct physical GPU UUIDs")
+    return ordered
+
+
+def _hardware_metadata(facts: list[dict[str, Any]], *, test_hardware: bool) -> dict[str, Any]:
+    ordered = sorted(facts, key=lambda fact: fact["rank"])
+    distributed = {fact["distributed_type"] for fact in ordered}
+    devices = {fact["device_type"] for fact in ordered}
+    return {
+        "measurement": "runtime_observation",
+        "test_hardware": test_hardware,
+        "world_size": len(ordered),
+        "distributed_type": next(iter(distributed)) if len(distributed) == 1 else "MIXED",
+        "device_type": next(iter(devices)) if len(devices) == 1 else "mixed",
+        "distinct_device_uuids": not test_hardware,
+        "ranks": ordered,
+    }
+
+
 def _runtime_contract(test_execution: bool) -> dict[str, Any]:
     return {
         "execution_mode": "private_test_injection" if test_execution else "public_cli",
@@ -403,6 +539,11 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
     train_ds = valid_ds = None
     body_failed = False
     try:
+        hardware_facts = _collect_runtime_hardware(accelerator)
+        if _test is None:
+            hardware_facts = _validate_public_hardware(hardware_facts)
+        runtime_hardware = _hardware_metadata(hardware_facts, test_hardware=_test is not None)
+
         identity = {}
         phase(accelerator, "identity", lambda: identity.setdefault("payload", _identity_payload(
             {"candidate": candidate.identities, "artifacts": artifacts["sha256"]})))
@@ -424,6 +565,8 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
             config_kwargs = model_kwargs(cfg["data"])
             if _test is not None:
                 config_kwargs["load_pretrained_encoder"] = False
+                if _test.observation is not None:
+                    _test.observation["model_construction_started"] = True
             config = HyenaTransgenicConfig(**config_kwargs, evidence_channels=8)
             state["model"] = transgenicForConditionalGeneration(config)
             state["initialization"] = load_weights_only(state["model"], inputs.weights.parent)
@@ -513,6 +656,7 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
             "runtime_packages": _versions(), "normalized_recipe": asdict(recipe),
             "seed_augmentation": {"seed": seed, "aug_seed": aug_seed},
             "runtime_contract": _runtime_contract(_test is not None),
+            "runtime_hardware": runtime_hardware,
         }
 
         def prepublication_prepare():

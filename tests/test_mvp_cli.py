@@ -17,10 +17,12 @@ from transgenic.training.mvp_cli import (
     _validate_inventory,
 )
 from transgenic.training.mvp_cli_runtime import (
+    _collect_runtime_hardware,
     _expected_code_files,
     _manifest_files,
     _runtime_contract,
     _validate_initialization_readiness,
+    _validate_public_hardware,
     compile_bound_forward,
     verify_candidate_artifacts,
     validate_launch_readiness,
@@ -320,6 +322,66 @@ def test_load_audit_checkpoint_mismatch_is_rejected_before_optimizer(tmp_path):
         _validate_initialization_readiness(audit, readiness, weights, run_config)
 
 
+def _gpu_fact(rank, *, uuid=None, **changes):
+    fact = {
+        "rank": rank, "local_rank": rank, "world_size": 4,
+        "distributed_type": "MULTI_GPU", "device_type": "cuda",
+        "device_index": rank, "current_cuda_device": rank,
+        "cuda_available": True, "cuda_device_count": 4,
+        "device_name": f"GPU {rank}", "device_uuid": uuid or f"GPU-{rank}",
+        "capability": [8, 0], "bf16_supported": True,
+        "torch_version": "2.6.0+cu124", "torch_cuda_version": "12.4",
+        "cudnn_version": 90100,
+    }
+    fact.update(changes)
+    return fact
+
+
+def test_public_hardware_gate_accepts_only_unit_synthetic_four_gpu_topology():
+    measured = _validate_public_hardware([_gpu_fact(rank) for rank in range(4)])
+    assert measured[2]["device_uuid"] == "GPU-2"
+
+
+@pytest.mark.parametrize("change,message", [
+    ({"device_type": "cpu", "cuda_available": False}, "CUDA device"),
+    ({"world_size": 3}, "world size 4"),
+    ({"bf16_supported": False}, "native bf16"),
+    ({"local_rank": 0}, "rank/local-rank/device mapping"),
+])
+def test_public_hardware_gate_rejects_incorrect_rank_facts(change, message):
+    facts = [_gpu_fact(rank) for rank in range(4)]
+    facts[1].update(change)
+    with pytest.raises(RuntimeError, match=message):
+        _validate_public_hardware(facts)
+
+
+def test_public_hardware_gate_rejects_duplicate_or_missing_gpu_uuid():
+    facts = [_gpu_fact(rank) for rank in range(4)]
+    facts[3]["device_uuid"] = facts[0]["device_uuid"]
+    with pytest.raises(RuntimeError, match="distinct physical GPU UUID"):
+        _validate_public_hardware(facts)
+    facts[3]["device_uuid"] = None
+    with pytest.raises(RuntimeError, match="UUID unavailable"):
+        _validate_public_hardware(facts)
+
+
+def test_hardware_probe_error_is_collectively_reachable():
+    import torch
+
+    class LocalAccelerator:
+        num_processes = 1
+        device = torch.device("cpu")
+
+        def gather(self, tensor):
+            return tensor
+
+    def broken(_accelerator):
+        raise RuntimeError("UUID API unavailable")
+
+    with pytest.raises(RuntimeError, match="hardware probe phase failed.*UUID API unavailable"):
+        _collect_runtime_hardware(LocalAccelerator(), _collector=broken)
+
+
 def test_runtime_contract_records_actual_public_and_private_test_modes():
     rng = {
         "canonical_aug_seed": "20260914+seed (molecule ranking)",
@@ -378,10 +440,13 @@ def test_actual_two_rank_execute_train_to_atomic_test_scope_final(tmp_path):
             {"canonical_aug_seed": 20260915, "private": 20260916, "rank": 1,
              "sampler": 1, "train_worker": 21260916, "valid_worker": 22260916},
         ],
-        "backend_called": True, "canonical_audit": True,
+        "backend_called": True, "canonical_audit": True, "cpu_rank_facts_recorded": True,
         "effective_batch_size": 4, "epochs_crossed": 3, "identity_scope": "test",
         "marker": True, "pairwise_distinct_generators": True,
         "pairwise_distinct_stream_seeds_per_rank": True,
+        "runtime_hardware": {"measurement": "runtime_observation", "test_hardware": True,
+            "world_size": 2, "distributed_type": "MULTI_CPU", "device_type": "cpu",
+            "distinct_device_uuids": False},
         "runtime_contract": {"checkpointing": "nonreentrant",
             "compile_backend": "eager_counting_test", "construction_order": "weights_optimizer_compile_prepare",
             "execution_mode": "private_test_injection", "precision": "no",
@@ -395,6 +460,14 @@ def test_actual_two_rank_execute_train_to_atomic_test_scope_final(tmp_path):
             }},
         "saved_keys_clean": True, "successful_updates": 2, "update_budget": 2, "world_size": 2,
     }
+
+
+def test_actual_two_rank_single_rank_hardware_probe_failure_rejects_before_model(tmp_path):
+    output = run_two_rank_probe(tmp_path, "hardware-failure")
+    assert output["all_rejected"] and output["no_artifact"] and output["dataset_closed"]
+    assert not output["backend_called"] and not output["model_construction_started"]
+    assert all("hardware probe phase failed" in error and "UUID probe failure" in error
+               for error in output["errors"])
 
 
 def test_actual_two_rank_single_rank_setup_failure_rejects_all_and_cleans_up(tmp_path):

@@ -119,6 +119,20 @@ def metadata():
                              ("python", "torch", "transformers", "accelerate", "safetensors")},
         "normalized_recipe": recipe,
         "seed_augmentation": {"seed": 1, "aug_seed": 20260915},
+        "runtime_hardware": {
+            "measurement": "runtime_observation", "test_hardware": True,
+            "world_size": 2, "distributed_type": "MULTI_CPU", "device_type": "cpu",
+            "distinct_device_uuids": False,
+            "ranks": [{"rank": rank, "local_rank": rank, "world_size": 2,
+                       "distributed_type": "MULTI_CPU", "device_type": "cpu",
+                       "device_index": None, "current_cuda_device": None,
+                       "cuda_available": False, "cuda_device_count": 0,
+                       "device_name": None, "device_uuid": None, "capability": None,
+                       "bf16_supported": False, "torch_version": str(torch.__version__),
+                       "torch_cuda_version": torch.version.cuda,
+                       "cudnn_version": torch.backends.cudnn.version()}
+                      for rank in range(2)],
+        },
     }
 
 

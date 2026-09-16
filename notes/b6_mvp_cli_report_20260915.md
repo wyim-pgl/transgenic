@@ -1,10 +1,10 @@
-# B6 exploratory MVP CLI integration report (2026-09-15, review round 3)
+# B6 exploratory MVP CLI integration report (2026-09-15, final integrated-review fix)
 
 ## Scope
 
-- Review base: `7222a3c447c680c8bf2409020bc2b3d5b3f380c7` (`Close MVP CLI round two review gaps`).
+- Final fix base: `1c47ae59deebedca18aaae9cbfa3c77e64a91769` (`Separate MVP runtime RNG domains`).
 - Native isolated worktree; CPU only. No main-worktree writes, remote actions, GPU actions, job submission, merge, or push.
-- All round-1 and round-2 findings remain addressed; round 3 changes only deterministic RNG domain separation and its wiring assertions.
+- Earlier review findings remain addressed. This final narrow wave adds only the measured public hardware assertion, metadata schema/reporting, and focused tests.
 - The public CLI remains fixed to bf16 plus Inductor, exploratory-only, and `EXPLORATORY_MVP_NOT_FOR_PRODUCTION`. No public test, eager, precision, budget, production, or recovery option was added.
 - Missing real launch readiness still blocks public execution before Accelerator/model/dataset construction.
 
@@ -63,6 +63,16 @@ Train and validation each receive a separately constructed `torch.Generator`. Th
 
 The two-rank production-path probe asserts the complete seed map for each rank, including canonical and sampler seeds, not merely cross-rank inequality. For seed 1 it requires rank 0 `(private, train, valid) = (20260915, 21260915, 22260915)` and rank 1 `(20260916, 21260916, 22260916)`. It also verifies pairwise-distinct stream seeds and generator identities on each rank. A rank-distinct but incorrectly offset implementation therefore fails.
 
+## Final integrated-review hardware assertion
+
+Immediately after `Accelerator` construction, inside the existing cleanup boundary and before model construction, every rank measures its actual Accelerator/Torch topology. Local probing and canonical serialization run through the bounded collective preflight; one fixed 16 KiB frame per rank is then gathered and decoded on every rank.
+
+Public execution now fails closed unless the measured topology is exactly the current single-node plan: four `MULTI_GPU` ranks, rank/local-rank/Accelerator device/current CUDA device mapping `0..3`, all four CUDA devices visible on each rank, native (non-emulated) bf16 support, and four distinct non-MIG device UUIDs. Missing UUID or native-bf16 APIs are errors; CUDA indices are not treated as physical identities. The gate runs before model, optimizer, compile, dataset, or training construction. Missing launch readiness still stops earlier.
+
+Published `runtime_hardware` metadata contains the gathered per-rank observations: topology, CUDA availability/count, device name and UUID, capability, native-bf16 result, Torch version, Torch CUDA build, and cuDNN version. These fields are labelled `runtime_observation`, not readiness or certification. The finalizer requires the schema and reruns the public topology validator for production-scope metadata.
+
+The private integration seam remains forced CPU. It records `test_hardware=true`, `MULTI_CPU`, CPU rank facts, and no GPU identity; it does not expose a public bypass. Synthetic four-GPU facts test only gate logic and are not GPU certification. Focused tests cover CPU, wrong world size, duplicate/missing UUID, unavailable UUID probe, false bf16 support, and bad rank mapping before any model path.
+
 ## Verification
 
 Interpreter/dependency paths:
@@ -94,17 +104,17 @@ git diff --check
 
 Results:
 
-- CLI suite: **37 passed**.
+- CLI suite: **45 passed**.
 - Finalizer suite: **42 passed**.
 - Fixed-runtime suite: **20 passed**.
 - Required reviewed baseline: **46 passed**.
-- Total requested tests: **145 passed**.
+- Total requested tests: **153 passed**.
 - Syntax compilation and `git diff --check`: exit 0.
 
 ## Remaining boundaries
 
 - No real launch-readiness record exists, so public training remains blocked.
-- No production corpus, real tokenizer/Hyena checkpoint, SIF execution, GPU, bf16 numerics, Inductor kernels, four-rank resource behavior, or production filesystem was exercised.
+- No production corpus, real tokenizer/Hyena checkpoint, SIF execution, GPU, bf16 numerics, Inductor kernels, four-rank GPU topology, resource behavior, or production filesystem was exercised. The new gate is a runtime assertion, not a GPU-readiness receipt or permission to launch.
 - Trusted readiness evidence is validated, not re-executed. Historical receipt paths remain digest-bound provenance and are not freshly reread.
 - Phase collectives coordinate ordinary rank-local Python failures only. Rank death, communicator failure, and DDP prepare/forward failures still rely on launcher timeout/termination.
 - Canonical paths, hashes, and before/after snapshots narrow TOCTOU exposure but do not guarantee immutability against adversarial in-place change-and-restore during opaque reads; immutable storage is required for that guarantee.

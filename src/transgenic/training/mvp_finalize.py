@@ -37,7 +37,7 @@ _STATUS_TRUNCATION_MARKER = "...[diagnostic truncated]"
 _SHA256_LENGTH = 64
 _REQUIRED_METADATA = {
     "identity_scope", "initialization_audit", "data_identities", "sif_code_identity",
-    "runtime_packages", "normalized_recipe", "seed_augmentation",
+    "runtime_packages", "normalized_recipe", "seed_augmentation", "runtime_hardware",
 }
 _IDENTITY_VERIFICATIONS = {"recorded", "independently_verified"}
 _RUNTIME_PACKAGES = {"python", "torch", "transformers", "accelerate", "safetensors"}
@@ -178,6 +178,36 @@ def _validate_initialization_audit(initialization: Any) -> None:
             raise ValueError(f"initialization_audit implementation identity is invalid for {name}")
 
 
+def _validate_runtime_hardware(value: Any, scope: str) -> None:
+    expected = {"measurement", "test_hardware", "world_size", "distributed_type",
+                "device_type", "distinct_device_uuids", "ranks"}
+    if not isinstance(value, dict) or set(value) != expected:
+        raise ValueError("runtime_hardware must contain the exact measured topology schema")
+    ranks = value["ranks"]
+    world = value["world_size"]
+    if (value["measurement"] != "runtime_observation" or type(value["test_hardware"]) is not bool or
+            type(value["distinct_device_uuids"]) is not bool or
+            isinstance(world, bool) or not isinstance(world, int) or world < 1 or
+            not isinstance(ranks, list) or len(ranks) != world or
+            any(not isinstance(fact, dict) for fact in ranks)):
+        raise ValueError("runtime_hardware is not a valid runtime observation")
+    if sorted(fact.get("rank") for fact in ranks) != list(range(world)):
+        raise ValueError("runtime_hardware ranks must be exactly 0..world_size-1")
+    distributed = {fact.get("distributed_type") for fact in ranks}
+    devices = {fact.get("device_type") for fact in ranks}
+    if (value["distributed_type"] != (next(iter(distributed)) if len(distributed) == 1 else "MIXED") or
+            value["device_type"] != (next(iter(devices)) if len(devices) == 1 else "mixed") or
+            any(fact.get("world_size") != world for fact in ranks)):
+        raise ValueError("runtime_hardware summary disagrees with measured rank facts")
+    if scope == "production":
+        if value["test_hardware"] or not value["distinct_device_uuids"]:
+            raise ValueError("production runtime_hardware cannot be marked as test hardware")
+        from .mvp_cli_runtime import _validate_public_hardware
+        _validate_public_hardware(ranks)
+    elif (not value["test_hardware"] or value["distinct_device_uuids"]):
+        raise ValueError("test runtime_hardware must be marked as test hardware")
+
+
 def _validate_metadata(metadata: Any, training_summary: Any) -> None:
     _canonical_json(metadata)
     _canonical_json(training_summary)
@@ -190,6 +220,7 @@ def _validate_metadata(metadata: Any, training_summary: Any) -> None:
     if scope not in {"production", "test"}:
         raise ValueError("identity_scope must be production or test")
     _validate_initialization_audit(metadata["initialization_audit"])
+    _validate_runtime_hardware(metadata["runtime_hardware"], scope)
     data = metadata["data_identities"]
     if not isinstance(data, dict):
         raise ValueError("data_identities must be an object")
