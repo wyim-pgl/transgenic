@@ -5,8 +5,11 @@ CPU-validated implementation only. No GPU/SIF/Hyena readiness is certified here.
 is still unimplemented and full readiness remains blocked**. See
 `notes/MVP_REAL_PROBES_REPORT.md` for exact CLI, actual SIF version pins, independent
 cache layout, nonzero-EST beam2 checks, CPU results and the smallest remaining task.
-The
-existing trainer and `mvp_cli_runtime.py:175-236` contract are unchanged.
+The readiness consumer schema remains unchanged. Review fix `981489d` corrects
+actual MVP train/valid decoder config wiring (v3/290/8192), adds collective probe
+failure guards, and rejects inherited `TRANSGENIC_RUN_DIR`. Historical B5 training
+is untouched; 250/12, LR, metrics, RNG and sampling policies are unchanged.
+**Regenerate every code/tooling binding and receipt after this fix.**
 `--validate-only` bypasses readiness; use this tool's **check** command instead.
 The base consumer trusts operator receipt digests; this tooling additionally
 checks the receipt files, DONE digests, measurements, sidecars and tool identity.

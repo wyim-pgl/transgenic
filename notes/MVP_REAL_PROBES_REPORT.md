@@ -1,5 +1,108 @@
 # Real CUDA probe implementation — partial, NOT launch-ready
 
+## Independent-review fix round 1 (supersedes historical wiring claims below)
+
+Fix base: `3b62306acfa989e3bcf2a15b6506068980a9c3fe`.
+Implementation: **`981489daa2ddbb040ab0056299655899dd2b28b2`**.
+Read the complete controller review
+`notes/mvp_execution_20260916/real_probes.independent_review.md` in main read-only.
+Only the existing isolated A worktree was modified. No SSH/jobs/subagents,
+other-worktree edits, merge, push or main writes.
+
+### R1: actual training and probe decoder inputs
+
+- `src/transgenic/training/mvp_cli_runtime.py`: both train and valid constructors
+  now pass the already-bound `cfg['data']['gff_vocab_version']`. Shared
+  `validate_decoder_dataset` requires agreement of dataset vocabulary version,
+  actual `len(dataset.dt)`, config/model vocabulary size, dataset maxlength,
+  config max_label_tokens and config/model decoder positions. Frozen v3 remains
+  **290 tokens / 8192 label tokens / 8192 positions**, not v2/2048.
+- `real_probes.datasets(args, bindings, cfg, model_config)` receives loaded config
+  and actual model config, passes the same decoder version and invokes the same
+  guard. It closes the dataset if the guard rejects it.
+- Existing real two-rank `execute -> _train -> final` CPU fixture now uses tiny
+  compute dimensions but actual v3/290/8192 semantics. An observing constructor
+  asserts explicit v3 kwargs and actual tokenizer/cap on **both train and valid
+  on every rank**. No production factory is mocked beyond the existing tiny
+  external Hyena/DNA tokenizer fixture. This catches future missing-kwarg regressions.
+- Real GFFTokenizer/dataset tests cover `<empty>` IDs `[0,289,2]`, two-gene separator
+  preservation, 2701-token labels (not truncated at2048), and >8192 labels preserving
+  the existing8192/end-token cap. Negative tests reject each version/vocabulary/cap
+  inconsistency. No historical dataset defaults or B5 trainer were changed.
+
+### R2: rank-local error boundaries and clean environment
+
+- Compiled-mode main now creates one Accelerator, then uses existing
+  `_collective_preflight` around local input setup, real model/loader initialization
+  and tier retrieval. Compiler/optimizer configuration and DataLoader construction
+  also use local-operation guards. `accelerator.prepare`, optimizer update,
+  hardware collection and final gather stay **outside** local-exception wrappers
+  because they contain collectives.
+- `collective_batches` guards rank-local retrieval of exactly24 batches.
+  `one_update` checks `_batch_parts` validity collectively before tensor transfer
+  and uses the trainer's collective finite/skip checks. Completion-count agreement
+  is also collective. `collective_compiler_check` shares local Inductor-counter/
+  suppress-errors failure with every rank **before** `gather_object`.
+- Actual two-rank CPU fault programs run under the real bounded runner. Rank1-only
+  loader exception and rank1-only zero generated-kernel count both yield the
+  original diagnostic on **both ranks**, nonzero launcher exit, FAILED JSON,
+  no timeout and **no DONE**. They do not simulate CUDA/NCCL failures; the launcher,
+  process-group timeout and outer allocation deadline remain mandatory backstops.
+- Both actual MVP runtime and probe reject nonempty `TRANSGENIC_RUN_DIR` before
+  model construction, preventing inherited encoder report writes into B5. Explicit
+  tests exercise both refusal paths. Probe offline environment is set before
+  importing Accelerator/HF modules, including the earlier process-group setup.
+- Main owns accelerator cleanup through its outer finally; no collective-containing
+  whole function was wrapped as if it were a rank-local operation.
+
+### Exact validation
+
+All commands use `/home/wyim/miniconda3/envs/pdb/bin/python` and
+`PYTHONPATH=.testdeps:src` in A.
+
+Initial focused run: **26 passed, 1 failed in73.16s**. The new intended >2048 test
+fixture had only1801 real tokens; expanded it from200 to300 gene blocks (2701 tokens).
+The implementation and tokenizer/cap policy were not relaxed.
+
+Full scoped command below: **245 passed in644.32s**, no timeout this round:
+
+```
+PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q \
+ tests/test_mvp_cli.py tests/test_mvp_finalize.py tests/test_mvp_runtime.py \
+ tests/test_weights_init.py tests/test_mvp_metrics.py tests/test_mvp_model.py \
+ tests/test_mvp_dataset.py tests/test_mvp_readiness_tools.py \
+ tests/test_mvp_readiness_review.py tests/test_mvp_real_probes.py tests/test_mvp_review_fixes.py
+```
+
+After the final offline-before-Accelerator ordering adjustment, focused rerun:
+**92 passed in112.55s** (all66 existing tooling, all15 earlier probes and11 new fix
+cases, including both actual distributed fault tests). Command uses the same
+prefix and files `tests/test_mvp_review_fixes.py tests/test_mvp_real_probes.py
+ tests/test_mvp_readiness_tools.py tests/test_mvp_readiness_review.py`.
+`py_compile` and `git diff --check` passed. Earlier historical fixture timeouts
+remain recorded below; no timeout was weakened and no historical root cause is
+claimed fixed.
+
+### Controller/resource-track handoff
+
+**Regenerate ALL consumed-code manifests, tooling bindings, prepared records and
+probe receipts** after this commit; previous v2-label results cannot certify v3.
+Independent controller re-review and real aarch64 SIF P1/P2/P4 remain required.
+Torch2.14/CUDA13.4, Transformers4.57.6 generation/cache, Accelerate1.15 parser,
+real 400M gradients, Inductor, deterministic GPU kernels, native bf16 and NCCL
+termination are still untested. This fix grants no GPU or training authorization.
+
+Resource agent must integrate this fix later (its worktree was not touched).
+Internal signatures changed to `datasets(args, bindings, cfg, model_config)` and
+`compiled_update(args, bindings, model, ds, accelerator)`; main owns Accelerator.
+Reuse `validate_decoder_dataset`, `collective_batches`, and
+`collective_compiler_check` as appropriate, never wrap collectives inside a local
+phase. Resource mode remains absent in A. No LR,250/12,metrics,RNG,heldout filtering
+or training-profile changes; dataset decoder wiring is the explicitly authorized
+correctness exception to the original no-trainer-change scope.
+
+---
+
 ## Scope and commits
 
 Only writer in `/tmp/b6-p2-readiness-1535112`, base
