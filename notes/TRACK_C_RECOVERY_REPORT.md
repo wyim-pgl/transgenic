@@ -1,5 +1,41 @@
 # Track C recovery report
 
+## Round-one C1 review fixes (supersedes the earlier C1 status below)
+
+- FIX_BASE: `2c91ecb295d88a1bc27199b0f84fe8af667abb08`; source/tests fix commit: **`53c8f7d1a0f6f5d69a2b2ff47d82cec361d06afe`**. This report update is a separate documentation commit.
+- Read all five findings verbatim in main `notes/recovery_20260916_1251/C.independent_review.md`; inspected historical wrappers and the log-layout record in `notes/RESTART_HANDOFF_20260915.md:38`. Only C1 and its CPU tests changed. `git diff --exit-code 2c91ecb` on the three C2/C3 Python files confirmed no changes; production/semantic gates remain intact.
+- **Container markers:** every scanned root checks its own markers independently of known-child exemptions (pilot, remaining8 batch, species, source unit, and audit tree). Absent container markers are allowed. Present FAILED, contradictory markers, malformed DONE, marker directories and symlinks fail. No new normal-container DONE requirement.
+- **Historical identity:** provenance must include `diamond_version`, `diamond_sha256`, `launcher_sha256`, and `taxonomy_helper_sha256`. Launcher SHA `5fa32fe8…d4e291` and helper SHA `32ea1a2e…d90302` were independently reproduced using `git show 950cf4c:<path> | sha256sum` and match both historical launch scripts. Engine SHA `0fb259d7…fed07d` is the approved pin in those scripts, not an arbitrary executable's self-declared identity. The recorded release/help lines must satisfy the exact historical 950cf4c acceptance contract (2.1.24 release, optionally .178, and .178 build). The auditor never executes the binary. Current audit/runtime hashes are recorded under separate audit-prefixed keys, not mistaken for historical producer identity.
+- **Timing/scripts/logs:** require nonempty regular `swissprot.time.txt` AND `orthodb.time.txt`, exactly as both wrappers produce. A `.time.txt` directory cannot abort inventory or stand in for evidence. Wrapper category is satisfied only by matching the archived wrapper bytes, irrespective of copied script filename: pilot SHA `8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a`; remaining8 SHA `4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c`. Require every remaining8 `logs/6164049_<0-7>.{out,err}`; empty stderr is valid inventory. An arbitrary script/log no longer substitutes for missing categories. Timing content remains an inventory, not a benchmark or format-specific timing interpretation.
+- **Closed unit inventory:** chose the smaller contract: hash all immediate regular files, reject ALL nested unit directories as UNRESOLVED even if they contain DONE. No claim to have recursively hashed rejected nested payloads. Existing tmp and symlink failures remain.
+- **Malformed evidence:** explicit top-level/nested provenance and consumed batch-input schema/type checks. Unit failures retain hashes and checks already gathered and continue inventory of the other 17 units. The unit boundary catches only declared evidence/JSON/encoding/I/O errors, not generic TypeError/KeyError/IndexError/AttributeError; a programmer-TypeError regression verifies propagation. Historical launcher ValueError validation is converted at its input-validation boundaries.
+
+### Remaining receipt gaps — intentional FAIL, not launch readiness
+
+The pilot wrapper contains no `--output`/`--error` directive, and no local submission receipt establishing the pilot log paths was found. Slurm defaults or `slurm-6163851.out` are **not inferred as authority**. Consequently `batch_artifacts:pilot:logs` is currently an explicit **UNRESOLVED FAIL** even when all 18 units pass. All 18 unit records and the rollup are still written before failure. A controller-reviewed historical submission receipt and a scoped follow-up change are required to resolve this gate; there is no CLI waiver. Neither real payload failure nor blastx resubmission follows from this missing receipt.
+
+An independent original engine version/banner receipt and the real binary bytes were not available locally. The implemented binding uses the archived wrapper's approved engine SHA and the historical launcher's version-validation contract; it does not claim an independently observed literal copyright/banner string. Unknown/mismatched historical pins explicitly fail. Original absolute files must remain resolvable for the real audit. No remote audit was performed. Wrapper-only A37 receipt/count bindings beyond the direct launcher's screened-query provenance remain outside replay scope, as the review noted. Existing tmp/execution.lock/preflight reconciliation and `.extern` OOM remain unresolved.
+
+### Round-one test evidence
+
+Baseline before edits: **65 passed**. New independent repro suite first ran against unfixed C1: **29 failed, 9 passed**, exposing all five findings. An additional directory-timing repro failed with IsADirectoryError before its fix. Synthetic unit fixtures now carry all required producer fields and named per-source timings; test-only monkeypatches substitute synthetic engine/wrapper trust anchors, never a public production override. Separate tests restore the real engine pin and prove an arbitrary self-hashed fixture binary fails. Integrated cases cover nine container-marker combinations, malformed provenance continuation with exactly one failed unit, malformed remaining8 manifest continuation, missing producer identity, and complete 18-unit FAIL rollups with no outer DONE.
+
+Final exact command from this worktree:
+
+```sh
+PYTHONPATH=.testdeps /home/wyim/micromamba/envs/kimicli/bin/python3.12 -m pytest -q \
+  revision/scripts/tests/test_est_blastx.py \
+  revision/scripts/tests/test_est_blastx_fixture.py \
+  revision/scripts/tests/test_track_c_recovery.py \
+  revision/scripts/tests/test_track_c_audit_review.py
+bash -n revision/scripts/evidence/est_blastx_audit.sbatch revision/scripts/evidence/est_phase_accept_fixture.sbatch
+/home/wyim/micromamba/envs/kimicli/bin/python3.12 -m py_compile revision/scripts/evidence/est_blastx_audit.py
+```
+
+**116 passed** (existing 65 + 51 round-one cases); bash syntax, py_compile and staged diff whitespace checks passed. This is CPU fixture verification, not actual historical payload acceptance. Scoped independent re-review remains the controller's responsibility. No SSH, jobs, main edits, subagents, merge or push; dependency/graph/ignore files excluded from commits.
+
+---
+
 ## Scope and commits
 
 - Worktree only: `/tmp/b6-p2-phase-1535433`, branch `b6-p2-phase-20260916a`.
