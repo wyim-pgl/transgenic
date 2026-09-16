@@ -70,6 +70,93 @@ def frozen_reference(fasta, reference):
             'manifest_sha256': hashlib.sha256(proc.stdout).hexdigest(), 'files': bound}
 
 
+def verify_training_code(source, metadata):
+    """Apply the existing training closure schema at its bound checkout, not ours."""
+    require(isinstance(source, dict) and set(source) == {'files', 'external_packages'}, 'invalid consumed code manifest')
+    files, packages = source['files'], source['external_packages']
+    require(isinstance(files, dict) and files, 'consumed code files must be a nonempty object')
+    required_packages = {'accelerate', 'duckdb', 'safetensors', 'torch', 'transformers'}
+    require(isinstance(packages, dict) and set(packages) == required_packages and
+            all(isinstance(v, str) and v.strip() for v in packages.values()), 'complete five-package code schema required')
+    # duckdb is mandatory in the training code manifest but absent from the
+    # existing finalizer runtime_packages schema. No scoring-runtime comparison.
+    for name in required_packages - {'duckdb'}:
+        require(packages[name] == metadata['runtime_packages'][name], 'code/runtime package mismatch')
+    implementation = metadata['initialization_audit']['audit']['implementation']
+    runtime_path = Path(implementation['b5_runtime.py']['path'])
+    require(runtime_path.is_absolute() and runtime_path.parts[-4:] ==
+            ('src', 'transgenic', 'training', 'b5_runtime.py'), 'invalid bound training checkout path')
+    root = runtime_path.parents[3].resolve(strict=True)
+    # Same closure as mvp_cli_runtime._expected_code_files, evaluated in the
+    # historical training checkout. Additional scoring-checkout files are irrelevant.
+    expected = {str(path) for path in (root/'src/transgenic').rglob('*.py')}
+    expected.add(str(root/'train/train_HyenaTransgenic_MVP.py'))
+    require(set(files) == expected, 'consumed code manifest must match exact bound training source closure')
+    require(all(str(Path(path).resolve(strict=True)) == path for path in files), 'noncanonical consumed code path')
+    identities = [check_file(path, {'sha256': digest}) for path, digest in files.items()]
+    for name, relative in [('b5_runtime.py', 'src/transgenic/training/b5_runtime.py'),
+                           ('configuration_transgenic.py', 'src/transgenic/model/configuration_transgenic.py')]:
+        path = str(root/relative)
+        require(implementation[name] == {'path': path, 'sha256': files.get(path)}, 'initialization implementation/code binding mismatch')
+    # Reconstruct semantics only with the same project-owned implementation.
+    # Do not import/execute arbitrary files from a supplied historical checkout.
+    from transgenic.training import weights_init as wi
+    for module, relative in [(wi, 'src/transgenic/training/weights_init.py'),
+                             (wi.b5_runtime, 'src/transgenic/training/b5_runtime.py'),
+                             (wi.configuration_transgenic, 'src/transgenic/model/configuration_transgenic.py')]:
+        require(files.get(str(root/relative)) == w.sha256_file(module.__file__),
+                'unsupported historical semantic implementation; reviewed verifier adapter required')
+    return identities
+
+
+def verify_initialization(audit, initialization, final_config):
+    """Reconstruct directly checkable loader claims without loading a full model."""
+    from transgenic.training import weights_init as wi
+    from safetensors import safe_open, SafetensorError
+    checkpoint = Path(audit['resolved_checkpoint_dir'])
+    require(initialization['model.safetensors']['path'] == str(checkpoint/'model.safetensors') and
+            initialization['run_config.json']['path'] == str(checkpoint.parent/'run_config.json'),
+            'source checkpoint/run config canonical paths mismatch')
+    for name in ('config.json', 'meta.json', 'runtime.json', 'runtime_identity.txt'):
+        if name in initialization:
+            parent = checkpoint.parent if name == 'runtime_identity.txt' else checkpoint
+            require(initialization[name]['path'] == str(parent/name), 'source optional file canonical path mismatch')
+    run_config = read_json(initialization['run_config.json']['path'])
+    require(isinstance(run_config, dict) and type(run_config.get('seed')) is int and
+            run_config['seed'] == 123, 'baseline source is not seed 123')
+    recipe = run_config.get('recipe')
+    require(isinstance(recipe, dict) and wi._REQUIRED_RECIPE_KEYS <= set(recipe), 'embedded source recipe missing required keys')
+    require(audit['recipe'] == {'canonical_sha256': wi._sha256_bytes(wi._canonical(recipe))}, 'source recipe canonical digest mismatch')
+    require(type(recipe.get('evidence_channels', 0)) is int and recipe.get('evidence_channels', 0) == 0,
+            'source recipe must have zero evidence channels')
+    source_config = wi.HyenaTransgenicConfig(**wi.model_kwargs(recipe))
+    source_fields = wi._manifest(source_config, recipe)
+    for name in wi._SEMANTIC_FIELDS:
+        if name in recipe and name != 'evidence_channels' and hasattr(source_config, name):
+            require(wi._canonical(wi._value(recipe[name])) == wi._canonical(wi._value(getattr(source_config, name))),
+                    f'source recipe semantic contradiction: {name}')
+    require(wi._manifest_record(source_fields) == audit['source_semantics'], 'source semantic manifest mismatch')
+    if 'config.json' in initialization:
+        recorded = read_json(initialization['config.json']['path'])
+        require(isinstance(recorded, dict), 'source config must be a JSON object')
+        for name, entry in source_fields.items():
+            if name in recorded:
+                require(wi._canonical(recorded[name]) == wi._canonical(entry['value']), f'source config semantic mismatch: {name}')
+    require(isinstance(final_config, dict), 'final config must be a JSON object')
+    require(set(audit['target_semantics']['fields']) <= set(final_config), 'final config missing audited semantic fields')
+    target_fields = wi._manifest(wi.HyenaTransgenicConfig(**final_config), None)
+    require(wi._manifest_record(target_fields) == audit['target_semantics'], 'final config target semantic manifest mismatch')
+    for name, entry in target_fields.items():
+        require(wi._canonical(final_config[name]) == wi._canonical(entry['value']), f'final config semantic normalization: {name}')
+    wi._check_equal(source_fields, target_fields)
+    try:
+        with safe_open(initialization['model.safetensors']['path'], framework='pt', device='cpu') as model:
+            require(bool(list(model.keys())) and wi._PROJECTION_KEY not in model.keys(), 'invalid zero-channel source weights inventory')
+            require(model.metadata() == audit['load']['safetensors_metadata'], 'source safetensors metadata mismatch')
+    except SafetensorError as error:
+        raise ValueError('source weights are not readable safetensors') from error
+
+
 def verify_final(final, seed, expected_rns, data_hashes, code_manifest):
     """Consume exactly mvp_finalize's existing publication format."""
     from transgenic.training.mvp_finalize import _validate_metadata
@@ -88,16 +175,11 @@ def verify_final(final, seed, expected_rns, data_hashes, code_manifest):
         require(metadata['data_identities'][name]['sha256'] == digest, f'final {name} identity mismatch')
     code = check_file(code_manifest, metadata['sif_code_identity']['code'])
     source = read_json(code_manifest)
-    require(set(source) == {'files', 'external_packages'} and source['files'], 'invalid consumed code manifest')
-    code_files = [check_file(p, {'sha256': h}) for p, h in source['files'].items()]
-    # Finalizer metadata omits duckdb, while the consumed-code manifest includes it.
-    for package in set(source['external_packages']) & set(metadata['runtime_packages']):
-        require(metadata['runtime_packages'][package] == source['external_packages'][package], 'code/runtime package mismatch')
+    code_files = verify_training_code(source, metadata)
     audit_files = metadata['initialization_audit']['audit']['files']
     initialization = {name: check_file(record['path'], record['before'])
                       for name, record in audit_files.items() if record is not None}
-    source_config = read_json(initialization['run_config.json']['path'])
-    require(type(source_config.get('seed')) is int and source_config['seed'] == 123, 'baseline source is not seed 123')
+    verify_initialization(metadata['initialization_audit']['audit'], initialization, read_json(final/'config.json'))
     records = [json.loads(line) for line in (final / 'paired_records.jsonl').read_text().splitlines()]
     for record in records:
         validate_paired_record(record)
@@ -140,8 +222,11 @@ def fasta_lengths(path):
 def read_gff(path):
     """Strict preflight around the existing half-open GFF parser; never repair data."""
     genes, transcripts, features = {}, {}, []
+    gff3_header = False
     with Path(path).open() as f:
         for line in f:
+            if line.rstrip('\r\n') == '##gff-version 3':
+                gff3_header = True
             if not line.strip() or line.startswith('#'):
                 continue
             cols = line.rstrip('\n').split('\t')
@@ -151,6 +236,12 @@ def read_gff(path):
             fields = [a.split('=', 1) for a in attrs.split(';') if a]
             require(all(len(a) == 2 for a in fields) and len(dict(fields)) == len(fields), 'malformed GFF attributes')
             attrs = dict(fields)
+            require(all(key == key.strip() and not any(c.isspace() for c in key) for key in attrs), 'noncanonical GFF attribute key')
+            for key in ('ID', 'Parent'):
+                if key in attrs:
+                    identifiers = attrs[key].split(',') if key == 'Parent' else [attrs[key]]
+                    require(all(re.fullmatch(r'[A-Za-z0-9_.:-]+', value) for value in identifiers) and
+                            len(identifiers) == len(set(identifiers)), 'noncanonical GFF ID/Parent')
             span = (chrom, int(start) - 1, int(end), strand)
             if kind == 'gene':
                 gid = attrs.get('ID')
@@ -167,6 +258,7 @@ def read_gff(path):
                     features.append((parent, span))
             else:
                 raise ValueError(f'unsupported GFF feature {kind}; no silent omission')
+    require(genes or gff3_header, 'completed empty prediction requires explicit ##gff-version 3 header')
     def contained(child, parent):
         return child[0] == parent[0] and child[3] == parent[3] and parent[1] <= child[1] < child[2] <= parent[2]
     for parent, span in transcripts.values():
@@ -174,6 +266,10 @@ def read_gff(path):
     for parent, span in features:
         require(contained(span, transcripts[parent][1]), 'feature outside transcript')
     parsed = legacy_module('07_selfconsistency_stats.py').load_gff(str(path))
+    require(set(parsed) == set(genes), 'GFF parser gene inventory changed')
+    for gid, gene in parsed.items():
+        require(set(gene['transcripts']) == {tid for tid, (parent, _) in transcripts.items() if parent == gid},
+                'GFF parser transcript inventory changed')
     for gene in parsed.values():
         require(gene['transcripts'], 'GFF gene has no transcripts; only a header-only file represents zero predictions')
         for tx in gene['transcripts'].values():
@@ -353,7 +449,7 @@ def produce(input_path, out):
                   count_provenance_status='DERIVED_FROM_RAW_GFF_IN_THIS_INVOCATION',
                   reference_identity_status='COMMIT_BOUND_SPECIES_MANIFEST',
                   baseline_reference_counts=baseline,
-                  provenance_caveat='Receipts establish local consistency, not cryptographic proof of historical execution or scientific approval.')
+                  provenance_caveat='Receipts establish local consistency, not historical execution or scientific approval. Seed-123 source bytes agree with initialization declarations; an external concrete pin for the intended historical best checkpoint remains required.')
     baseline_rows = [{'gene_id': c['gene_id'], 'seeds': {'123': {'off': {k:v for k,v in c.items() if k != 'gene_id'}}}} for c in baseline]
     core_ids = {l.gene_id for l in panel if l.panel == 'mvp_core'}
     result['baseline_reference_F1_percent'] = {
