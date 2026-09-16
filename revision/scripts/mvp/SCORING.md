@@ -3,6 +3,48 @@
 Exploratory / MVP only. No training authorization, GPU decoder, job submission,
 or empirical results are supplied by these programs.
 
+## Raw-GFF producer (new, controller review required)
+
+`mvp_produce_counts.py --input evaluation.json --out NEW_DIRECTORY` derives
+reference-dependent counts in the same invocation that verifies finalizer
+receipts and computes the existing statistics. Exact decoder transport contract:
+`notes/MVP_EVALUATION_INPUT_CONTRACT.md`. Do not feed `counts.json` back into the
+legacy adapter and describe its output as independently verified: that adapter
+still deliberately labels caller-supplied counts unverified.
+
+The producer binds the existing finalizer five-file manifest, marker, production
+metadata, seed/augmentation recipe, checkpoint and source initialization bytes,
+consumed code manifest/source bytes, paired summary, and complete valid RN set
+from the existing candidate/inventory/actual-DB verifier. All three runs must
+share consumed code and initialization source identities. Hashes establish local
+consistency, not proof of historical execution, authority, or scientific approval.
+
+FASTA/GFF MD5 authority is the Athaliana row of commit
+`92d8020ee79eeedd7f1d50167b1c8dc94700fb16:data/manifests/b5_species_v1.tsv`,
+read from git, not supplied by the caller. Missing anchor or wrong bytes fails.
+The reference is restricted by the existing script 24, then checked against
+panel gene coordinates/strand; raw predictions are restricted by gene overlap.
+A strict wrapper reuses script 07's half-open parser. Explicit exon rows and
+ordered gene/transcript/features are required; unsupported features and malformed
+geometry fail instead of silently changing denominators. Monoexonic matches
+require identical nonempty CDS intervals and strand. Multiexonic matching runs
+GFFCompare 0.12.6 and accepts only `=` with independently equal intron chains and
+strand. Exact commands, executable bytes/version, comparison output bytes,
+TP/FP/FN and per-locus input identities are retained. Empty prediction files are
+valid completed zero predictions; missing files are errors.
+
+**Unresolved multiplicity:** duplicate identical intron-chain structures (or
+identical monoexonic CDS structures) in either selected prediction/reference
+set currently fail closed. No silent deduplication, many-to-one TP inflation,
+or new author-approved multiplicity policy is asserted. This may block real
+panel scoring and needs controller/author resolution before operational use.
+Reference-dependent F1 and the seed-123 baseline are not independent splice P/R.
+Read-evidence coverage and withholding remain unavailable/unassessable, with
+unchanged author HiFi-policy block and `decision=null`. No training code or
+bootstrap math/thresholds changed. The legacy alignment driver below retains
+its explicit external-reference-gate limitation; this producer's reference gate
+does not retroactively certify any alignment outputs.
+
 ## Alignment driver
 
 `mvp_align_panel_longreads.py --help` lists required local inputs. Without
