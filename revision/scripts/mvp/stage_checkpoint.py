@@ -15,8 +15,8 @@ This script therefore produces a self-contained staged run root:
     runtime_identity.txt     copied from the source run root, re-hashed
     checkpoint/
       model.safetensors      copied from the pinned epoch dir, re-hashed
-      eval.json, meta.json   copied when present (provenance; meta.json is
-                             snapshotted by the loader when it exists)
+      config.json, meta.json, runtime.json  exact loader inventory, if present
+      eval.json             copied when present (additional provenance)
     staging_receipt.json     measured source/staged hashes (atomic)
     STAGING_DONE             marker, written last (renameat2 NOREPLACE)
 
@@ -102,11 +102,12 @@ def main(argv: list[str] | None = None) -> int:
 
     import time
     quota_path = Path(args.quota_record)
-    from make_launch_readiness import json_snapshot
+    from make_launch_readiness import json_snapshot, optional_sidecars
     quota = json_snapshot(quota_path, args.quota_sha256)
+    chosen_sidecars = optional_sidecars(source_epoch)
     size = sum(p.stat().st_size for p in [source_epoch / 'model.safetensors',
                source_root / 'run_config.json', source_root / 'runtime_identity.txt'] +
-               [source_epoch / name for name in ('eval.json', 'meta.json') if (source_epoch / name).exists()])
+               [source_epoch / name for name in (*chosen_sidecars, 'eval.json') if (source_epoch / name).exists()])
     if (quota.get('path') != str(destination.parent.resolve()) or
             type(quota.get('available_bytes')) is not int or
             type(quota.get('measured_at_unix')) not in (int, float) or
@@ -131,10 +132,16 @@ def main(argv: list[str] | None = None) -> int:
             source_root / "runtime_identity.txt", destination / "runtime_identity.txt",
             args.expected_runtime_identity_sha256, "runtime_identity.txt"),
     }
-    for optional in ("eval.json", "meta.json"):
-        candidate = source_epoch / optional
-        if candidate.is_file():
-            receipts[optional] = _copy_verified(candidate, checkpoint / optional, None, optional)
+    for name, identity in chosen_sidecars.items():
+        if identity is not None:
+            receipts[name] = _copy_verified(source_epoch / name, checkpoint / name,
+                                            identity['sha256'], name)
+    candidate = source_epoch / 'eval.json'
+    if candidate.is_file():
+        receipts['eval.json'] = _copy_verified(candidate, checkpoint / 'eval.json', None, 'eval.json')
+    if (optional_sidecars(source_epoch) != chosen_sidecars or
+            optional_sidecars(checkpoint) != chosen_sidecars):
+        raise ValueError('loader sidecar inventory changed during staging')
 
     run_config = json.loads((destination / "run_config.json").read_text(encoding="utf-8"))
     if not isinstance(run_config, dict) or run_config.get("seed") != 123:
@@ -145,6 +152,7 @@ def main(argv: list[str] | None = None) -> int:
         "purpose": "mvp_init_checkpoint_staging",
         "output_use": "EXPLORATORY_MVP_NOT_FOR_PRODUCTION",
         "source_epoch": str(source_epoch),
+        "optional_sidecars": chosen_sidecars,
         "staged_init_from": str(checkpoint),
         "files": receipts,
         "staged_at_utc": datetime.now(timezone.utc).isoformat(),

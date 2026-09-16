@@ -106,7 +106,7 @@ def measurement(name):
     return value
 
 
-def input_args(tmp_path):
+def input_args(tmp_path, sidecars=None):
     # Standalone synthetic acceptance fixture: never a production receipt.
     from transgenic.training.mvp_cli import _ACCEPTANCE_CHECKS
     files = {}
@@ -115,6 +115,8 @@ def input_args(tmp_path):
         files[name].write_text(name)
     checkpoint = tmp_path / 'checkpoint'
     checkpoint.mkdir()
+    for name, value in (sidecars or {}).items():
+        put(checkpoint / name, value)
     (checkpoint / 'model.safetensors').write_bytes(b'weights')
     put(tmp_path / 'run_config.json', {'seed': 123})
     (tmp_path / 'runtime_identity.txt').write_text('runtime')
@@ -158,9 +160,9 @@ def input_args(tmp_path):
     return args, pins
 
 
-def prepared(tmp_path, monkeypatch):
+def prepared(tmp_path, monkeypatch, sidecars=None):
     monkeypatch.setenv('SLURM_JOB_ID', 'CPU_UNIT_FIXTURE')
-    args, pins = input_args(tmp_path)
+    args, pins = input_args(tmp_path, sidecars)
     manifest = tmp_path / 'code.json'
     bindings = tmp_path / 'bindings.json'
     assert readiness.main(['prepare', *args, *pins, '--manifest-output', str(manifest),
@@ -302,8 +304,8 @@ def test_probe_retries_only_warmup_then_publishes_hash_marker(tmp_path, monkeypa
     assert (out / 'real_tokenizer.DONE').read_text().strip() == readiness._sha256(out / 'real_tokenizer.json')
 
 
-def launch_fixture(tmp_path, monkeypatch):
-    args, pins, manifest, bindings = prepared(tmp_path, monkeypatch)
+def launch_fixture(tmp_path, monkeypatch, sidecars=None):
+    args, pins, manifest, bindings = prepared(tmp_path, monkeypatch, sidecars)
     budget = tmp_path / 'budget.json'
     budget_sha = put(budget, {'authorized_scope': 'exploratory_mvp', 'seeds': [1], 'max_wall_seconds': 1000})
     for name, stage in readiness.EVIDENCE_RECEIPTS.items():

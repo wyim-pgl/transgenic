@@ -70,8 +70,12 @@ measured quota headroom, `measured_at_unix` is its actual timestamp. It must be
 at most one hour old. Keep the original quota command/output alongside it.
 Filesystem free space is checked separately. Failures leave a `.partial.PID`
 directory for inspection, never a published destination. Do not auto-delete it.
-Success publishes parent sidecars plus `checkpoint/model.safetensors`, optional
-`eval.json`/`meta.json`, a staging receipt and digest-bound `STAGING_DONE`.
+Success publishes parent sidecars plus `checkpoint/model.safetensors`, the exact
+chosen loader inventory (`config.json`, `meta.json`, `runtime.json`, each present
+with its digest/size or explicitly absent), optional `eval.json`, a staging
+receipt and digest-bound `STAGING_DONE`. Sidecars must be canonical nonsymlink
+regular files. Staging checks the chosen source and copied inventories before
+publication; readiness prepare/generate/check bind presence as well as bytes.
 Use `--init-from "$FRESH_STAGED_ROOT/checkpoint"`.
 
 ## Prepare → probe → generate → direct check
@@ -83,7 +87,9 @@ Use `--init-from "$FRESH_STAGED_ROOT/checkpoint"`.
 Seeds are exactly 1/2/3; prepare separate bindings/receipts per seed.
 
 1. **prepare** writes a non-authorizing bindings JSON and exact consumed-code
-   manifest. Save its SHA256. It hashes all inputs on compute and compares the
+   manifest, including the shipped `accelerate_mvp.json` config path and bytes.
+   Config absence fails prepare; later addition/removal/modification cannot reuse
+   prepared evidence. Save the bindings SHA256. It hashes all inputs on compute and compares the
    corpus/evidence/panel identities with the accepted candidate.
 2. Run each real, reviewed probe with `run_bounded.py`:
 
@@ -149,7 +155,18 @@ projected runtime must fit the requested bound. Allow additional allocation
 time for input rehashing and up to three 60-second CUDA-startup attempts.
 The wrapper rejects `--validate-only`, missing readiness, existing output or
 unauthorized seed/budget. It directly checks readiness, warms CUDA, then launches
-exactly one fixed four-process bf16 Accelerate training attempt.
+exactly one fixed four-process bf16 Accelerate training attempt. It passes the exact
+bound `accelerate_mvp.json` path through `--config_file` and rechecks its bytes
+after warmup; home/default Accelerate config is not consulted. The config pins
+single-machine rank 0, GPU IDs `0,1,2,3`, bf16, static loopback rendezvous
+`127.0.0.1:29500`, and Accelerate Dynamo `NO`. `--max_restarts 0` is explicit on
+the command line (it is not a supported ClusterConfig key in Accelerate 0.34.2).
+Dynamo `NO` prevents a second Accelerate compiler; the trainer still compiles its
+bound forward, with no eager fallback. Its four-distinct-non-MIG-GPU gate stays
+unchanged. Port 29500 must be free in the isolated single-node allocation.
+The schema/parser was CPU-tested with installed Accelerate 0.34.2 against a
+conflicting default config. Verify the actual SIF dependency separately; this
+is not production SIF certification. All original trainer argv are preserved.
 
 SIGTERM/timeout writes atomic FAILED, never completion or resumable state.
 The trainer has no public resume or graceful-save handler. Zero child exit is

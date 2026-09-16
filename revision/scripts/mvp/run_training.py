@@ -88,8 +88,14 @@ def main(argv=None):
                 raise ValueError('CUDA warmup failed without retryable startup status')
         else:
             raise ValueError('CUDA warmup failed after three bounded attempts')
+        # Recheck after warmup: launch only the exact prepared config bytes/path.
+        from make_launch_readiness import accelerate_config_binding
+        accelerate_config = ready['bindings']['accelerate_config']
+        if accelerate_config_binding() != accelerate_config:
+            raise ValueError('Accelerate config changed before launch')
         command = [sys.executable, '-m', 'accelerate.commands.launch', '--multi_gpu',
                    '--num_machines', '1', '--num_processes', '4', '--mixed_precision', 'bf16',
+                   '--config_file', accelerate_config['path'], '--max_restarts', '0',
                    str(_REPO_ROOT / 'train/train_HyenaTransgenic_MVP.py'), *training_argv]
         status.update(run_command(command, status_dir / 'training.log', args.timeout_seconds))
         if status['exit_code'] != 0 or status['timed_out'] or status['signal'] is not None:

@@ -48,6 +48,28 @@ EVIDENCE_RECEIPTS = {
     "resource_budget": "p4_compile_topology",
 }
 _EXTERNAL_PACKAGES = ("accelerate", "duckdb", "safetensors", "torch", "transformers")
+ACCELERATE_CONFIG = Path(__file__).resolve().with_name('accelerate_mvp.json')
+
+
+def accelerate_config_binding() -> dict:
+    path = ACCELERATE_CONFIG.absolute()
+    if path.resolve() != path or not path.is_file():
+        raise ValueError('explicit Accelerate config must be a canonical nonsymlink regular file')
+    return {'path': str(path), 'sha256': _sha256(path)}
+
+
+def optional_sidecars(checkpoint: Path) -> dict:
+    """Exact loader-consumed inventory; absence is identity, not a skipped check."""
+    inventory = {}
+    for name in ('config.json', 'meta.json', 'runtime.json'):
+        path = checkpoint / name
+        if not os.path.lexists(path):
+            inventory[name] = None
+        else:
+            if path.resolve() != path.absolute() or not path.is_file():
+                raise ValueError(f'optional sidecar must be a canonical nonsymlink regular file: {path}')
+            inventory[name] = {'sha256': _sha256(path), 'bytes': path.stat().st_size}
+    return inventory
 
 
 def require_allocation() -> str:
@@ -80,7 +102,8 @@ def json_snapshot(path, expected):
 def tooling_identity():
     directory = Path(__file__).resolve().parent
     return {str(directory / name): _sha256(directory / name) for name in
-            ('make_launch_readiness.py', 'stage_checkpoint.py', 'run_bounded.py', 'run_training.py')}
+            ('make_launch_readiness.py', 'stage_checkpoint.py', 'run_bounded.py', 'run_training.py',
+             'accelerate_mvp.json')}
 
 
 def _canonical_bytes(value: dict) -> bytes:
@@ -191,6 +214,7 @@ def _source_checkpoint_binding(init_from: str) -> dict:
         raise SystemExit("FAIL: source checkpoint run_config.json must bind seed 123 "
                          "(B5 seed123 identity); refusing to fabricate the binding")
     binding = {
+        "optional_sidecars": optional_sidecars(checkpoint),
         "weights_path": str(weights),
         "weights_sha256": _sha256(weights),
         "weights_bytes": weights.stat().st_size,
@@ -250,6 +274,7 @@ def generate(args: argparse.Namespace) -> int:
             "consumed_code_manifest": {"path": str(manifest_path),
                                        "sha256": _sha256(manifest_path)},
             "tooling": tooling_identity(),
+            "accelerate_config": accelerate_config_binding(),
             "recipe": asdict(MVPRecipe()),
             "seed": args.seed,
         },
@@ -308,6 +333,8 @@ def check(args: argparse.Namespace) -> int:
     record = validate_launch_readiness(args.readiness, args.readiness_sha256, candidate, paths,
                                        seed=args.seed, recipe=MVPRecipe())
     bindings = record['bindings']
+    if bindings.get('accelerate_config') != accelerate_config_binding():
+        raise ValueError('Accelerate config identity changed')
     if bindings.get('tooling') != tooling_identity():
         raise ValueError('readiness tooling identity changed')
     if _source_checkpoint_binding(args.init_from) != bindings['source_checkpoint']:
