@@ -1,0 +1,30 @@
+# src/transgenic/training/b5_runtime.py
+
+- resolve_checkpointing · function · L22-L41 — def resolve_checkpointing(env: Dict[str, str], world_size: int) -> str
+- epoch_batches · function · L44-L54 — def epoch_batches(dataloader, epoch: int, resume_step: int = 0)
+- load_b5_config · function · L57-L73 — def load_b5_config(path: str) -> Dict
+- model_kwargs · function · L76-L86 — def model_kwargs(cfg: Dict) -> Dict
+- accumulation_steps · function · L89-L93 — def accumulation_steps(cfg: Dict, batch_size: int) -> int
+- EarlyStopper · class · L96-L117 — class EarlyStopper
+- __init__ · method · L99-L103 — def __init__(self, patience: int = DEFAULT_PATIENCE, min_delta: float = 0.0)
+- update · method · L105-L111 — def update(self, epoch: int, loss: float) -> Tuple[bool, bool]
+- state · method · L113-L114 — def state(self) -> Dict
+- load_state · method · L116-L117 — def load_state(self, s: Dict) -> None
+- CheckpointLayout · class · L120-L226 — class CheckpointLayout
+- __init__ · method · L123-L125 — def __init__(self, run_dir: str)
+- epoch_dir · method · L127-L128 — def epoch_dir(self, epoch: int) -> str
+- begin_epoch · method · L130-L136 — def begin_epoch(self, epoch: int) -> str
+- finish_epoch · method · L138-L150 — def finish_epoch(self, epoch: int, eval_loss: Optional[float], train_loss: float, extra: Optional[Dict] = None, is_best: bool = False) -> str
+- set_best · method · L152-L156 — def set_best(self, epoch: int) -> None
+- completed_epochs · method · L158-L163 — def completed_epochs(self) -> List[int]
+- latest_epoch · method · L165-L167 — def latest_epoch(self) -> Optional[int]
+- write_state · method · L169-L171 — def write_state(self, state: Dict) -> None
+- read_state · method · L173-L178 — def read_state(self) -> Optional[Dict]
+- mark_done · method · L180-L182 — def mark_done(self) -> None
+- latest_state_dir · method · L184-L185 — def latest_state_dir(self) -> str
+- resume_dir · method · L187-L215 — def resume_dir(self, mode: Optional[str]) -> Optional[str]
+- gstep · function · L208-L214 — def gstep(d)
+- check_run_config · method · L217-L226 — def check_run_config(self, current: Dict) -> None
+- split_row_numbers · function · L229-L253 — def split_row_numbers(db: str, split: str, excluded_species: Sequence[str] = ("Zmays",), require_labels: bool = True, window_len: Optional[int] = None) -> List[int]
+- parse_args · function · L256-L277 — def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace
+- benchmark_summary · function · L280-L288 — def benchmark_summary(step_seconds: Sequence[float], tokens_per_step: Sequence[int], rows_in_train: int, rows_per_step: int, peak_mem_gb: Optional[float] = None, warmup: int = 20) -> Dict

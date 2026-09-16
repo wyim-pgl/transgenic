@@ -1,0 +1,56 @@
+# src/transgenic/utils/gsf_contract.py
+
+- CapError · class · L58-L59 — class CapError(ValueError)
+- SplitError · class · L62-L63 — class SplitError(KeyError)
+- Feature · class · L67-L71 — class Feature
+- Gene · class · L75-L83 — class Gene
+- species_code · function · L89-L91 — def species_code(species_id: str) -> str
+- key_is_valid · function · L94-L95 — def key_is_valid(key: str) -> bool
+- gene_key · function · L98-L104 — def gene_key(species_code_: str, gff_id: str, gff_name: str, counter: int) -> str
+- pad_window_tiered · function · L110-L131 — def pad_window_tiered(start0: int, end0: int, rng: Optional["random.Random"] = None, tier_up_prob: float = 0.0, tiers: Sequence[int] = WINDOW_TIERS, min_flank: int = MIN_FLANK) -> Tuple[int, int, int]
+- pad_window · function · L134-L144 — def pad_window(start0: int, end0: int) -> Tuple[int, int]
+- _attrs · function · L153-L154 — def _attrs(col9: str) -> Dict[str, str]
+- parse_gff3 · function · L157-L200 — def parse_gff3(lines: Iterable[str], species_code: Optional[str] = None) -> Iterator[Gene]
+- _rel · function · L206-L207 — def _rel(f: Feature, ws: int) -> Tuple[str, int, int, str]
+- _orient · function · L210-L211 — def _orient(strand: str)
+- _transcription_order · function · L214-L216 — def _transcription_order(feats: Sequence[Tuple[str, int, int, str]], strand: str)
+- exons_of · function · L219-L227 — def exons_of(feats: Sequence[Tuple[str, int, int, str]]) -> List[Tuple[int, int]]
+- _signature · function · L230-L241 — def _signature(feats: Sequence[Tuple[str, int, int, str]], strand: str)
+- _serialize · function · L244-L262 — def _serialize(transcripts: Sequence[Sequence[Tuple[str, int, int, str]]], strand: str) -> str
+- _phase_letter · function · L265-L270 — def _phase_letter(f: Tuple[str, int, int, str]) -> str
+- gene_to_gsf · function · L273-L275 — def gene_to_gsf(gene: Gene, window_start: int) -> str
+- _parse · function · L278-L294 — def _parse(gsf: str)
+- gsf_to_gene · function · L297-L307 — def gsf_to_gene(gsf: str, window_start: int, chrom: str, strand: str, gene_id: str) -> Gene
+- canonicalize · function · L310-L312 — def canonicalize(gsf: str) -> str
+- _recompute_phases · function · L318-L335 — def _recompute_phases(tx: Sequence[Tuple[str, int, int, str]], strand: str, initial_phase: Optional[int] = None) -> List[Tuple[str, int, int, str]]
+- reverse_complement · function · L338-L347 — def reverse_complement(gsf: str, window_len: int) -> str
+- count_tokens_v2 · function · L353-L368 — def count_tokens_v2(gsf: str) -> int
+- check_caps · function · L371-L389 — def check_caps(gsf: str, window_len: Optional[int] = None) -> None
+- build_rows · function · L395-L423 — def build_rows(genes: Iterable[Gene], species_id: str, rc: str, split_lookup: Dict[str, str], return_rejected: bool = False)
+- make_split · function · L429-L442 — def make_split(orthogroup_of: Dict[str, str], seed: int, fractions: Tuple[float, float, float], strict_holdout: Set[str]) -> Dict[str, str]
+- validate_split · function · L445-L465 — def validate_split(rows: Sequence[Dict], excluded_species: Set[str] = frozenset({"Zmays"})) -> List[str]
+- validate_evidence_roles · function · L468-L470 — def validate_evidence_roles(labels: Sequence[Dict]) -> List[str]
+- segmentation_labels · function · L483-L492 — def segmentation_labels(features: Sequence[Tuple[str, int, int, str]], L: int, window_start: int)
+- evidence_weight · function · L495-L509 — def evidence_weight(source: str, n_molecules: int, genotype: str = "reference", retained_intron: bool = False, family: str = "exon") -> float
+- add_evidence · function · L512-L519 — def add_evidence(labels, weights, cells: Iterable[Tuple[int, int, float]]) -> None
+- junction_weight · function · L522-L523 — def junction_weight(source: str, n_molecules: int, genotype: str = "reference") -> float
+- add_junction_evidence · function · L526-L531 — def add_junction_evidence(labels, weights, donor0: int, acceptor0: int, weight: float) -> None
+- genes_in_window · function · L537-L541 — def genes_in_window(genes: Sequence[Gene], ws: int, we: int) -> Tuple[List[Gene], int]
+- window_to_gsf_v3 · function · L544-L551 — def window_to_gsf_v3(genes: Sequence[Gene], ws: int) -> str
+- split_v3 · function · L554-L555 — def split_v3(gsf: str) -> List[str]
+- canonicalize_v3 · function · L558-L567 — def canonicalize_v3(gsf: str) -> str
+- reverse_complement_v3 · function · L570-L574 — def reverse_complement_v3(gsf: str, window_len: int) -> str
+- count_tokens_v3 · function · L577-L582 — def count_tokens_v3(gsf: str) -> int
+- check_caps_v3 · function · L585-L606 — def check_caps_v3(gsf: str, window_len: Optional[int] = None) -> None
+- tile_windows · function · L609-L621 — def tile_windows(chrom_len: int, tier: int, offset: int = 0) -> List[Tuple[int, int]]
+- block_splits · function · L627-L642 — def block_splits(chrom_len: int, rng: "random.Random", fractions: Sequence[float] = (0.75, 0.10, 0.15), forced_test: Sequence[Tuple[int, int]] = ()) -> List[Tuple[int, int, str]]
+- tile_split · function · L645-L651 — def tile_split(blocks: Sequence[Tuple[int, int, str]], ws: int, we: int) -> str
+- leak_mask · function · L654-L664 — def leak_mask(seq: str, ws: int, genes: Sequence["Gene"], flank: int = LEAK_MASK_FLANK, flanks: Optional[Sequence[int]] = None) -> str
+- masked_fraction · function · L667-L669 — def masked_fraction(seq: str) -> float
+- overlap_components · function · L672-L690 — def overlap_components(genes: Sequence["Gene"]) -> List[List["Gene"]]
+- cds_signature · function · L693-L702 — def cds_signature(gene: "Gene") -> Tuple[str, Tuple[Tuple[int, int], ...]]
+- collapse_duplicate_genes · function · L705-L724 — def collapse_duplicate_genes(genes: Sequence["Gene"]) -> Tuple[List["Gene"], int]
+- _cds_intervals · function · L727-L728 — def _cds_intervals(blocks: Sequence[Tuple[int, int, str]]) -> int
+- same_locus · function · L731-L753 — def same_locus(a_cds: Sequence[Tuple[int, int]], a_strand: str, b_cds: Sequence[Tuple[int, int]], b_strand: str, same_tile: bool = False) -> bool
+- tier_offsets · function · L756-L758 — def tier_offsets(tier: int, n: int = 3) -> List[int]
+- covered_with_margin · function · L761-L775 — def covered_with_margin(gene_start: int, gene_end: int, tier: int, margin: int = EDGE_MARGIN, contig_len: Optional[int] = None) -> bool

@@ -1,0 +1,40 @@
+# src/transgenic/training/mvp_finalize.py
+
+- PublicationDurabilityError · class · L51-L57 — class PublicationDurabilityError(OSError)
+- __init__ · method · L54-L57 — def __init__(self, message: str, final_dir: Path | str)
+- _canonical_json · function · L60-L65 — def _canonical_json(value: Any) -> bytes
+- _identity · function · L68-L76 — def _identity(value: Any, name: str) -> None
+- _is_sha256 · function · L79-L81 — def _is_sha256(value: Any) -> bool
+- _validate_initialization_audit · function · L84-L178 — def _validate_initialization_audit(initialization: Any) -> None
+- _validate_runtime_hardware · function · L181-L208 — def _validate_runtime_hardware(value: Any, scope: str) -> None
+- _validate_metadata · function · L211-L270 — def _validate_metadata(metadata: Any, training_summary: Any) -> None
+- _validate_bounds · function · L273-L279 — def _validate_bounds(records: list[dict]) -> bytes
+- _bounded_text · function · L282-L288 — def _bounded_text(value: str, limit: int) -> tuple[str, bool]
+- _status · function · L291-L307 — def _status(error: BaseException | None = None) -> dict
+- _status_bytes · function · L310-L319 — def _status_bytes(status: dict) -> bytes
+- _decode_status · function · L322-L325 — def _decode_status(payload: bytes) -> dict
+- _raise_status · function · L328-L335 — def _raise_status(status: dict) -> None
+- _validate_transport_lengths · function · L338-L349 — def _validate_transport_lengths(lengths: list[int]) -> int
+- _transport_lengths · function · L352-L363 — def _transport_lengths(accelerator, local_error: Exception | None, payload: bytes) -> list[int]
+- _gather_payload_bytes · function · L366-L376 — def _gather_payload_bytes(accelerator, payload: bytes, lengths: list[int]) -> list[bytes]
+- _gather_record_payload_bytes · function · L379-L380 — def _gather_record_payload_bytes(accelerator, payload: bytes, lengths: list[int]) -> list[bytes]
+- _broadcast_payload_bytes · function · L383-L395 — def _broadcast_payload_bytes(accelerator, payload: bytes) -> bytes
+- _collect_statuses · function · L398-L401 — def _collect_statuses(accelerator, status: dict) -> list[dict]
+- _broadcast_status · function · L404-L406 — def _broadcast_status(accelerator, status: dict | None) -> dict
+- _collective_preflight · function · L409-L417 — def _collective_preflight(accelerator, operation) -> None
+- _all_ints · function · L420-L424 — def _all_ints(accelerator, value: int) -> list[int]
+- _all_fixed_payloads_equal · function · L427-L430 — def _all_fixed_payloads_equal(accelerator, payload: bytes) -> bool
+- _validated_inventory · function · L433-L442 — def _validated_inventory(expected_rns) -> list[int]
+- _validate_evaluation_inputs · function · L445-L469 — def _validate_evaluation_inputs(accelerator, model, eval_loader, expected, metadata, training_summary) -> None
+- _to_device · function · L472-L481 — def _to_device(value: Any, device) -> Any
+- _save_target · function · L484-L499 — def _save_target(accelerator, model)
+- _write_sync · function · L502-L506 — def _write_sync(path: Path, payload: bytes) -> None
+- _sha256 · function · L509-L514 — def _sha256(path: Path) -> str
+- _write_payload_files · function · L517-L537 — def _write_payload_files(stage: Path, target, paired_summary: dict, metadata: dict, training_summary: dict) -> list[str]
+- _write_manifest · function · L540-L557 — def _write_manifest(stage: Path, names: list[str]) -> None
+- _write_done_marker · function · L560-L566 — def _write_done_marker(stage: Path) -> None
+- _rename_noreplace · function · L569-L584 — def _rename_noreplace(source: Path, destination: Path) -> None
+- _fsync_parent · function · L587-L592 — def _fsync_parent(final_dir: Path) -> None
+- _publish_final · function · L595-L625 — def _publish_final(accelerator, model, paired_summary: dict, final_dir: Path | str, *, metadata: dict, training_summary: dict) -> dict
+- evaluate_and_publish_final · function · L628-L696 — def evaluate_and_publish_final(accelerator, model, eval_loader, expected_rns, final_dir, *, metadata, training_summary, prepublication_prepare=None, prepublication_check=None)
+- validate_preflight · function · L633-L637 — def validate_preflight()

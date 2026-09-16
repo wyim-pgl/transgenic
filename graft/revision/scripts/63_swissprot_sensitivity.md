@@ -1,0 +1,27 @@
+# revision/scripts/63_swissprot_sensitivity.py
+
+- Entry · class · L68-L100 — class Entry
+- gene_xrefs · method · L83-L84 — def gene_xrefs(self) -> Set[str]
+- length · method · L87-L88 — def length(self) -> int
+- sha256 · method · L91-L92 — def sha256(self) -> str
+- caution_types · method · L95-L96 — def caution_types(self) -> List[str]
+- structural_caution · method · L99-L100 — def structural_caution(self) -> bool
+- slug · function · L103-L104 — def slug(text: str) -> str
+- flag_name · function · L107-L109 — def flag_name(caution_type: str) -> str
+- _open · function · L112-L113 — def _open(path: str)
+- _xref_ids · function · L116-L127 — def _xref_ids(line: str) -> Tuple[str, List[str]]
+- parse_dat · function · L130-L196 — def parse_dat(path: str) -> Iterator[Entry]
+- finalize · function · L139-L142 — def finalize(entry: Entry) -> Entry
+- gene_of · function · L199-L218 — def gene_of(xref: str, genes, tx2gene: Optional[Dict[str, str]] = None) -> Optional[str]
+- _gff_attrs · function · L224-L230 — def _gff_attrs(col: str) -> Dict[str, str]
+- read_gff_gene_map · function · L233-L257 — def read_gff_gene_map(path: str) -> Tuple[Dict[str, str], Dict[str, str]]
+- ensembl_style_aliases · function · L268-L279 — def ensembl_style_aliases(genes) -> Dict[str, str]
+- read_id_map · function · L282-L296 — def read_id_map(path: str, genes, tx2gene: Optional[Dict[str, str]] = None) -> Dict[str, str]
+- _proteome_by_gene · function · L299-L307 — def _proteome_by_gene(proteome: Dict[str, str], genes: Set[str], tx2gene: Dict[str, str]) -> Tuple[Dict[str, Set[str]], int, int]
+- species_flags · function · L310-L386 — def species_flags(entries: Iterable[Entry], gene_ids: Dict[str, Set[str]], taxids: Dict[str, Set[int]], proteomes: Dict[str, Dict[str, str]], tx2gene: Optional[Dict[str, Dict[str, str]]] = None, min_proteome_mapped: float = DEFAULT_MIN_PROTEOME_MAPPED, sequence_fallback: bool = True) -> Tuple[List[Dict], Dict[str, Dict]]
+- strata · function · L389-L397 — def strata(entries: Iterable[Entry]) -> Dict[str, int]
+- read_gene_ids · function · L400-L409 — def read_gene_ids(path: str) -> Dict[str, Set[str]]
+- read_fasta · function · L412-L425 — def read_fasta(path: str) -> Dict[str, str]
+- _parse_kv · function · L428-L435 — def _parse_kv(items: Optional[List[str]]) -> Dict[str, str]
+- file_sha256 · function · L438-L443 — def file_sha256(path: str) -> str
+- main · function · L446-L526 — def main(argv: Optional[List[str]] = None) -> int

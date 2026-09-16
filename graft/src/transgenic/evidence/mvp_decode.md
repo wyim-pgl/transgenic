@@ -1,0 +1,15 @@
+# src/transgenic/evidence/mvp_decode.py
+
+- require · function · L18-L20 — def require(ok, message)
+- read_json · function · L23-L30 — def read_json(path)
+- unique · function · L24-L29 — def unique(items)
+- identity · function · L33-L35 — def identity(path)
+- checked_file · function · L38-L43 — def checked_file(record)
+- load_panel_batch · function · L46-L82 — def load_panel_batch(payload, panel, sequences, pins)
+- encode_window · function · L85-L91 — def encode_window(sequence, tokenizer)
+- validate_decode · function · L94-L109 — def validate_decode(ids, tokenizer)
+- validate_gff · function · L112-L139 — def validate_gff(text)
+- gsf_gff · function · L142-L166 — def gsf_gff(gsf, chromosome, start, prefix)
+- generate_one · function · L169-L192 — def generate_one(model, tokenizer, input_ids, attention_mask, tracks, *, raw_sink=None)
+- load_final_model · function · L195-L221 — def load_final_model(verified_run, device='cpu')
+- load_baseline_model · function · L224-L234 — def load_baseline_model(verified_run, device='cpu')

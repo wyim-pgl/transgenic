@@ -1,0 +1,21 @@
+# tests/test_mvp_decode.py
+
+- test_raw_empty_and_truncation · function · L12-L20 — def test_raw_empty_and_truncation()
+- test_multi_gene_minus_deterministic_and_no_dedup · function · L23-L33 — def test_multi_gene_minus_deterministic_and_no_dedup()
+- test_generation_kwargs_tracks_and_rejection · function · L36-L55 — def test_generation_kwargs_tracks_and_rejection()
+- Model · class · L38-L44 — class Model
+- eval · method · L41-L41 — def eval(self)
+- generate · method · L42-L44 — def generate(self, **kwargs)
+- test_sequence_sep_and_no_rc · function · L58-L66 — def test_sequence_sep_and_no_rc()
+- Tok · class · L59-L64 — class Tok
+- __call__ · method · L62-L64 — def __call__(self, seq, **kwargs)
+- test_normalize_rejects_bad_identifiers · function · L69-L73 — def test_normalize_rejects_bad_identifiers()
+- test_raw_planning_validation_and_beam_reorder · function · L76-L93 — def test_raw_planning_validation_and_beam_reorder()
+- test_strict_final_load_preserves_projection_and_aliases · function · L96-L126 — def test_strict_final_load_preserves_projection_and_aliases(tmp_path, monkeypatch)
+- test_tiny_real_beam_cache_tracks_and_negative · function · L129-L147 — def test_tiny_real_beam_cache_tracks_and_negative(tmp_path, monkeypatch)
+- test_internal_batch_identity_shape_and_n_mask · function · L150-L170 — def test_internal_batch_identity_shape_and_n_mask(tmp_path)
+- test_runner_exact_350_no_overwrite_and_partial_failure · function · L173-L212 — def test_runner_exact_350_no_overwrite_and_partial_failure(tmp_path, monkeypatch)
+- generated · function · L196-L199 — def generated(*a,raw_sink)
+- fail · function · L208-L208 — def fail(*a,**k)
+- test_baseline_approved_loader_actual_roundtrip · function · L215-L240 — def test_baseline_approved_loader_actual_roundtrip(tmp_path)
+- test_known_incomplete_verifier_blocked · function · L243-L252 — def test_known_incomplete_verifier_blocked()

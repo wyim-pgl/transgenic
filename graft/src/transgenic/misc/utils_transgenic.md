@@ -1,0 +1,75 @@
+# src/transgenic/misc/utils_transgenic.py
+
+- print_gpu_allocation · function · L19-L23 — def print_gpu_allocation(s:str): #print(f"Allocated: {torch.cuda.memory_allocated()}, Cached: {torch.cuda.memory_reserved()}...{s}", file=sys.stderr)
+- loadGenome · function · L25-L43 — def loadGenome(genome): # Load genome into a dictionary # Return the dictionary
+- reverseComplement · function · L45-L56 — def reverseComplement(sequence): # Reverse complement a sequence # Return the reverse complement
+- reverseComplement_gffString · function · L58-L117 — def reverseComplement_gffString(gff, length): # Reverse complement a gff string for reverse complemented sequence
+- validateCDS · function · L119-L167 — def validateCDS(gff:str, seq:str, geneModel:str) -> Tuple[bool, str]: # Purpose: # Validate that the CDS features in the gff produce a valid coding sequence # Inputs: # gff: str, the gff string # seq: str, the sequence # geneModel: str, the gene model name # Outputs: # (bool, str) - (valid, error message)
+- genome2GeneList · function · L169-L394 — def genome2GeneList(genome, gff3, db, maxLen=49152, addExtra=0, staticSize=6144, addRC=False, addRCIsoOnly=False, clean=False): # Purpose: # Read a genome assembly and gff3 annotation file into a # duckdb database for training or inference. For each gene # model, the corresponding nucleotide sequence is extracted # from the genome and the target annotation string is created. # The function may be called multiple times to append add # multiple genomes to the database # Inputs: # genome: path to a fasta file containing the genome assembly # gff3: path to a gff3 file containing gene annotations # db: path to a duckdb database file (will be created if it does not exist) # maxLen: Maximum size of gene model sequence to include in the database (larger gene models are skipped) # addExtra: Max size of random buffer to add to the gene model sequence (used to capture UTR start and end during training) # staticSize: Extracted sequences will be this size (SegmentNT performs best with static sizes) # addRC: Add reverse complement of gene model sequence to the database (Used to augment training data) # addRCIsoOnly: When adding RC seqs, only add gene models with alternative splicing # clean: If true only sequences will be added that have start and stop codons and are a multiple of 3 # Outputs: # A duckdb database used to load data into the model # TODO: # - Add support for bed files # - Add inference mode with just target sequences for prediction # Load genome into a dictionary
+- isoformData · class · L397-L475 — class isoformData(Dataset)
+- __init__ · method · L398-L410 — def __init__(self, db, dt, mode="inference", encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", global_attention=False, shuffle=False)
+- __len__ · method · L412-L414 — def __len__(self)
+- __getitem__ · method · L416-L475 — def __getitem__(self, idx)
+- isoformDataHyena · class · L477-L529 — class isoformDataHyena(Dataset)
+- __init__ · method · L478-L489 — def __init__(self, db, dt, mode="inference", encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf", global_attention=False)
+- __len__ · method · L491-L493 — def __len__(self)
+- __getitem__ · method · L495-L529 — def __getitem__(self, idx)
+- genome2SegmentationSet · function · L532-L576 — def genome2SegmentationSet(genome_file, gff_file, organism, db): # load gff into database with organism name
+- segmentationDataset · class · L578-L692 — class segmentationDataset(Dataset)
+- __init__ · method · L579-L628 — def __init__(self, table, window_size, step_size, db, encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b", preprocess=False)
+- __len__ · method · L631-L632 — def __len__(self)
+- __getitem__ · method · L634-L692 — def __getitem__(self, idx): # Get the windowed sequence from the database
+- preProcessSegmentationDataset · function · L694-L760 — def preProcessSegmentationDataset(db, genome, gff, table, window_size, step_size): #dataset = segmentationDataset(table, window_size, step_size, olddb, encoder_model=encoder_model, preprocess=True) #dl = makeDataLoader(dataset, shuffle=False, batch_size=batch_size, pin_memory=False, sampler=None, num_workers=workers, collate_fn=preprocessing_collate_fn)
+- preprocessedSegmentationDataset · class · L762-L798 — class preprocessedSegmentationDataset(Dataset)
+- __init__ · method · L763-L765 — def __init__(self, db, encoder_model="InstaDeepAI/agro-nucleotide-transformer-1b")
+- __len__ · method · L767-L769 — def __len__(self)
+- __getitem__ · method · L771-L798 — def __getitem__(self, idx)
+- preprocessedSegmentationDatasetHyena · class · L800-L831 — class preprocessedSegmentationDatasetHyena(Dataset)
+- __init__ · method · L801-L803 — def __init__(self, db, encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf")
+- __len__ · method · L805-L807 — def __len__(self)
+- __getitem__ · method · L809-L831 — def __getitem__(self, idx)
+- MLMDatasetHyena · class · L833-L854 — class MLMDatasetHyena(Dataset)
+- __init__ · method · L834-L836 — def __init__(self, db, encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf")
+- __len__ · method · L838-L840 — def __len__(self)
+- __getitem__ · method · L842-L854 — def __getitem__(self, idx)
+- mask_sequences · function · L856-L896 — def mask_sequences(seqs, num_masked_nucleotides=921, mask_token=3)
+- gffString2GFF3 · function · L898-L963 — def gffString2GFF3(gff:str, chr:str, region_start:int, extra_attributes:str) -> List[str]: # Purpose: # Convert a GFF string (decoded model output) to GFF3 fromat. # Inputs: # gff: str, the GFF string # chr: str, the chromosome name # region_start: int, start coords of sequence region in the chromosome # region_end: int, end coords of sequence region in the chromosome # Outputs: # An array of strings for each GFF3 lines # TODO: Error handling for strange model outputs # Break out the gene features
+- segmentSequence · function · L965-L973 — def segmentSequence(seq, piece_size = 6144): # Segment the sequence into evenly sized chunks smaller than 4092bp (encoder max length of 1024 tokens)
+- setup · function · L975-L978 — def setup(rank, world_size, pg="gloo")
+- cleanup · function · L980-L982 — def cleanup()
+- target_collate_fn · function · L984-L1015 — def target_collate_fn(batch): # Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
+- hyena_collate_fn · function · L1017-L1041 — def hyena_collate_fn(batch): # Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
+- hyenaMLM_collate_fn · function · L1043-L1062 — def hyenaMLM_collate_fn(batch): # Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
+- segment_collate_fn · function · L1064-L1097 — def segment_collate_fn(batch): # Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
+- hyena_segment_collate_fn · function · L1099-L1122 — def hyena_segment_collate_fn(batch): # Unpack the batch items (each item in batch is a tuple of (sequence, attention_mask, target_sequence))
+- makeDataLoader · function · L1124-L1135 — def makeDataLoader(dat, shuffle=True, batch_size=8, pin_memory=True, sampler=None, num_workers=0, collate_fn=target_collate_fn)
+- getSpliceBranchSeqs · function · L1137-L1162 — def getSpliceBranchSeqs() -> List[str]: # Purpose: # Generate a list of splice branch sequences for use in the model # Outputs: # List[str], the splice branch sequences
+- scanGlobalAttentionTokens · function · L1164-L1250 — def scanGlobalAttentionTokens(vocab:dict, tokenized_sequence:List[int], seqlen:int) -> List[int]: # Purpose: # Scan a tokenized sequence for sequence feartures which can be used for setting # transient global attention in the model. Features include canonical and non-canonical # splice donor sites and spliceosome branch sequences. Splice donor sites are allowed to span two # tokens to account for split tokens and branch points must span two tokens. Both forward and # reverse strands are scanned and one direction is chosen based on the orientation with the most # identified tokens. # Inputs: # vocab: dict, the token to id dictionary # tokenized_sequence: List[int], the tokenized sequence # Outputs: # List[int], the positions of the global attention tokens # Donor splice sites in both directions
+- createDatabase · function · L1252-L1286 — def createDatabase(db="transgenic.db", mode="train", maxLen=49152, addExtra=0, staticSize=6144, addRC=False, addRCIsoOnly=False, clean=False): # Purpose: # Create or append to transgenic database. The database is a duckdb database # used for both either training or infrence. In 'train' mode, fasta sequences and # full GFF3 annotations are required. In 'infer' mode, fasta sequences # and BED formatted annotations are required. # Inputs: # db: str, the name of the database. If exists, will append to it. # mode: str, the mode of the database. Either "train" or "infer". # maxLen: int, the maximum length of the input sequence. # addExtra: int, the number of extra bases to add to the ends of the input sequence. # addRC: bool, whether to add the reverse complement of the input sequence. # TODO: # - Decide how to input filenames (add input argument) # - Make BED-parsing DB creation function
+- predictionToGFF3 · function · L1288-L1294 — def predictionToGFF3(device_type, world_size, suffix, outfile)
+- classifyGeneSignal · function · L1296-L1327 — def classifyGeneSignal( probs, threshold=0.65, sigma = 100, #rising_threshold = 0.1, #falling_threshold = -0.1, window_length=6144)
+- PredictionProcessor · class · L1329-L2045 — class PredictionProcessor()
+- __init__ · method · L1330-L1422 — def __init__(self, gff:str, sequence:str, probs)
+- tidyPrediction · method · L1424-L1498 — def tidyPrediction(self)
+- reverseComplement · method · L1500-L1504 — def reverseComplement(self)
+- findLargestGeneRegion · method · L1506-L1533 — def findLargestGeneRegion(self, lst, threshold=0.4)
+- findSeqFeatures · method · L1535-L1592 — def findSeqFeatures(self, junctionThresh=0.6, startThresh=0.6): # Find the central gene region #segments = classifyGeneSignal(self.probs[:, 0], threshold=geneThresh, sigma=200) #prev_len = 0 #for segment in segments[0]: # if int(segment["length"]) > prev_len: # geneStart = segment["start"] # geneEnd = segment["end"] # prev_len = int(segment["length"]) #geneStart, geneEnd = self.findLargestGeneRegion(self.probs[:,0], threshold=geneThresh) # Find all valid start codons over the threshold # Rank by probability score
+- checkStartCodons · method · L1597-L1652 — def checkStartCodons(self, buff=50, usingSeqFeature=False)
+- checkStopCodons · method · L1656-L1711 — def checkStopCodons(self, buff=50, usingSeqFeature=False)
+- containsStopCodon · method · L1714-L1717 — def containsStopCodon(self, seq, phase)
+- checkProbableSpliceJunctions · method · L1720-L1808 — def checkProbableSpliceJunctions(self, pairs, buff=100, cds=True)
+- checkCanonicalSpliceJunctions · method · L1811-L1935 — def checkCanonicalSpliceJunctions(self, buff=50): # Use canonical splice junctions to adjust feature cordinates. # Search for donor and acceptor splice sites # Find the highest quality donor site closest to prediction. Preference order (AGGT/GGT/AGGC/AGAT/GGC/GAT) # Select the matching acceptor site closest to the prediction which does not introduce in-frame stop codons # buff: search buffer for cds boundary markers # note: decisionTensors are (2, #donor sites,#acceptor sites). Dimension 0[0] is stop codon presence, Dimension 0[1] frame congruence # TODO: Need a way to mitigate the cumulative effect of incorrectly predicted splice junctions when using phase # to update the prediction. I need to balance the phase correction approach with the fact that some phase # calls will be wrong and I will not find the correct splice junction everytime.
+- selectDonorByPhase · method · L1937-L1964 — def selectDonorByPhase(self, donor:str, donor_end:int, acceptor:str, dsite:str, asite:str) -> bool: # Select the donor site with the lowest distance to the predicted site which maintains phase in the first transcript
+- checkSpliceJunctions · method · L1965-L1967 — def checkSpliceJunctions(self, pairs, buff=50, cds=True)
+- stitchGFF · method · L1969-L1973 — def stitchGFF(self, originalStrand=True)
+- analyzeUnused · method · L1975-L2027 — def analyzeUnused(self)
+- postProcessPrediction · method · L2032-L2045 — def postProcessPrediction(self, utr_splice_buf = 100, splice_buffer=10, start_buffer=150, stop_buffer=150, seqFeature=True) -> str: # Use start/stop codon, splice junction, and valid protein translation to adjust feature cordinates and phases. # Enforce that each transcript is a valid protein-coding sequence. # Ensure that updates do not make overlapping exons # buff: search buffer for cds boundary markers
+- checkPhase · function · L2047-L2061 — def checkPhase(gff)
+- processPredictions · function · L2063-L2095 — def processPredictions(files:list, db:str, buffer=50, outPrefix="transgenic_predictions"): # Processes output predctions and converts to gff3 format # files: list of files to process # db: Gene list database used for generation # buffer: buffer size for splice junction search # outPrefix: output files prefix. Files are made for standard GFF3 and transgenic input format
+- getModel · function · L2097-L2139 — def getModel(config, safetensors_model=None, device="cpu", mode="predict")
+- getLargeDecoderModel · function · L2141-L2173 — def getLargeDecoderModel(config, safetensors_model=None, device="cpu", mode="predict")
+- getPeftModel · function · L2175-L2252 — def getPeftModel(decoder_checkpoint, segment_checkpoint, config=None, unlink=False, safetensors_model=None, device="cpu", mode="predict")
+- registerModel · function · L2254-L2263 — def registerModel()
+- mergeAndProcessPredictions · function · L2265-L2268 — def mergeAndProcessPredictions(device, searchType, world_size, db, outprefix, buffer)
+- analyzePerGeneTranscriptPerformance · function · L2270-L2301 — def analyzePerGeneTranscriptPerformance(label_tokens, prediction_tokens): # Purpose: # Analyze the transcript performance of a prediction on a per-gene basis. # Inputs: # label_tokens: tensor containing tokenized labels # prediction_tokens: tensor containeing tokenized predictions # Outputs: # performance: dictionary of gene-level performance metrics
+- createDenoisingLabel · function · L2303-L2380 — def createDenoisingLabel(pred, true, dt): # Parse GSF strings
