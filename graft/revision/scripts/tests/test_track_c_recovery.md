@@ -1,0 +1,24 @@
+# revision/scripts/tests/test_track_c_recovery.py
+
+- load · function · L14-L18 — def load(name)
+- synthetic_identity · function · L27-L33 — def synthetic_identity(monkeypatch): # Fixture-only trust anchors. No production override or executable invocation.
+- test_acceptance_blocked_before_io · function · L37-L47 — def test_acceptance_blocked_before_io(tmp_path, entrypoint)
+- test_marker_truth_table · function · L52-L57 — def test_marker_truth_table(tmp_path, done, failed, ok)
+- test_recursive_preflight_tmp_not_hidden_by_done · function · L60-L68 — def test_recursive_preflight_tmp_not_hidden_by_done(tmp_path)
+- test_symlink_is_not_a_completed_directory · function · L71-L78 — def test_symlink_is_not_a_completed_directory(tmp_path)
+- test_accounting_requires_all_jobs_and_steps · function · L81-L94 — def test_accounting_requires_all_jobs_and_steps()
+- test_missing_timing_is_failure · function · L97-L101 — def test_missing_timing_is_failure(tmp_path)
+- test_query_layouts_and_unresolvable_query · function · L105-L125 — def test_query_layouts_and_unresolvable_query(tmp_path, layout)
+- test_audit_rejects_output_inside_input_without_mutation · function · L128-L134 — def test_audit_rejects_output_inside_input_without_mutation(tmp_path)
+- test_audit_rejects_scratch_inside_input · function · L137-L144 — def test_audit_rejects_scratch_inside_input(tmp_path, monkeypatch)
+- test_fixture_failure_does_not_leave_outer_done · function · L147-L152 — def test_fixture_failure_does_not_leave_outer_done(tmp_path)
+- make_unit · function · L155-L203 — def make_unit(root, species='Sitalica', kind='orthodb', inputs_root=None)
+- test_unit_reconciliation · function · L209-L239 — def test_unit_reconciliation(tmp_path, mutation)
+- test_flag_ts_composition · function · L244-L245 — def test_flag_ts_composition(flag, ts, want)
+- test_route_disagreement_is_neutral_not_phase_zero · function · L250-L251 — def test_route_disagreement_is_neutral_not_phase_zero(phase_a, phase_b, want)
+- test_projector_refuses_unresolved_semantics · function · L254-L256 — def test_projector_refuses_unresolved_semantics()
+- test_rich17_candidate_diagnostics_are_not_approval · function · L263-L275 — def test_rich17_candidate_diagnostics_are_not_approval(tmp_path, reverse, dna, btop, cigar, qg): # Hand-built candidate fixtures exercise plumbing, NOT real DIAMOND semantics.
+- test_boundary_lengths_remain_raw_not_accepted · function · L279-L286 — def test_boundary_lengths_remain_raw_not_accepted(tmp_path, length)
+- make_audit_tree · function · L289-L316 — def make_audit_tree(tmp_path)
+- test_full_18_unit_audit_and_preflight_failure · function · L319-L342 — def test_full_18_unit_audit_and_preflight_failure(tmp_path)
+- test_inconclusive_readings_cannot_pin · function · L345-L350 — def test_inconclusive_readings_cannot_pin()

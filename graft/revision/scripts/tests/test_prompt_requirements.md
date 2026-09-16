@@ -1,0 +1,22 @@
+# revision/scripts/tests/test_prompt_requirements.py
+
+- _gtf · function · L31-L40 — def _gtf(path, loci)
+- _gff3 · function · L43-L59 — def _gff3(path, loci)
+- reference · function · L63-L69 — def reference(tmp_path)
+- _prompt · function · L72-L76 — def _prompt(tmp_path, utr)
+- _output · function · L79-L84 — def _output(tmp_path, structures)
+- test_correct_utr_and_wrong_utr_are_separated · function · L89-L96 — def test_correct_utr_and_wrong_utr_are_separated(tmp_path, reference)
+- test_a_wrong_utr_lands_in_the_wrong_group · function · L99-L104 — def test_a_wrong_utr_lands_in_the_wrong_group(tmp_path, reference)
+- test_a_missing_utr_counts_as_wrong_not_as_absent · function · L107-L112 — def test_a_missing_utr_counts_as_wrong_not_as_absent(tmp_path, reference)
+- test_re_emitting_the_prompt_is_not_an_addition · function · L115-L120 — def test_re_emitting_the_prompt_is_not_an_addition(tmp_path, reference)
+- test_locus_whose_cds_is_not_a_reference_transcript_is_excluded · function · L123-L131 — def test_locus_whose_cds_is_not_a_reference_transcript_is_excluded(tmp_path, reference)
+- test_exact_utr_lands_in_the_exact_bucket · function · L136-L141 — def test_exact_utr_lands_in_the_exact_bucket(tmp_path, reference)
+- test_a_five_base_difference_lands_in_the_1_10_bucket · function · L144-L150 — def test_a_five_base_difference_lands_in_the_1_10_bucket(tmp_path, reference): # Reference UTR starts at 100; starting at 105 differs by exactly 5 bases.
+- test_a_large_difference_lands_in_a_far_bucket · function · L153-L157 — def test_a_large_difference_lands_in_a_far_bucket(tmp_path, reference)
+- test_every_locus_falls_in_exactly_one_bucket · function · L160-L164 — def test_every_locus_falls_in_exactly_one_bucket(tmp_path, reference)
+- test_generated_utr_matching_the_reference_is_counted_exact · function · L169-L179 — def test_generated_utr_matching_the_reference_is_counted_exact(tmp_path, reference)
+- test_generated_utr_that_is_close_but_wrong_is_not_counted_exact · function · L182-L191 — def test_generated_utr_that_is_close_but_wrong_is_not_counted_exact(tmp_path, reference)
+- test_transcript_without_a_generated_utr_is_counted_but_not_as_carrying · function · L194-L200 — def test_transcript_without_a_generated_utr_is_counted_but_not_as_carrying(tmp_path, reference)
+- test_locus_whose_prompt_was_overwritten_is_not_counted · function · L203-L208 — def test_locus_whose_prompt_was_overwritten_is_not_counted(tmp_path, reference)
+- test_utr_outside_returns_empty_when_exons_equal_cds · function · L213-L215 — def test_utr_outside_returns_empty_when_exons_equal_cds()
+- test_agi_normalises_both_id_shapes · function · L218-L220 — def test_agi_normalises_both_id_shapes()

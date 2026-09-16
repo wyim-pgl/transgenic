@@ -1,0 +1,17 @@
+# tests/test_gsf_v3_windows.py
+
+- _genes · function · L7-L8 — def _genes(gsf, text)
+- test_window_label_concatenates_genes_in_coordinate_order · function · L11-L22 — def test_window_label_concatenates_genes_in_coordinate_order(gsf)
+- test_v3_token_count_and_caps · function · L25-L33 — def test_v3_token_count_and_caps(gsf)
+- test_v3_rc_is_an_involution_and_reorders_genes · function · L36-L41 — def test_v3_rc_is_an_involution_and_reorders_genes(gsf)
+- test_tile_windows_cover_contig · function · L44-L47 — def test_tile_windows_cover_contig(gsf)
+- test_block_splits_and_leak_mask · function · L50-L59 — def test_block_splits_and_leak_mask(gsf)
+- _g · function · L64-L68 — def _g(gsf, gid, start1, end1, strand="+", cds=None)
+- test_a33_overlapping_blocks_accepted_and_ordered · function · L71-L88 — def test_a33_overlapping_blocks_accepted_and_ordered(gsf)
+- test_a33_nested_and_antisense_round_trip_and_rc · function · L91-L99 — def test_a33_nested_and_antisense_round_trip_and_rc(gsf)
+- test_a33_overlap_components_and_duplicate_collapse · function · L102-L110 — def test_a33_overlap_components_and_duplicate_collapse(gsf)
+- test_a33_flank_jitter_and_masked_fraction · function · L113-L120 — def test_a33_flank_jitter_and_masked_fraction(gsf)
+- test_a33_same_locus_stitching_rule · function · L123-L136 — def test_a33_same_locus_stitching_rule(gsf)
+- test_a33_edge_margin_invariant_over_three_offsets · function · L139-L153 — def test_a33_edge_margin_invariant_over_three_offsets(gsf)
+- test_equal_span_distinct_genes_use_canonical_block_tiebreak · function · L157-L169 — def test_equal_span_distinct_genes_use_canonical_block_tiebreak(gsf, reverse)
+- test_emitter_orders_emitted_features_not_outer_annotation_spans · function · L172-L180 — def test_emitter_orders_emitted_features_not_outer_annotation_spans(gsf)
