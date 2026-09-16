@@ -106,11 +106,10 @@ def _validate_inventory(value: dict) -> None:
     counts = value.get("counts")
     all_splits = counts.get("evidence_corpus_tile_all_splits") if isinstance(counts, dict) else None
     if (not isinstance(counts, dict) or counts.get("total") != len(records) or
-            not isinstance(all_splits, dict) or
-            any(isinstance(count, bool) or not isinstance(count, int) or count < 0
-                for count in all_splits.values()) or
-            all_splits.get("train") != split_counts["train"] or
-            all_splits.get("valid") != split_counts["valid"] or
+            not isinstance(all_splits, dict) or set(all_splits) != {"train", "valid", "test"} or
+            any(type(count) is not int or count < 0 for count in all_splits.values()) or
+            all_splits["train"] != split_counts["train"] or
+            all_splits["valid"] != split_counts["valid"] or
             counts.get("train") != split_counts["train"] or
             counts.get("valid") != split_counts["valid"]):
         raise ValueError("inventory counts do not reconcile with records")

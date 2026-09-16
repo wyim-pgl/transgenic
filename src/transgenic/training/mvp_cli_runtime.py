@@ -43,6 +43,7 @@ class _TestExecution:
     fail_phase: str | None = None
     fail_rank: int = 1
     mutate_before_final_recheck: Any = None
+    observation: dict[str, Any] | None = None
 
 
 def _snapshot_hash(value: os.PathLike[str] | str, label: str) -> tuple[Path, str]:
@@ -114,15 +115,22 @@ def verify_candidate_artifacts(candidate: CandidateRecords, db_value, evidence_v
             "SELECT rn, chrom, start0, end0, split, is_rc FROM corpus_tile "
             "WHERE split IN ('train','valid') ORDER BY rn"
         ).fetchall()
+        grouped_splits = con.execute(
+            "SELECT split, count(*) FROM corpus_tile GROUP BY split"
+        ).fetchall()
         test_rns = [row[0] for row in con.execute(
             "SELECT rn FROM corpus_tile WHERE split='test' ORDER BY rn"
         ).fetchall()]
-    counts = candidate.inventory.get("counts", {})
-    all_splits = counts.get("evidence_corpus_tile_all_splits", {}) if isinstance(counts, dict) else {}
-    if (all_splits and (all_splits.get("test") != len(test_rns) or
-            len(test_rns) != len(set(test_rns)) or
-            set(test_rns) & {row[0] for row in evidence_rows})):
-        raise ValueError("candidate test inventory count does not match unique evidence corpus_tile identities")
+    unexpected = [split for split, _ in grouped_splits if split not in {"train", "valid", "test"}]
+    if unexpected:
+        raise ValueError(f"unexpected corpus_tile split values: {unexpected}")
+    all_splits = candidate.inventory["counts"]["evidence_corpus_tile_all_splits"]
+    measured_splits = {name: 0 for name in ("train", "valid", "test")}
+    measured_splits.update(grouped_splits)
+    if measured_splits != all_splits:
+        raise ValueError("candidate evidence split counts do not exactly match corpus_tile")
+    if len(test_rns) != len(set(test_rns)) or set(test_rns) & {row[0] for row in evidence_rows}:
+        raise ValueError("candidate test inventory identities are not unique and disjoint")
     frozen = [(row["rn"], row["chromosome"], row["start0"], row["end0"],
                row["split"], row["is_rc"]) for row in candidate.inventory["records"]]
     if corpus_rows != frozen or evidence_rows != frozen:
@@ -253,10 +261,14 @@ def _versions() -> dict[str, str]:
     return versions
 
 
-def require_matching_identity(accelerator, value: Any) -> None:
-    """Reject a preflight identity disagreement collectively before model construction."""
+def _identity_payload(value: Any) -> bytes:
+    """Encode and validate one rank's identity without distributed operations."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+
+
+def require_matching_identity(accelerator, payload: bytes) -> None:
+    """Compare already-validated identity bytes in one collective."""
     import torch
-    payload = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
     tensor = torch.tensor(list(hashlib.sha256(payload).digest()), dtype=torch.uint8,
                           device=accelerator.device)
     gathered = accelerator.gather(tensor).reshape(accelerator.num_processes, -1)
@@ -270,6 +282,16 @@ def compile_bound_forward(model, backend="inductor"):
     torch._dynamo.config.suppress_errors = False
     model.forward = torch.compile(model.forward, backend=backend)
     return model
+
+
+def _runtime_contract(test_execution: bool) -> dict[str, str]:
+    return {
+        "execution_mode": "private_test_injection" if test_execution else "public_cli",
+        "compile_backend": "eager_counting_test" if test_execution else "inductor",
+        "precision": "no" if test_execution else "bf16",
+        "checkpointing": "nonreentrant",
+        "construction_order": "weights_optimizer_compile_prepare",
+    }
 
 
 def _validate_initialization_readiness(audit, readiness, weights: Path, run_config: Path) -> None:
@@ -373,8 +395,10 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
     train_ds = valid_ds = None
     body_failed = False
     try:
-        phase(accelerator, "identity", lambda: require_matching_identity(
-            accelerator, {"candidate": candidate.identities, "artifacts": artifacts["sha256"]}))
+        identity = {}
+        phase(accelerator, "identity", lambda: identity.setdefault("payload", _identity_payload(
+            {"candidate": candidate.identities, "artifacts": artifacts["sha256"]})))
+        require_matching_identity(accelerator, identity["payload"])
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
@@ -430,22 +454,32 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
             if train_ds._index_map != artifacts["train_rns"] or valid_ds._index_map != artifacts["valid_rns"]:
                 raise ValueError("dataset index map does not match accepted inventory")
             rank = accelerator.process_index
+            private_aug_seed = aug_seed + rank
+            train_worker_seed = aug_seed + 10_000 * rank
+            valid_worker_seed = aug_seed + 1_000_000 + rank
             if num_workers == 0:
-                train_ds._aug_generator = torch.Generator().manual_seed(aug_seed + rank)
+                train_ds._aug_generator = torch.Generator().manual_seed(private_aug_seed)
                 train_ds._aug_key = (os.getpid(), None)
+            if _test is not None and _test.observation is not None:
+                _test.observation["augmentation_streams"] = {
+                    "private": private_aug_seed, "train_worker": train_worker_seed,
+                    "valid_worker": valid_worker_seed,
+                }
             loader_args = {"batch_size": 1, "num_workers": num_workers,
                            "collate_fn": hyena_collate_fn, "pin_memory": True}
             loaders["train"] = DataLoader(train_ds, sampler=DistributedSampler(
                 train_ds, num_replicas=accelerator.num_processes, rank=rank,
                 shuffle=True, seed=seed),
-                generator=torch.Generator().manual_seed(aug_seed + 10_000 * rank), **loader_args)
+                generator=torch.Generator().manual_seed(train_worker_seed), **loader_args)
             loaders["valid"] = DataLoader(valid_ds, sampler=DistributedSampler(
                 valid_ds, num_replicas=accelerator.num_processes, rank=rank,
                 shuffle=False, drop_last=False),
-                generator=torch.Generator().manual_seed(aug_seed + 1_000_000 + rank), **loader_args)
+                generator=torch.Generator().manual_seed(valid_worker_seed), **loader_args)
         phase(accelerator, "dataset", datasets)
 
         summary = run_fixed_updates(accelerator, model, optimizer, loaders["train"], recipe)
+        if _test is not None and _test.observation is not None:
+            _test.observation["training_summary"] = dict(summary)
         initialization = state["initialization"]
         metadata = {
             "identity_scope": "test" if _test is not None else "production",
@@ -463,19 +497,18 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
                                            "verification": "independently_verified"}},
             "runtime_packages": _versions(), "normalized_recipe": asdict(recipe),
             "seed_augmentation": {"seed": seed, "aug_seed": aug_seed},
-            "runtime_contract": {"compile": "bound_forward_inductor_no_fallback", "precision": "bf16",
-                "checkpointing": "nonreentrant", "construction_order": "weights_optimizer_compile_prepare",
-                "rank_augmentation": "aug_seed+rank only for private dropout/thinning stream when num_workers=0"},
+            "runtime_contract": _runtime_contract(_test is not None),
         }
+
+        def prepublication_prepare():
+            if (accelerator.is_main_process and _test is not None and
+                    _test.mutate_before_final_recheck is not None):
+                _test.mutate_before_final_recheck()
 
         def prepublication_check():
             # Evaluation is complete; release read handles before the final independent DB audit.
             _close_dataset(train_ds)
             _close_dataset(valid_ds)
-            if _test is not None and _test.mutate_before_final_recheck is not None:
-                if accelerator.is_main_process:
-                    _test.mutate_before_final_recheck()
-                accelerator.wait_for_everyone()
             unchanged(tuple(paths))
             final_artifacts = verify_candidate_artifacts(candidate, inputs.db, inputs.evidence, inputs.panel)
             if final_artifacts["sha256"] != artifacts["sha256"]:
@@ -488,6 +521,8 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
         evaluate_and_publish_final(
             accelerator, model, loaders["valid"], artifacts["valid_rns"], inputs.final,
             metadata=metadata, training_summary=summary,
+            prepublication_prepare=(prepublication_prepare if _test is not None and
+                                    _test.mutate_before_final_recheck is not None else None),
             prepublication_check=prepublication_check)
         return {"status": "complete", "output_use": OUTPUT_USE, "final": str(inputs.final)}
     except BaseException:

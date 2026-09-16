@@ -14,10 +14,12 @@ from transgenic.training.mvp_cli import (
     OUTPUT_USE,
     build_parser,
     validate_candidate_records,
+    _validate_inventory,
 )
 from transgenic.training.mvp_cli_runtime import (
     _expected_code_files,
     _manifest_files,
+    _runtime_contract,
     _validate_initialization_readiness,
     compile_bound_forward,
     verify_candidate_artifacts,
@@ -143,6 +145,18 @@ def test_candidate_rejects_fabricated_check_even_when_true(tmp_path):
         validate_candidate_records(path, hashlib.sha256(path.read_bytes()).hexdigest(), INVENTORY, RECEIPTS)
 
 
+@pytest.mark.parametrize("all_splits", [
+    {"train": 7635, "valid": 1447},
+    {"train": 7635, "valid": 1447, "test": 1388, "other": 0},
+    {"train": 7635, "valid": 1447, "test": True},
+])
+def test_candidate_inventory_requires_exact_integral_evidence_split_counts(all_splits):
+    inventory = json.loads(INVENTORY.read_text())
+    inventory["counts"]["evidence_corpus_tile_all_splits"] = all_splits
+    with pytest.raises(ValueError, match="inventory counts"):
+        _validate_inventory(inventory)
+
+
 def test_candidate_rejects_boolean_receipt_location_with_recomputed_bindings(tmp_path):
     acceptance = json.loads(ACCEPTANCE.read_text())
     receipts = json.loads(RECEIPTS.read_text())
@@ -178,7 +192,9 @@ def tiny_candidate(tmp_path):
     ]
     acceptance = {"artifact": {"sha256": ids["evidence"]},
                   "inputs": {"corpus": {"sha256": ids["corpus"]}, "panel": {"sha256": ids["panel"]}}}
-    candidate = CandidateRecords(acceptance, {"records": records}, {},
+    inventory = {"records": records, "counts": {"total": 2, "train": 1, "valid": 1,
+        "evidence_corpus_tile_all_splits": {"train": 1, "valid": 1, "test": 0}}}
+    candidate = CandidateRecords(acceptance, inventory, {},
                                  {"acceptance": "a" * 64, "inventory": "b" * 64, "receipts": "c" * 64})
     return candidate, db, evidence, panel
 
@@ -207,11 +223,29 @@ def test_candidate_artifacts_reject_wal_and_metadata_mutation(tmp_path):
 
 def test_candidate_artifacts_reject_fabricated_test_count(tmp_path):
     candidate, db, evidence, panel = tiny_candidate(tmp_path)
-    candidate.inventory["counts"] = {
-        "total": 2, "train": 1, "valid": 1,
-        "evidence_corpus_tile_all_splits": {"train": 1, "valid": 1, "test": 999999},
-    }
-    with pytest.raises(ValueError, match="test inventory count"):
+    candidate.inventory["counts"]["evidence_corpus_tile_all_splits"]["test"] = 999999
+    with pytest.raises(ValueError, match="split counts"):
+        verify_candidate_artifacts(candidate, db, evidence, panel)
+
+
+@pytest.mark.parametrize("split", ["mystery", None])
+def test_candidate_artifacts_reject_unknown_or_null_evidence_split_with_updated_digest(tmp_path, split):
+    candidate, db, evidence, panel = tiny_candidate(tmp_path)
+    import duckdb
+    with duckdb.connect(str(evidence)) as con:
+        con.execute("INSERT INTO corpus_tile VALUES (3, 'Chr3', 50, 60, ?, false)", [split])
+    candidate.acceptance["artifact"]["sha256"] = hashlib.sha256(evidence.read_bytes()).hexdigest()
+    with pytest.raises(ValueError, match="unexpected corpus_tile split"):
+        verify_candidate_artifacts(candidate, db, evidence, panel)
+
+
+def test_candidate_artifacts_reject_extra_known_split_row_with_updated_digest(tmp_path):
+    candidate, db, evidence, panel = tiny_candidate(tmp_path)
+    import duckdb
+    with duckdb.connect(str(evidence)) as con:
+        con.execute("INSERT INTO corpus_tile VALUES (3, 'Chr3', 50, 60, 'train', false)")
+    candidate.acceptance["artifact"]["sha256"] = hashlib.sha256(evidence.read_bytes()).hexdigest()
+    with pytest.raises(ValueError, match="split counts"):
         verify_candidate_artifacts(candidate, db, evidence, panel)
 
 
@@ -286,6 +320,18 @@ def test_load_audit_checkpoint_mismatch_is_rejected_before_optimizer(tmp_path):
         _validate_initialization_readiness(audit, readiness, weights, run_config)
 
 
+def test_runtime_contract_records_actual_public_and_private_test_modes():
+    assert _runtime_contract(False) == {
+        "execution_mode": "public_cli", "compile_backend": "inductor", "precision": "bf16",
+        "checkpointing": "nonreentrant", "construction_order": "weights_optimizer_compile_prepare",
+    }
+    assert _runtime_contract(True) == {
+        "execution_mode": "private_test_injection", "compile_backend": "eager_counting_test",
+        "precision": "no", "checkpointing": "nonreentrant",
+        "construction_order": "weights_optimizer_compile_prepare",
+    }
+
+
 def test_bound_forward_compile_has_no_eager_fallback():
     import torch
 
@@ -314,9 +360,15 @@ def run_two_rank_probe(tmp_path, case):
 
 
 def test_actual_two_rank_execute_train_to_atomic_test_scope_final(tmp_path):
-    assert run_two_rank_probe(tmp_path, "success") == {
+    output = run_two_rank_probe(tmp_path, "success")
+    assert output == {
         "all_succeeded": True, "backend_called": True, "canonical_audit": True,
-        "identity_scope": "test", "marker": True, "saved_keys_clean": True, "world_size": 2,
+        "effective_batch_size": 4, "epochs_crossed": 3, "identity_scope": "test",
+        "marker": True, "rank_distinct_augmentation_streams": True,
+        "runtime_contract": {"checkpointing": "nonreentrant",
+            "compile_backend": "eager_counting_test", "construction_order": "weights_optimizer_compile_prepare",
+            "execution_mode": "private_test_injection", "precision": "no"},
+        "saved_keys_clean": True, "successful_updates": 2, "update_budget": 2, "world_size": 2,
     }
 
 
@@ -327,11 +379,23 @@ def test_actual_two_rank_single_rank_setup_failure_rejects_all_and_cleans_up(tmp
     assert all("dataset phase failed" in error for error in output["errors"])
 
 
+def test_actual_two_rank_identity_local_failure_rejects_all_without_nested_collective(tmp_path):
+    output = run_two_rank_probe(tmp_path, "identity-failure")
+    assert output["all_rejected"] and output["no_artifact"] and output["dataset_closed"]
+    assert all("identity phase failed" in error for error in output["errors"])
+
+
 def test_actual_two_rank_evaluation_time_mutation_rejects_without_artifact(tmp_path):
     output = run_two_rank_probe(tmp_path, "mutation")
     assert output["all_rejected"] and output["no_artifact"] and output["dataset_closed"]
     assert output["world_size"] == 2
     assert all("identity changed" in error for error in output["errors"])
+
+
+def test_actual_two_rank_mutation_hook_exception_rejects_all_without_artifact(tmp_path):
+    output = run_two_rank_probe(tmp_path, "mutation-error")
+    assert output["all_rejected"] and output["no_artifact"] and output["dataset_closed"]
+    assert all("injected mutation hook failure" in error for error in output["errors"])
 
 
 def test_launch_readiness_binds_recipe_sources_and_evidence(tmp_path):

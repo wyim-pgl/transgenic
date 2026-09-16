@@ -1,47 +1,55 @@
-# B6 exploratory MVP CLI integration report (2026-09-15, review round 1)
+# B6 exploratory MVP CLI integration report (2026-09-15, review round 2)
 
 ## Scope
 
-- Review base: `c7b016a7b17d8cfd5dbc576bb86c5a3eace4014e` (`Add exploratory MVP training CLI`).
+- Review base: `f6b1e776ff09227110252e38e36e12e8656df147` (`Harden exploratory MVP CLI handoff`).
 - Native isolated worktree; CPU only. No main-worktree writes, remote actions, GPU actions, job submission, merge, or push.
-- The entrypoint remains exploratory and always emits `EXPLORATORY_MVP_NOT_FOR_PRODUCTION`. No resume, arbitrary budget/LR/world-size, eager fallback, production authorization, or test-only public flag was added.
-- Missing real launch readiness still blocks actual public execution before Accelerator/model/dataset construction. `--validate-only` remains available for the technically accepted, production-false candidate.
+- Round-1 canonical path consumption, initialization-audit checks, coordinated setup, strict code manifest, and final prepublication checks remain in place.
+- The public CLI remains fixed to bf16 plus Inductor, exploratory-only, and `EXPLORATORY_MVP_NOT_FOR_PRODUCTION`. No public test, eager, precision, budget, production, or recovery option was added.
+- Missing real launch readiness still blocks public execution before Accelerator/model/dataset construction.
 
-## Review findings and changes
+## Round-2 findings and changes
 
-### 1. Canonical consumption and final identity checks (HIGH)
+### 1. Exact evidence split population
 
-`execute` now resolves and verifies every consumed path once and passes a frozen internal `_VerifiedInputs` binding into `_train`. `_train` no longer reopens `args.config`, `args.init_from`, `args.db`, `args.evidence_db`, `args.sif`, or the readiness path. Config, initialization, and dataset-open boundaries compare device/inode/size/mtime/ctime snapshots before and after access. The loaded config bytes are rehashed against readiness before optimizer construction.
+The candidate inventory now requires `counts.evidence_corpus_tile_all_splits` to have exactly `train`, `valid`, and `test`. Every value must be a nonnegative integer with booleans rejected. Train and valid counts still reconcile to the ordered candidate records.
 
-The actual `load_weights_only` audit is compared before optimizer construction with readiness's concrete resolved checkpoint/weights/run-config paths and both source SHA256 values. Symlink file aliases are rejected at the regular-file gate; a checkpoint directory alias is resolved and the resulting audit records the canonical source.
+Artifact verification now queries `SELECT split, count(*) FROM corpus_tile GROUP BY split` without filtering to known values. Unknown and `NULL` splits are rejected before count comparison. Missing known groups normalize to zero, and the complete measured map must equal the companion map. Unique/disjoint test RN checks remain. Tests modify DuckDB bytes and update the accepted digest, proving that semantic validation rejects unknown/NULL splits, an extra known-split row, and a fabricated test count after the hash gate passes.
 
-`evaluate_and_publish_final` has one optional keyword-only `prepublication_check`. The default is unchanged. When supplied, it runs collectively after evaluation aggregation and before staging-directory creation or any publication filesystem work. The CLI uses it to close dataset read handles, repeat canonical stat/WAL checks, rehash/requery candidate DB identities, and revalidate readiness, config, SIF, source checkpoint, and exact code manifest. Evaluation-time mutation therefore rejects all ranks with no final artifact.
+### 2. No nested identity collectives
 
-This is a canonical-binding and phase-check contract, not proof against an adversary changing and restoring bytes during an opaque read while preserving observable metadata. Preventing that requires immutable/snapshot storage.
+Identity work is now split into two operations. `_identity_payload` performs local JSON encoding and validation only, under the bounded collective phase-status wrapper. After every rank has reported local success, `require_matching_identity` performs the single identity gather directly, without an outer status collective around it.
 
-### 2. Coordinated setup failure and cleanup (HIGH)
+All other guarded phase operations were checked and remain rank-local: config load, model/weights initialization, final readiness audit, optimizer/compile setup, and dataset/loader setup. A real two-rank injection fails identity preparation on one rank; both ranks reject within the launcher timeout, clean up, and produce no artifact.
 
-The existing bounded collective status transport now guards fixed noncollective phases: rank identity, config load, model/weights initialization, final readiness/audit, optimizer plus bound-forward compile, and dataset/loader construction. No rank enters `accelerator.prepare` until optimizer/compile setup has succeeded on every rank, and no rank enters runtime collectives until dataset setup has succeeded on every rank.
+### 3. Safe mutation normalization before final recheck
 
-`_train` now always releases both dataset connection sets when constructed and calls `accelerator.end_training()` in `finally`. A real CPU/Gloo two-rank test injects a dataset setup failure on one rank and verifies all ranks reject, the corpus can be reopened read-write, and no output artifact exists.
+`evaluate_and_publish_final` now accepts a second optional internal callback, `prepublication_prepare`, immediately before `prepublication_check`. Each callback is independently wrapped by the finalizer's bounded collective preflight after evaluation aggregation and before publication filesystem work.
 
-This does not claim recovery from arbitrary rank death, communicator failure, or failure during DDP forward/prepare. The external launcher timeout remains the boundary for those cases.
+The private rank-zero mutation hook runs only as local work in `prepublication_prepare`; it contains no barrier or collective. Its success or exception is normalized collectively before any rank enters the final recheck. The normal recheck callback now contains only local close/stat/hash/query/readiness work. Real two-rank tests cover both shared-file mutation and a rank-zero mutation-hook exception; all ranks reject and no staging/final artifact is published.
 
-### 3. Production execute/_train E2E (MEDIUM)
+### 4. Truthful runtime metadata
 
-`tests/mvp_cli_probe.py` no longer reconstructs the helper chain. It calls production `execute`, which calls production `_train`, using a private `_TestExecution` object that is unavailable from the public parser. The only substitutions are the small test recipe/test identity, CPU mode, a counting eager compile backend, external tiny Hyena factory, and external tokenizer.
+Runtime metadata is derived from the path actually selected by `_train`:
 
-The two-rank success path exercises readiness-to-runtime handoff, canonical checkpoint alias resolution, real tiny DuckDB corpus/evidence metadata and dataset/rasterizer/collate, actual TransGenic wrappers, actual `load_weights_only`, optimizer/runtime accumulation across epochs, final evaluation/aggregation, atomic finalization, test-scope metadata, clean safetensors keys, final identity checks, and cleanup. It makes no bf16, Inductor, GPU, or production claim.
+- Public execution records `execution_mode=public_cli`, `compile_backend=inductor`, and `precision=bf16`.
+- Private CPU integration records `execution_mode=private_test_injection`, `compile_backend=eager_counting_test`, and `precision=no`.
 
-Separate real two-rank cases cover one-rank setup failure and post-evaluation/prepublication mutation, both with all-rank rejection and no artifact.
+Both record nonreentrant checkpointing and the actual `weights_optimizer_compile_prepare` order. The two-rank final metadata assertion verifies the private conditions and therefore makes no bf16 or Inductor certification claim. A focused unit test fixes the unchanged public contract.
 
-### 4. Closed schemas and deterministic code manifest (MEDIUM)
+### 5. Production-path runtime observations restored
 
-The technical candidate now requires the exact 12-key `checks` set from the neutral record, with every value exactly `true`. Receipt rows require exact fields, integer byte counts (not booleans), and a string location from `local_git_object`, `local_parent_repo`, or `pronghorn`.
+The real two-rank probe still calls production `execute`, which calls production `_train`; it does not reconstruct the helper chain. `_TestExecution` now carries only a private in-memory observation dictionary. `_train` records the exact private augmentation seed and the exact train/valid DataLoader generator seeds used on each rank, then records the actual summary returned by `run_fixed_updates`.
 
-Runtime metadata queries now reconcile the inventory's test count with unique, disjoint `corpus_tile` test RNs. A fabricated `test=999999` count is rejected.
+The published final metadata and per-rank observations are asserted to show:
 
-The consumed-code manifest now has exactly two sections. `files` must equal every `src/transgenic/**/*.py` file plus `train/train_HyenaTransgenic_MVP.py` under the actual imported checkout, with every byte SHA256 matching; missing, extra, or substituted paths are rejected. `external_packages` separately binds exact installed versions for Accelerate, DuckDB, safetensors, Torch, and Transformers. A recomputed manifest containing only `pass.py` is rejected.
+- exactly **2 successful updates** for the test recipe's **2-update budget**;
+- **3 crossed epochs**, proving the shared runtime crossed loader epochs;
+- effective batch size **4**;
+- distinct private, train-worker, and valid-worker streams on both ranks;
+- test identity scope, CPU/no precision, eager counting backend, clean saved keys, marker publication, and world size 2.
+
+These assertions are limited to the injected CPU test recipe and external tiny Hyena/tokenizer substitutions. They are not claims about public 250-update, four-rank, bf16, Inductor, GPU, or production behavior.
 
 ## Verification
 
@@ -74,11 +82,11 @@ git diff --check
 
 Results:
 
-- CLI suite: **28 passed**.
-- Finalizer suite: **41 passed**.
+- CLI suite: **37 passed**.
+- Finalizer suite: **42 passed**.
 - Fixed-runtime suite: **20 passed**.
 - Required reviewed baseline: **46 passed**.
-- Total requested tests: **135 passed**.
+- Total requested tests: **145 passed**.
 - Syntax compilation and `git diff --check`: exit 0.
 
 ## Remaining boundaries
@@ -86,6 +94,6 @@ Results:
 - No real launch-readiness record exists, so public training remains blocked.
 - No production corpus, real tokenizer/Hyena checkpoint, SIF execution, GPU, bf16 numerics, Inductor kernels, four-rank resource behavior, or production filesystem was exercised.
 - Trusted readiness evidence is validated, not re-executed. Historical receipt paths remain digest-bound provenance and are not freshly reread.
-- Phase collectives coordinate ordinary rank-local Python failures only. Rank death and communicator/DDP failures still rely on launcher timeout/termination.
+- Phase collectives coordinate ordinary rank-local Python failures only. Rank death, communicator failure, and DDP prepare/forward failures still rely on launcher timeout/termination.
 - Canonical paths, hashes, and before/after snapshots narrow TOCTOU exposure but do not guarantee immutability against adversarial in-place change-and-restore during opaque reads; immutable storage is required for that guarantee.
-- `identity_scope="production"` remains only the legacy fixed-250x96 finalizer shape name. Authorization metadata remains `exploratory_mvp`, `production_authorized=false`, and `EXPLORATORY_MVP_NOT_FOR_PRODUCTION`.
+- `identity_scope="production"` remains only the legacy fixed-250x96 finalizer shape name. Authorization remains exploratory and production false.

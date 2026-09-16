@@ -207,6 +207,24 @@ def test_prepublication_check_failure_leaves_no_artifact(tmp_path):
     assert not final.exists() and not list(tmp_path.iterdir())
 
 
+def test_prepublication_prepare_is_normalized_before_local_recheck(tmp_path):
+    order = []
+
+    def prepare():
+        order.append("prepare")
+
+    def check():
+        order.append("check")
+        raise ValueError("recheck rejected")
+
+    with pytest.raises(ValueError, match="recheck rejected"):
+        finalize.evaluate_and_publish_final(
+            LocalAccelerator(), SaveToy(), DataLoader(OneDataset(), batch_size=1), [11], tmp_path / "final",
+            metadata=metadata(), training_summary=summary(),
+            prepublication_prepare=prepare, prepublication_check=check)
+    assert order == ["prepare", "check"] and not list(tmp_path.iterdir())
+
+
 @pytest.mark.parametrize("distributed_type", ["FSDP", "DEEPSPEED"])
 def test_sharded_distributed_types_are_rejected(distributed_type):
     accelerator = LocalAccelerator()

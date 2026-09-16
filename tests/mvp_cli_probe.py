@@ -14,7 +14,6 @@ from unittest.mock import patch
 
 import duckdb
 import torch
-import torch.distributed as dist
 from safetensors import safe_open
 from safetensors.torch import save_model
 
@@ -184,10 +183,18 @@ def main():
         args, candidate = inputs(root)
         recipe = MVPRecipe(max_updates=2, warmup_updates=1, accumulation_steps=2,
                            required_world_size=2, backbone_lr=3e-4, projection_lr=5e-4)
-        mutate = ((lambda: (root / "panel.tsv").write_text("mutated\n"))
-                  if case == "mutation" else None)
-        injection = _TestExecution(recipe, counting_backend, fail_phase="dataset" if case == "failure" else None,
-                                   mutate_before_final_recheck=mutate)
+        def mutation_hook():
+            if case == "mutation-error":
+                raise RuntimeError("injected mutation hook failure")
+            (root / "panel.tsv").write_text("mutated\n")
+
+        observation = {}
+        fail_phase = "dataset" if case == "failure" else ("identity" if case == "identity-failure" else None)
+        injection = _TestExecution(
+            recipe, counting_backend, fail_phase=fail_phase,
+            mutate_before_final_recheck=(mutation_hook if case in {"mutation", "mutation-error"} else None),
+            observation=observation,
+        )
         error = None
         try:
             execute(args, candidate, validate_only=False, _test=injection)
@@ -195,7 +202,8 @@ def main():
             error = str(caught)
         result_path = root / f"result-{rank}.json"
         result_tmp = root / f".result-{rank}.tmp"
-        canonical(result_tmp, {"error": error, "backend_called": BACKEND_CALLS > 0})
+        canonical(result_tmp, {"error": error, "backend_called": BACKEND_CALLS > 0,
+                               "observation": observation})
         result_tmp.replace(result_path)
         if rank == 0:
             deadline = time.monotonic() + 20
@@ -215,12 +223,24 @@ def main():
                 metadata = json.loads((root / "final" / "metadata.json").read_text())
                 clean = all(not key.startswith(("module.", "_orig_mod."))
                             for key in safe_open(root / "final" / "model.safetensors", framework="pt").keys())
+                training = metadata["training_summary"]
+                streams = [item["observation"]["augmentation_streams"] for item in results]
+                rank_distinct = all(len({item[name] for item in streams}) == 2
+                                    for name in ("private", "train_worker", "valid_worker"))
                 payload = {"all_succeeded": errors == [None, None],
                            "backend_called": all(item["backend_called"] for item in results),
                            "canonical_audit": metadata["initialization_audit"]["audit"]["resolved_weights_path"] ==
                                               str((root / "source/epoch_01/model.safetensors").resolve()),
-                           "identity_scope": metadata["identity_scope"], "marker": (root / "final/TRAINING_DONE").is_file(),
-                           "saved_keys_clean": clean, "world_size": 2}
+                           "effective_batch_size": training["effective_batch_size"],
+                           "epochs_crossed": training["epochs_crossed"],
+                           "identity_scope": metadata["identity_scope"],
+                           "marker": (root / "final/TRAINING_DONE").is_file(),
+                           "rank_distinct_augmentation_streams": rank_distinct,
+                           "runtime_contract": metadata["runtime_contract"],
+                           "saved_keys_clean": clean,
+                           "successful_updates": training["successful_updates"],
+                           "update_budget": metadata["normalized_recipe"]["max_updates"],
+                           "world_size": 2}
             else:
                 payload = {"all_rejected": all(errors), "errors": errors,
                            "no_artifact": not (root / "final").exists(), "dataset_closed": writable,
