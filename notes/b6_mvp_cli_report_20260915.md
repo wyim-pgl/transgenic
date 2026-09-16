@@ -1,10 +1,10 @@
-# B6 exploratory MVP CLI integration report (2026-09-15, review round 2)
+# B6 exploratory MVP CLI integration report (2026-09-15, review round 3)
 
 ## Scope
 
-- Review base: `f6b1e776ff09227110252e38e36e12e8656df147` (`Harden exploratory MVP CLI handoff`).
+- Review base: `7222a3c447c680c8bf2409020bc2b3d5b3f380c7` (`Close MVP CLI round two review gaps`).
 - Native isolated worktree; CPU only. No main-worktree writes, remote actions, GPU actions, job submission, merge, or push.
-- Round-1 canonical path consumption, initialization-audit checks, coordinated setup, strict code manifest, and final prepublication checks remain in place.
+- All round-1 and round-2 findings remain addressed; round 3 changes only deterministic RNG domain separation and its wiring assertions.
 - The public CLI remains fixed to bf16 plus Inductor, exploratory-only, and `EXPLORATORY_MVP_NOT_FOR_PRODUCTION`. No public test, eager, precision, budget, production, or recovery option was added.
 - Missing real launch readiness still blocks public execution before Accelerator/model/dataset construction.
 
@@ -39,7 +39,7 @@ Both record nonreentrant checkpointing and the actual `weights_optimizer_compile
 
 ### 5. Production-path runtime observations restored
 
-The real two-rank probe still calls production `execute`, which calls production `_train`; it does not reconstruct the helper chain. `_TestExecution` now carries only a private in-memory observation dictionary. `_train` records the exact private augmentation seed and the exact train/valid DataLoader generator seeds used on each rank, then records the actual summary returned by `run_fixed_updates`.
+The real two-rank probe still calls production `execute`, which calls production `_train`; it does not reconstruct the helper chain. `_TestExecution` carries only a private in-memory observation dictionary. `_train` records the canonical augmentation seed, sampler seed, exact private augmentation seed, exact train/valid DataLoader generator seeds, and generator object identities used on each rank, then records the actual summary returned by `run_fixed_updates`.
 
 The published final metadata and per-rank observations are asserted to show:
 
@@ -50,6 +50,18 @@ The published final metadata and per-rank observations are asserted to show:
 - test identity scope, CPU/no precision, eager counting backend, clean saved keys, marker publication, and world size 2.
 
 These assertions are limited to the injected CPU test recipe and external tiny Hyena/tokenizer substitutions. They are not claims about public 250-update, four-rank, bf16, Inductor, GPU, or production behavior.
+
+## Round-3 RNG domain separation
+
+The canonical molecule-ranking seed remains `aug_seed = 20260914 + seed`. The distributed sampler remains independently seeded with the run `seed`. Runtime streams now use these exact formulas:
+
+- private dataset dropout/thinning generator when `num_workers=0`: `aug_seed + rank`;
+- train DataLoader worker generator: `aug_seed + 1_000_000 + rank`;
+- validation DataLoader worker generator: `aug_seed + 2_000_000 + rank`.
+
+Train and validation each receive a separately constructed `torch.Generator`. The private generator is also a distinct object when present. The nonzero-worker dataset RNG implementation is unchanged. This resolves the prior rank-zero collision between the private and train-worker seeds without changing the canonical molecule-ranking seed, sampler permutation, fixed recipe, or evidence algorithm.
+
+The two-rank production-path probe asserts the complete seed map for each rank, including canonical and sampler seeds, not merely cross-rank inequality. For seed 1 it requires rank 0 `(private, train, valid) = (20260915, 21260915, 22260915)` and rank 1 `(20260916, 21260916, 22260916)`. It also verifies pairwise-distinct stream seeds and generator identities on each rank. A rank-distinct but incorrectly offset implementation therefore fails.
 
 ## Verification
 

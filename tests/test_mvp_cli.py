@@ -321,14 +321,23 @@ def test_load_audit_checkpoint_mismatch_is_rejected_before_optimizer(tmp_path):
 
 
 def test_runtime_contract_records_actual_public_and_private_test_modes():
+    rng = {
+        "canonical_aug_seed": "20260914+seed (molecule ranking)",
+        "private_num_workers_0": "aug_seed+rank",
+        "train_worker_generator": "aug_seed+1000000+rank",
+        "valid_worker_generator": "aug_seed+2000000+rank",
+        "distributed_sampler": "seed",
+        "nonzero_worker_dataset_rng": "dataset implementation unchanged",
+    }
     assert _runtime_contract(False) == {
         "execution_mode": "public_cli", "compile_backend": "inductor", "precision": "bf16",
         "checkpointing": "nonreentrant", "construction_order": "weights_optimizer_compile_prepare",
+        "rng_streams": rng,
     }
     assert _runtime_contract(True) == {
         "execution_mode": "private_test_injection", "compile_backend": "eager_counting_test",
         "precision": "no", "checkpointing": "nonreentrant",
-        "construction_order": "weights_optimizer_compile_prepare",
+        "construction_order": "weights_optimizer_compile_prepare", "rng_streams": rng,
     }
 
 
@@ -362,12 +371,28 @@ def run_two_rank_probe(tmp_path, case):
 def test_actual_two_rank_execute_train_to_atomic_test_scope_final(tmp_path):
     output = run_two_rank_probe(tmp_path, "success")
     assert output == {
-        "all_succeeded": True, "backend_called": True, "canonical_audit": True,
+        "all_succeeded": True,
+        "augmentation_streams": [
+            {"canonical_aug_seed": 20260915, "private": 20260915, "rank": 0,
+             "sampler": 1, "train_worker": 21260915, "valid_worker": 22260915},
+            {"canonical_aug_seed": 20260915, "private": 20260916, "rank": 1,
+             "sampler": 1, "train_worker": 21260916, "valid_worker": 22260916},
+        ],
+        "backend_called": True, "canonical_audit": True,
         "effective_batch_size": 4, "epochs_crossed": 3, "identity_scope": "test",
-        "marker": True, "rank_distinct_augmentation_streams": True,
+        "marker": True, "pairwise_distinct_generators": True,
+        "pairwise_distinct_stream_seeds_per_rank": True,
         "runtime_contract": {"checkpointing": "nonreentrant",
             "compile_backend": "eager_counting_test", "construction_order": "weights_optimizer_compile_prepare",
-            "execution_mode": "private_test_injection", "precision": "no"},
+            "execution_mode": "private_test_injection", "precision": "no",
+            "rng_streams": {
+                "canonical_aug_seed": "20260914+seed (molecule ranking)",
+                "private_num_workers_0": "aug_seed+rank",
+                "train_worker_generator": "aug_seed+1000000+rank",
+                "valid_worker_generator": "aug_seed+2000000+rank",
+                "distributed_sampler": "seed",
+                "nonzero_worker_dataset_rng": "dataset implementation unchanged",
+            }},
         "saved_keys_clean": True, "successful_updates": 2, "update_budget": 2, "world_size": 2,
     }
 

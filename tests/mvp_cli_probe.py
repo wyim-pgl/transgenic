@@ -224,10 +224,18 @@ def main():
                 clean = all(not key.startswith(("module.", "_orig_mod."))
                             for key in safe_open(root / "final" / "model.safetensors", framework="pt").keys())
                 training = metadata["training_summary"]
-                streams = [item["observation"]["augmentation_streams"] for item in results]
-                rank_distinct = all(len({item[name] for item in streams}) == 2
-                                    for name in ("private", "train_worker", "valid_worker"))
+                streams = sorted(
+                    (item["observation"]["augmentation_streams"] for item in results),
+                    key=lambda item: item["rank"],
+                )
+                generator_ids = [item["observation"]["generator_ids"] for item in results]
+                pairwise_seeds = all(
+                    len({item["private"], item["train_worker"], item["valid_worker"]}) == 3
+                    for item in streams
+                )
+                pairwise_generators = all(len(set(item.values())) == 3 for item in generator_ids)
                 payload = {"all_succeeded": errors == [None, None],
+                           "augmentation_streams": streams,
                            "backend_called": all(item["backend_called"] for item in results),
                            "canonical_audit": metadata["initialization_audit"]["audit"]["resolved_weights_path"] ==
                                               str((root / "source/epoch_01/model.safetensors").resolve()),
@@ -235,7 +243,8 @@ def main():
                            "epochs_crossed": training["epochs_crossed"],
                            "identity_scope": metadata["identity_scope"],
                            "marker": (root / "final/TRAINING_DONE").is_file(),
-                           "rank_distinct_augmentation_streams": rank_distinct,
+                           "pairwise_distinct_generators": pairwise_generators,
+                           "pairwise_distinct_stream_seeds_per_rank": pairwise_seeds,
                            "runtime_contract": metadata["runtime_contract"],
                            "saved_keys_clean": clean,
                            "successful_updates": training["successful_updates"],

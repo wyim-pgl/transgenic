@@ -284,13 +284,21 @@ def compile_bound_forward(model, backend="inductor"):
     return model
 
 
-def _runtime_contract(test_execution: bool) -> dict[str, str]:
+def _runtime_contract(test_execution: bool) -> dict[str, Any]:
     return {
         "execution_mode": "private_test_injection" if test_execution else "public_cli",
         "compile_backend": "eager_counting_test" if test_execution else "inductor",
         "precision": "no" if test_execution else "bf16",
         "checkpointing": "nonreentrant",
         "construction_order": "weights_optimizer_compile_prepare",
+        "rng_streams": {
+            "canonical_aug_seed": "20260914+seed (molecule ranking)",
+            "private_num_workers_0": "aug_seed+rank",
+            "train_worker_generator": "aug_seed+1000000+rank",
+            "valid_worker_generator": "aug_seed+2000000+rank",
+            "distributed_sampler": "seed",
+            "nonzero_worker_dataset_rng": "dataset implementation unchanged",
+        },
     }
 
 
@@ -455,26 +463,33 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
                 raise ValueError("dataset index map does not match accepted inventory")
             rank = accelerator.process_index
             private_aug_seed = aug_seed + rank
-            train_worker_seed = aug_seed + 10_000 * rank
-            valid_worker_seed = aug_seed + 1_000_000 + rank
+            train_worker_seed = aug_seed + 1_000_000 + rank
+            valid_worker_seed = aug_seed + 2_000_000 + rank
+            private_generator = None
             if num_workers == 0:
-                train_ds._aug_generator = torch.Generator().manual_seed(private_aug_seed)
+                private_generator = torch.Generator().manual_seed(private_aug_seed)
+                train_ds._aug_generator = private_generator
                 train_ds._aug_key = (os.getpid(), None)
+            train_generator = torch.Generator().manual_seed(train_worker_seed)
+            valid_generator = torch.Generator().manual_seed(valid_worker_seed)
             if _test is not None and _test.observation is not None:
                 _test.observation["augmentation_streams"] = {
+                    "rank": rank, "canonical_aug_seed": aug_seed, "sampler": seed,
                     "private": private_aug_seed, "train_worker": train_worker_seed,
                     "valid_worker": valid_worker_seed,
+                }
+                _test.observation["generator_ids"] = {
+                    "private": id(private_generator), "train_worker": id(train_generator),
+                    "valid_worker": id(valid_generator),
                 }
             loader_args = {"batch_size": 1, "num_workers": num_workers,
                            "collate_fn": hyena_collate_fn, "pin_memory": True}
             loaders["train"] = DataLoader(train_ds, sampler=DistributedSampler(
                 train_ds, num_replicas=accelerator.num_processes, rank=rank,
-                shuffle=True, seed=seed),
-                generator=torch.Generator().manual_seed(train_worker_seed), **loader_args)
+                shuffle=True, seed=seed), generator=train_generator, **loader_args)
             loaders["valid"] = DataLoader(valid_ds, sampler=DistributedSampler(
                 valid_ds, num_replicas=accelerator.num_processes, rank=rank,
-                shuffle=False, drop_last=False),
-                generator=torch.Generator().manual_seed(valid_worker_seed), **loader_args)
+                shuffle=False, drop_last=False), generator=valid_generator, **loader_args)
         phase(accelerator, "dataset", datasets)
 
         summary = run_fixed_updates(accelerator, model, optimizer, loaders["train"], recipe)
