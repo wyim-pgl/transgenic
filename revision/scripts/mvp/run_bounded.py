@@ -45,6 +45,11 @@ def validate_step0(value):
 def validate_measurement(name, value):
     if not isinstance(value, dict) or value.get('device') != 'cuda' or value.get('real_runtime') is not True:
         raise ValueError('measured real CUDA runtime required')
+    if 'probe_identity' in value or 'mode' in value:
+        from real_probes import validate_identity
+        if value.get('mode') != name:
+            raise ValueError('real probe mode/receipt mismatch')
+        validate_identity(value)
     if name == 'real_hyena_step0_three_tiers':
         validate_step0(value)
     elif name == 'four_rank_smoke':
