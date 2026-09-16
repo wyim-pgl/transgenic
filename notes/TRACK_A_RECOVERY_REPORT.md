@@ -149,3 +149,105 @@ source-path resolution, initialization sidecar expectations and existing tests.
    remain for inspection; no automatic cleanup or retry is implemented.
 6. Independent review is pending with the controller. No launch authorization
    follows from this CPU test report.
+
+## Independent-review fix round 1 — 2026-09-16 PDT
+
+Fix base: `709ff26ff7f69be42f028a45b6c28ccbb5d68b60`.
+Fix implementation commit: **`f6b171ffc3f2216504fb385031ad588cb1f797dd`**.
+Read the complete controller review at
+`notes/recovery_20260916_1251/A.independent_review.md` in main, read-only.
+Only findings **A1 and A2** were changed. Controller re-review remains pending.
+
+### A1: complete loader sidecar identity
+
+- Additive `source_checkpoint.optional_sidecars` binds `config.json`, `meta.json`
+  and `runtime.json`, each as digest/size or explicit `null` absence. Canonical
+  nonsymlink regular files are required; dangling links/directories fail.
+- Prepare records this inventory. Generate cannot reuse preflights after any
+  sidecar addition/removal/modification; check remeasures the same inventory.
+  The review's invalid-JSON `config.json` addition now fails check.
+- Staging snapshots the chosen inventory, copies every present loader sidecar
+  against that digest, verifies the source and staged inventories before
+  publication, and records all three presence/absence states in its receipt.
+  It no longer silently drops `config.json` or `runtime.json`.
+- New tests cover add/remove/change for every loader sidecar, invalid JSON config
+  addition, symlinks/dangling links/directories, present/absent staging inventory,
+  and source inventory drift during copying.
+
+### A2: explicit bound Accelerate configuration
+
+- Added `revision/scripts/mvp/accelerate_mvp.json`, derived from installed
+  **Accelerate 0.34.2** `ClusterConfig` and launch parser, not a new general
+  configuration framework. Config bytes are included in tooling identity and
+  additive `bindings.accelerate_config` records the exact canonical path/digest.
+- Config is mandatory at prepare; later changed/removed/recreated bytes fail
+  generate/check. The wrapper rechecks after warmup and supplies that exact
+  bound path using `--config_file`, preserving every trainer argument.
+- Pins: LOCAL_MACHINE/MULTI_GPU, one machine, machine rank 0, four processes,
+  GPU IDs `0,1,2,3`, bf16, static loopback rendezvous `127.0.0.1:29500`,
+  same-network true, Accelerate Dynamo `NO`. Port availability remains an
+  operator prerequisite. Explicit CLI `--max_restarts 0` is used because it is
+  not a ClusterConfig field; the old parser already defaulted to zero, so this
+  is policy pinning, **not a demonstrated old restart bug**.
+- Dynamo `NO` prevents Accelerate from adding another compilation layer. The
+  trainer's bound-forward compilation/no-eager-fallback and local-device /
+  distinct-non-MIG-GPU gates are unchanged.
+- CPU test calls the actual installed launch parser and config loader with a
+  conflicting real default-config file (GPU IDs `2,3`, Dynamo EAGER, two
+  machines, other IP/port/backend). The exact wrapper argv retains all pinned
+  settings and the full trainer argv. Only bf16 hardware availability and
+  subprocess execution are substituted; no GPU is launched or certified.
+
+### Exact round-1 verification
+
+All commands ran in `/tmp/b6-p2-readiness-1535112` using existing `.testdeps`.
+
+```
+PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_readiness_review.py
+```
+
+Before production edits: **24 failed in 15.99 s**, including reproduction of
+both review findings. The first green tooling run (before further edge tests):
+
+```
+PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_readiness_review.py tests/test_mvp_readiness_tools.py
+```
+
+**59 passed in 37.60 s**.
+
+Final focused tooling plus unchanged CLI/weights verification:
+
+```
+PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_readiness_review.py tests/test_mvp_readiness_tools.py tests/test_mvp_cli.py tests/test_weights_init.py
+```
+
+**123 passed in 155.26 s**.
+
+Final full scoped regression (previous 188 + 31 review regressions):
+
+```
+PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_cli.py tests/test_mvp_finalize.py tests/test_mvp_runtime.py tests/test_weights_init.py tests/test_mvp_metrics.py tests/test_mvp_model.py tests/test_mvp_dataset.py tests/test_mvp_readiness_tools.py tests/test_mvp_readiness_review.py
+```
+
+**219 passed in 480.62 s**. No timeout occurred this round. The earlier unchanged
+two-rank timeout remains an unexplained historical observation; no timeout or
+trainer behavior was weakened or described as fixed.
+
+```
+PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m py_compile revision/scripts/mvp/make_launch_readiness.py revision/scripts/mvp/stage_checkpoint.py revision/scripts/mvp/run_training.py tests/test_mvp_readiness_tools.py tests/test_mvp_readiness_review.py
+git diff --check
+git diff --cached --check
+git diff 709ff26ff7f69be42f028a45b6c28ccbb5d68b60 -- src/transgenic train
+```
+
+Compile/whitespace checks exited 0; trainer/source diff was empty. Graft was
+queried before source inspection and refreshed after the fix. No remote/job,
+subagent, main modification, merge or push. Existing ignore/dependency/cache
+state remains excluded from commits.
+
+All operational gates above remain: genuine real-runtime probes/receipts,
+author checkpoint and budgets, transfer/quota approval, immutable deployment
+and actual SIF dependency validation. This CPU parser result is **not** a
+production SIF or GPU certification. Earlier readiness records must be
+regenerated with fresh input-bound preflights because tooling identities and
+required additive bindings changed.
