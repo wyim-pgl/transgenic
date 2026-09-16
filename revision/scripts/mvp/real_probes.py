@@ -136,7 +136,7 @@ def setup(args):
     require_allocation()
     if os.environ.get('CUBLAS_WORKSPACE_CONFIG') != ':4096:8':
         raise ValueError('runner must set CUBLAS_WORKSPACE_CONFIG=:4096:8 before startup')
-    forbidden = ('TRANSGENIC_ALLOW_ENCODER_DRIFT', 'TRANSGENIC_NO_GRAD_CKPT',
+    forbidden = ('TRANSGENIC_RUN_DIR', 'TRANSGENIC_ALLOW_ENCODER_DRIFT', 'TRANSGENIC_NO_GRAD_CKPT',
                  'TRANSGENIC_CKPT_REENTRANT', 'TRANSGENIC_NO_COMPILE', 'TRANSGENIC_COMPILE_SCOPE')
     if any(os.environ.get(key) for key in forbidden):
         raise ValueError('probe refuses model/compile/checkpoint override environment')
@@ -230,12 +230,20 @@ def load_model(args, bindings):
     return model, cfg, audit
 
 
-def datasets(args, bindings):
+def datasets(args, bindings, cfg, model_config):
     from transgenic.datasets.datasets import isoformDataHyena
     common = dict(mode='train', split='train', strict=True, species='Athaliana',
                   evidence_db=args.evidence_db, evidence_k=8,
-                  aug_seed=20260914 + bindings['seed'], return_tile_ids=True)
-    return isoformDataHyena(args.db, eval_fraction=1, **common)
+                  aug_seed=20260914 + bindings['seed'], return_tile_ids=True,
+                  gff_vocab_version=cfg['gff_vocab_version'])
+    ds = isoformDataHyena(args.db, eval_fraction=1, **common)
+    from transgenic.training.mvp_cli_runtime import validate_decoder_dataset, _close_dataset
+    try:
+        validate_decoder_dataset(ds, cfg, model_config)
+        return ds
+    except Exception:
+        _close_dataset(ds)
+        raise
 
 
 def measured_batches(args, ds):
@@ -481,6 +489,14 @@ def one_update(accelerator, model, optimizer, batches):
     syncs = 0
     for batch in batches:
         with accelerator.accumulate(model):
+            from transgenic.training.mvp_runtime import _batch_parts
+            try:
+                _batch_parts(batch, recipe)
+                valid = True
+            except (ValueError, TypeError):
+                valid = False
+            if not _collective_true(accelerator, valid):
+                raise ValueError('invalid batch contract on at least one rank')
             kw = inputs(batch, accelerator.device)
             # Same forward signature as run_fixed_updates (no alternate loss).
             kw.pop('use_cache')
@@ -499,7 +515,7 @@ def one_update(accelerator, model, optimizer, batches):
                     raise RuntimeError('optimizer update skipped')
                 optimizer.zero_grad()
                 syncs += 1
-    if syncs != 1 or len(batches) != recipe.accumulation_steps:
+    if not _collective_true(accelerator, syncs == 1 and len(batches) == recipe.accumulation_steps):
         raise RuntimeError('probe must observe exactly one update after 24 microbatches')
     torch.cuda.synchronize(accelerator.device)
     finite = all(bool(torch.isfinite(p).all()) for p in model.parameters())
@@ -511,23 +527,49 @@ def one_update(accelerator, model, optimizer, batches):
                 microbatches=24, optimizer_steps=syncs)
 
 
-def compiled_update(args, bindings, model, ds):
+def collective_batches(accelerator, loader):
+    from transgenic.training.mvp_finalize import _collective_preflight
+    import itertools
+    result = []
+    def retrieve():
+        result.extend(itertools.islice(loader, 24))
+        if len(result) != 24:
+            raise ValueError('insufficient real per-rank training samples for accumulation24')
+    _collective_preflight(accelerator, retrieve)
+    return result
+
+
+def collective_compiler_check(accelerator, before):
+    import torch
+    from torch._inductor import metrics
+    from transgenic.training.mvp_finalize import _collective_preflight
+    def check():
+        if torch._dynamo.config.suppress_errors or metrics.generated_kernel_count <= before:
+            raise RuntimeError('no observed Inductor kernel generation or eager fallback enabled')
+    _collective_preflight(accelerator, check)
+
+
+def compiled_update(args, bindings, model, ds, accelerator):
     import torch
     from torch.utils.data import DataLoader, DistributedSampler
     from transgenic.datasets.datasets import hyena_collate_fn
-    from transgenic.training.mvp_runtime import MVPRecipe, make_accelerator, build_optimizer
+    from transgenic.training.mvp_runtime import MVPRecipe, build_optimizer
     from transgenic.training.mvp_cli_runtime import (compile_bound_forward,
         _collect_runtime_hardware, _validate_public_hardware)
     from accelerate.utils import gather_object
-    accelerator = make_accelerator(MVPRecipe(), mixed_precision='bf16')
-    try:
-        hardware = _validate_public_hardware(_collect_runtime_hardware(accelerator))
+    from transgenic.training.mvp_finalize import _collective_preflight
+    state = {}
+    hardware = _validate_public_hardware(_collect_runtime_hardware(accelerator))
+    def configure():
         model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
-        optimizer = build_optimizer(model, MVPRecipe())
-        from torch._inductor import metrics
-        before = metrics.generated_kernel_count
+        state['optimizer'] = build_optimizer(model, MVPRecipe())
         compile_bound_forward(model)
-        model, optimizer = accelerator.prepare(model, optimizer)
+    _collective_preflight(accelerator, configure)
+    from torch._inductor import metrics
+    before = metrics.generated_kernel_count
+    # prepare contains collectives; never nest it inside a local-status phase.
+    model, optimizer = accelerator.prepare(model, state['optimizer'])
+    def prepare_loader():
         # Restore the real training augmentation (paired probes use fraction=1).
         ds.eval_fraction = None
         seed = bindings['seed']
@@ -539,36 +581,58 @@ def compiled_update(args, bindings, model, ds):
                                        shuffle=True, seed=seed),
             generator=torch.Generator().manual_seed(aug_seed + 1_000_000 + accelerator.process_index),
             pin_memory=True)
-        # No short-tile replacement, no repeating the same toy batch.
-        import itertools
-        batches = list(itertools.islice(loader, 24))
-        if len(batches) != 24:
-            raise ValueError('insufficient real per-rank training samples for accumulation24')
-        measured = one_update(accelerator, model, optimizer, batches)
-        if torch._dynamo.config.suppress_errors or metrics.generated_kernel_count <= before:
-            raise RuntimeError('no observed Inductor kernel generation or eager fallback enabled')
-        rank_rows = gather_object([measured])
-        if len(rank_rows) != 4:
-            raise RuntimeError('missing rank measurement')
-        return dict(hardware=hardware, optimizer_steps=1, finite=True, native_bf16=True,
-                    inductor=True, no_eager_fallback=True, ranks=rank_rows,
-                    accumulation_steps=24, timing_scope='cold_compile_plus_one_update_not_resource_budget')
-    finally:
-        accelerator.end_training()
+        state['loader'] = loader
+    _collective_preflight(accelerator, prepare_loader)
+    # No short-tile replacement, no repeating the same toy batch.
+    batches = collective_batches(accelerator, state['loader'])
+    measured = one_update(accelerator, model, optimizer, batches)
+    collective_compiler_check(accelerator, before)
+    rank_rows = gather_object([measured])
+    if len(rank_rows) != 4:
+        raise RuntimeError('missing rank measurement')
+    return dict(hardware=hardware, optimizer_steps=1, finite=True, native_bf16=True,
+                inductor=True, no_eager_fallback=True, ranks=rank_rows,
+                accumulation_steps=24, timing_scope='cold_compile_plus_one_update_not_resource_budget')
 
 
 def main(argv=None):
     args = parser().parse_args(argv)
+    # Accelerator may import HF modules: offline policy must precede it too.
+    os.environ['HF_HUB_OFFLINE'] = '1'
+    os.environ['TRANSFORMERS_OFFLINE'] = '1'
     started = time.monotonic()
-    bindings, roots, runtime = setup(args)
+    require_cuda()
     import torch
     rank = int(os.environ.get('LOCAL_RANK', '0'))
     torch.cuda.set_device(rank)
     device = torch.device('cuda', rank)
-    model, cfg, audit = load_model(args, bindings)
-    ds = datasets(args, bindings)
+    accelerator = None
+    if args.mode in ('bf16_compile', 'four_rank_smoke'):
+        from transgenic.training.mvp_runtime import make_accelerator, MVPRecipe
+        accelerator = make_accelerator(MVPRecipe(), mixed_precision='bf16')
+    state = {}
+    ds = None
     try:
-        batches = measured_batches(args, ds)
+        def prepare_inputs():
+            state['inputs'] = setup(args)
+        if accelerator is None:
+            prepare_inputs()
+        else:
+            from transgenic.training.mvp_finalize import _collective_preflight
+            _collective_preflight(accelerator, prepare_inputs)
+        bindings, roots, runtime = state['inputs']
+        def initialize():
+            nonlocal ds
+            state['model'], state['cfg'], state['audit'] = load_model(args, bindings)
+            ds = datasets(args, bindings, state['cfg'], state['model'].config)
+            state['batches'] = measured_batches(args, ds)
+        if accelerator is None:
+            initialize()
+        else:
+            from transgenic.training.mvp_finalize import _collective_preflight
+            _collective_preflight(accelerator, initialize)
+        model, cfg, audit = state['model'], state['cfg'], state['audit']
+        batches = state['batches']
         if args.mode == 'real_tokenizer':
             seq = 'ACGTN'
             ids = ds.encoder_tokenizer(seq, return_tensors='pt')['input_ids'][0, :-1]
@@ -584,7 +648,7 @@ def main(argv=None):
         elif args.mode == 'generation_cache_parity':
             result = generation(model, batches[30720][0], device)
         else:
-            result = compiled_update(args, bindings, model, ds)
+            result = compiled_update(args, bindings, model, ds, accelerator)
         # Snapshot actual loaded Python and extension modules, including HF remote code.
         imports = {str(Path(__file__).resolve()): _sha256(Path(__file__))}
         for module in list(sys.modules.values()):
@@ -619,7 +683,11 @@ def main(argv=None):
         return 0
     finally:
         from transgenic.training.mvp_cli_runtime import _close_dataset
-        _close_dataset(ds)
+        try:
+            _close_dataset(ds)
+        finally:
+            if accelerator is not None:
+                accelerator.end_training()
 
 
 if __name__ == '__main__':

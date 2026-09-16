@@ -488,6 +488,17 @@ def execute(args, candidate: CandidateRecords, *, validate_only: bool,
                   readiness, args.launch_readiness_sha256, _test=_test)
 
 
+def validate_decoder_dataset(dataset, cfg, model_config):
+    """Fail before sampling when bound decoder vocabulary/cap wiring disagrees."""
+    if (dataset.gff_vocab_version != cfg['gff_vocab_version'] or
+            len(dataset.dt) != cfg['vocab_size'] or
+            len(dataset.dt) != model_config.vocab_size or
+            dataset.maxlength != cfg['max_label_tokens'] or
+            cfg['max_decoder_position_embeddings'] != model_config.max_decoder_position_embeddings or
+            dataset.maxlength != model_config.max_decoder_position_embeddings):
+        raise ValueError('dataset decoder vocabulary/label cap disagrees with bound model config')
+
+
 def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, recipe,
            readiness, readiness_sha256, *, _test: _TestExecution | None = None) -> dict:
     """Construct and run the reviewed runtime only from canonical verified bindings."""
@@ -503,7 +514,7 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
     from transgenic.training.mvp_runtime import build_optimizer, make_accelerator, run_fixed_updates
     from transgenic.training.weights_init import load_weights_only
 
-    forbidden = ("TRANSGENIC_NO_GRAD_CKPT", "TRANSGENIC_CKPT_REENTRANT",
+    forbidden = ("TRANSGENIC_RUN_DIR", "TRANSGENIC_NO_GRAD_CKPT", "TRANSGENIC_CKPT_REENTRANT",
                  "TRANSGENIC_NO_COMPILE", "TRANSGENIC_COMPILE_SCOPE")
     present = [name for name in forbidden if os.environ.get(name)]
     if present:
@@ -597,10 +608,14 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
             unchanged(("db", "evidence"))
             train_ds = isoformDataHyena(str(inputs.db), mode="train", split="train", strict=True,
                 species="Athaliana", evidence_db=str(inputs.evidence), evidence_k=8,
+                gff_vocab_version=cfg["data"]["gff_vocab_version"],
                 aug_seed=aug_seed, return_tile_ids=True)
             valid_ds = isoformDataHyena(str(inputs.db), mode="train", split="valid", strict=True,
                 species="Athaliana", evidence_db=str(inputs.evidence), evidence_k=8,
+                gff_vocab_version=cfg["data"]["gff_vocab_version"],
                 aug_seed=aug_seed, eval_fraction=1, return_tile_ids=True)
+            for dataset in (train_ds, valid_ds):
+                validate_decoder_dataset(dataset, cfg["data"], state["model"].config)
             unchanged(("db", "evidence"))
             if train_ds._index_map != artifacts["train_rns"] or valid_ds._index_map != artifacts["valid_rns"]:
                 raise ValueError("dataset index map does not match accepted inventory")

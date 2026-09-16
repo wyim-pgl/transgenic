@@ -55,20 +55,20 @@ def source_recipe():
         "attention_window": [4], "dropout": 0.0, "lr": 1e-4,
         "weight_decay": 0.02, "effective_batch_size": 4, "max_epochs": 5,
         "seeds": [123], "encoder_model": "tiny/local", "max_encoder_seqlen": 24,
-        "max_decoder_position_embeddings": 32, "vocab_size": 288, "patience": 3,
+        "max_decoder_position_embeddings": 8192, "vocab_size": 290, "patience": 3,
         "optimizer": "AdamW", "lr_warmup_fraction": 0.05,
-        "window_policy": "sym6144-v1", "gff_vocab_version": "v2",
-        "max_label_tokens": 2048,
+        "window_policy": "tile6144-v3", "gff_vocab_version": "v3",
+        "max_label_tokens": 8192,
     }
 
 
 def config(channels):
     return HyenaTransgenicConfig(**{
-        "vocab_size": 288, "d_model": 8, "encoder_d_model": 8, "decoder_d_model": 16,
+        "vocab_size": 290, "d_model": 8, "encoder_d_model": 8, "decoder_d_model": 16,
         "encoder_layers": 1, "decoder_layers": 1, "encoder_n_layer": 1,
         "encoder_attention_heads": 2, "decoder_attention_heads": 2,
         "encoder_ffn_dim": 32, "decoder_ffn_dim": 32, "max_encoder_seqlen": 24,
-        "max_decoder_position_embeddings": 32, "attention_window": [4], "dropout": 0.0,
+        "max_decoder_position_embeddings": 8192, "attention_window": [4], "dropout": 0.0,
         "encoder_model": "tiny/local", "load_pretrained_encoder": False,
         "evidence_channels": channels,
     })
@@ -173,7 +173,17 @@ def main():
                                  side_effect=lambda cfg, **k: TinyHyena(cfg))
     tokenizer = patch("transgenic.datasets.datasets.AutoTokenizer.from_pretrained",
                       return_value=Tokenizer())
-    with factory_config, factory_model, tokenizer:
+    from transgenic.datasets import datasets as dataset_module
+    real_dataset = dataset_module.isoformDataHyena
+    decoder_splits = []
+    def checked_dataset(*args, **kwargs):
+        assert kwargs['gff_vocab_version'] == 'v3'
+        result = real_dataset(*args, **kwargs)
+        assert len(result.dt) == 290 and result.maxlength == 8192
+        decoder_splits.append(kwargs['split'])
+        return result
+    dataset_patch = patch.object(dataset_module, 'isoformDataHyena', checked_dataset)
+    with factory_config, factory_model, tokenizer, dataset_patch:
         if rank == 0:
             root.mkdir(parents=True, exist_ok=True)
             build_fixture(root)
@@ -213,7 +223,7 @@ def main():
         result_path = root / f"result-{rank}.json"
         result_tmp = root / f".result-{rank}.tmp"
         canonical(result_tmp, {"error": error, "backend_called": BACKEND_CALLS > 0,
-                               "observation": observation})
+                               "observation": observation, "decoder_splits": decoder_splits})
         result_tmp.replace(result_path)
         if rank == 0:
             deadline = time.monotonic() + 20
@@ -230,6 +240,7 @@ def main():
             except Exception:
                 writable = False
             if case == "success":
+                assert all(item['decoder_splits'] == ['train', 'valid'] for item in results)
                 metadata = json.loads((root / "final" / "metadata.json").read_text())
                 clean = all(not key.startswith(("module.", "_orig_mod."))
                             for key in safe_open(root / "final" / "model.safetensors", framework="pt").keys())
