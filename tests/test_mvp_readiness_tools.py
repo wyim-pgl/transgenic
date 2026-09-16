@@ -161,6 +161,12 @@ def input_args(tmp_path, sidecars=None):
 
 
 def prepared(tmp_path, monkeypatch, sidecars=None):
+    # These launcher/identity unit fixtures do not execute a CUDA resource probe.
+    # Mock the resource-certification boundary explicitly rather than claiming
+    # synthetic runtime flags meet it. Real schema negatives live separately in
+    # test_mvp_resource_probe.py; no production bypass exists.
+    import resource_probe
+    monkeypatch.setattr(resource_probe, 'validate_resource', lambda value: None)
     monkeypatch.setenv('SLURM_JOB_ID', 'CPU_UNIT_FIXTURE')
     args, pins = input_args(tmp_path, sidecars)
     manifest = tmp_path / 'code.json'

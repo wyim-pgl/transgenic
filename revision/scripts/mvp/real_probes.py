@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """CUDA-only real Hyena readiness measurements; never a trainer or CPU fallback.
 
-resource_budget is deliberately NOT implemented: see MVP_REAL_PROBES_REPORT.md.
-Run only through run_bounded in the pinned offline SIF/allocation. The five
-implemented modes emit nothing until every check and identity recheck succeeds.
+Run only through run_bounded in the pinned offline SIF/allocation. Resource
+profiling lives in resource_probe; intermediate timings are not readiness.
+Modes emit measurements only after every required stage succeeds.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from make_launch_readiness import (_atomic_write, _canonical_bytes, _sha256,
 
 TIERS = (30720, 61440, 129024)
 MODES = ('real_tokenizer', 'real_hyena_step0_three_tiers',
-         'generation_cache_parity', 'bf16_compile', 'four_rank_smoke')
+         'generation_cache_parity', 'bf16_compile', 'four_rank_smoke', 'resource_budget')
 PROJECTION = 'transgenic.encoder.evidence_proj.weight'
 
 
@@ -128,6 +128,9 @@ def parser():
     for flag in ('bindings', 'bindings-file-sha256', 'assets-manifest', 'assets-sha256',
                  'db', 'evidence-db', 'config', 'tile-rns', 'tile-rns-sha256', 'scratch-root'):
         p.add_argument('--' + flag, required=True)
+    for flag in ('budget-authorization', 'budget-sha256', 'profile-dir',
+                 'acceptance-record', 'inventory-record', 'receipts-record', 'panel', 'sif'):
+        p.add_argument('--' + flag, help='required for resource_budget only')
     return p
 
 
@@ -600,6 +603,9 @@ def main(argv=None):
     # Accelerator may import HF modules: offline policy must precede it too.
     os.environ['HF_HUB_OFFLINE'] = '1'
     os.environ['TRANSFORMERS_OFFLINE'] = '1'
+    if args.mode == 'resource_budget':
+        from resource_probe import run
+        return run(args)
     started = time.monotonic()
     require_cuda()
     import torch

@@ -43,10 +43,11 @@ def test_bitwise_negative():
         probe.tensor_digest(torch.tensor([float('nan')]))
 
 
-def test_resource_not_exposed_without_measured_overheads(capsys):
+def test_resource_requires_explicit_inputs(capsys):
     with pytest.raises(SystemExit):
         probe.parser().parse_args(['--mode', 'resource_budget'])
-    assert "invalid choice: 'resource_budget'" in capsys.readouterr().err
+    assert 'required' in capsys.readouterr().err
+    assert 'resource_budget' in probe.MODES
 
 
 def test_asset_inventory_changed_or_missing(tmp_path):

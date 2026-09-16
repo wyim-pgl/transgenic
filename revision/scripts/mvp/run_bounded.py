@@ -58,15 +58,8 @@ def validate_measurement(name, value):
         if type(value.get('optimizer_steps')) is not int or value['optimizer_steps'] != 1 or value.get('finite') is not True:
             raise ValueError('four-rank smoke must complete one finite optimizer step')
     elif name == 'resource_budget':
-        for key in ('measured_step_seconds', 'peak_memory_bytes', 'memory_limit_bytes',
-                    'authorized_wall_seconds', 'projected_run_seconds'):
-            if type(value.get(key)) not in (int, float) or not math.isfinite(value[key]) or value[key] <= 0:
-                raise ValueError('explicit measured resource budget required')
-        if (value['peak_memory_bytes'] >= value['memory_limit_bytes'] or
-                value['projected_run_seconds'] >= value['authorized_wall_seconds'] or
-                value['projected_run_seconds'] < 250 * value['measured_step_seconds'] or
-                not digest(value.get('authorization_sha256'))):
-            raise ValueError('resource budget exceeded or not authorized')
+        from resource_probe import validate_resource
+        validate_resource(value)
     else:
         checks = {
             'real_tokenizer': ('tokenizer_roundtrip', 'hyena_loaded'),
@@ -160,7 +153,8 @@ def main(argv=None):
     output.mkdir()  # Collision fails; no automatic resume or overwritten receipts.
     measurement = output / 'measurement.json'
     env = dict(os.environ, CUBLAS_WORKSPACE_CONFIG=':4096:8',
-               MVP_BINDINGS_SHA256=binding_sha, MVP_MEASUREMENT_OUTPUT=str(measurement))
+               MVP_BINDINGS_SHA256=binding_sha, MVP_MEASUREMENT_OUTPUT=str(measurement),
+               MVP_PROBE_TIMEOUT_SECONDS=str(args.timeout_seconds))
     receipt = {'schema_version': 1, 'preflight': EVIDENCE_RECEIPTS[args.name],
                'bindings_sha256': binding_sha, 'command_sha256': args.command_sha256,
                'allocation': allocation, 'pass': False, 'resume_supported': False}

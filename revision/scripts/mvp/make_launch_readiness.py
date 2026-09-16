@@ -103,7 +103,7 @@ def tooling_identity():
     directory = Path(__file__).resolve().parent
     return {str(directory / name): _sha256(directory / name) for name in
             ('make_launch_readiness.py', 'stage_checkpoint.py', 'run_bounded.py', 'run_training.py',
-             'accelerate_mvp.json', 'real_probes.py')}
+             'accelerate_mvp.json', 'real_probes.py', 'resource_probe.py')}
 
 
 def _canonical_bytes(value: dict) -> bytes:
