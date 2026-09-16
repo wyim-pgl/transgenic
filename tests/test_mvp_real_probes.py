@@ -108,6 +108,67 @@ def test_real_receipt_mode_and_identity_cannot_be_omitted():
         validate_measurement('bf16_compile', value)
 
 
+@pytest.fixture
+def toy_generation_model(monkeypatch):
+    """CPU control-flow fixture only; explicitly NOT real Hyena/SIF validation."""
+    import torch
+    from types import SimpleNamespace
+    from test_mvp_model import tiny_config, TinyHyena
+    from transgenic.model import modeling_HyenaTransgenic as modeling
+    monkeypatch.setattr(modeling.AutoConfig, 'from_pretrained', lambda *a, **k: SimpleNamespace())
+    monkeypatch.setattr(modeling.AutoModel, 'from_config', lambda cfg, **k: TinyHyena(cfg))
+    old_threads = torch.get_num_threads()
+    torch.set_num_threads(1)
+    torch.manual_seed(123)
+    model = modeling.transgenicForConditionalGeneration(tiny_config(evidence_channels=8)).eval()
+    ids = torch.tensor([[3, 4, 5, 6] * 6])
+    tracks = torch.arange(192, dtype=torch.float32).reshape(1, 24, 8) / 192
+    batch = (ids, torch.ones_like(ids), torch.tensor([[2, 7, 9]]), None, None,
+             None, None, None, tracks, None)
+    yield model, batch
+    torch.set_num_threads(old_threads)
+
+
+def test_cpu_generation_hook_contract_and_projection_restoration(toy_generation_model):
+    import torch
+    model, batch = toy_generation_model
+    original = model.get_parameter(probe.PROJECTION).detach().clone()
+    result = probe.generation(model, batch, torch.device('cpu'))
+    assert result['encoder_activation_sha256']['on'] != result['encoder_activation_sha256']['off']
+    assert len(result['generated']) == 8
+    assert result['reorder_indices_sha256']
+    assert torch.equal(original, model.get_parameter(probe.PROJECTION))
+    assert '_reorder_cache' not in model.__dict__
+
+
+def test_generation_dropped_est_is_fatal(toy_generation_model, monkeypatch):
+    import torch
+    model, batch = toy_generation_model
+    original = model.generate
+    def drop(**kwargs):
+        kwargs.pop('evidence_tracks', None)
+        return original(**kwargs)
+    monkeypatch.setattr(model, 'generate', drop)
+    with pytest.raises(ValueError, match='dropped EST tracks'):
+        probe.generation(model, batch, torch.device('cpu'))
+    assert torch.count_nonzero(model.get_parameter(probe.PROJECTION)) == 0
+
+
+def test_generation_failure_restores_projection(toy_generation_model, monkeypatch):
+    import torch
+    model, batch = toy_generation_model
+    original = model.get_parameter(probe.PROJECTION).detach().clone()
+    def fail(**kwargs):
+        raise RuntimeError('injected generation failure')
+    monkeypatch.setattr(model, 'generate', fail)
+    with pytest.raises(RuntimeError, match='injected generation failure'):
+        probe.generation(model, batch, torch.device('cpu'))
+    assert torch.equal(original, model.get_parameter(probe.PROJECTION))
+    assert '_reorder_cache' not in model.__dict__
+    assert not model._forward_pre_hooks
+    assert not model.get_encoder()._forward_hooks
+
+
 def test_alignment_masks_n_and_checks_channel_order():
     import torch
     good = torch.zeros((4, 8), dtype=torch.float16)

@@ -176,6 +176,10 @@ def setup(args):
     required = (Path.cwd() / 'HFmodels', Path(HF_HUB_CACHE))
     if any(str(p.absolute()) not in assets['roots'] for p in required):
         raise ValueError('pin both ./HFmodels and HF_HUB_CACHE roots explicitly')
+    for root in required:
+        ref = root / 'models--LongSafari--hyenadna-large-1m-seqlen-hf/refs/main'
+        if ref.read_text().strip() != '0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446':
+            raise ValueError('encoder/tokenizer offline HF revision differs from deployment pin')
     # Dynamic module/compiler caches are writable in an independent namespace,
     # not immutable input roots. Their consumed import bytes are recorded later.
     scratch = Path(args.scratch_root).resolve(strict=True)
@@ -207,7 +211,8 @@ def load_model(args, bindings):
     from transgenic.training.weights_init import load_weights_only
     from transgenic.training.mvp_cli_runtime import _validate_initialization_readiness
     cfg = load_b5_config(args.config)
-    if (cfg['d_model_encoder'], cfg['encoder_n_layer'], cfg['max_encoder_seqlen']) != (768, 12, 129024):
+    if (cfg['encoder_model'] != 'LongSafari/hyenadna-large-1m-seqlen-hf' or
+            (cfg['d_model_encoder'], cfg['encoder_n_layer'], cfg['max_encoder_seqlen']) != (768, 12, 129024)):
         raise ValueError('real probes require the approved 400M window-v3 encoder')
     config = HyenaTransgenicConfig(**model_kwargs(cfg), evidence_channels=8)
     if not config.load_pretrained_encoder:
@@ -350,25 +355,116 @@ def step0(model, cfg, bindings, batches, device):
 
 
 def generation(model, batch, device):
+    """Nonzero EST, beam2 expansion/reorder and raw-logit same-path comparison.
+
+    Cached/full-prefix arithmetic is NOT silently assigned a tolerance: tokens
+    must match; raw logits must match bitwise against direct-encoder generation
+    with the SAME cache/beam setting. Cross-path logit equality is not claimed.
+    This process owns a dedicated probe model; its projection is restored even
+    when a hook or a comparison fails.
+    """
     import torch
+    from transgenic.model.modeling_HyenaTransgenic import HyenaModelOutput
     model.to(device).eval()
     kw = inputs(batch, device)
-    for key in ('labels', 'use_cache', 'return_dict'):
-        kw.pop(key)
-    records = {}
-    with torch.no_grad():
-        for on in (False, True):
-            tr = kw['evidence_tracks'] if on else torch.zeros_like(kw['evidence_tracks'])
-            common = dict(kw, evidence_tracks=tr, do_sample=False, num_beams=1,
-                          min_new_tokens=16, max_new_tokens=16)
-            cached = model.generate(**common, use_cache=True)
-            uncached = model.generate(**common, use_cache=False)
-            equal_tensors(cached, uncached)
-            records['on' if on else 'off'] = cached
-        equal_tensors(records['on'], records['off'])
+    projection = model.get_parameter(PROJECTION)
+    original = projection.detach().clone()
+    encoder = model.get_encoder()
+    records, activations = {}, {}
+    old_reorder = model._reorder_cache
+    previous_override = model.__dict__.get('_reorder_cache')
+    reorder_calls = []
+    handles = []
+
+    def observed_reorder(past, beam_idx):
+        reference = tuple(tuple(t.index_select(0, beam_idx.to(t.device)) for t in layer[:2])
+                          + tuple(layer[2:]) for layer in past)
+        actual = old_reorder(past, beam_idx)
+        for got_layer, expected_layer in zip(actual, reference, strict=True):
+            for got, expected in zip(got_layer, expected_layer, strict=True):
+                equal_tensors(got, expected)
+        reorder_calls.append(tensor_digest(beam_idx))
+        return actual
+
+    try:
+        with torch.no_grad():
+            # Deterministic nonzero diagonal signal in all eight channels, not
+            # learned weights, and never used by any training/evaluation output.
+            projection.zero_()
+            projection[:8, :8].copy_(torch.eye(8, device=device, dtype=projection.dtype))
+            model._reorder_cache = observed_reorder
+            for on in (False, True):
+                tr = kw['evidence_tracks'] if on else torch.zeros_like(kw['evidence_tracks'])
+                raw = encoder(kw['input_ids'], evidence_tracks=tr).last_hidden_state
+                activations['on' if on else 'off'] = tensor_digest(raw)
+                if not on:
+                    equal_tensors(raw, encoder(kw['input_ids']).last_hidden_state)
+                for beams in (1, 2):
+                    outputs = {}
+                    for cached in (False, True):
+                        received, expanded = [], []
+
+                        def capture_encoder(module, positional, keywords, output):
+                            evidence = keywords.get('evidence_tracks')
+                            if evidence is None:
+                                raise ValueError('generation dropped EST tracks at encoder hook')
+                            equal_tensors(evidence, tr)
+                            equal_tensors(output.last_hidden_state, raw)
+                            received.append(True)
+
+                        def capture_forward(module, positional, keywords):
+                            hidden = keywords.get('encoder_outputs')
+                            if hidden is None:
+                                raise ValueError('generation did not forward encoder outputs')
+                            equal_tensors(hidden, raw.repeat_interleave(beams, dim=0))
+                            expanded.append(int(hidden.shape[0]))
+
+                        handles = [encoder.register_forward_hook(capture_encoder, with_kwargs=True),
+                                   model.register_forward_pre_hook(capture_forward, with_kwargs=True)]
+                        common = dict(input_ids=kw['input_ids'], attention_mask=kw['attention_mask'],
+                            do_sample=False, num_beams=beams, min_new_tokens=16, max_new_tokens=16,
+                            use_cache=cached, return_dict_in_generate=True, output_logits=True)
+                        before_reorder = len(reorder_calls)
+                        actual = model.generate(**common, evidence_tracks=tr)
+                        for handle in handles:
+                            handle.remove()
+                        handles = []
+                        if len(received) != 1 or len(expanded) != 16 or set(expanded) != {beams}:
+                            raise ValueError('generation encoder-once/beam expansion contract failed')
+                        if beams == 2 and cached and len(reorder_calls) <= before_reorder:
+                            raise ValueError('beam2 did not exercise observable cache reordering')
+                        # Bypass generation's encoder/evidence forwarding, but keep
+                        # exact eager decoder/cache/beam numerical path unchanged.
+                        reference = model.generate(**common,
+                            encoder_outputs=HyenaModelOutput(last_hidden_state=raw.clone()))
+                        equal_tensors(actual.sequences, reference.sequences)
+                        if len(actual.logits) != 16 or len(reference.logits) != 16:
+                            raise ValueError('missing raw generation logits')
+                        for got, expected in zip(actual.logits, reference.logits, strict=True):
+                            equal_tensors(got, expected)
+                        label = f'{"on" if on else "off"}/beam{beams}/cache{int(cached)}'
+                        records[label] = {'sequences_sha256': tensor_digest(actual.sequences),
+                            'logits_sha256': [tensor_digest(x) for x in actual.logits],
+                            'encoder_calls': len(received), 'expanded_batches': expanded}
+                        outputs[cached] = actual.sequences
+                    equal_tensors(outputs[False], outputs[True])
+            if activations['on'] == activations['off']:
+                raise ValueError('nonzero EST projection did not change encoder activations')
+    finally:
+        for handle in handles:
+            handle.remove()
+        if previous_override is None:
+            model.__dict__.pop('_reorder_cache', None)
+        else:
+            model._reorder_cache = previous_override
+        with torch.no_grad():
+            projection.copy_(original)
+        equal_tensors(projection, original)
     return dict(cached_uncached_equal=True, evidence_off_equal=True,
-                generated_sha256={k: tensor_digest(v) for k, v in records.items()},
-                new_tokens=16, comparison='bitwise', zero_projection=True)
+                generated=records, encoder_activation_sha256=activations,
+                reorder_indices_sha256=reorder_calls, new_tokens=16, nonzero_projection=True,
+                projection_restored_sha256=tensor_digest(projection),
+                comparison='same-cache-beam-path raw logits bitwise; cache/full-prefix tokens bitwise')
 
 
 def one_update(accelerator, model, optimizer, batches):
