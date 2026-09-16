@@ -127,6 +127,40 @@ def test_identity_and_hsp_validation():
     with pytest.raises(ValueError,match='event bounds'): m.project_codons(h,e,p)
 
 
+@pytest.mark.parametrize('with_valid', [False, True])
+def test_observations_first_none_is_invalid(with_valid):
+    p,h,e=inputs()
+    observations = [None, (h,e,p)] if with_valid else [None]
+    with pytest.raises(ValueError, match='observation'):
+        m.project_observations(observations)
+
+
+def test_observations_second_none_is_not_exhaustion():
+    p,h,e=inputs()
+    r=m.project_observations([(h,e,p), None, (h,e,p)])
+    assert r['segments']==[] and r['reasons']==['multi_hsp_policy_unresolved']
+
+
+def test_observations_empty_and_single_generator():
+    r=m.project_observations(iter(()))
+    assert r['segments']==[] and r['reasons']==['no_observations']
+    p,h,e=inputs()
+    r=m.project_observations(o for o in [(h,e,p)])
+    assert expand(r)=={100:('+',0),101:('+',1),102:('+',2),103:('+',0),
+                       108:('+',1),109:('+',2),110:('+',0),111:('+',1),112:('+',2)}
+
+
+@pytest.mark.parametrize('second_none', [False, True])
+def test_observations_reads_at_most_two_entries(second_none):
+    p,h,e=inputs()
+    def observations():
+        yield h,e,p
+        yield None if second_none else (h,e,p)
+        raise AssertionError('read beyond second observation')
+    r=m.project_observations(observations())
+    assert r['segments']==[] and r['reasons']==['multi_hsp_policy_unresolved']
+
+
 def test_ambiguity_refusals_not_policy():
     p,h,e=inputs(); p['ts']='-'
     r=m.project_codons(h,e,p)

@@ -188,10 +188,13 @@ def project_codons(hsp, codon_events, placement):
 def project_observations(observations):
     """Diagnostic boundary; multi-HSP resolution deliberately not implemented."""
     observations = iter(observations)
-    first = next(observations, None)
-    if first is None:
+    exhausted = object()
+    first = next(observations, exhausted)
+    if first is exhausted:
         return _diagnostic(['no_observations'])
-    if next(observations, None) is not None:
+    if first is None:
+        raise ValueError('invalid observation: None')
+    if next(observations, exhausted) is not exhausted:
         return _diagnostic(['multi_hsp_policy_unresolved'])
     return project_codons(*first)
 
