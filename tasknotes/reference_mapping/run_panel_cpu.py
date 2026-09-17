@@ -73,7 +73,15 @@ def duplicate_groups(transcripts, producer):
         if key is not None: groups[key].append(tid)
     return [{'structure':key,'transcript_ids':ids} for key,ids in groups.items() if len(ids)>1]
 
-def reference_audit(payload,out):
+def recheck_audit(payload, report):
+    import mvp_produce_counts as p
+    p.recheck_files(list(report['reference_identity']['files'].values()))
+    if p.frozen_reference(payload['fasta'],payload['reference'])!=report['reference_identity']:
+        raise ValueError('reference changed during audit')
+    p.recheck_reference_mapping(report['reference_mapping'])
+
+
+def reference_audit(payload,out, *, defer_publication=False):
     import mvp_produce_counts as p
     w=p.w
     binding=p.frozen_reference(payload['fasta'],payload['reference'])
@@ -119,7 +127,9 @@ def reference_audit(payload,out):
     # Rehash raw authoritative bytes after parsing; no GFF repair or deduplication.
     if p.frozen_reference(payload['fasta'],payload['reference'])!=binding: raise ValueError('reference changed during audit')
     p.recheck_reference_mapping(mapping)
-    dump(out/'reference_compatibility.json',report)
+    p.stage_json(out/'reference_compatibility.json',report)
+    if not defer_publication:
+        p.publish_staged([out/'reference_compatibility.json'],lambda: recheck_audit(payload,report))
     return report
 
 def main():
@@ -150,17 +160,23 @@ def main():
                  'inventory':str(root/'notes/b6_mvp_candidate_inventories_20260915.json'),'receipts':str(root/'notes/b6_mvp_candidate_receipts_20260915.json'),
                  'corpus':accepted['inputs']['corpus']['path'],'evidence':accepted['artifact']['path']}}
         dump(out/'request.json',payload)
-        report=reference_audit(payload,out)
+        report=reference_audit(payload,out,defer_publication=True)
+        def publish_completion(name, data):
+            p.stage_json(out/name,data)
+            def recheck():
+                verify_source(root); authority.verify(root)
+                recheck_audit(payload,report)
+            p.publish_staged([out/'reference_compatibility.json',out/name],recheck)
         if a.reference_only:
-            dump(out/'REFERENCE_ONLY.json',{'scope':'reference_only_raster_not_run','reference_report_sha256':sha(out/'reference_compatibility.json')}); return
+            publish_completion('REFERENCE_ONLY.json',{'scope':'reference_only_raster_not_run','reference_report_sha256':sha(out/'reference_compatibility.json.pending')}); return
         manifest=panel.prepare(out/'request.json',out/'panel')
         verify_source(root); authority.verify(root)
         if len(manifest['loci'])!=50: raise ValueError('missing raster loci')
         counts=[{k:r[k] for k in ('gene_id','window','selected_molecule_count','biological_nonzero_per_channel','availability_nonzero','zero_biological_support')} for r in manifest['loci']]
         dump(out/'panel_counts.json',{'scope':'raw_EST_input_counts_only','population':'excluded_heldout','rn':None,'training_eligible':False,'loci':counts,
-             'manifest_sha256':sha(out/'panel/manifest.json'),'reference_report_sha256':sha(out/'reference_compatibility.json'),
+             'manifest_sha256':sha(out/'panel/manifest.json'),'reference_report_sha256':sha(out/'reference_compatibility.json.pending'),
              'reference_compatible_loci':report['compatible_locus_count'],'duplicate_ambiguous_loci':report['duplicate_ambiguous_locus_count'],'scientific_verdict':None})
-        dump(out/'OBSERVATIONS_COMPLETE.json',{'job_id':os.environ['SLURM_JOB_ID'],'seconds':time.monotonic()-started,'counts_sha256':sha(out/'panel_counts.json'),'scope':'raw_CPU_observations_not_prediction_or_scientific_approval'})
+        publish_completion('OBSERVATIONS_COMPLETE.json',{'job_id':os.environ['SLURM_JOB_ID'],'seconds':time.monotonic()-started,'counts_sha256':sha(out/'panel_counts.json'),'scope':'raw_CPU_observations_not_prediction_or_scientific_approval'})
     except Exception as e:
         dump(out/'FAILED.json',{'error':str(e),'type':type(e).__name__,'seconds':time.monotonic()-started,'scope':'incomplete_observations'}); raise
 

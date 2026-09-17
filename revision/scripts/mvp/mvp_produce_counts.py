@@ -6,6 +6,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -323,10 +324,49 @@ def resolve_reference_mapping(panel, corpus, authority, accepted_hashes, panel_p
     return receipt
 
 
-def recheck_reference_mapping(receipt):
-    require(not Path(receipt['sources'][0]['path'] + '.wal').exists(), 'corpus WAL appeared')
-    for record in receipt['sources']:
+def recheck_files(records):
+    # Catch a source changing even after its hash was read, during another hash.
+    def stamps():
+        stats = [Path(r['path']).stat() for r in records]
+        return [(s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns) for s in stats]
+    before = stamps()
+    for record in records:
         check_file(record['path'], record)
+    require(before == stamps(), 'source changed during hashing')
+
+
+def recheck_reference_mapping(receipt):
+    wal = receipt['sources'][0]['path'] + '.wal'
+    require(not os.path.lexists(wal), 'corpus WAL appeared')
+    recheck_files(receipt['sources'])
+    require(not os.path.lexists(wal), 'corpus WAL appeared')
+
+
+def stage_json(path, data):
+    """Closed diagnostic staging file; never a consumable success receipt."""
+    staging = Path(str(path) + '.pending')
+    with staging.open('x') as handle:
+        json.dump(data, handle, indent=2, allow_nan=False)
+        handle.flush()
+        os.fsync(handle.fileno())
+    return staging
+
+
+def publish_staged(paths, recheck):
+    """Validate after serialization, then atomically link each fresh destination.
+
+    Failed staging files are retained. Hard links provide stdlib no-replace
+    publication on the same filesystem, without importing the decoder stack.
+    """
+    for path in paths:
+        if os.path.lexists(path):
+            raise FileExistsError(path)
+        read_json(str(path) + '.pending')
+    recheck()
+    for path in paths:
+        staging = Path(str(path) + '.pending')
+        os.link(staging, path)
+        staging.unlink()
 
 
 def prepare_mapped_reference(panel, reference, restricted, mapping):
@@ -528,8 +568,11 @@ def produce(input_path, out):
                'comparisons': receipts, 'outputs': [restricted_identity, *[file_identity(out/n) for n in ('counts.json','statistics.json')]],
                'independent_read_splice_status': 'ABSENT_NOT_NEGATIVE', 'coverage_policy': 'PENDING_AUTHOR',
                'withholding_status': 'UNASSESSABLE', 'decision': None}
-    with (out/'receipt.json').open('x') as f:
-        json.dump(receipt, f, indent=2, allow_nan=False)
+    stage_json(out/'receipt.json', receipt)
+    def final_recheck():
+        recheck_files(inputs + receipt['outputs'])
+        recheck_reference_mapping(mapping)
+    publish_staged([out/'receipt.json'], final_recheck)
     return result
 
 
