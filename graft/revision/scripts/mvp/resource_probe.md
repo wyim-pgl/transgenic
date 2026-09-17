@@ -1,0 +1,28 @@
+# revision/scripts/mvp/resource_probe.py
+
+- positive · function · L22-L23 — def positive(value)
+- validate_budget · function · L26-L49 — def validate_budget(budget, binding_sha)
+- project_budget · function · L52-L142 — def project_budget(budget, ranks)
+- validate_resource · function · L145-L157 — def validate_resource(value)
+- require_v3_dataset · function · L160-L164 — def require_v3_dataset(dataset, cfg)
+- strict_compile_limits · function · L167-L175 — def strict_compile_limits(config): # Torch renamed cache limits to recompile limits. Neither supported means # unsupported runtime, not permission to execute cached eager fallbacks.
+- paired_validation · function · L178-L238 — def paired_validation(accelerator, model, loader, expected)
+- open_iterator · function · L188-L190 — def open_iterator()
+- retrieve · function · L196-L200 — def retrieve()
+- post_metric · function · L211-L213 — def post_metric()
+- run · function · L241-L493 — def run(args)
+- local · function · L278-L285 — def local(operation): # Only rank-local work here: never nest DDP/transport collectives.
+- checked · function · L281-L283 — def checked()
+- progress · function · L289-L302 — def progress()
+- publish · function · L291-L300 — def publish(): # Immutable snapshots, never MVP_MEASUREMENT_OUTPUT or receipt/DONE.
+- stage · function · L304-L317 — def stage(name, operation, *, collective=False)
+- finish · function · L310-L314 — def finish()
+- audit_inputs · function · L319-L328 — def audit_inputs()
+- setup_finished · function · L346-L350 — def setup_finished()
+- inventory · function · L354-L372 — def inventory()
+- finish_update · function · L402-L411 — def finish_update()
+- check_kernels · function · L416-L420 — def check_kernels()
+- check_compiled · function · L422-L424 — def check_compiled()
+- publication · function · L432-L445 — def publication()
+- revalidate · function · L450-L463 — def revalidate()
+- imported_identity · function · L465-L471 — def imported_identity()

@@ -1,0 +1,21 @@
+# revision/scripts/71_b6_panels.py
+
+- PanelError · class · L113-L114 — class PanelError(RuntimeError)
+- digest · function · L117-L122 — def digest(path: Path, algorithm: str = "sha256") -> str
+- sha256_bytes · function · L125-L126 — def sha256_bytes(data: bytes) -> str
+- parse_gff_genes · function · L130-L177 — def parse_gff_genes(path: Path) -> dict
+- read_fai · function · L180-L186 — def read_fai(path: Path) -> dict
+- is_hard · function · L189-L191 — def is_hard(flag: str) -> bool
+- read_hard_flags · function · L194-L209 — def read_hard_flags(path: Path, species: str = SPECIES) -> dict
+- read_gene_list · function · L212-L219 — def read_gene_list(path: Path, species: str = SPECIES) -> set
+- verify_hash · function · L222-L226 — def verify_hash(path: Path, expected: str, algorithm: str, label: str) -> str
+- load_corpus · function · L230-L260 — def load_corpus(db: str, expect_md5: str | None)
+- overlapping_genes · function · L263-L278 — def overlapping_genes(genes, flank: int) -> set
+- draw_panels · function · L281-L409 — def draw_panels(args, report: list) -> list
+- keys · function · L327-L328 — def keys(g): # builder key, GFF ID, Name attribute — the three ids build_b5.flags_for_gene consults
+- hard_of · function · L330-L335 — def hard_of(g, table)
+- window_fits · function · L363-L368 — def window_fits(g)
+- rows_to_tsv · function · L412-L418 — def rows_to_tsv(rows) -> bytes
+- write_outputs · function · L421-L427 — def write_outputs(tsv: bytes, out: Path, report: list) -> None
+- run_remote · function · L430-L444 — def run_remote(args) -> tuple[bytes, str]
+- main · function · L447-L488 — def main(argv=None) -> int

@@ -1,0 +1,46 @@
+# tests/test_train_b5_chain.py
+
+- _wait_loop · function · L25-L29 — def _wait_loop() -> str
+- _run · function · L32-L42 — def _run(child: str, signal_after: float | None = None) -> str
+- test_wait_loop_keeps_a_failing_child_exit_code · function · L45-L46 — def test_wait_loop_keeps_a_failing_child_exit_code()
+- test_wait_loop_reports_zero_for_a_clean_child · function · L49-L50 — def test_wait_loop_reports_zero_for_a_clean_child()
+- test_wait_loop_survives_usr1_and_keeps_the_final_code · function · L53-L57 — def test_wait_loop_survives_usr1_and_keeps_the_final_code(): # USR1 interrupts the first wait (status 138); the loop must re-wait and keep the child's real code.
+- test_wait_loop_survives_usr1_with_a_clean_child · function · L60-L63 — def test_wait_loop_survives_usr1_with_a_clean_child()
+- test_failed_link_exits_nonzero · function · L66-L70 — def test_failed_link_exits_nonzero()
+- _decision_block · function · L78-L82 — def _decision_block() -> str
+- _decide · function · L85-L110 — def _decide(tmp_path: Path, *, rc: int, err_before: str = "", err_after: str = "", env: dict | None = None, forced_preempt: bool = False) -> dict
+- test_launch_failure_after_the_in_allocation_relaunch_resubmits_same_link_elsewhere · function · L116-L121 — def test_launch_failure_after_the_in_allocation_relaunch_resubmits_same_link_elsewhere(tmp_path): # the in-allocation relaunch already retried on this node; the cross-allocation retry excludes it
+- test_a_second_cross_allocation_launch_failure_is_terminal · function · L124-L126 — def test_a_second_cross_allocation_launch_failure_is_terminal(tmp_path)
+- test_launch_failure_text_from_a_previous_attempt_is_not_a_retry · function · L129-L132 — def test_launch_failure_text_from_a_previous_attempt_is_not_a_retry(tmp_path)
+- test_other_failures_stay_terminal · function · L135-L137 — def test_other_failures_stay_terminal(tmp_path)
+- test_retry_budget_is_bounded · function · L140-L142 — def test_retry_budget_is_bounded(tmp_path)
+- test_exclusions_accumulate_and_travel_in_the_environment · function · L145-L149 — def test_exclusions_accumulate_and_travel_in_the_environment(tmp_path)
+- test_signature_followed_by_a_large_log_still_matches · function · L152-L154 — def test_signature_followed_by_a_large_log_still_matches(tmp_path)
+- test_clean_link_resubmits_next_link_with_retry_reset_and_exclusions_kept · function · L157-L160 — def test_clean_link_resubmits_next_link_with_retry_reset_and_exclusions_kept(tmp_path)
+- _rank_finder · function · L168-L172 — def _rank_finder() -> str
+- test_usr1_targets_only_the_ranks_under_the_launcher · function · L175-L199 — def test_usr1_targets_only_the_ranks_under_the_launcher(tmp_path): # Fake tree: container -> launcher ("accelerate launch") -> rank (trainer script) -> worker (same script).
+- test_forced_preemption_resubmits_the_next_link_and_clears_the_marker · function · L202-L206 — def test_forced_preemption_resubmits_the_next_link_and_clears_the_marker(tmp_path): # The watchdog killed a trainer that ignored USR1 (rc 137): not a failure, the next link resumes latest_state.
+- test_forced_preemption_at_the_chain_limit_stays_terminal_and_consumes_the_marker · function · L209-L211 — def test_forced_preemption_at_the_chain_limit_stays_terminal_and_consumes_the_marker(tmp_path)
+- test_forced_preemption_wins_over_a_launch_error_signature_at_the_cap · function · L214-L218 — def test_forced_preemption_wins_over_a_launch_error_signature_at_the_cap(tmp_path): # Codex review: with both a forced marker and a fresh launch-failure signature at CHAIN_N=CHAIN_MAX the old # ordering fell through to the launch retry and submitted the capped link again.
+- test_a_finished_watchdog_does_not_end_the_link_under_errexit · function · L221-L225 — def test_a_finished_watchdog_does_not_end_the_link_under_errexit(tmp_path): # rehearsal 3119991: `[ -n "$WATCHDOG" ] && kill $WATCHDOG` failed (the subshell had exited) and errexit # killed the batch script before the resubmit decision.
+- _decide_pre · function · L234-L247 — def _decide_pre(tmp_path: Path, *, rc: int, err_after: str = "", env: dict | None = None, forced_preempt: bool = False, done: bool = False, successors: str = "7 seed456\n8 seed456\n9 seed789\n") -> dict
+- test_presubmitted_clean_link_does_not_resubmit · function · L250-L253 — def test_presubmitted_clean_link_does_not_resubmit(tmp_path)
+- test_presubmitted_forced_preemption_does_not_resubmit_and_clears_the_marker · function · L256-L258 — def test_presubmitted_forced_preemption_does_not_resubmit_and_clears_the_marker(tmp_path)
+- test_presubmitted_finished_run_cancels_only_this_seeds_queued_links · function · L261-L264 — def test_presubmitted_finished_run_cancels_only_this_seeds_queued_links(tmp_path)
+- test_presubmitted_trainer_failure_marks_and_cancels_the_successors · function · L267-L269 — def test_presubmitted_trainer_failure_marks_and_cancels_the_successors(tmp_path)
+- test_presubmitted_launch_failure_excludes_the_node_on_the_queued_links · function · L272-L276 — def test_presubmitted_launch_failure_excludes_the_node_on_the_queued_links(tmp_path)
+- test_presubmitted_mode_does_not_change_the_self_resubmitting_chain · function · L279-L282 — def test_presubmitted_mode_does_not_change_the_self_resubmitting_chain(tmp_path): # CHAIN_PRESUBMITTED unset: the 2026-09-09/10 behaviour is byte-for-byte the same decision
+- _guard_block · function · L285-L289 — def _guard_block() -> str
+- _guard_run · function · L292-L303 — def _guard_run(tmp_path: Path, *, running_jobs: str = "", job_id: str = "5", exc: str = "(null)", env: dict | None = None) -> subprocess.CompletedProcess
+- test_guard_runs_before_anything_touches_the_gpus · function · L306-L309 — def test_guard_runs_before_anything_touches_the_gpus()
+- test_guard_finished_run_exits_zero_without_starting · function · L312-L315 — def test_guard_finished_run_exits_zero_without_starting(tmp_path)
+- test_guard_failed_run_is_refused · function · L318-L321 — def test_guard_failed_run_is_refused(tmp_path)
+- test_guard_refuses_while_another_link_of_the_seed_is_running · function · L324-L328 — def test_guard_refuses_while_another_link_of_the_seed_is_running(tmp_path)
+- test_guard_ignores_a_stale_marker_and_records_its_own · function · L331-L337 — def test_guard_ignores_a_stale_marker_and_records_its_own(tmp_path)
+- test_guard_fails_closed_when_squeue_cannot_answer · function · L340-L345 — def test_guard_fails_closed_when_squeue_cannot_answer(tmp_path): # Codex 2026-09-11: an outage must not read as "not running"
+- test_guard_treats_a_purged_job_id_as_stale · function · L348-L351 — def test_guard_treats_a_purged_job_id_as_stale(tmp_path)
+- test_submit_chain_refuses_a_non_integer_seed · function · L354-L357 — def test_submit_chain_refuses_a_non_integer_seed(tmp_path)
+- test_guard_seeds_exclusions_from_the_submission · function · L360-L364 — def test_guard_seeds_exclusions_from_the_submission(tmp_path)
+- _identity_block · function · L372-L376 — def _identity_block() -> str
+- _identity_run · function · L379-L391 — def _identity_run(tmp_path: Path, *, gpus: str, env: dict | None = None) -> subprocess.CompletedProcess
+- test_runtime_identity_is_recorded_then_enforced · function · L394-L403 — def test_runtime_identity_is_recorded_then_enforced(tmp_path)

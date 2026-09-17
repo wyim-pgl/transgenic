@@ -1,0 +1,17 @@
+# revision/scripts/make_dataset_roles.py
+
+- md5 · function · L103-L108 — def md5(path)
+- read_md5_file · function · L111-L117 — def read_md5_file(path)
+- filereport · function · L120-L130 — def filereport(dataset_dir)
+- species_of · function · L133-L137 — def species_of(dataset_key, fallback="")
+- rows_for_est · function · L140-L160 — def rows_for_est(root)
+- rows_for_runs · function · L174-L208 — def rows_for_runs(root, rel, default_role, data_type, basis)
+- rows_for_declared_runs · function · L256-L260 — def rows_for_declared_runs()
+- _ssh_md5 · function · L306-L312 — def _ssh_md5(host, path)
+- verify_resources · function · L315-L333 — def verify_resources(runner=_ssh_md5)
+- rows_for_resources · function · L336-L339 — def rows_for_resources()
+- demote_duplicates · function · L342-L351 — def demote_duplicates(rows)
+- build · function · L354-L369 — def build(root)
+- scope_filter · function · L377-L395 — def scope_filter(rows, scope)
+- validate · function · L398-L457 — def validate(rows)
+- main · function · L460-L503 — def main()

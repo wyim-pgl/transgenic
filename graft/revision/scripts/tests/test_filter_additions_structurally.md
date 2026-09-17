@@ -1,0 +1,23 @@
+# revision/scripts/tests/test_filter_additions_structurally.py
+
+- _fasta · function · L24-L25 — def _fasta(path: Path, sequences: dict) -> None
+- _gff3 · function · L28-L43 — def _gff3(path: Path, loci: list) -> None
+- genome · function · L66-L85 — def genome(tmp_path): # Every piece is joined with an explicit `+`. Mixing implicit literal concatenation # with `+` here silently regrouped the parts and produced a 135 nt sequence whose # regions no longer matched the map above.
+- _run · function · L88-L93 — def _run(tmp_path, genome, prompt_loci, output_loci, filtered=None)
+- test_addition_with_a_complete_orf_is_kept · function · L98-L106 — def test_addition_with_a_complete_orf_is_kept(tmp_path, genome)
+- test_addition_without_a_start_codon_is_discarded · function · L109-L116 — def test_addition_without_a_start_codon_is_discarded(tmp_path, genome)
+- test_length_not_divisible_by_three_is_discarded · function · L119-L125 — def test_length_not_divisible_by_three_is_discarded(tmp_path, genome)
+- test_canonical_gt_ag_intron_is_kept · function · L130-L138 — def test_canonical_gt_ag_intron_is_kept(tmp_path, genome)
+- test_non_canonical_intron_is_discarded_though_its_orf_is_complete · function · L141-L151 — def test_non_canonical_intron_is_discarded_though_its_orf_is_complete(tmp_path, genome)
+- test_single_exon_structure_is_not_failed_for_lacking_introns · function · L154-L161 — def test_single_exon_structure_is_not_failed_for_lacking_introns(tmp_path, genome)
+- test_the_supplied_structure_survives_even_if_it_would_fail · function · L166-L175 — def test_the_supplied_structure_survives_even_if_it_would_fail(tmp_path, genome)
+- test_prompt_re_emission_is_not_counted_as_an_addition · function · L178-L184 — def test_prompt_re_emission_is_not_counted_as_an_addition(tmp_path, genome)
+- test_identical_emissions_count_once · function · L189-L197 — def test_identical_emissions_count_once(tmp_path, genome)
+- test_unknown_seqid_is_reported_not_silently_dropped · function · L200-L207 — def test_unknown_seqid_is_reported_not_silently_dropped(tmp_path, genome)
+- test_discard_percentage_is_reported · function · L210-L219 — def test_discard_percentage_is_reported(tmp_path, genome)
+- test_empty_output_raises_rather_than_reporting_a_clean_filter · function · L222-L227 — def test_empty_output_raises_rather_than_reporting_a_clean_filter(tmp_path, genome)
+- test_ensembl_named_genome_joins_to_tair_named_annotation · function · L232-L238 — def test_ensembl_named_genome_joins_to_tair_named_annotation(tmp_path)
+- test_written_file_keeps_only_surviving_transcripts · function · L241-L250 — def test_written_file_keeps_only_surviving_transcripts(tmp_path, genome)
+- test_audit_scores_a_sound_annotation_at_100_percent · function · L260-L268 — def test_audit_scores_a_sound_annotation_at_100_percent(tmp_path, genome)
+- test_audit_separates_the_two_criteria · function · L271-L279 — def test_audit_separates_the_two_criteria(tmp_path, genome)
+- test_audit_reports_a_non_joining_genome_as_skipped_not_as_zero · function · L282-L290 — def test_audit_reports_a_non_joining_genome_as_skipped_not_as_zero(tmp_path, genome)

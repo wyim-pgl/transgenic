@@ -1,0 +1,31 @@
+# revision/scripts/32_score_polishing.py
+
+- _attr · function · L202-L215 — def _attr(attributes: str, key: str) -> str | None
+- _parse_hierarchy · function · L219-L251 — def _parse_hierarchy(path: Path) -> tuple[dict, dict, dict, dict, tuple]
+- _is_noncoding · function · L254-L255 — def _is_noncoding(ptype: str | None, gbkey: str | None) -> bool
+- _tx_and_gene · function · L258-L284 — def _tx_and_gene(fparent: str | None, fid: str | None, id_type: dict, id_parent: dict, id_gbkey: dict ) -> tuple[str, str, str, bool]
+- _transcript_structures · function · L287-L342 — def _transcript_structures(path: Path, feature: str) -> tuple[dict, dict, dict, int]
+- _group_by_gene · function · L345-L365 — def _group_by_gene(structs: dict, tx_gene: dict, tx_seq: dict) -> dict
+- cds_structures · function · L368-L371 — def cds_structures(path: Path) -> dict
+- _representative · function · L374-L376 — def _representative(txs: dict) -> tuple
+- _load_primary_ids · function · L379-L382 — def _load_primary_ids(path: Path | None) -> set[str] | None
+- _primary_representative · function · L385-L395 — def _primary_representative(txs: dict, primary_ids: set[str] | None) -> tuple[tuple, bool]
+- _gene_gm_values · function · L398-L401 — def _gene_gm_values(path: Path) -> dict[str, str]
+- _overlaps · function · L404-L405 — def _overlaps(a: tuple, b: tuple) -> bool
+- _jaccard · function · L408-L414 — def _jaccard(a: tuple, b: tuple) -> float
+- match_by_overlap · function · L417-L474 — def match_by_overlap(pred: dict, ref: dict, stats: dict | None = None) -> dict
+- _resolve_one_to_one · function · L477-L500 — def _resolve_one_to_one(raw_pairs: dict) -> tuple[dict, int]
+- pair_input_to_output · function · L503-L561 — def pair_input_to_output(inp: dict, out: dict, output_gff: Path) -> tuple[dict, dict]
+- _bump · function · L564-L573 — def _bump(table: dict, in_ok: bool, out_ok: bool) -> None
+- _new_table · function · L576-L578 — def _new_table() -> dict
+- _finalize_table · function · L581-L587 — def _finalize_table(table: dict) -> None
+- _score_one_level · function · L590-L659 — def _score_one_level(inp: dict, out: dict, ref: dict, input_gff: Path, output_gff: Path, primary_ids: set[str] | None, primary_ids_path: Path | None) -> dict
+- _utr_signal_one · function · L662-L675 — def _utr_signal_one(path: Path, label: str) -> tuple[bool, str]
+- _utr_signal · function · L678-L693 — def _utr_signal(input_gff: Path, output_gff: Path) -> tuple[bool, str]
+- _noncoding_feature_counts · function · L696-L724 — def _noncoding_feature_counts(path: Path) -> dict
+- _gene_row_count · function · L727-L736 — def _gene_row_count(path: Path) -> int
+- baseline · function · L739-L811 — def baseline(input_gff: Path, ref_gff: Path = REFERENCE) -> dict
+- score · function · L814-L883 — def score(input_gff: Path, output_gff: Path, ref_gff: Path = REFERENCE, primary_ids_path: Path | None = PRIMARY_IDS, tool: str | None = None) -> dict
+- _with_pairing_diagnostics · function · L827-L834 — def _with_pairing_diagnostics(level_result: dict, table_key: str) -> dict
+- _print_result · function · L886-L892 — def _print_result(res: dict, indent: str = " ") -> None
+- main · function · L895-L928 — def main() -> int

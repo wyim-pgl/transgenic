@@ -1,0 +1,25 @@
+# tests/test_mvp_readiness_tools.py
+
+- put · function · L21-L23 — def put(path, value)
+- test_receipt_rejects_unbound_pass · function · L26-L30 — def test_receipt_rejects_unbound_pass(tmp_path)
+- test_staging_requires_all_pins_before_copy · function · L33-L41 — def test_staging_requires_all_pins_before_copy(tmp_path)
+- test_compute_guard_before_hashing · function · L44-L49 — def test_compute_guard_before_hashing(monkeypatch)
+- test_candidate_input_identity_rejected_during_prepare · function · L52-L58 — def test_candidate_input_identity_rejected_during_prepare(tmp_path, monkeypatch)
+- test_training_wrapper_rejects_validate_only · function · L61-L67 — def test_training_wrapper_rejects_validate_only(tmp_path)
+- test_step0_gate_rejects_tolerance_and_missing_tiers · function · L70-L74 — def test_step0_gate_rejects_tolerance_and_missing_tiers()
+- test_bounded_timeout_and_sigterm · function · L77-L82 — def test_bounded_timeout_and_sigterm(tmp_path)
+- measurement · function · L85-L106 — def measurement(name)
+- input_args · function · L109-L160 — def input_args(tmp_path, sidecars=None): # Standalone synthetic acceptance fixture: never a production receipt.
+- prepared · function · L163-L176 — def prepared(tmp_path, monkeypatch, sidecars=None): # These launcher/identity unit fixtures do not execute a CUDA resource probe. # Mock the resource-certification boundary explicitly rather than claiming # synthetic runtime flags meet it. Real schema negatives live separately in # test_mvp_resource_probe.py; no production bypass exists.
+- test_generate_then_direct_consumer_and_changed_inputs · function · L179-L201 — def test_generate_then_direct_consumer_and_changed_inputs(tmp_path, monkeypatch)
+- test_step0_measurements_fail_closed · function · L205-L218 — def test_step0_measurements_fail_closed(mutation)
+- stage_args · function · L221-L238 — def stage_args(tmp_path, monkeypatch)
+- test_staged_checkpoint_layout_and_collision · function · L241-L252 — def test_staged_checkpoint_layout_and_collision(tmp_path, monkeypatch)
+- test_staging_rejects_unapproved_copy · function · L256-L269 — def test_staging_rejects_unapproved_copy(tmp_path, monkeypatch, mutation)
+- test_receipt_execution_and_identity_rejected · function · L273-L288 — def test_receipt_execution_and_identity_rejected(tmp_path, mutation)
+- test_probe_retries_only_warmup_then_publishes_hash_marker · function · L291-L310 — def test_probe_retries_only_warmup_then_publishes_hash_marker(tmp_path, monkeypatch)
+- launch_fixture · function · L313-L328 — def launch_fixture(tmp_path, monkeypatch, sidecars=None)
+- test_direct_validator_rejects_modified_generated_record · function · L332-L355 — def test_direct_validator_rejects_modified_generated_record(tmp_path, monkeypatch, mutation)
+- test_training_wrapper_single_attempt_and_failure_semantics · function · L359-L391 — def test_training_wrapper_single_attempt_and_failure_semantics(tmp_path, monkeypatch, outcome)
+- child · function · L367-L375 — def child(argv, log, timeout)
+- test_probe_sigterm_publishes_only_failure · function · L394-L418 — def test_probe_sigterm_publishes_only_failure(tmp_path, monkeypatch)
