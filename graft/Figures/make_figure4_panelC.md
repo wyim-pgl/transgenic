@@ -1,0 +1,22 @@
+# Figures/make_figure4_panelC.py
+
+- parse · function · L121-L150 — def parse(path: Path, gtf: bool) -> dict
+- chain · function · L153-L156 — def chain(segs: list) -> tuple
+- overlaps · function · L159-L160 — def overlaps(a: tuple, b: tuple) -> bool
+- thick_thin · function · L163-L168 — def thick_thin(rec: dict) -> tuple[list, list]
+- span · function · L171-L173 — def span(rec: dict) -> tuple
+- suffix · function · L176-L178 — def suffix(tx: str) -> int
+- source_dir · function · L183-L192 — def source_dir(locus: str) -> Path
+- analyse · function · L195-L329 — def analyse(locus: str) -> dict
+- covered_by · function · L242-L243 — def covered_by(segs)
+- tair_leaves_unspliced · function · L245-L247 — def tair_leaves_unspliced(j)
+- _analyse_reproduced · function · L333-L357 — def _analyse_reproduced(locus, pred, tair, art, tair_chains, art_chains, reproduced, shared)
+- build_rows · function · L359-L442 — def build_rows(a: dict) -> tuple[list, list]
+- art_label · function · L421-L423 — def art_label(t)
+- support_note · function · L445-L469 — def support_note(a: dict) -> str
+- headline · function · L472-L494 — def headline(a: dict) -> tuple[str, str]
+- draw_tx · function · L499-L508 — def draw_tx(ax, y: float, rec: dict, color: str, lw: float) -> None
+- render · function · L511-L589 — def render(ax, a: dict, *, compact: bool) -> None
+- legend_handles · function · L600-L604 — def legend_handles(used: set | None = None) -> list
+- draw_locus · function · L607-L625 — def draw_locus(locus: str) -> dict
+- draw_sheet · function · L628-L658 — def draw_sheet(loci: list, name: str = "all", ncol: int = 2, panel_labels: list | None = None, prefix: str = "figure4_panelC_") -> None

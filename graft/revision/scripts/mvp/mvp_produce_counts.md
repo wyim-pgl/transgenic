@@ -1,0 +1,22 @@
+# revision/scripts/mvp/mvp_produce_counts.py
+
+- require · function · L24-L26 — def require(ok, message)
+- read_json · function · L29-L37 — def read_json(path): # Duplicate keys must not silently replace a seed or a file identity.
+- unique · function · L31-L36 — def unique(items)
+- file_identity · function · L40-L43 — def file_identity(path)
+- check_file · function · L46-L51 — def check_file(path, expected)
+- frozen_reference · function · L54-L70 — def frozen_reference(fasta, reference)
+- verify_training_code · function · L73-L109 — def verify_training_code(source, metadata)
+- verify_initialization · function · L112-L157 — def verify_initialization(audit, initialization, final_config)
+- verify_final · function · L160-L196 — def verify_final(final, seed, expected_rns, data_hashes, code_manifest)
+- legacy_module · function · L199-L204 — def legacy_module(name)
+- fasta_lengths · function · L207-L219 — def fasta_lengths(path)
+- read_gff · function · L222-L281 — def read_gff(path)
+- contained · function · L262-L263 — def contained(child, parent)
+- select_transcripts · function · L284-L294 — def select_transcripts(genes, locus, reference=False)
+- structure · function · L297-L302 — def structure(tx)
+- write_gtf · function · L305-L310 — def write_gtf(path, transcripts)
+- reference_counts · function · L313-L346 — def reference_counts(predicted, reference, directory, executable)
+- prediction_inventory · function · L349-L367 — def prediction_inventory(rows, panel, checkpoints)
+- produce · function · L370-L471 — def produce(input_path, out)
+- main · function · L474-L480 — def main(argv=None)

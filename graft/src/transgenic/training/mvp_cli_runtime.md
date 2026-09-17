@@ -1,0 +1,37 @@
+# src/transgenic/training/mvp_cli_runtime.py
+
+- _VerifiedInputs · class · L24-L34 — class _VerifiedInputs
+- _TestExecution · class · L38-L46 — class _TestExecution
+- _snapshot_hash · function · L49-L60 — def _snapshot_hash(value: os.PathLike[str] | str, label: str) -> tuple[Path, str]
+- _stat_identity · function · L63-L65 — def _stat_identity(path: Path) -> tuple[int, int, int, int, int]
+- _reject_wal · function · L68-L71 — def _reject_wal(path: Path, label: str) -> None
+- _close_dataset · function · L74-L86 — def _close_dataset(dataset) -> None
+- verify_candidate_artifacts · function · L89-L143 — def verify_candidate_artifacts(candidate: CandidateRecords, db_value, evidence_value, panel_value) -> dict
+- _expected_code_files · function · L146-L151 — def _expected_code_files() -> tuple[Path, ...]
+- _manifest_files · function · L154-L172 — def _manifest_files(path: Path) -> None
+- validate_launch_readiness · function · L175-L236 — def validate_launch_readiness(readiness_value, readiness_sha256: str, candidate: CandidateRecords, paths, *, seed: int, recipe: MVPRecipe) -> dict
+- _source_paths · function · L239-L244 — def _source_paths(init_from) -> tuple[Path, Path]
+- _validate_output · function · L247-L254 — def _validate_output(path_value) -> Path
+- _versions · function · L257-L261 — def _versions() -> dict[str, str]
+- _identity_payload · function · L264-L266 — def _identity_payload(value: Any) -> bytes
+- require_matching_identity · function · L269-L276 — def require_matching_identity(accelerator, payload: bytes) -> None
+- compile_bound_forward · function · L279-L284 — def compile_bound_forward(model, backend="inductor")
+- _collect_local_hardware · function · L290-L331 — def _collect_local_hardware(accelerator) -> dict[str, Any]
+- _collect_runtime_hardware · function · L334-L374 — def _collect_runtime_hardware(accelerator, *, _collector=None) -> list[dict[str, Any]]
+- probe · function · L342-L347 — def probe()
+- _validate_public_hardware · function · L377-L405 — def _validate_public_hardware(facts: list[dict[str, Any]]) -> list[dict[str, Any]]
+- _hardware_metadata · function · L408-L420 — def _hardware_metadata(facts: list[dict[str, Any]], *, test_hardware: bool) -> dict[str, Any]
+- _runtime_contract · function · L423-L438 — def _runtime_contract(test_execution: bool) -> dict[str, Any]
+- _validate_initialization_readiness · function · L441-L454 — def _validate_initialization_readiness(audit, readiness, weights: Path, run_config: Path) -> None
+- execute · function · L457-L488 — def execute(args, candidate: CandidateRecords, *, validate_only: bool, _test: _TestExecution | None = None) -> dict
+- _train · function · L491-L702 — def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, recipe, readiness, readiness_sha256, *, _test: _TestExecution | None = None) -> dict
+- unchanged · function · L517-L522 — def unchanged(names)
+- phase · function · L524-L533 — def phase(accelerator, name, operation)
+- checked · function · L525-L529 — def checked()
+- configure · function · L556-L559 — def configure()
+- initialize · function · L563-L575 — def initialize()
+- final_readiness · function · L578-L583 — def final_readiness()
+- compile_setup · function · L586-L589 — def compile_setup()
+- datasets · function · L595-L635 — def datasets()
+- prepublication_prepare · function · L662-L665 — def prepublication_prepare()
+- prepublication_check · function · L667-L678 — def prepublication_check(): # Evaluation is complete; release read handles before the final independent DB audit.

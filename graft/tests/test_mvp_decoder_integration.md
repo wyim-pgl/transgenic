@@ -1,0 +1,23 @@
+# tests/test_mvp_decoder_integration.py
+
+- panel_publication · function · L27-L97 — def panel_publication(tmp_path, monkeypatch)
+- synthetic_authority · function · L50-L51 — def synthetic_authority(a,b)
+- test_real_panel_high_junction_and_biological_zero · function · L100-L118 — def test_real_panel_high_junction_and_biological_zero(panel_publication)
+- test_panel_rejects_mutations · function · L122-L145 — def test_panel_rejects_mutations(panel_publication, mutation, tmp_path)
+- test_atomic_final_failure_never_publishes · function · L149-L176 — def test_atomic_final_failure_never_publishes(tmp_path, monkeypatch, phase)
+- broken · function · L152-L154 — def broken(value, handle, **kwargs)
+- Broken · class · L160-L169 — class Broken
+- __init__ · method · L161-L161 — def __init__(self, *a, **k)
+- __enter__ · method · L162-L162 — def __enter__(self)
+- __getattr__ · method · L163-L163 — def __getattr__(self,name)
+- flush · method · L164-L166 — def flush(self)
+- __exit__ · method · L167-L169 — def __exit__(self,*args)
+- recheck · function · L171-L172 — def recheck()
+- test_atomic_no_replace · function · L179-L183 — def test_atomic_no_replace(tmp_path)
+- test_cpu_cannot_claim_runtime_receipt · function · L186-L192 — def test_cpu_cannot_claim_runtime_receipt(tmp_path)
+- test_loaded_closure_negative_standins · function · L196-L207 — def test_loaded_closure_negative_standins(tmp_path, monkeypatch, mutation)
+- test_asset_tree_rechecks_additions_and_link_target · function · L210-L220 — def test_asset_tree_rechecks_additions_and_link_target(tmp_path)
+- test_full_publication_panel_decoder_counts · function · L223-L307 — def test_full_publication_panel_decoder_counts(panel_publication, tmp_path, monkeypatch)
+- EncoderTokenizer · class · L262-L264 — class EncoderTokenizer
+- __call__ · method · L264-L264 — def __call__(self, seq, **kwargs)
+- cpu_generate · function · L269-L274 — def cpu_generate(self, **kw)

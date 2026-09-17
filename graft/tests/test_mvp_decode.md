@@ -1,0 +1,25 @@
+# tests/test_mvp_decode.py
+
+- test_raw_empty_and_truncation · function · L12-L20 — def test_raw_empty_and_truncation()
+- test_multi_gene_minus_deterministic_and_no_dedup · function · L23-L33 — def test_multi_gene_minus_deterministic_and_no_dedup()
+- test_generation_kwargs_tracks_and_rejection · function · L36-L64 — def test_generation_kwargs_tracks_and_rejection()
+- Encoder · class · L38-L39 — class Encoder(torch.nn.Module)
+- forward · method · L39-L39 — def forward(self, ids, evidence_tracks=None)
+- Model · class · L40-L50 — class Model
+- get_encoder · method · L43-L43 — def get_encoder(self)
+- eval · method · L46-L46 — def eval(self)
+- generate · method · L47-L50 — def generate(self, **kwargs)
+- test_sequence_sep_and_no_rc · function · L67-L75 — def test_sequence_sep_and_no_rc()
+- Tok · class · L68-L73 — class Tok
+- __call__ · method · L71-L73 — def __call__(self, seq, **kwargs)
+- test_normalize_rejects_bad_identifiers · function · L78-L82 — def test_normalize_rejects_bad_identifiers()
+- test_raw_planning_validation_and_beam_reorder · function · L85-L102 — def test_raw_planning_validation_and_beam_reorder()
+- test_strict_final_load_preserves_projection_and_aliases · function · L105-L135 — def test_strict_final_load_preserves_projection_and_aliases(tmp_path, monkeypatch)
+- test_tiny_real_beam_cache_tracks_and_negative · function · L138-L156 — def test_tiny_real_beam_cache_tracks_and_negative(tmp_path, monkeypatch)
+- test_runner_exact_350_no_overwrite_and_partial_failure · function · L159-L223 — def test_runner_exact_350_no_overwrite_and_partial_failure(tmp_path, monkeypatch)
+- generated · function · L184-L187 — def generated(*a,raw_sink)
+- fail · function · L196-L196 — def fail(*a,**k)
+- fail_final · function · L203-L207 — def fail_final(value, handle, **kwargs)
+- mutate_after_serialization · function · L214-L218 — def mutate_after_serialization(value, handle, **kwargs)
+- test_baseline_approved_loader_actual_roundtrip · function · L226-L251 — def test_baseline_approved_loader_actual_roundtrip(tmp_path)
+- test_reviewed_verifier_requires_actual_candidate_records · function · L254-L258 — def test_reviewed_verifier_requires_actual_candidate_records()

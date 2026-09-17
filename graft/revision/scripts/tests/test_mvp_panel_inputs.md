@@ -1,0 +1,16 @@
+# revision/scripts/tests/test_mvp_panel_inputs.py
+
+- db · function · L18-L30 — def db(tmp_path)
+- test_selection_union_n_and_intron_only · function · L33-L56 — def test_selection_union_n_and_intron_only(db)
+- test_rc_small_handcomputed · function · L59-L66 — def test_rc_small_handcomputed(db)
+- test_no_retained_flank_fallback · function · L69-L75 — def test_no_retained_flank_fallback(db)
+- test_fresh_publication · function · L78-L97 — def test_fresh_publication(tmp_path, db, monkeypatch)
+- test_input_mutation_no_complete · function · L101-L124 — def test_input_mutation_no_complete(tmp_path, db, monkeypatch, phase)
+- mutate · function · L111-L113 — def mutate(*args)
+- mutate · function · L117-L120 — def mutate(identities)
+- test_all_frozen_50_loci · function · L127-L144 — def test_all_frozen_50_loci(tmp_path, db, monkeypatch)
+- test_seed_independence_failure · function · L147-L156 — def test_seed_independence_failure(db, monkeypatch)
+- different · function · L149-L152 — def different(con, **kwargs)
+- test_frozen_reference_gate_rejects_synthetic · function · L159-L165 — def test_frozen_reference_gate_rejects_synthetic(tmp_path)
+- test_preflight_rejects_unaccepted_database · function · L168-L181 — def test_preflight_rejects_unaccepted_database(tmp_path, db, monkeypatch)
+- test_wal_rejected_before_output · function · L184-L191 — def test_wal_rejected_before_output(tmp_path, db, monkeypatch)

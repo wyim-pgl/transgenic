@@ -1,0 +1,16 @@
+# tests/test_mvp_decoder_runtime.py
+
+- sha · function · L16-L17 — def sha(path)
+- dump · function · L20-L22 — def dump(path, value)
+- bounded · function · L26-L64 — def bounded(tmp_path, monkeypatch)
+- spec_for · function · L67-L68 — def spec_for(path)
+- test_real_bounded_publication · function · L71-L77 — def test_real_bounded_publication(bounded)
+- test_completed_negatives · function · L82-L97 — def test_completed_negatives(bounded, mutation)
+- test_relocated_project_not_root_exempt · function · L102-L117 — def test_relocated_project_not_root_exempt(tmp_path, monkeypatch, filename)
+- test_probe_handshake_and_operator_code_pin · function · L120-L134 — def test_probe_handshake_and_operator_code_pin(tmp_path)
+- test_hf_scaffolding · function · L138-L152 — def test_hf_scaffolding(tmp_path, monkeypatch, mutation)
+- test_installed_transformers_dynamic_import · function · L155-L177 — def test_installed_transformers_dynamic_import(tmp_path, monkeypatch)
+- test_pinned_transformers_4576_loader_contract · function · L180-L184 — def test_pinned_transformers_4576_loader_contract(tmp_path, monkeypatch)
+- test_cpu_device_refused · function · L187-L188 — def test_cpu_device_refused()
+- test_unknown_project_file_not_decoder_audited · function · L191-L196 — def test_unknown_project_file_not_decoder_audited(tmp_path, monkeypatch)
+- test_all_declared_bytes_and_handshake_checked · function · L199-L228 — def test_all_declared_bytes_and_handshake_checked(bounded, monkeypatch, tmp_path)
