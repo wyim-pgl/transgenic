@@ -147,4 +147,3 @@ def test_unmeasured_coverage_or_undercount_rejected(damage):
     if damage == 'no_est': update['est_signal_microbatches'] = 0
     if damage == 'boolean_time': update['wall_seconds'] = True
     with pytest.raises(ValueError): project_budget(budget, ranks)
-

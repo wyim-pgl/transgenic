@@ -25,11 +25,12 @@ def positive(value):
 
 def validate_budget(budget, binding_sha):
     from run_bounded import digest
-    if (not isinstance(budget, dict) or budget.get('schema_version') != 1 or
+    if (not isinstance(budget, dict) or type(budget.get('schema_version')) is not int or budget['schema_version'] != 1 or
             budget.get('authorized_scope') != 'exploratory_mvp' or
             budget.get('seeds') != [1, 2, 3] or
             any(type(seed) is not int for seed in budget.get('seeds', [])) or
             budget.get('resource_envelope') != dict(nodes=1, ranks=4, microbatches_per_rank=24) or
+            any(type(n) is not int for n in budget['resource_envelope'].values()) or
             not digest(binding_sha) or budget.get('bindings_sha256') != binding_sha):
         raise ValueError('explicit bound three-seed controller resource envelope required')
     for key in ('controller_record_reference', 'intent', 'margin_rationale'):
@@ -58,13 +59,14 @@ def project_budget(budget, ranks):
     from run_bounded import digest
     validate_budget(budget, budget.get('bindings_sha256'))
     if (not isinstance(ranks, list) or len(ranks) != 4 or
+            any(not isinstance(r, dict) or type(r.get('rank')) is not int for r in ranks) or
             {r.get('rank') for r in ranks} != {0, 1, 2, 3}):
         raise ValueError('exactly four measured ranks required')
     worst, peak, limit, elapsed = 0., 0, float('inf'), 0.
     inventories = set()
     for rank in ranks:
         contract = rank.get('label_contract', {})
-        if contract.get('gff_vocab_version') != 'v3' or contract.get('maxlength') != 8192:
+        if contract.get('gff_vocab_version') != 'v3' or type(contract.get('maxlength')) is not int or contract['maxlength'] != 8192:
             raise ValueError('measured v3/8192 label contract required')
         capacity = rank.get('capacity_bytes')
         if type(capacity) is not int or capacity <= 0:
@@ -84,11 +86,15 @@ def project_budget(budget, ranks):
             if len(updates) != 3:
                 raise ValueError('one cold and two steady updates per rank/tier required')
             for index, update in enumerate(updates):
-                if (update.get('microbatches') != 24 or update.get('optimizer_steps') != 1 or
-                        len(update.get('rns', [])) != 24 or len(set(update['rns'])) != 24 or
+                if (type(update.get('microbatches')) is not int or update['microbatches'] != 24 or
+                        type(update.get('optimizer_steps')) is not int or update['optimizer_steps'] != 1 or
+                        len(update.get('rns', [])) != 24 or
+                        any(type(rn) is not int for rn in update['rns']) or len(set(update['rns'])) != 24 or
+                        type(update.get('generated_kernels')) is not int or update['generated_kernels'] < 0 or
                         type(update.get('est_signal_microbatches')) is not int or
                         not 0 < update['est_signal_microbatches'] <= 24 or
                         update.get('input_lengths') != [int(tier)] * 24 or
+                        any(type(n) is not int for n in update['input_lengths']) or
                         len(update.get('label_lengths', [])) != 24 or
                         any(type(n) is not int or n <= 0 for n in update['label_lengths'])):
                     raise ValueError('actual microbatch/update/length coverage incomplete')
@@ -112,6 +118,8 @@ def project_budget(budget, ranks):
     if len(inventories) != 1:
         raise ValueError('rank valid inventories disagree')
     for tier in map(str, TIERS):
+        if any(type(r['tiers'][tier].get('inventory_max_label_length')) is not int for r in ranks):
+            raise ValueError('integer inventory maximum label length required')
         maxima = {r['tiers'][tier].get('inventory_max_label_length') for r in ranks}
         observed = max(max(u['label_lengths']) for r in ranks for u in r['tiers'][tier]['updates'][1:])
         if maxima != {observed}:
@@ -170,7 +178,7 @@ def strict_compile_limits(config):
 def paired_validation(accelerator, model, loader, expected):
     """Actual finalizer metric, byte transport and aggregation, without publication."""
     from transgenic.training import mvp_finalize as f
-    from transgenic.training.mvp_metrics import paired_metric_record, aggregate_paired_records
+    from transgenic.training.mvp_metrics import paired_metric_record, aggregate_paired_records, validate_paired_batch
     lengths = f._all_ints(accelerator, len(loader))
     if len(set(lengths)) != 1:
         raise ValueError('unequal paired validation lengths')
@@ -188,6 +196,7 @@ def paired_validation(accelerator, model, loader, expected):
         def retrieve():
             nonlocal batch
             batch = f._to_device(next(iterator), accelerator.device)
+            validate_paired_batch(batch)
             torch.cuda.synchronize(accelerator.device)
         f._collective_preflight(accelerator, retrieve)
         times['read_transfer_seconds'] += time.monotonic() - start
@@ -275,14 +284,22 @@ def run(args):
         f._collective_preflight(accelerator, checked)
         return result
 
+    progress_sequence = 0
+
     def progress():
+        nonlocal progress_sequence
         def publish():
-            # Not MVP_MEASUREMENT_OUTPUT: partial work never has a receipt/DONE.
-            _atomic_write(profile / f'rank{accelerator.process_index}.profiling.json',
-                _canonical_bytes(dict(output_use='INTERMEDIATE_PROFILING_NOT_READINESS', measurement=row)))
+            # Immutable snapshots, never MVP_MEASUREMENT_OUTPUT or receipt/DONE.
+            try:
+                _atomic_write(profile / f'rank{accelerator.process_index}.{progress_sequence:06d}.profiling.json',
+                    _canonical_bytes(dict(output_use='INTERMEDIATE_PROFILING_NOT_READINESS', measurement=row)))
+            except SystemExit as error:
+                # The fresh-path writer uses SystemExit; preflight exchanges Exception.
+                raise RuntimeError(str(error)) from error
             if time.monotonic() - started >= budget['max_probe_wall_seconds']:
                 raise RuntimeError('authorized probe cap exhausted; retain partial profiling only')
         local(publish)
+        progress_sequence += 1
 
     def stage(name, operation, *, collective=False):
         accelerator.wait_for_everyone()
