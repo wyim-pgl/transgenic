@@ -98,7 +98,8 @@ def decode_panel(payload, out, command):
         producer.frozen_reference(payload['fasta'], payload['reference'])
         runs = verify_runs(payload, producer)
         from mvp_verify_panel_inputs import load_panel_inputs
-        from mvp_decode_runtime import verify_runtime
+        from mvp_decode_runtime import verify_runtime, require_cuda_device
+        device = require_cuda_device(payload.get('device', 'cuda'))
         inputs = [d.identity(payload[k]) for k in ('panels','fasta','reference')]
         if '_request_identity' in payload:
             inputs.append(d.checked_file(payload['_request_identity']))
@@ -124,7 +125,6 @@ def decode_panel(payload, out, command):
         inputs.extend(panel_records)
         encoder, tokenizer, tokenizer_files = load_tokenizers(payload['encoder_tokenizer'])
         inputs.extend(tokenizer_files)
-        device = payload.get('device','cpu')
         predictions, audits = [], []
         for seed in (1,2,3,123):
             if seed == 123:
