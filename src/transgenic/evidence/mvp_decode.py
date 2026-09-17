@@ -1,12 +1,10 @@
-"""Fail-closed MVP decode boundaries. Panel-input schema is INTERNAL, not approval."""
+"""Fail-closed MVP model/generation boundaries; panel publication adapter is separate."""
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 import re
 
-import numpy as np
 import torch
 
 from . import mvp_windows as w
@@ -41,45 +39,6 @@ def checked_file(record):
     if 'size' in record:
         require(actual['size'] == record['size'], 'input size mismatch')
     return actual
-
-
-def load_panel_batch(payload, panel, sequences, pins):
-    """Normalize internal worker output; caller supplies independently checked pins.
-
-    payload: {schema, provenance, rows}; rows: gene_id, window,
-    sequence_sha256, tracks:{path,sha256,size}, dtype, shape. No ONT/HiFi.
-    pins: exact identities for evidence_db, panels, fasta, rasterizer_code;
-    provenance also carries population=excluded_heldout, keep_fraction=1, is_rc=False.
-    This is byte/shape validation, NOT a scientific approval receipt.
-    """
-    require(payload['schema'] == 'mvp_panel_batch_internal_v1', 'unknown internal schema')
-    expected = dict(pins, population='excluded_heldout', keep_fraction=1, is_rc=False)
-    require(payload['provenance'] == expected, 'panel evidence provenance mismatch')
-    require(type(payload['provenance']['keep_fraction']) is int and payload['provenance']['is_rc'] is False, 'invalid fraction/orientation types')
-    for record in pins.values():
-        checked_file(record)
-    rows = payload['rows']
-    require(len(rows) == len(panel) == 50, 'exact 50 panel inputs required')
-    by_id = {r['gene_id']: r for r in rows}
-    require(len(by_id) == 50 and set(by_id) == {p.gene_id for p in panel}, 'panel input inventory mismatch')
-    result = {}
-    for locus in panel:
-        row = by_id[locus.gene_id]
-        start, end = w.evaluation_window(locus)
-        seq = sequences[locus.gene_id]
-        require(row['window'] == [locus.chromosome, start, end] and all(type(v) is int for v in row['window'][1:]), 'input window mismatch')
-        require(len(seq) == LENGTH and row['sequence_sha256'] == hashlib.sha256(seq.encode('ascii')).hexdigest(), 'sequence mismatch')
-        require(row['dtype'] == 'float16' and row['shape'] == [LENGTH, 8], 'track metadata mismatch')
-        checked_file(row['tracks'])
-        tracks = np.load(row['tracks']['path'], allow_pickle=False)
-        require(tracks.dtype == np.float16 and tracks.shape == (LENGTH, 8), 'track array mismatch')
-        require(np.isfinite(tracks).all() and (tracks >= 0).all(), 'invalid track values')
-        masked = np.frombuffer(seq.upper().encode('ascii'), dtype='S1') == b'N'
-        require(not tracks[masked].any(), 'N bases must have zero evidence')
-        require((tracks[~masked, 7] == 1).all(), 'on availability must be one')
-        require((tracks[:, :7] <= np.float16(np.log1p(64))).all(), 'track count cap exceeded')
-        result[locus.gene_id] = torch.from_numpy(tracks.copy()).unsqueeze(0)
-    return result
 
 
 def encode_window(sequence, tokenizer):
