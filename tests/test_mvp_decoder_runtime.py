@@ -24,25 +24,30 @@ def dump(path, value):
 
 @pytest.fixture
 def bounded(tmp_path, monkeypatch):
-    """Execute real d99b1f8 runner publication with openly synthetic measurement."""
+    """Real reviewed772 runner/tooling; only measurement/allocation are synthetic."""
     modules = {}
     authority = tmp_path / 'authority/revision/scripts/mvp'
     authority.mkdir(parents=True)
-    for name in ('make_launch_readiness', 'real_probes', 'run_bounded'):
+    for filename in ('make_launch_readiness.py', 'real_probes.py', 'run_bounded.py',
+                     'resource_probe.py', 'stage_checkpoint.py', 'run_training.py', 'accelerate_mvp.json'):
+        (authority / filename).write_bytes(subprocess.check_output(['git', 'show',
+            '772c38c:revision/scripts/mvp/' + filename], cwd=r.ROOT))
+    for name in ('make_launch_readiness', 'real_probes', 'resource_probe', 'run_bounded'):
         path = authority / (name + '.py')
-        path.write_bytes(subprocess.check_output(['git', 'show',
-            'd99b1f8:revision/scripts/mvp/' + path.name], cwd=r.ROOT))
-        assert sha(path) == r.PROBE_CODE[path.name]
+        if path.name in r.PROBE_CODE:
+            assert sha(path) == r.PROBE_CODE[path.name]
         spec = importlib.util.spec_from_file_location(name, path)
         module = importlib.util.module_from_spec(spec)
         monkeypatch.setitem(sys.modules, name, module)
         spec.loader.exec_module(module)
         modules[name] = module
     runner = modules['run_bounded']
-    # Allocation/tooling are CPU fixture substitutions, not operational evidence.
+    # Allocation and measurement are CPU substitutions, NOT operational evidence.
+    # Tooling validation is genuine, including resource_probe and all seven files.
     monkeypatch.setattr(runner, 'require_allocation', lambda: 'CPU_FIXTURE_NO_ALLOCATION')
-    monkeypatch.setattr(runner, 'tooling_identity', lambda: {'fixture': True})
-    bindings = {'tooling': {'fixture': True}}
+    bindings = {'tooling': runner.tooling_identity()}
+    assert len(bindings['tooling']) == 7
+    assert str(authority / 'resource_probe.py') in bindings['tooling']
     binding_sha = hashlib.sha256(runner._canonical_bytes(bindings)).hexdigest()
     bindings_path = dump(tmp_path / 'bindings.json', dict(bindings=bindings, bindings_sha256=binding_sha))
     assets = tmp_path / 'assets'; assets.mkdir(); (assets / 'fixture.txt').write_text('CPU FIXTURE')
@@ -182,6 +187,23 @@ def test_pinned_transformers_4576_loader_contract(tmp_path, monkeypatch):
     if transformers.__version__ != '4.57.6':
         pytest.skip('pinned 4.57.6 not installed; CPU 4.46.3 test is not SIF validation')
     test_installed_transformers_dynamic_import(tmp_path, monkeypatch)
+
+
+@pytest.mark.parametrize('name', list(r.PROBE_CODE))
+def test_old_d99_handshake_rejected(tmp_path, name):
+    probe = tmp_path / 'revision/scripts/mvp/real_probes.py'
+    imports = {str(probe.with_name(n)): h for n,h in r.PROBE_CODE.items()}
+    imports[str(probe.with_name(name))] = hashlib.sha256(subprocess.check_output(
+        ['git', 'show', 'd99b1f8:revision/scripts/mvp/' + name], cwd=r.ROOT)).hexdigest()
+    with pytest.raises(ValueError, match='unreviewed probe/handshake'):
+        r.project_closure({'probe_path': str(probe), 'imports': imports}, {})
+
+
+def test_bootstrap_is_explicit_decoder_dependency():
+    # Producer imports this new numerical-count validator before runtime preflight.
+    import mvp_produce_counts as producer
+    module = sys.modules[producer.validate_paired_record.__module__]
+    assert str(Path(module.__file__).resolve().relative_to(r.ROOT)) in r.DECODER_ONLY
 
 
 def test_cpu_device_refused():
