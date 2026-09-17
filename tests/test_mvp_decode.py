@@ -156,29 +156,6 @@ def test_tiny_real_beam_cache_tracks_and_negative(tmp_path, monkeypatch):
         model.generate(**dict(kwargs,evidence_tracks=tracks[:,:,:7]))
 
 
-def test_internal_batch_identity_shape_and_n_mask(tmp_path):
-    from transgenic.evidence import mvp_windows as w
-    from unittest.mock import patch
-    seq = 'N'+'A'*30719
-    panel = [SimpleNamespace(gene_id=f'g{i}',chromosome='Chr1') for i in range(50)]
-    array = np.ones((30720,8),dtype=np.float16); array[0]=0
-    path = tmp_path/'on.npy'; np.save(path,array)
-    pin = tmp_path/'pin'; pin.write_text('frozen')
-    pins = {k:d.identity(pin) for k in ('evidence_db','panels','fasta','rasterizer_code')}
-    rows = [dict(gene_id=p.gene_id, window=['Chr1',0,30720], sequence_sha256=d.hashlib.sha256(seq.encode()).hexdigest(), tracks=d.identity(path), dtype='float16',shape=[30720,8]) for p in panel]
-    payload = dict(schema='mvp_panel_batch_internal_v1', provenance=dict(pins,population='excluded_heldout',keep_fraction=1,is_rc=False), rows=rows)
-    with patch.object(w,'evaluation_window',return_value=(0,30720)):
-        assert len(d.load_panel_batch(payload,panel,{p.gene_id:seq for p in panel},pins)) == 50
-        rows[0]['window'][1] = 1
-        with pytest.raises(ValueError,match='window'):
-            d.load_panel_batch(payload,panel,{p.gene_id:seq for p in panel},pins)
-        rows[0]['window'][1] = 0
-        array[0] = 1; np.save(path,array)
-        for row in rows: row['tracks'] = d.identity(path)
-        with pytest.raises(ValueError,match='N bases'):
-            d.load_panel_batch(payload,panel,{p.gene_id:seq for p in panel},pins)
-
-
 def test_runner_exact_350_no_overwrite_and_partial_failure(tmp_path, monkeypatch):
     import importlib.util
     import sys
@@ -192,12 +169,14 @@ def test_runner_exact_350_no_overwrite_and_partial_failure(tmp_path, monkeypatch
     inp = tmp_path/'batch.json'; inp.write_text('{"rows":[]}')
     runs = {s: {'files':{'model.safetensors':d.identity(pin)},'initialization':{'model.safetensors':d.identity(pin)}} for s in (1,2,3)}
     payload = dict(panels=str(panel_path),fasta=str(pin),reference=str(pin),panel_inputs=str(inp),
-        candidate={'evidence':str(pin)},runs={},encoder_tokenizer={})
-    payload['panel_input_pins'] = dict(evidence_db=d.identity(pin),panels=d.identity(panel_path),fasta=d.identity(pin),rasterizer_code=d.identity(root/'src/transgenic/evidence/mvp_tracks.py'))
+        candidate={'evidence':str(pin)},runs={},encoder_tokenizer={},runtime_preflight={})
     monkeypatch.setattr(producer,'frozen_reference',lambda *a: None)
     monkeypatch.setattr(runner,'verify_runs',lambda *a:runs)
     monkeypatch.setattr(runner,'sequences_from_fasta',lambda *a:{p.gene_id:'A'*30720 for p in panel})
-    monkeypatch.setattr(d,'load_panel_batch',lambda *a:{p.gene_id:torch.ones((1,30720,8),dtype=torch.float16) for p in panel})
+    import mvp_verify_panel_inputs as adapter
+    import mvp_decode_runtime as runtime
+    monkeypatch.setattr(adapter,'load_panel_inputs',lambda *a:({p.gene_id:torch.ones((1,30720,8),dtype=torch.float16) for p in panel}, []))
+    monkeypatch.setattr(runtime,'verify_runtime',lambda *a,**k:[]) # explicit CPU orchestration stand-in
     monkeypatch.setattr(runner,'load_tokenizers',lambda *a:(None,None,[]))
     monkeypatch.setattr(d,'load_final_model',lambda *a:object())
     monkeypatch.setattr(d,'load_baseline_model',lambda *a:(object(),{}))
@@ -219,6 +198,29 @@ def test_runner_exact_350_no_overwrite_and_partial_failure(tmp_path, monkeypatch
     out = tmp_path/'failure'
     with pytest.raises(ValueError,match='truncated'): runner.decode_panel(payload,out,['python','fixture'])
     assert (out/'FAILED.json').exists() and not (out/'evaluation.json').exists()
+    monkeypatch.setattr(d,'generate_one',generated)
+    real_dump=runner.json.dump
+    def fail_final(value, handle, **kwargs):
+        if Path(handle.name).name.startswith('.evaluation.json.'):
+            handle.write('{"predictions":[')
+            raise OSError('injected final serialization')
+        return real_dump(value,handle,**kwargs)
+    monkeypatch.setattr(runner.json,'dump',fail_final)
+    out=tmp_path/'final-write-failure'
+    with pytest.raises(OSError,match='final serialization'):
+        runner.decode_panel(payload,out,['python','fixture'])
+    assert not (out/'evaluation.json').exists() and (out/'FAILED.json').exists()
+    assert list(out.glob('.evaluation.json.*.tmp'))
+    def mutate_after_serialization(value, handle, **kwargs):
+        result=real_dump(value,handle,**kwargs)
+        if Path(handle.name).name.startswith('.evaluation.json.'):
+            pin.write_text('changed after the initial final_recheck')
+        return result
+    monkeypatch.setattr(runner.json,'dump',mutate_after_serialization)
+    out=tmp_path/'late-input-mutation'
+    with pytest.raises(ValueError,match='mutated'):
+        runner.decode_panel(payload,out,['python','fixture'])
+    assert not (out/'evaluation.json').exists() and (out/'FAILED.json').exists()
 
 
 def test_baseline_approved_loader_actual_roundtrip(tmp_path):
@@ -249,13 +251,8 @@ def test_baseline_approved_loader_actual_roundtrip(tmp_path):
         fixture.doCleanups()
 
 
-def test_known_incomplete_verifier_blocked():
-    import importlib.util
-    root = Path(__file__).resolve().parents[1]
-    spec = importlib.util.spec_from_file_location('decode_guard_test',root/'revision/scripts/mvp/mvp_decode_panel.py')
-    runner = importlib.util.module_from_spec(spec); spec.loader.exec_module(runner)
+def test_reviewed_verifier_requires_actual_candidate_records():
+    import mvp_decode_panel as runner
     import mvp_produce_counts as producer
-    if d.identity(producer.__file__)['sha256'] != 'a3b731c217e2da92eb044e1c7815a310fbd78b18a707487b12eb20a897576f1a':
-        pytest.skip('owner verifier changed; old-vulnerability veto no longer applies')
-    with pytest.raises(ValueError,match='known-incomplete'):
-        runner.verify_runs({},producer)
+    with pytest.raises(KeyError, match='candidate'):
+        runner.verify_runs({}, producer)

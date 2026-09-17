@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Decode exact 350-row MVP transport. Internal panel-input adapter; no approval receipt.
+"""Decode exact 350-row transport from COMPLETE panel inputs and pinned runtime.
 
---input contains producer contract fields plus panel_inputs, panel_input_pins,
-and encoder_tokenizer:{path,files:{relative_path:sha256}}. Snapshot must be local.
-Requires the independently reviewed producer verifier at integration time.
+--input adds panel_inputs (publication directory), encoder_tokenizer and
+runtime_preflight to the producer contract. See MVP_DECODER_INTEGRATION_REPORT.md.
 """
 from __future__ import annotations
 import argparse
@@ -11,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'src'))
@@ -22,18 +22,27 @@ os.environ['TRANSFORMERS_OFFLINE'] = '1'
 from transgenic.evidence import mvp_decode as d, mvp_windows as w
 
 
-def write_json(path, value):
-    with Path(path).open('x') as handle:
-        json.dump(value, handle, sort_keys=True, indent=2)
+def write_json(path, value, *, before_publish=None):
+    """Close durable sibling temp before atomic no-replace publication.
+
+    Hard-link publication is the POSIX no-overwrite equivalent of rename. Failed
+    temporary files are intentionally retained for diagnostics, never consumed.
+    """
+    path = Path(path)
+    with tempfile.NamedTemporaryFile(mode='w', dir=path.parent, prefix='.' + path.name + '.',
+                                     suffix='.tmp', delete=False) as handle:
+        temporary = Path(handle.name)
+        json.dump(value, handle, sort_keys=True, indent=2, allow_nan=False)
         handle.write('\n')
+        handle.flush()
+        os.fsync(handle.fileno())
+    if before_publish is not None:
+        before_publish()
+    os.link(temporary, path)  # atomic, fails if destination already exists
+    temporary.unlink()
 
 
 def verify_runs(payload, producer):
-    # Controller reported incomplete checks in this exact base implementation.
-    # A different hash is NOT approval; integration still requires owner review.
-    d.require(d.identity(producer.__file__)['sha256'] !=
-              'a3b731c217e2da92eb044e1c7815a310fbd78b18a707487b12eb20a897576f1a',
-              'known-incomplete producer verifier: integrate reviewed owner fixes first')
     from transgenic.training.mvp_cli import validate_candidate_records
     from transgenic.training.mvp_cli_runtime import verify_candidate_artifacts
     c = payload['candidate']
@@ -79,15 +88,26 @@ def load_tokenizers(spec):
 def decode_panel(payload, out, command):
     import torch
     import mvp_produce_counts as producer
-    out = Path(out).resolve()
+    out = Path(out).absolute()
+    if out.exists() or out.is_symlink():
+        raise FileExistsError(out)
     out.mkdir(parents=True, exist_ok=False)
     try:
         panel = w.load_panel(payload['panels'])
         d.require(len(panel) == 50, 'exact 50 loci required')
         producer.frozen_reference(payload['fasta'], payload['reference'])
         runs = verify_runs(payload, producer)
-        inputs = [d.identity(payload[k]) for k in ('panels','fasta','reference','panel_inputs')]
+        from mvp_verify_panel_inputs import load_panel_inputs
+        from mvp_decode_runtime import verify_runtime
+        inputs = [d.identity(payload[k]) for k in ('panels','fasta','reference')]
+        if '_request_identity' in payload:
+            inputs.append(d.checked_file(payload['_request_identity']))
+        inputs.extend(verify_runtime(payload['runtime_preflight'], payload['encoder_tokenizer']))
         files = [Path(__file__).resolve(), Path(d.__file__).resolve(), Path(w.__file__).resolve(),
+                 Path(__file__).with_name('mvp_verify_panel_inputs.py'),
+                 Path(__file__).with_name('mvp_decode_runtime.py'),
+                 Path(__file__).with_name('mvp_prepare_panel_inputs.py'),
+                 Path(producer.__file__),
                  ROOT/'src/transgenic/evidence/mvp_tracks.py',
                  ROOT/'src/transgenic/model/tokenization_transgenic.py',
                  ROOT/'src/transgenic/model/constrained_decoding.py',
@@ -99,16 +119,9 @@ def decode_panel(payload, out, command):
         code_inputs = [d.identity(p) for p in files]
         inputs.extend(code_inputs)
         sequences = sequences_from_fasta(payload['fasta'], panel)
-        pins = payload['panel_input_pins']
-        d.require(set(pins) == {'evidence_db','panels','fasta','rasterizer_code'}, 'exact internal provenance pins required')
-        for key,path in (('evidence_db',payload['candidate']['evidence']),('panels',payload['panels']),('fasta',payload['fasta'])):
-            d.require(d.checked_file(pins[key]) == d.identity(path), 'worker input identity mismatch')
-        inputs.extend(d.checked_file(record) for record in pins.values())
-        rasterizer = ROOT / 'src/transgenic/evidence/mvp_tracks.py'
-        d.require(d.checked_file(pins['rasterizer_code'])['sha256'] == d.identity(rasterizer)['sha256'], 'rasterizer code mismatch')
-        batch = producer.read_json(payload['panel_inputs'])
-        tracks = d.load_panel_batch(batch, panel, sequences, pins)
-        inputs.extend(d.checked_file(r['tracks']) for r in batch['rows'])
+        panel_root = Path(payload['panel_inputs']).resolve(strict=True)
+        tracks, panel_records = load_panel_inputs(panel_root, payload, panel, sequences)
+        inputs.extend(panel_records)
         encoder, tokenizer, tokenizer_files = load_tokenizers(payload['encoder_tokenizer'])
         inputs.extend(tokenizer_files)
         device = payload.get('device','cpu')
@@ -118,9 +131,11 @@ def decode_panel(payload, out, command):
                 model, audit = d.load_baseline_model(runs[1], device)
                 checkpoint = runs[1]['initialization']['model.safetensors']['sha256']
                 write_json(out / 'baseline_initialization.json', audit)
+                inputs.append(d.identity(out / 'baseline_initialization.json'))
             else:
                 model = d.load_final_model(runs[seed], device)
                 checkpoint = runs[seed]['files']['model.safetensors']['sha256']
+            inputs.extend(verify_runtime(payload['runtime_preflight'], payload['encoder_tokenizer'], model=model, tokenizer=encoder))
             for index,locus in enumerate(panel):
                 ids,mask = d.encode_window(sequences[locus.gene_id], encoder)
                 ids,mask = ids.to(device),mask.to(device)
@@ -142,17 +157,28 @@ def decode_panel(payload, out, command):
         checkpoints = {s:r['files']['model.safetensors']['sha256'] for s,r in runs.items()}
         checkpoints[123] = runs[1]['initialization']['model.safetensors']['sha256']
         producer.prediction_inventory(predictions, panel, checkpoints)
-        for record in inputs:
-            d.checked_file(record)
-        # Recheck producer publication inputs after the long decode, not only at entry.
-        d.require(verify_runs(payload, producer) == runs, 'run inputs mutated during decoding')
+        runtime_records = verify_runtime(payload['runtime_preflight'], payload['encoder_tokenizer'])
+        inputs.extend(runtime_records)
+        def final_recheck():
+            # Includes COMPLETE, every FASTA/npy/JSONL, request/code and live imports.
+            from mvp_prepare_panel_inputs import unchanged
+            d.require(Path(payload['panel_inputs']).resolve(strict=True) == panel_root, 'panel directory identity changed')
+            unchanged(inputs + audits)
+            for prediction in predictions:
+                d.checked_file(prediction)
+            d.require(verify_runs(payload, producer) == runs, 'run inputs mutated during decoding')
+            d.require(verify_runtime(payload['runtime_preflight'], payload['encoder_tokenizer']) == runtime_records,
+                      'runtime import closure changed before publication')
+        final_recheck()
         transport = {k:payload[k] for k in ('panels','fasta','reference','candidate','runs')}
         transport.update(decoder={'files':{r['path']:r['sha256'] for r in code_inputs}, 'commands':[command]}, predictions=predictions)
         write_json(out/'decode_audit.json', dict(status='DECODE_COMPLETE_NOT_APPROVAL', label='exploratory / MVP', inputs=inputs,
             raw_outputs=audits, generation=dict(num_beams=2, do_sample=False, use_cache=True, max_length=8192),
-            panel_input_contract='INTERNAL_PENDING_CONTROLLER_INTEGRATION'))
+            panel_input_contract='COMPLETE_schema_1_est_mvp_panel_inputs_not_training',
+            runtime_preflight=payload['runtime_preflight']))
         # Last file only: never publish transport on a partial/failed decode.
-        write_json(out/'evaluation.json', transport)
+        inputs.append(d.identity(out/'decode_audit.json'))
+        write_json(out/'evaluation.json', transport, before_publish=final_recheck)
         return transport
     except Exception as error:
         write_json(out/'FAILED.json', {'error':str(error), 'status':'PARTIAL_NOT_A_RECEIPT'})
@@ -165,7 +191,10 @@ def main(argv=None):
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args(argv)
     import mvp_produce_counts as producer
-    decode_panel(producer.read_json(args.input), args.out, [sys.executable, str(Path(__file__).resolve()), *(sys.argv[1:] if argv is None else argv)])
+    request_identity = d.identity(args.input)
+    payload = producer.read_json(args.input)
+    payload['_request_identity'] = request_identity
+    decode_panel(payload, args.out, [sys.executable, str(Path(__file__).resolve()), *(sys.argv[1:] if argv is None else argv)])
     return 0
 
 
