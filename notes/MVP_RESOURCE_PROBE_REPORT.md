@@ -135,7 +135,9 @@ more than the remaining cap: full label/evidence scanning, long-tier compilation
 864 global microbatches and full paired validation can be expensive. No real
 measurement exists here to assert that it fits. The controller must not authorize
 an over-cap run. If bounded execution expires, retained per-rank
-`*.profiling.json` gives useful completed setup/inventory/cold/steady timings,
+`rankN.SEQUENCE.profiling.json` (six-digit, increasing sequence per rank;
+ retain all snapshots and select the greatest numeric sequence per rank) gives
+ useful completed setup/inventory/cold/steady timings,
 but **cannot produce PASS or training readiness**. No timing from an incomplete
 long tier or partial valid inventory is extrapolated into a success receipt.
 `projected_campaign_node_hours` additionally reports probe/prior-smoke plus all
@@ -207,9 +209,13 @@ PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q 
   tests/test_mvp_metrics.py
 ```
 
-Final observed: **126 passed, 21 subtests passed in52.41s**, including the final
-local-work coordination and label-contract checks. `py_compile` and
-`git diff --check` passed in the same command; `graft build` refreshed the local graph. A broader run including
+Original implementation reported: **126 passed, 21 subtests passed in52.41s**,
+including the local-work coordination and label-contract checks. The original
+blanket whitespace-success claim was incorrect: independent review found a new
+EOF blank line in `tests/test_mvp_resource_probe.py` in `3b62306..4bd97399`.
+FIX1 removes it; see `MVP_RESOURCE_PROBE_FIX1_REPORT.md` for the checked range and
+fresh CPU results. The original report also recorded `py_compile` and a local
+`graft build`. A broader run including
 `test_mvp_finalize.py` exceeded the240-second tool bound after substantial test
 progress; no full-finalizer-suite success is claimed. No real-CUDA orchestration
 or performance test was possible, and none was simulated into a receipt.

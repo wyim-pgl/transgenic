@@ -61,8 +61,8 @@ def _scalar(value, name):
     return result
 
 
-def paired_metric_record(model, batch):
-    """Evaluate one collated 10-tuple tile with zero/off and caller-supplied/on tracks."""
+def validate_paired_batch(batch):
+    """Validate local paired inputs without a model forward or collectives."""
     if not isinstance(batch, (tuple, list)) or len(batch) != 10:
         raise ValueError("paired evaluation requires a collated 10-tuple batch")
     input_ids, attention_mask, labels, _, _, _, _, _, tracks, metadata = batch
@@ -82,6 +82,13 @@ def paired_metric_record(model, batch):
     rn = int(rn_tensor.item())
     has_evidence = bool(evidence_tensor.item())
 
+    return rn, has_evidence
+
+
+def paired_metric_record(model, batch):
+    """Evaluate one collated 10-tuple tile with zero/off and caller-supplied/on tracks."""
+    rn, has_evidence = validate_paired_batch(batch)
+    input_ids, attention_mask, labels, _, _, _, _, _, tracks, _ = batch
     was_training = model.training
     model.eval()
     try:
