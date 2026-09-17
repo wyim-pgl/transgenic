@@ -281,10 +281,76 @@ def read_gff(path):
     return parsed
 
 
-def select_transcripts(genes, locus, reference=False):
+def resolve_reference_mapping(panel, corpus, authority, accepted_hashes, panel_path):
+    """After candidate gates, bind all 50 builder keys to the corpus's original IDs.
+
+    No aliases, ordinal reconstruction, coordinate lookup or label-table queries.
+    The caller must recheck this receipt's sources immediately before publication.
+    """
+    import duckdb
+    keys = [l.gene_id for l in panel]
+    require(len(keys) == len(set(keys)) == 50, 'exact unique 50 panel keys required')
+    sources = [check_file(corpus, {'sha256': accepted_hashes['corpus']}),
+               check_file(panel_path, {'sha256': accepted_hashes['panel']})]
+    sources.extend(check_file(r['path'], r) for r in authority['files'].values())
+    sources.extend(file_identity(path) for path in
+                   (Path(__file__), Path(w.__file__), ROOT/'revision/scripts/24_restrict_reference_to_test_genes.py',
+                    ROOT/'revision/scripts/07_selfconsistency_stats.py'))
+    corpus = sources[0]['path']
+    require(not Path(corpus + '.wal').exists(), 'corpus WAL is not a frozen snapshot')
+    with duckdb.connect(corpus, read_only=True, config={'threads': 1}) as con:
+        manifest = con.execute('SELECT species_id,fasta_sha256,gff_sha256 FROM build_manifest WHERE species_id=?',
+                               ['Athaliana']).fetchall()
+        rows = con.execute('SELECT species_id,gene_id,gene_id_original,name_original,chromosome,start0,end0 '
+                           'FROM gene_key_map WHERE species_id=? AND gene_id IN (' + ','.join('?' for _ in keys) + ')',
+                           ['Athaliana', *keys]).fetchall()
+    require(manifest == [('Athaliana', authority['files']['fasta']['sha256'], authority['files']['gff']['sha256'])],
+            'corpus build_manifest/reference full SHA256 mismatch or duplicate species')
+    require(len(rows) == 50 and len({r[1] for r in rows}) == 50 and {r[1] for r in rows} == set(keys),
+            'missing/duplicate/wrong-species reference mapping')
+    require(all(r[0] == 'Athaliana' and isinstance(r[2], str) and re.fullmatch(r'[A-Za-z0-9_.:-]+', r[2]) for r in rows),
+            'null/empty/invalid original reference ID or wrong species')
+    require(len({r[2] for r in rows}) == 50, 'many-to-one original reference mapping')
+    by_key = {r[1]: r for r in rows}
+    ordered = []
+    for locus in panel:
+        row = by_key[locus.gene_id]
+        require(row[4:] == (locus.chromosome, locus.gene_start0, locus.gene_end0), 'corpus mapping/panel geometry mismatch')
+        ordered.append(dict(zip(('species_id','gene_id','gene_id_original','name_original','chromosome','start0','end0'), row),
+                            strand=locus.strand))
+    receipt = dict(method='corpus_gene_key_map', rows=ordered, sources=sources, authority=authority)
+    recheck_reference_mapping(receipt)
+    return receipt
+
+
+def recheck_reference_mapping(receipt):
+    require(not Path(receipt['sources'][0]['path'] + '.wal').exists(), 'corpus WAL appeared')
+    for record in receipt['sources']:
+        check_file(record['path'], record)
+
+
+def prepare_mapped_reference(panel, reference, restricted, mapping):
+    """Shared strict preparation; subsets are only for CPU failure diagnostics."""
+    rows = {r['gene_id']: r for r in mapping['rows']}
+    originals = {rows[l.gene_id]['gene_id_original'] for l in panel}
+    require(panel and len(originals) == len(panel), 'empty/duplicate reference selection')
+    restrictor = legacy_module('24_restrict_reference_to_test_genes.py')
+    # Tighten only the local legacy module, never alter raw GFF bytes/IDs.
+    restrictor.ID_RE = re.compile(r'(?:^|;)ID=([^;\s]+)')
+    restrictor.PARENT_RE = re.compile(r'(?:^|;)Parent=([^;\s]+)')
+    counts = restrictor.restrict(Path(reference), originals, Path(restricted))
+    require(counts[0] == len(originals), 'reference restriction gene inventory mismatch')
+    genes = read_gff(restricted)
+    require(set(genes) == originals, 'reference strict parser inventory mismatch')
+    return {l.gene_id: select_transcripts(genes, l, reference=True,
+            reference_id=rows[l.gene_id]['gene_id_original']) for l in panel}
+
+
+def select_transcripts(genes, locus, reference=False, *, reference_id=None):
     if reference:
-        require(locus.gene_id in genes, f'reference missing panel gene {locus.gene_id}')
-        gene = genes[locus.gene_id]
+        key = locus.gene_id if reference_id is None else reference_id
+        require(key in genes, f'reference missing panel gene {locus.gene_id} (raw {key})')
+        gene = genes[key]
         require((gene['chrom'], gene['start'], gene['end'], gene['strand']) ==
                 (locus.chromosome, locus.gene_start0, locus.gene_end0, locus.strand), 'panel/reference gene geometry mismatch')
         result = gene['transcripts']
@@ -416,18 +482,13 @@ def produce(input_path, out):
                           ('mvp_cli.py', 'mvp_cli_runtime.py', 'mvp_finalize.py', 'mvp_metrics.py', 'mvp_runtime.py', 'weights_init.py'))
     inputs.extend(file_identity(path) for path in scorer_sources)
     out.mkdir(parents=True, exist_ok=False)
+    mapping = resolve_reference_mapping(panel, c['corpus'], authority, artifacts['sha256'], payload['panels'])
     restricted = out / 'reference.panel.gff3'
-    restrictor = legacy_module('24_restrict_reference_to_test_genes.py')
-    # Legacy regex captures a newline when ID/Parent is the final attribute.
-    # Tighten only this local module instance; do not rewrite the frozen script.
-    restrictor.ID_RE = re.compile(r'(?:^|;)ID=([^;\s]+)')
-    restrictor.PARENT_RE = re.compile(r'(?:^|;)Parent=([^;\s]+)')
-    restrictor.restrict(Path(payload['reference']), {l.gene_id for l in panel}, restricted)
-    reference = read_gff(restricted)
+    reference = prepare_mapped_reference(panel, payload['reference'], restricted, mapping)
     restricted_identity = file_identity(restricted)
     loci, receipts, baseline = [], [], []
     for locus in panel:
-        refs = select_transcripts(reference, locus, reference=True)
+        refs = reference[locus.gene_id]
         row = {'gene_id': locus.gene_id, 'seeds': {str(s): {} for s in (1,2,3)}}
         for seed, fraction in [(1,0),(1,1),(2,0),(2,1),(3,0),(3,1),(123,0)]:
             identity = predictions[seed, fraction, locus.gene_id]
@@ -457,10 +518,11 @@ def produce(input_path, out):
         'core20': mvp_score.metric([r for r in baseline_rows if r['gene_id'] in core_ids], 'off', 'F1', (123,))}
     for identity in inputs:
         check_file(identity['path'], identity)
+    recheck_reference_mapping(mapping)
     for name, obj in [('counts.json', counts), ('statistics.json', result)]:
         with (out/name).open('x') as f:
             json.dump(obj, f, indent=2, allow_nan=False)
-    receipt = {'label': 'exploratory / MVP', 'authority': authority, 'inputs': inputs, 'runs': runs,
+    receipt = {'label': 'exploratory / MVP', 'authority': authority, 'reference_mapping': mapping, 'inputs': inputs, 'runs': runs,
                'decoder_recorded_commands': decoder['commands'], 'gffcompare_version': version.stdout + version.stderr,
                'gffcompare_version_command': [executable, '--version'],
                'comparisons': receipts, 'outputs': [restricted_identity, *[file_identity(out/n) for n in ('counts.json','statistics.json')]],

@@ -55,6 +55,12 @@ def panel_publication(tmp_path, monkeypatch):
     with duckdb.connect(str(corpus)) as c:
         c.execute('CREATE TABLE geneList(rn INT, chromosome VARCHAR, start INT, fin INT, split VARCHAR, is_rc BOOLEAN, species_id VARCHAR)')
         c.execute("INSERT INTO geneList VALUES (1,'Chr1',10,20,'valid',false,'Athaliana'),(2,'Chr2',10,20,'train',false,'Athaliana')")
+        # Explicit synthetic mapping authority, consistent with synthetic raw bytes.
+        c.execute('CREATE TABLE gene_key_map(species_id VARCHAR,gene_id VARCHAR,gene_id_original VARCHAR,name_original VARCHAR,chromosome VARCHAR,start0 BIGINT,end0 BIGINT)')
+        c.executemany('INSERT INTO gene_key_map VALUES (?,?,?,?,?,?,?)',
+            [('Athaliana',l.gene_id,l.gene_id,None,l.chromosome,l.gene_start0,l.gene_end0) for l in panel])
+        c.execute('CREATE TABLE build_manifest(species_id VARCHAR,fasta_sha256 VARCHAR,gff_sha256 VARCHAR)')
+        c.execute('INSERT INTO build_manifest VALUES (?,?,?)', ['Athaliana',w.sha256_file(fasta),w.sha256_file(reference)])
     with duckdb.connect(str(evidence)) as c:
         c.execute('CREATE TABLE corpus_tile(rn INT, chrom VARCHAR, start0 INT, end0 INT, split VARCHAR, is_rc BOOLEAN)')
         c.execute("INSERT INTO corpus_tile VALUES (1,'Chr1',10,20,'valid',false),(2,'Chr2',10,20,'train',false)")
@@ -118,7 +124,7 @@ def test_real_panel_high_junction_and_biological_zero(panel_publication):
             adapter.load_panel_inputs(root,payload,panel,sequences)
 
 
-@pytest.mark.parametrize('mutation', ['missing_marker','changed_jsonl','symlink_escape','coverage','wrong_sequence','wrong_request','wrong_authority','internal_schema'])
+@pytest.mark.parametrize('mutation', ['missing_marker','changed_jsonl','symlink_escape','coverage','wrong_sequence','wrong_request','wrong_authority','stale_producer','internal_schema'])
 def test_panel_rejects_mutations(panel_publication, mutation, tmp_path):
     payload,panel,sequences,manifest,_ = panel_publication
     root = Path(payload['panel_inputs'])
@@ -138,6 +144,9 @@ def test_panel_rejects_mutations(panel_publication, mutation, tmp_path):
         elif mutation == 'wrong_sequence': row['sequence_sha256']='0'*64
         elif mutation == 'wrong_request': payload['candidate']=dict(payload['candidate'],acceptance_sha256='0'*64)
         elif mutation == 'wrong_authority': manifest['authority']={}
+        elif mutation == 'stale_producer':
+            for record in manifest['inputs']:
+                if record['path'].endswith('/mvp_produce_counts.py'): record['sha256']='0'*64
         else: manifest={'schema':'mvp_panel_batch_internal_v1'}
         (root/'manifest.json').write_text(panel_producer.canonical(manifest))
         (root/'COMPLETE').write_text(w.sha256_file(root/'manifest.json')+'\n')

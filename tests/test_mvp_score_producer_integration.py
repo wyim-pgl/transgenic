@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import pytest
+import duckdb
 from test_mvp_score_producer import p, w, ROOT, dump, finalized_fixture, fake_gffcompare, prediction_rows
 
 
@@ -30,6 +31,15 @@ def test_full_producer_actual_finalizer_frozen_panel_synthetic_biology(tmp_path,
             lines.append(f'{l.chromosome}\ttest\t{kind}\t{start}\t{end}\t.\t{l.strand}\t.\t{attrs}')
     reference.write_text('\n'.join(lines)+'\n')
     fasta = tmp_path/'ref.fa'; fasta.write_text('>synthetic\nA\n')
+    # Replace dummy corpus with a genuine tiny, explicitly synthetic authority.
+    Path(candidate['corpus']).unlink()
+    with duckdb.connect(candidate['corpus']) as c:
+        c.execute('CREATE TABLE gene_key_map(species_id VARCHAR,gene_id VARCHAR,gene_id_original VARCHAR,name_original VARCHAR,chromosome VARCHAR,start0 BIGINT,end0 BIGINT)')
+        c.executemany('INSERT INTO gene_key_map VALUES (?,?,?,?,?,?,?)',
+            [('Athaliana',l.gene_id,l.gene_id,None,l.chromosome,l.gene_start0,l.gene_end0) for l in panel])
+        c.execute('CREATE TABLE build_manifest(species_id VARCHAR,fasta_sha256 VARCHAR,gff_sha256 VARCHAR)')
+        c.execute('INSERT INTO build_manifest VALUES (?,?,?)', ['Athaliana',w.sha256_file(fasta),w.sha256_file(reference)])
+    hashes['corpus'] = w.sha256_file(candidate['corpus'])
     monkeypatch.setattr(p,'frozen_reference',lambda a,b: {'test_fixture_only':True,'files':{'fasta':p.file_identity(a),'gff':p.file_identity(b)}})
     monkeypatch.setattr(p,'fasta_lengths',lambda _: {l.chromosome:100000000 for l in panel})
     rows, _ = prediction_rows(tmp_path,panel)
@@ -58,6 +68,8 @@ def test_full_producer_actual_finalizer_frozen_panel_synthetic_biology(tmp_path,
     assert len(result['baseline_reference_counts']) == 50
     receipt = json.loads((out/'receipt.json').read_text())
     assert len(receipt['comparisons']) == 350
+    assert receipt['reference_mapping']['method'] == 'corpus_gene_key_map'
+    assert [r['gene_id'] for r in receipt['reference_mapping']['rows']] == [l.gene_id for l in panel]
     assert receipt['independent_read_splice_status'] == 'ABSENT_NOT_NEGATIVE'
     assert receipt['coverage_policy'] == 'PENDING_AUTHOR'
     assert receipt['withholding_status'] == 'UNASSESSABLE'

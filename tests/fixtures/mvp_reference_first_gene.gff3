@@ -1,0 +1,6 @@
+##gff-version 3
+##annot-version TAIR10
+ChrM	phytozomev10	gene	273	734	.	-	.	ID=ATMG00010.TAIR10;Name=ATMG00010
+ChrM	phytozomev10	mRNA	273	734	.	-	.	ID=ATMG00010.1.TAIR10;Parent=ATMG00010.TAIR10;Name=ATMG00010.1;longest=1;pacid=19643678
+ChrM	phytozomev10	exon	273	734	.	-	.	ID=nbis-exon-207326;Parent=ATMG00010.1.TAIR10;pacid=19643678
+ChrM	phytozomev10	CDS	273	734	.	-	0	ID=ATMG00010.1.TAIR10.CDS.1;Parent=ATMG00010.1.TAIR10;pacid=19643678
