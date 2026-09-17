@@ -1,0 +1,1754 @@
+{
+  "counts": {
+    "D": 30,
+    "F": 96,
+    "I": 30,
+    "M": 9294
+  },
+  "dispositions": {
+    "BELOW_HSP_LENGTH_30": 18,
+    "HSP_RULE_ACCEPTED": 126
+  },
+  "exact_raw13_to_rich17": 144,
+  "fixture_root": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/est_execution_20260916_1530/hsp_expanded_result",
+  "input_sha256": {
+    "diagnostic.json": "99fb4acaac0a46712d8723f608a39755926151e85edbf3dd99173d76bd1fbfcb",
+    "expanded.raw17.tsv": "7530085dc8796ca431127a6804b9ca421656fa1ca92abcc9c698779990cb579c",
+    "manifest.json": "d35f0343d5a1b99c8dfec9ba59279572e133fb321e92fcb827ffa755484b711d",
+    "proteins.fa": "003f0978a1cc163500aa85e3021a49698f7ed460f631e829b4cd8bfc4589e7ad",
+    "queries.fa": "b34bcc4c6a6f60299f7557a74d2d7fd4a22a35d4a2f40d2709c78ea738dd46f6"
+  },
+  "originals_unchanged": true,
+  "row_results": [
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "eb3d39189e195109e9803a78e87c8a973b3cab513662bac6050db95521559524",
+        "protein_sha256": "6e8aecc42bab152cbbde0e3a2c9b1ee1adc384d4bb836afd532688a5c4bd5f77",
+        "raw_row_sha256": "982988021c086b5f0065a75d566a0c8711a9d8cc44266da920c90f1864759dc9"
+      },
+      "qseqid": "exact29_o0_fwd",
+      "raw13_sha256": "63f862841b8f9636f5b3ade22b1a6a15a579637403dfb4504afd4191945e346f",
+      "row": 1,
+      "sseqid": "exact29"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "3e4962bdf9b5ac4810cea57a5f5a3e0901e384207db7a003b3b3998742a25b41",
+        "protein_sha256": "6e8aecc42bab152cbbde0e3a2c9b1ee1adc384d4bb836afd532688a5c4bd5f77",
+        "raw_row_sha256": "559fbead57c83267599acfc4f1a6f380b30a1b875c14beea0d875ed0ca64358b"
+      },
+      "qseqid": "exact29_o0_rev",
+      "raw13_sha256": "f4d4e3c8f89d1949a33359087508b238cf20eb5dae2ed1f294fb3f332ada4278",
+      "row": 2,
+      "sseqid": "exact29"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "e7e7c24f20bbe6a56455adfbe21d1ae195383275456b68d4a71588a578f97bd9",
+        "protein_sha256": "6e8aecc42bab152cbbde0e3a2c9b1ee1adc384d4bb836afd532688a5c4bd5f77",
+        "raw_row_sha256": "1db27df9425aa4f16f76421ba2cac26d377655675a7cce6f2c3c782deb5d1d3a"
+      },
+      "qseqid": "exact29_o1_fwd",
+      "raw13_sha256": "dcf124dab5757aeffe2b089184e982bf6fa397a3c5faff1cb0475ad646354042",
+      "row": 3,
+      "sseqid": "exact29"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "be0ab4ee35878457c20d44751e110a9b65b7725b7b88e67653c42dccf04189bc",
+        "protein_sha256": "6e8aecc42bab152cbbde0e3a2c9b1ee1adc384d4bb836afd532688a5c4bd5f77",
+        "raw_row_sha256": "9e2ba6d763a6edaaa63ccb6eb8d567887268255a646a58a5dbd6841691b7de6a"
+      },
+      "qseqid": "exact29_o1_rev",
+      "raw13_sha256": "1150ca0b0aa2ce4385237396f0e17076964c79d600d1b14ca4241089fbf4a658",
+      "row": 4,
+      "sseqid": "exact29"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "49f05f30ead98d936b541663247824b523ff50cfb863287279cde59a070f5c2e",
+        "protein_sha256": "6e8aecc42bab152cbbde0e3a2c9b1ee1adc384d4bb836afd532688a5c4bd5f77",
+        "raw_row_sha256": "016454cdbc01752d8b912eb95419c954768e12c5c1cf1fbddf5a61c47bb8cb35"
+      },
+      "qseqid": "exact29_o2_fwd",
+      "raw13_sha256": "acc90ede990f1813c5b485a6fe484bfdf4dcdfd8f59ce004ff5be102994fbbcb",
+      "row": 5,
+      "sseqid": "exact29"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "3de159b2d08d0d5f6111948f076541814124cf4eef7abcc94769ac85aefe43ce",
+        "protein_sha256": "6e8aecc42bab152cbbde0e3a2c9b1ee1adc384d4bb836afd532688a5c4bd5f77",
+        "raw_row_sha256": "df4dc439e20f72d3a267fafe5b39e9a796f52aefa645ec8ce81aec807e54465b"
+      },
+      "qseqid": "exact29_o2_rev",
+      "raw13_sha256": "37fd90fb0779baabb54a1be32c2881687d2f1de3e584c96138a29a2ca5f51acd",
+      "row": 6,
+      "sseqid": "exact29"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "505fd3d84d36ec7b8191cdec665b5b1fbb1257a8c369aa7ab1b5eb073d087749",
+        "protein_sha256": "9c71fef207b9017a7371a05089b19509b4bd6c7639ab97295e6b55e0244e168e",
+        "raw_row_sha256": "5d1b9c596e349d614c1484eab975254eb4fa3c6b67be8000202debe2f794b62b"
+      },
+      "qseqid": "exact30_o0_fwd",
+      "raw13_sha256": "f097fd85d2ef4ae499184ce391042545c059f2be9b1399f4a33a9b2c53121877",
+      "row": 7,
+      "sseqid": "exact30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "b0b21ddfec6701b4505e27455d99db39223c7be7ac49d30a7a49a4d1ede259a3",
+        "protein_sha256": "9c71fef207b9017a7371a05089b19509b4bd6c7639ab97295e6b55e0244e168e",
+        "raw_row_sha256": "5952ca30e13ed736fa11708084cbeae16fb9118b6e94546af5908cc9fefde002"
+      },
+      "qseqid": "exact30_o0_rev",
+      "raw13_sha256": "bd6611fd0526461b4677a260d0e52f3b51a61be36d8cd24d459b8ea540785d33",
+      "row": 8,
+      "sseqid": "exact30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "2a36d78dd939b7ceebe09b80934d10069e69cad64c215dd36b563f1d51b26052",
+        "protein_sha256": "9c71fef207b9017a7371a05089b19509b4bd6c7639ab97295e6b55e0244e168e",
+        "raw_row_sha256": "62a6285ec4b3c572423ae02899dd75c047c745854f1712f2c5657da6497576be"
+      },
+      "qseqid": "exact30_o1_fwd",
+      "raw13_sha256": "9f7717270c1ee146bef9f29f0a1373f068fb5092432670265908b9a168311d6f",
+      "row": 9,
+      "sseqid": "exact30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "52c74b40774ee69b1788eb94e257f290bbf4848cd35bd3e401bda45ca1073b30",
+        "protein_sha256": "9c71fef207b9017a7371a05089b19509b4bd6c7639ab97295e6b55e0244e168e",
+        "raw_row_sha256": "62271c640d843e05afe0cb0777f9f17396e01f3ef1ae95eb5b7c5c2e2986ce40"
+      },
+      "qseqid": "exact30_o1_rev",
+      "raw13_sha256": "a1b822d37bb6b068114173f6ab1c45ec24bc4291cdf7a749afc5e3c7fdc7bf27",
+      "row": 10,
+      "sseqid": "exact30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "012ac233fcfadfbd16b9f366f5500395eddf2f038e4da2e3a20aae95a7bef5c9",
+        "protein_sha256": "9c71fef207b9017a7371a05089b19509b4bd6c7639ab97295e6b55e0244e168e",
+        "raw_row_sha256": "91f229be6323715859ea46a8bd7677e2a1341d219b035d7c8d9b0d118093329a"
+      },
+      "qseqid": "exact30_o2_fwd",
+      "raw13_sha256": "35e410fa160970582c2a73defc3639e18f4be333ea58883dc3a8b43c762b9c1b",
+      "row": 11,
+      "sseqid": "exact30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "f8bde560283a195762056d931c63d7623a328d1b07a1c479242e066d1715bd77",
+        "protein_sha256": "9c71fef207b9017a7371a05089b19509b4bd6c7639ab97295e6b55e0244e168e",
+        "raw_row_sha256": "a1fd43b4e47130655b2ea17fe62caeae5a311252e5923c7b8a5be0bace45f20d"
+      },
+      "qseqid": "exact30_o2_rev",
+      "raw13_sha256": "f4a878fca9bb7687866ca1a17d959bdad329d114cc291b43cd77a531f563a908",
+      "row": 12,
+      "sseqid": "exact30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "52ae65524374e21c9c6c0ae56e67bc3ae04c1a8d09acab58ce60b344708bbc2e",
+        "protein_sha256": "10a56c00d40c2dbae040581523aa9dc7a9719a1eadd56da67f0f325e81b52333",
+        "raw_row_sha256": "a4cdd627f110ae3f2685774b6628abc7f660bde688d09a29fe797ab7c579da0f"
+      },
+      "qseqid": "exact31_o0_fwd",
+      "raw13_sha256": "44c441b21acf30c4afd2290247f590df69ebae73f179cddce023fdafa11b36d3",
+      "row": 13,
+      "sseqid": "exact31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "942397a83ccbef6ba229f2190d858197a3f2fef53ad2bac7b828151038958539",
+        "protein_sha256": "10a56c00d40c2dbae040581523aa9dc7a9719a1eadd56da67f0f325e81b52333",
+        "raw_row_sha256": "c121926a4bc68db8c01267a167b45a91cf231fa7ee2744c446d43cd2e84bfa6b"
+      },
+      "qseqid": "exact31_o0_rev",
+      "raw13_sha256": "58cf354267ff4ca519c9954ddfb2f05b837acaa44a7b51c984a7ba3062e41cf6",
+      "row": 14,
+      "sseqid": "exact31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "93256ddd525af4cab17c6d3fa5f78f5db8fc2a10cbc1968796969142e5555d16",
+        "protein_sha256": "10a56c00d40c2dbae040581523aa9dc7a9719a1eadd56da67f0f325e81b52333",
+        "raw_row_sha256": "711c2bbafd2546e77e43ef57f213c5a84c9c69b34a6889e99c3e88233c3307da"
+      },
+      "qseqid": "exact31_o1_fwd",
+      "raw13_sha256": "48f5476427b024f279a94164f6e84d91edf407cef0bbc300a37290ea745611f4",
+      "row": 15,
+      "sseqid": "exact31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "192e9dbd1ae7a67cbbe6dd34826cda40c3c48c7ced6d66f020d16755e9e7a027",
+        "protein_sha256": "10a56c00d40c2dbae040581523aa9dc7a9719a1eadd56da67f0f325e81b52333",
+        "raw_row_sha256": "d3fbd3c69d7fe1d4b94a44dd279cf61ed527b4597dfed53afcc63d0abf04a679"
+      },
+      "qseqid": "exact31_o1_rev",
+      "raw13_sha256": "df16ad3d4c9edcc0aa36dc5a9435ccd59c9f37c9da12586ddda2d561240365f2",
+      "row": 16,
+      "sseqid": "exact31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "c5ff54c769a50149d68ce8be27620625d75957fce7b5e69c89d9e137111df1e4",
+        "protein_sha256": "10a56c00d40c2dbae040581523aa9dc7a9719a1eadd56da67f0f325e81b52333",
+        "raw_row_sha256": "cb80660aff61a6a3e7d73d6d2e5c1060509e18c060e4f075c772d577b7742e68"
+      },
+      "qseqid": "exact31_o2_fwd",
+      "raw13_sha256": "03f7d6a400cbc21d09435ab087272947457cb12e548c5906009733c4052bfa60",
+      "row": 17,
+      "sseqid": "exact31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "71e421caefb2f9f425dab60844bdae8f59e948e9884f13ca8365bd8b5fdcbfe7",
+        "protein_sha256": "10a56c00d40c2dbae040581523aa9dc7a9719a1eadd56da67f0f325e81b52333",
+        "raw_row_sha256": "908b1f439cab48b4bee452c324d29200d27104efd4488f1bd8b83766ee028e72"
+      },
+      "qseqid": "exact31_o2_rev",
+      "raw13_sha256": "b14f426ea937b690b753235e0e2eddf3911ce38b48bdaa3d5df5c05c261ecadd",
+      "row": 18,
+      "sseqid": "exact31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "f170801783dcd7b8127d49842838b0545bb3551730b44496c2ce3c257b10e5a4",
+        "protein_sha256": "70a170b2ea95eb8de486e91a9ec9753f15165474dd35332477f2a561950bbc1c",
+        "raw_row_sha256": "c3c7f7c491e0284cb684db7796e40bfe2f9603e0ce4b08bbd5792bb177daa594"
+      },
+      "qseqid": "D30_o0_fwd",
+      "raw13_sha256": "f58278de2c791abfd14c19b69406f65505f51fdffa762789e5999c1e26cc5fb6",
+      "row": 19,
+      "sseqid": "D30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "853e52fd394c04440e80ab283378e7cdc6d32187f930a4992a8a0767c6e46889",
+        "protein_sha256": "70a170b2ea95eb8de486e91a9ec9753f15165474dd35332477f2a561950bbc1c",
+        "raw_row_sha256": "899dc0672f12993592a23c265fd014fddadf5229566f0df0bd0ab2e250bd29bf"
+      },
+      "qseqid": "D30_o0_rev",
+      "raw13_sha256": "5c908130edf547c2f1485ac1e8f5a6dd3bdf090a71e457550e53c9bb29100935",
+      "row": 20,
+      "sseqid": "D30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "8524d3404737d4dcc8d00f0a217ded302cf3992a2c4489bbaddc07a3373a5f2c",
+        "protein_sha256": "70a170b2ea95eb8de486e91a9ec9753f15165474dd35332477f2a561950bbc1c",
+        "raw_row_sha256": "476919a4c958eeabd63454fdf9116a8c02bb581d4a842e018555dcac4fe29d9d"
+      },
+      "qseqid": "D30_o1_fwd",
+      "raw13_sha256": "cdd4099ed9e7722b8671d9591f30b99847df15dd07d8b2b7d6b6bca59825cfe6",
+      "row": 21,
+      "sseqid": "D30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "fa7a86a4cc729c72e834ad384c20f8c11eafbc8342b1af7ce8ac1b74529534c7",
+        "protein_sha256": "70a170b2ea95eb8de486e91a9ec9753f15165474dd35332477f2a561950bbc1c",
+        "raw_row_sha256": "80322cfaa3759302de93ee79a123125ce7ad8f722da0c8a5cde22f88a41d3a8a"
+      },
+      "qseqid": "D30_o1_rev",
+      "raw13_sha256": "7ab3ef01256fa483519fc53dc7b59124508b7002938cf5a30d50332e5b5ae952",
+      "row": 22,
+      "sseqid": "D30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "1ce2e90468b45e38f7c079844e26513a1f1e8b6775cd48d803b794b6d39712a8",
+        "protein_sha256": "70a170b2ea95eb8de486e91a9ec9753f15165474dd35332477f2a561950bbc1c",
+        "raw_row_sha256": "d9b37f4f33492b4929a340aa338d39d15b635f8c29513baa9e5f90f20672f005"
+      },
+      "qseqid": "D30_o2_fwd",
+      "raw13_sha256": "e20506511ef3d9ab48ab20284a0ef9392edd816e71980ed57b615a1b440a16a3",
+      "row": 23,
+      "sseqid": "D30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "0805bbfc378479a7cf16360e60da1e62487dc7c48828faecb4f389dfcd8fae63",
+        "protein_sha256": "70a170b2ea95eb8de486e91a9ec9753f15165474dd35332477f2a561950bbc1c",
+        "raw_row_sha256": "8240aec59ace633971f7f61806e6493d0066924ca14dbd3813c17dfc8fcf4b97"
+      },
+      "qseqid": "D30_o2_rev",
+      "raw13_sha256": "fab0bece053b1c9ffdf03c49794bde81708477c5e4d9c5ab00455ed51c27058d",
+      "row": 24,
+      "sseqid": "D30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "09308e1e7ab4b96c2803685a5bb8dbd0be708b0582e92bcb81e7e5854408d79e",
+        "protein_sha256": "a3a17af7a61a0cf4a8d85fda142800a476489dc27559b1522eb662bc7edafe4f",
+        "raw_row_sha256": "e71b4bb6f66eb7bd5489852ebbf66633e89cd039e608c421bbcdd3193384444d"
+      },
+      "qseqid": "D31_o0_fwd",
+      "raw13_sha256": "cea93d2736928df8a6b0cbcfe924246b8db5cc29286176d8e55a828f542142e7",
+      "row": 25,
+      "sseqid": "D31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "b739aa6621f35fb0c4113c93b52d538f3cbe10dfe837923723a6d1d2f297d547",
+        "protein_sha256": "a3a17af7a61a0cf4a8d85fda142800a476489dc27559b1522eb662bc7edafe4f",
+        "raw_row_sha256": "3da3cd3e620293928ff481ed9c3254ad3c1b0ef5e6d6a005431807da17d7729e"
+      },
+      "qseqid": "D31_o0_rev",
+      "raw13_sha256": "38a9ad70a5f50a4d0c2724bda8d3c878de12336fa36ceaaf54a39abcb14375d9",
+      "row": 26,
+      "sseqid": "D31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "4b1730ec7cda2b63b6fcc2b02b289f41b1e4b3d2b0afe7c5c862c602b25fa185",
+        "protein_sha256": "a3a17af7a61a0cf4a8d85fda142800a476489dc27559b1522eb662bc7edafe4f",
+        "raw_row_sha256": "4d5d12170aa292b032929633a6b9ac39790b7cee99386fd49ea7aad84af92a24"
+      },
+      "qseqid": "D31_o1_fwd",
+      "raw13_sha256": "d4c8e3519eba4ff414a8a83f42ff563aeb2718358f0a7507a7f2248eccf2e4a9",
+      "row": 27,
+      "sseqid": "D31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "68ea37c6c6dfb890ac93a9e22ba65a7674281248f43ab2802752bc1ca4364f3c",
+        "protein_sha256": "a3a17af7a61a0cf4a8d85fda142800a476489dc27559b1522eb662bc7edafe4f",
+        "raw_row_sha256": "52dcde6468eeb463f36c752231e56ab4ffe9cb84316c6d1277662e5a381109ab"
+      },
+      "qseqid": "D31_o1_rev",
+      "raw13_sha256": "4dfba608dad8247a1200749d320f3d561bb94f6348889cc29124f7cbde997060",
+      "row": 28,
+      "sseqid": "D31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "18b90929a6f060e0f5ce1c8420b3b064c1042ae3a8983bda72ffa60126f9b4f4",
+        "protein_sha256": "a3a17af7a61a0cf4a8d85fda142800a476489dc27559b1522eb662bc7edafe4f",
+        "raw_row_sha256": "4a83cb3859699bc0f6b4bfe4024918e9449976f8cc970cf87e1acee9a4c5ed1a"
+      },
+      "qseqid": "D31_o2_fwd",
+      "raw13_sha256": "772d867bb2d649d40d02493c7b1807ba5fb2612310506adbed8a9140e8ae3a21",
+      "row": 29,
+      "sseqid": "D31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "6ae0edd30dfc39fd875b981adcca1af620340634e1d67c9150741457c8f42f2a",
+        "protein_sha256": "a3a17af7a61a0cf4a8d85fda142800a476489dc27559b1522eb662bc7edafe4f",
+        "raw_row_sha256": "aaeb1fd35767942eb6f9a1c88fc1e6d7f8c743b0858f4612d1c1ab3d4d4c7be0"
+      },
+      "qseqid": "D31_o2_rev",
+      "raw13_sha256": "bce209599f515cd2ab88009d8c837c02c765af54b0868eb0576a57d6ec80ad11",
+      "row": 30,
+      "sseqid": "D31"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "6df3969c205c7e3678e02c245ca5e4b0a7300169a9153b0af4b9a4371e574842",
+        "protein_sha256": "74310be5ae6ba8989f6cb59b91568c0cdbac54b658583ef9fd5afa2d2ddd0107",
+        "raw_row_sha256": "6a5184bb105620ef31cf4dbc4219d4a12f72ae2c05214ae9dee61ea41afce06e"
+      },
+      "qseqid": "I29_o0_fwd",
+      "raw13_sha256": "aeaa0b1bb61049fe0b738c56c5077a6411f79f44ea37fe09045b57e58c7e189d",
+      "row": 31,
+      "sseqid": "I29"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "a1a7809c3d18463cf8966f7638de5c494ad877182fdb9e62b829c90706eaaa09",
+        "protein_sha256": "74310be5ae6ba8989f6cb59b91568c0cdbac54b658583ef9fd5afa2d2ddd0107",
+        "raw_row_sha256": "14ea5735635cabb23b324b8011775a1982af6f18571aa47ae225442284006149"
+      },
+      "qseqid": "I29_o0_rev",
+      "raw13_sha256": "f5daa226860aa547d317f5090c593b3578068ce4391e6131abdb5e9af9ed244c",
+      "row": 32,
+      "sseqid": "I29"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "f85d17dde725f8f2259b0f369cb9e22daa5cea7f700e3ba4a1b79c9bf2e1f4c8",
+        "protein_sha256": "74310be5ae6ba8989f6cb59b91568c0cdbac54b658583ef9fd5afa2d2ddd0107",
+        "raw_row_sha256": "af42e6125cac2cb9de1a1ef1e695f3e6aa888759401d5ae8fd6bef191429ffe1"
+      },
+      "qseqid": "I29_o1_fwd",
+      "raw13_sha256": "ce6b3da1000ff516d19f03341ded34e611a4d6a5f2dc4ec75057d2f3f5778141",
+      "row": 33,
+      "sseqid": "I29"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "755407f7990b784cef7259d2a05675e3d3c57bd61c81cb0a5b1e89cdc921d57d",
+        "protein_sha256": "74310be5ae6ba8989f6cb59b91568c0cdbac54b658583ef9fd5afa2d2ddd0107",
+        "raw_row_sha256": "f7d9b5ac5ad58f39ab6b9d840c73876a1bbec767b9a73389954bab0bc0edc8ef"
+      },
+      "qseqid": "I29_o1_rev",
+      "raw13_sha256": "c60848540f48afd99fc407aa9fdb8a3881dfa5564b41bb0ccf3652aa49fa1cc7",
+      "row": 34,
+      "sseqid": "I29"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "1a2fb59f5a404e0688c45795ac60cfe4b16a03a26bf4f91fbd5b827395f8fb09",
+        "protein_sha256": "74310be5ae6ba8989f6cb59b91568c0cdbac54b658583ef9fd5afa2d2ddd0107",
+        "raw_row_sha256": "67e6bd8b13f3d6e04155f863baed32acb1fb4c604ad3bba9c279e1189ec8a844"
+      },
+      "qseqid": "I29_o2_fwd",
+      "raw13_sha256": "cefd1f69faf388600debb283c519b561690d427a8c33417c1040a3703a1e38e0",
+      "row": 35,
+      "sseqid": "I29"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "13afcfa062fad3eb4d3ed2fb90840238dd4eab4e7573e25405f2bb919f07d9a4",
+        "protein_sha256": "74310be5ae6ba8989f6cb59b91568c0cdbac54b658583ef9fd5afa2d2ddd0107",
+        "raw_row_sha256": "4c0ddd558079bd99993a859995be3b9c2165c37ed2e58d07c494c3fc24cbd296"
+      },
+      "qseqid": "I29_o2_rev",
+      "raw13_sha256": "ac62d2e2ee8ad2267e49dd18e8288306c6ab8bbb1fd9b897a14a03ef0439eef9",
+      "row": 36,
+      "sseqid": "I29"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "dac075785796152826a4ba6c2a6065bcf1d13ae96b3bdf0517126eb0d37db903",
+        "protein_sha256": "68b852a604ab02055ef6c10c5764d772caaf14ef02dead0e5445fb53267e2f2a",
+        "raw_row_sha256": "10b3a179de88d68b3734849004a04bfd01966cc9ad5d145a3e6d701fbefd8919"
+      },
+      "qseqid": "I30_o0_fwd",
+      "raw13_sha256": "2ee137cb3cde9886286129ada6a422cdfde12660ec7b04e5e72cc21483fbe9ca",
+      "row": 37,
+      "sseqid": "I30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "366a4e9dbde6caee66a5959568980142d815236b648a801fcf1621d19d372213",
+        "protein_sha256": "68b852a604ab02055ef6c10c5764d772caaf14ef02dead0e5445fb53267e2f2a",
+        "raw_row_sha256": "a97d3b6682b46e727321b156647a4676f3898c71fe00c49c4e0b57853807414a"
+      },
+      "qseqid": "I30_o0_rev",
+      "raw13_sha256": "a1143a52c747aca208d986a11d64a1d11cc82c08a9216b7583f08990eb763508",
+      "row": 38,
+      "sseqid": "I30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "746abb9696ddde792d4e4d85dbff65502a0779b40380f1a4b7502286f49e5437",
+        "protein_sha256": "68b852a604ab02055ef6c10c5764d772caaf14ef02dead0e5445fb53267e2f2a",
+        "raw_row_sha256": "c0506fdd189460e552b555a128b46de367fa7af3f4670cc04dd406882f786d94"
+      },
+      "qseqid": "I30_o1_fwd",
+      "raw13_sha256": "13112f3abcd045ba8be28ef4b0dd5ff7970a06d82b147f33c600b52464efe058",
+      "row": 39,
+      "sseqid": "I30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "b3ef13f67f237a3c81b10c9b20b14f879254517298685fc7810a80e92daf595e",
+        "protein_sha256": "68b852a604ab02055ef6c10c5764d772caaf14ef02dead0e5445fb53267e2f2a",
+        "raw_row_sha256": "be3876e63fdc0057ce510ba53e6066254ab54098f6458f302f36b87660aa2410"
+      },
+      "qseqid": "I30_o1_rev",
+      "raw13_sha256": "7c9b68169a5b207f7c375ac2894d5dcc3d966ccaae06c25c38da3bce542b93ea",
+      "row": 40,
+      "sseqid": "I30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "22f4600479f17c2ff45d3e42f3f1ee2f5c5c161df6aec679e24bc7cf32e3ed19",
+        "protein_sha256": "68b852a604ab02055ef6c10c5764d772caaf14ef02dead0e5445fb53267e2f2a",
+        "raw_row_sha256": "b80f8d1543e6fd4bb7053514a6dec0927554f8a6d98663785c487064b036a65d"
+      },
+      "qseqid": "I30_o2_fwd",
+      "raw13_sha256": "afaf118124276d22dc27230d18bff5f3c12d16859b5e72194c05b257ea57e7cc",
+      "row": 41,
+      "sseqid": "I30"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "426d80782e6118cd5042ecebe646831eb1cb5da1160a555c50c575f25710f4d7",
+        "protein_sha256": "68b852a604ab02055ef6c10c5764d772caaf14ef02dead0e5445fb53267e2f2a",
+        "raw_row_sha256": "17a1ef3ef30ebf96436f279e0ab6660057176741b4771b061fc3372dbd35fe6f"
+      },
+      "qseqid": "I30_o2_rev",
+      "raw13_sha256": "e02252414ac269e100d2be6b156817197a06b753b339694d4e7984c6265afbbf",
+      "row": 42,
+      "sseqid": "I30"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "85a34270d451ff7d075ba586874293c192fbd08c947fad865bd81eb93431738e",
+        "protein_sha256": "691f70bcf3004ba71a66591f4c831f8dcd0a90aa99559cb47936b5aa03c919c6",
+        "raw_row_sha256": "cb9c520302f15018e5e2328fa1d15747df3c6bcc98fb5f431cf571a87f22ba64"
+      },
+      "qseqid": "short29_1_o0_fwd",
+      "raw13_sha256": "e2a85bbd4845111c76836447ca877a641984b2dbcf5748196cddcea6edc5f554",
+      "row": 43,
+      "sseqid": "short29_1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "e230c8156deceacd74f2155caed7b1b323ada066d9d6d82fed5d105ac108df20",
+        "protein_sha256": "691f70bcf3004ba71a66591f4c831f8dcd0a90aa99559cb47936b5aa03c919c6",
+        "raw_row_sha256": "469adfe31df8656b4413d6cc42e4a5b07ba5bf699ba3b8343fba11155bf0c1f3"
+      },
+      "qseqid": "short29_1_o0_rev",
+      "raw13_sha256": "185da00e44b836e83a05bbad775157105e3c025a0ab9d8053144bf650c7c2b1f",
+      "row": 44,
+      "sseqid": "short29_1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "204d7a3e79521e2c74e4bb180c58bec5bc287b6baedce4608aa22bb4b6c83771",
+        "protein_sha256": "691f70bcf3004ba71a66591f4c831f8dcd0a90aa99559cb47936b5aa03c919c6",
+        "raw_row_sha256": "c990e1579f05080a2158573c7e488c4e7e288484d39b535f0f875e3c4699bb64"
+      },
+      "qseqid": "short29_1_o1_fwd",
+      "raw13_sha256": "7490e7092e1dc8475ae3293dc7219780e808348c61a016449d2f8666c4e0c9f7",
+      "row": 45,
+      "sseqid": "short29_1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "80ab8a7918fb06ec9e34f12977d4b762aa87f986c3850644e5da0ec1256324c8",
+        "protein_sha256": "691f70bcf3004ba71a66591f4c831f8dcd0a90aa99559cb47936b5aa03c919c6",
+        "raw_row_sha256": "e7adb789005f3448731a77c022b74cdba7d034f3c42951be63a47c555825daec"
+      },
+      "qseqid": "short29_1_o1_rev",
+      "raw13_sha256": "60950c3bae973e118260334c2f56016b1fe5157d8db27980434ca30531448362",
+      "row": 46,
+      "sseqid": "short29_1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "d086547d7885ee3c6fa2abc15e9d6cb1599ff8578ae4e093f05fea140b734c52",
+        "protein_sha256": "691f70bcf3004ba71a66591f4c831f8dcd0a90aa99559cb47936b5aa03c919c6",
+        "raw_row_sha256": "63609c1f8800598e9775fe098263ae278a6d283ca3d18525f1e81f5df85d32a2"
+      },
+      "qseqid": "short29_1_o2_fwd",
+      "raw13_sha256": "73b062fca39f3c533055fca9a46d4f7b960b57a4b4b95c4f7f6c49ee2a4aab69",
+      "row": 47,
+      "sseqid": "short29_1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "384194849510ed0fd0ab79a5674fad157c6131c4c7ea8e81e0f1eb92ca47faff",
+        "protein_sha256": "691f70bcf3004ba71a66591f4c831f8dcd0a90aa99559cb47936b5aa03c919c6",
+        "raw_row_sha256": "9144003496fa81a29838e4be61e0c66e4e40b08aa2828f24e45a4d9cee92f51e"
+      },
+      "qseqid": "short29_1_o2_rev",
+      "raw13_sha256": "aaaa0a8bb049f0572f69405f3cdf40ae191c07a453cdf263a48a0c2fc761e9b9",
+      "row": 48,
+      "sseqid": "short29_1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "5d65674051ec349a56b991ddeb5b93239274f122d8aa0187124d6476b52e370c",
+        "protein_sha256": "8c11890d05e0c9e1cdd22e599adfa1333b3d53f1619431e308a6fc2fe40e8da8",
+        "raw_row_sha256": "a30f07b7d5e3eab6115889707aa2728106042855ffd2c519f4f7b4e8218d9cf0"
+      },
+      "qseqid": "short29_-1_o0_fwd",
+      "raw13_sha256": "3bd37d46c440fe32741a05e85ecd0aed82a57abb64142648aa25c978ee443217",
+      "row": 49,
+      "sseqid": "short29_-1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "ceded5c4e2a7b3fed2d1edf67b63c0c3351e1fb35bd00673df10bb78878507a6",
+        "protein_sha256": "8c11890d05e0c9e1cdd22e599adfa1333b3d53f1619431e308a6fc2fe40e8da8",
+        "raw_row_sha256": "99d1d12fb370e2f12cc13e416f61b151e4de07fe63ce605985bfd86d686a1cf8"
+      },
+      "qseqid": "short29_-1_o0_rev",
+      "raw13_sha256": "d1a4ffa185d796894fdbb3f5c41ea6c4ee7b8c9bd44ef5e7b0841540a97acd76",
+      "row": 50,
+      "sseqid": "short29_-1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "2039f9bed0d541b07599d5109b49ddef96e738bf6f089174d402b09fd22ebf6f",
+        "protein_sha256": "8c11890d05e0c9e1cdd22e599adfa1333b3d53f1619431e308a6fc2fe40e8da8",
+        "raw_row_sha256": "d69d357dd07cce43cf42f87dbd2b1e51f2a5d89da13a0c52d762e8e37fe0e785"
+      },
+      "qseqid": "short29_-1_o1_fwd",
+      "raw13_sha256": "a28a6e88646e455c43b7ce2a7b2efd5d3ed4f9a3199114082da000b26d70e02f",
+      "row": 51,
+      "sseqid": "short29_-1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "7a052bc444c9801381d1e0ff711f5d8ed7cf75753b69fcaae96fea449fa44643",
+        "protein_sha256": "8c11890d05e0c9e1cdd22e599adfa1333b3d53f1619431e308a6fc2fe40e8da8",
+        "raw_row_sha256": "7c33783b3873b139a5fcb3a5a8a5e51720eda22e3605ea4339749d7a0fbe09db"
+      },
+      "qseqid": "short29_-1_o1_rev",
+      "raw13_sha256": "ced30b1eadbe9e395bdaf59bd910a686412dd86698610eed23e59cd160d05521",
+      "row": 52,
+      "sseqid": "short29_-1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "79dddc84ced5d0f4190d3c8825dacfba3af73a5bdec41695cfb4f6127f34d96e",
+        "protein_sha256": "8c11890d05e0c9e1cdd22e599adfa1333b3d53f1619431e308a6fc2fe40e8da8",
+        "raw_row_sha256": "84601c5faaacdef24c57eff47d31a642188a13a79fc2cb8697d975a98b0a9cc1"
+      },
+      "qseqid": "short29_-1_o2_fwd",
+      "raw13_sha256": "06b423976f87bdaa6e94807c1ce6e52ba1af2a9a2466d216629e937e3af2bbaa",
+      "row": 53,
+      "sseqid": "short29_-1"
+    },
+    {
+      "disposition": "BELOW_HSP_LENGTH_30",
+      "identities": {
+        "dna_sha256": "de8ea79aa0b3f8f93fc1c10ae3ae4c3e4cc38644ed639ee78d7fb9c012bedb2c",
+        "protein_sha256": "8c11890d05e0c9e1cdd22e599adfa1333b3d53f1619431e308a6fc2fe40e8da8",
+        "raw_row_sha256": "b9aef86f0fbc790e568c48e46d0278048325320db77372943e6af093bd5ed0b7"
+      },
+      "qseqid": "short29_-1_o2_rev",
+      "raw13_sha256": "529cadaa84893738b0a419a5b055f3350f03bddda786687f37de1c7950f85645",
+      "row": 54,
+      "sseqid": "short29_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "4d72203fbb39e814512d3bab82afd16e08ecdc2dfd41fe7d93478a36e618f0cd",
+        "protein_sha256": "8b19aabaffe68512c34879732f26e8a958dfa3b0b5203020ea647adaa8b016c5",
+        "raw_row_sha256": "472c8108bd7498b344348e45e38e3f2609356a69845a4837eacffbf3adc43d55"
+      },
+      "qseqid": "short30_1_o0_fwd",
+      "raw13_sha256": "b26b99a79b3ddc0e92fffc75fecd4956aa21490707f35a63c66ab41335f16736",
+      "row": 55,
+      "sseqid": "short30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "5d2707f3bf23e952a3caf582033f2b3f572dd5f60359a43d819a35fec1966ba9",
+        "protein_sha256": "8b19aabaffe68512c34879732f26e8a958dfa3b0b5203020ea647adaa8b016c5",
+        "raw_row_sha256": "0ab9423d36dc5282f5e2b5f9df7ab7f2d500ee3ae9c5f15879ab895151ba5ad2"
+      },
+      "qseqid": "short30_1_o0_rev",
+      "raw13_sha256": "b3d16094c71bb88cf554de19b3b15d7b8f57b8f7e29f29651c2097a9cc48149e",
+      "row": 56,
+      "sseqid": "short30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "94c6537b00dfb35d7ff5522cd93a1f5b91d1b23e0b96cefd0908c5cb2d58faa9",
+        "protein_sha256": "8b19aabaffe68512c34879732f26e8a958dfa3b0b5203020ea647adaa8b016c5",
+        "raw_row_sha256": "3c9cd2a422f11ef12056ebbcc2cc5c3414e92c0d982442e48b7af67a59efe443"
+      },
+      "qseqid": "short30_1_o1_fwd",
+      "raw13_sha256": "233ef2c4bf8b18db93a7ffb986b304dd9dd8e2a72a176ca7b4b0a8a655bba05e",
+      "row": 57,
+      "sseqid": "short30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "194950b639f88c3918f03a8123c6142743c273b6d25e679c886c1baa512942dd",
+        "protein_sha256": "8b19aabaffe68512c34879732f26e8a958dfa3b0b5203020ea647adaa8b016c5",
+        "raw_row_sha256": "ce61d2c6e041b7d4c98b116c16b542fc53c4ab42cf03f94b6b1f27a2218d63db"
+      },
+      "qseqid": "short30_1_o1_rev",
+      "raw13_sha256": "d9ec23d781c40f7c7ed0733e17643192a2c7c57477b4518a622515c1c569d135",
+      "row": 58,
+      "sseqid": "short30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "b39dbe9c641a6df0b915d722038617a4230304bf407a5263946a641a2fcfd957",
+        "protein_sha256": "8b19aabaffe68512c34879732f26e8a958dfa3b0b5203020ea647adaa8b016c5",
+        "raw_row_sha256": "93a24b8dd323e79f813744137d7190f2cb6f4fd43700cbe4da9ef59c97933504"
+      },
+      "qseqid": "short30_1_o2_fwd",
+      "raw13_sha256": "0320f8df2ab81e8476186cfb16712269d629d038bd22e9fd21a530d9a753b5a7",
+      "row": 59,
+      "sseqid": "short30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "86cc17390e8454ec22a909628fa6d1bbbd6dc595e9d1f6db49000620789f1c5b",
+        "protein_sha256": "8b19aabaffe68512c34879732f26e8a958dfa3b0b5203020ea647adaa8b016c5",
+        "raw_row_sha256": "c0f904653847b0d2805e2a079dab4350a9bd312e59745f0f9552fe6b62a887d1"
+      },
+      "qseqid": "short30_1_o2_rev",
+      "raw13_sha256": "5a93d635bc73d850398eb61ceeeaaffabc16481dcc1996ef6483c69084ddb548",
+      "row": 60,
+      "sseqid": "short30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "66c123cdcbd9de838320c00e110a5abc33205bcd04ef148f497db8f1a10fea20",
+        "protein_sha256": "d8256267b1ce92d77361fba96d5581567146727210471cd31426dae14743fbd1",
+        "raw_row_sha256": "5df90a3868a14e8930cf3d881c5c84c6da59847a1b49aafb0c85e3446d67eee8"
+      },
+      "qseqid": "short30_-1_o0_fwd",
+      "raw13_sha256": "24161339f439a325a61bee07cb2daec7c924c857a1a2e0233261bef24114064e",
+      "row": 61,
+      "sseqid": "short30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "86b83af54615efa7253bde2a5d82655235e5126f089838e3ce5deb89e45b734b",
+        "protein_sha256": "d8256267b1ce92d77361fba96d5581567146727210471cd31426dae14743fbd1",
+        "raw_row_sha256": "41dd55092f16c4716d74f3a33a34bfefef665652f513e77fb5b1a331b7d19343"
+      },
+      "qseqid": "short30_-1_o0_rev",
+      "raw13_sha256": "1d3226b6e1a6681351d88236ee8ce022f8d59a4754ab947be1bf79a3d49f3f48",
+      "row": 62,
+      "sseqid": "short30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "dc7df2e9854380650b5043736c85e47ec31187b6990709c5ac4e9621bb7ab848",
+        "protein_sha256": "d8256267b1ce92d77361fba96d5581567146727210471cd31426dae14743fbd1",
+        "raw_row_sha256": "52c865fa169d2c24ab09a140326b301e82dfd7cbc01c8b7705ce6012bec9eb49"
+      },
+      "qseqid": "short30_-1_o1_fwd",
+      "raw13_sha256": "787b4468851c52d8a66ed168d8a8842f4ba9178d928a0abf9997ff49bdaa35ab",
+      "row": 63,
+      "sseqid": "short30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "98c27a0ea5aab0dacde3e46af5f982fccbaf57d91678c4a76fe08b5c87c2b6d6",
+        "protein_sha256": "d8256267b1ce92d77361fba96d5581567146727210471cd31426dae14743fbd1",
+        "raw_row_sha256": "6b9a9e9bcff9c69757a186a02ebc08190e03e3760c4c7b4d55342cc7464ee2e5"
+      },
+      "qseqid": "short30_-1_o1_rev",
+      "raw13_sha256": "0db0438d6cf51529864203bf028c06403be81475fe5a3ea7cb682febb2b82cba",
+      "row": 64,
+      "sseqid": "short30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "c80483cf1b74299d1170c9bee3f866720c13d018f8f3c50e788f971a1720ed04",
+        "protein_sha256": "d8256267b1ce92d77361fba96d5581567146727210471cd31426dae14743fbd1",
+        "raw_row_sha256": "d298aca45700cf9c6c0059787e8b56d3b05a656789f96c370ab75ceca0e3881d"
+      },
+      "qseqid": "short30_-1_o2_fwd",
+      "raw13_sha256": "2f69e6d547bb41634c5f0bc9448a4ae8be832f982846206b3675e99934f27e15",
+      "row": 65,
+      "sseqid": "short30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "7d89835fe4d66a7f149f1956eb64908ce45f29fc89bd8e901a170b46bbbb0f18",
+        "protein_sha256": "d8256267b1ce92d77361fba96d5581567146727210471cd31426dae14743fbd1",
+        "raw_row_sha256": "2803a8c73a18d53fc6ae4dc68e157bfd5ef75d2ff108e7e03135ba51c6798f20"
+      },
+      "qseqid": "short30_-1_o2_rev",
+      "raw13_sha256": "75e66cce9f6184e2ce27fc26c47003c75e6c090979121c68ff1566933afb0953",
+      "row": 66,
+      "sseqid": "short30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "93c0c25f881262fd8b11cfb9e63de07db0f74b51b6a62590bc67a3fdd58251c1",
+        "protein_sha256": "6e7e52d770e50814832b3d50ff9fe8168320409937d49caaebc8908de5528f40",
+        "raw_row_sha256": "ed54fe40e97e2f3d028ae245579581638c43e5bddca34c27762bad6f407d381d"
+      },
+      "qseqid": "short31_1_o0_fwd",
+      "raw13_sha256": "9235b46d097f3beea0154a02d89819e49229cc1593c131a542ed1bee70b8addd",
+      "row": 67,
+      "sseqid": "short31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "44494bebd7544928af5a4a30fc9a02fe398c167a01f41cd514ad44482b365132",
+        "protein_sha256": "6e7e52d770e50814832b3d50ff9fe8168320409937d49caaebc8908de5528f40",
+        "raw_row_sha256": "061aee047f8c35d5eb2e9c0c9e00781cee2d0899a22b3727b7d2ea74e6c160f7"
+      },
+      "qseqid": "short31_1_o0_rev",
+      "raw13_sha256": "30df38d370e60bc07ab7c75a80045e3f4e69034e6395a953e23ad47bab7625e0",
+      "row": 68,
+      "sseqid": "short31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "779b7cfa6d8a7dca5b78520fac12b3bb1b5a81e94915f58c467fab80e6480ffb",
+        "protein_sha256": "6e7e52d770e50814832b3d50ff9fe8168320409937d49caaebc8908de5528f40",
+        "raw_row_sha256": "323aad6798b9e4ca9ac57e5bebd3c1517c742edb328f87ce6b1b2ba9dd2abf0a"
+      },
+      "qseqid": "short31_1_o1_fwd",
+      "raw13_sha256": "0760a7aff5f8ace834bbdf66bdfa3708437ed39c7978be34a9e56ae6ee269adb",
+      "row": 69,
+      "sseqid": "short31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "a67e3c36d4c6aa0e1e8ecf4d3b539de1f2dcec7e036ee030bbbe7fc203a1dd35",
+        "protein_sha256": "6e7e52d770e50814832b3d50ff9fe8168320409937d49caaebc8908de5528f40",
+        "raw_row_sha256": "9a5edd2fe6efa5dbf0c3c4b355d8a5a6a9716b6c4b4afe7bee0a9095d59bb397"
+      },
+      "qseqid": "short31_1_o1_rev",
+      "raw13_sha256": "9de326bb3ddf46350c9ed2fbf459e53dc64dfb7136b24863ef6ae8de8e9e21dc",
+      "row": 70,
+      "sseqid": "short31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "defda750cc2e2c1cf738f52da9f66d279cd14b1700eed95488d78025957b1fb6",
+        "protein_sha256": "6e7e52d770e50814832b3d50ff9fe8168320409937d49caaebc8908de5528f40",
+        "raw_row_sha256": "05c19d3a285430588cef104968a954a256f208f4f3db2a2c35dbcc49cd92ddb4"
+      },
+      "qseqid": "short31_1_o2_fwd",
+      "raw13_sha256": "00c37d591572cfa3b9c6078d1d1043d1f76e635230424236767e2e7191ff019d",
+      "row": 71,
+      "sseqid": "short31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "81e78459253df5a6eb848002ca1d73b844a00d324f9ace8e921cd52ea8629486",
+        "protein_sha256": "6e7e52d770e50814832b3d50ff9fe8168320409937d49caaebc8908de5528f40",
+        "raw_row_sha256": "8b5801ae9be0f63c1c28efe740adedf52d89298767c23bf78f607db38d1f2a68"
+      },
+      "qseqid": "short31_1_o2_rev",
+      "raw13_sha256": "687777e49640dd9833d151d3a7177a03986af9d8e2899a9b1854195d933aa2c7",
+      "row": 72,
+      "sseqid": "short31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "f285dc411d3ab85f9250740296b0c2bb16aebc994f15fa75ee5d45beb751e815",
+        "protein_sha256": "29696c4dcd5c696edc410430ec59e5b1c0dcae2ff3aa863bb0d396fc1d2112f3",
+        "raw_row_sha256": "88ae583ebbea3e719150805914e9ce2f619ac1f3bbc2ef5ef67f3fb795655742"
+      },
+      "qseqid": "short31_-1_o0_fwd",
+      "raw13_sha256": "98988269c7285debc8d96c4b44cb1c1f3ffcf9ccb03c3202a9c3ad4196114769",
+      "row": 73,
+      "sseqid": "short31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "ccdb562e09487fa21f11be4efed827007444ac5b13e05f11f2fdcb9cd7b21023",
+        "protein_sha256": "29696c4dcd5c696edc410430ec59e5b1c0dcae2ff3aa863bb0d396fc1d2112f3",
+        "raw_row_sha256": "37700469819d1e03e4d2fe766fd22ce89f3529a843260adb9618904f4ebad3ca"
+      },
+      "qseqid": "short31_-1_o0_rev",
+      "raw13_sha256": "a2d2ce07d2f9a5b68838b2767ae00584d10e659ec0f63ce9268ffcb27423216a",
+      "row": 74,
+      "sseqid": "short31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "94fc5593488f732c195418568acd38f35bc3d61d51eacb417f25a035375a6666",
+        "protein_sha256": "29696c4dcd5c696edc410430ec59e5b1c0dcae2ff3aa863bb0d396fc1d2112f3",
+        "raw_row_sha256": "45f3a34a6d7cf2531979696d375274434612e0b7c12da30b2e373cccb3742216"
+      },
+      "qseqid": "short31_-1_o1_fwd",
+      "raw13_sha256": "959ee6a40c2afad4cd9dad2241a46e811378e410a1d85af3f75c8835558bd0d5",
+      "row": 75,
+      "sseqid": "short31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "d1c0ffb66a165180fd784fb24d946b3b0476462de8adf701471faed225a0d446",
+        "protein_sha256": "29696c4dcd5c696edc410430ec59e5b1c0dcae2ff3aa863bb0d396fc1d2112f3",
+        "raw_row_sha256": "eb8844bc0aaa57b82db4db37320014f7afc3b596cea11fc09b2576a27d26047d"
+      },
+      "qseqid": "short31_-1_o1_rev",
+      "raw13_sha256": "9a0bbd18eb915c498eaa6f37788ec974ba903b5adf8ca5bd68fbfac84beeef90",
+      "row": 76,
+      "sseqid": "short31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "3225309eab0cb6ab2867a92e05edde8f7d08c395060dc47783e7eaed540ccb50",
+        "protein_sha256": "29696c4dcd5c696edc410430ec59e5b1c0dcae2ff3aa863bb0d396fc1d2112f3",
+        "raw_row_sha256": "00f912a655bb99aee922922cb8c3908e00064eaa0e14ea230b378376729fa514"
+      },
+      "qseqid": "short31_-1_o2_fwd",
+      "raw13_sha256": "669e893dfb5902b31601214f34b58dfeb222c9de0123b18819f6a295c9d3c700",
+      "row": 77,
+      "sseqid": "short31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "cced73b478df79f0eeabdf6100cf26b1f6874c510ffb464ea25290b419530b7f",
+        "protein_sha256": "29696c4dcd5c696edc410430ec59e5b1c0dcae2ff3aa863bb0d396fc1d2112f3",
+        "raw_row_sha256": "0d98f6d1ce6a9fc6e98576227b59883e0908fd7492c9b8f821fd1d7c8e6616b0"
+      },
+      "qseqid": "short31_-1_o2_rev",
+      "raw13_sha256": "df5401d6988e87277bdfc8cf76b1d0359e58a9ab7e158782548a8137b04d9075",
+      "row": 78,
+      "sseqid": "short31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "4378ab920ba74aa163b9ba707d097ffd2bf7fcc683db6afbabda6e7f4c5c8ccd",
+        "protein_sha256": "a0bfb2e00033aeb63861599cebb9f5ef3289a461349872b1500c80c98aceedb5",
+        "raw_row_sha256": "c436ebe397fab11f1f97133d377455590165f40c06178c2a04452ff72e6229ca"
+      },
+      "qseqid": "blocks29_29_1_o0_fwd",
+      "raw13_sha256": "e03081bc4fb63e127407ec03b414b9087bd3bef7c2401dbb0b5324d055b5f53b",
+      "row": 79,
+      "sseqid": "blocks29_29_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "b45806b2046c219df1c5d3d0abb08b8964e404fa4b4a5c4a0ee9139c6f9472da",
+        "protein_sha256": "a0bfb2e00033aeb63861599cebb9f5ef3289a461349872b1500c80c98aceedb5",
+        "raw_row_sha256": "bf564d22b1906ba7f50926f9f446f87c7d181f65c6410d664b4784a297326e78"
+      },
+      "qseqid": "blocks29_29_1_o0_rev",
+      "raw13_sha256": "5c0b8d4ed7d69cacebd92bac34d6e34dc3220ee70532e6cfbec7069af4f057c5",
+      "row": 80,
+      "sseqid": "blocks29_29_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "e5ece131f31eda05bcab1588447df943d94fc30ecb3e231b0e4cac7385ec5ba0",
+        "protein_sha256": "a0bfb2e00033aeb63861599cebb9f5ef3289a461349872b1500c80c98aceedb5",
+        "raw_row_sha256": "14657fcdf929de7455ed7c0b74f4c6b5d459ced1909f8f4b539f8d7562b8aadc"
+      },
+      "qseqid": "blocks29_29_1_o1_fwd",
+      "raw13_sha256": "06c9998412b1ecb23d5baad8fc75fc04a9c1d501ea46a2514be98b3a44706e1a",
+      "row": 81,
+      "sseqid": "blocks29_29_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "9e8e8efdfa0e1775d0dd7f47d757fe76fe4d150503e1ebef1ddbf272cd4b9b71",
+        "protein_sha256": "a0bfb2e00033aeb63861599cebb9f5ef3289a461349872b1500c80c98aceedb5",
+        "raw_row_sha256": "d13d520f19a87c8d76ce9afff617ae028c49d7884ada133c96d614be342ba3c2"
+      },
+      "qseqid": "blocks29_29_1_o1_rev",
+      "raw13_sha256": "cbf0b1f4280ca59b3ddf3d683cb13e5a65a5958d078a8b62b7edcf170b391f52",
+      "row": 82,
+      "sseqid": "blocks29_29_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "44f34d1bfa2d1599e8ccc62a4287d7796087794f3302b36662564ec6a26b2326",
+        "protein_sha256": "a0bfb2e00033aeb63861599cebb9f5ef3289a461349872b1500c80c98aceedb5",
+        "raw_row_sha256": "8802ef9de3c191a51700c8e945e7a04aa9b37f0fd70785b4089166984f80de63"
+      },
+      "qseqid": "blocks29_29_1_o2_fwd",
+      "raw13_sha256": "68c84d45ad6e4b9325cd868f44279fec4f6737007d94d04525b37af8cc183593",
+      "row": 83,
+      "sseqid": "blocks29_29_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "312797eeb56d1c63acd3f27caaa099b56a185e654b90f351327f69516f144410",
+        "protein_sha256": "a0bfb2e00033aeb63861599cebb9f5ef3289a461349872b1500c80c98aceedb5",
+        "raw_row_sha256": "3c6d6685dcd9b32391bbf3064f3f4d7778754347f98c5626ebb2a19589752844"
+      },
+      "qseqid": "blocks29_29_1_o2_rev",
+      "raw13_sha256": "dcc0a26f2f70635ba8e7fefb2bdc73498ba8f8d63e414092c5e4de9286d687e3",
+      "row": 84,
+      "sseqid": "blocks29_29_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "26a968b7644bd4786056fb40efa0fb2337d8dd6db9fd5ecb7187137cd386bfd2",
+        "protein_sha256": "88559e694e803f7a5e778ba225d222a812f6a4911f2ad2f559a46db483f56e37",
+        "raw_row_sha256": "f8e0928578fac07fc626c0e39b6002743c55b269ac7812fbe579b8a27f9d4a8c"
+      },
+      "qseqid": "blocks29_29_-1_o0_fwd",
+      "raw13_sha256": "dfafb230c3fa94fa47c00d654bdf9aff9a6cab185f9ba45b2a9fa8c6b5b17677",
+      "row": 85,
+      "sseqid": "blocks29_29_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "ce21022ccb3ea1211639f746e466d95bec371de14aacd4f90d4a29da97537b3b",
+        "protein_sha256": "88559e694e803f7a5e778ba225d222a812f6a4911f2ad2f559a46db483f56e37",
+        "raw_row_sha256": "5c7b67ef1198a98f22923934e6bc4ceca4c8535fbbaf687ececc131e096de8cb"
+      },
+      "qseqid": "blocks29_29_-1_o0_rev",
+      "raw13_sha256": "720fd57c4a71d616d3b2e3af36573a633f97df9a0cfd645557d4ba05e8776c7e",
+      "row": 86,
+      "sseqid": "blocks29_29_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "a952a7aa65682cddcf508f82e89c7bc3b4283e7dc00669faf0fad23903909511",
+        "protein_sha256": "88559e694e803f7a5e778ba225d222a812f6a4911f2ad2f559a46db483f56e37",
+        "raw_row_sha256": "80637292af5dd9c6b519ce60d709da2c741601d17ca148f3f714bac32f04a858"
+      },
+      "qseqid": "blocks29_29_-1_o1_fwd",
+      "raw13_sha256": "37f56a805c79b996eb7d5f558b92ab863bc94e622b05e07fd73553f7fe9e84ac",
+      "row": 87,
+      "sseqid": "blocks29_29_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "8a92f964a2692b204693523d6500a5ee253ebc247ab79c25cc64023623f120d9",
+        "protein_sha256": "88559e694e803f7a5e778ba225d222a812f6a4911f2ad2f559a46db483f56e37",
+        "raw_row_sha256": "57e445a34326cbd0622a6894591afd93097049606d8f58312d8895c041c583b9"
+      },
+      "qseqid": "blocks29_29_-1_o1_rev",
+      "raw13_sha256": "10fa9f1e00a8891091a2b2bb7d1b4fde2a862c8461312bdfdb39bd40c37a7071",
+      "row": 88,
+      "sseqid": "blocks29_29_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "cbdcc7306c11a1abd9e721bdc477c7bc9bba064da35dbfa4283d445e42539a39",
+        "protein_sha256": "88559e694e803f7a5e778ba225d222a812f6a4911f2ad2f559a46db483f56e37",
+        "raw_row_sha256": "acca32b1b9e9002efe42f793b5a507ff6935dd016ce9397125bf4d20ab71fd87"
+      },
+      "qseqid": "blocks29_29_-1_o2_fwd",
+      "raw13_sha256": "8e729bbfbfe13fe8886ad9b0bdc8497f66f1b77cb1ff2c9b7f1461bcd5e278a0",
+      "row": 89,
+      "sseqid": "blocks29_29_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "8e71c619f539e4cb9c3bcdd862241695fa2f9f5c4c987c6e15a05010aaec3d00",
+        "protein_sha256": "88559e694e803f7a5e778ba225d222a812f6a4911f2ad2f559a46db483f56e37",
+        "raw_row_sha256": "a605c7d8365ef69cf13f60a97920fd7d67ddaff40a1960ea88442dd58319b896"
+      },
+      "qseqid": "blocks29_29_-1_o2_rev",
+      "raw13_sha256": "0367643664ead13cf6759cfb2e2c4ee62a9bebd763536860b12db19b116abf90",
+      "row": 90,
+      "sseqid": "blocks29_29_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "749f83c74ae15cab351beee962076b5efc2304a035baa8d74e7a7f55c1cbc70d",
+        "protein_sha256": "1d0df702801cbc319714dd6af1a3b12fffba9541dfcfb3154bd01fed188aaec0",
+        "raw_row_sha256": "0e38fe7500c0cb274745d99475b9496c7167b4cb61f190af2ea705e312f73dea"
+      },
+      "qseqid": "blocks29_30_1_o0_fwd",
+      "raw13_sha256": "508d2042568b9b55aa5815120b53c120660c1d27f43729b7b0054f43f496617f",
+      "row": 91,
+      "sseqid": "blocks29_30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "0a56f89760671f561569d7a5ae0b0aeb763b3af59a1a3de84023532ceece0aa6",
+        "protein_sha256": "1d0df702801cbc319714dd6af1a3b12fffba9541dfcfb3154bd01fed188aaec0",
+        "raw_row_sha256": "c5538053a24e29cad736a40835daedb3b6ec5290208813d1b0104d57d18f9ccf"
+      },
+      "qseqid": "blocks29_30_1_o0_rev",
+      "raw13_sha256": "71154e9c1bc80914ecf51c3195ecb30c4fe917c115b2af88a611106ca5c1f96a",
+      "row": 92,
+      "sseqid": "blocks29_30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "b58743fae4c8ffaa3dc7638451fba4cc944d0a81761de90118d2d855923df29a",
+        "protein_sha256": "1d0df702801cbc319714dd6af1a3b12fffba9541dfcfb3154bd01fed188aaec0",
+        "raw_row_sha256": "5e329318f890da3df37fc5ff1d1be055393c4f9e8b37b93f1b2fab28c1c68d9e"
+      },
+      "qseqid": "blocks29_30_1_o1_fwd",
+      "raw13_sha256": "5ae3a68d2311912a76b9a3460865b0a13d1da324a2380ec47e8b71e3c3a3856c",
+      "row": 93,
+      "sseqid": "blocks29_30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "3bdc22096ae3ff0f0777763958aa5e3600b4435f7ffc2cecdec91b5e1a33e467",
+        "protein_sha256": "1d0df702801cbc319714dd6af1a3b12fffba9541dfcfb3154bd01fed188aaec0",
+        "raw_row_sha256": "943bcfe69607675622efd8809dee810c53668785342013452574ec3101720a15"
+      },
+      "qseqid": "blocks29_30_1_o1_rev",
+      "raw13_sha256": "a5f97b5cd70ad5897bf17815cc5fc29b932f220ad92a52177465de4be02b3710",
+      "row": 94,
+      "sseqid": "blocks29_30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "f2fb4d474afbc3a30e472edf8546e7b97caba1f65998f674c2317d97fd245eb3",
+        "protein_sha256": "1d0df702801cbc319714dd6af1a3b12fffba9541dfcfb3154bd01fed188aaec0",
+        "raw_row_sha256": "89fc463f06ea4e3fb48c2522c53f54139f8d05bb2e38ff7e43d2c883302f6e02"
+      },
+      "qseqid": "blocks29_30_1_o2_fwd",
+      "raw13_sha256": "5f161b74486160563db0b794b32f8a48b7623cb24c3416078271355677b04d81",
+      "row": 95,
+      "sseqid": "blocks29_30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "5cb0cfa3cb358611b196d1df2e9d7671af0342aca2f6fa543e8d09e7b4561d5d",
+        "protein_sha256": "1d0df702801cbc319714dd6af1a3b12fffba9541dfcfb3154bd01fed188aaec0",
+        "raw_row_sha256": "1831b3400499aa0d6506bfbc9fc63f77f902c4946c5cf0c16bf7026e21467ff8"
+      },
+      "qseqid": "blocks29_30_1_o2_rev",
+      "raw13_sha256": "3f8d746370a57ec28de87418d094b2ce331fc7786d82bbec064d7511da24c9da",
+      "row": 96,
+      "sseqid": "blocks29_30_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "ad8af48148257d5789cbff84aedb132107308d96864f298fe9e444e4126cc78f",
+        "protein_sha256": "4a5ff58d2b347dff15595740459a6b1f36a99aeb93bd8fcde9655c8c2e8e890a",
+        "raw_row_sha256": "c4180449343aaa9c345e98cd17e9a806883cdb3a9b9e708e402f2c5f36b21df1"
+      },
+      "qseqid": "blocks29_30_-1_o0_fwd",
+      "raw13_sha256": "2e284057e04726dda13d01cebcea9e648da662bc3a6661bbc13ed376d71f29b4",
+      "row": 97,
+      "sseqid": "blocks29_30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "cc62993a7dc938ef3314b1e283d0dad32c1a2ad5d4c5c873dff9e6fbe0349105",
+        "protein_sha256": "4a5ff58d2b347dff15595740459a6b1f36a99aeb93bd8fcde9655c8c2e8e890a",
+        "raw_row_sha256": "6f39d6bb0c54ca9dea192e18107d5fa5814a345d4ede710135c8e4376371e0db"
+      },
+      "qseqid": "blocks29_30_-1_o0_rev",
+      "raw13_sha256": "4393d0964cdf4b9881e6b71395d87197396dc8467879d8414d668c9ecf16dc30",
+      "row": 98,
+      "sseqid": "blocks29_30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "7244d5b462b50341b01a5d8e0a76e213d497bdba66bbf3a7e8e494d5f0fbad4d",
+        "protein_sha256": "4a5ff58d2b347dff15595740459a6b1f36a99aeb93bd8fcde9655c8c2e8e890a",
+        "raw_row_sha256": "60bc8e0f9f6e1d2fce7f3ab54ff405a5c52c6b2bf982bb67adb0940a044d987d"
+      },
+      "qseqid": "blocks29_30_-1_o1_fwd",
+      "raw13_sha256": "b9d573b20c48da5d101163798f1b9ec15c68d9c23505449ef884be893929ff6e",
+      "row": 99,
+      "sseqid": "blocks29_30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "db1c0b4978ac751fc538f5f0577f60448f881a32e98b78038a6fcd097e302bc9",
+        "protein_sha256": "4a5ff58d2b347dff15595740459a6b1f36a99aeb93bd8fcde9655c8c2e8e890a",
+        "raw_row_sha256": "b13027e752fd7384a2ebd6ffbc834077faef78e95aa1f5951ed711ddbfc50e59"
+      },
+      "qseqid": "blocks29_30_-1_o1_rev",
+      "raw13_sha256": "2cf1d4a8a176703cfe7e5006c8e9564fe16cac003bc6a62bbc7e3ec08c4d0905",
+      "row": 100,
+      "sseqid": "blocks29_30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "f84a6443a1b5a1cd2ebb9094330b1b0050bc5bc8c7a23340986a35df6c72fa7d",
+        "protein_sha256": "4a5ff58d2b347dff15595740459a6b1f36a99aeb93bd8fcde9655c8c2e8e890a",
+        "raw_row_sha256": "b61b5a37f26259eea520f53feeea923f276a1c40b3dfefe84bb25e74b0a9a106"
+      },
+      "qseqid": "blocks29_30_-1_o2_fwd",
+      "raw13_sha256": "2cc7707574c1030f3ca2773dfd44506e517eee8b882affce1f29b03734d69d81",
+      "row": 101,
+      "sseqid": "blocks29_30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "a92c9f5d7d88c2076ea8998ffa6277f4b591641e987ef20a814687f2c326daa1",
+        "protein_sha256": "4a5ff58d2b347dff15595740459a6b1f36a99aeb93bd8fcde9655c8c2e8e890a",
+        "raw_row_sha256": "22c70ee0bc9844cd629fd8b93bca7042e16108ef24473508c31b9665b64e4f2d"
+      },
+      "qseqid": "blocks29_30_-1_o2_rev",
+      "raw13_sha256": "87b30b163afa49e0f9e084bae2c66039e2cce00c24d8d5531c4e00d9ff632878",
+      "row": 102,
+      "sseqid": "blocks29_30_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "0a93bcaf4ade4ba5b6fff0b84aa484abdcb60ec41b1fe873f01e1d92a55306b2",
+        "protein_sha256": "54a152bca6bdc2c17daadf81c24c19d5fd1e524a953ec626cb0572508ef1278a",
+        "raw_row_sha256": "e3c12a161dc1c0c5d23fd0609cf4252729bd819298b409ec3c32472c60a10cce"
+      },
+      "qseqid": "blocks29_31_1_o0_fwd",
+      "raw13_sha256": "5bf566203e23e2f8357ca8247ec3f02ebd03aca13fefd3a3babcad0d3fd16062",
+      "row": 103,
+      "sseqid": "blocks29_31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "633d2e601d59f4e6eb55aa8342ef52d39d3046c4290f4823e3dae130a8f38120",
+        "protein_sha256": "54a152bca6bdc2c17daadf81c24c19d5fd1e524a953ec626cb0572508ef1278a",
+        "raw_row_sha256": "a9243b3d288800757959460dd1be527f42208d51ccc4becba66f23144c208dbe"
+      },
+      "qseqid": "blocks29_31_1_o0_rev",
+      "raw13_sha256": "0394b9b7d7fbf59e47674a0ec02d805ca82f3729c0a169f55e5ff71cb02769de",
+      "row": 104,
+      "sseqid": "blocks29_31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "4be5b05e27ae174ca41dc84e0f6b71bd87b52ed3136f60deb0614e2df2596262",
+        "protein_sha256": "54a152bca6bdc2c17daadf81c24c19d5fd1e524a953ec626cb0572508ef1278a",
+        "raw_row_sha256": "317f6ad280862ba0f98c6856ae4aa41b1387418c6340c54b0802561a7a41bec6"
+      },
+      "qseqid": "blocks29_31_1_o1_fwd",
+      "raw13_sha256": "e5e64919cbd7b80cc5f69e609524bc1339981faceb3656cb499556d6bb43a0f7",
+      "row": 105,
+      "sseqid": "blocks29_31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "d674e68cffd1548aa91c4c000c182301efac032a02aee14e648af16cbc6cf259",
+        "protein_sha256": "54a152bca6bdc2c17daadf81c24c19d5fd1e524a953ec626cb0572508ef1278a",
+        "raw_row_sha256": "2c0480b23ecec5b4e13e36ef4d8266e703a34186880dabfcb507713c70fa81a5"
+      },
+      "qseqid": "blocks29_31_1_o1_rev",
+      "raw13_sha256": "ec44b8c9a1baf9b7824b114fcbf71df3ca87c9cf9929d546d64b657a03aec0a5",
+      "row": 106,
+      "sseqid": "blocks29_31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "47de9314817e209dc5946e0ec7b75c88ebf0703c7c9b54651763796af900f9e0",
+        "protein_sha256": "54a152bca6bdc2c17daadf81c24c19d5fd1e524a953ec626cb0572508ef1278a",
+        "raw_row_sha256": "fdf84c3b64a8398b7b199afcd56b2c96928fea82573e6232b278cc9b96d9905d"
+      },
+      "qseqid": "blocks29_31_1_o2_fwd",
+      "raw13_sha256": "75c5297381ea042d188e98c4895d87860a34e614832018c978a52e49fa99d9ef",
+      "row": 107,
+      "sseqid": "blocks29_31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "dce267aad55635125056f62bb4328cc673754d62eac784764c02fc228af17000",
+        "protein_sha256": "54a152bca6bdc2c17daadf81c24c19d5fd1e524a953ec626cb0572508ef1278a",
+        "raw_row_sha256": "c60741959aadefd787c28f4ab5370c1fde16a80c6badeaf0352fb48a1f674695"
+      },
+      "qseqid": "blocks29_31_1_o2_rev",
+      "raw13_sha256": "30684761699dcdbb5f8bc9edfe6b55b13ce00c82c6115bcbf491780b2bd3d539",
+      "row": 108,
+      "sseqid": "blocks29_31_1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "91eb87d144288890d8af532608b0887adc07557f9a468047074ba7458ce285d8",
+        "protein_sha256": "ddb47a698269649e7c4e159286414f9c02ed2cb25afd78a9cede9946bc17f93f",
+        "raw_row_sha256": "842af0721242f1d0f01dd86271399be748945eaca75b48a4f4e512f694b482c8"
+      },
+      "qseqid": "blocks29_31_-1_o0_fwd",
+      "raw13_sha256": "58011b9db8074b0b3a6f3e80302b4c2da9028341e475a1759a202b1f5fbab199",
+      "row": 109,
+      "sseqid": "blocks29_31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "5a40363888e7a3e4960540501bb6b1e58316c947c7b8c9e5c956eca861b571df",
+        "protein_sha256": "ddb47a698269649e7c4e159286414f9c02ed2cb25afd78a9cede9946bc17f93f",
+        "raw_row_sha256": "18dda8614d98ec3afba15eda5238b25a3395755a7438c8ca1fe7d7261f858651"
+      },
+      "qseqid": "blocks29_31_-1_o0_rev",
+      "raw13_sha256": "5d5bbd410d942ccfc4b1caf074e8f9283b761a12e10f9cbba5162678dff37b4d",
+      "row": 110,
+      "sseqid": "blocks29_31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "eb7b429e27a3ce2ec9e8b1ef7891c6bfe89b3bbfa836fe62744eec7ee4ab6a01",
+        "protein_sha256": "ddb47a698269649e7c4e159286414f9c02ed2cb25afd78a9cede9946bc17f93f",
+        "raw_row_sha256": "4857e30390e2b875efcb67043d5b95a6832848569585ec36286344b2b5694ad9"
+      },
+      "qseqid": "blocks29_31_-1_o1_fwd",
+      "raw13_sha256": "c46698fc8cf585e7391ae9f1b372c433cc3cdd89344a9ac400dd89e79f5cd045",
+      "row": 111,
+      "sseqid": "blocks29_31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "73f033fc08e2fe8c1cd1f8c65961628e14f8c1151a7129db83e30de79c298739",
+        "protein_sha256": "ddb47a698269649e7c4e159286414f9c02ed2cb25afd78a9cede9946bc17f93f",
+        "raw_row_sha256": "47e4a49b8a0df5622a07e732628047550aa8069605ad49ec8c981a3752554780"
+      },
+      "qseqid": "blocks29_31_-1_o1_rev",
+      "raw13_sha256": "f0ff1bd01c920763c3160dacba7e3df653d1d2a8fb8064a0bdd7a1131416e778",
+      "row": 112,
+      "sseqid": "blocks29_31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "978eb396b8a9bdbfae0d3796adfc41b215366becd2012a55779f8f28ebda0508",
+        "protein_sha256": "ddb47a698269649e7c4e159286414f9c02ed2cb25afd78a9cede9946bc17f93f",
+        "raw_row_sha256": "ef5a6fe30360231c23c160ae900db511590ea6fe657549d47e1d65b1bd6b15e1"
+      },
+      "qseqid": "blocks29_31_-1_o2_fwd",
+      "raw13_sha256": "1c265cfb9439ce0b88ed0dbb29b97b34683e6feceddc9a02977537ab097cbd53",
+      "row": 113,
+      "sseqid": "blocks29_31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "75e7518bc45f2271524a3403a528a754f34afdb210f1070d1e5f5bf1cb46f1a6",
+        "protein_sha256": "ddb47a698269649e7c4e159286414f9c02ed2cb25afd78a9cede9946bc17f93f",
+        "raw_row_sha256": "9ed84b4f94b322112422d2147e89c237605c2799108a02896dce5755bf7d8586"
+      },
+      "qseqid": "blocks29_31_-1_o2_rev",
+      "raw13_sha256": "3349ef78461abc3010241a1833f302be1b32d5f3200fc911bfc90ee3b9a69563",
+      "row": 114,
+      "sseqid": "blocks29_31_-1"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "77281813b2fd2182290a1205ca3f8a3629b465981aaeb48d2cfdf28034dae5f7",
+        "protein_sha256": "532b46becd28521314d8fb6df893129af62bbe0462ab1236032aca59704c9d8d",
+        "raw_row_sha256": "c7f5e5db186ca365cae1b7d17ca5b7f21f133ade54d72cf37e2f2a3399197fc4"
+      },
+      "qseqid": "long_plus_o0_fwd",
+      "raw13_sha256": "3e6e53a1fd235d9131c6a5c2ac30e35112312cbb99cb151ce2bd96628d0f85e6",
+      "row": 115,
+      "sseqid": "long_plus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "6e85b9c0c6dcd6202fda9a5e40cc87cf31f7c75fcfa55a95215228a9c340db57",
+        "protein_sha256": "532b46becd28521314d8fb6df893129af62bbe0462ab1236032aca59704c9d8d",
+        "raw_row_sha256": "1d48a8fde8f7eb44bf1719c8e7b0c1f6cd5526f73fcb1ee9d08b198ca0a776e7"
+      },
+      "qseqid": "long_plus_o0_rev",
+      "raw13_sha256": "0549dedb0d6a33c8c1ac200672296195656a883989fc9939fca6eb72f6b3094b",
+      "row": 116,
+      "sseqid": "long_plus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "a36ad71e7ed1430e454125e05c028d104568997ce6f2f3850d3d973ca78ee350",
+        "protein_sha256": "532b46becd28521314d8fb6df893129af62bbe0462ab1236032aca59704c9d8d",
+        "raw_row_sha256": "1f4ea0de6abf1e81294eb612b567cfc31fc711d8a9ddf49e86832ff8f7d3a571"
+      },
+      "qseqid": "long_plus_o1_fwd",
+      "raw13_sha256": "20ee53c9c2c25c7ab7dec35c41b59e8cf4eacd5eec88b18fcd11f948b24513fb",
+      "row": 117,
+      "sseqid": "long_plus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "28dae8636fdf1be634bbf10233ce5d7b17f14b921db1b3dcc160b8325602e319",
+        "protein_sha256": "532b46becd28521314d8fb6df893129af62bbe0462ab1236032aca59704c9d8d",
+        "raw_row_sha256": "9f046da16d906ff5c35173863ad5bfc601162e9f3b87d04593cd08192aafdbc0"
+      },
+      "qseqid": "long_plus_o1_rev",
+      "raw13_sha256": "99dd44323d2677141e5399f0f4b5f7791c65f5721d94de9861ef457b0b2689aa",
+      "row": 118,
+      "sseqid": "long_plus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "f083553433e98120c777684578bc279c9276683e49edc2fdd91c783c142f3f9c",
+        "protein_sha256": "532b46becd28521314d8fb6df893129af62bbe0462ab1236032aca59704c9d8d",
+        "raw_row_sha256": "a91135ca2a61f47a5b4c55815ac9df9e4b72ed7e2c5e339c6425809392f02d59"
+      },
+      "qseqid": "long_plus_o2_fwd",
+      "raw13_sha256": "5fae930559e83812a136c4ba546526891ca3bda50b58f355193ebb77d166fbf8",
+      "row": 119,
+      "sseqid": "long_plus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "66cea98f59c9adeb458738bfeab0826f57e9101669d5cb624c79421cb87e231c",
+        "protein_sha256": "532b46becd28521314d8fb6df893129af62bbe0462ab1236032aca59704c9d8d",
+        "raw_row_sha256": "1b50381d6d19172030d3babb61951b06df807d76b2d96618c36a215679c4e2a8"
+      },
+      "qseqid": "long_plus_o2_rev",
+      "raw13_sha256": "1a123a4187ecd2e655b0be2779af5219f384b3eced3f743f8bee143d84b005c9",
+      "row": 120,
+      "sseqid": "long_plus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "96a920e175d124ce04a4063164e9be2679ab0edb4f8271f2ace18171d68957d6",
+        "protein_sha256": "102e23f282340a3548ea8e89adc5f77906343c94d4409c3105eba4edc9e02eb6",
+        "raw_row_sha256": "01e900ffb1b6ec0c92523c79cabc61be435c591cc96b501522ad080fdbeff2d0"
+      },
+      "qseqid": "long_minus_o0_fwd",
+      "raw13_sha256": "6345c3a63f71145e7a053e4cc863842d117bb4a9f2d9e0d2ceeb530e0703598b",
+      "row": 121,
+      "sseqid": "long_minus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "d05ff08ca05becdf3a4d6a0372fc8007c5f72a3f30a0880f3b9a73a13ecf1e85",
+        "protein_sha256": "102e23f282340a3548ea8e89adc5f77906343c94d4409c3105eba4edc9e02eb6",
+        "raw_row_sha256": "1432e819464a41f185c9c338aaa88e23e339f6bc836069eeacdab1dfcef05295"
+      },
+      "qseqid": "long_minus_o0_rev",
+      "raw13_sha256": "89cc6b985226e6a9903018646bd29aac7c283dc6a23be5bc6c8620192e123722",
+      "row": 122,
+      "sseqid": "long_minus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "3f24a05cea4661b7a51278be6a4deb7642e2d7a8ce475c36bbdb6e989a8438a8",
+        "protein_sha256": "102e23f282340a3548ea8e89adc5f77906343c94d4409c3105eba4edc9e02eb6",
+        "raw_row_sha256": "de8ff84f57d092dc85d162c1935e009476fa73dd3b666f655159c3eb968b512f"
+      },
+      "qseqid": "long_minus_o1_fwd",
+      "raw13_sha256": "a54753bab7e4bec8d9283fcc95f658a765f85e7bf63f664b5e0394be3ac6acc5",
+      "row": 123,
+      "sseqid": "long_minus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "8ca4da1f12374f86c1e814b1afa01ed90bf85857bf60e6df9d6883386d4a835a",
+        "protein_sha256": "102e23f282340a3548ea8e89adc5f77906343c94d4409c3105eba4edc9e02eb6",
+        "raw_row_sha256": "50e56b1d88eb3cda6ddd5bc7b22f7b6ba170ae7e0e29666918d768fd6a736b2f"
+      },
+      "qseqid": "long_minus_o1_rev",
+      "raw13_sha256": "affa019760cac5f96b66e5c6f193803c8e66c3936e1da1dd929ba32e3e791a01",
+      "row": 124,
+      "sseqid": "long_minus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "8ad3018c7967e27c7b94d5b362eb4763de45b245f113449bfc05f3cf9208d14c",
+        "protein_sha256": "102e23f282340a3548ea8e89adc5f77906343c94d4409c3105eba4edc9e02eb6",
+        "raw_row_sha256": "439ea3505fc186b3c81139ecb6a809710b7dc9a1323c4b5e0932f817833d067f"
+      },
+      "qseqid": "long_minus_o2_fwd",
+      "raw13_sha256": "20f54b784a29708bce476408d61e146ae965b10f43a69f8ca181d071780b087c",
+      "row": 125,
+      "sseqid": "long_minus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "69534f70732faa7e7337f46246da57ca50afd00bfd2bcc74af8d429dae21406e",
+        "protein_sha256": "102e23f282340a3548ea8e89adc5f77906343c94d4409c3105eba4edc9e02eb6",
+        "raw_row_sha256": "f893d084144c8ff823faadb108237b05e23122a49344f113cea4aeea0afc0ef2"
+      },
+      "qseqid": "long_minus_o2_rev",
+      "raw13_sha256": "5bf0b86db6a62ce8bd48e5d817ef302a2ee9f6ac772b00c85af83a23a3f83871",
+      "row": 126,
+      "sseqid": "long_minus"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "0fe21e0be8e824f6c64267486c4447ac74615db5d403ab2b5bf745e54dbb9ed1",
+        "protein_sha256": "890c075402480a7a13ac4fe1ba4e4c683bc0cf228b169b32b7fc33c2c66dad42",
+        "raw_row_sha256": "f3f783ee18a3d0c6afa4b5ff3311e2fb2fc3f2b783c8ce1f7db1385c21e1c778"
+      },
+      "qseqid": "long_I_o0_fwd",
+      "raw13_sha256": "34d5623d15fee5d36757d59366463d74c664aab77c75fa1d930d6b196aa1a47b",
+      "row": 127,
+      "sseqid": "long_I"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "58b006095c89dddcf60eb44a077fcef0083dfcb6afd069824c236a54c1996af8",
+        "protein_sha256": "890c075402480a7a13ac4fe1ba4e4c683bc0cf228b169b32b7fc33c2c66dad42",
+        "raw_row_sha256": "2ca645dbd310ab6e097f30df2baade07f5aef5fc7eb40bf135077cbf18b99921"
+      },
+      "qseqid": "long_I_o0_rev",
+      "raw13_sha256": "5f708648afbe6cd35aa31ff1e035d5425707aaaf15ab0136cf869dc446c602d5",
+      "row": 128,
+      "sseqid": "long_I"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "3fd66ac7d82454d9c61b98d7b40c3616e68070fc32669fe5a076d0d8194f5725",
+        "protein_sha256": "890c075402480a7a13ac4fe1ba4e4c683bc0cf228b169b32b7fc33c2c66dad42",
+        "raw_row_sha256": "d0c3a65c27eeecacb70d393e1ba3e420cbd5852b8fa205209b5bb5b7b405029a"
+      },
+      "qseqid": "long_I_o1_fwd",
+      "raw13_sha256": "f0e3c563b49cfa76d3d922df47f4c30db63e323394497c58da0d47dea9d5a4ee",
+      "row": 129,
+      "sseqid": "long_I"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "e1887c1e07ab55b4dd0d459fd7889b041254b95cd9e693eb72be247a8ce12a06",
+        "protein_sha256": "890c075402480a7a13ac4fe1ba4e4c683bc0cf228b169b32b7fc33c2c66dad42",
+        "raw_row_sha256": "83fca21331722b307a06fbeeaf51f257c8c6019de2537844c3f4b65e200ea03a"
+      },
+      "qseqid": "long_I_o1_rev",
+      "raw13_sha256": "b48bc538fbadf63114218ceb652f493da1ebecab670a8ed58ac289d341112302",
+      "row": 130,
+      "sseqid": "long_I"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "3eb27fe7a18193a370dc5b1ff2b3136eb1f5a598f3fef2f65b241cfba5606f1c",
+        "protein_sha256": "890c075402480a7a13ac4fe1ba4e4c683bc0cf228b169b32b7fc33c2c66dad42",
+        "raw_row_sha256": "866fc7bc0e919f252b5aad58441a5d0e02ee9f03647aedc554b0ca47ceac3705"
+      },
+      "qseqid": "long_I_o2_fwd",
+      "raw13_sha256": "4f4de13cb631cb5f190c0a3ce421b023da02c5569eef6ac01901907008e4d90f",
+      "row": 131,
+      "sseqid": "long_I"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "feb8e4b59523b714a93b6ff460405be2a71496f6a43cf0bce203c8224583778b",
+        "protein_sha256": "890c075402480a7a13ac4fe1ba4e4c683bc0cf228b169b32b7fc33c2c66dad42",
+        "raw_row_sha256": "adaeced402abc9f0197ed5addd2f8d76cf754d88ed280b7e0f3a087a70775209"
+      },
+      "qseqid": "long_I_o2_rev",
+      "raw13_sha256": "bc08f0f30159faead577b05a50bfccb6eb01e584d6d7f908f3136cfd159ec607",
+      "row": 132,
+      "sseqid": "long_I"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "fec5329213409f4a536c43e64a0bbcb111a004d172f1b06073acfcd43818e9e5",
+        "protein_sha256": "035dd821a830dcae1376770632a3ee06cec201eb658ff1c93b52b66344f048c2",
+        "raw_row_sha256": "7c065aea116246361f20b5a4fe36553f34a1f988c3194acfbe8035bed602ab70"
+      },
+      "qseqid": "long_D_o0_fwd",
+      "raw13_sha256": "6ce8fc175d3a246b93bea0fc62718695a12b13aa44696d2d1620172738f1302f",
+      "row": 133,
+      "sseqid": "long_D"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "35ccdfae04a71f980871dd95fddfe8a0425a609130c6fd6fd3033111f2c557af",
+        "protein_sha256": "035dd821a830dcae1376770632a3ee06cec201eb658ff1c93b52b66344f048c2",
+        "raw_row_sha256": "530dd2f0285d998b96f0e6e1a68e728d238bbc978b830e75d7e55c3122bbff25"
+      },
+      "qseqid": "long_D_o0_rev",
+      "raw13_sha256": "afabdaac99d987f76b13bf6fda1485cd2d95c958f2b4ea548ac0818aae5e5e79",
+      "row": 134,
+      "sseqid": "long_D"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "410540058cff5c8b72d07bef402af3e1ac156159e52f24cf8477b152b9c42303",
+        "protein_sha256": "035dd821a830dcae1376770632a3ee06cec201eb658ff1c93b52b66344f048c2",
+        "raw_row_sha256": "79dbf286c7620c91eb8e148a648268774c14adb85b10d7a63be16e567c37b4c8"
+      },
+      "qseqid": "long_D_o1_fwd",
+      "raw13_sha256": "fdad84264e65a83d94e804fff4f647f40cb20ed81e5b611ca8bb3edf2df6fe22",
+      "row": 135,
+      "sseqid": "long_D"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "7c943523dabc412749d965d2a1cddb707f4ca1970e740cacf7c9529ec594f87e",
+        "protein_sha256": "035dd821a830dcae1376770632a3ee06cec201eb658ff1c93b52b66344f048c2",
+        "raw_row_sha256": "953b89717b4ecf5513b6a666a9ec143855e68a70aaba52c836552baccac4be58"
+      },
+      "qseqid": "long_D_o1_rev",
+      "raw13_sha256": "69dccd91c3562e0359b2df1b79273e53691b2bd0fc3ed523cb8b00dde0f1d75d",
+      "row": 136,
+      "sseqid": "long_D"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "d78aca813441a3f6c4c472443c06a3b8f2d1e7a16286372ab35bc0932c02b8bd",
+        "protein_sha256": "035dd821a830dcae1376770632a3ee06cec201eb658ff1c93b52b66344f048c2",
+        "raw_row_sha256": "a1b21db10fb8d1c7975db50c927c16ef0a92e6ced87ed50666b4fbb844322935"
+      },
+      "qseqid": "long_D_o2_fwd",
+      "raw13_sha256": "f7773359215a0abe7c0b181058a033a17696bb999cc314d6b1e9874cc5e74bed",
+      "row": 137,
+      "sseqid": "long_D"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "646f6fe743055cd1773081da6008faa0993a402e8f6012ab35e86f4a78bc66b8",
+        "protein_sha256": "035dd821a830dcae1376770632a3ee06cec201eb658ff1c93b52b66344f048c2",
+        "raw_row_sha256": "64b3faa60529d4f8f1228d087b5a0c6065b3d6b363c3ddd16227213acd10ca16"
+      },
+      "qseqid": "long_D_o2_rev",
+      "raw13_sha256": "68d8b2b60b01570fd58725b8d3454f3d84c680287195a6e08569f8a181d14af1",
+      "row": 138,
+      "sseqid": "long_D"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "a8b8d0de7cc852e462dc2a749a0db7fbe08a18be98737c9a27c275492b79e525",
+        "protein_sha256": "50d63a8c6a68a95cd067698eb7657fe794681d64dcd4f41d3022bbe3b197198e",
+        "raw_row_sha256": "12a8b92b747ec59abd9778a7b77e128f42430aedafc3db9dc7f1587712f415f8"
+      },
+      "qseqid": "cancel_o0_fwd",
+      "raw13_sha256": "924f4659355efa181e45926ba25aa624f2c2c58a1cf8bd481f4a08aa427be1f5",
+      "row": 139,
+      "sseqid": "cancel"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "6e608291dc56bd35bdf01b4e698adbe9c44622f0a058f5cc3ca2c11322cbca5f",
+        "protein_sha256": "50d63a8c6a68a95cd067698eb7657fe794681d64dcd4f41d3022bbe3b197198e",
+        "raw_row_sha256": "1195fc3ad87b7932fcf9c3a65655858682693393fc4154769b70a41445bffc1f"
+      },
+      "qseqid": "cancel_o0_rev",
+      "raw13_sha256": "d6bd1951fe0a2699bbcadbe509627c19c5290781bb0aa04f45c470eba7a7cedd",
+      "row": 140,
+      "sseqid": "cancel"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "fcd7243f24b731875a7a6f71f3eb0c1ef1cd16ef60b0c5a08ff61ef4d274ebb3",
+        "protein_sha256": "50d63a8c6a68a95cd067698eb7657fe794681d64dcd4f41d3022bbe3b197198e",
+        "raw_row_sha256": "2ecf7e06c52b81e1358d54e7e719cbd895eb41a6a1726df24df6714820ef8daf"
+      },
+      "qseqid": "cancel_o1_fwd",
+      "raw13_sha256": "4725258723ce2ff4f56efdc00aeea8f303d12bea0473b75b75c426dd9deed905",
+      "row": 141,
+      "sseqid": "cancel"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "6fe88cd10536f53ee050f7da207729d478cc94c624de9566cf85def532910381",
+        "protein_sha256": "50d63a8c6a68a95cd067698eb7657fe794681d64dcd4f41d3022bbe3b197198e",
+        "raw_row_sha256": "d5384b8a7909533480fcdc0941595f930ea325e588ca07e49a9f55b87fdd399e"
+      },
+      "qseqid": "cancel_o1_rev",
+      "raw13_sha256": "b1553f1da9471db05a704f4e3acbcae5806de52dd55a8d6212cd4f2a361a6bbe",
+      "row": 142,
+      "sseqid": "cancel"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "567720a0ae239ee9aff4055ee35ee1de4e6ac1ba588954930f0d13af7185c3de",
+        "protein_sha256": "50d63a8c6a68a95cd067698eb7657fe794681d64dcd4f41d3022bbe3b197198e",
+        "raw_row_sha256": "8ffab060013d6025003a2fcfecf3a3164d596f1e47ff4189c21c37cb2434d135"
+      },
+      "qseqid": "cancel_o2_fwd",
+      "raw13_sha256": "ae90561f23db5e720728575d5ecd96319fc57f095123aafedf7e0acf0840e97c",
+      "row": 143,
+      "sseqid": "cancel"
+    },
+    {
+      "disposition": "HSP_RULE_ACCEPTED",
+      "identities": {
+        "dna_sha256": "0c1b387a37675b8ca4d6d941b01620fb3da38dbd631c0c1c7db4c082b2d5f13f",
+        "protein_sha256": "50d63a8c6a68a95cd067698eb7657fe794681d64dcd4f41d3022bbe3b197198e",
+        "raw_row_sha256": "0bbf7f1653cde884371e5278aabcf6764ed36bf88449fdd7a71a472659fad830"
+      },
+      "qseqid": "cancel_o2_rev",
+      "raw13_sha256": "56dc51af58a0bf60357acb11413327d76a7f10a6871bafd53491ad961e122998",
+      "row": 144,
+      "sseqid": "cancel"
+    }
+  ],
+  "rows": 144,
+  "scope": "DIAGNOSTIC_ONLY_NOT_PRODUCTION_TRAINING_OR_LINEAGE_A11_CERTIFICATION"
+}

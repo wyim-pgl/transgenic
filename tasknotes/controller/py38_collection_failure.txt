@@ -1,0 +1,14 @@
+
+==================================== ERRORS ====================================
+_______ ERROR collecting revision/scripts/tests/test_evidence_support.py _______
+revision/scripts/tests/test_evidence_support.py:14: in <module>
+    exec(compile(SCRIPT.read_text(), str(SCRIPT), "exec"), m.__dict__)
+revision/scripts/59_evidence_support.py:242: in <module>
+    class Junction:
+revision/scripts/59_evidence_support.py:244: in Junction
+    corrected: tuple | None
+E   TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'
+=========================== short test summary info ============================
+ERROR revision/scripts/tests/test_evidence_support.py - TypeError: unsupporte...
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.31s
