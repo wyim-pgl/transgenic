@@ -1,0 +1,1731 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF        [100%]
+=================================== FAILURES ===================================
+__________ test_threshold_all_frames_and_original_codons[False-0-29] ___________
+
+n = 29, offset = 0, reverse = False
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+__________ test_threshold_all_frames_and_original_codons[False-0-30] ___________
+
+n = 30, offset = 0, reverse = False
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+__________ test_threshold_all_frames_and_original_codons[False-0-31] ___________
+
+n = 31, offset = 0, reverse = False
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+__________ test_threshold_all_frames_and_original_codons[False-1-29] ___________
+
+n = 29, offset = 1, reverse = False
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+__________ test_threshold_all_frames_and_original_codons[False-1-30] ___________
+
+n = 30, offset = 1, reverse = False
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+__________ test_threshold_all_frames_and_original_codons[False-1-31] ___________
+
+n = 31, offset = 1, reverse = False
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+__________ test_threshold_all_frames_and_original_codons[False-2-29] ___________
+
+n = 29, offset = 2, reverse = False
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+__________ test_threshold_all_frames_and_original_codons[False-2-30] ___________
+
+n = 30, offset = 2, reverse = False
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+__________ test_threshold_all_frames_and_original_codons[False-2-31] ___________
+
+n = 31, offset = 2, reverse = False
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+___________ test_threshold_all_frames_and_original_codons[True-0-29] ___________
+
+n = 29, offset = 0, reverse = True
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+___________ test_threshold_all_frames_and_original_codons[True-0-30] ___________
+
+n = 30, offset = 0, reverse = True
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+___________ test_threshold_all_frames_and_original_codons[True-0-31] ___________
+
+n = 31, offset = 0, reverse = True
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+___________ test_threshold_all_frames_and_original_codons[True-1-29] ___________
+
+n = 29, offset = 1, reverse = True
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+___________ test_threshold_all_frames_and_original_codons[True-1-30] ___________
+
+n = 30, offset = 1, reverse = True
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+___________ test_threshold_all_frames_and_original_codons[True-1-31] ___________
+
+n = 31, offset = 1, reverse = True
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+___________ test_threshold_all_frames_and_original_codons[True-2-29] ___________
+
+n = 29, offset = 2, reverse = True
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+___________ test_threshold_all_frames_and_original_codons[True-2-30] ___________
+
+n = 30, offset = 2, reverse = True
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+___________ test_threshold_all_frames_and_original_codons[True-2-31] ___________
+
+n = 31, offset = 2, reverse = True
+
+    @pytest.mark.parametrize('n', [29, 30, 31])
+    @pytest.mark.parametrize('offset', [0, 1, 2])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_threshold_all_frames_and_original_codons(n, offset, reverse):
+        row, dna, protein = fixture('K' * n, 'K' * n, offset, reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK--KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-True] _
+
+qg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKK-', sg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+accepted = True, reverse = False
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKK--False] _
+
+qg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKK-'
+accepted = False, reverse = False
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK--True] _
+
+qg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKK-'
+accepted = True, reverse = False
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-True] _
+
+qg = 'KKKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK'
+accepted = True, reverse = False
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK-KKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-False] _
+
+qg = 'KKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKK-KKKKKKKKKKKKKKK'
+accepted = False, reverse = False
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKK/KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-True] _
+
+qg = 'KKKKKKKKKKKKKKK/KKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK'
+accepted = True, reverse = False
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKKRKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-True] _
+
+qg = 'KKKKKKKKKKKKKKKRKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+accepted = True, reverse = False
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK--KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-True] _
+
+qg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKK-', sg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+accepted = True, reverse = True
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKK--False] _
+
+qg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKK-'
+accepted = False, reverse = True
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK--True] _
+
+qg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKK-'
+accepted = True, reverse = True
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-True] _
+
+qg = 'KKKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK'
+accepted = True, reverse = True
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK-KKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-False] _
+
+qg = 'KKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKK-KKKKKKKKKKKKKKK'
+accepted = False, reverse = True
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKK/KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-True] _
+
+qg = 'KKKKKKKKKKKKKKK/KKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK'
+accepted = True, reverse = True
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKKRKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-True] _
+
+qg = 'KKKKKKKKKKKKKKKRKKKKKKKKKKKKKK', sg = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+accepted = True, reverse = True
+
+    @pytest.mark.parametrize('qg,sg,accepted', [
+        ('K'*29+'-', 'K'*30, True),  # D30: query only29, whole30
+        ('K'*29, 'K'*28+'-', False), # I29: paired28, whole29
+        ('K'*30, 'K'*29+'-', True),
+        ('K'*15+'\\'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*14+'\\'+'K'*15, 'K'*14+'-'+'K'*15, False),
+        ('K'*15+'/'+'K'*15, 'K'*15+'-'+'K'*15, True),
+        ('K'*15+'R'+'K'*14, 'K'*30, True),
+    ])
+    @pytest.mark.parametrize('reverse', [False, True])
+    def test_whole_hsp_indels_mismatch_and_shift(qg, sg, accepted, reverse):
+        row, dna, protein = fixture(qg, sg, reverse=reverse)
+>       result = api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_________________________ test_reject_invalid_rich[0-] _________________________
+
+index = 0, value = ''
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_______________________ test_reject_invalid_rich[0-q x] ________________________
+
+index = 0, value = 'q x'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_________________________ test_reject_invalid_rich[2-] _________________________
+
+index = 2, value = ''
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[1-89] ________________________
+
+index = 1, value = '89'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[3-31] ________________________
+
+index = 3, value = '31'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[4-0] _________________________
+
+index = 4, value = '0'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[5-89] ________________________
+
+index = 5, value = '89'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[6-0] _________________________
+
+index = 6, value = '0'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[7-29] ________________________
+
+index = 7, value = '29'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[8-31] ________________________
+
+index = 8, value = '31'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[8-0] _________________________
+
+index = 8, value = '0'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_______________________ test_reject_invalid_rich[9-nan] ________________________
+
+index = 9, value = 'nan'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_______________________ test_reject_invalid_rich[9-inf] ________________________
+
+index = 9, value = 'inf'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_______________________ test_reject_invalid_rich[9-0.01] _______________________
+
+index = 9, value = '0.01'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_______________________ test_reject_invalid_rich[10-inf] _______________________
+
+index = 10, value = 'inf'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[10-0] ________________________
+
+index = 10, value = '0'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[11-0] ________________________
+
+index = 11, value = '0'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+________________________ test_reject_invalid_rich[12-0] ________________________
+
+index = 12, value = '0'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+__________________ test_reject_invalid_rich[12-999999999999] ___________________
+
+index = 12, value = '999999999999'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_______________________ test_reject_invalid_rich[12-30X] _______________________
+
+index = 12, value = '30X'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+______________________ test_reject_invalid_rich[12-KK29] _______________________
+
+index = 12, value = 'KK29'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+______________________ test_reject_invalid_rich[12---30] _______________________
+
+index = 12, value = '--30'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_______________________ test_reject_invalid_rich[13-29M] _______________________
+
+index = 13, value = '29M'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_________ test_reject_invalid_rich[14-RKKKKKKKKKKKKKKKKKKKKKKKKKKKKK] __________
+
+index = 14, value = 'RKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_________ test_reject_invalid_rich[15-RKKKKKKKKKKKKKKKKKKKKKKKKKKKKK] __________
+
+index = 15, value = 'RKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_________ test_reject_invalid_rich[16-RKKKKKKKKKKKKKKKKKKKKKKKKKKKKK] __________
+
+index = 16, value = 'RKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+
+    @pytest.mark.parametrize('index,value', [(0,''),(0,'q x'),(2,''),(1,'89'),(3,'31'),(4,'0'),(5,'89'),(6,'0'),(7,'29'),(8,'31'),(8,'0'),(9,'nan'),(9,'inf'),(9,'0.01'),(10,'inf'),(10,'0'),(11,'0'),(12,'0'),(12,'999999999999'),(12,'30X'),(12,'KK29'),(12,'--30'),(13,'29M'),(14,'R'+'K'*29),(15,'R'+'K'*29),(16,'R'+'K'*29)])
+    def test_reject_invalid_rich(index, value):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        row[index] = value
+        with pytest.raises(ValueError):
+>           api().classify_rich17(row, dna, protein)
+
+tests/test_est_hsp_contract.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_reject_bad_actual_sequences[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK] _
+
+dna = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+protein = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+
+    @pytest.mark.parametrize('dna,protein', [('A'*89,'K'*30),('N'+'A'*89,'K'*30),('a'*90,'K'*30),('A'*90,'X'+'K'*29),('A'*90,'K'*29),('A'*90,'K'*29+' ')])
+    def test_reject_bad_actual_sequences(dna, protein):
+        row, _, _ = fixture('K'*30, 'K'*30)
+>       for function in (api().classify_rich17, api().adapt_raw13):
+
+tests/test_est_hsp_contract.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_reject_bad_actual_sequences[NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK] _
+
+dna = 'NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+protein = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+
+    @pytest.mark.parametrize('dna,protein', [('A'*89,'K'*30),('N'+'A'*89,'K'*30),('a'*90,'K'*30),('A'*90,'X'+'K'*29),('A'*90,'K'*29),('A'*90,'K'*29+' ')])
+    def test_reject_bad_actual_sequences(dna, protein):
+        row, _, _ = fixture('K'*30, 'K'*30)
+>       for function in (api().classify_rich17, api().adapt_raw13):
+
+tests/test_est_hsp_contract.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_reject_bad_actual_sequences[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK] _
+
+dna = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+protein = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+
+    @pytest.mark.parametrize('dna,protein', [('A'*89,'K'*30),('N'+'A'*89,'K'*30),('a'*90,'K'*30),('A'*90,'X'+'K'*29),('A'*90,'K'*29),('A'*90,'K'*29+' ')])
+    def test_reject_bad_actual_sequences(dna, protein):
+        row, _, _ = fixture('K'*30, 'K'*30)
+>       for function in (api().classify_rich17, api().adapt_raw13):
+
+tests/test_est_hsp_contract.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_reject_bad_actual_sequences[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-XKKKKKKKKKKKKKKKKKKKKKKKKKKKKK] _
+
+dna = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+protein = 'XKKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+
+    @pytest.mark.parametrize('dna,protein', [('A'*89,'K'*30),('N'+'A'*89,'K'*30),('a'*90,'K'*30),('A'*90,'X'+'K'*29),('A'*90,'K'*29),('A'*90,'K'*29+' ')])
+    def test_reject_bad_actual_sequences(dna, protein):
+        row, _, _ = fixture('K'*30, 'K'*30)
+>       for function in (api().classify_rich17, api().adapt_raw13):
+
+tests/test_est_hsp_contract.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_reject_bad_actual_sequences[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK] _
+
+dna = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+protein = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKK'
+
+    @pytest.mark.parametrize('dna,protein', [('A'*89,'K'*30),('N'+'A'*89,'K'*30),('a'*90,'K'*30),('A'*90,'X'+'K'*29),('A'*90,'K'*29),('A'*90,'K'*29+' ')])
+    def test_reject_bad_actual_sequences(dna, protein):
+        row, _, _ = fixture('K'*30, 'K'*30)
+>       for function in (api().classify_rich17, api().adapt_raw13):
+
+tests/test_est_hsp_contract.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+_ test_reject_bad_actual_sequences[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK ] _
+
+dna = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+protein = 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKK '
+
+    @pytest.mark.parametrize('dna,protein', [('A'*89,'K'*30),('N'+'A'*89,'K'*30),('a'*90,'K'*30),('A'*90,'X'+'K'*29),('A'*90,'K'*29),('A'*90,'K'*29+' ')])
+    def test_reject_bad_actual_sequences(dna, protein):
+        row, _, _ = fixture('K'*30, 'K'*30)
+>       for function in (api().classify_rich17, api().adapt_raw13):
+
+tests/test_est_hsp_contract.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+___________ test_raw_equal_runs_checked_against_dna_and_source_hash ____________
+
+    def test_raw_equal_runs_checked_against_dna_and_source_hash():
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        with pytest.raises(ValueError):
+>           api().adapt_raw13(row[:13], 'GCC'+dna[3:], protein)
+
+tests/test_est_hsp_contract.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def api():
+        # Assertion gives a useful RED rather than a collection/import error.
+        from importlib.util import find_spec
+        name = 'revision.scripts.evidence.est_hsp_contract'
+>       assert find_spec(name) is not None, 'approved HSP contract not implemented'
+E       AssertionError: approved HSP contract not implemented
+E       assert None is not None
+E        +  where None = <function find_spec at 0x71fcb67aa0d0>('revision.scripts.evidence.est_hsp_contract')
+
+tests/test_est_hsp_contract.py:15: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[False-0-29]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[False-0-30]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[False-0-31]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[False-1-29]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[False-1-30]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[False-1-31]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[False-2-29]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[False-2-30]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[False-2-31]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[True-0-29]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[True-0-30]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[True-0-31]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[True-1-29]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[True-1-30]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[True-1-31]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[True-2-29]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[True-2-30]
+FAILED tests/test_est_hsp_contract.py::test_threshold_all_frames_and_original_codons[True-2-31]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK--KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-True]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKK--False]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK--True]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-True]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK-KKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-False]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKK/KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-True]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[False-KKKKKKKKKKKKKKKRKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-True]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK--KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-True]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKK--False]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK--True]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-True]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKK\\KKKKKKKKKKKKKKK-KKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-False]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKK/KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-KKKKKKKKKKKKKKK-True]
+FAILED tests/test_est_hsp_contract.py::test_whole_hsp_indels_mismatch_and_shift[True-KKKKKKKKKKKKKKKRKKKKKKKKKKKKKK-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK-True]
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[0-] - Asserti...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[0-q x] - Asse...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[2-] - Asserti...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[1-89] - Asser...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[3-31] - Asser...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[4-0] - Assert...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[5-89] - Asser...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[6-0] - Assert...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[7-29] - Asser...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[8-31] - Asser...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[8-0] - Assert...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[9-nan] - Asse...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[9-inf] - Asse...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[9-0.01] - Ass...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[10-inf] - Ass...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[10-0] - Asser...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[11-0] - Asser...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[12-0] - Asser...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[12-999999999999]
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[12-30X] - Ass...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[12-KK29] - As...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[12---30] - As...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[13-29M] - Ass...
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[14-RKKKKKKKKKKKKKKKKKKKKKKKKKKKKK]
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[15-RKKKKKKKKKKKKKKKKKKKKKKKKKKKKK]
+FAILED tests/test_est_hsp_contract.py::test_reject_invalid_rich[16-RKKKKKKKKKKKKKKKKKKKKKKKKKKKKK]
+FAILED tests/test_est_hsp_contract.py::test_reject_bad_actual_sequences[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK]
+FAILED tests/test_est_hsp_contract.py::test_reject_bad_actual_sequences[NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK]
+FAILED tests/test_est_hsp_contract.py::test_reject_bad_actual_sequences[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK]
+FAILED tests/test_est_hsp_contract.py::test_reject_bad_actual_sequences[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-XKKKKKKKKKKKKKKKKKKKKKKKKKKKKK]
+FAILED tests/test_est_hsp_contract.py::test_reject_bad_actual_sequences[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK]
+FAILED tests/test_est_hsp_contract.py::test_reject_bad_actual_sequences[AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-KKKKKKKKKKKKKKKKKKKKKKKKKKKKK ]
+FAILED tests/test_est_hsp_contract.py::test_raw_equal_runs_checked_against_dna_and_source_hash
+65 failed in 0.80s
