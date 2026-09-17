@@ -262,17 +262,15 @@ def run(args):
     from transgenic.training.mvp_runtime import MVPRecipe, make_accelerator, build_optimizer
     from transgenic.training.mvp_cli import validate_candidate_records
     from transgenic.training.mvp_cli_runtime import (_collect_runtime_hardware, _validate_public_hardware,
-        compile_bound_forward, verify_candidate_artifacts, _close_dataset, require_matching_identity)
+        compile_bound_forward, verify_candidate_artifacts, _close_dataset, require_matching_identity,
+        validate_decoder_dataset)
     from transgenic.training import mvp_finalize as f
     from transgenic.datasets.datasets import isoformDataHyena, hyena_collate_fn
     torch.cuda.set_device(int(os.environ['LOCAL_RANK']))
     torch.cuda.reset_peak_memory_stats()
     accelerator = make_accelerator(MVPRecipe(), mixed_precision='bf16')
     ds = valid = None
-    profile = Path(args.profile_dir).resolve()
-    scratch = Path(args.scratch_root).resolve(strict=True)
-    if not profile.is_relative_to(scratch) or profile == scratch:
-        raise ValueError('fresh profile directory must be beneath independent scratch root')
+    profile = None
     row = dict(rank=accelerator.process_index, stages={}, tiers={})
 
     def local(operation):
@@ -327,15 +325,25 @@ def run(args):
             raise ValueError('SIF bytes differ from prepared bindings')
         return artifacts
 
+    def profile_path():
+        path = Path(args.profile_dir).resolve()
+        scratch = Path(args.scratch_root).resolve(strict=True)
+        if not path.is_relative_to(scratch) or path == scratch:
+            raise ValueError('fresh profile directory must be beneath independent scratch root')
+        return path
+
     try:
+        profile = local(profile_path)
         f._collective_preflight(accelerator, lambda: profile.mkdir() if accelerator.is_main_process else None)
         bindings, roots, runtime = local(lambda: p.setup(args))
         hardware = _validate_public_hardware(_collect_runtime_hardware(accelerator))
         require_matching_identity(accelerator, _canonical_bytes(budget))
         row['capacity_bytes'] = local(lambda: torch.cuda.get_device_properties(accelerator.device).total_memory)
         model, cfg, audit = local(lambda: p.load_model(args, bindings))
-        ds = local(lambda: p.datasets(args, bindings))
-        local(lambda: require_v3_dataset(ds, cfg))  # Fails on unintegrated R1 base.
+        model_config = model.config  # Preserve the bound config before compilation/DDP wrapping.
+        ds = local(lambda: p.datasets(args, bindings, cfg, model.config))
+        local(lambda: validate_decoder_dataset(ds, cfg, model_config))
+        local(lambda: require_v3_dataset(ds, cfg))
         row['label_contract'] = dict(gff_vocab_version=ds.gff_vocab_version,
                                      maxlength=ds.maxlength, vocab_size=len(ds.dt.vocab))
         local(lambda: model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False}))
@@ -358,6 +366,7 @@ def run(args):
                 species='Athaliana', evidence_db=args.evidence_db, evidence_k=8,
                 aug_seed=20260914 + bindings['seed'], eval_fraction=1, return_tile_ids=True,
                 gff_vocab_version=cfg['gff_vocab_version'])
+            validate_decoder_dataset(valid, cfg, model_config)
             require_v3_dataset(valid, cfg)
             if ds._index_map != artifacts['train_rns'] or valid._index_map != artifacts['valid_rns']:
                 raise ValueError('dataset differs from accepted full inventory')
@@ -394,8 +403,8 @@ def run(args):
                 local(lambda: torch.cuda.synchronize(accelerator.device))
                 start = time.monotonic()
                 kernels = metrics.generated_kernel_count
-                batches = local(lambda: [hyena_collate_fn([ds[index]]) for _, _, index in chosen])
-                # R2's coordinated shared helper must be integrated before GPU run.
+                batches = p.collective_batches(accelerator,
+                    (hyena_collate_fn([ds[index]]) for _, _, index in chosen))
                 # Retains shared probe LR semantics; does not override the trainer.
                 with torch._dynamo.config.patch(error_on_recompile=bool(update)):
                     measured = p.one_update(accelerator, model, optimizer, batches)
@@ -419,10 +428,7 @@ def run(args):
                     if torch._dynamo.config.suppress_errors:
                         raise RuntimeError('eager fallback enabled; resource probe cannot pass')
                 local(check_kernels)
-        def check_compiled():
-            if metrics.generated_kernel_count <= generated_before:
-                raise RuntimeError('no observed Inductor kernels; resource probe cannot pass')
-        local(check_compiled)
+        p.collective_compiler_check(accelerator, generated_before)
         loader = local(lambda: DataLoader(valid, batch_size=1, num_workers=0, collate_fn=hyena_collate_fn,
             sampler=DistributedSampler(valid, num_replicas=4, rank=accelerator.process_index,
                                        shuffle=False, drop_last=False), pin_memory=True))

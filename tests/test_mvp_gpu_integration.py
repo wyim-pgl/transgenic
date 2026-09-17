@@ -24,6 +24,20 @@ def test_resource_uses_bound_factory_and_validates_before_wrap():
     prepare = next(n for n in calls if ast.unparse(n.func) == 'accelerator.prepare')
     assert factory.lineno < prepare.lineno
     assert all(ast.unparse(n.args[2]) == 'model_config' for n in validators)
+    train_check = next(n for n in validators if ast.unparse(n.args[0]) == 'ds')
+    assert train_check.lineno < prepare.lineno
+
+
+def test_resource_reuses_coordinated_helpers_without_local_guard():
+    tree = ast.parse(inspect.getsource(r.run))
+    calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call)]
+    collective = {'p.collective_batches', 'p.one_update', 'p.collective_compiler_check',
+                  'accelerator.prepare', 'paired_validation'}
+    assert collective <= {ast.unparse(n.func) for n in calls}
+    for call in calls:
+        if ast.unparse(call.func) in {'local', 'f._collective_preflight'}:
+            assert not any(isinstance(n, ast.Call) and ast.unparse(n.func) in collective
+                           for arg in call.args for n in ast.walk(arg))
 
 
 def test_resource_dispatch_is_early_and_offline(monkeypatch):
@@ -45,6 +59,46 @@ def test_compiled_main_passes_owned_accelerator():
     assert list(inspect.signature(p.compiled_update).parameters) == ['args', 'bindings', 'model', 'ds', 'accelerator']
 
 
+@pytest.mark.parametrize('mode', ['bf16_compile', 'four_rank_smoke'])
+@pytest.mark.parametrize('failure', ['setup', 'compiled'])
+def test_normal_main_owns_one_accelerator_on_failure(monkeypatch, mode, failure):
+    import torch
+    from transgenic.training import mvp_runtime, mvp_finalize as f, mvp_cli_runtime as runtime
+    counts = dict(create=0, end=0, compiled=0)
+    owner = SimpleNamespace(end_training=lambda: counts.update(end=counts['end'] + 1))
+    def make(*args, **kwargs):
+        counts['create'] += 1
+        return owner
+    class StopProbe(Exception):
+        pass
+    def setup(args):
+        if failure == 'setup':
+            raise StopProbe('setup')
+        return {}, {}, {}
+    dataset = object()
+    closed = []
+    def compiled(args, bindings, model, ds, accelerator):
+        assert accelerator is owner and ds is dataset
+        counts['compiled'] += 1
+        raise StopProbe('compiled')
+    monkeypatch.setattr(p, 'parser', lambda: SimpleNamespace(parse_args=lambda argv: SimpleNamespace(mode=mode)))
+    monkeypatch.setattr(p, 'require_cuda', lambda: None)
+    monkeypatch.setattr(torch.cuda, 'set_device', lambda *a: None)
+    monkeypatch.setattr(mvp_runtime, 'make_accelerator', make)
+    monkeypatch.setattr(f, '_collective_preflight', lambda accelerator, operation: operation())
+    monkeypatch.setattr(p, 'setup', setup)
+    monkeypatch.setattr(p, 'load_model', lambda *a: (SimpleNamespace(config=object()), {}, {}))
+    monkeypatch.setattr(p, 'datasets', lambda *a: dataset)
+    monkeypatch.setattr(p, 'measured_batches', lambda *a: {})
+    monkeypatch.setattr(p, 'compiled_update', compiled)
+    monkeypatch.setattr(runtime, '_close_dataset', closed.append)
+    monkeypatch.setattr(r, 'run', lambda *a: pytest.fail('normal mode cannot dispatch resource owner'))
+    with pytest.raises(StopProbe, match=failure):
+        p.main([])
+    assert counts == dict(create=1, end=1, compiled=int(failure == 'compiled'))
+    assert closed == [dataset if failure == 'compiled' else None]
+
+
 def test_resource_cpu_dispatch_refuses_cuda(monkeypatch, tmp_path):
     import torch
     from test_mvp_resource_probe import fixture
@@ -63,7 +117,8 @@ def test_resource_cpu_dispatch_refuses_cuda(monkeypatch, tmp_path):
     assert not list(tmp_path.iterdir())
 
 
-def test_resource_real_factories_both_decoder_contracts(monkeypatch, tmp_path):
+@pytest.mark.parametrize('failure', ['inventory', 'profile'])
+def test_resource_real_factories_both_decoder_contracts(monkeypatch, tmp_path, failure):
     import duckdb
     import torch
     from test_mvp_dataset import DatasetTests
@@ -85,8 +140,8 @@ def test_resource_real_factories_both_decoder_contracts(monkeypatch, tmp_path):
         device = torch.device('cpu')
         def prepare(self, model, optimizer):
             counts['prepare'] += 1
-            assert observed == ['train']
-            return model, optimizer
+            assert observed == ['train', 'train']
+            return SimpleNamespace(), optimizer  # Wrapper deliberately has no config.
         def wait_for_everyone(self):
             pass
         def end_training(self):
@@ -137,11 +192,18 @@ def test_resource_real_factories_both_decoder_contracts(monkeypatch, tmp_path):
     try:
         with duckdb.connect(data.db) as con:
             con.execute("UPDATE geneList SET gff='<empty>'")
+        if failure == 'profile':
+            args.profile_dir = str(tmp_path)
+            with pytest.raises(ValueError, match='beneath independent scratch'):
+                r.run(args)
+            assert counts == dict(create=1, end=1, prepare=0)
+            assert not observed
+            return
         with pytest.raises(StopInventory, match='both actual factories reached'):
             r.run(args)
         assert observed == ['train', 'train', 'valid']  # shared factory + resource train/valid checks
         assert counts == dict(create=1, end=1, prepare=1)
-        assert all(ds._con is None for ds in datasets) if hasattr(datasets[0], '_con') else True
+        assert all(ds._con is None and ds._evidence_con is None for ds in datasets)
         assert not (tmp_path / 'profile/PROBE_ONLY_CHECKPOINT').exists()
     finally:
         data.doCleanups()
