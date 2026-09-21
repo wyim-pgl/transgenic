@@ -25,6 +25,8 @@ def training_arguments(path, expected_sha):
     args = build_parser().parse_args(argv)
     if args.validate_only:
         raise ValueError('validate-only bypasses readiness and is forbidden in this launcher')
+    from transgenic.training.mvp_profiles import validate_seed_profile
+    validate_seed_profile(args.profile, args.seed)
     _required(args, ('db', 'evidence_db', 'panel', 'acceptance_record', 'acceptance_sha256',
                      'inventory_record', 'receipts_record', 'config', 'init_from', 'output_dir',
                      'sif', 'seed', 'launch_readiness', 'launch_readiness_sha256'))
@@ -56,6 +58,9 @@ def main(argv=None):
     try:
         training_argv, training = training_arguments(args.arguments, args.arguments_sha256)
         budget = json_snapshot(args.budget_authorization, args.budget_sha256)
+        from resource_probe import validate_budget
+        validate_budget(budget, budget.get('bindings_sha256'),
+                        bindings=dict(profile=training.profile, seed=training.seed))
         if (budget.get('authorized_scope') != 'exploratory_mvp' or
                 training.seed not in budget.get('seeds', []) or
                 type(budget.get('max_wall_seconds')) is not int or
@@ -63,6 +68,9 @@ def main(argv=None):
             raise ValueError('explicit seed/walltime authorization required')
         check(training)  # Direct readiness path; not --validate-only.
         ready = json_snapshot(training.readiness, training.readiness_sha256)
+        import hashlib
+        validate_budget(budget, hashlib.sha256(_canonical_bytes(ready['bindings'])).hexdigest(),
+                        bindings=ready['bindings'])
         resource = ready['evidence']['resource_budget']
         measured = json_snapshot(resource['receipt_path'], resource['receipt_sha256'])['measurement']
         if (measured['authorization_sha256'] != args.budget_sha256 or

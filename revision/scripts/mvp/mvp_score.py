@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """CPU MVP statistics from caller-supplied counts and final eval-pair JSONL.
 
-Input JSON: pairs maps '1','2','3' to final deduplicated JSONL paths; loci is
+Legacy JSON: pairs maps '1','2','3' to final deduplicated JSONL paths; loci is
 50 records {gene_id, seeds: {'1': {'off': counts, 'on': counts}, ...}}.
 counts: f1_tp, f1_predicted, f1_reference (GFFCompare v0.12.6 restricted
 transcript counts; monoexonic exact CDS), and optionally precision_tp,
 predicted, recall_tp, supported (exact junction counts). All are integers.
-Structural counts must be present everywhere or nowhere, never filled as zero
-for missing evidence. F1 is percentage points; P/R are fractions.
+Legacy structural counts must be present everywhere or nowhere, never filled as
+zero for missing evidence. Explicit development-single uses pairs.mvp_seed123,
+loci.seeds['123'], and descriptive single-seed bootstrap;
+partially missing structural counts suppress pooled P/R rather than becoming zero. F1 is percentage points; P/R are fractions.
 This adapter does not decode models or claim to run GFFCompare. Pair paths
 must identify distinct files, but filenames and seed keys do not prove distinct
 runs. API and CLI outputs mark pair/run provenance UNVERIFIED and three-seed
@@ -23,10 +25,72 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'src'))
 from transgenic.evidence import mvp_bootstrap as b, mvp_windows as w
 
 
+# Structural-coverage contract, frozen by PROTOCOL_B1 A47 (v1.37, 2026-09-21)
+# and B6_MVP_PILOT_v1 §2. A47 settles what used to be pending here: FLNC is
+# never produced in this project, ERR13994458 (A-HiFi) and PRJNA911826
+# (A-CCS23) publish no downloadable CCS/FLNC product, so A-ONT1 is the only
+# structural source and HiFi is missing PER SOURCE -- never a zero count.
+COVERAGE_POLICY_ID = 'B1-A47-v1.37/MVP-v1'
+COVERAGE_STRUCTURAL_SOURCES = ('ONT',)
+COVERAGE_UNAVAILABLE_SOURCES = ('HiFi',)
+COVERAGE_POOLING = 'within_source'
+_COVERAGE_FIELDS = ('policy_id', 'structural_sources', 'thresholds',
+                    'unavailable_sources', 'pooling', 'per_run_retained')
+
+
+def _frozen_thresholds():
+    """The scorer's own thresholds, loaded from the frozen wrapper, not restated."""
+    import importlib.util
+    path = Path(__file__).resolve().parent / 'mvp_junction_table.py'
+    spec = importlib.util.spec_from_file_location('mvp_junction_table', path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules.setdefault(spec.name, module)
+    spec.loader.exec_module(module)
+    return module.SOURCE_THRESHOLDS
+
+
 def require_coverage_policy(policy):
-    # No policy is approved in this implementation. A future author-approved
-    # policy must specify technology/run coverage before decision publication.
-    raise ValueError('coverage policy pending author approval (HiFi versus ONT-only)')
+    """Validate a structural-coverage policy against the frozen A47 contract.
+
+    The contract must be stated explicitly by the caller; nothing is defaulted,
+    so a missing or partial policy fails closed exactly as before. Accepts the
+    A47 contract and nothing else, and returns the normalised record to record
+    alongside the result.
+    """
+    if not isinstance(policy, dict):
+        raise ValueError(
+            'coverage policy required: pass the A47 contract explicitly '
+            f'(policy_id {COVERAGE_POLICY_ID}); got {type(policy).__name__}')
+    unknown = sorted(set(policy) - set(_COVERAGE_FIELDS))
+    missing = sorted(set(_COVERAGE_FIELDS) - set(policy))
+    if unknown or missing:
+        raise ValueError(f'coverage policy fields wrong: unknown {unknown}, missing {missing}')
+    if policy['policy_id'] != COVERAGE_POLICY_ID:
+        raise ValueError(f'coverage policy {policy["policy_id"]!r} is not the approved '
+                         f'contract {COVERAGE_POLICY_ID!r}')
+    sources = tuple(policy['structural_sources'])
+    if sources != COVERAGE_STRUCTURAL_SOURCES:
+        raise ValueError(f'coverage policy declares structural sources {sources}; A47 approves '
+                         f'{COVERAGE_STRUCTURAL_SOURCES} only (A-HiFi has no FLNC product '
+                         'and none is produced here)')
+    if tuple(policy['unavailable_sources']) != COVERAGE_UNAVAILABLE_SOURCES:
+        raise ValueError(f'coverage policy must declare {COVERAGE_UNAVAILABLE_SOURCES} unavailable; '
+                         'a missing source is recorded as missing, never as zero support')
+    frozen = _frozen_thresholds()
+    thresholds = {k: policy['thresholds'][k] for k in policy['thresholds']}
+    expected = {source: frozen[source] for source in sources}
+    if thresholds != expected:
+        raise ValueError(f'coverage policy thresholds {thresholds} contradict the frozen '
+                         f'59_evidence_support thresholds {expected}')
+    if policy['pooling'] != COVERAGE_POOLING:
+        raise ValueError(f'coverage policy pooling {policy["pooling"]!r} is not {COVERAGE_POOLING!r}; '
+                         'read-count thresholds are per source, so cross-source pooling is not arithmetic')
+    if policy['per_run_retained'] is not True:
+        raise ValueError('coverage policy must retain per-run results alongside the pooled result '
+                         '(PROTOCOL_B1 §3.2, B6_MVP_PILOT_v1 §2)')
+    return dict(policy_id=COVERAGE_POLICY_ID, structural_sources=list(sources),
+                thresholds=expected, unavailable_sources=list(COVERAGE_UNAVAILABLE_SOURCES),
+                pooling=COVERAGE_POOLING, per_run_retained=True)
 
 
 def predicted_junctions(transcripts, locus):
@@ -72,20 +136,37 @@ def metric(rows, fraction, name, seeds=(1, 2, 3)):
 
 
 def score(payload, panel):
-    if set(payload['pairs']) != {'1', '2', '3'}:
-        raise ValueError('exact seeds 1, 2, 3 required')
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE, validate_seed_profile
+    profile = payload.get('profile', LEGACY_PROFILE)
+    development = profile == DEVELOPMENT_PROFILE
+    seeds = (123,) if development else (1, 2, 3)
+    validate_seed_profile(profile, seeds[0])
+    metadata = payload.get('metadata', {})
+    if not isinstance(metadata, dict) or metadata.get('profile', profile) != profile:
+        raise ValueError('metadata profile mismatch')
+    if development:
+        for record in (payload, metadata):
+            if 'run_id' in record and record['run_id'] != 'mvp_seed123':
+                raise ValueError('development scorer run identity mismatch')
+            if record.get('run_role', 'mvp_finetune') != 'mvp_finetune':
+                raise ValueError('development scorer run role mismatch')
+            if 'seed' in record:
+                validate_seed_profile(profile, record['seed'])
+    pair_keys = {'mvp_seed123'} if development else {'1', '2', '3'}
+    if set(payload['pairs']) != pair_keys:
+        raise ValueError('exact profile pair run inventory required' if development else 'exact seeds 1, 2, 3 required')
     paths = {s: Path(path).resolve(strict=True) for s, path in payload['pairs'].items()}
     seen = []
     for path in paths.values():
         if any(path == previous or path.samefile(previous) for previous in seen):
             raise ValueError('duplicate pair input file; seed labels do not establish run identity')
         seen.append(path)
-    records = {int(s): [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    records = {(123 if development else int(s)): [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
                for s, path in paths.items()}
-    rns, delta = b.build_tiles(records)
+    rns, delta = b.build_tiles(records, expected_seeds=seeds, profile=profile)
     primary = b.tile_bootstrap(delta)
     composite = math.fsum(r['composite_loss_off'] - r['composite_loss_on']
-                         for rows in records.values() for r in rows if r['has_evidence']) / (3 * len(rns))
+                         for rows in records.values() for r in rows if r['has_evidence']) / (len(seeds) * len(rns))
     loci = payload['loci']
     ids = [r['gene_id'] for r in loci]
     if len(ids) != len(set(ids)) or set(ids) != {l.gene_id for l in panel}:
@@ -93,8 +174,8 @@ def score(payload, panel):
     loci = sorted(loci, key=lambda r: r['gene_id'])
     structural_flags = []
     for row in loci:
-        if set(row['seeds']) != {'1', '2', '3'}:
-            raise ValueError('each locus must carry all three seeds')
+        if set(row['seeds']) != {str(seed) for seed in seeds}:
+            raise ValueError('each locus must carry exactly the profile seeds')
         frozen = {}
         for pair in row['seeds'].values():
             if set(pair) != {'off', 'on'}:
@@ -117,7 +198,7 @@ def score(payload, panel):
                 for field in ['f1_reference'] + (['supported'] if available else []):
                     if c[field] != frozen.setdefault(field, c[field]):
                         raise ValueError(f'{field} must be frozen across all fractions and seeds per locus')
-    if any(structural_flags) != all(structural_flags):
+    if not development and any(structural_flags) != all(structural_flags):
         raise ValueError('partially missing structural scoring; do not encode missing as negative')
     result = dict(label='exploratory / MVP', panel_sha256=w.PANEL_SHA256,
                   primary=primary, composite_delta_diagnostic=composite,
@@ -127,14 +208,26 @@ def score(payload, panel):
                   three_seed_identity_verified=False, three_seed_policy_verified=False,
                   decision=None, decision_status='BLOCKED_PENDING_COVERAGE_POLICY',
                   precision_rule='point_estimate_ge_0; interpretation pending author review')
+    if development:
+        result.pop('three_seed_identity_verified')
+        result.pop('three_seed_policy_verified')
+        result.update(profile=profile, run_id='mvp_seed123', run_role='mvp_finetune', seed=123,
+                      decision_status='DESCRIPTIVE_SINGLE_SEED_NO_FINAL_DECISION',
+                      structural_status=('AVAILABLE_CALLER_COUNTS_UNVERIFIED' if all(structural_flags)
+                                         else 'PARTIAL_UNASSESSABLE_NOT_ZERO' if any(structural_flags)
+                                         else 'MISSING_UNASSESSABLE_NOT_ZERO'),
+                      structural_pairs_present=sum(structural_flags), structural_pairs_total=len(structural_flags),
+                      bootstrap_scope='descriptive paired tiles/loci conditional on one training seed; no across-seed inference',
+                      precision_rule='descriptive only; no final GO/STOP')
     core = {l.gene_id for l in panel if l.panel == 'mvp_core'}
     for stratum, rows in [('all50', loci), ('core20', [r for r in loci if r['gene_id'] in core])]:
         result['readouts'][stratum] = {}
         for name in ['F1'] + (['P', 'R'] if all(structural_flags) else []):
             by_seed = {}
-            for label, seeds in [('pooled', (1, 2, 3)), ('1', (1,)), ('2', (2,)), ('3', (3,))]:
+            groups = [('123', (123,))] if development else [('pooled', (1, 2, 3)), ('1', (1,)), ('2', (2,)), ('3', (3,))]
+            for label, group_seeds in groups:
                 try:
-                    by_seed[label] = b.locus_bootstrap(rows, lambda sample: metric(sample, 'on', name, seeds) - metric(sample, 'off', name, seeds))
+                    by_seed[label] = b.locus_bootstrap(rows, lambda sample: metric(sample, 'on', name, group_seeds) - metric(sample, 'off', name, group_seeds))
                 except b.BootstrapError as e:
                     by_seed[label] = {'status': 'UNASSESSABLE', 'reason': str(e)}
             result['readouts'][stratum][name] = by_seed
@@ -146,18 +239,35 @@ def main(argv=None):
     p.add_argument('--input', required=True, type=Path)
     p.add_argument('--panels', required=True, type=Path)
     p.add_argument('--out', required=True, type=Path)
-    p.add_argument('--final-decision', action='store_true', help='currently fail-closed pending author policy')
+    p.add_argument('--final-decision', action='store_true',
+                   help='publish a final decision; requires --coverage-policy stating the A47 contract')
+    p.add_argument('--coverage-policy', type=Path,
+                   help='JSON structural-coverage policy validated against the frozen A47 contract')
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE
+    p.add_argument('--profile', choices=(LEGACY_PROFILE, DEVELOPMENT_PROFILE))
     a = p.parse_args(argv)
-    if a.final_decision:
-        require_coverage_policy(None)
     input_hash = w.sha256_file(a.input)
     payload = json.loads(a.input.read_text())
+    profile = payload.get('profile', LEGACY_PROFILE)
+    if a.profile is not None and a.profile != profile:
+        raise ValueError('CLI/payload profile mismatch')
+    coverage = None
+    if a.final_decision:
+        if profile == DEVELOPMENT_PROFILE:
+            raise ValueError('development-single has no final decision')
+        if a.coverage_policy is None:
+            raise ValueError('coverage policy required: --final-decision needs --coverage-policy '
+                             f'stating the A47 contract ({COVERAGE_POLICY_ID})')
+        coverage = require_coverage_policy(json.loads(a.coverage_policy.read_text()))
+    elif a.coverage_policy is not None:
+        raise ValueError('--coverage-policy is only meaningful with --final-decision')
     hashes = {str(path): w.sha256_file(path) for path in [a.panels, *payload['pairs'].values()]}
     hashes[str(a.input)] = input_hash
     result = score(payload, w.load_panel(a.panels))
     if any(w.sha256_file(path) != expected for path, expected in hashes.items()):
         raise ValueError('scoring input changed during computation')
     result['input_sha256'] = hashes
+    result['coverage_policy'] = coverage
     result['count_provenance_status'] = 'caller-supplied counts; not independently verified by this adapter'
     with a.out.open('x') as f:
         json.dump(result, f, indent=2, allow_nan=False)

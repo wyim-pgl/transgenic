@@ -134,7 +134,23 @@ def parser():
     return p
 
 
+def load_bindings(args):
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE, validate_seed_profile
+    record = json_snapshot(args.bindings, args.bindings_file_sha256)
+    bindings = record['bindings']
+    profile = bindings.get('profile', LEGACY_PROFILE)
+    validate_seed_profile(profile, bindings.get('seed'))
+    if ((profile == DEVELOPMENT_PROFILE or 'run_role' in bindings) and
+            bindings.get('run_role') != 'mvp_finetune'):
+        raise ValueError('probe run_role must be mvp_finetune')
+    binding_sha = hashlib.sha256(_canonical_bytes(bindings)).hexdigest()
+    if record['bindings_sha256'] != binding_sha or os.environ.get('MVP_BINDINGS_SHA256') != binding_sha:
+        raise ValueError('prepared bindings/runner identity mismatch')
+    return bindings
+
+
 def setup(args):
+    bindings = load_bindings(args)
     require_cuda()  # Before DB/cache hashing or construction; no CPU fixtures.
     require_allocation()
     if os.environ.get('CUBLAS_WORKSPACE_CONFIG') != ':4096:8':
@@ -146,18 +162,13 @@ def setup(args):
     # Must precede all HF imports. Factories retain the exact training cache paths.
     os.environ['HF_HUB_OFFLINE'] = '1'
     os.environ['TRANSFORMERS_OFFLINE'] = '1'
-    record = json_snapshot(args.bindings, args.bindings_file_sha256)
-    bindings = record['bindings']
-    binding_sha = hashlib.sha256(_canonical_bytes(bindings)).hexdigest()
-    if record['bindings_sha256'] != binding_sha or os.environ.get('MVP_BINDINGS_SHA256') != binding_sha:
-        raise ValueError('prepared bindings/runner identity mismatch')
     if bindings['tooling'] != tooling_identity():
         raise ValueError('probe tooling changed since prepare')
     runtime = runtime_contract(bindings)  # Fail before expensive asset/DB hashing.
     from dataclasses import asdict
     from transgenic.training.mvp_runtime import MVPRecipe
-    if bindings['recipe'] != asdict(MVPRecipe()) or bindings['seed'] not in (1, 2, 3):
-        raise ValueError('only the approved 250/12 recipe and seeds 1/2/3 are supported')
+    if bindings['recipe'] != asdict(MVPRecipe()):
+        raise ValueError('only the approved 250/12 recipe is supported')
     for path, key in ((args.db, 'corpus_sha256'), (args.evidence_db, 'evidence_sha256'),
                       (args.config, 'config_sha256')):
         if _sha256(Path(path)) != bindings[key]:
@@ -207,6 +218,12 @@ def setup(args):
 
 
 def load_model(args, bindings):
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE, validate_seed_profile
+    profile = bindings.get('profile', LEGACY_PROFILE)
+    validate_seed_profile(profile, bindings.get('seed'))
+    if ((profile == DEVELOPMENT_PROFILE or 'run_role' in bindings) and
+            bindings.get('run_role') != 'mvp_finetune'):
+        raise ValueError('probe run_role must be mvp_finetune')
     import torch
     from transgenic.training.b5_runtime import load_b5_config, model_kwargs
     from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
@@ -606,6 +623,7 @@ def main(argv=None):
     if args.mode == 'resource_budget':
         from resource_probe import run
         return run(args)
+    load_bindings(args)  # Reject cross-profile identity before any CUDA access.
     started = time.monotonic()
     require_cuda()
     import torch
@@ -664,6 +682,7 @@ def main(argv=None):
         from transgenic.training.mvp_cli_runtime import _manifest_files
         _manifest_files(Path(bindings['consumed_code_manifest']['path']))
         result.update(device='cuda', real_runtime=True, mode=args.mode, runtime=runtime,
+            profile=bindings.get('profile', 'historical-three-seed'), seed=bindings['seed'], run_role='mvp_finetune',
             bindings_sha256=os.environ['MVP_BINDINGS_SHA256'],
             initialization_audit_sha256=hashlib.sha256(_canonical_bytes(audit)).hexdigest(),
             tile_rns_sha256=args.tile_rns_sha256, assets_manifest_sha256=args.assets_sha256,

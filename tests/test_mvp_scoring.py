@@ -124,6 +124,66 @@ def test_scoring_missing_independent_not_negative():
         m.require_coverage_policy(None)
 
 
+def approved_coverage_policy(**overrides):
+    m = script('mvp_score')
+    policy = dict(policy_id=m.COVERAGE_POLICY_ID,
+                  structural_sources=list(m.COVERAGE_STRUCTURAL_SOURCES),
+                  thresholds={'ONT': 3},
+                  unavailable_sources=list(m.COVERAGE_UNAVAILABLE_SOURCES),
+                  pooling=m.COVERAGE_POOLING,
+                  per_run_retained=True)
+    policy.update(overrides)
+    return policy
+
+
+def test_coverage_policy_accepts_the_a47_contract_and_normalises_it():
+    m = script('mvp_score')
+    contract = m.require_coverage_policy(approved_coverage_policy())
+    assert contract == dict(policy_id='B1-A47-v1.37/MVP-v1', structural_sources=['ONT'],
+                            thresholds={'ONT': 3}, unavailable_sources=['HiFi'],
+                            pooling='within_source', per_run_retained=True)
+
+
+def test_coverage_policy_rejects_hifi_as_a_structural_source():
+    m = script('mvp_score')
+    with pytest.raises(ValueError, match='structural sources'):
+        m.require_coverage_policy(approved_coverage_policy(
+            structural_sources=['ONT', 'HiFi'], thresholds={'ONT': 3, 'HiFi': 2},
+            unavailable_sources=[]))
+
+
+def test_coverage_policy_rejects_thresholds_that_contradict_the_frozen_scorer():
+    m = script('mvp_score')
+    with pytest.raises(ValueError, match='frozen'):
+        m.require_coverage_policy(approved_coverage_policy(thresholds={'ONT': 1}))
+
+
+def test_coverage_policy_rejects_an_unavailable_source_recorded_as_available():
+    m = script('mvp_score')
+    with pytest.raises(ValueError, match='never as zero'):
+        m.require_coverage_policy(approved_coverage_policy(unavailable_sources=[]))
+
+
+def test_coverage_policy_rejects_cross_source_pooling():
+    m = script('mvp_score')
+    with pytest.raises(ValueError, match='pooling'):
+        m.require_coverage_policy(approved_coverage_policy(pooling='across_sources'))
+
+
+def test_shipped_coverage_policy_file_is_the_approved_contract():
+    m = script('mvp_score')
+    shipped = json.loads((ROOT / 'revision/scripts/mvp/coverage_policy_a47.json').read_text())
+    assert m.require_coverage_policy(shipped)['policy_id'] == m.COVERAGE_POLICY_ID
+
+
+def test_coverage_policy_requires_every_field_to_be_stated():
+    m = script('mvp_score')
+    partial = approved_coverage_policy()
+    del partial['per_run_retained']
+    with pytest.raises(ValueError, match='missing'):
+        m.require_coverage_policy(partial)
+
+
 def test_bootstrap_carries_seeds_together_and_matches_rng():
     deltas = np.array([[1., 2., -3.], [4., 5., -9.], [7., 8., -15.]])
     result = b.tile_bootstrap(deltas)
@@ -184,8 +244,18 @@ def test_real_score_cli_full_frozen_panel_missing_structural(tmp_path):
                               '--input', str(inp), '--panels', str(panel), '--out', str(blocked_out),
                               '--final-decision'], capture_output=True, text=True)
     assert blocked.returncode != 0
-    assert 'coverage policy pending' in blocked.stderr
+    assert 'coverage policy required' in blocked.stderr
     assert not blocked_out.exists()
+    # the shipped A47 contract unblocks --final-decision and is recorded in the result
+    policy_out = tmp_path / 'policy.json'
+    accepted = subprocess.run([sys.executable, str(ROOT / 'revision/scripts/mvp/mvp_score.py'),
+                               '--input', str(inp), '--panels', str(panel), '--out', str(policy_out),
+                               '--final-decision', '--coverage-policy',
+                               str(ROOT / 'revision/scripts/mvp/coverage_policy_a47.json')],
+                              capture_output=True, text=True)
+    assert accepted.returncode == 0, accepted.stderr
+    recorded = json.loads(policy_out.read_text())['coverage_policy']
+    assert recorded['structural_sources'] == ['ONT'] and recorded['unavailable_sources'] == ['HiFi']
     payload['pairs']['01'] = str(pairfile)
     with pytest.raises(ValueError, match='seeds'):
         script('mvp_score').score(payload, loci)

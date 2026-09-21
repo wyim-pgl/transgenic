@@ -145,7 +145,7 @@ def _regular(path_value: str, label: str) -> Path:
     return path.resolve()
 
 
-def _load_receipt(preflight_dir: Path, name: str, bindings_sha256: str) -> dict:
+def _load_receipt(preflight_dir: Path, name: str, bindings_sha256: str, *, bindings=None) -> dict:
     """Fail-closed load of one measured preflight receipt + DONE marker."""
     directory = preflight_dir / name if (preflight_dir / name).is_dir() else preflight_dir
     receipt = directory / f"{name}.json"
@@ -173,8 +173,20 @@ def _load_receipt(preflight_dir: Path, name: str, bindings_sha256: str) -> dict:
             value.get("exit_code") != 0 or value.get("timed_out") is not False or
             value.get("signal") is not None):
         raise ValueError(f"receipt binding/execution failure: {name}")
+    measurement = value.get("measurement")
+    if bindings is not None:
+        from transgenic.training.mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE, validate_seed_profile
+        profile = bindings.get('profile', LEGACY_PROFILE)
+        validate_seed_profile(profile, bindings.get('seed'))
+        if not isinstance(measurement, dict):
+            raise ValueError('measured receipt must be an object')
+        if profile == DEVELOPMENT_PROFILE or any(k in measurement for k in ('profile', 'seed', 'run_role')):
+            validate_seed_profile(measurement.get('profile', LEGACY_PROFILE), measurement.get('seed'))
+            if (measurement.get('profile', LEGACY_PROFILE) != profile or
+                    measurement['seed'] != bindings['seed'] or measurement.get('run_role') != 'mvp_finetune'):
+                raise ValueError('receipt profile/seed/run_role binding mismatch')
     from run_bounded import validate_measurement
-    validate_measurement(name, value.get("measurement"))
+    validate_measurement(name, measurement)
     return {
         "pass": True,
         "receipt_path": str(receipt.resolve()),
@@ -210,7 +222,8 @@ def _source_checkpoint_binding(init_from: str) -> dict:
         config_value = json.loads(run_config.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise SystemExit(f"FAIL: source run_config.json is not valid JSON: {error}")
-    if not isinstance(config_value, dict) or config_value.get("seed") != 123:
+    if (not isinstance(config_value, dict) or type(config_value.get("seed")) is not int or
+            config_value.get("seed") != 123):
         raise SystemExit("FAIL: source checkpoint run_config.json must bind seed 123 "
                          "(B5 seed123 identity); refusing to fabricate the binding")
     binding = {
@@ -235,6 +248,9 @@ def _source_checkpoint_binding(init_from: str) -> dict:
 def generate(args: argparse.Namespace) -> int:
     from transgenic.training.mvp_runtime import MVPRecipe
 
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE, validate_seed_profile
+    profile = getattr(args, "profile", LEGACY_PROFILE)
+    validate_seed_profile(profile, args.seed)
     acceptance_sha = args.acceptance_sha256
     inventory = _regular(args.inventory_record, "inventory record")
     receipts = _regular(args.receipts_record, "receipts record")
@@ -277,6 +293,8 @@ def generate(args: argparse.Namespace) -> int:
             "accelerate_config": accelerate_config_binding(),
             "recipe": asdict(MVPRecipe()),
             "seed": args.seed,
+            "profile": profile,
+            "run_role": "mvp_finetune",
         },
     }
     bindings = record["bindings"]
@@ -294,7 +312,7 @@ def generate(args: argparse.Namespace) -> int:
         _atomic_write(Path(args.output), _canonical_bytes({"bindings": bindings, "bindings_sha256": bindings_sha}))
         return 0
     preflight_dir = Path(args.preflight_dir)
-    record["evidence"] = {name: _load_receipt(preflight_dir, name, bindings_sha)
+    record["evidence"] = {name: _load_receipt(preflight_dir, name, bindings_sha, bindings=bindings)
                           for name in sorted(EVIDENCE_RECEIPTS)}
     payload = _canonical_bytes(record)
     # Direct consumer validation BEFORE publishing a ready record.
@@ -306,7 +324,7 @@ def generate(args: argparse.Namespace) -> int:
         trial = Path(temporary) / "readiness.json"
         trial.write_bytes(payload)
         validate_launch_readiness(trial, hashlib.sha256(payload).hexdigest(), candidate,
-                                  paths, seed=args.seed, recipe=MVPRecipe())
+                                  paths, seed=args.seed, recipe=MVPRecipe(), profile=profile)
     _atomic_write(Path(args.output), payload)
     print(json.dumps({
         "status": "generated",
@@ -324,6 +342,9 @@ def check(args: argparse.Namespace) -> int:
     from transgenic.training.mvp_cli_runtime import _source_paths, validate_launch_readiness
     from transgenic.training.mvp_runtime import MVPRecipe
 
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE, validate_seed_profile
+    profile = getattr(args, "profile", LEGACY_PROFILE)
+    validate_seed_profile(profile, args.seed)
     candidate = validate_candidate_records(args.acceptance_record, args.acceptance_sha256,
                                            args.inventory_record, args.receipts_record)
     weights, run_config = _source_paths(args.init_from)
@@ -331,7 +352,7 @@ def check(args: argparse.Namespace) -> int:
         ("corpus db", args.db), ("evidence db", args.evidence_db), ("panel", args.panel),
         ("SIF", args.sif), ("config", args.config))) + (weights, run_config)
     record = validate_launch_readiness(args.readiness, args.readiness_sha256, candidate, paths,
-                                       seed=args.seed, recipe=MVPRecipe())
+                                       seed=args.seed, recipe=MVPRecipe(), profile=profile)
     bindings = record['bindings']
     if bindings.get('accelerate_config') != accelerate_config_binding():
         raise ValueError('Accelerate config identity changed')
@@ -341,7 +362,7 @@ def check(args: argparse.Namespace) -> int:
         raise ValueError('checkpoint sidecar identity changed')
     binding_sha = hashlib.sha256(_canonical_bytes(bindings)).hexdigest()
     for name, row in record['evidence'].items():
-        current = _load_receipt(Path(row['receipt_path']).parent, name, binding_sha)
+        current = _load_receipt(Path(row['receipt_path']).parent, name, binding_sha, bindings=bindings)
         if current != row:
             raise ValueError(f'measured receipt changed: {name}')
     print(json.dumps({
@@ -358,7 +379,9 @@ def _add_input_arguments(parser: argparse.ArgumentParser) -> None:
                  "acceptance-record", "acceptance-sha256", "inventory-record",
                  "receipts-record"):
         parser.add_argument("--" + name, required=True)
-    parser.add_argument("--seed", type=int, choices=(1, 2, 3), required=True)
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE
+    parser.add_argument("--profile", default=LEGACY_PROFILE)
+    parser.add_argument("--seed", type=int, required=True)
 
 
 def build_parser() -> argparse.ArgumentParser:

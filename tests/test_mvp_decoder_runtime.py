@@ -24,14 +24,13 @@ def dump(path, value):
 
 @pytest.fixture
 def bounded(tmp_path, monkeypatch):
-    """Real reviewed772 runner/tooling; only measurement/allocation are synthetic."""
+    """Current pinned runner/tooling; only measurement/allocation are synthetic."""
     modules = {}
     authority = tmp_path / 'authority/revision/scripts/mvp'
     authority.mkdir(parents=True)
     for filename in ('make_launch_readiness.py', 'real_probes.py', 'run_bounded.py',
                      'resource_probe.py', 'stage_checkpoint.py', 'run_training.py', 'accelerate_mvp.json'):
-        (authority / filename).write_bytes(subprocess.check_output(['git', 'show',
-            '772c38c:revision/scripts/mvp/' + filename], cwd=r.ROOT))
+        (authority / filename).write_bytes((r.ROOT / 'revision/scripts/mvp' / filename).read_bytes())
     for name in ('make_launch_readiness', 'real_probes', 'resource_probe', 'run_bounded'):
         path = authority / (name + '.py')
         if path.name in r.PROBE_CODE:
@@ -122,17 +121,33 @@ def test_relocated_project_not_root_exempt(tmp_path, monkeypatch, filename):
         r.verify_loaded_modules(identity, set(), project_root=old, decoder_code={str(relative): sha(current / relative)})
 
 
-def test_probe_handshake_and_operator_code_pin(tmp_path):
+@pytest.mark.parametrize('stale_name,stale_hash', [
+    (None, None),
+    ('real_probes.py', 'a40b46b3e2df1f5a80a4357d06c0e77bf1cdedd66c0fd22582df7de0541bbc58'),
+    ('make_launch_readiness.py', '73728aee67611575448722cb4180062917ee0c86330749ff1ca648346e75a6d5'),
+])
+def test_probe_handshake_and_operator_code_pin(tmp_path, stale_name, stale_hash):
+    # Independent TRAIN_REVIEW.md 2026-09-17 authority, not receipt-selected pins.
+    approved = {
+        'real_probes.py': '7f9507f4fced687e1886c659224d4b778b3486a2b390dac1e8f3c6954e46c7ae',
+        'run_bounded.py': '8b2f4042e03732c16d633fb66444b1b91e87cef54d3c696104775beebf19a932',
+        'make_launch_readiness.py': 'a5b2c895bd76699718655993d67430b9459c5db07d5f47636feb6acc77ce6de2',
+    }
     probe = tmp_path / 'revision/scripts/mvp/real_probes.py'
-    identity = {'probe_path': str(probe), 'imports': {str(probe.with_name(n)): h for n,h in r.PROBE_CODE.items()}}
+    identity = {'probe_path': str(probe), 'imports': {str(probe.with_name(n)): h for n,h in approved.items()}}
     closure = {p: sha(r.ROOT / p) for p in r.DECODER_ONLY}
     pin = hashlib.sha256((json.dumps(closure, sort_keys=True, separators=(',', ':')) + '\n').encode()).hexdigest()
+    if stale_name is not None:
+        identity['imports'][str(probe.with_name(stale_name))] = stale_hash
+        with pytest.raises(ValueError, match='unreviewed probe/handshake'):
+            r.project_closure(identity, {'decoder_code_sha256': pin})
+        return
     assert r.project_closure(identity, {'decoder_code_sha256': pin})[0] == tmp_path
     without_runner = dict(identity, imports={p:h for p,h in identity['imports'].items() if not p.endswith('/run_bounded.py')})
     assert r.project_closure(without_runner, {'decoder_code_sha256': pin})[0] == tmp_path
     with pytest.raises(ValueError, match='operator decoder code pin'):
         r.project_closure(identity, {'decoder_code_sha256': '0' * 64})
-    for name in r.PROBE_CODE:
+    for name in approved:
         changed = dict(identity, imports=dict(identity['imports']))
         changed['imports'][str(probe.with_name(name))] = '0' * 64
         with pytest.raises(ValueError, match='unreviewed probe/handshake'):
@@ -204,6 +219,24 @@ def test_bootstrap_is_explicit_decoder_dependency():
     import mvp_produce_counts as producer
     module = sys.modules[producer.validate_paired_record.__module__]
     assert str(Path(module.__file__).resolve().relative_to(r.ROOT)) in r.DECODER_ONLY
+
+
+def test_panel_compatibility_live_import_requires_operator_closure_and_probe_precedence(tmp_path, monkeypatch):
+    import mvp_panel_compatibility as compat
+    relative = str(Path(compat.__file__).resolve().relative_to(r.ROOT))
+    probe = tmp_path / 'revision/scripts/mvp/real_probes.py'
+    identity = {'probe_path': str(probe), 'imports': {str(probe.with_name(n)): h for n, h in r.PROBE_CODE.items()}}
+    closure = {p: sha(r.ROOT / p) for p in r.DECODER_ONLY}
+    pin = hashlib.sha256((json.dumps(closure, sort_keys=True, separators=(',', ':')) + '\n').encode()).hexdigest()
+    old, audited = r.project_closure(identity, {'decoder_code_sha256': pin})
+    monkeypatch.setattr(r, 'sys', SimpleNamespace(modules={'mvp_panel_compatibility': compat}))
+    assert r.verify_loaded_modules(identity, set(), project_root=old, decoder_code=audited)
+    bad = dict(audited, **{relative: '0'*64})
+    with pytest.raises(ValueError, match='project implementation'):
+        r.verify_loaded_modules(identity, set(), project_root=old, decoder_code=bad)
+    identity['imports'][str(old / relative)] = '0'*64
+    with pytest.raises(ValueError, match='project implementation'):
+        r.verify_loaded_modules(identity, set(), project_root=old, decoder_code=audited)
 
 
 def test_cpu_device_refused():

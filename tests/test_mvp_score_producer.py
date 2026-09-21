@@ -154,10 +154,12 @@ def test_actual_commit_anchor_wrong_reference_and_missing_anchor(tmp_path,monkey
     with pytest.raises(subprocess.CalledProcessError): p.frozen_reference(fasta,fasta)
 
 
-def finalized_fixture(tmp_path, seed=1, hashes=None, source_weights=None):
+def finalized_fixture(tmp_path, seed=1, hashes=None, source_weights=None, profile=None):
     import test_mvp_finalize as f
     md = f.metadata('production')
     md['seed_augmentation'] = {'seed':seed, 'aug_seed':20260914+seed}
+    if profile is not None:
+        md.update(profile=profile, run_role='mvp_finetune')
     if hashes is not None:
         md['data_identities'] = {k:{'sha256':v,'verification':'recorded'} for k,v in hashes.items()}
     import shutil

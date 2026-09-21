@@ -80,16 +80,23 @@ def validate_paired_record(record):
     return record
 
 
-def build_tiles(records_by_seed, expected_seeds=EXPECTED_SEEDS):
+def build_tiles(records_by_seed, expected_seeds=EXPECTED_SEEDS, *, profile='historical-three-seed'):
     """Assemble evidence-positive tiles carrying one pair per seed.
 
     `records_by_seed`: {seed: iterable of validated eval_pairs records}.
     Returns (rns, deltas) with `deltas` a float64 array [n_tiles, n_seeds] of
     loss_off - loss_on, seed order = sorted(expected_seeds). Fail-closed on any
     seed missing a tile, disagreeing evidence flags, or duplicate rns.
+    Explicit development-single accepts only expected_seeds=(123,); its caller
+    must label the bootstrap descriptive, never use it for a three-seed decision.
     """
+    from transgenic.training.mvp_profiles import DEVELOPMENT_PROFILE, validate_seed_profile
     seeds = tuple(sorted(expected_seeds))
-    _require(seeds == EXPECTED_SEEDS, "primary requires exactly seeds 1, 2, 3")
+    _require(seeds == ((123,) if profile == DEVELOPMENT_PROFILE else EXPECTED_SEEDS),
+             "primary requires exactly the profile seeds")
+    for seed in seeds:
+        validate_seed_profile(profile, seed)
+    _require(all(type(seed) is int for seed in records_by_seed), "seed keys must be integers")
     _require(tuple(sorted(records_by_seed)) == seeds,
              f"expected seeds {seeds}, got {tuple(sorted(records_by_seed))}")
     per_seed = {}

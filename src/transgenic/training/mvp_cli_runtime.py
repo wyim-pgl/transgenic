@@ -174,10 +174,12 @@ def _manifest_files(path: Path) -> None:
 
 def validate_launch_readiness(readiness_value, readiness_sha256: str,
                               candidate: CandidateRecords, paths, *, seed: int,
-                              recipe: MVPRecipe) -> dict:
+                              recipe: MVPRecipe, profile: str = "historical-three-seed") -> dict:
     """Validate a trusted operator readiness record; never synthesize evidence."""
+    from .mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE, validate_seed_profile
+    validate_seed_profile(profile, seed)
     _, readiness = _json_record(readiness_value, readiness_sha256, "launch readiness")
-    if (readiness.get("schema_version") != 1 or
+    if (type(readiness.get("schema_version")) is not int or readiness.get("schema_version") != 1 or
             readiness.get("authorized_scope") != "exploratory_mvp" or
             readiness.get("production_authorized") is not False or
             readiness.get("ready_for_finetuning") is not True):
@@ -185,6 +187,13 @@ def validate_launch_readiness(readiness_value, readiness_sha256: str,
     bindings = readiness.get("bindings")
     if not isinstance(bindings, dict):
         raise ValueError("launch readiness bindings are missing")
+    bound_profile = bindings.get("profile", LEGACY_PROFILE)
+    validate_seed_profile(bound_profile, bindings.get("seed"))
+    if bound_profile != profile:
+        raise ValueError("launch readiness profile binding mismatch")
+    if ((bound_profile == DEVELOPMENT_PROFILE or "run_role" in bindings) and
+            bindings.get("run_role") != "mvp_finetune"):
+        raise ValueError("launch readiness run_role must be mvp_finetune")
     for key, identity_key in (("technical_acceptance_sha256", "acceptance"),
                               ("inventory_sha256", "inventory"),
                               ("receipts_sha256", "receipts")):
@@ -212,8 +221,8 @@ def validate_launch_readiness(readiness_value, readiness_sha256: str,
         source_config = json.loads(measured_source_paths["run_config"].read_text())
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise ValueError("source run config is not valid JSON") from error
-    if (not isinstance(source_config, dict) or source_config.get("seed") != 123 or
-            source.get("seed") != 123):
+    if (not isinstance(source_config, dict) or type(source_config.get("seed")) is not int or
+            source_config.get("seed") != 123 or type(source.get("seed")) is not int or source.get("seed") != 123):
         raise ValueError("launch readiness source checkpoint seed must exactly bind seed 123")
     manifest = bindings.get("consumed_code_manifest")
     if not isinstance(manifest, dict):
@@ -457,6 +466,9 @@ def _validate_initialization_readiness(audit, readiness, weights: Path, run_conf
 def execute(args, candidate: CandidateRecords, *, validate_only: bool,
             _test: _TestExecution | None = None) -> dict:
     """Run validation, or the fixed public recipe after readiness authorization."""
+    from .mvp_profiles import LEGACY_PROFILE, validate_seed_profile
+    profile = getattr(args, "profile", LEGACY_PROFILE)
+    validate_seed_profile(profile, args.seed)
     recipe = _test.recipe if _test is not None else MVPRecipe()
     final = _validate_output(args.output_dir)
     artifacts = verify_candidate_artifacts(candidate, args.db, args.evidence_db, args.panel)
@@ -467,6 +479,7 @@ def execute(args, candidate: CandidateRecords, *, validate_only: bool,
     if validate_only:
         return {
             "status": "candidate_valid", "output_use": OUTPUT_USE,
+            "profile": profile, "run_role": "mvp_finetune",
             "runtime_profile": "mvp_fixed_250x96", "authorization_scope": "exploratory_mvp",
             "production_authorized": False, "candidate_identities": candidate.identities,
             "counts": {"train": len(artifacts["train_rns"]), "valid": len(artifacts["valid_rns"])},
@@ -475,7 +488,7 @@ def execute(args, candidate: CandidateRecords, *, validate_only: bool,
     readiness = validate_launch_readiness(
         readiness_path, args.launch_readiness_sha256, candidate,
         (db, evidence, panel, sif, config_path, weights, run_config),
-        seed=args.seed, recipe=recipe,
+        seed=args.seed, recipe=recipe, profile=profile,
     )
     paths = {"db": db, "evidence": evidence, "panel": panel, "sif": sif,
              "config": config_path, "weights": weights, "run_config": run_config,
@@ -502,6 +515,15 @@ def validate_decoder_dataset(dataset, cfg, model_config):
 def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, recipe,
            readiness, readiness_sha256, *, _test: _TestExecution | None = None) -> dict:
     """Construct and run the reviewed runtime only from canonical verified bindings."""
+    from .mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE, validate_seed_profile
+    profile = readiness["bindings"].get("profile", LEGACY_PROFILE)
+    validate_seed_profile(profile, seed)
+    validate_seed_profile(profile, readiness["bindings"].get("seed"))
+    if readiness["bindings"]["seed"] != seed:
+        raise ValueError("training profile seed binding mismatch")
+    if ((profile == DEVELOPMENT_PROFILE or "run_role" in readiness["bindings"]) and
+            readiness["bindings"].get("run_role") != "mvp_finetune"):
+        raise ValueError("training run_role must be mvp_finetune")
     import torch
     from torch.utils.data import DataLoader
     from torch.utils.data.distributed import DistributedSampler
@@ -557,7 +579,8 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
 
         identity = {}
         phase(accelerator, "identity", lambda: identity.setdefault("payload", _identity_payload(
-            {"candidate": candidate.identities, "artifacts": artifacts["sha256"]})))
+            {"candidate": candidate.identities, "artifacts": artifacts["sha256"],
+             "profile": profile, "seed": seed})))
         require_matching_identity(accelerator, identity["payload"])
         torch.manual_seed(seed)
         if torch.cuda.is_available():
@@ -655,6 +678,7 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
             _test.observation["training_summary"] = dict(summary)
         initialization = state["initialization"]
         metadata = {
+            "profile": profile, "run_role": "mvp_finetune",
             "identity_scope": "test" if _test is not None else "production",
             "runtime_profile": "mvp_fixed_250x96", "authorization_scope": "exploratory_mvp",
             "production_authorized": False, "output_use": OUTPUT_USE,
@@ -690,7 +714,7 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
             validate_launch_readiness(
                 inputs.readiness, readiness_sha256, candidate,
                 (inputs.db, inputs.evidence, inputs.panel, inputs.sif, inputs.config,
-                 inputs.weights, inputs.run_config), seed=seed, recipe=recipe)
+                 inputs.weights, inputs.run_config), seed=seed, recipe=recipe, profile=profile)
 
         evaluate_and_publish_final(
             accelerator, model, loaders["valid"], artifacts["valid_rns"], inputs.final,

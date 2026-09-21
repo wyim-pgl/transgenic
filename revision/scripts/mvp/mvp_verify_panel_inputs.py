@@ -11,6 +11,13 @@ import mvp_prepare_panel_inputs as p
 
 
 def load_panel_inputs(root, payload, panel, sequences):
+    if payload.get('profile') == 'development-single':
+        from mvp_panel_compatibility import load_compatible_panel
+        return load_compatible_panel(root, payload, panel, sequences)
+    return _load_current_panel(root, payload, panel, sequences)
+
+
+def _read_panel(root):
     root = Path(root).resolve(strict=True)
     for name in ('COMPLETE', 'manifest.json'):
         d.require(not (root/name).is_symlink(), 'panel publication marker symlink')
@@ -24,6 +31,11 @@ def load_panel_inputs(root, payload, panel, sequences):
         zero_support_policy='report_not_fail')
     for key, value in policy.items():
         d.require(type(manifest[key]) is type(value) and manifest[key] == value, 'panel policy mismatch: ' + key)
+    return root, manifest, records
+
+
+def _load_current_panel(root, payload, panel, sequences):
+    root, manifest, records = _read_panel(root)
     loci, authority, expected, evidence = p.preflight(payload)
     d.require(loci == panel and manifest['authority'] == authority, 'panel authority mismatch')
     # The producer adds exactly its request identity to its independently obtained inventory.
@@ -35,6 +47,11 @@ def load_panel_inputs(root, payload, panel, sequences):
               'panel request binding mismatch')
     d.require(manifest['rasterizer'] == d.identity(p.mvp_tracks.__file__), 'rasterizer mismatch')
     d.require(manifest['packages'] == {'numpy': np.__version__, 'duckdb': duckdb.__version__}, 'panel package mismatch')
+    return _load_artifacts(root, manifest, panel, sequences, evidence, records)
+
+
+def _load_artifacts(root, manifest, panel, sequences, evidence, records):
+    """Shared byte/numerical checks, after the caller has bound producer identity."""
     rows = manifest['loci']
     d.require(len(rows) == len(panel) == 50 and [r['gene_id'] for r in rows] == [l.gene_id for l in panel],
               'exact ordered 50-locus inventory required')

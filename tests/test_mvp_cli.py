@@ -64,8 +64,10 @@ def test_public_parser_rejects_non_mvp_options(option):
 
 @pytest.mark.parametrize("seed", ["0", "4", "123"])
 def test_public_parser_rejects_unapproved_seed(seed):
-    with pytest.raises(SystemExit):
-        build_parser().parse_args(["--seed", seed])
+    from transgenic.training.mvp_profiles import validate_seed_profile
+    args = build_parser().parse_args(["--seed", seed])
+    with pytest.raises(ValueError):
+        validate_seed_profile(args.profile, args.seed)
 
 
 def test_actual_mode_without_readiness_stops_before_file_or_runtime_access():

@@ -204,7 +204,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--init-from", required=False)
     parser.add_argument("--output-dir", required=False)
     parser.add_argument("--sif", required=False)
-    parser.add_argument("--seed", type=int, choices=(1, 2, 3))
+    from .mvp_profiles import LEGACY_PROFILE
+    parser.add_argument("--profile", default=LEGACY_PROFILE)
+    parser.add_argument("--seed", type=int)
     parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--validate-only", action="store_true",
                         help=f"validate candidate inputs only; {OUTPUT_USE}")
@@ -223,6 +225,8 @@ def main(argv: list[str] | None = None) -> int:
               "inventory_record", "receipts_record", "config", "init_from", "output_dir", "sif", "seed")
     try:
         _required(args, common)
+        from .mvp_profiles import validate_seed_profile
+        validate_seed_profile(args.profile, args.seed)
         if args.num_workers < 0:
             raise ValueError("--num-workers must be nonnegative")
         if not args.validate_only:

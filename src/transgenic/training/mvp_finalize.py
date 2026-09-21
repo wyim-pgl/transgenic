@@ -252,9 +252,13 @@ def _validate_metadata(metadata: Any, training_summary: Any) -> None:
     seed = seeds.get("seed") if isinstance(seeds, dict) else None
     if (set(seeds) != {"seed", "aug_seed"} if isinstance(seeds, dict) else True) or isinstance(seed, bool) or not isinstance(seed, int):
         raise ValueError("seed_augmentation requires integer seed and aug_seed")
-    if scope == "production" and seed not in {1, 2, 3}:
-        raise ValueError("production seed must be one of 1, 2, 3")
-    if seeds["aug_seed"] != 20260914 + seed:
+    from .mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE, validate_seed_profile
+    profile = metadata.get("profile", LEGACY_PROFILE)
+    validate_seed_profile(profile, seed)
+    if ((profile == DEVELOPMENT_PROFILE or "run_role" in metadata) and
+            metadata.get("run_role") != "mvp_finetune"):
+        raise ValueError("MVP metadata run_role must be mvp_finetune")
+    if type(seeds["aug_seed"]) is not int or seeds["aug_seed"] != 20260914 + seed:
         raise ValueError("aug_seed must equal 20260914 + seed")
     if (not isinstance(training_summary, dict) or
             isinstance(training_summary.get("successful_updates"), bool) or

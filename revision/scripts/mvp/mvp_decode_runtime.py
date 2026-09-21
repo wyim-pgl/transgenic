@@ -15,12 +15,13 @@ COMMIT = '0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446'
 SIF = '1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6'
 VERSIONS = dict(torch='2.14.0a0+4fdf77b940.nv26.08', cuda='13.4', transformers='4.57.6', accelerate='1.15.0')
 ROOT = Path(__file__).resolve().parents[3]
-# Only reviewed GPU integration 772c38c3a428acedebb0ba3b1bef37f2777a0f35.
-# Explicit Git-byte authority, NOT receipt-selected hashes; old d99 is unsupported.
+# Independently reviewed source bytes: seed123 TRAIN_REVIEW.md, 2026-09-17.
+# Explicit review authority, NOT receipt-selected hashes or GPU readiness proof.
+# Older integrations are unsupported; run_bounded.py retains its reviewed pin.
 PROBE_CODE = {
-    'real_probes.py': 'a40b46b3e2df1f5a80a4357d06c0e77bf1cdedd66c0fd22582df7de0541bbc58',
+    'real_probes.py': '7f9507f4fced687e1886c659224d4b778b3486a2b390dac1e8f3c6954e46c7ae',
     'run_bounded.py': '8b2f4042e03732c16d633fb66444b1b91e87cef54d3c696104775beebf19a932',
-    'make_launch_readiness.py': '73728aee67611575448722cb4180062917ee0c86330749ff1ca648346e75a6d5',
+    'make_launch_readiness.py': 'a5b2c895bd76699718655993d67430b9459c5db07d5f47636feb6acc77ce6de2',
 }
 # Decoder orchestration/grammar/transport, not A's numerical model implementation.
 # Exact closed boundary: no directory exemptions; independently operator-pinned.
@@ -28,6 +29,7 @@ DECODER_ONLY = (
     'revision/scripts/mvp/mvp_decode_panel.py',
     'revision/scripts/mvp/mvp_decode_runtime.py',
     'revision/scripts/mvp/mvp_verify_panel_inputs.py',
+    'revision/scripts/mvp/mvp_panel_compatibility.py',
     'revision/scripts/mvp/mvp_prepare_panel_inputs.py',
     'revision/scripts/mvp/mvp_produce_counts.py',
     'src/transgenic/evidence/mvp_decode.py',

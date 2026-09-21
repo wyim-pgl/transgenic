@@ -158,10 +158,12 @@ def verify_initialization(audit, initialization, final_config):
         raise ValueError('source weights are not readable safetensors') from error
 
 
-def verify_final(final, seed, expected_rns, data_hashes, code_manifest):
+def verify_final(final, seed, expected_rns, data_hashes, code_manifest, *, profile='historical-three-seed'):
     """Consume exactly mvp_finalize's existing publication format."""
     from transgenic.training.mvp_finalize import _validate_metadata
     from transgenic.training.mvp_metrics import aggregate_paired_records
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE, validate_seed_profile
+    validate_seed_profile(profile, seed)
     final = Path(final).resolve(strict=True)
     require((final / 'TRAINING_DONE').read_bytes() == b'complete\n', 'final is not complete')
     manifest = read_json(final / 'manifest.json')
@@ -170,6 +172,11 @@ def verify_final(final, seed, expected_rns, data_hashes, code_manifest):
     files = {name: check_file(final / name, manifest['files'][name]) for name in names}
     metadata = read_json(final / 'metadata.json')
     _validate_metadata(metadata, metadata.get('training_summary'))
+    require(metadata.get('profile', LEGACY_PROFILE) == profile, 'final metadata profile mismatch')
+    if profile == DEVELOPMENT_PROFILE:
+        require(metadata.get('run_role') == 'mvp_finetune', 'final metadata run role mismatch')
+    elif 'run_role' in metadata:
+        require(metadata['run_role'] == 'mvp_finetune', 'final metadata run role mismatch')
     require(metadata['identity_scope'] == 'production', 'test final cannot establish MVP run identity')
     require(metadata['seed_augmentation'] == {'seed': seed, 'aug_seed': 20260914 + seed}, 'cross-seed final mismatch')
     for name, digest in data_hashes.items():
@@ -195,6 +202,92 @@ def verify_final(final, seed, expected_rns, data_hashes, code_manifest):
             'done': file_identity(final / 'TRAINING_DONE'), 'files': files,
             'seed': seed, 'code_manifest': code, 'code_files': code_files,
             'initialization': initialization, 'valid_rns': list(expected_rns)}
+
+
+def evaluation_profile(payload, requested=None):
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE, validate_seed_profile
+    profile = payload.get('profile', LEGACY_PROFILE)
+    validate_seed_profile(profile, 123 if profile == DEVELOPMENT_PROFILE else 1)
+    require(requested is None or requested == profile, 'CLI/payload profile mismatch')
+    metadata = payload.get('metadata', {})
+    require(isinstance(metadata, dict) and metadata.get('profile', profile) == profile,
+            'metadata profile mismatch')
+    return profile
+
+
+def verify_run_inventory(payload, artifacts):
+    """One development final plus an independently pinned, unaugmented B5 source."""
+    from transgenic.training.mvp_profiles import DEVELOPMENT_PROFILE, validate_seed_profile
+    profile = evaluation_profile(payload)
+    if profile != DEVELOPMENT_PROFILE:
+        require(set(payload['runs']) == {'1', '2', '3'}, 'exact final seeds 1/2/3 required')
+        runs = {s: verify_final(r['final'], int(s), artifacts['valid_rns'], artifacts['sha256'], r['code_manifest'])
+                for s, r in payload['runs'].items()}
+        require(len({r['code_manifest']['sha256'] for r in runs.values()}) == 1, 'cross-seed consumed code mismatch')
+        sources = {tuple(sorted((name, value['sha256']) for name, value in r['initialization'].items()))
+                   for r in runs.values()}
+        require(len(sources) == 1, 'cross-seed initialization source inventory mismatch')
+        return runs
+    roles = {'mvp_seed123': 'mvp_finetune', 'b5_seed123': 'b5_baseline'}
+    require(set(payload['runs']) == set(roles), 'exact development run identities required')
+    for run_id, role in roles.items():
+        spec = payload['runs'][run_id]
+        validate_seed_profile(profile, spec.get('seed'))
+        require(spec.get('run_role') == role and spec.get('profile', profile) == profile,
+                'run profile/role mismatch')
+        require(spec.get('run_id', run_id) == run_id, 'run identity mismatch')
+        md = spec.get('metadata', {})
+        require(isinstance(md, dict) and md.get('profile', profile) == profile and
+                md.get('run_role', role) == role, 'run metadata profile/role mismatch')
+        if 'seed' in md:
+            validate_seed_profile(profile, md['seed'])
+        for key in ('run_id', 'checkpoint_sha256'):
+            require(key not in md or md[key] == spec.get(key, run_id if key == 'run_id' else None),
+                    'run metadata identity mismatch')
+    spec = payload['runs']['mvp_seed123']
+    final = verify_final(spec['final'], spec['seed'], artifacts['valid_rns'], artifacts['sha256'],
+                         spec['code_manifest'], profile=profile)
+    require(spec['checkpoint_sha256'] == final['files']['model.safetensors']['sha256'],
+            'fine-tuned checkpoint pin mismatch')
+    base = payload['runs']['b5_seed123']
+    require(set(base) <= {'run_id', 'run_role', 'seed', 'profile', 'metadata', 'checkpoint_sha256', 'weights'},
+            'baseline must not carry MVP augmentation/final fields')
+    require(not ({'seed_augmentation', 'aug_seed', 'final'} & set(base.get('metadata', {}))),
+            'baseline metadata must not carry MVP augmentation')
+    pinned = check_file(base['weights']['path'], base['weights'])
+    source = final['initialization']['model.safetensors']
+    require(pinned['sha256'] == source['sha256'] == base['checkpoint_sha256'],
+            'baseline pinned weights disagree with final initialization audit')
+    require(pinned['sha256'] != final['files']['model.safetensors']['sha256'],
+            'baseline and fine-tuned checkpoints must be distinct')
+    final.update(profile=profile, run_id='mvp_seed123', run_role='mvp_finetune')
+    return {'mvp_seed123': final, 'b5_seed123': dict(profile=profile, run_id='b5_seed123',
+            run_role='b5_baseline', seed=123, weights=pinned)}
+
+
+def verify_evaluation_readiness(payload, candidate, runs):
+    """Re-use training's trusted-readiness contract; never infer it from final files."""
+    from transgenic.training.mvp_profiles import DEVELOPMENT_PROFILE
+    from transgenic.training.mvp_cli_runtime import validate_launch_readiness
+    from transgenic.training.mvp_runtime import MVPRecipe
+    profile = evaluation_profile(payload)
+    if profile != DEVELOPMENT_PROFILE:
+        return []
+    spec = payload['runs']['mvp_seed123']
+    require(all(isinstance(spec.get(key), dict) and {'path', 'sha256'} <= set(spec[key])
+                for key in ('launch_readiness', 'sif', 'config')), 'pinned launch readiness/SIF/config required')
+    records = [check_file(spec[key]['path'], spec[key]) for key in ('launch_readiness', 'sif', 'config')]
+    run = runs['mvp_seed123']
+    metadata = read_json(run['files']['metadata.json']['path'])
+    require(records[1]['sha256'] == metadata['sif_code_identity']['sif']['sha256'], 'readiness/final SIF mismatch')
+    c = payload['candidate']
+    paths = (c['corpus'], c['evidence'], payload['panels'], records[1]['path'], records[2]['path'],
+             run['initialization']['model.safetensors']['path'], run['initialization']['run_config.json']['path'])
+    readiness = validate_launch_readiness(records[0]['path'], records[0]['sha256'], candidate, paths,
+                                          seed=123, recipe=MVPRecipe(), profile=profile)
+    manifest = readiness['bindings']['consumed_code_manifest']
+    require(check_file(manifest['path'], manifest) == run['code_manifest'], 'readiness/final code manifest mismatch')
+    return records
 
 
 def legacy_module(name):
@@ -452,33 +545,83 @@ def reference_counts(predicted, reference, directory, executable):
                     'FN': len(reference)-tp, 'outputs': [file_identity(p) for p in sorted(directory.iterdir())]}
 
 
-def prediction_inventory(rows, panel, checkpoints):
-    expected = {(s, f, l.gene_id) for l in panel for s, f in [(1,0),(1,1),(2,0),(2,1),(3,0),(3,1),(123,0)]}
-    actual, paths = {}, set()
+def prediction_inventory(rows, panel, checkpoints, *, profile='historical-three-seed'):
+    from transgenic.training.mvp_profiles import DEVELOPMENT_PROFILE, validate_seed_profile
+    development = profile == DEVELOPMENT_PROFILE
+    validate_seed_profile(profile, 123 if development else 1)
+    roles = {'mvp_seed123': 'mvp_finetune', 'b5_seed123': 'b5_baseline'}
+    if development:
+        require(len(panel) == 50 and len({l.gene_id for l in panel}) == 50, 'exact full50 panel required')
+        require(set(checkpoints) == set(roles) and len(set(checkpoints.values())) == 2,
+                'distinct role checkpoint keys required')
+        expected = {(profile, run_id, fraction, l.gene_id) for l in panel
+                    for run_id, fraction in [('mvp_seed123', 0), ('mvp_seed123', 1), ('b5_seed123', 0)]}
+    else:
+        expected = {(s, f, l.gene_id) for l in panel for s, f in [(1,0),(1,1),(2,0),(2,1),(3,0),(3,1),(123,0)]}
+    actual, paths, stems = {}, set(), set()
     loci = {l.gene_id: l for l in panel}
     for row in rows:
         require(type(row['seed']) is int and type(row['fraction']) is int, 'seed/fraction must be integers')
-        key = row['seed'], row['fraction'], row['gene_id']
+        if development:
+            validate_seed_profile(profile, row['seed'])
+            require(row.get('profile') == profile and row.get('run_id') in roles and
+                    row.get('run_role') == roles.get(row.get('run_id')), 'prediction profile/run role mismatch')
+            metadata = row.get('metadata', {})
+            require(isinstance(metadata, dict) and metadata.get('profile', profile) == profile and
+                    metadata.get('run_role', row['run_role']) == row['run_role'], 'prediction metadata mismatch')
+            if 'seed' in metadata:
+                validate_seed_profile(profile, metadata['seed'])
+            for field in ('run_id', 'checkpoint_sha256', 'fraction', 'gene_id'):
+                require(field not in metadata or (type(metadata[field]) is type(row[field]) and
+                        metadata[field] == row[field]), 'prediction metadata identity mismatch')
+            key = profile, row['run_id'], row['fraction'], row['gene_id']
+        else:
+            require(row.get('profile', profile) == profile, 'prediction profile mismatch')
+            key = row['seed'], row['fraction'], row['gene_id']
         require(key in expected and key not in actual, 'unexpected/duplicate prediction identity')
         locus = loci[row['gene_id']]
         require(row['window'] == [locus.chromosome, *w.evaluation_window(locus)], 'prediction panel window mismatch')
-        require(row['checkpoint_sha256'] == checkpoints[row['seed']], 'prediction checkpoint/seed mismatch')
+        require(row['checkpoint_sha256'] == checkpoints[row['run_id'] if development else row['seed']],
+                'prediction checkpoint/seed mismatch')
         identity = check_file(row['path'], row)
         stat = Path(identity['path']).stat()
         inode = stat.st_dev, stat.st_ino
         require(inode not in paths, 'duplicate prediction file')
         paths.add(inode)
+        if development:
+            stem = Path(identity['path']).stem
+            require(stem not in stems, 'duplicate prediction file stem')
+            stems.add(stem)
         actual[key] = identity
-    require(set(actual) == expected, 'exact full50 three-seed off/on plus baseline inventory required')
+    require(set(actual) == expected, 'exact full50 profile off/on plus baseline inventory required')
     return actual
 
 
-def produce(input_path, out):
+def verify_decoder_package(decoder):
+    """Bind the recorded decoder package to the reviewed decoder source closure.
+
+    A decoder that recorded less than the operator-pinned DECODER_ONLY closure
+    is a stale or partial package, not a consumable evaluation transport. Byte
+    identity of every recorded file is still checked against this checkout.
+    """
+    import mvp_decode_runtime
+    require(decoder['files'] and decoder['commands'] and all(isinstance(cmd, list) and cmd and all(isinstance(x,str) and x for x in cmd) for cmd in decoder['commands']), 'decoder code/commands missing')
+    recorded = {str(Path(path).resolve()) for path in decoder['files']}
+    missing = sorted(rel for rel in mvp_decode_runtime.DECODER_ONLY
+                     if str((ROOT / rel).resolve()) not in recorded)
+    require(not missing, 'decoder package omits reviewed decoder closure: ' + ', '.join(missing))
+    return [check_file(path, {'sha256': digest}) for path, digest in decoder['files'].items()]
+
+
+def produce(input_path, out, *, profile=None):
     from transgenic.training.mvp_cli import validate_candidate_records
     from transgenic.training.mvp_cli_runtime import verify_candidate_artifacts
     import mvp_score
     out = Path(out).resolve()
     payload = read_json(input_path)
+    from transgenic.training.mvp_profiles import DEVELOPMENT_PROFILE
+    profile = evaluation_profile(payload, profile)
+    development = profile == DEVELOPMENT_PROFILE
     inputs = [file_identity(input_path)]
     panel = w.load_panel(payload['panels'])
     inputs.append(file_identity(payload['panels']))
@@ -492,22 +635,26 @@ def produce(input_path, out):
     candidate = validate_candidate_records(c['acceptance'], c['acceptance_sha256'], c['inventory'], c['receipts'])
     artifacts = verify_candidate_artifacts(candidate, c['corpus'], c['evidence'], payload['panels'])
     inputs.extend(file_identity(c[k]) for k in ('acceptance','inventory','receipts','corpus','evidence'))
-    require(set(payload['runs']) == {'1','2','3'}, 'exact final seeds 1/2/3 required')
-    runs = {s: verify_final(r['final'], int(s), artifacts['valid_rns'], artifacts['sha256'], r['code_manifest'])
-            for s, r in payload['runs'].items()}
-    require(len({r['code_manifest']['sha256'] for r in runs.values()}) == 1, 'cross-seed consumed code mismatch')
-    source_identities = {tuple(sorted((name, identity['sha256']) for name, identity in r['initialization'].items())) for r in runs.values()}
-    require(len(source_identities) == 1, 'cross-seed initialization source inventory mismatch')
-    checkpoints = {int(s): r['files']['model.safetensors']['sha256'] for s, r in runs.items()}
-    baselines = {r['initialization']['model.safetensors']['sha256'] for r in runs.values()}
-    require(len(baselines) == 1, 'cross-seed baseline mismatch')
-    checkpoints[123] = baselines.pop()
-    for run in runs.values():
+    runs = verify_run_inventory(payload, artifacts)
+    inputs.extend(verify_evaluation_readiness(payload, candidate, runs))
+    if 'panel_compatibility' in payload:
+        spec = payload['panel_compatibility']
+        inputs.append(check_file(spec['path'], spec))
+    finals = {'mvp_seed123': runs['mvp_seed123']} if development else runs
+    if development:
+        checkpoints = {'mvp_seed123': runs['mvp_seed123']['files']['model.safetensors']['sha256'],
+                       'b5_seed123': runs['b5_seed123']['weights']['sha256']}
+        inputs.append(runs['b5_seed123']['weights'])
+    else:
+        checkpoints = {int(s): r['files']['model.safetensors']['sha256'] for s, r in runs.items()}
+        baselines = {r['initialization']['model.safetensors']['sha256'] for r in runs.values()}
+        require(len(baselines) == 1, 'cross-seed baseline mismatch')
+        checkpoints[123] = baselines.pop()
+    for run in finals.values():
         inputs.extend([run['manifest'], run['done'], run['code_manifest'], *run['files'].values(), *run['code_files'], *run['initialization'].values()])
     decoder = payload['decoder']
-    require(decoder['files'] and decoder['commands'] and all(isinstance(cmd, list) and cmd and all(isinstance(x,str) and x for x in cmd) for cmd in decoder['commands']), 'decoder code/commands missing')
-    inputs.extend(check_file(p, {'sha256': h}) for p, h in decoder['files'].items())
-    predictions = prediction_inventory(payload['predictions'], panel, checkpoints)
+    inputs.extend(verify_decoder_package(decoder))
+    predictions = prediction_inventory(payload['predictions'], panel, checkpoints, profile=profile)
     inputs.extend(predictions.values())
     executable = shutil.which('gffcompare')
     require(executable, 'GFFCompare 0.12.6 required')
@@ -519,7 +666,7 @@ def produce(input_path, out):
                       ROOT/'revision/scripts/24_restrict_reference_to_test_genes.py',
                       Path(mvp_score.__file__), Path(mvp_score.b.__file__), Path(w.__file__)]
     scorer_sources.extend(ROOT/'src/transgenic/training'/name for name in
-                          ('mvp_cli.py', 'mvp_cli_runtime.py', 'mvp_finalize.py', 'mvp_metrics.py', 'mvp_runtime.py', 'weights_init.py'))
+                          ('mvp_cli.py', 'mvp_cli_runtime.py', 'mvp_finalize.py', 'mvp_metrics.py', 'mvp_runtime.py', 'mvp_profiles.py', 'weights_init.py'))
     inputs.extend(file_identity(path) for path in scorer_sources)
     out.mkdir(parents=True, exist_ok=False)
     mapping = resolve_reference_mapping(panel, c['corpus'], authority, artifacts['sha256'], payload['panels'])
@@ -527,30 +674,42 @@ def produce(input_path, out):
     reference = prepare_mapped_reference(panel, payload['reference'], restricted, mapping)
     restricted_identity = file_identity(restricted)
     loci, receipts, baseline = [], [], []
+    jobs = [('mvp_seed123', 123, 'mvp_finetune', 0), ('mvp_seed123', 123, 'mvp_finetune', 1),
+            ('b5_seed123', 123, 'b5_baseline', 0)] if development else [
+            (str(s), s, 'mvp_finetune', f) for s in (1, 2, 3) for f in (0, 1)] + [('123', 123, 'b5_baseline', 0)]
     for locus in panel:
         refs = reference[locus.gene_id]
-        row = {'gene_id': locus.gene_id, 'seeds': {str(s): {} for s in (1,2,3)}}
-        for seed, fraction in [(1,0),(1,1),(2,0),(2,1),(3,0),(3,1),(123,0)]:
-            identity = predictions[seed, fraction, locus.gene_id]
+        row = {'gene_id': locus.gene_id, 'seeds': {str(s): {} for s in ((123,) if development else (1,2,3))}}
+        for run_id, seed, role, fraction in jobs:
+            key = (profile, run_id, fraction, locus.gene_id) if development else (seed, fraction, locus.gene_id)
+            identity = predictions[key]
             genes = read_gff(identity['path'])
             start, end = w.evaluation_window(locus)
             require(all(g['chrom'] == locus.chromosome and start <= g['start'] < g['end'] <= end for g in genes.values()), 'prediction outside decoded window')
             predicted = select_transcripts(genes, locus)
             counts, receipt = reference_counts(predicted, refs, out / f'{len(receipts):04d}', executable)
             receipts.append(dict(receipt, seed=seed, fraction=fraction, gene_id=locus.gene_id, prediction=identity))
-            if seed == 123:
+            if development:
+                receipts[-1].update(profile=profile, run_id=run_id, run_role=role, checkpoint_sha256=checkpoints[run_id])
+            if role == 'b5_baseline':
                 baseline.append({'gene_id': locus.gene_id, **counts})
             else:
                 row['seeds'][str(seed)]['on' if fraction else 'off'] = counts
         loci.append(row)
-    counts = {'pairs': {s: r['files']['paired_records.jsonl']['path'] for s,r in runs.items()}, 'loci': loci}
+    counts = {'pairs': {s: r['files']['paired_records.jsonl']['path'] for s,r in finals.items()}, 'loci': loci}
+    if development:
+        counts['profile'] = profile
     result = mvp_score.score(counts, panel)
     result.update(pair_run_provenance_status='FINALIZER_BYTES_METADATA_INVENTORY_CONSISTENT',
-                  three_seed_identity_verified=True, three_seed_policy_verified=True,
+                  three_seed_identity_verified=not development, three_seed_policy_verified=not development,
                   count_provenance_status='DERIVED_FROM_RAW_GFF_IN_THIS_INVOCATION',
                   reference_identity_status='COMMIT_BOUND_SPECIES_MANIFEST',
                   baseline_reference_counts=baseline,
                   provenance_caveat='Receipts establish local consistency, not historical execution or scientific approval. Seed-123 source bytes agree with initialization declarations; an external concrete pin for the intended historical best checkpoint remains required.')
+    if development:
+        result.pop('three_seed_identity_verified')
+        result.pop('three_seed_policy_verified')
+        result['provenance_caveat'] = 'Local byte/metadata consistency, not historical execution or scientific approval; baseline independently pinned and matched to final initialization audit.'
     baseline_rows = [{'gene_id': c['gene_id'], 'seeds': {'123': {'off': {k:v for k,v in c.items() if k != 'gene_id'}}}} for c in baseline]
     core_ids = {l.gene_id for l in panel if l.panel == 'mvp_core'}
     result['baseline_reference_F1_percent'] = {
@@ -568,6 +727,9 @@ def produce(input_path, out):
                'comparisons': receipts, 'outputs': [restricted_identity, *[file_identity(out/n) for n in ('counts.json','statistics.json')]],
                'independent_read_splice_status': 'ABSENT_NOT_NEGATIVE', 'coverage_policy': 'PENDING_AUTHOR',
                'withholding_status': 'UNASSESSABLE', 'decision': None}
+    if development:
+        receipt.update(profile=profile, coverage_policy='APPROVED_SOURCE_OR_MISSING_NOT_NEGATIVE',
+                       structural_status='MISSING_UNASSESSABLE_NOT_ZERO')
     stage_json(out/'receipt.json', receipt)
     def final_recheck():
         recheck_files(inputs + receipt['outputs'])
@@ -580,8 +742,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', required=True, type=Path)
     parser.add_argument('--out', required=True, type=Path)
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE
+    parser.add_argument('--profile', choices=(LEGACY_PROFILE, DEVELOPMENT_PROFILE))
     args = parser.parse_args(argv)
-    produce(args.input, args.out)
+    produce(args.input, args.out, profile=args.profile)
     return 0
 
 

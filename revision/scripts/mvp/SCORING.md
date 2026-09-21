@@ -150,6 +150,21 @@ with explicit three seed points, withholding assessed/unassessable state,
 reversal upper bound >=0.005, and missing-structural downgrade (never automatic
 GO). It is a pure rule helper, **not an approval gate**. The precision-clause
 interpretation uses delta_P point >=0 and is explicitly pending author review.
-The public statistics CLI always emits `decision=null`; `--final-decision`
-errors pending the author's HiFi versus ONT-only coverage policy. No approval
-switch or default silently chooses that policy.
+The public statistics CLI always emits `decision=null`. `--final-decision` now
+requires `--coverage-policy PATH`, a JSON policy validated by
+`mvp_score.require_coverage_policy` against the contract frozen in
+`PROTOCOL_B1_frozen_v1.md` **A47** (v1.37, 2026-09-21): `policy_id`
+`B1-A47-v1.37/MVP-v1`, structural sources `['ONT']` only, thresholds equal to
+the frozen `59_evidence_support` values, `unavailable_sources` `['HiFi']`,
+`pooling` `within_source`, `per_run_retained` true. A-HiFi carries no structural
+authority because ERR13994458 publishes only subreads and FLNC is never produced
+here; it is recorded as missing per source, never as zero support. Every field
+must be stated explicitly -- nothing is defaulted, no approval switch exists, and
+any deviation (a missing field, HiFi as a structural source, a threshold that
+contradicts the frozen scorer, cross-source pooling) fails closed. The validated
+policy is copied into the result as `coverage_policy`.
+
+`mvp_junction_binding.bind(runs)` stays single-run without a policy. Given the
+A47 contract it pools the runs of one source by summing read counts per junction
+and re-deriving `supported` through the frozen thresholds; per-run rows are
+untouched and cross-source pooling is refused.

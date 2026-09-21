@@ -313,7 +313,11 @@ def test_probe_retries_only_warmup_then_publishes_hash_marker(tmp_path, monkeypa
 def launch_fixture(tmp_path, monkeypatch, sidecars=None):
     args, pins, manifest, bindings = prepared(tmp_path, monkeypatch, sidecars)
     budget = tmp_path / 'budget.json'
-    budget_sha = put(budget, {'authorized_scope': 'exploratory_mvp', 'seeds': [1], 'max_wall_seconds': 1000})
+    from test_mvp_resource_probe import fixture
+    authorization, _ = fixture()
+    authorization.update(max_wall_seconds=1000,
+                         bindings_sha256=json.loads(bindings.read_text())['bindings_sha256'])
+    budget_sha = put(budget, authorization)
     for name, stage in readiness.EVIDENCE_RECEIPTS.items():
         value = measurement(name)
         if name == 'resource_budget':

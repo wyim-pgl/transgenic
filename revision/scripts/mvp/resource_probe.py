@@ -23,21 +23,37 @@ def positive(value):
     return type(value) in (int, float) and math.isfinite(value) and value > 0
 
 
-def validate_budget(budget, binding_sha):
+def validate_budget(budget, binding_sha, *, bindings=None):
     from run_bounded import digest
-    if (not isinstance(budget, dict) or type(budget.get('schema_version')) is not int or budget['schema_version'] != 1 or
-            budget.get('authorized_scope') != 'exploratory_mvp' or
-            budget.get('seeds') != [1, 2, 3] or
+    from transgenic.training.mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE, validate_seed_profile
+    if not isinstance(budget, dict) or type(budget.get('schema_version')) is not int or budget['schema_version'] not in (1, 2):
+        raise ValueError('explicit resource budget schema 1 or 2 required')
+    development = budget['schema_version'] == 2
+    profile = DEVELOPMENT_PROFILE if development else LEGACY_PROFILE
+    if budget.get('profile', LEGACY_PROFILE) != profile:
+        raise ValueError('resource budget profile/schema mismatch')
+    if development and 'max_three_seed_node_hours' in budget:
+        raise ValueError('development budget must not reinterpret legacy three-seed cap')
+    if not development and 'max_training_node_hours' in budget:
+        raise ValueError('legacy budget requires the three-seed cap')
+    if (budget.get('authorized_scope') != 'exploratory_mvp' or
+            budget.get('seeds') != ([123] if development else [1, 2, 3]) or
             any(type(seed) is not int for seed in budget.get('seeds', [])) or
             budget.get('resource_envelope') != dict(nodes=1, ranks=4, microbatches_per_rank=24) or
             any(type(n) is not int for n in budget['resource_envelope'].values()) or
             not digest(binding_sha) or budget.get('bindings_sha256') != binding_sha):
-        raise ValueError('explicit bound three-seed controller resource envelope required')
+        raise ValueError('explicit bound profile/seed controller resource envelope required')
+    if bindings is not None:
+        bound_profile = bindings.get('profile', LEGACY_PROFILE)
+        validate_seed_profile(bound_profile, bindings.get('seed'))
+        if bound_profile != profile or bindings['seed'] not in budget['seeds']:
+            raise ValueError('resource budget/profile binding mismatch')
     for key in ('controller_record_reference', 'intent', 'margin_rationale'):
         if not isinstance(budget.get(key), str) or not budget[key].strip():
             raise ValueError(f'explicit controller record requires {key}')
     for key in ('safety_margin', 'memory_headroom_fraction', 'max_wall_seconds',
-                'max_three_seed_node_hours', 'max_probe_wall_seconds', 'launcher_overhead_seconds'):
+                'max_training_node_hours' if development else 'max_three_seed_node_hours',
+                'max_probe_wall_seconds', 'launcher_overhead_seconds'):
         if not positive(budget.get(key)):
             raise ValueError(f'positive finite budget field required: {key}')
     spent = budget.get('prior_smoke_node_hours')
@@ -129,16 +145,19 @@ def project_budget(budget, ranks):
             if len(set(rns)) != 96:
                 raise ValueError('rank training samples must be disjoint within each update')
     projected = (250 * worst + elapsed) * budget['safety_margin'] + budget['launcher_overhead_seconds']
-    three = projected * 3 / 3600
+    development = budget['schema_version'] == 2
+    hours = projected * (1 if development else 3) / 3600
+    cap = budget['max_training_node_hours' if development else 'max_three_seed_node_hours']
     if peak >= limit:
         raise ValueError('conservative cross-rank memory headroom exceeded')
-    if projected >= budget['max_wall_seconds'] or three >= budget['max_three_seed_node_hours']:
-        raise ValueError('conservative 250-update/three-seed budget exceeded')
+    if projected >= budget['max_wall_seconds'] or hours >= cap:
+        raise ValueError('conservative 250-update training budget exceeded')
     return dict(measured_step_seconds=worst, peak_memory_bytes=peak, memory_limit_bytes=limit,
         authorized_wall_seconds=budget['max_wall_seconds'], projected_run_seconds=projected,
-        projected_three_seed_node_hours=three, measured_probe_seconds=elapsed,
+        **{'projected_training_node_hours' if development else 'projected_three_seed_node_hours': hours},
+        measured_probe_seconds=elapsed,
         total_smoke_node_hours=budget['prior_smoke_node_hours'] + elapsed / 3600,
-        projected_campaign_node_hours=three + budget['prior_smoke_node_hours'] + elapsed / 3600,
+        projected_campaign_node_hours=hours + budget['prior_smoke_node_hours'] + elapsed / 3600,
         projection_formula='(250 * worst_rank_tier_steady + entire_probe_elapsed) * margin + launcher_allowance')
 
 
@@ -152,6 +171,10 @@ def validate_resource(value):
     _validate_public_hardware(value.get('hardware', []))
     budget = json_snapshot(value.get('authorization_path'), value.get('authorization_sha256'))
     validate_budget(budget, value.get('bindings_sha256'))
+    if budget['schema_version'] == 2 or any(k in value for k in ('profile', 'seed', 'run_role')):
+        validate_budget(budget, value.get('bindings_sha256'), bindings=value)
+        if value.get('run_role') != 'mvp_finetune':
+            raise ValueError('resource receipt run_role must be mvp_finetune')
     expected = project_budget(budget, value.get('ranks'))
     if any(value.get(key) != item for key, item in expected.items()):
         raise ValueError('resource projection does not match measured stages')
@@ -250,7 +273,8 @@ def run(args):
     if 'TRANSGENIC_RUN_DIR' in os.environ:
         raise ValueError('TRANSGENIC_RUN_DIR is prohibited for resource profiling')
     budget = json_snapshot(args.budget_authorization, args.budget_sha256)
-    validate_budget(budget, os.environ.get('MVP_BINDINGS_SHA256'))
+    prepared_bindings = p.load_bindings(args)
+    validate_budget(budget, os.environ.get('MVP_BINDINGS_SHA256'), bindings=prepared_bindings)
     timeout = float(os.environ.get('MVP_PROBE_TIMEOUT_SECONDS', 'nan'))
     if not positive(timeout) or timeout > budget['max_probe_wall_seconds']:
         raise ValueError('bounded runner timeout must fit explicit probe cap')
@@ -336,6 +360,7 @@ def run(args):
         profile = local(profile_path)
         f._collective_preflight(accelerator, lambda: profile.mkdir() if accelerator.is_main_process else None)
         bindings, roots, runtime = local(lambda: p.setup(args))
+        local(lambda: validate_budget(budget, os.environ.get('MVP_BINDINGS_SHA256'), bindings=bindings))
         hardware = _validate_public_hardware(_collect_runtime_hardware(accelerator))
         require_matching_identity(accelerator, _canonical_bytes(budget))
         row['capacity_bytes'] = local(lambda: torch.cuda.get_device_properties(accelerator.device).total_memory)
@@ -477,6 +502,7 @@ def run(args):
             return imports
         imports = local(imported_identity)
         result = dict(device='cuda', real_runtime=True, mode='resource_budget', runtime=runtime,
+            profile=bindings.get('profile', 'historical-three-seed'), seed=bindings['seed'], run_role='mvp_finetune',
             hardware=hardware, bindings_sha256=os.environ['MVP_BINDINGS_SHA256'],
             authorization_path=str(Path(args.budget_authorization).resolve()), authorization_sha256=args.budget_sha256,
             initialization_audit_sha256=hashlib.sha256(_canonical_bytes(audit)).hexdigest(),

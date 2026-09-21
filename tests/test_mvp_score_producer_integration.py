@@ -5,6 +5,13 @@ from pathlib import Path
 import pytest
 import duckdb
 from test_mvp_score_producer import p, w, ROOT, dump, finalized_fixture, fake_gffcompare, prediction_rows
+import mvp_decode_panel
+
+
+def reviewed_decoder_package():
+    """Synthetic command over the real reviewed decoder source closure."""
+    return {'files': {str(path): w.sha256_file(path) for path in mvp_decode_panel.decoder_code_paths()},
+            'commands': [['synthetic-test-only']]}
 
 
 def test_full_producer_actual_finalizer_frozen_panel_synthetic_biology(tmp_path, monkeypatch):
@@ -58,7 +65,7 @@ def test_full_producer_actual_finalizer_frozen_panel_synthetic_biology(tmp_path,
     monkeypatch.setattr(p.shutil,'which',lambda _: executable)
     payload = {'panels':str(panel_path),'fasta':str(fasta),'reference':str(reference),
                'candidate':candidate,'runs':runs,'predictions':rows,
-               'decoder':{'files':{str(Path(__file__)):w.sha256_file(__file__)},'commands':[['synthetic-test-only']]}}
+               'decoder':reviewed_decoder_package()}
     input_path = dump(tmp_path/'evaluation.json',payload)
     out = tmp_path/'result'
     result = p.produce(input_path,out)
