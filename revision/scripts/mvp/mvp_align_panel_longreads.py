@@ -24,8 +24,26 @@ from transgenic.evidence import mvp_windows as w
 
 ROLE_COLUMNS = ('dataset run species genotype_stratum instrument data_type expected_files '
                 'expected_reads source_checksum source_checksum_authority local_fa_md5 role basis note').split()
-ONT_RUNS = {'SRR28341943', 'SRR28341944', 'SRR28341945'}
-HIFI_RUNS = {'ERR13994458'}
+ONT_RUNS = {'SRR28341943', 'SRR28341944', 'SRR28341945'}  # A-ONT1
+# PacBio leg (labelled HiFi, PacBio threshold 2) is A-CCS23 per PROTOCOL_B1
+# A47.2 (v1.38): PRJNA911826 Col-0 WT runs only, lima-processed full-length
+# Iso-Seq (primers 0.000, 3' poly(A) only in 98.8-99.4 %, concatemer signal
+# 0.4-0.9 %). splice:hq suits these CCS-level FL reads; 3' poly(A) tails are
+# soft-clipped. A-CCS23 supports junctions / intron chains only, never TES.
+HIFI_RUNS = {'SRR22719002', 'SRR22719003', 'SRR22719004',
+             'SRR22719005', 'SRR22719006', 'SRR22719007'}  # A-CCS23
+RUN_DATASETS = dict({run: 'A-ONT1' for run in ONT_RUNS}, **{run: 'A-CCS23' for run in HIFI_RUNS})
+# A-HiFi (ERR13994458) publishes subreads only and no FLNC product exists:
+# unavailable, missing per source (never zero), and refused here.
+UNAVAILABLE_RUNS = {'ERR13994458': 'A-HiFi'}
+
+
+def require_scoring_run(run):
+    if run in UNAVAILABLE_RUNS:
+        raise ValueError(f'{run} ({UNAVAILABLE_RUNS[run]}) is unavailable under A47.2: '
+                         'subreads only, no FLNC product; missing, never zero')
+    if run not in ONT_RUNS | HIFI_RUNS:
+        raise ValueError('run is not A-ONT1 / A-CCS23')
 
 
 def digest(path):
@@ -37,8 +55,7 @@ def digest(path):
 
 
 def validate_read(root, run, reads):
-    if run not in ONT_RUNS | HIFI_RUNS:
-        raise ValueError('run is not A-ONT1 / A-HiFi')
+    require_scoring_run(run)
     roles = Path(root).resolve() / 'evidence/DATASET_ROLES.longread_v1.tsv'
     with roles.open() as f:
         reader = csv.DictReader(f, delimiter='\t')
@@ -122,8 +139,7 @@ def select_names(paf_lines, loci):
 
 
 def output_directory(root, run):
-    if run not in ONT_RUNS | HIFI_RUNS:
-        raise ValueError('unknown scoring run')
+    require_scoring_run(run)
     out = Path(root).resolve() / 'evidence/mvp_scoring_20260916' / run
     if out.resolve() != out:
         raise ValueError('scoring namespace must not be redirected by symlinks')
@@ -202,6 +218,7 @@ def execute(args):
             raise ValueError('input mutated during scoring')
         report = dict(boundary, label='exploratory / MVP', role=row, inputs_md5=inputs,
                       commands=commands, source=source, use_uf=uf, run=args.run,
+                      dataset=RUN_DATASETS[args.run],
                       panel_sha256=w.PANEL_SHA256, coverage_policy='PENDING',
                       outputs_md5={p.name: digest(p) for p in out.iterdir() if p.is_file()},
                       status='PREPARATORY_COMMANDS_COMPLETED')

@@ -77,7 +77,7 @@ def test_binds_single_run_table_to_locus_structural_counts(tmp_path):
 
 def test_unsupported_junction_rows_are_excluded_from_the_supported_set(tmp_path):
     m = script('mvp_junction_binding')
-    table = write_table(tmp_path, [row(30050, 30149, n_ont=2), row(30300, 30399, n_hifi=2)])
+    table = write_table(tmp_path, [row(30050, 30149, n_ont=2), row(30300, 30399, n_ont=3)])
     run = m.load_run(table, write_report(tmp_path, table))
     assert m.supported_set(m.bind([run])) == frozenset({('Chr1', 30300, 30399, '+')})
 
@@ -94,7 +94,7 @@ def test_refuses_table_not_bound_to_its_alignment_report(tmp_path):
     m = script('mvp_junction_binding')
     table = write_table(tmp_path, [row(30050, 30149, n_ont=3)])
     report = write_report(tmp_path, table)
-    write_table(tmp_path, [row(30050, 30149, n_ont=3), row(30300, 30399, n_hifi=2)])
+    write_table(tmp_path, [row(30050, 30149, n_ont=3), row(30300, 30399, n_ont=3)])
     with pytest.raises(m.JunctionBindingError, match='md5'):
         m.load_run(table, report)
 
@@ -135,10 +135,7 @@ def test_refuses_pooling_runs_without_approved_coverage_policy(tmp_path):
 
 
 def approved_policy():
-    m = script('mvp_score')
-    return dict(policy_id=m.COVERAGE_POLICY_ID, structural_sources=['ONT'],
-                thresholds={'ONT': 3}, unavailable_sources=['HiFi'],
-                pooling='within_source', per_run_retained=True)
+    return json.loads((ROOT / 'revision/scripts/mvp/coverage_policy_a47_2.json').read_text())
 
 
 def two_ont_runs(tmp_path, n_ont=2):
@@ -147,6 +144,19 @@ def two_ont_runs(tmp_path, n_ont=2):
     b = write_table(tmp_path, [row(30050, 30149, n_ont=n_ont)], name='b.tsv')
     return (m.load_run(a, write_report(tmp_path, a, run='SRR28341943', name='a.json')),
             m.load_run(b, write_report(tmp_path, b, run='SRR28341944', name='b.json')))
+
+
+def ccs_run(tmp_path, rows, run='SRR22719002', name='h'):
+    m = script('mvp_junction_binding')
+    table = write_table(tmp_path, rows, name=name + '.tsv')
+    return m.load_run(table, write_report(tmp_path, table, run=run, source='HiFi',
+                                          name=name + '.json'))
+
+
+def ont_run(tmp_path, rows, run='SRR28341943', name='o'):
+    m = script('mvp_junction_binding')
+    table = write_table(tmp_path, rows, name=name + '.tsv')
+    return m.load_run(table, write_report(tmp_path, table, run=run, name=name + '.json'))
 
 
 def test_pools_read_counts_within_one_source_under_the_approved_policy(tmp_path):
@@ -159,14 +169,73 @@ def test_pools_read_counts_within_one_source_under_the_approved_policy(tmp_path)
     assert m.supported_set(pooled) == frozenset({('Chr1', 30050, 30149, '+')})
 
 
-def test_refuses_cross_source_pooling_under_the_approved_policy(tmp_path):
+def test_a_ccs23_runs_pool_within_the_hifi_column(tmp_path):
     m = script('mvp_junction_binding')
-    ont, _ = two_ont_runs(tmp_path)
-    hifi_table = write_table(tmp_path, [row(30050, 30149, n_hifi=2)], name='h.tsv')
-    hifi = m.load_run(hifi_table, write_report(tmp_path, hifi_table, run='ERR13994458',
-                                               source='HiFi', name='h.json'))
-    with pytest.raises(ValueError, match='no structural authority'):
-        m.bind([ont, hifi], policy=approved_policy())
+    first = ccs_run(tmp_path, [row(30050, 30149, n_hifi=1)], run='SRR22719002', name='h1')
+    second = ccs_run(tmp_path, [row(30050, 30149, n_hifi=1)], run='SRR22719007', name='h2')
+    pooled = m.bind([first, second], policy=approved_policy())
+    assert [(r['n_ONT'], r['n_HiFi'], r['supported']) for r in pooled] == [(0, 2, True)]
+
+
+def test_junction_with_two_a_ccs23_reads_and_under_three_ont_reads_is_supported(tmp_path):
+    m = script('mvp_junction_binding')
+    ont = ont_run(tmp_path, [row(30050, 30149, n_ont=2)])
+    ccs = ccs_run(tmp_path, [row(30050, 30149, n_hifi=2)])
+    bound = m.bind([ont, ccs], policy=approved_policy())
+    assert [(r['n_ONT'], r['n_HiFi'], r['supported']) for r in bound] == [(2, 2, True)]
+    assert m.supported_set(bound) == frozenset({('Chr1', 30050, 30149, '+')})
+    predicted = {('Chr1', 30050, 30149, '+')}
+    counts = m.locus_counts({'g': predicted}, m.supported_set(bound), [locus()])
+    assert counts['g'] == dict(predicted=1, precision_tp=1, supported=1, recall_tp=1)
+
+
+def test_one_ccs_plus_two_ont_reads_is_not_supported_no_cross_source_summation(tmp_path):
+    m = script('mvp_junction_binding')
+    ont = ont_run(tmp_path, [row(30050, 30149, n_ont=2)])
+    ccs = ccs_run(tmp_path, [row(30050, 30149, n_hifi=1)])
+    bound = m.bind([ont, ccs], policy=approved_policy())
+    # 1 + 2 = 3 would clear the ONT threshold if sources were summed; they are not
+    assert [(r['n_ONT'], r['n_HiFi'], r['supported']) for r in bound] == [(2, 1, False)]
+    assert m.supported_set(bound) == frozenset()
+
+
+def test_cross_source_counts_are_never_summed_into_one_column(tmp_path):
+    m = script('mvp_junction_binding')
+    first, second = two_ont_runs(tmp_path, n_ont=1)
+    ccs1 = ccs_run(tmp_path, [row(30050, 30149, n_hifi=1), row(30300, 30399, n_hifi=5)], name='h1')
+    ccs2 = ccs_run(tmp_path, [row(30300, 30399, n_hifi=1)], run='SRR22719003', name='h2')
+    bound = m.bind([first, ccs1, second, ccs2], policy=approved_policy())
+    by_key = {(r['intron_start0'], r['intron_end0']): (r['n_ONT'], r['n_HiFi']) for r in bound}
+    assert by_key == {(30050, 30149): (2, 1), (30300, 30399): (0, 6)}
+    assert m.supported_set(bound) == frozenset({('Chr1', 30300, 30399, '+')})
+    with pytest.raises(ValueError, match='cross-source pooling'):
+        m.pool([first, ccs1])
+    # per-source pooled tables are retained separately, as are per-run rows
+    per = m.per_source([first, ccs1, second, ccs2], approved_policy())
+    assert [r['n_HiFi'] for r in per['ONT']] == [0] and [r['n_ONT'] for r in per['HiFi']] == [0, 0]
+    assert first.rows[0]['n_ONT'] == 1
+
+
+def test_run_table_with_counts_in_another_sources_column_is_refused(tmp_path):
+    m = script('mvp_junction_binding')
+    table = write_table(tmp_path, [row(30050, 30149, n_ont=1, n_hifi=2)])
+    with pytest.raises(m.JunctionBindingError, match="another source's column"):
+        m.load_run(table, write_report(tmp_path, table))
+
+
+def test_unavailable_a_hifi_run_is_refused(tmp_path):
+    m = script('mvp_junction_binding')
+    table = write_table(tmp_path, [row(30050, 30149, n_hifi=2)])
+    with pytest.raises(m.JunctionBindingError, match='A-HiFi'):
+        m.load_run(table, write_report(tmp_path, table, run='ERR13994458', source='HiFi'))
+
+
+def test_superseded_v1_policy_cannot_pool(tmp_path):
+    m = script('mvp_junction_binding')
+    first, second = two_ont_runs(tmp_path)
+    v1 = json.loads((ROOT / 'revision/scripts/mvp/coverage_policy_a47.json').read_text())
+    with pytest.raises(ValueError, match='A47.2'):
+        m.bind([first, second], policy=v1)
 
 
 def test_receipt_records_the_validated_policy_instead_of_pending(tmp_path):
@@ -176,6 +245,24 @@ def test_receipt_records_the_validated_policy_instead_of_pending(tmp_path):
     receipt = m.receipt([first, second], m.bind([first, second], policy=policy), policy=policy)
     assert receipt['coverage_policy']['policy_id'] == policy['policy_id']
     assert receipt['pooled_across_runs'] is True
+    # A-CCS23 not bound here: recorded missing, never as zero support
+    assert receipt['structural_sources_bound'] == ['ONT']
+    assert receipt['structural_sources_missing'] == ['HiFi']
+
+
+def test_receipt_retains_per_source_and_per_run_results(tmp_path):
+    m = script('mvp_junction_binding')
+    ont = ont_run(tmp_path, [row(30050, 30149, n_ont=2)])
+    ccs = ccs_run(tmp_path, [row(30050, 30149, n_hifi=2)])
+    policy = approved_policy()
+    receipt = m.receipt([ont, ccs], m.bind([ont, ccs], policy=policy), policy=policy)
+    assert receipt['structural_sources_missing'] == []
+    assert receipt['per_source'] == {
+        'HiFi': dict(dataset='A-CCS23', runs=['SRR22719002'], junctions=1, supported_junctions=1),
+        'ONT': dict(dataset='A-ONT1', runs=['SRR28341943'], junctions=1, supported_junctions=0)}
+    assert [(r['run'], r['dataset'], r['supported_junctions']) for r in receipt['runs']] == [
+        ('SRR28341943', 'A-ONT1', 0), ('SRR22719002', 'A-CCS23', 1)]
+    assert receipt['supported_junctions'] == 1
 
 
 def test_forged_support_column_is_rejected_by_the_frozen_table_reader(tmp_path):
@@ -200,5 +287,5 @@ def test_receipt_records_read_counts_run_identity_and_unverified_provenance(tmp_
     assert receipt['run_provenance_status'] == 'UNVERIFIED'
     assert receipt['panel_sha256'] == w.PANEL_SHA256
     assert receipt['junctions'] == 2 and receipt['supported_junctions'] == 1
-    assert receipt['runs'] == [dict(run=run.run_id, source='ONT', use_uf=False,
-                                    table_sha256=run.table_sha256)]
+    assert receipt['runs'] == [dict(run=run.run_id, source='ONT', dataset='A-ONT1', use_uf=False,
+                                    table_sha256=run.table_sha256, supported_junctions=1)]

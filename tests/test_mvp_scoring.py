@@ -128,40 +128,66 @@ def approved_coverage_policy(**overrides):
     m = script('mvp_score')
     policy = dict(policy_id=m.COVERAGE_POLICY_ID,
                   structural_sources=list(m.COVERAGE_STRUCTURAL_SOURCES),
-                  thresholds={'ONT': 3},
+                  source_sets={'ONT': 'A-ONT1', 'HiFi': 'A-CCS23'},
+                  thresholds={'ONT': 3, 'HiFi': 2},
                   unavailable_sources=list(m.COVERAGE_UNAVAILABLE_SOURCES),
                   pooling=m.COVERAGE_POOLING,
-                  per_run_retained=True)
+                  per_run_retained=True,
+                  excluded_judgements={'HiFi': ['TES']})
     policy.update(overrides)
     return policy
 
 
-def test_coverage_policy_accepts_the_a47_contract_and_normalises_it():
+SHIPPED_POLICY = ROOT / 'revision/scripts/mvp/coverage_policy_a47_2.json'
+SUPERSEDED_POLICY = ROOT / 'revision/scripts/mvp/coverage_policy_a47.json'
+
+
+def test_coverage_policy_accepts_the_a47_2_contract_and_normalises_it():
     m = script('mvp_score')
     contract = m.require_coverage_policy(approved_coverage_policy())
-    assert contract == dict(policy_id='B1-A47-v1.37/MVP-v1', structural_sources=['ONT'],
-                            thresholds={'ONT': 3}, unavailable_sources=['HiFi'],
-                            pooling='within_source', per_run_retained=True)
+    assert contract == dict(policy_id='B1-A47.2-v1.38/MVP-v2', structural_sources=['ONT', 'HiFi'],
+                            source_sets={'ONT': 'A-ONT1', 'HiFi': 'A-CCS23'},
+                            thresholds={'ONT': 3, 'HiFi': 2}, unavailable_sources=['A-HiFi'],
+                            pooling='within_source', per_run_retained=True,
+                            excluded_judgements={'HiFi': ['TES']})
 
 
-def test_coverage_policy_rejects_hifi_as_a_structural_source():
+def test_coverage_policy_rejects_the_superseded_a47_v1_contract():
+    m = script('mvp_score')
+    v1 = json.loads(SUPERSEDED_POLICY.read_text())
+    assert v1['policy_id'] == 'B1-A47-v1.37/MVP-v1'
+    with pytest.raises(ValueError, match='superseded by PROTOCOL_B1 A47.2'):
+        m.require_coverage_policy(v1)
+
+
+def test_coverage_policy_rejects_ont_only_structural_sources():
     m = script('mvp_score')
     with pytest.raises(ValueError, match='structural sources'):
         m.require_coverage_policy(approved_coverage_policy(
-            structural_sources=['ONT', 'HiFi'], thresholds={'ONT': 3, 'HiFi': 2},
-            unavailable_sources=[]))
+            structural_sources=['ONT'], thresholds={'ONT': 3}))
 
 
-def test_coverage_policy_rejects_thresholds_that_contradict_the_frozen_scorer():
+def test_coverage_policy_rejects_a_hifi_column_filled_by_the_unavailable_a_hifi():
+    m = script('mvp_score')
+    with pytest.raises(ValueError, match='source sets'):
+        m.require_coverage_policy(approved_coverage_policy(
+            source_sets={'ONT': 'A-ONT1', 'HiFi': 'A-HiFi'}))
+
+
+@pytest.mark.parametrize('thresholds', [{'ONT': 1, 'HiFi': 2}, {'ONT': 3, 'HiFi': 3},
+                                        {'ONT': 3}, {'ONT': 3, 'HiFi': 2, 'PacBio': 2}])
+def test_coverage_policy_rejects_thresholds_that_contradict_the_frozen_scorer(thresholds):
     m = script('mvp_score')
     with pytest.raises(ValueError, match='frozen'):
-        m.require_coverage_policy(approved_coverage_policy(thresholds={'ONT': 1}))
+        m.require_coverage_policy(approved_coverage_policy(thresholds=thresholds))
 
 
 def test_coverage_policy_rejects_an_unavailable_source_recorded_as_available():
     m = script('mvp_score')
     with pytest.raises(ValueError, match='never as zero'):
         m.require_coverage_policy(approved_coverage_policy(unavailable_sources=[]))
+    with pytest.raises(ValueError, match='never as zero'):
+        m.require_coverage_policy(approved_coverage_policy(unavailable_sources=['HiFi']))
 
 
 def test_coverage_policy_rejects_cross_source_pooling():
@@ -170,9 +196,16 @@ def test_coverage_policy_rejects_cross_source_pooling():
         m.require_coverage_policy(approved_coverage_policy(pooling='across_sources'))
 
 
+def test_coverage_policy_requires_the_a_ccs23_tes_exclusion():
+    m = script('mvp_score')
+    for excluded in ({}, {'HiFi': []}, {'HiFi': ['TSS']}):
+        with pytest.raises(ValueError, match='TES'):
+            m.require_coverage_policy(approved_coverage_policy(excluded_judgements=excluded))
+
+
 def test_shipped_coverage_policy_file_is_the_approved_contract():
     m = script('mvp_score')
-    shipped = json.loads((ROOT / 'revision/scripts/mvp/coverage_policy_a47.json').read_text())
+    shipped = json.loads(SHIPPED_POLICY.read_text())
     assert m.require_coverage_policy(shipped)['policy_id'] == m.COVERAGE_POLICY_ID
 
 
@@ -246,16 +279,26 @@ def test_real_score_cli_full_frozen_panel_missing_structural(tmp_path):
     assert blocked.returncode != 0
     assert 'coverage policy required' in blocked.stderr
     assert not blocked_out.exists()
-    # the shipped A47 contract unblocks --final-decision and is recorded in the result
+    # the superseded A47 v1 contract no longer unblocks --final-decision
+    v1_out = tmp_path / 'v1.json'
+    rejected = subprocess.run([sys.executable, str(ROOT / 'revision/scripts/mvp/mvp_score.py'),
+                               '--input', str(inp), '--panels', str(panel), '--out', str(v1_out),
+                               '--final-decision', '--coverage-policy', str(SUPERSEDED_POLICY)],
+                              capture_output=True, text=True)
+    assert rejected.returncode != 0 and 'A47.2' in rejected.stderr
+    assert not v1_out.exists()
+    # the shipped A47.2 contract unblocks --final-decision and is recorded in the result
     policy_out = tmp_path / 'policy.json'
     accepted = subprocess.run([sys.executable, str(ROOT / 'revision/scripts/mvp/mvp_score.py'),
                                '--input', str(inp), '--panels', str(panel), '--out', str(policy_out),
-                               '--final-decision', '--coverage-policy',
-                               str(ROOT / 'revision/scripts/mvp/coverage_policy_a47.json')],
+                               '--final-decision', '--coverage-policy', str(SHIPPED_POLICY)],
                               capture_output=True, text=True)
     assert accepted.returncode == 0, accepted.stderr
     recorded = json.loads(policy_out.read_text())['coverage_policy']
-    assert recorded['structural_sources'] == ['ONT'] and recorded['unavailable_sources'] == ['HiFi']
+    assert recorded['structural_sources'] == ['ONT', 'HiFi']
+    assert recorded['source_sets'] == {'ONT': 'A-ONT1', 'HiFi': 'A-CCS23'}
+    assert recorded['unavailable_sources'] == ['A-HiFi']
+    assert recorded['excluded_judgements'] == {'HiFi': ['TES']}
     payload['pairs']['01'] = str(pairfile)
     with pytest.raises(ValueError, match='seeds'):
         script('mvp_score').score(payload, loci)

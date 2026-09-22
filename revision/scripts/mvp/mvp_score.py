@@ -25,17 +25,28 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'src'))
 from transgenic.evidence import mvp_bootstrap as b, mvp_windows as w
 
 
-# Structural-coverage contract, frozen by PROTOCOL_B1 A47 (v1.37, 2026-09-21)
-# and B6_MVP_PILOT_v1 §2. A47 settles what used to be pending here: FLNC is
-# never produced in this project, ERR13994458 (A-HiFi) and PRJNA911826
-# (A-CCS23) publish no downloadable CCS/FLNC product, so A-ONT1 is the only
-# structural source and HiFi is missing PER SOURCE -- never a zero count.
-COVERAGE_POLICY_ID = 'B1-A47-v1.37/MVP-v1'
-COVERAGE_STRUCTURAL_SOURCES = ('ONT',)
-COVERAGE_UNAVAILABLE_SOURCES = ('HiFi',)
+# Structural-coverage contract, frozen by PROTOCOL_B1 A47.2 (v1.38, 2026-09-22)
+# and B6_MVP_PILOT_v1 §2; supersedes A47 v1.37 (coverage_policy_a47.json, kept
+# as history and rejected here). The measured read-end census showed A-CCS23
+# (PRJNA911826, Col-0 WT SRR22719002-07) is lima-processed full-length Iso-Seq:
+# Iso-Seq primers 0.000 in all six runs, poly(A) at the 3' end only in
+# 98.8-99.4 % of reads, no Illumina adapters, internal poly(A)/primer
+# (concatemer) 0.4-0.9 %. A-CCS23 therefore fills the PacBio column (labelled
+# HiFi, frozen PacBio threshold 2) for junctions / intron chains (and TSS) but
+# is excluded from TES / 3'-end judgements. A-ONT1 fills ONT (threshold 3).
+# The DATASET A-HiFi (ERR13994458, subreads only, no FLNC) stays unavailable:
+# missing per source, never a zero count. Runs pool only within a source; a
+# junction is supported when EITHER source clears its own threshold.
+COVERAGE_POLICY_ID = 'B1-A47.2-v1.38/MVP-v2'
+COVERAGE_STRUCTURAL_SOURCES = ('ONT', 'HiFi')
+COVERAGE_SOURCE_SETS = {'ONT': 'A-ONT1', 'HiFi': 'A-CCS23'}
+COVERAGE_UNAVAILABLE_SOURCES = ('A-HiFi',)
+COVERAGE_EXCLUDED_JUDGEMENTS = {'HiFi': ['TES']}
 COVERAGE_POOLING = 'within_source'
-_COVERAGE_FIELDS = ('policy_id', 'structural_sources', 'thresholds',
-                    'unavailable_sources', 'pooling', 'per_run_retained')
+SUPERSEDED_POLICY_IDS = ('B1-A47-v1.37/MVP-v1',)
+_COVERAGE_FIELDS = ('policy_id', 'structural_sources', 'source_sets', 'thresholds',
+                    'unavailable_sources', 'pooling', 'per_run_retained',
+                    'excluded_judgements')
 
 
 def _frozen_thresholds():
@@ -50,34 +61,39 @@ def _frozen_thresholds():
 
 
 def require_coverage_policy(policy):
-    """Validate a structural-coverage policy against the frozen A47 contract.
+    """Validate a structural-coverage policy against the frozen A47.2 contract.
 
     The contract must be stated explicitly by the caller; nothing is defaulted,
-    so a missing or partial policy fails closed exactly as before. Accepts the
-    A47 contract and nothing else, and returns the normalised record to record
-    alongside the result.
+    so a missing or partial policy fails closed. Accepts the A47.2 contract and
+    nothing else (the superseded A47 v1 contract included), and returns the
+    normalised record to record alongside the result.
     """
     if not isinstance(policy, dict):
         raise ValueError(
-            'coverage policy required: pass the A47 contract explicitly '
+            'coverage policy required: pass the A47.2 contract explicitly '
             f'(policy_id {COVERAGE_POLICY_ID}); got {type(policy).__name__}')
+    if policy.get('policy_id') in SUPERSEDED_POLICY_IDS:
+        raise ValueError(f'coverage policy {policy["policy_id"]!r} is superseded by PROTOCOL_B1 '
+                         f'A47.2 (v1.38); pass {COVERAGE_POLICY_ID!r} (A-ONT1 + A-CCS23)')
     unknown = sorted(set(policy) - set(_COVERAGE_FIELDS))
     missing = sorted(set(_COVERAGE_FIELDS) - set(policy))
     if unknown or missing:
         raise ValueError(f'coverage policy fields wrong: unknown {unknown}, missing {missing}')
     if policy['policy_id'] != COVERAGE_POLICY_ID:
         raise ValueError(f'coverage policy {policy["policy_id"]!r} is not the approved '
-                         f'contract {COVERAGE_POLICY_ID!r}')
+                         f'A47.2 contract {COVERAGE_POLICY_ID!r}')
     sources = tuple(policy['structural_sources'])
     if sources != COVERAGE_STRUCTURAL_SOURCES:
-        raise ValueError(f'coverage policy declares structural sources {sources}; A47 approves '
-                         f'{COVERAGE_STRUCTURAL_SOURCES} only (A-HiFi has no FLNC product '
-                         'and none is produced here)')
+        raise ValueError(f'coverage policy declares structural sources {sources}; A47.2 approves '
+                         f'{COVERAGE_STRUCTURAL_SOURCES} exactly')
+    if policy['source_sets'] != COVERAGE_SOURCE_SETS:
+        raise ValueError(f'coverage policy source sets {policy["source_sets"]} are not the A47.2 '
+                         f'sets {COVERAGE_SOURCE_SETS} (HiFi is filled by A-CCS23, never A-HiFi)')
     if tuple(policy['unavailable_sources']) != COVERAGE_UNAVAILABLE_SOURCES:
         raise ValueError(f'coverage policy must declare {COVERAGE_UNAVAILABLE_SOURCES} unavailable; '
                          'a missing source is recorded as missing, never as zero support')
     frozen = _frozen_thresholds()
-    thresholds = {k: policy['thresholds'][k] for k in policy['thresholds']}
+    thresholds = dict(policy['thresholds'])
     expected = {source: frozen[source] for source in sources}
     if thresholds != expected:
         raise ValueError(f'coverage policy thresholds {thresholds} contradict the frozen '
@@ -88,9 +104,14 @@ def require_coverage_policy(policy):
     if policy['per_run_retained'] is not True:
         raise ValueError('coverage policy must retain per-run results alongside the pooled result '
                          '(PROTOCOL_B1 §3.2, B6_MVP_PILOT_v1 §2)')
+    if policy['excluded_judgements'] != COVERAGE_EXCLUDED_JUDGEMENTS:
+        raise ValueError(f'coverage policy excluded judgements {policy["excluded_judgements"]} are not '
+                         f'{COVERAGE_EXCLUDED_JUDGEMENTS}: A-CCS23 never supports TES / 3\'-end boundaries')
     return dict(policy_id=COVERAGE_POLICY_ID, structural_sources=list(sources),
-                thresholds=expected, unavailable_sources=list(COVERAGE_UNAVAILABLE_SOURCES),
-                pooling=COVERAGE_POOLING, per_run_retained=True)
+                source_sets=dict(COVERAGE_SOURCE_SETS), thresholds=expected,
+                unavailable_sources=list(COVERAGE_UNAVAILABLE_SOURCES),
+                pooling=COVERAGE_POOLING, per_run_retained=True,
+                excluded_judgements={k: list(v) for k, v in COVERAGE_EXCLUDED_JUDGEMENTS.items()})
 
 
 def predicted_junctions(transcripts, locus):
@@ -240,9 +261,9 @@ def main(argv=None):
     p.add_argument('--panels', required=True, type=Path)
     p.add_argument('--out', required=True, type=Path)
     p.add_argument('--final-decision', action='store_true',
-                   help='publish a final decision; requires --coverage-policy stating the A47 contract')
+                   help='publish a final decision; requires --coverage-policy stating the A47.2 contract')
     p.add_argument('--coverage-policy', type=Path,
-                   help='JSON structural-coverage policy validated against the frozen A47 contract')
+                   help='JSON structural-coverage policy validated against the frozen A47.2 contract')
     from transgenic.training.mvp_profiles import LEGACY_PROFILE, DEVELOPMENT_PROFILE
     p.add_argument('--profile', choices=(LEGACY_PROFILE, DEVELOPMENT_PROFILE))
     a = p.parse_args(argv)
@@ -257,7 +278,7 @@ def main(argv=None):
             raise ValueError('development-single has no final decision')
         if a.coverage_policy is None:
             raise ValueError('coverage policy required: --final-decision needs --coverage-policy '
-                             f'stating the A47 contract ({COVERAGE_POLICY_ID})')
+                             f'stating the A47.2 contract ({COVERAGE_POLICY_ID})')
         coverage = require_coverage_policy(json.loads(a.coverage_policy.read_text()))
     elif a.coverage_policy is not None:
         raise ValueError('--coverage-policy is only meaningful with --final-decision')

@@ -57,8 +57,9 @@ allocation after independent review and real-tool smoke tests.
 Canonical roles are **ROOT/evidence/DATASET_ROLES.longread_v1.tsv**, not the
 repository copy. The one matching run must be reference Athaliana,
 `b1_validation_only`, with `local_fa_md5` matching fresh MD5 of the canonical
-actual read file. Only SRR28341943–45 and ERR13994458 are admitted. Missing HiFi
-manifest/read inputs fail; nothing is fetched or inferred. Reference/GFF MD5
+actual read file. Only A-ONT1 (SRR28341943–45) and, as the PacBio/HiFi leg,
+A-CCS23 (SRR22719002–07, `splice:hq`) are admitted (A47.2); A-HiFi ERR13994458
+is refused as unavailable. Missing HiFi manifest/read inputs fail; nothing is fetched or inferred. Reference/GFF MD5
 values are caller assertions: equality verifies bytes, not their frozen identity.
 An **external frozen-reference identity gate is required**, but not implemented
 here. No caller approval flag can establish that gate. Both return modes record
@@ -153,18 +154,26 @@ interpretation uses delta_P point >=0 and is explicitly pending author review.
 The public statistics CLI always emits `decision=null`. `--final-decision` now
 requires `--coverage-policy PATH`, a JSON policy validated by
 `mvp_score.require_coverage_policy` against the contract frozen in
-`PROTOCOL_B1_frozen_v1.md` **A47** (v1.37, 2026-09-21): `policy_id`
-`B1-A47-v1.37/MVP-v1`, structural sources `['ONT']` only, thresholds equal to
-the frozen `59_evidence_support` values, `unavailable_sources` `['HiFi']`,
-`pooling` `within_source`, `per_run_retained` true. A-HiFi carries no structural
-authority because ERR13994458 publishes only subreads and FLNC is never produced
-here; it is recorded as missing per source, never as zero support. Every field
-must be stated explicitly -- nothing is defaulted, no approval switch exists, and
-any deviation (a missing field, HiFi as a structural source, a threshold that
+`PROTOCOL_B1_frozen_v1.md` **A47.2** (v1.38, 2026-09-22), shipped as
+`coverage_policy_a47_2.json`: `policy_id` `B1-A47.2-v1.38/MVP-v2`, structural
+sources `['ONT', 'HiFi']` with `source_sets` ONT = A-ONT1, HiFi = A-CCS23,
+thresholds equal to the frozen `59_evidence_support` values (ONT 3 / PacBio 2),
+`unavailable_sources` `['A-HiFi']` (a dataset: ERR13994458 publishes only
+subreads and FLNC is never produced here; missing per source, never zero),
+`pooling` `within_source`, `per_run_retained` true, and `excluded_judgements`
+`{'HiFi': ['TES']}` (A-CCS23 is lima-processed FL Iso-Seq: it supports junctions,
+intron chains and TSS, never TES / 3'-end boundaries; the MVP judges junctions
+only). The superseded A47 v1.37 contract (`coverage_policy_a47.json`, kept as
+history) is rejected. Every field must be stated explicitly -- nothing is
+defaulted, no approval switch exists, and any deviation (a missing field, a
+wrong source set, a threshold that
 contradicts the frozen scorer, cross-source pooling) fails closed. The validated
 policy is copied into the result as `coverage_policy`.
 
 `mvp_junction_binding.bind(runs)` stays single-run without a policy. Given the
-A47 contract it pools the runs of one source by summing read counts per junction
-and re-deriving `supported` through the frozen thresholds; per-run rows are
-untouched and cross-source pooling is refused.
+A47.2 contract it pools runs WITHIN each source (A-ONT1 into `n_ONT`, A-CCS23
+into `n_HiFi`), then combines the per-source pooled tables per junction; counts
+are never summed across sources and `supported` is re-derived as the frozen
+disjunct (ONT >= 3 or HiFi >= 2). Per-run rows are untouched, `per_source`
+returns the pooled tables, and the receipt records per-run, per-source and
+missing-source results.

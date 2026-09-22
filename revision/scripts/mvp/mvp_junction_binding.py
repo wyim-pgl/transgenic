@@ -21,11 +21,17 @@ What it deliberately refuses:
   * pooling two or more runs without an explicit approved coverage policy.
     Support thresholds are READ counts, so pooling changes which junctions are
     supported. `bind` pools only when the caller states the contract frozen by
-    PROTOCOL_B1 A47 (v1.37) and `mvp_score.require_coverage_policy` accepts it,
-    and even then only WITHIN one source: A-ONT1 is the sole structural source
-    (A-HiFi has no downloadable FLNC product and none is produced here), and an
-    unavailable source stays missing rather than contributing zero counts.
+    PROTOCOL_B1 A47.2 (v1.38) and `mvp_score.require_coverage_policy` accepts
+    it, and even then only WITHIN one source: A-ONT1 runs pool into the ONT
+    column (threshold 3), A-CCS23 runs into the PacBio column labelled HiFi
+    (threshold 2). Counts are never summed across sources; a junction is
+    supported when EITHER source's own pooled count clears its own threshold
+    (the frozen disjunct). The dataset A-HiFi (ERR13994458) is unavailable and
+    stays missing rather than contributing zero counts. A-CCS23 supports
+    junctions only here, never TES / 3'-end boundaries (none are judged).
     Single-run binding stays available for preparatory work.
+  * a run table carrying read counts in another source's column, since that
+    would smuggle cross-source counts into a within-source pool.
 
 Counts are READS (UMI status unknown; never molecules). Nothing here decodes a
 model, runs GFFCompare, verifies a reference genome, or makes any evaluation,
@@ -61,6 +67,7 @@ _DRIVER = _load("mvp_align_panel_longreads")
 
 RUN_SOURCES = {run: "ONT" for run in _DRIVER.ONT_RUNS}
 RUN_SOURCES.update({run: "HiFi" for run in _DRIVER.HIFI_RUNS})
+SOURCE_COLUMNS = {"ONT": "n_ONT", "HiFi": "n_HiFi"}
 
 COUNTS_ARE = "reads (UMI status unknown; never molecules)"
 
@@ -94,6 +101,9 @@ def load_run(table_path, report_path):
     report = json.loads(report_path.read_text())
 
     run_id = report.get("run")
+    _require(run_id not in _DRIVER.UNAVAILABLE_RUNS,
+             f"{run_id} ({_DRIVER.UNAVAILABLE_RUNS.get(run_id)}) is unavailable under A47.2; "
+             "missing per source, never zero")
     _require(run_id in RUN_SOURCES, f"unknown long-read run {run_id!r}")
     source = report.get("source")
     _require(source == RUN_SOURCES[run_id],
@@ -111,6 +121,10 @@ def load_run(table_path, report_path):
              f"junction table md5 {actual} does not match the receipt md5 {claimed}")
 
     rows = _TABLE.read_table(table_path)
+    foreign = [c for s, c in SOURCE_COLUMNS.items() if s != source]
+    _require(all(row[c] == 0 for row in rows for c in foreign),
+             f"run {run_id} ({source}) table carries read counts in another source's column; "
+             "counts are never mixed across sources")
     return RunTable(run_id=run_id, source=source, use_uf=use_uf,
                     table_path=table_path, table_sha256=_sha256(table_path),
                     rows=tuple(rows))
@@ -120,45 +134,86 @@ def bind(runs, policy=None):
     """Bound junction rows: one validated run, or runs pooled under an approved policy.
 
     Without a policy this stays single-run, because read-count thresholds make
-    pooling a coverage decision rather than arithmetic. With the A47 contract
-    the runs of one structural source are pooled by summing their read counts
-    per junction; per-run rows are unchanged and still available to the caller.
+    pooling a coverage decision rather than arithmetic. With the A47.2 contract
+    the runs of each structural source are pooled within that source, and the
+    per-source pooled tables are combined per junction by the frozen disjunct
+    (ONT >= 3 or HiFi >= 2), never by summing counts across sources. Per-run
+    rows are unchanged on each RunTable; `per_source` exposes the pooled tables.
     """
+    runs = _checked(runs)
+    if policy is None:
+        _require(len(runs) == 1,
+                 "pooling two or more runs requires an approved coverage policy; "
+                 "pass the A47.2 contract to bind(runs, policy=...)")
+        return list(runs[0].rows)
+    return combine(per_source(runs, policy))
+
+
+def _checked(runs):
     runs = list(runs)
     _require(runs, "no junction table supplied; missing evidence is not negative evidence")
     identities = [(r.run_id, r.table_sha256) for r in runs]
     _require(len(set(identities)) == len(identities),
              "duplicate run identity; file labels do not establish distinct runs")
-    if policy is None:
-        _require(len(runs) == 1,
-                 "pooling two or more runs requires an approved coverage policy; "
-                 "pass the A47 contract to bind(runs, policy=...)")
-        return list(runs[0].rows)
+    run_ids = [r.run_id for r in runs]
+    _require(len(set(run_ids)) == len(run_ids),
+             "the same run supplied twice with different tables; pooling it would double-count reads")
+    return runs
+
+
+def per_source(runs, policy):
+    """{source: rows pooled WITHIN that source} under the approved contract."""
+    runs = _checked(runs)
     contract = _SCORE.require_coverage_policy(policy)
     approved = set(contract["structural_sources"])
-    sources = sorted({r.source for r in runs})
-    _require(set(sources) <= approved,
-             f"run source(s) {sorted(set(sources) - approved)} carry no structural authority "
+    sources = {r.source for r in runs}
+    _require(sources <= approved,
+             f"run source(s) {sorted(sources - approved)} carry no structural authority "
              f"under coverage policy {contract['policy_id']}")
-    _require(len(sources) == 1,
-             f"cross-source pooling is not permitted under {contract['pooling']!r}; got {sources}")
-    return pool(runs)
+    return {source: pool([r for r in runs if r.source == source])
+            for source in sorted(sources)}
 
 
 def pool(runs):
-    """Sum read counts per junction across runs and re-derive `supported`."""
-    thresholds = _TABLE.SOURCE_THRESHOLDS
+    """Sum read counts per junction across runs of ONE source; re-derive `supported`."""
+    runs = list(runs)
+    sources = {r.source for r in runs}
+    _require(len(sources) == 1,
+             f"cross-source pooling is not permitted (within_source); got {sorted(sources)}")
+    column = SOURCE_COLUMNS[sources.pop()]
     pooled = {}
     for run in runs:
         for row in run.rows:
             key = (row["chrom"], row["intron_start0"], row["intron_end0"], row["tx_strand"])
             acc = pooled.setdefault(key, dict(row, n_ONT=0, n_HiFi=0))
-            acc["n_ONT"] += row["n_ONT"]
-            acc["n_HiFi"] += row["n_HiFi"]
+            acc[column] += row[column]
     for row in pooled.values():
-        row["supported"] = (row["n_HiFi"] >= thresholds["HiFi"]
-                            or row["n_ONT"] >= thresholds["ONT"])
+        row["supported"] = _supported(row)
     return [pooled[key] for key in sorted(pooled)]
+
+
+def combine(pooled_by_source):
+    """Per-junction union of per-source pooled tables; support is a per-source OR.
+
+    Each output column comes from exactly one source's pool, so n_ONT and n_HiFi
+    are never added together; `supported` is re-derived from the frozen
+    thresholds, i.e. EITHER source clearing its own threshold.
+    """
+    combined = {}
+    for source, rows in pooled_by_source.items():
+        column = SOURCE_COLUMNS[source]
+        for row in rows:
+            key = (row["chrom"], row["intron_start0"], row["intron_end0"], row["tx_strand"])
+            acc = combined.setdefault(key, dict(row, n_ONT=0, n_HiFi=0))
+            acc[column] = row[column]
+    for row in combined.values():
+        row["supported"] = _supported(row)
+    return [combined[key] for key in sorted(combined)]
+
+
+def _supported(row):
+    thresholds = _TABLE.SOURCE_THRESHOLDS
+    return row["n_HiFi"] >= thresholds["HiFi"] or row["n_ONT"] >= thresholds["ONT"]
 
 
 def supported_set(rows):
@@ -188,7 +243,7 @@ def locus_counts(predicted_by_locus, supported, loci):
 def receipt(runs, rows, policy=None):
     runs = list(runs)
     contract = _SCORE.require_coverage_policy(policy) if policy is not None else None
-    return {
+    result = {
         "panel_sha256": mvp_windows.PANEL_SHA256,
         "thresholds": dict(_TABLE.SOURCE_THRESHOLDS),
         "counts_are": COUNTS_ARE,
@@ -197,6 +252,20 @@ def receipt(runs, rows, policy=None):
         "run_provenance_status": "UNVERIFIED",
         "junctions": len(rows),
         "supported_junctions": len(supported_set(rows)),
-        "runs": [dict(run=r.run_id, source=r.source, use_uf=r.use_uf,
-                      table_sha256=r.table_sha256) for r in runs],
+        "runs": [dict(run=r.run_id, source=r.source, dataset=_DRIVER.RUN_DATASETS[r.run_id],
+                      use_uf=r.use_uf, table_sha256=r.table_sha256,
+                      supported_junctions=len(supported_set(r.rows))) for r in runs],
     }
+    if contract is not None:
+        bound = sorted({r.source for r in runs})
+        pooled = per_source(runs, policy)
+        result.update(
+            structural_sources_bound=bound,
+            # an approved source with no run bound is MISSING, never zero support
+            structural_sources_missing=[s for s in contract["structural_sources"] if s not in bound],
+            per_source={s: dict(dataset=contract["source_sets"][s],
+                                runs=sorted(r.run_id for r in runs if r.source == s),
+                                junctions=len(pooled[s]),
+                                supported_junctions=len(supported_set(pooled[s])))
+                        for s in bound})
+    return result

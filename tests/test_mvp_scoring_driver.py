@@ -100,7 +100,7 @@ def test_driver_self_attested_reference_is_never_scientifically_validated(tmp_pa
     from types import SimpleNamespace
     from test_mvp_scoring import locus
     m, root, reads, roles = setup_inputs(tmp_path)
-    roles.write_text(roles.read_text().replace('SRR28341943', 'ERR13994458'))
+    roles.write_text(roles.read_text().replace('SRR28341943', 'SRR22719002'))  # A-CCS23
     ref = root / 'alternative.fa'; ref.write_text('>Chr1\n' + 'A' * 60000 + '\n')
     gff = root / 'alternative.gff'; gff.write_text('##gff-version 3\n')
     panel = root / 'panel'; panel.write_text('test fixture')
@@ -130,7 +130,7 @@ def test_driver_self_attested_reference_is_never_scientifically_validated(tmp_pa
         return SimpleNamespace(returncode=0)
 
     monkeypatch.setattr(m.subprocess, 'run', external_tool)
-    args = SimpleNamespace(root=root, run='ERR13994458', reads=reads, ref=ref,
+    args = SimpleNamespace(root=root, run='SRR22719002', reads=reads, ref=ref,
                            ref_md5=m.digest(ref), gff=gff, gff_md5=m.digest(gff),
                            panels=panel, threads=1, execute=execute)
     result = m.execute(args)
@@ -142,6 +142,24 @@ def test_driver_self_attested_reference_is_never_scientifically_validated(tmp_pa
         published = json.loads((m.output_directory(root, args.run) / 'alignment.json').read_text())
         assert published == result
         assert calls
+        # A-CCS23 FL reads: PacBio leg, splice:hq, no ONT orientation audit
+        assert result['source'] == 'HiFi' and result['dataset'] == 'A-CCS23'
+        assert result['use_uf'] is False
+        pass2 = [c for c in calls if c[0] == 'minimap2' and '-ax' in c]
+        assert pass2 and all(c[c.index('-ax') + 1] == 'splice:hq' for c in pass2)
     else:
         assert not calls
         assert not m.output_directory(root, args.run).exists()
+
+
+def test_a_ccs23_runs_are_the_pacbio_leg_and_a_hifi_is_refused(tmp_path):
+    m = script('mvp_align_panel_longreads')
+    assert m.HIFI_RUNS == {'SRR22719002', 'SRR22719003', 'SRR22719004',
+                           'SRR22719005', 'SRR22719006', 'SRR22719007'}
+    assert 'ERR13994458' not in m.HIFI_RUNS | m.ONT_RUNS
+    assert {m.RUN_DATASETS[r] for r in m.HIFI_RUNS} == {'A-CCS23'}
+    assert {m.RUN_DATASETS[r] for r in m.ONT_RUNS} == {'A-ONT1'}
+    for check in (lambda: m.output_directory(tmp_path, 'ERR13994458'),
+                  lambda: m.validate_read(tmp_path, 'ERR13994458', tmp_path / 'x.fa')):
+        with pytest.raises(ValueError, match='A-HiFi'):
+            check()

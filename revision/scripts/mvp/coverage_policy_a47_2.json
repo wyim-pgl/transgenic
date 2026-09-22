@@ -1,0 +1,10 @@
+{
+  "policy_id": "B1-A47.2-v1.38/MVP-v2",
+  "structural_sources": ["ONT", "HiFi"],
+  "source_sets": {"ONT": "A-ONT1", "HiFi": "A-CCS23"},
+  "thresholds": {"ONT": 3, "HiFi": 2},
+  "unavailable_sources": ["A-HiFi"],
+  "pooling": "within_source",
+  "per_run_retained": true,
+  "excluded_judgements": {"HiFi": ["TES"]}
+}
