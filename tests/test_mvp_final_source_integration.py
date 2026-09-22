@@ -10,15 +10,16 @@ from test_mvp_score_producer import ROOT, finalized_fixture, p
 
 
 def test_reviewed_a_implementation_bytes_unchanged():
-    # Re-pinned 2026-09-21 (A47/A47.1 coverage-policy work); the previous pin 772c38c
-    # had already drifted. The pin records the tree, not an independent review.
+    # Re-pinned 2026-09-22 to 426c328 (A47.2 coverage contract v2); before that eff505f
+    # (2026-09-21, A47/A47.1), whose predecessor 772c38c had already drifted.
+    # The pin records the tree, not an independent review.
     # Includes paired metric validator/math, v3 dataset runtime, finalizer, model,
     # config/tokenizer, B5 initialization, probes/resource/runner and recipes.
-    paths = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', 'eff505f',
+    paths = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', '426c328',
         'src/transgenic', 'train/train_HyenaTransgenic_MVP.py', 'configs',
         'revision/scripts/mvp'], cwd=ROOT, text=True).splitlines()
     for relative in paths:
-        expected = subprocess.check_output(['git', 'show', 'eff505f:' + relative], cwd=ROOT)
+        expected = subprocess.check_output(['git', 'show', '426c328:' + relative], cwd=ROOT)
         assert (ROOT / relative).read_bytes() == expected, relative
 
 
