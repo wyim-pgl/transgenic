@@ -29,6 +29,16 @@ class RuleUnresolved(EvidenceError):
     """A frozen rule needs an author decision, not an implementation default."""
 
 
+class EmptyExonError(EvidenceError):
+    """A spliced alignment with an exon of zero reference bases (e.g. `N I N`).
+
+    Raised exactly where `parse_sam` always stopped, with the same message, so
+    every existing caller still fails closed. It is a subclass only so that a
+    consumer may choose to reject the one read instead of the whole run
+    (MVP junction table, author decision 2026-09-22).
+    """
+
+
 SOURCES = ("ONT", "PacBio", "EST", "FL-cDNA")
 THRESHOLDS = {"ONT": 3, "PacBio": 2, "EST": 2, "FL-cDNA": 2}
 CHAIN_READINGS = {
@@ -129,7 +139,8 @@ def parse_sam(line):
         if op in "MI=X":
             aligned += n
         if op == "N":
-            require(pos > block_start, f"{f[0]}: empty exon")
+            if not pos > block_start:
+                raise EmptyExonError(f"{f[0]}: empty exon")
             blocks.append((block_start, pos - 1))
             introns.append((pos, pos + n - 1))
             pos += n

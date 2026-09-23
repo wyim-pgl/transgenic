@@ -87,6 +87,29 @@ def test_junction_real_sam_threshold_strand_and_duplicate_inputs(tmp_path):
         m.build_table([('ONT', False, p), ('ONT', False, p)], w.windows_by_chromosome([locus()]))
 
 
+def test_empty_exon_read_is_rejected_not_the_run(tmp_path):
+    # SRR22719003.186798 shape: two introns with only an insertion between them.
+    m = script('mvp_junction_table')
+    p = tmp_path / 'reads.sam'
+    lines = [f'r{i}\t0\tChr1\t30001\t60\t50M100N50M\t*\t0\t0\t*\t*\tts:A:+\n' for i in range(3)]
+    lines += ['bad\t0\tChr1\t30001\t60\t50M100N40I100N50M\t*\t0\t0\t*\t*\tts:A:+\n',
+              'bad\t2048\tChr1\t40001\t60\t100M\t*\t0\t0\t*\t*\tts:A:+\n']
+    p.write_text(''.join(lines))
+    rows, qc = m.build_table([('ONT', False, p)], w.windows_by_chromosome([locus()]))
+    assert rows[0]['n_ONT'] == 3 and rows[0]['supported'] is True
+    counters = next(iter(qc.values()))
+    assert counters['rejected:empty_exon'] == 1
+    assert counters['raw_reads'] == 4 and counters['accepted_reads'] == 3
+
+
+def test_frozen_parser_still_fails_closed_on_empty_exon():
+    es = script('mvp_junction_table').ES
+    line = 'bad\t0\tChr1\t30001\t60\t50M100N40I100N50M\t*\t0\t0\t*\t*\tts:A:+'
+    with pytest.raises(es.EvidenceError, match='empty exon'):
+        es.parse_sam(line)
+    assert issubclass(es.EmptyExonError, es.EvidenceError)
+
+
 def test_junction_table_rejects_forged_support(tmp_path):
     m = script('mvp_junction_table')
     p = tmp_path / 'junctions.tsv'

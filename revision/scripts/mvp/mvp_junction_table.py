@@ -83,12 +83,23 @@ def collect_junctions(alignment_path, uf, windows, samtools="samtools"):
     counted in QC, never tabulated.
     """
     groups = defaultdict(list)
+    empty_exon = set()
     for line in ES.sam_lines(str(alignment_path), samtools):
-        aln = ES.parse_sam(line)
+        try:
+            aln = ES.parse_sam(line)
+        except ES.EmptyExonError:
+            # Author decision 2026-09-22: a record with a zero-reference-base
+            # exon (e.g. CIGAR `N I N`) rejects its READ, not the run. Every
+            # record of that read is dropped and the read is counted in QC.
+            empty_exon.add(line.split("\t", 1)[0])
+            continue
         if aln is not None:
             groups[aln.read].append(aln)
     qc = Counter()
     pairs = []
+    for read in empty_exon:
+        groups.pop(read, None)
+    qc["rejected:empty_exon"] = len(empty_exon)
     for read in sorted(groups):
         records = groups[read]
         rejection = ES.alignment_rejection(records)
@@ -109,7 +120,7 @@ def collect_junctions(alignment_path, uf, windows, samtools="samtools"):
                 continue
             qc["junctions_in_panel_windows"] += 1
             pairs.append(((aln.contig, start0, end0, strand), read))
-    qc["raw_reads"] = len(groups)
+    qc["raw_reads"] = len(groups) + len(empty_exon)
     return pairs, qc
 
 
