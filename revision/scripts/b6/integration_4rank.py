@@ -13,10 +13,10 @@ on the production code path (train/train_HyenaTransgenic_B6.run_b6, modeling_b6)
      downsampling and chain gather rerun at every step, no cache), greedy and beam, on evidence, zero and RC rows.
 Rank 0 writes one JSON report; exit 0 = PASS, 2 = FAIL.
 
-``--data synthetic`` (default) uses revision/scripts/b6/wp4_synthetic.py twins (DNA, label, tracks and chains
+``--data`` is required. ``--data synthetic`` uses revision/scripts/b6/wp4_synthetic.py twins (DNA, label, tracks and chains
 transformed together). ``--data wp3-fixtures`` uses WP3's own fixture world through the real verify_inputs,
-B6Dataset and b6_collate_fn_torch, asserting DNA, tracks and chains of every forward/RC twin under one fixed
-draw; it needs the merged WP3 modules (mandatory after the b6-integration merge). ``--model tiny`` with
+B6Dataset and b6_collate_fn_torch, asserting DNA, label (reverse_complement_v3 of the fixture's real v3 GSF),
+tracks and chains of every forward/RC twin under one fixed draw; it needs the merged WP3 modules (mandatory after the b6-integration merge). ``--model tiny`` with
 ``torch.distributed.run`` on CPU is the local smoke form.
 """
 from __future__ import annotations
@@ -181,6 +181,7 @@ def wp3_fixture_data(workdir, seed, trainer, acc):
     twins = {}
     for rn, wid, tier, split, is_rc in c3:
         twins.setdefault(wid, {})[bool(is_rc)] = rn
+    gc = fx.gsf_contract()                           # the gsf_contract the B6 corpus builder uses (b6_corpus_repair)
     checked = []
     for wid, pair in sorted(twins.items()):
         if set(pair) != {False, True}:
@@ -191,6 +192,17 @@ def wp3_fixture_data(workdir, seed, trainer, acc):
         draw = AG.resolve_fixed(rt.AUG_SEED_BASE + seed, owner, 1.0)
         if rc.dna != fx._revcomp(fw.dna):
             raise AssertionError(f"{wid}: RC twin DNA is not the reverse complement")
+        # Label RC (review 3 M8): a real, non-empty v3 GSF whose RC twin is reverse_complement_v3 of it.
+        g_fw, g_rc = corpus.row(pair[False])[9], corpus.row(pair[True])[9]
+        try:
+            gc.check_caps_v3(g_fw, fw.L)
+            gc.check_caps_v3(g_rc, rc.L)
+        except Exception as exc:
+            raise AssertionError(f"{wid}: twin label is not a v3 GSF ({type(exc).__name__}: {exc})") from exc
+        if not gc.split_v3(g_fw):
+            raise AssertionError(f"{wid}: forward twin label is empty; label RC would be vacuous")
+        if g_rc != gc.reverse_complement_v3(g_fw, fw.L) or gc.reverse_complement_v3(g_rc, rc.L) != g_fw:
+            raise AssertionError(f"{wid}: RC twin label != reverse_complement_v3(forward label)")
         t_fw, t_rc = TR.rasterise(cache, fw, draw), TR.rasterise(cache, rc, draw)
         if not np.array_equal(t_rc, TS.rc_tracks(t_fw)):
             raise AssertionError(f"{wid}: RC twin tracks != rc_tracks(forward)")
@@ -199,12 +211,20 @@ def wp3_fixture_data(workdir, seed, trainer, acc):
         if _chain_set(*mapped) != _chain_set(c_rc.chain_pos, c_rc.chain_feat, c_rc.chain_mask):
             raise AssertionError(f"{wid}: RC twin chains != chain-rc-v1(forward) (slots aside)")
         checked.append(dict(wid=wid, fw=pair[False], rc=pair[True], tracks_nonzero=int(np.count_nonzero(t_fw)),
-                            chain_elements=int(c_fw.chain_mask.sum())))
+                            chain_elements=int(c_fw.chain_mask.sum()), label_genes=len(gc.split_v3(g_fw)),
+                            label_fw=g_fw, label_rc=g_rc))
     if not checked:
         raise AssertionError("the WP3 fixture world has no forward/RC twin pair")
-    common = dict(arm="B6", aug_seed=rt.AUG_SEED_BASE + seed, encode_dna=fx.char_encoder, tokenize_gsf=fx.gsf_tokens)
+    # Real v3 GSF labels go through WP3's production GFF tokenizer (as synthetic mode does), not the fixture's
+    # one-token-per-character test tokenizer, whose label lengths would overrun the tiny decoder's positions.
+    tokenize = DS.gff_label_tokenizer("v3")
+    common = dict(arm="B6", aug_seed=rt.AUG_SEED_BASE + seed, encode_dna=fx.char_encoder, tokenize_gsf=tokenize)
     train_ds = DS.B6Dataset(corpus, cache, mode="train_track", **common)
     eval_ds = DS.B6Dataset(corpus, cache, mode="valid_track", **common)
+    for p in checked:                                # the label tokens the trainer is served for each RC twin
+        want = tokenize(gc.reverse_complement_v3(p["label_fw"], int(fx.TILE)))
+        if not np.array_equal(np.asarray(train_ds[(p["rc"], 0)]["labels"]), want):
+            raise AssertionError(f"{p['wid']}: served RC labels != tokens of reverse_complement_v3(forward label)")
     sampler = trainer.WP3EpochKeys(DS.B6EpochSampler, train_rns, seed)
     def reverify():
         """What production main() does at every link: a fresh cache handle and the real verify_inputs."""
@@ -214,8 +234,8 @@ def wp3_fixture_data(workdir, seed, trainer, acc):
     return dict(record=record, reverify=reverify, train_ds=train_ds, eval_ds=eval_ds, sampler=sampler,
                 eval_keys=[(int(rn), 0) for rn in valid_rns], collate=DS.b6_collate_fn_torch, pairs=checked,
                 record_sha256_fn=BD.canonical_record_sha256, tile=int(fx.TILE),
-                labels_note="TODO post-merge: fixture gff is a placeholder ('gsf<rn>'), so label RC is not asserted "
-                            "here; the lead adds real paired labels to the fixture at integration",
+                labels_note="label RC asserted: fixture labels are real v3 GSF (tests/b6_fixtures.tile_labels); each "
+                            "RC twin label == reverse_complement_v3(forward) both ways and its served tokens match",
                 n_train_rows=len(train_rns))
 
 

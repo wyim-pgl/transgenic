@@ -91,8 +91,7 @@ def test_obs_cache_cli_refuses_family_mismatch_and_missing_zero(tmp_path):
 def test_dose_response_archive_nested_deterministic(world, tmp_path):
     wins = [CX.EvalWindow(FX.SPECIES, FX.CHROM, 765, 31485, rc, "gH", "centred30720-v1") for rc in (False, True)]
     CX.WindowManifest.write(tmp_path / "win.tsv", wins)
-    fz = tmp_path / "freeze.json"
-    fz.write_text(json.dumps(world.freeze))
+    fz = world.freeze_path                    # the freeze file the world's cache is bound to (verify_cache checks it)
     argv = ["--cache", str(world.cache_dir), "--evidence", str(world.c0), "--freeze", str(fz), "--corpus",
             str(world.corpus), "--reference", str(world.fasta), "--panel", str(world.panel),
             "--panel-sha", world.panel_sha, "--panel-id", "pilot", "--windows", str(tmp_path / "win.tsv"),

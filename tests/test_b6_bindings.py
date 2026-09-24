@@ -95,6 +95,9 @@ def legacy_world(tmp_path, recomputed, rows):
     w = FX.make_world(tmp_path, c0_kw={"drop_provenance_keys": ("interval_manifest_sha256",),
                                        "provenance_extra": {s: {"leakage_intervals_sha256": legacy} for s in ALL}})
     w.freeze = FX.writer_a_freeze(w.corpus, {FX.SPECIES: {"path": str(mpath), "sha256": msha}})
+    # verify(w) consumes this freeze as FX.freeze_file(w.tmp, w.freeze); the cache must be bound to those bytes.
+    w.cache_dir = _rebound_cache(w, tmp_path, "cache_legacy",
+                                 freeze_sha256=FX._sha(FX.freeze_file(tmp_path, w.freeze))).path
     return w
 
 
@@ -252,6 +255,58 @@ def test_freeze_must_be_a_file(world):
     with pytest.raises(BD.BindingError, match="path of the frozen"):
         BD.verify_inputs(accept={"training"}, evidence=world.c0, roles=world.roles,
                          cache=OC.ObsCache(world.cache_dir), freeze=object(), corpus=world.corpus)
+
+
+def _rebound_cache(world, tmp_path, name, **over):
+    """The world's training cache republished with some bindings replaced (value) or removed (None)."""
+    b = dict(OC.ObsCache(world.cache_dir).manifest["bindings"])
+    for k, v in over.items():
+        if v is None:
+            b.pop(k, None)
+        else:
+            b[k] = v
+    out = tmp_path / name
+    OC.write_cache(out, world.rows, family="train", libraries=world.libraries, drops=world.drops, bindings=b,
+                   zero_lists=world.zero)
+    return OC.ObsCache(out)
+
+
+def test_training_cache_binds_the_verified_corpus_and_freeze(world, tmp_path):
+    """Integration review 1 MEDIUM: verify_cache enforces the corpus and freeze bindings the cache records."""
+    b = OC.ObsCache(world.cache_dir).manifest["bindings"]
+    assert b["corpus_sha256"] == FX._sha(world.corpus) and b["freeze_sha256"] == FX._sha(world.freeze_path)
+    ident = verify(world, cache=_rebound_cache(world, tmp_path, "same"))        # republished unchanged: passes
+    assert ident["provenance"]["freeze"] == b["freeze_sha256"]
+
+
+@pytest.mark.parametrize("over, pattern", [
+    ({"corpus_sha256": None}, "binds no corpus_sha256"),
+    ({"corpus_sha256": "0" * 64}, "different B6 corpus"),
+    ({"corpus_sha256": "not-a-sha"}, "binds no corpus_sha256"),
+    ({"freeze_sha256": None}, "binds no freeze_sha256"),
+    ({"freeze_sha256": "0" * 64}, "different corpus freeze"),
+])
+def test_training_cache_with_a_missing_or_mismatched_corpus_or_freeze_binding_fails(world, tmp_path, over, pattern):
+    with pytest.raises(BD.BindingError, match=pattern):
+        verify(world, cache=_rebound_cache(world, tmp_path, "bad", **over))
+
+
+def test_stale_cache_refused_with_another_valid_freeze_or_corpus(world, tmp_path):
+    """The reviewer's case: upstream alone verifies with another freeze (or corpus + freeze) on the same C0, but the
+    cache was built against the original pair."""
+    other_freeze = tmp_path / "freeze_reformatted.json"          # same record, different bytes: a different freeze
+    other_freeze.write_text(json.dumps(world.freeze, indent=2, sort_keys=True) + "\n")
+    with pytest.raises(BD.BindingError, match="different corpus freeze"):
+        verify(world, freeze=other_freeze)
+    corpus2 = tmp_path / "b5_full_b6_v1.db"                      # another corpus, with its own valid freeze
+    corpus2.write_bytes(Path(world.corpus).read_bytes())
+    con = duckdb.connect(str(corpus2))
+    con.execute("UPDATE geneList SET gene_id = gene_id || '_v2' WHERE rn = 3")
+    con.close()
+    assert FX._sha(corpus2) != FX._sha(world.corpus)
+    freeze2 = FX.writer_a_freeze(corpus2, world.freeze["interval_manifests"])
+    with pytest.raises(BD.BindingError, match="different B6 corpus"):
+        verify(world, corpus=corpus2, freeze=FX.freeze_file(tmp_path, freeze2, "freeze2.json"))
 
 
 def test_zero_upstream_needs_both_producer_keys_each_matching_its_own_source(tmp_path):

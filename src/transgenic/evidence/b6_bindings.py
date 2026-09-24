@@ -468,6 +468,13 @@ def verify_cache(cache, ident):
     _require(isinstance(refs, dict), "cache binds no per-species reference_sha256 mapping")
     for sp, sha in ident.get("reference_sha256", {}).items():
         _require(refs.get(sp) == sha, f"cache reference binding for {sp} differs from the verified reference")
+    if family == "training":                  # plan §7.5: a training cache is bound to one corpus and its freeze
+        for key, want, what in (("corpus_sha256", ident["corpus_sha256"], "B6 corpus"),
+                                ("freeze_sha256", ident["provenance"]["freeze"], "corpus freeze")):
+            got = b.get(key)
+            _require(_is_sha(got), f"training cache binds no {key} (the {what} it was built against)")
+            _require(got == want, f"cache was built against a different {what}: {key} {got[:12]} != verified "
+                                  f"{want[:12]}")
     for s in cache.manifest["shards"]:
         _require(sha256_file(cache.path / s["file"]) == s["sha256"], f"cache shard {s['file']} changed")
     zl = cache.manifest["zero_lists"]

@@ -49,6 +49,26 @@ def test_batch_contract_and_pad_invariant_chain_idx(world):
     assert np.array_equal(b["chain_idx"][0][m], s1["chain_pos"][m] // 6)
 
 
+def test_fixture_rc_twins_carry_reverse_complement_v3_labels(world):
+    """Review 3 M8: the fixture corpus labels are real v3 GSF, and each RC twin's label is the corpus builder's
+    reverse_complement_v3 of its forward twin's label (both directions), as the dataset serves it."""
+    gc = FX.gsf_contract()
+    rows = {rn: (ws, is_rc) for rn, ws, is_rc, _ in FX.TILES}
+    corpus = CX.B6Corpus(world.corpus, OC.ObsCache(world.cache_dir))
+    gff = {rn: corpus.row(rn)[9] for rn in rows}
+    assert gff == FX.tile_labels()
+    pairs = [(fw, rc) for fw, (ws, r) in rows.items() if not r for rc, (ws2, r2) in rows.items() if r2 and ws2 == ws]
+    assert sorted(pairs) == [(1, 2), (7, 8)]
+    ds = make(world)
+    for fw, rc in pairs:
+        assert gff[fw] != gc.EMPTY_LABEL and gc.split_v3(gff[fw])
+        assert gff[rc] == gc.reverse_complement_v3(gff[fw], FX.TILE) != gff[fw]
+        assert gc.reverse_complement_v3(gff[rc], FX.TILE) == gff[fw]
+        assert np.array_equal(ds[(rc, 0)]["labels"], FX.gsf_tokens(gc.reverse_complement_v3(gff[fw], FX.TILE)))
+    strands = {gc.split_v3(gff[fw])[0].split("|")[3] for fw, _ in pairs}
+    assert strands == {"+", "-"}                                   # one '+' and one '-' gene among the twin pairs
+
+
 def test_left_pad_shifts_chain_idx_by_one_sum_then_division():
     s = {"input_ids": np.full(6, 7, np.int64), "attention_mask": np.ones(6, bool),
          "evidence_tracks": np.zeros((6, 31), np.float16), "labels": np.array([1, 2], np.int64),

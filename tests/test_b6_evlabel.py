@@ -402,19 +402,6 @@ def test_a_species_with_accepted_proteins_needs_its_supplement(built, tmp_path):
     assert prov["inputs"]["protein_evidence"] == {EW.SPECIES: "bound"}
 
 
-def _wp3_bindings():
-    try:
-        from transgenic.evidence import b6_bindings as BB   # WP3; present only after the b6-integration merge
-        return BB
-    except ImportError:
-        return None
-
-
-WP3_REASON = ("requires the b6-integration tree: WP3's b6_bindings.verify_inputs needs the freeze FILE PATH and a real "
-              "observation cache built by WP3 (b6_build_obs_cache); neither exists in the WP2 worktree, so this case "
-              "builds a valid WP3 binding first and runs only where both are available")
-
-
 def _local(evidence, corpus, built):
     return EV.verify_training_binding(merged=evidence, corpus=corpus, freeze=built["freeze"],
                                       roles_obj=_roles_obj(built))
@@ -430,22 +417,62 @@ def test_training_input_verifier_rejects_an_evlabel_db_as_evidence_or_corpus(bui
         _local(built["ev"]["merged"], built["out"], built)
 
 
-@pytest.mark.skipif(_wp3_bindings() is None, reason=WP3_REASON)
-def test_wp3_training_verifier_rejects_an_evlabel_db_after_a_valid_binding(built):
-    BB = _wp3_bindings()
-    cache_path = built.get("cache")
-    if cache_path is None:
-        pytest.skip(WP3_REASON)
+@pytest.fixture(scope="module")
+def wp3_cache(built, tmp_path_factory):
+    """A real WP3 training-family observation cache for this world, published by WP3's own CLI
+    (b6_build_obs_cache.main: verify_upstream(stage="build") -> extract_rows -> write_cache -> verify_cache).
+    Review 3 M7: nothing here may skip; any import or build failure fails the dependent test."""
+    import sys
+
+    from transgenic.evidence import b6_bindings as BB
     from transgenic.evidence import b6_obs_cache as OC
+
+    sys.path.insert(0, str(ROOT / "revision" / "scripts" / "evidence"))
+    import b6_build_obs_cache as BOC
+
+    tmp = tmp_path_factory.mktemp("wp3_cache")
+    merged = built["ev"]["merged"]
+    merge_inputs = {(sp, src): sha for sha, sp, src in
+                    q(merged, "SELECT input_sha256, species, source FROM merge_manifest")}
+    species = sorted({sp for sp, _ in merge_inputs})
+    assert species == [EW.SPECIES]
+    zero = []
+    for pop in OC.POPULATIONS:                           # header-only A48 zero lists whose QC binds the merged C0s
+        for sp in species:
+            tsv, qc = tmp / f"zero.{pop}.{sp}.tsv", tmp / f"zero.{pop}.{sp}.tsv.qc.json"
+            tsv.write_text("species\tchrom\tstart0\tend0\taction\treason\n")
+            qc.write_text(json.dumps({"population": pop, "species": sp, "upstream": {
+                key: merge_inputs[(sp, src)] for src, key in BB.ZERO_UPSTREAM.items() if (sp, src) in merge_inputs}}))
+            zero += ["--zero", f"{pop}:{sp}:{tsv}:{qc}"]
+    out = tmp / "cache_train"
+    assert BOC.main(["--evidence", str(merged), "--family", "train", "--roles", str(built["roles"]),
+                     "--reference", f"{EW.SPECIES}={built['ev']['fasta']}", "--corpus", str(built["corpus"]),
+                     "--freeze", str(built["freeze"]), "--out", str(out)] + zero) == 0
+    cache = OC.ObsCache(out)
+    assert cache.family == "train" and sum(s["rows"] for s in cache.manifest["shards"]) > 0
+    return out
+
+
+def test_wp3_training_verifier_rejects_an_evlabel_db_after_a_valid_binding(built, wp3_cache):
+    """Review 3 M7: WP3's consumer entry point (b6_bindings.verify_inputs, called by train_HyenaTransgenic_B6.py)
+    with the freeze FILE PATH and a real WP3 cache accepts the valid binding, then rejects an evlabel DB supplied
+    as the evidence snapshot and as the corpus."""
+    from transgenic.evidence import b6_bindings as BB
+    from transgenic.evidence import b6_obs_cache as OC
+    from transgenic.evidence import c0_schema as CS
 
     def verify(evidence, corpus):
         return BB.verify_inputs(accept=("training",), evidence=evidence, roles=_roles_obj(built),
-                                cache=OC.ObsCache(cache_path), freeze=str(built["freeze"]), corpus=corpus)
-    verify(built["ev"]["merged"], built["corpus"])                           # a valid binding first
-    with pytest.raises(Exception):
-        verify(built["out"], built["corpus"])
-    with pytest.raises(Exception):
-        verify(built["ev"]["merged"], built["out"])
+                                cache=OC.ObsCache(wp3_cache), freeze=str(built["freeze"]), corpus=corpus)
+
+    rec = verify(built["ev"]["merged"], built["corpus"])                     # a valid binding first
+    assert rec["family"] == "training" and rec["evlabel"] == "absent"
+    assert rec["corpus_sha256"] == LK.sha256(built["corpus"]) and rec["cache_manifest_sha256"]
+    assert rec["provenance"]["freeze"] == LK.sha256(built["freeze"])
+    with pytest.raises(CS.SchemaError, match="not a C0 database"):
+        verify(built["out"], built["corpus"])                                # evlabel DB as evidence
+    with pytest.raises(BB.BindingError, match="out_sha256"):
+        verify(built["ev"]["merged"], built["out"])                          # evlabel DB as corpus
 
 
 # ------------------------------------------------------------------------------ review 2 H2: exact source coverage

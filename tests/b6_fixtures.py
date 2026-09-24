@@ -184,10 +184,55 @@ def _revcomp(s):
     return s.translate(str.maketrans("ACGTN", "TGCAN"))[::-1]
 
 
+# Reference annotation of the fixture world (post-merge, review 3 M8): complete genes, one transcript each, GFF3
+# 1-based features. gene_id -> (strand, [(type, start1, end1, phase)]). gE1 follows e1's exons [100,200)+[300,400)
+# on '+'; gO3 follows o3's exons [1850,1900)+[1950,2000) (CDS 50 nt, so the second CDS has phase 1); gC1 is a '-'
+# gene in tile [3000, 3600) (first CDS in transcription order is 3301-3390, 90 nt, so 3101-3200 has phase 0).
+FIXTURE_GENES = {
+    "gE1": ("+", [("five_prime_UTR", 101, 110, "."), ("CDS", 111, 200, "0"), ("CDS", 301, 390, "0"),
+                  ("three_prime_UTR", 391, 400, ".")]),
+    "gO3": ("+", [("CDS", 1851, 1900, "0"), ("CDS", 1951, 2000, "1")]),
+    "gC1": ("-", [("three_prime_UTR", 3091, 3100, "."), ("CDS", 3101, 3200, "0"), ("CDS", 3301, 3390, "0"),
+                  ("five_prime_UTR", 3391, 3400, ".")]),
+}
+
+
+def gsf_contract():
+    """The gsf_contract module the B6 corpus builder uses (b6_corpus_repair._gc -> leakage.load_build_b5().gc), loaded
+    without the torch-importing transgenic.utils package."""
+    from transgenic.evidence import b6_corpus_repair as CR
+
+    return CR._gc()
+
+
+def tile_labels():
+    """{rn: v3 GSF} for TILES. A forward tile's label is window_to_gsf_v3 of the FIXTURE_GENES that lie wholly inside
+    it (EMPTY_LABEL when none); an RC twin's label is reverse_complement_v3(forward label, TILE), the derivation
+    b6_corpus_repair and b6_validate_corpus use, so forward/RC twins are internally consistent."""
+    gc = gsf_contract()
+    forward = {}
+    for rn, ws, is_rc, _ in TILES:
+        if is_rc:
+            continue
+        genes = []
+        for gid, (strand, feats) in FIXTURE_GENES.items():
+            fs = [gc.Feature(*f) for f in feats]
+            s0, e0 = min(f.start1 for f in fs) - 1, max(f.end1 for f in fs)
+            if ws <= s0 and e0 <= ws + TILE:
+                genes.append(gc.Gene(gid, CHROM, strand, s0, e0, {f"{gid}.1": fs}))
+        forward[ws] = gc.window_to_gsf_v3(genes, ws)
+    out = {}
+    for rn, ws, is_rc, _ in TILES:
+        out[rn] = gc.reverse_complement_v3(forward[ws], TILE) if is_rc else forward[ws]
+        gc.check_caps_v3(out[rn], TILE)
+    return out
+
+
 def write_corpus(tmp, genome):
     import duckdb
 
     path = Path(tmp) / "b5_full_b6_v1.db"
+    labels = tile_labels()
     con = duckdb.connect(str(path))
     con.execute("CREATE TABLE geneList (rn INT PRIMARY KEY, species_id VARCHAR, chromosome VARCHAR, start INT, "
                 "fin INT, is_rc BOOLEAN, split VARCHAR, sequence VARCHAR, gene_id VARCHAR, gff VARCHAR)")
@@ -196,7 +241,7 @@ def write_corpus(tmp, genome):
         wid = f"{SPECIES}:{CHROM}:{ws}-{ws + TILE}"
         con.execute("INSERT INTO geneList VALUES (?,?,?,?,?,?,?,?,?,?)",
                     [rn, SPECIES, CHROM, ws, ws + TILE, is_rc, split, _revcomp(seq) if is_rc else seq, wid,
-                     f"gsf{rn}"])
+                     labels[rn]])
     con.close()
     return path
 
@@ -390,18 +435,18 @@ def make_world(tmp, *, molecules=MOLECULES, hsps=HSPS, zero=ZERO, roles_rows=ROL
     con = duckdb.connect(str(c0), read_only=True)
     rows, drops, libs = OC.extract_rows(con, roles, "train")
     con.close()
-    cache_dir = tmp / "cache_train"
-    OC.write_cache(cache_dir, rows, family="train", libraries=libs, drops=drops,
-                   bindings={"reference_sha256": {SPECIES: _sha(fa)}, "roles_sha256": roles.sha256,
-                             "evidence_sha256": _sha(c0),
-                             "corpus_sha256": _sha(corpus)}, zero_lists=zl)
-    panel, panel_sha = write_panel(tmp)
     mpath = tmp / "intervals.Athaliana.jsonl"
     if not mpath.exists():
         assert write_interval_manifest(mpath, MANIFEST_ROWS) == IMAN_SHA
     freeze = writer_a_freeze(corpus, {SPECIES: {"path": str(mpath), "sha256": IMAN_SHA}})
-    freeze_path = tmp / "freeze.json"
+    freeze_path = tmp / "freeze.json"         # same bytes as freeze_file(tmp, freeze): verify(w) copies stay bound
     freeze_path.write_text(_json.dumps(freeze, indent=1, sort_keys=True) + "\n")
+    cache_dir = tmp / "cache_train"           # bound like b6_build_obs_cache: corpus AND freeze (verify_cache checks)
+    OC.write_cache(cache_dir, rows, family="train", libraries=libs, drops=drops,
+                   bindings={"reference_sha256": {SPECIES: _sha(fa)}, "roles_sha256": roles.sha256,
+                             "evidence_sha256": _sha(c0), "corpus_sha256": _sha(corpus),
+                             "freeze_sha256": _sha(freeze_path)}, zero_lists=zl)
+    panel, panel_sha = write_panel(tmp)
     return _NS(tmp=tmp, fasta=fa, genome=genome, corpus=corpus, c0=c0, roles=roles, zero=zl, cache_dir=cache_dir,
                rows=rows, drops=drops, libraries=libs, panel=panel, panel_sha=panel_sha, freeze=freeze,
                freeze_path=freeze_path)
