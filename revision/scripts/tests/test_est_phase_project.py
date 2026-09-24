@@ -172,7 +172,9 @@ def test_ambiguity_refusals_not_policy():
     assert r['segments']==[] and 'self_overlap_policy_unresolved' in r['reasons']
     r=m.project_observations([(h,e,p),(h,e,p)])
     assert r['segments']==[] and r['reasons']==['multi_hsp_policy_unresolved']
-    with pytest.raises(ValueError,match='UNRESOLVED'): m.project()
+    # A46 approved 2026-09-22: production project() drops (never labels) the self-overlapping HSP.
+    assert m.project(h,e,p)['dropped']=='self_overlap_policy_unresolved'
+    assert m.A46_APPROVAL['record']=='notes/a46_approval/A46_APPROVAL_RECORD_20260922.md'
 
 
 @pytest.mark.parametrize('cigar,reflected_cigar,span', [

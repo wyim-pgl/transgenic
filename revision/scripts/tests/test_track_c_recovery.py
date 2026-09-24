@@ -251,9 +251,11 @@ def test_route_disagreement_is_neutral_not_phase_zero(phase_a, phase_b, want):
     assert load('est_phase_project').reconcile_phases(phase_a, phase_b) == want
 
 
-def test_projector_refuses_unresolved_semantics():
-    with pytest.raises(ValueError, match='UNRESOLVED.*A46'):
-        load('est_phase_project').project()
+def test_projector_unblocked_only_by_recorded_a46_approval():
+    # The A46 block was lifted by the author's approval (2026-09-22); the gate is now the record.
+    approval = load('est_phase_project').A46_APPROVAL
+    assert (approval['amendment'], approval['approved']) == ('A46', '2026-09-22')
+    assert approval['record'] == 'notes/a46_approval/A46_APPROVAL_RECORD_20260922.md'
 
 
 @pytest.mark.parametrize('reverse', [False, True])
