@@ -78,6 +78,48 @@ def clean(value, stats):
     return v
 
 
+def genbank_source(acc, tries=20):
+    """(clone_lib, clone, BioSample) of one record from its GenBank flat file: source-feature qualifiers, wrapped lines
+    joined with one space (the b6_c0_metadata --genbank convention); BioSample from DBLINK.  Fails closed when the
+    record cannot be fetched or has no source feature."""
+    url = BASE + "efetch.fcgi?" + urllib.parse.urlencode(dict(db="nuccore", id=acc, rettype="gb", retmode="text",
+                                                              **({"api_key": KEY} if KEY else {})))
+    text = None
+    for i in range(tries):
+        time.sleep(PAUSE)
+        res = subprocess.run(["curl", "-sS", "--fail", "-m", str(REQUEST_SECONDS), url], capture_output=True)
+        if res.returncode == 0 and res.stdout.startswith(b"LOCUS"):
+            text = res.stdout.decode("utf-8", errors="replace")
+            break
+        time.sleep(5 if i < 10 else 60)
+    if text is None:
+        raise FetchError(f"{acc}: GenBank fallback fetch failed")
+    bs = None
+    for line in text.splitlines():
+        if "BioSample:" in line:
+            bs = line.split("BioSample:", 1)[1].split()[0]
+            break
+    feat = text.split("\nFEATURES", 1)
+    if len(feat) != 2 or "\n     source " not in feat[1]:
+        raise FetchError(f"{acc}: GenBank record has no source feature")
+    src = feat[1].split("\n     source ", 1)[1]
+    quals, cur = {}, None
+    for line in src.splitlines()[1:]:
+        if line[:21].strip():                 # next feature key -> source feature ended
+            break
+        body = line[21:]
+        if body.startswith("/"):
+            key, _, val = body[1:].partition("=")
+            cur = key
+            quals.setdefault(key, val)
+        elif cur is not None:
+            quals[cur] += " " + body.strip()
+    def unq(v):
+        v = (v or "").strip()
+        return v[1:-1] if len(v) >= 2 and v[0] == v[-1] == '"' else v
+    return unq(quals.get("clone_lib")) or None, unq(quals.get("clone")) or None, bs
+
+
 def parse(root, stats):
     out = []
     for d in root.iter("DocumentSummary"):
@@ -87,7 +129,14 @@ def parse(root, stats):
         types = (d.findtext("SubType") or "").split("|")
         names = (d.findtext("SubName") or "").split("|")
         if (d.findtext("SubType") or "") and len(types) != len(names):
-            raise FetchError(f"{acc}: SubType/SubName lengths differ ({len(types)} vs {len(names)}); cannot pair")
+            # a free-text value (typically /note) contains '|', so the pipe lists cannot be paired: read the record's
+            # GenBank source qualifiers instead (observed: HS102357.1, Slycopersicum, 2026-09-23)
+            stats["genbank_fallback"] += 1
+            lib, clone, bs = genbank_source(acc)
+            stats["with_clone_lib"] += bool(lib)
+            stats["with_clone"] += bool(clone)
+            out.append((acc, clean(lib, stats), clean(clone, stats), clean(bs or d.findtext("BioSample"), stats)))
+            continue
         sub = dict(zip(types, names)) if d.findtext("SubType") else {}
         lib, clone = clean(sub.get("clone_lib"), stats), clean(sub.get("clone"), stats)
         stats["with_clone_lib"] += bool(lib)
@@ -128,7 +177,7 @@ def main(argv=None):
         count, webenv, qk = int(root.findtext("Count")), root.findtext("WebEnv"), root.findtext("QueryKey")
         if count != a.expect_count:
             raise FetchError(f"{a.label}: esearch count {count} != frozen download COUNT {a.expect_count}")
-        stats = dict(control_chars_replaced=0, with_clone_lib=0, with_clone=0, short_batches=0)
+        stats = dict(control_chars_replaced=0, with_clone_lib=0, with_clone=0, short_batches=0, genbank_fallback=0)
         seen = set()
         part = Path(str(out) + ".part")
         with open(part, "w", encoding="utf-8", newline="\n") as fh:
