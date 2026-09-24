@@ -113,7 +113,7 @@ GEOM = _load("est_phase_project_c0", _SCRIPTS / "evidence" / "est_phase_project.
 # build time (decide_all -> Exhaustiveness.check) and re-checked by the merge from the recorded counters.  The author
 # gave no per-source number; the species value (0.999) is used and recorded here (assumption, stated in the report).
 EXHAUSTIVENESS_RULE = {"scope": "per_source_floor_and_species",
-                       "rule": "per-source floor 0.999 (author 2026-09-23) + species >= 0.999 (rule 4(b))",
+                       "rule": "per-source floor 0.99 (A49 decision 2 / A49.2) + species >= 0.999 (rule 4(b))",
                        "min_exhaustiveness": LK.MIN_EXHAUSTIVENESS,
                        "min_source_exhaustiveness": LK.MIN_SOURCE_EXHAUSTIVENESS,
                        "per_source_counters": ["exhaustiveness_below_cap", "exhaustiveness_molecules", "audit_n"],

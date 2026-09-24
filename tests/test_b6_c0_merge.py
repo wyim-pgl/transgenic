@@ -235,14 +235,14 @@ def _with_counters(dbs, tmp_path, name, index, below, molecules):
 
 def test_per_source_floor_and_species_sum_are_rechecked_in_the_merge_from_recorded_counters(dbs, tmp_path):
     """Fix round 6, item 3 (author 2026-09-23: BOTH gates).  A46 rule 4(b): exhaustiveness is "reported per species and
-    required to be >= 99.9 %"; the per-source floor uses the same 0.999 (no number was given).  The merge re-applies
+    required to be >= 99.9 %"; the per-source floor is 0.99 (A49.2).  The merge re-applies
     the floor to the counters each input RECORDED, so an EST C0 recording 16/17 (a DB an older builder published;
     the current builder aborts on it, test_b6_c0_build.py) is refused even though the species sum with a large ONT
     source (16 + 1203) / (17 + 1203) = 99.92 % would pass the species gate alone (fix round 5 accepted exactly that).
     Sources at or above the floor merge, and the species result records both thresholds."""
     est = _with_counters(dbs, tmp_path, "est16.db", 0, 16, 17)
     ont = _with_counters(dbs, tmp_path, "ont1203.db", 1, 1203, 1203)
-    with pytest.raises(M.MergeError, match=r"per-source exhaustiveness floor: Athaliana/est .*0\.941176 < 0\.999.*raise N"):
+    with pytest.raises(M.MergeError, match=r"per-source exhaustiveness floor: Athaliana/est .*0\.941176 < 0\.99.*raise N"):
         M.merge([est, ont], tmp_path / "both.db")
     assert not (tmp_path / "both.db").exists()
     est = _with_counters(dbs, tmp_path, "est999.db", 0, 999, 1000)
@@ -250,16 +250,19 @@ def test_per_source_floor_and_species_sum_are_rechecked_in_the_merge_from_record
     ex = result["exhaustiveness"]["Athaliana"]
     assert (ex["below_cap"], ex["molecules"], ex["audit_n"]) == (2202, 2203, 50) and ex["exhaustiveness"] >= 0.999
     assert ex["by_source"] == {"est": {"below_cap": 999, "molecules": 1000}, "ont": {"below_cap": 1203, "molecules": 1203}}
-    assert ex["min_exhaustiveness"] == ex["min_source_exhaustiveness"] == 0.999
+    assert (ex["min_exhaustiveness"], ex["min_source_exhaustiveness"]) == (0.999, 0.99)
     con = duckdb.connect(str(tmp_path / "ok.db"), read_only=True)
     stored = json.loads(con.execute("SELECT value FROM c0_meta WHERE key = 'exhaustiveness'").fetchone()[0])
     con.close()
     assert stored["Athaliana"]["molecules"] == 2203
-    # The species-level sum is still its own gate (kept; with equal thresholds every source at the floor implies it).
+    # The species-level sum is its own, stricter gate: a source at 0.99 passes the floor but not the species gate alone.
     with pytest.raises(LK.ExhaustivenessError, match="species-level"):
         LK.species_exhaustiveness("X", [("est", 998, 1000, 50)])
-    with pytest.raises(LK.ExhaustivenessError, match=r"per-source audit exhaustiveness 0\.998000 < 0\.999"):
-        LK.source_exhaustiveness("X/est", 998, 1000, 50)
+    with pytest.raises(LK.ExhaustivenessError, match=r"per-source audit exhaustiveness 0\.985000 < 0\.99"):
+        LK.source_exhaustiveness("X/est", 985, 1000, 50)
+    LK.source_exhaustiveness("X/est", 990, 1000, 50)                  # exactly at the floor: passes
+    with pytest.raises(LK.ExhaustivenessError, match="species-level"):
+        LK.species_exhaustiveness("X", [("est", 990, 1000, 50)])      # ...but 0.99 < 0.999 for the species
     assert LK.source_exhaustiveness("X/est", 0, 0, 50) is None          # an empty source has no fraction
 
 

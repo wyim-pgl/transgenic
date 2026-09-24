@@ -78,11 +78,13 @@ LOW_MAPQ_APPLIES_TO_AUDIT_SECONDARIES = True
 # ``excluded_a_cause_edge_partial`` / ``train_tiles_cause_edge_partial`` count its effect.
 EDGE_PARTIAL_MOLECULE_WIDE = True
 MIN_EXHAUSTIVENESS = 0.999
-# Per (species x source) exhaustiveness floor: author decision 2026-09-23 (fix round 6) -- BOTH the species-level rule
-# 4(b) gate AND a per-source floor apply.  No number was given for the floor; the species value is used (assumption,
-# stated in the round-6 report).  Enforced at build time (Exhaustiveness.check, nothing published below it) and
-# re-checked by the merge from the recorded per-source counters (source_exhaustiveness).
-MIN_SOURCE_EXHAUSTIVENESS = MIN_EXHAUSTIVENESS
+# Per (species x source) exhaustiveness floor: author decision 2026-09-23 (A49 decision 2) -- BOTH the species-level
+# rule 4(b) gate (0.999) AND a per-source floor apply.  The value 0.99 is A49.2 (the author delegated the number to a
+# Codex consultation, 2026-09-23): up to 1 % source-specific capped loss before an audit rerun, with the unchanged
+# species gate still bounding aggregate loss at 0.1 %; no small-denominator exemption.  Enforced at build time
+# (Exhaustiveness.check, nothing published below it) and re-checked by the merge from the recorded per-source
+# counters (source_exhaustiveness).
+MIN_SOURCE_EXHAUSTIVENESS = 0.99
 TILE_QC_KEYS = ("leak_masked", "hard_masked", "decoy_masked", "component_masked", "edge_partial")
 
 

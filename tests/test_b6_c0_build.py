@@ -234,7 +234,7 @@ def test_sensitivity_arm_is_never_c0_input(world, tmp_path, capsys):
 def test_capped_molecule_below_the_per_source_floor_aborts_the_build(world, tmp_path, capsys):
     """Fix round 6, item 3 (author decision 2026-09-23: BOTH the species-level rule 4(b) gate AND a per-source floor).
     One capped molecule among the 17 EST molecules (16/17 = 94.1 %) is below the per-source floor
-    (leakage.MIN_SOURCE_EXHAUSTIVENESS = 0.999, the species value -- no per-source number was given), so the build
+    (leakage.MIN_SOURCE_EXHAUSTIVENESS = 0.99, A49.2), so the build
     aborts fail-closed: exit 1, ExhaustivenessError text, status ABORT, nothing published.  (Fix round 5 had made this
     a merge-only species check; the species sum is still enforced there.)"""
     extra = dict(W.EST_EXTRA_AUDIT)
@@ -242,12 +242,12 @@ def test_capped_molecule_below_the_per_source_floor_aborts_the_build(world, tmp_
     W.write_est(tmp_path, audit_extra=extra)
     rc, args = _run(world, tmp_path)
     err = capsys.readouterr().err
-    assert rc == 1 and "per-source audit exhaustiveness 0.941176 < 0.999" in err and "raise N" in err
+    assert rc == 1 and "per-source audit exhaustiveness 0.941176 < 0.99" in err and "raise N" in err
     assert "Athaliana/est" in err
     record = json.load(open(args[args.index("--qc") + 1]))
     assert record["status"] == "ABORT" and record["output"] is None
     assert not Path(args[args.index("--out") + 1]).exists()
-    assert LK.MIN_SOURCE_EXHAUSTIVENESS == LK.MIN_EXHAUSTIVENESS == 0.999
+    assert LK.MIN_SOURCE_EXHAUSTIVENESS == 0.99 and LK.MIN_EXHAUSTIVENESS == 0.999
     # Codex review 4 LOW: the counters survive the abort (report() is recorded before check() raises).
     qc = record["qc"]
     assert (qc["exhaustiveness_molecules"], qc["exhaustiveness_below_cap"], qc["audit_n"]) == (17, 16, 50)
@@ -264,8 +264,8 @@ def test_exhaustiveness_counters_and_both_rules_are_recorded(est_db):
     assert (stored["exhaustiveness_below_cap"], stored["exhaustiveness_molecules"], stored["audit_n"]) == (17, 17, 50)
     rule = json.loads(q(db, "SELECT value FROM c0_provenance WHERE key = 'exhaustiveness_rule'")[0][0])
     assert rule["scope"] == "per_source_floor_and_species"
-    assert rule["rule"] == "per-source floor 0.999 (author 2026-09-23) + species >= 0.999 (rule 4(b))"
-    assert rule["min_exhaustiveness"] == rule["min_source_exhaustiveness"] == 0.999
+    assert rule["rule"] == "per-source floor 0.99 (A49 decision 2 / A49.2) + species >= 0.999 (rule 4(b))"
+    assert (rule["min_exhaustiveness"], rule["min_source_exhaustiveness"]) == (0.999, 0.99)
 
 
 def test_audit_must_cover_every_member(world, tmp_path, capsys):
