@@ -46,7 +46,7 @@ class GateVerdictTests(unittest.TestCase):
     """Codex review 1 H3: the bench cannot certify PASS without running under the frozen conditions."""
 
     def conditions(self, **kw):
-        c = dict(bench.GATE_CONDITIONS)
+        c = dict(bench.GATE_CONDITIONS, world_size=4)
         c.update(kw)
         return c
 
@@ -66,6 +66,11 @@ class GateVerdictTests(unittest.TestCase):
             with self.subTest(change=change):
                 self.assertEqual(self.verdict(conditions=self.conditions(**change)), "NOT_A_GATE_RUN")
         self.assertEqual(self.verdict(ranks=self.ranks(n=3)), "NOT_A_GATE_RUN")
+        # A51: the gate is certified on 2 or 4 ranks; 1 rank (no DDP buffers) and 3 ranks are not gate runs
+        self.assertEqual(self.verdict(conditions=self.conditions(world_size=2), ranks=self.ranks(n=2)), "PASS")
+        self.assertEqual(self.verdict(conditions=self.conditions(world_size=1), ranks=self.ranks(n=1)), "NOT_A_GATE_RUN")
+        self.assertEqual(self.verdict(conditions=self.conditions(world_size=3), ranks=self.ranks(n=3)), "NOT_A_GATE_RUN")
+        self.assertEqual(self.verdict(conditions=self.conditions(world_size=2), ranks=self.ranks(n=4)), "NOT_A_GATE_RUN")
         self.assertEqual(self.verdict(ranks=self.ranks(measured_updates=0)), "FAIL")
         self.assertEqual(self.verdict(ranks=self.ranks(compile_verified=False)), "FAIL")
         self.assertEqual(self.verdict(ranks=self.ranks(error="RuntimeError: recompile")), "FAIL")
@@ -120,7 +125,7 @@ class ArchitectureGateTests(unittest.TestCase):
         status, reason = bench.gate_verdict(conditions, ranks, steps=12, warmup=4, gate_gb=100.0)
         self.assertEqual(status, "NOT_A_GATE_RUN")
         self.assertIn("architecture_sha256", reason)
-        self.assertEqual(bench.gate_verdict(dict(bench.GATE_CONDITIONS), ranks, steps=12, warmup=4,
+        self.assertEqual(bench.gate_verdict(dict(bench.GATE_CONDITIONS, world_size=4), ranks, steps=12, warmup=4,
                                             gate_gb=100.0)[0], "PASS")
 
 

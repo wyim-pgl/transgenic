@@ -3,7 +3,7 @@
 #SBATCH --account=bilv-dtai-gh
 #SBATCH --partition=ghx4
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=4
+#SBATCH --gpus-per-node=2
 #SBATCH --cpus-per-task=64
 # No --mem: ghx4 bills MAX_TRES and DefMemPerGPU already scales with --gpus-per-node (deploy/deltaai/train_b5.slurm).
 #SBATCH --time=01:00:00
@@ -27,8 +27,8 @@ REPO_DIR=${REPO_DIR:-$WORK/repo_b6}
 case "$REPO_DIR" in */repo|*/repo_seeds) echo "REFUSED: $REPO_DIR is a frozen seed checkout" >&2; exit 3;; esac
 ls "$REPO_DIR"/HFmodels/hub/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/*/model.safetensors >/dev/null 2>&1 \
   || { echo "REFUSED: encoder cache missing under $REPO_DIR/HFmodels" >&2; exit 3; }
-GPUS=${SLURM_GPUS_ON_NODE:-4}
-[ "$GPUS" = 4 ] || { echo "REFUSED: the gate is defined on 4 ranks, got $GPUS" >&2; exit 3; }
+GPUS=${SLURM_GPUS_ON_NODE:-2}
+case "$GPUS" in 1|2|4) ;; *) echo "REFUSED: $GPUS GPUs; tests run on 1 (pre-check) or 2 (gate, A51), production on 4" >&2; exit 3;; esac
 echo "repo: $REPO_DIR @ $(git -C "$REPO_DIR" log --oneline -1 | cut -c1-70)  image: $SIF"
 apptainer exec "$SIF" cat /opt/transgenic/IMAGE_INFO 2>/dev/null || echo "image: (no IMAGE_INFO)"
 export TRITON_LIBCUDA_PATH=/.singularity.d/libs HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 NCCL_DEBUG=WARN OMP_NUM_THREADS=8
@@ -38,14 +38,14 @@ MEMLOG=$OUT/mem129k-smi-$SLURM_JOB_ID.csv
 nvidia-smi --query-gpu=index,memory.used --format=csv,noheader,nounits -l 2 > "$MEMLOG" 2>/dev/null &
 SMI=$!
 # First-kernel launch failures on fresh GH200 allocations (train_b5.slurm, 2026-09-09): warm each GPU first.
-for _g in 0 1 2 3; do
+for _g in $(seq 0 $((GPUS - 1))); do
   CUDA_VISIBLE_DEVICES=$_g apptainer exec --nv "$SIF" python -c "import torch; torch.ones(1).cuda(); torch.cuda.synchronize()" \
     || echo "gpu warm-up failed on device $_g; the bench follows anyway"
 done
 RC=0
 apptainer exec --nv --writable-tmpfs --bind "$WORK":/work --bind "$REPO_DIR":/work/repo "$SIF" bash -lc "
   cd /work/repo && export PYTHONPATH=/work/repo/src HF_HOME=/work/repo/HFmodels &&
-  accelerate launch --num_processes=4 --mixed_precision=bf16 revision/scripts/b6/bench_memory_129k.py \
+  accelerate launch --num_processes=$GPUS --mixed_precision=bf16 revision/scripts/b6/bench_memory_129k.py \
     --config configs/b6_400m_win_v3.json --tier 129024 --chain-elements 511 --steps ${STEPS:-12} --warmup 4 \
     --gate-gb 100 --out /work/runs/b6_bench/mem129k-$SLURM_JOB_ID.json
 " || RC=$?

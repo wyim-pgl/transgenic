@@ -3,7 +3,7 @@
 #SBATCH --account=bilv-dtai-gh
 #SBATCH --partition=ghx4
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=4
+#SBATCH --gpus-per-node=2
 #SBATCH --cpus-per-task=64
 # No --mem (MAX_TRES billing; see deploy/deltaai/train_b5.slurm).
 #SBATCH --time=01:30:00
@@ -29,13 +29,13 @@ REPO_DIR=${REPO_DIR:-$WORK/repo_b6}
 case "$REPO_DIR" in */repo|*/repo_seeds) echo "REFUSED: $REPO_DIR is a frozen seed checkout" >&2; exit 3;; esac
 ls "$REPO_DIR"/HFmodels/hub/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/*/model.safetensors >/dev/null 2>&1 \
   || { echo "REFUSED: encoder cache missing under $REPO_DIR/HFmodels" >&2; exit 3; }
-GPUS=${SLURM_GPUS_ON_NODE:-4}
-[ "$GPUS" = 4 ] || { echo "REFUSED: rule 15 needs 4 ranks, got $GPUS" >&2; exit 3; }
+GPUS=${SLURM_GPUS_ON_NODE:-2}
+case "$GPUS" in 1|2|4) ;; *) echo "REFUSED: $GPUS GPUs; tests run on 1-2 GPUs (A51), production on 4" >&2; exit 3;; esac
 echo "repo: $REPO_DIR @ $(git -C "$REPO_DIR" log --oneline -1 | cut -c1-70)  image: $SIF"
 export CUBLAS_WORKSPACE_CONFIG=:4096:8 TRITON_LIBCUDA_PATH=/.singularity.d/libs HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 NCCL_DEBUG=WARN OMP_NUM_THREADS=8
 unset TRANSGENIC_NO_COMPILE TRANSGENIC_NO_GRAD_CKPT TRANSGENIC_CKPT_REENTRANT
 OUT=/work/runs/b6_int4/run_$SLURM_JOB_ID
-for _g in 0 1 2 3; do
+for _g in $(seq 0 $((GPUS - 1))); do
   CUDA_VISIBLE_DEVICES=$_g apptainer exec --nv "$SIF" python -c "import torch; torch.ones(1).cuda(); torch.cuda.synchronize()" \
     || echo "gpu warm-up failed on device $_g; the test follows anyway"
 done
@@ -52,7 +52,7 @@ esac
 RC=0
 apptainer exec --nv --writable-tmpfs --bind "$WORK":/work --bind "$REPO_DIR":/work/repo "$SIF" bash -lc "
   cd /work/repo && export PYTHONPATH=/work/repo/src HF_HOME=/work/repo/HFmodels && mkdir -p $OUT &&
-  accelerate launch --num_processes=4 --mixed_precision=bf16 revision/scripts/b6/integration_4rank.py \
+  accelerate launch --num_processes=$GPUS --mixed_precision=bf16 revision/scripts/b6/integration_4rank.py \
     --model real --config configs/b6_400m_win_v3.json $DATA_ARGS --backend inductor --mixed-precision bf16 \
     --gen-tokens 12 --out $OUT
 " || RC=$?

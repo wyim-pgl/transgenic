@@ -2,7 +2,7 @@
 """B6 memory bench at the 129,024-nt tier (plan B6_WP2_WP4_PLAN_v4 section 10 CP2; A46 rule 15).
 
 Run conditions (all fixed, recorded in the output JSON): the B6 400M model of configs/b6_400m_win_v3.json with
-the pretrained Hyena encoder, 4 ranks under DDP, bf16, torch.compile (Inductor, suppress_errors off, whole
+the pretrained Hyena encoder, 2 or 4 ranks under DDP (A51), bf16, torch.compile (Inductor, suppress_errors off, whole
 model), non-reentrant activation checkpointing, one 129,024-nt tile per rank per micro-batch, dense tracks
 (all 31 channels non-zero on every base), 511 real chain elements (column 0 is the dummy) and a worst-case
 decoder target of max_label_tokens (8,192). Each step is a forward, backward and AdamW update.
@@ -59,7 +59,11 @@ def _frozen_architecture_sha256():
     return FROZEN_ARCHITECTURE_SHA256
 
 
-GATE_CONDITIONS = {"world_size": 4, "tier": 129024, "chain_elements": 511, "n_tok": 512, "gate_gb": 100.0,
+# A51 (author 2026-09-24): per-rank peak memory does not depend on the DDP world size (per-rank micro-batch fixed;
+# gradient-bucket buffers are per rank), so the gate is certified on 2 or 4 ranks. 1 rank omits the DDP buffers
+# and is a pre-check only (NOT_A_GATE_RUN). Production training stays on 4 GPUs.
+GATE_WORLD_SIZES = (2, 4)
+GATE_CONDITIONS = {"tier": 129024, "chain_elements": 511, "n_tok": 512, "gate_gb": 100.0,
                    "label_tokens": 8192, "architecture_sha256": _frozen_architecture_sha256()}
 
 
@@ -73,8 +77,10 @@ def gate_verdict(conditions, ranks, *, steps, warmup, gate_gb):
     off = {k: (conditions.get(k), v) for k, v in GATE_CONDITIONS.items() if conditions.get(k) != v}
     if off:
         return "NOT_A_GATE_RUN", f"settings differ from the frozen gate: {off}"
-    if len(ranks) != GATE_CONDITIONS["world_size"]:
-        return "NOT_A_GATE_RUN", f"{len(ranks)} rank reports, gate needs {GATE_CONDITIONS['world_size']}"
+    if conditions.get("world_size") not in GATE_WORLD_SIZES:
+        return "NOT_A_GATE_RUN", f"world_size {conditions.get('world_size')} is not a gate size {GATE_WORLD_SIZES} (A51)"
+    if len(ranks) != conditions["world_size"]:
+        return "NOT_A_GATE_RUN", f"{len(ranks)} rank reports for world_size {conditions['world_size']}"
     for r in ranks:
         if r.get("error"):
             return "FAIL", f"rank {r.get('rank')}: {r['error']}"
