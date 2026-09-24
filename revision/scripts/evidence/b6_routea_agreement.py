@@ -134,26 +134,63 @@ def bind_inputs(args):
     return bound
 
 
-def load_route_b(protein_c0, species):
-    """Route-B rows from the protein C0's est_protein_hsp: (row tuples that can be training channels, QC counts).
+POPULATIONS = ('train_track', 'valid_track', 'eval_input')
 
-    row = (chrom, strand, protein_id, start0, end0, anchor, protein_source)."""
+
+def load_est_state(est_c0, species):
+    """{EST molecule_id: molecule_state} from the species' published EST C0 (eval_input population)."""
     import duckdb
 
+    con = duckdb.connect(str(Path(est_c0).absolute()), read_only=True)
+    try:
+        rows = con.execute("""SELECT molecule_id, any_value(molecule_state), count(DISTINCT molecule_state)
+                              FROM molecule_member WHERE species = ? AND source = 'est' GROUP BY molecule_id""",
+                           [species]).fetchall()
+    finally:
+        con.close()
+    bad = [m for m, _, n in rows if n != 1]
+    if bad:
+        raise ValueError(f'{est_c0}: EST molecules with several states {bad[:3]}')
+    return {m: st for m, st, _ in rows}
+
+
+def load_route_b(protein_c0, species, population='train_track', est_state=None):
+    """Route-B rows from the protein C0's est_protein_hsp: (row tuples of the population, QC counts).
+
+    row = (chrom, strand, protein_id, start0, end0, anchor, protein_source).
+    Populations (plan §7.4 D4): ``train_track`` drops leakage-excluded and train-tiles-excluded rows (the producer's
+    original behaviour); ``valid_track`` admits train-tiles-excluded rows; ``eval_input`` keeps exactly the rows of
+    EST molecules whose EST C0 state is ``excluded_heldout`` (the A-EST evaluation input; b6_score sets are
+    long-read sets and never have route-B rows)."""
+    import duckdb
+
+    if population not in POPULATIONS:
+        raise ValueError(f'unknown population {population!r}')
+    if population == 'eval_input' and est_state is None:
+        raise ValueError('eval_input needs the EST molecule states')
     con = duckdb.connect(str(Path(protein_c0).absolute()), read_only=True)
     try:
         rows = con.execute("""
             SELECT chrom, strand, protein_id, genomic_start0, genomic_end0, phase, protein_source, leakage_excluded,
-                   train_tiles_excluded, exclusion_cause
+                   train_tiles_excluded, exclusion_cause, molecule_id
             FROM est_protein_hsp WHERE species = ? ORDER BY hsp_id, interval_index""", [species]).fetchall()
     finally:
         con.close()
     kept, qc = [], Counter()
-    for chrom, strand, protein, s, e, p, source, leak, tte, cause in rows:
+    for chrom, strand, protein, s, e, p, source, leak, tte, cause, mid in rows:
         if strand not in '+-' or p not in (0, 1, 2) or not 0 <= s < e:
             raise ValueError(f'invalid route-B interval in {protein_c0}: {(chrom, strand, protein, s, e, p)}')
         if source not in SOURCES:
             raise ValueError(f'unknown route-B protein_source {source!r}')
+        if population == 'eval_input':
+            if mid not in est_state:
+                raise ValueError(f'route-B molecule {mid} has no EST C0 molecule')
+            if est_state[mid] != 'excluded_heldout':
+                qc[f'rows_dropped_not_eval_input_{est_state[mid]}'] += 1
+                continue
+            kept.append((chrom, strand, protein, s, e, anchor(strand, s, p), source))
+            qc['rows_used'] += 1
+            continue
         if leak:
             if cause == 'protein_query':
                 qc['rows_dropped_protein_query_excluded'] += 1
@@ -162,7 +199,7 @@ def load_route_b(protein_c0, species):
             else:
                 qc['rows_dropped_excluded_heldout'] += 1
             continue
-        if tte:
+        if tte and population == 'train_track':
             qc['rows_dropped_protein_query_train_tiles_excluded' if cause == 'protein_query'
                else 'rows_dropped_train_tiles_excluded'] += 1
             continue
@@ -194,13 +231,15 @@ def load_protein_state(protein_c0, species):
     return state
 
 
-def protein_drop_reason(protein_state, protein):
+def protein_drop_reason(protein_state, protein, population='train_track'):
     st, tte = protein_state[protein]
+    if population == 'eval_input':          # protein-query exclusion is a training-side rule (rule 4(b))
+        return None
     if st == 'excluded_heldout':
         return 'leakage_excluded'
     if st == 'never':
         return 'never_training'
-    if tte:
+    if tte and population == 'train_track':
         return 'train_tiles_excluded'
     return None
 
@@ -270,7 +309,7 @@ def verify_accept_table(protein_c0, species, gff, accepted_tsv, ambiguous):
     return len(order)
 
 
-def load_route_a(gff, accepted_tsv, ambiguous_txt, proteins, protein_state):
+def load_route_a(gff, accepted_tsv, ambiguous_txt, proteins, protein_state, population='train_track'):
     ambiguous = {line.strip() for line in _open(ambiguous_txt) if line.strip()}
     keep, qc = {}, Counter()
     with _open(accepted_tsv) as f:
@@ -283,7 +322,7 @@ def load_route_a(gff, accepted_tsv, ambiguous_txt, proteins, protein_state):
             if r['protein'] not in protein_state:
                 raise ValueError(f'{r["protein"]}: accepted miniprot alignment {r["alignment_id"]} has no molecule in '
                                  'the protein C0 (--protein-c0 is not the C0 of this miniprot run)')
-            reason = protein_drop_reason(protein_state, r['protein'])
+            reason = protein_drop_reason(protein_state, r['protein'], population)
             if reason is not None:
                 qc[f'A_{reason}_alignments_removed'] += 1
                 continue
@@ -395,9 +434,12 @@ def run(args):
     ambiguous = {line.strip() for line in _open(args.mapping_ambiguous) if line.strip()}
     n_gff = verify_accept_table(args.protein_c0, args.species, args.miniprot_gff, args.accepted, ambiguous)
     protein_state = load_protein_state(args.protein_c0, args.species)
-    route_b, qc_b = load_route_b(args.protein_c0, args.species)
+    population = getattr(args, 'population', 'train_track')
+    est_state = load_est_state(args.est_c0, args.species) if population == 'eval_input' else None
+    route_b, qc_b = load_route_b(args.protein_c0, args.species, population, est_state)
     proteins = {r[2] for r in route_b}
-    route_a, qc_a = load_route_a(args.miniprot_gff, args.accepted, args.mapping_ambiguous, proteins, protein_state)
+    route_a, qc_a = load_route_a(args.miniprot_gff, args.accepted, args.mapping_ambiguous, proteins, protein_state,
+                                 population)
     counts, zero = compare(route_a, route_b)
     both_sources_bases, cross_zero = compare_sources(route_b)
     by_source, detail = {}, {}
@@ -424,7 +466,9 @@ def run(args):
         w.writerow(['species', 'chrom', 'start0', 'end0', 'action', 'reason'])
         for chrom, s, e, reason in lines:
             w.writerow([args.species, chrom, s, e, 'zero_all_route_b_phase_channels', reason])
-    report = dict(species=args.species, bases=dict(counts), bases_by_route_b_source=by_source,
+    report = dict(species=args.species, population=population,
+                  upstream={'protein_c0': bound['protein_c0']['sha256'], 'est_c0': bound['est_c0']['sha256']},
+                  bases=dict(counts), bases_by_route_b_source=by_source,
                   by_route_b_source=detail, route_a=dict(qc_a), route_b_leakage_filter=dict(qc_b),
                   route_b_source='protein C0 est_protein_hsp (resolved by ' + B.MULTI_HSP_APPLIED_BY + ')',
                   inputs_bound_to_protein_c0=bound, gff_alignments_bound=n_gff,
@@ -454,6 +498,8 @@ def main(argv=None):
                    help="the species' published EST C0 DB (bound by sha256 to the protein C0's inputs.est_c0)")
     p.add_argument('--protein-c0', type=Path, required=True,
                    help="the species' published protein C0 DB: route-B rows, protein rule 4(b) states, input binding")
+    p.add_argument('--population', choices=POPULATIONS, default='train_track',
+                   help='plan §7.4 D4: one zero list per population (train_track default = original behaviour)')
     p.add_argument('--out-intervals', type=Path, required=True)
     p.add_argument('--qc', type=Path, required=True)
     args = p.parse_args(argv)
