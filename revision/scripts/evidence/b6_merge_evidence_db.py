@@ -151,7 +151,9 @@ def _provenance(con):
 def build_identity(prov):
     """The exclusion/corpus identity every input of one species must share."""
     inputs = prov.get("inputs") or {}
-    ident = {"leakage_intervals_sha256": prov.get("leakage_intervals_sha256"), "seed": prov.get("seed")}
+    ident = {"leakage_intervals_sha256": prov.get("leakage_intervals_sha256"), "seed": prov.get("seed"),
+             # plan v4.1 §2.5: one b6-intervals-v2 manifest per species (absent on every input of an older C0)
+             "interval_manifest_sha256": prov.get("interval_manifest_sha256")}
     for k in IDENTITY_INPUTS:
         ident[k] = (inputs.get(k) or {}).get("sha256")
     for k in sorted(inputs):

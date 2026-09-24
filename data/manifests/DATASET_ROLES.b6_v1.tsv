@@ -1,0 +1,29 @@
+dataset	run	species	roles_file	role	set_label	b6_input	b6_score	b6_input_scope	basis
+ont/Athaliana_FLIC_PRJNA1087576	SRR28341943	Athaliana	DATASET_ROLES.longread_v1.tsv	b1_validation_only	A-ONT1	false	true	-	A46 rule 10 (A47.2): A. thaliana scoring set
+ont/Athaliana_FLIC_PRJNA1087576	SRR28341944	Athaliana	DATASET_ROLES.longread_v1.tsv	b1_validation_only	A-ONT1	false	true	-	A46 rule 10 (A47.2): A. thaliana scoring set
+ont/Athaliana_FLIC_PRJNA1087576	SRR28341945	Athaliana	DATASET_ROLES.longread_v1.tsv	b1_validation_only	A-ONT1	false	true	-	A46 rule 10 (A47.2): A. thaliana scoring set
+pacbio/Athaliana_zhang2023_PRJNA911826	SRR22719002	Athaliana	DATASET_ROLES.longread_v1.tsv	b1_validation_only	A-CCS23	false	true	-	A46 rule 10 (A47.2): scoring, never TES/3-prime end
+pacbio/Athaliana_zhang2023_PRJNA911826	SRR22719003	Athaliana	DATASET_ROLES.longread_v1.tsv	b1_validation_only	A-CCS23	false	true	-	A46 rule 10 (A47.2): scoring, never TES/3-prime end
+pacbio/Athaliana_zhang2023_PRJNA911826	SRR22719004	Athaliana	DATASET_ROLES.longread_v1.tsv	b1_validation_only	A-CCS23	false	true	-	A46 rule 10 (A47.2): scoring, never TES/3-prime end
+pacbio/Athaliana_zhang2023_PRJNA911826	SRR22719005	Athaliana	DATASET_ROLES.longread_v1.tsv	b1_validation_only	A-CCS23	false	true	-	A46 rule 10 (A47.2): scoring, never TES/3-prime end
+pacbio/Athaliana_zhang2023_PRJNA911826	SRR22719006	Athaliana	DATASET_ROLES.longread_v1.tsv	b1_validation_only	A-CCS23	false	true	-	A46 rule 10 (A47.2): scoring, never TES/3-prime end
+pacbio/Athaliana_zhang2023_PRJNA911826	SRR22719007	Athaliana	DATASET_ROLES.longread_v1.tsv	b1_validation_only	A-CCS23	false	true	-	A46 rule 10 (A47.2): scoring, never TES/3-prime end
+ont/Zmays_roottip_PRJNA822071	SRR18571905	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-ONT	false	true	-	A46 decision 2: root-tip ONT scoring
+ont/Zmays_roottip_PRJNA822071	SRR18571906	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-ONT	false	true	-	A46 decision 2: root-tip ONT scoring
+ont/Zmays_roottip_PRJNA822071	SRR18571907	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-ONT	false	true	-	A46 decision 2: root-tip ONT scoring
+ont/Zmays_roottip_PRJNA822071	SRR18571911	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-ONT	false	true	-	A46 decision 2: root-tip ONT scoring
+ont/Zmays_roottip_PRJNA822071	SRR18571914	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-ONT	false	true	-	A46 decision 2: root-tip ONT scoring
+ont/Zmays_roottip_PRJNA822071	SRR18571915	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-ONT	false	true	-	A46 decision 2: root-tip ONT scoring
+pacbio/Zmays_wang2018_PRJEB22122	ERR2093901	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-HQ18	true	false	tracks_only	A46 decision 2; rule 6a + A47.3: RS II set, tracks only, never chain memory
+pacbio/Zmays_wang2018_PRJEB22122	ERR2093902	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-HQ18	true	false	tracks_only	A46 decision 2; rule 6a + A47.3: RS II set, tracks only, never chain memory
+pacbio/Zmays_wang2018_PRJEB22122	ERR2093903	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-HQ18	true	false	tracks_only	A46 decision 2; rule 6a + A47.3: RS II set, tracks only, never chain memory
+pacbio/Zmays_wang2018_PRJEB22122	ERR2093904	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-HQ18	true	false	tracks_only	A46 decision 2; rule 6a + A47.3: RS II set, tracks only, never chain memory
+pacbio/Zmays_wang2018_PRJEB22122	ERR2093905	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-HQ18	true	false	tracks_only	A46 decision 2; rule 6a + A47.3: RS II set, tracks only, never chain memory
+pacbio/Zmays_wang2020_zenodo2611319	F1maize.FINAL.gff	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-FLNC	false	true	-	A46 decision 2: scoring
+pacbio/Zmays_wang2020_zenodo2611319	F1maize.demux_FL_count.txt	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-FLNC	false	true	-	A46 decision 2: scoring
+pacbio/Zmays_wang2020_zenodo2611319	F1maize.flnc.fa.gz	Zmays	DATASET_ROLES.longread_v1.tsv	b1_validation_only	M-FLNC	false	true	-	A46 decision 2: scoring
+ont/Athaliana_cui2020_PRJNA594286	SRR10611193	Athaliana	DATASET_ROLES.longread_v1.tsv	c2_training_eligible	A-ONT2	true	false	tracks+chains	A46 rule 10: excluded_heldout A-ONT2 (canonical copy; training/ont duplicate stays excluded)
+ont/Athaliana_cui2020_PRJNA594286	SRR10611194	Athaliana	DATASET_ROLES.longread_v1.tsv	c2_training_eligible	A-ONT2	true	false	tracks+chains	A46 rule 10: excluded_heldout A-ONT2 (canonical copy; training/ont duplicate stays excluded)
+ont/Athaliana_cui2020_PRJNA594286	SRR10611195	Athaliana	DATASET_ROLES.longread_v1.tsv	c2_training_eligible	A-ONT2	true	false	tracks+chains	A46 rule 10: excluded_heldout A-ONT2 (canonical copy; training/ont duplicate stays excluded)
+est/Zmays	est.fa.gz	Zmays	DATASET_ROLES.est_v1.tsv	b1_validation_only	M-EST	true	false	tracks+chains	A46 decision 2 / rule 6a
+est/Athaliana	est.fa.gz	Athaliana	DATASET_ROLES.est_v1.tsv	c2_training_eligible	A-EST	true	false	tracks+chains	A46 rule 10: excluded_heldout A-EST molecules only, at held-out loci

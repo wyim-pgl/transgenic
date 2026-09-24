@@ -1710,7 +1710,8 @@ def build(args, argv):
         verify_overlap(args.overlap, leakage.intervals)
     ctx = {"species": species, "source": source, "genome": leakage.genome, "leakage": leakage, "qc": Counter(),
            "assembly": leakage.manifest["fasta_sha256"], "inputs": {}, "versions": versions, "audit_n": args.audit_n,
-           "intervals_sha256": intervals_sha256(leakage.intervals)}
+           "intervals_sha256": intervals_sha256(leakage.intervals),
+           "interval_manifest_sha256": LK.interval_manifest_sha256(leakage.interval_manifest)}
     inputs = {"roles": args.roles, "est_roles": args.est_roles, "corpus": args.corpus, "splits": args.splits, "flags": args.flags,
               "reference": args.reference or leakage.manifest["fasta"], "gff": args.gff or leakage.manifest["gff"]}
     inputs.update({f"build_flags_{i}": p for i, p in enumerate(args.build_flags or [])})
@@ -1837,7 +1838,9 @@ def provenance_hash(ctx, args, argv, tool_shas, code, duckdb_version, rows, excl
             "code_sha256": code, "duckdb_version": duckdb_version, "seed": args.seed, "audit_n": args.audit_n,
             "role_rows": sorted(f"{r['dataset']}/{r['run']}:{r['role']}" for r in rows),
             "excluded_role_rows": sorted(f"{r['dataset']}/{r['run']}" for r in excluded_rows),
-            "leakage_intervals_sha256": ctx["intervals_sha256"], "phase_convention": S.PHASE_CONVENTION,
+            "leakage_intervals_sha256": ctx["intervals_sha256"],
+            # plan v4.1 §2.5: the b6-intervals-v2 manifest (genome-level components + A30-only repair components)
+            "interval_manifest_sha256": ctx["interval_manifest_sha256"], "phase_convention": S.PHASE_CONVENTION,
             "pending_author_rulings": {"low_mapq_applies_to_audit_secondaries": LK.LOW_MAPQ_APPLIES_TO_AUDIT_SECONDARIES,
                                        "edge_partial_molecule_wide": LK.EDGE_PARTIAL_MOLECULE_WIDE},
             "miniprot_max_placements": MINIPROT_MAX_PLACEMENTS,

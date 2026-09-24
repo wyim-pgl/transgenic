@@ -52,18 +52,28 @@
 
 (d) ``heldout_qc`` -- independent recount of molecules overlapping strict
     held-out loci: overlapping == excluded and retained == 0.
+
+``b6-intervals-v2`` manifest (plan v4.1 §2.5): ``LeakageModel.interval_manifest`` holds one row per (genome-level
+component, cause, scope) -- the rule 4(a) component intervals above, ``c0_exclusion = true`` -- plus every A30-only
+component (a build-hard member and no rule-4(a) cause; ``cause = a30_only``, ``c0_exclusion = false``, never a C0
+exclusion), each with ``flank_source`` historical_max / fallback_150.  ``write_interval_manifest`` writes it as
+canonical JSON lines whose file sha256 is ``interval_manifest_sha256`` (recorded in C0 provenance and in the WP2
+corpus freeze); ``verify_interval_manifest`` is the §8.3 (b)-(c) projection check.  ``prepare_genes`` /
+``tile_masks`` / ``verify_tile`` are the build's gene preparation and per-tile masking replay, shared with the WP2
+repair (``b6_corpus_repair``).
 """
 from __future__ import annotations
 
 import bisect
 import csv
 import hashlib
+import json
 import os
 import random
 import sys
 import types
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 AUDIT_N = 50
@@ -182,10 +192,241 @@ class LeakageModel:
     genome: dict
     manifest: dict
     qc: dict
+    interval_manifest: list = field(default_factory=list)   # b6-intervals-v2 rows (plan v4.1 §2.5), sorted
 
     def excluded_4c(self, chrom, strand, donor0, acceptor0):
         return ((chrom, strand, "donor", donor0) in self.coordinates
                 or (chrom, strand, "acceptor", acceptor0) in self.coordinates)
+
+
+@dataclass
+class GenePrep:
+    """The corpus build's gene preparation (build_b5.py _build_species_tiles), shared by the leakage model and the
+    WP2 repair: ``by_chrom`` holds the build's (flag-filtered, cap-checked) genes; ``all_genes`` every GFF gene as
+    (gene, split, strict, a22_hard); ``gene_meta[gene_id]`` = split / strict / weight / labelable / qc."""
+    by_chrom: dict
+    gene_meta: dict
+    all_genes: list
+    a22_ids: set
+    decoy_rate: float
+
+
+def prepare_genes(*, species, gff_path, splits_path, flags_path, build_flags, genome):
+    """The build's gene preparation, verbatim in effect (build_b5.py _build_species_tiles).  ``flags_path`` is the
+    A22 rule-4(a) file; ``build_flags`` every flag file the corpus build used (default: ``flags_path``)."""
+    b5 = load_build_b5()
+    gc = b5.gc
+    split_rows, _ = b5.read_split_table(splits_path)
+    rule_flags = b5.read_qc_flags(flags_path) if flags_path else {}
+    build_q = b5.read_qc_flags(list(build_flags) if build_flags else flags_path) if (build_flags or flags_path) else None
+    by_chrom, gene_meta, all_genes = {}, {}, []
+    with open(gff_path) as fh:
+        for gene in gc.parse_gff3(fh, species_code=gc.species_code(species)):
+            key = (species, gene.gene_id)
+            require(key in split_rows, f"{species}:{gene.gene_id} has no split entry")
+            srow = split_rows[key]
+            strict = str(srow.get("strict_holdout", "")).lower() in ("1", "true", "yes")
+            no_cds = not any(f.type == "CDS" for tx in gene.transcripts.values() for f in tx)
+            all_tx = list(gene.transcripts.keys())
+            rflags = b5.flags_for_gene(rule_flags, species, gene)
+            a22_hard = bool(rflags) and b5.loss_mask_decision(rflags, all_tx)[0] == 0
+            all_genes.append((gene, srow["split"], strict, a22_hard))
+            weight, qc_list = 1.0, []
+            gflags = b5.flags_for_gene(build_q, species, gene)
+            if gflags:
+                weight, keep_tx, qc_list = b5.loss_mask_decision(gflags, gene.transcripts.keys())
+                if weight > 0 and len(keep_tx) < len(gene.transcripts):
+                    gene = gc.Gene(gene.gene_id, gene.chrom, gene.strand, gene.start0, gene.end0,
+                                   {t: gene.transcripts[t] for t in keep_tx}, gene.gene_id_original, gene.name_original)
+            if gene.chrom not in genome:
+                continue
+            try:
+                gc.check_caps(gc.gene_to_gsf(gene, gene.start0))
+            except gc.CapError:
+                if not no_cds:
+                    continue
+            by_chrom.setdefault(gene.chrom, []).append(gene)
+            gene_meta[gene.gene_id] = {"split": srow["split"], "strict": strict, "weight": weight,
+                                       "labelable": not no_cds, "qc": list(qc_list)}
+    a22_ids = {gene.gene_id for gene, _, _, hard_ in all_genes if hard_}
+    n_genes = sum(len(v) for v in by_chrom.values())
+    n_masked = sum(1 for v in by_chrom.values() for g in v
+                   if gene_meta[g.gene_id]["weight"] == 0 or gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"] or "train", 0) > 0)
+    decoy_rate = min(gc.DECOY_MAX, (n_masked / n_genes) * gc.DECOY_RATIO) if n_genes else 0.0
+    return GenePrep(by_chrom, gene_meta, all_genes, a22_ids, decoy_rate)
+
+
+@dataclass
+class TileMask:
+    """The corpus build's masking of one tile (build_b5.py _build_species_tiles), replayed from its seeds."""
+    inside: list
+    partial: int
+    leak: set
+    hard: set
+    decoy: set
+    masked_ids: set
+    masked: list            # masked genes in ``inside`` order
+    flanks: list            # the seeded per-gene flank of each masked gene (A33.3)
+
+
+def tile_masks(prep, *, seed, species, chrom, ws, we, split):
+    """Replay the build's per-tile masking with its own code path and seed strings (exact order of RNG draws)."""
+    gc = load_build_b5().gc
+    gene_meta = prep.gene_meta
+    inside, partial = gc.genes_in_window(prep.by_chrom.get(chrom, []), ws, we)
+    leak = {g.gene_id for g in inside if gene_meta[g.gene_id]["split"]
+            and gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"], 0) > gc.SPLIT_RANK[split]}
+    hard = {g.gene_id for g in inside if g.gene_id not in leak and gene_meta[g.gene_id]["weight"] == 0}
+    decoy = set()
+    if split == "train" and prep.decoy_rate > 0:
+        drng = random.Random(f"{seed}:{species}:{chrom}:{ws}-{we}:decoy")
+        decoy = {g.gene_id for g in inside if gene_meta[g.gene_id]["labelable"] and g.gene_id not in leak
+                 and g.gene_id not in hard and drng.random() < prep.decoy_rate}
+    seed_ids = leak | hard | decoy
+    masked_ids = set()
+    for comp in gc.overlap_components(inside):
+        if any(g.gene_id in seed_ids for g in comp):
+            masked_ids |= {g.gene_id for g in comp}
+    masked = [g for g in inside if g.gene_id in masked_ids]
+    flanks = []
+    if masked:
+        frng = random.Random(f"{seed}:{species}:{chrom}:{ws}-{we}:flank")
+        flanks = [frng.randint(*gc.FLANK_RANGE) for _ in masked]
+    return TileMask(inside, partial, leak, hard, decoy, masked_ids, masked, flanks)
+
+
+def verify_tile(tm, genome, *, rn, chrom, ws, we, seq, qc_flags):
+    """Fail closed unless the stored tile equals the replayed masking (qc_flags counts and the exact N-mask)."""
+    gc = load_build_b5().gc
+    got = _parse_tile_qc(qc_flags)
+    want = {"leak_masked": len(tm.leak), "hard_masked": len(tm.hard), "decoy_masked": len(tm.decoy),
+            "component_masked": len(tm.masked_ids) - len(tm.leak | tm.hard | tm.decoy), "edge_partial": tm.partial}
+    require(got == want, f"tile {rn} ({chrom}:{ws}-{we}): recomputed masking {want} != stored qc_flags {got}; "
+                         "wrong --build-flags, seed or corpus")
+    ref = genome[chrom][ws:we]
+    if len(ref) < we - ws:
+        ref = ref + "N" * (we - ws - len(ref))
+    if tm.masked:
+        ref = gc.leak_mask(ref, ws, tm.masked, flanks=tm.flanks)
+    require(ref == seq, f"tile {rn} ({chrom}:{ws}-{we}): recomputed N-mask differs from the stored sequence")
+
+
+# ------------------------------------------------------------------ b6-intervals-v2 manifest (plan v4.1 §2.5, §8.3)
+INTERVAL_MANIFEST_VERSION = "b6-intervals-v2"
+MANIFEST_FIELDS = ("manifest_version", "species", "chrom", "component_id", "members", "start0", "end0", "cause",
+                   "scope", "flank", "flank_source", "c0_exclusion")
+GENOME_LEVEL_CAUSES = ("heldout", "test_orthogroup", "valid_orthogroup", "a22_hard")
+A30_ONLY_CAUSE = "a30_only"
+FLANK_SOURCES = ("historical_max", "fallback_150")
+
+
+def _manifest_row(row):
+    """A manifest row as a dict with the fields in MANIFEST_FIELDS order, validated (fail closed)."""
+    require(set(row) == set(MANIFEST_FIELDS), f"interval manifest row keys {sorted(row)} != {sorted(MANIFEST_FIELDS)}")
+    out = {k: row[k] for k in MANIFEST_FIELDS}
+    require(out["manifest_version"] == INTERVAL_MANIFEST_VERSION,
+            f"interval manifest version {out['manifest_version']!r} != {INTERVAL_MANIFEST_VERSION!r}")
+    require(isinstance(out["members"], list) and out["members"] == sorted(out["members"]) and out["members"],
+            f"interval manifest members must be a non-empty sorted list: {out['members']!r}")
+    require(out["component_id"] in out["members"], f"component_id {out['component_id']!r} is not a member")
+    for k in ("start0", "end0", "flank"):
+        require(isinstance(out[k], int) and not isinstance(out[k], bool), f"interval manifest {k} must be an integer")
+    require(0 <= out["start0"] < out["end0"], f"interval manifest row has an empty interval: {out}")
+    require(out["flank_source"] in FLANK_SOURCES, f"flank_source {out['flank_source']!r} not in {FLANK_SOURCES}")
+    require(out["flank_source"] != "fallback_150" or out["flank"] == 150, "fallback_150 row with flank != 150")
+    require(isinstance(out["c0_exclusion"], bool), "c0_exclusion must be a boolean")
+    if out["cause"] == A30_ONLY_CAUSE:
+        require(out["c0_exclusion"] is False and out["scope"] == "all", "a30_only rows are never C0 exclusions")
+    else:
+        require(out["cause"] in GENOME_LEVEL_CAUSES and out["c0_exclusion"] is True,
+                f"manifest cause {out['cause']!r} must be a genome-level rule 4(a) cause with c0_exclusion true")
+        want = "train_tiles" if out["cause"] == "valid_orthogroup" else "all"
+        require(out["scope"] == want, f"manifest cause {out['cause']} must have scope {want}")
+    return out
+
+
+def _manifest_sort_key(r):
+    return (r["species"], r["chrom"], r["start0"], r["end0"], r["cause"], r["scope"], r["component_id"])
+
+
+def sort_manifest_rows(rows):
+    return sorted(rows, key=_manifest_sort_key)
+
+
+def manifest_line(row):
+    return json.dumps(row, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def interval_manifest_sha256(rows):
+    """Canonical hash (plan v4.1 §2.5): sha256 over UTF-8 JSON lines (sort_keys, separators (",", ":")), one per row,
+    rows sorted by (species, chrom, start0, end0, cause, scope, component_id).  Equals the sha256 of the file
+    ``write_interval_manifest`` writes."""
+    h = hashlib.sha256()
+    for r in sort_manifest_rows([_manifest_row(r) for r in rows]):
+        h.update((manifest_line(r) + "\n").encode("utf-8"))
+    return h.hexdigest()
+
+
+def write_interval_manifest(rows, path):
+    """Write the canonical JSONL (exclusive create) and its ``.sha256`` sidecar; returns the canonical sha256."""
+    rows = sort_manifest_rows([_manifest_row(r) for r in rows])
+    with open(path, "x", encoding="utf-8", newline="\n") as fh:
+        for r in rows:
+            fh.write(manifest_line(r) + "\n")
+    digest = interval_manifest_sha256(rows)
+    require(sha256(path) == digest, f"{path}: written bytes do not hash to the canonical manifest sha256")
+    with open(str(path) + ".sha256", "x") as fh:
+        fh.write(f"{digest}  {Path(path).name}\n")
+    return digest
+
+
+def read_interval_manifest(path, *, expected_sha256=None):
+    """Read and validate a b6-intervals-v2 JSONL file: every row valid, rows in canonical order, no duplicate
+    (component, cause, scope), file bytes == canonical serialisation, sidecar (and ``expected_sha256``) equal."""
+    rows = []
+    with open(path, encoding="utf-8") as fh:
+        for n, line in enumerate(fh, start=1):
+            require(line.endswith("\n"), f"{path}:{n}: unterminated line")
+            try:
+                row = json.loads(line)
+            except ValueError as exc:
+                raise LeakageError(f"{path}:{n}: not JSON: {exc}") from exc
+            row = _manifest_row(row)
+            require(manifest_line(row) == line[:-1], f"{path}:{n}: not the canonical serialisation")
+            rows.append(row)
+    require(rows == sort_manifest_rows(rows), f"{path}: rows are not in canonical order")
+    keys = [(r["species"], r["chrom"], r["component_id"], r["cause"], r["scope"]) for r in rows]
+    require(len(keys) == len(set(keys)), f"{path}: duplicate (component, cause, scope) rows")
+    digest = interval_manifest_sha256(rows)
+    require(sha256(path) == digest, f"{path}: file sha256 != canonical manifest sha256")
+    side = Path(str(path) + ".sha256")
+    require(side.is_file() and side.read_text().split()[:1] == [digest], f"{path}: sidecar missing or != {digest}")
+    if expected_sha256 is not None:
+        require(digest == expected_sha256, f"{path}: interval manifest sha256 {digest} != expected {expected_sha256}")
+    return rows
+
+
+def verify_interval_manifest(rows, intervals):
+    """Plan v4.1 §8.3 (b)-(c): the ``c0_exclusion`` rows' projection (chrom, start0, end0, cause, scope) equals, as a
+    multiset, the recomputed genome-level component intervals (``tile_rn`` NULL, causes GENOME_LEVEL_CAUSES); the
+    A30-only rows have ``c0_exclusion`` false and match no recomputed interval.  Step (a) -- the full legacy row set
+    reproducing ``leakage_intervals_sha256`` -- is the caller's (it owns the recorded sha)."""
+    from collections import Counter
+
+    rows = [_manifest_row(r) for r in rows]
+    got = Counter((r["chrom"], r["start0"], r["end0"], r["cause"], r["scope"]) for r in rows if r["c0_exclusion"])
+    want = Counter((iv.chrom, iv.start0, iv.end0, iv.cause, iv.scope) for iv in intervals
+                   if iv.tile_rn is None and iv.cause in GENOME_LEVEL_CAUSES)
+    require(got == want, f"interval manifest projection differs from the recomputed genome-level components: "
+                         f"missing {sorted((want - got).elements())[:5]}, extra {sorted((got - want).elements())[:5]}")
+    spans = {(iv.chrom, iv.start0, iv.end0) for iv in intervals}
+    for r in rows:
+        if r["cause"] == A30_ONLY_CAUSE:
+            require(not r["c0_exclusion"], "a30_only row with c0_exclusion true")
+            require((r["chrom"], r["start0"], r["end0"]) not in spans,
+                    f"a30_only row {r['component_id']} matches a recomputed excluded interval")
+    return True
+
 
 
 def corpus_manifest(con, species):
@@ -263,44 +504,10 @@ def build_leakage_model(*, corpus_db, species, splits_path, flags_path, build_fl
         require(os.path.isfile(fasta) and sha256(fasta) == manifest["fasta_sha256"],
                 f"reference {fasta} missing or sha256 != corpus build_manifest")
         genome = b5.load_fasta(fasta)
-        split_rows, _ = b5.read_split_table(splits_path)
-        rule_flags = b5.read_qc_flags(flags_path) if flags_path else {}
-        build_q = b5.read_qc_flags(list(build_flags) if build_flags else flags_path) if (build_flags or flags_path) else None
-
-        # --- the build's gene preparation, verbatim in effect (build_b5.py _build_species_tiles) ---
-        by_chrom, gene_meta, all_genes = {}, {}, []
-        with open(gff) as fh:
-            for gene in gc.parse_gff3(fh, species_code=gc.species_code(species)):
-                key = (species, gene.gene_id)
-                require(key in split_rows, f"{species}:{gene.gene_id} has no split entry")
-                srow = split_rows[key]
-                strict = str(srow.get("strict_holdout", "")).lower() in ("1", "true", "yes")
-                no_cds = not any(f.type == "CDS" for tx in gene.transcripts.values() for f in tx)
-                all_tx = list(gene.transcripts.keys())
-                rflags = b5.flags_for_gene(rule_flags, species, gene)
-                a22_hard = bool(rflags) and b5.loss_mask_decision(rflags, all_tx)[0] == 0
-                all_genes.append((gene, srow["split"], strict, a22_hard))
-                weight = 1.0
-                gflags = b5.flags_for_gene(build_q, species, gene)
-                if gflags:
-                    weight, keep_tx, _ = b5.loss_mask_decision(gflags, gene.transcripts.keys())
-                    if weight > 0 and len(keep_tx) < len(gene.transcripts):
-                        gene = gc.Gene(gene.gene_id, gene.chrom, gene.strand, gene.start0, gene.end0,
-                                       {t: gene.transcripts[t] for t in keep_tx}, gene.gene_id_original, gene.name_original)
-                if gene.chrom not in genome:
-                    continue
-                try:
-                    gc.check_caps(gc.gene_to_gsf(gene, gene.start0))
-                except gc.CapError:
-                    if not no_cds:
-                        continue
-                by_chrom.setdefault(gene.chrom, []).append(gene)
-                gene_meta[gene.gene_id] = {"split": srow["split"], "weight": weight, "labelable": not no_cds}
-        a22_ids = {gene.gene_id for gene, _, _, hard_ in all_genes if hard_}
-        n_genes = sum(len(v) for v in by_chrom.values())
-        n_masked = sum(1 for v in by_chrom.values() for g in v
-                       if gene_meta[g.gene_id]["weight"] == 0 or gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"] or "train", 0) > 0)
-        decoy_rate = min(gc.DECOY_MAX, (n_masked / n_genes) * gc.DECOY_RATIO) if n_genes else 0.0
+        prep = prepare_genes(species=species, gff_path=gff, splits_path=splits_path, flags_path=flags_path,
+                             build_flags=build_flags, genome=genome)
+        by_chrom, gene_meta, all_genes, a22_ids, decoy_rate = (prep.by_chrom, prep.gene_meta, prep.all_genes,
+                                                               prep.a22_ids, prep.decoy_rate)
 
         blocks = defaultdict(list)
         intervals = []
@@ -336,36 +543,11 @@ def build_leakage_model(*, corpus_db, species, splits_path, flags_path, build_fl
                             f"(overlaps a tile_block: {explicit}; genes inside: {len(inside)}); refusing")
                     qc["tiles_split_null_resolved"] += 1
                 require(split in (expected_split, None), f"tile {rn}: stored split {split} != recomputed {expected_split}")
-                leak = {g.gene_id for g in inside if gene_meta[g.gene_id]["split"]
-                        and gc.SPLIT_RANK.get(gene_meta[g.gene_id]["split"], 0) > gc.SPLIT_RANK[expected_split]}
-                hard = {g.gene_id for g in inside if g.gene_id not in leak and gene_meta[g.gene_id]["weight"] == 0}
-                decoy = set()
-                if expected_split == "train" and decoy_rate > 0:
-                    drng = random.Random(f"{seed}:{species}:{chrom}:{ws}-{we}:decoy")
-                    decoy = {g.gene_id for g in inside if gene_meta[g.gene_id]["labelable"] and g.gene_id not in leak
-                             and g.gene_id not in hard and drng.random() < decoy_rate}
-                seed_ids = leak | hard | decoy
-                masked_ids = set()
-                for comp in gc.overlap_components(inside):
-                    if any(g.gene_id in seed_ids for g in comp):
-                        masked_ids |= {g.gene_id for g in comp}
-                masked = [g for g in inside if g.gene_id in masked_ids]
-                flanks = []
-                if masked:
-                    frng = random.Random(f"{seed}:{species}:{chrom}:{ws}-{we}:flank")
-                    flanks = [frng.randint(*gc.FLANK_RANGE) for _ in masked]
+                tm = tile_masks(prep, seed=seed, species=species, chrom=chrom, ws=ws, we=we, split=expected_split)
+                leak, hard, decoy, masked_ids, masked, flanks = (tm.leak, tm.hard, tm.decoy, tm.masked_ids, tm.masked,
+                                                                 tm.flanks)
                 if verify_tiles:
-                    got = _parse_tile_qc(qc_flags)
-                    want = {"leak_masked": len(leak), "hard_masked": len(hard), "decoy_masked": len(decoy),
-                            "component_masked": len(masked_ids) - len(seed_ids), "edge_partial": partial}
-                    require(got == want, f"tile {rn} ({chrom}:{ws}-{we}): recomputed masking {want} != stored qc_flags {got}; "
-                                         "wrong --build-flags, seed or corpus")
-                    ref = genome[chrom][ws:we]
-                    if len(ref) < we - ws:
-                        ref = ref + "N" * (we - ws - len(ref))
-                    if masked:
-                        ref = gc.leak_mask(ref, ws, masked, flanks=flanks)
-                    require(ref == seq, f"tile {rn} ({chrom}:{ws}-{we}): recomputed N-mask differs from the stored sequence")
+                    verify_tile(tm, genome, rn=rn, chrom=chrom, ws=ws, we=we, seq=seq, qc_flags=qc_flags)
                     qc["tiles_verified"] += 1
                 if expected_split not in ("train", "valid"):
                     continue
@@ -413,24 +595,40 @@ def build_leakage_model(*, corpus_db, species, splits_path, flags_path, build_fl
         if causes:
             seeds[gene.gene_id] = causes
     heldout = [(g.gene_id, g.chrom, g.start0, g.end0) for g, _, strict, _ in all_genes if strict and g.chrom in genome]
+    manifest_rows = []
     for chrom, genes in per_chrom.items():
         L = len(genome[chrom])
         for comp in gc.overlap_components(genes):
             comp_causes = {c for g in comp for c in seeds.get(g.gene_id, ())}
-            if not comp_causes:
+            # A30-only (plan v4.1 §2.3/§2.5): a component with a build-hard (A22/A30 weight-0) member and no rule-4(a)
+            # cause is masked by the WP2 repair with the same formula but is never a C0 exclusion.
+            build_hard = any(gene_meta.get(g.gene_id, {}).get("weight", 1.0) == 0 for g in comp)
+            if not comp_causes and not build_hard:
                 continue
-            flank = max((flank_seen[g.gene_id] for g in comp if g.gene_id in flank_seen), default=gc.FLANK_RANGE[1])
+            seen = [flank_seen[g.gene_id] for g in comp if g.gene_id in flank_seen]
+            flank = max(seen, default=gc.FLANK_RANGE[1])
             a = max(0, min(g.start0 for g in comp) - flank)
             b = min(L, max(g.end0 for g in comp) + flank)
-            label = ",".join(sorted(g.gene_id for g in comp if g.gene_id in seeds))
-            for cause, scope in sorted(comp_causes):
-                intervals.append(ExcludedInterval(chrom, a, b, cause, scope, label))
+            members = sorted(g.gene_id for g in comp)
+            component_id = min(comp, key=lambda g: (g.start0, g.gene_id)).gene_id
+            base = {"manifest_version": INTERVAL_MANIFEST_VERSION, "species": species, "chrom": chrom,
+                    "component_id": component_id, "members": members, "start0": a, "end0": b, "flank": flank,
+                    "flank_source": "historical_max" if seen else "fallback_150"}
+            if comp_causes:
+                label = ",".join(sorted(g.gene_id for g in comp if g.gene_id in seeds))
+                for cause, scope in sorted(comp_causes):
+                    intervals.append(ExcludedInterval(chrom, a, b, cause, scope, label))
+                    manifest_rows.append(dict(base, cause=cause, scope=scope, c0_exclusion=True))
+            else:
+                manifest_rows.append(dict(base, cause=A30_ONLY_CAUSE, scope="all", c0_exclusion=False))
     coords = coordinate_exclusions([g for g, *_ in all_genes if g.chrom in genome], set(seeds))
     for iv in intervals:
         qc["intervals_" + iv.cause] += 1
     qc.update(genes=len(all_genes), seed_genes=len(seeds), heldout_loci=len(heldout), decoy_rate_ppm=round(decoy_rate * 1e6),
-              coordinates_4c=len(coords))
-    return LeakageModel(species, intervals, IntervalIndex(intervals), heldout, coords, genome, manifest, dict(qc))
+              coordinates_4c=len(coords), interval_manifest_rows=len(manifest_rows),
+              interval_manifest_a30_only=sum(1 for r in manifest_rows if r["cause"] == A30_ONLY_CAUSE))
+    return LeakageModel(species, intervals, IntervalIndex(intervals), heldout, coords, genome, manifest, dict(qc),
+                        sort_manifest_rows([_manifest_row(r) for r in manifest_rows]))
 
 
 @dataclass(frozen=True)
