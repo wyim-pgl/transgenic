@@ -3,9 +3,14 @@
 
     b6_leakage_intervals.py --corpus <corpus DuckDB> --species Athaliana --splits <split TSV> --flags <A22 flags>
                             [--build-flags <A22> <A30>] [--reference FASTA] [--gff GFF] --seed <corpus build seed> --out intervals.tsv
+                            [--manifest-out intervals.b6-intervals-v2.jsonl]
 
 ``--seed`` is required (the corpus build_manifest does not record it; a wrong seed fails closed).  Rows are written
 sorted, so the TSV is byte-deterministic for one corpus.
+
+``--manifest-out`` also writes the ``b6-intervals-v2`` interval manifest (plan v4.1 §2.5: one row per genome-level
+component x cause x scope, plus the A30-only repair components) as canonical JSON lines with a ``.sha256`` sidecar;
+its sha256 is the ``interval_manifest_sha256`` the C0 provenance and the WP2 corpus freeze record.
 """
 from __future__ import annotations
 
@@ -32,11 +37,14 @@ def main(argv=None):
     ap.add_argument("--gff")
     ap.add_argument("--seed", type=int, required=True, help="corpus build seed (not in build_manifest)")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--manifest-out", help="also write the b6-intervals-v2 manifest (JSONL + .sha256)")
     a = ap.parse_args(argv)
     try:
         model = LK.build_leakage_model(corpus_db=a.corpus, species=a.species, splits_path=a.splits, flags_path=a.flags,
                                        build_flags=a.build_flags, gff_path=a.gff, fasta_path=a.reference, seed=a.seed)
         LK.write_intervals_tsv(model.intervals, a.out)
+        if a.manifest_out:
+            model.qc["interval_manifest_sha256"] = LK.write_interval_manifest(model.interval_manifest, a.manifest_out)
     except (LK.LeakageError, FileExistsError, OSError) as exc:
         print(f"b6_leakage_intervals failed: {exc}", file=sys.stderr)
         return 1
