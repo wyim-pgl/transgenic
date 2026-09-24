@@ -1,0 +1,6 @@
+................................................................................................................................................................................................................................................................evidence scorer stopped: input hash mismatch: /tmp/pytest-of-wyim/pytest-1217/test_cli_reproducibility_and_h0/run.sam
+.evidence scorer stopped: missing dataset role: ('dataset', 'absent')
+evidence scorer stopped: run1/r0: missing C0 read metadata
+............evidence scorer stopped: A16 non-transitive 10-nt PCR equivalence
+.........
+278 passed in 1.23s
