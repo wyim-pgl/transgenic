@@ -1,0 +1,18 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+801d3f0412778cff81aba422dec2b37d92430e53eeab6bf8ef5eb320984998e4  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/est_c0.sbatch
+SUBMIT Athaliana 6172274 mem=180G time=24:00:00 duckdb=48GB
+SUBMIT Gmax 6172275 mem=180G time=24:00:00 duckdb=48GB
+SUBMIT Osativa 6172276 mem=180G time=24:00:00 duckdb=48GB
+SUBMIT Bdistachyon 6172277 mem=64G time=12:00:00 duckdb=24GB
+SUBMIT Ppatens 6172278 mem=64G time=12:00:00 duckdb=24GB
+SUBMIT Ptrichocarpa 6172279 mem=64G time=12:00:00 duckdb=24GB
+SUBMIT Sbicolor 6172280 mem=64G time=12:00:00 duckdb=24GB
+6172280|b6_est_c0_Sbicolor|PENDING|(Resources)
+6172274|b6_est_c0_Athaliana|RUNNING|cpu-48
+6172275|b6_est_c0_Gmax|RUNNING|cpu-49
+6172276|b6_est_c0_Osativa|RUNNING|cpu-50
+6172277|b6_est_c0_Bdistachyon|RUNNING|cpu-51
+6172278|b6_est_c0_Ppatens|RUNNING|cpu-51
+6172279|b6_est_c0_Ptrichocarpa|RUNNING|cpu-51

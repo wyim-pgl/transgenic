@@ -1,5 +1,17 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## 전체 C0 구축 제출: 2026-09-25 16:20 PDT
+
+사용자 지시("커밋 하고 전체 진행해 수정 잡제출")에 따라 준비된 모든 EST·PacBio C0를 제출했다. CPU 증거DB 구축이며 GPU 훈련이 아니다. 런타임·입력 규칙은 검증된 Sitalica 6172228과 같다(source3511a5a, micromamba.sif+DuckDB1.5.5/PyArrow25.0.1, seed123, A22+A30 flags, current PREP roles).
+
+- **입력 인벤토리** [all_species_inventory.txt](all_species_inventory.txt): 9종 모두 genome/GFF sha256이 B5 build_manifest와 일치, geenuff/swissprot flags·EST primary/audit 존재.
+- **EST C0 7종** ([est_c0.sbatch](est_c0.sbatch) sha256 `801d3f04…98e4`, 뷰 [est_c0_views.txt](est_c0_views.txt)): Athaliana6172274·Gmax6172275·Osativa6172276(180G/24h/DuckDB48GB), Bdistachyon6172277·Ppatens6172278·Ptrichocarpa6172279·Sbicolor6172280(64G/12h/24GB), 8CPU. Gmax 메타데이터는 `metadata_est_clone_display_fix/Gmax`. 출력 `c0/<sp>_est_v1/out/`.
+- **Vvinifera EST C0 보류:** library 누락175records 저자결정 전에는 메타데이터 없음.
+- **PacBio C0 3종** ([pacbio_c0.sbatch](pacbio_c0.sbatch) sha256 `8f3868bb…34f0`, 뷰 [pacbio_c0_views.txt](pacbio_c0_views.txt)): training49런 전부 metadata/primary/audit 준비([pacbio_c0_readiness.txt](pacbio_c0_readiness.txt)). Vvinifera6172281(9런, 2.46M reads, 2d)·Ptrichocarpa6172282(6런, 9.85M, 4d)·Sbicolor6172283(34런, 25.09M, 7d), 16CPU/200G/DuckDB64GB. 시간은 Sitalica 처리량으로 추정했고 실측 전이다.
+- **범위 밖:** Athaliana6·Zmays15 PacBio는 b1_validation_only이고 정렬·메타데이터가 없다. training C0에 넣지 않았다.
+- **ONT C0 보류:** UMI 값 저자결정 대기(보고서 no_UMI5/unresolved120 vs TSV absent125). ONT 메타데이터 미생성.
+- **protein C0(route-B) 대기:** 종별 EST C0 완료 후 `--hsp`(b6_hsp_project.py)·`--est-c0`·`--lineage`가 필요하다.
+
 ## Sitalica C0 DB 독립검증: 2026-09-25 15:53 PDT
 
 - 읽기 전용 확인만 수행했다. 원문 출력은 [sitalica_c0_db_verify.txt](sitalica_c0_db_verify.txt)에 있다.

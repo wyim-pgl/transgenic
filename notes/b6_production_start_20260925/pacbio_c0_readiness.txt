@@ -1,0 +1,22 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+SP Athaliana {'b1_validation_only': 6} NOT_READY 6
+    ('Athaliana_zhang2023_PRJNA911826', 'SRR22719002', 'b1_validation_only', ['meta', 'primary'])
+    ('Athaliana_zhang2023_PRJNA911826', 'SRR22719003', 'b1_validation_only', ['meta', 'primary'])
+    ('Athaliana_zhang2023_PRJNA911826', 'SRR22719004', 'b1_validation_only', ['meta', 'primary'])
+    ('Athaliana_zhang2023_PRJNA911826', 'SRR22719005', 'b1_validation_only', ['meta', 'primary'])
+    ('Athaliana_zhang2023_PRJNA911826', 'SRR22719006', 'b1_validation_only', ['meta', 'primary'])
+    ('Athaliana_zhang2023_PRJNA911826', 'SRR22719007', 'b1_validation_only', ['meta', 'primary'])
+SP Ptrichocarpa {'c2_training_eligible': 6} NOT_READY 0
+SP Sbicolor {'c2_training_eligible': 34} NOT_READY 0
+SP Vvinifera {'c2_training_eligible': 9} NOT_READY 0
+SP Zmays {'b1_validation_only': 15} NOT_READY 15
+    ('Zmays_B73_ccs_PRJNA1470126', 'SRR38818769', 'b1_validation_only', ['meta', 'primary'])
+    ('Zmays_B73_ccs_PRJNA1470126', 'SRR38818770', 'b1_validation_only', ['meta', 'primary'])
+    ('Zmays_B73_ccs_PRJNA1470126', 'SRR38818771', 'b1_validation_only', ['meta', 'primary'])
+    ('Zmays_kinnex_hybrid_PRJNA1290227', 'SRR34503567', 'b1_validation_only', ['meta', 'primary'])
+    ('Zmays_kinnex_hybrid_PRJNA1290227', 'SRR34503568', 'b1_validation_only', ['meta', 'primary'])
+    ('Zmays_kinnex_hybrid_PRJNA1290227', 'SRR34503569', 'b1_validation_only', ['meta', 'primary'])
+    ('Zmays_kinnex_hybrid_PRJNA1290227', 'SRR34503570', 'b1_validation_only', ['meta', 'primary'])
+    ('Zmays_wang2018_PRJEB22122', 'ERR2093901', 'b1_validation_only', ['meta', 'primary'])
