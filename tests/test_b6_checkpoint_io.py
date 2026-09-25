@@ -2,6 +2,7 @@
 from datetime import timedelta
 import json
 import os
+import socket
 from pathlib import Path
 from unittest.mock import patch
 
@@ -9,9 +10,6 @@ import pytest
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
-
-from tests.test_b6_ddp import _free_port
-
 
 def _worker(rank, port, root, failure):
     os.environ.update(MASTER_ADDR="127.0.0.1", MASTER_PORT=str(port), RANK=str(rank),
@@ -24,9 +22,15 @@ def _worker(rank, port, root, failure):
     assert device in ("cpu", "cuda")
     if device == "cuda":
         assert torch.cuda.is_available() and torch.cuda.device_count() == 2
+        torch.cuda.set_device(rank)
+    backend = "gloo" if device == "cpu" else "nccl"
+    # Initialize once using this test's unique shared file; Accelerator reuses the group.
+    # Finding then releasing a TCP port races other jobs between spawn and TCPStore bind.
+    dist.init_process_group(backend, init_method=(Path(root) / "rendezvous").resolve().as_uri(),
+                            rank=rank, world_size=2, timeout=timedelta(seconds=30))
     acc = Accelerator(cpu=device == "cpu", mixed_precision="no", kwargs_handlers=[
         DistributedDataParallelKwargs(find_unused_parameters=True),
-        InitProcessGroupKwargs(backend="gloo" if device == "cpu" else "nccl", timeout=timedelta(seconds=30))])
+        InitProcessGroupKwargs(backend=backend, timeout=timedelta(seconds=30))])
     assert acc.num_processes == dist.get_world_size() == 2
     assert acc.process_index == rank
     fixture = TrainerBase()
@@ -77,8 +81,13 @@ def _worker(rank, port, root, failure):
 
 @pytest.mark.parametrize("failure", ["weights", "state", "grads", "latest_state", "publish", "identity", "preserve_step"])
 def test_checkpoint_failure_reaches_all_ranks_without_publication(tmp_path, failure):
-    mp.start_processes(_worker, args=(_free_port(), str(tmp_path), failure), nprocs=2,
-                       join=True, start_method="spawn")
+    # Deliberately occupy MASTER_PORT: the workers must not depend on a free TCP rendezvous port.
+    with socket.socket() as occupied:
+        occupied.bind(("127.0.0.1", 0))
+        occupied.listen()
+        port = occupied.getsockname()[1]
+        mp.start_processes(_worker, args=(port, str(tmp_path), failure), nprocs=2,
+                           join=True, start_method="spawn")
     records = [json.loads((tmp_path / f"rank{rank}.json").read_text()) for rank in (0, 1)]
     expected = "refusing to replace published step checkpoint" if failure == "preserve_step" else "injected EDQUOT " + failure
     for record in records:
