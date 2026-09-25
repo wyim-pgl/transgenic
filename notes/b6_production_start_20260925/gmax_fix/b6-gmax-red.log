@@ -1,0 +1,25 @@
+F....                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_ncbi_fasta_clone_display_keeps_authoritative_clone[AGTT_Gm-r1030-2842] __
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1666/test_ncbi_fasta_clone_display_0')
+display_clone = 'AGTT_Gm-r1030-2842'
+
+    @pytest.mark.parametrize('display_clone', ['AGTT_Gm-r1030-2842', 'AGTT>Gm-r1030-2842'])
+    def test_ncbi_fasta_clone_display_keeps_authoritative_clone(tmp_path, display_clone):
+        clone = 'AGTT>Gm-r1030-2842'
+        meta = ('accession_version\tclone_lib\tclone\tbiosample\n'
+                'DN591027.1\tSAMN00158301 Gm-r1030\t' + clone + '\tSAMN00158301\n')
+        screened = '>DN591027.1 cDNA clone ' + display_clone + " 5', mRNA sequence univec=keep:1-100/100\n" + 'A' * 100 + '\n'
+>       assert CM.main(_est_meta(tmp_path, meta=meta, screened=screened) + ['--bioproject', 'NCBI_EST:txid3847']) == 0
+E       assert 1 == 0
+E        +  where 1 = <function main at 0x71280d2b9da0>((['--source', 'est', '--species', 'Athaliana', '--roles', '/tmp/pytest-of-wyim/pytest-1666/test_ncbi_fasta_clone_display_0/roles_est.tsv', ...] + ['--bioproject', 'NCBI_EST:txid3847']))
+E        +    where <function main at 0x71280d2b9da0> = CM.main
+E        +    and   ['--source', 'est', '--species', 'Athaliana', '--roles', '/tmp/pytest-of-wyim/pytest-1666/test_ncbi_fasta_clone_display_0/roles_est.tsv', ...] = _est_meta(PosixPath('/tmp/pytest-of-wyim/pytest-1666/test_ncbi_fasta_clone_display_0'), meta='accession_version\tclone_lib\tclone\tbiosample\nDN591027.1\tSAMN00158301 Gm-r1030\tAGTT>Gm-r1030-2842\tSAMN00158301\n', screened=">DN591027.1 cDNA clone AGTT_Gm-r1030-2842 5', mRNA sequence univec=keep:1-100/100\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n")
+
+tests/test_b6_c0_metadata.py:271: AssertionError
+----------------------------- Captured stderr call -----------------------------
+b6_c0_metadata failed: DN591027.1: FASTA header 'cDNA clone AGTT_Gm-r1030-2842 5', mRNA sequence univec=keep:1-100/100' disagrees with the recorded clone 'AGTT>Gm-r1030-2842'
+=========================== short test summary info ============================
+FAILED tests/test_b6_c0_metadata.py::test_ncbi_fasta_clone_display_keeps_authoritative_clone[AGTT_Gm-r1030-2842]
+1 failed, 4 passed, 14 deselected in 0.26s

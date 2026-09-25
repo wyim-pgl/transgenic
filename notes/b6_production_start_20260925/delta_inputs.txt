@@ -1,0 +1,29 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+DIR /work/nvme/bilv/wcyim/transgenic/db
+total 22G
+drwxr-xr-x+  2 wcyim delta_bilv 4.0K Sep  7 21:04 .
+drwxr-xr-x+ 24 wcyim delta_bilv 4.0K Sep 25 01:48 ..
+-rw-r--r--+  1 wcyim grp_202     22G Sep  6 02:12 b5_full_a40_v1.db
+-rw-r--r--+  1 wcyim grp_202     12K Sep  7 20:56 rsync_a40_20260907.log
+-rw-r--r--+  1 wcyim grp_202    9.7K Sep  4 13:21 rsync_db.log
+DIR /work/nvme/bilv/wcyim/transgenic/evidence
+total 8.0K
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  4 13:18 .
+drwxr-xr-x+ 24 wcyim delta_bilv 4.0K Sep 25 01:48 ..
+DIR /work/nvme/bilv/wcyim/transgenic/freeze
+total 256K
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  7 20:54 .
+drwxr-xr-x+ 24 wcyim delta_bilv 4.0K Sep 25 01:48 ..
+-rw-r--r--+  1 wcyim grp_202    221K Sep  7 20:54 b5_full_a40_v1.freeze.json
+-rw-r--r--+  1 wcyim grp_202    6.5K Sep  3 03:45 b5_full_v1.freeze.json
+-rw-r--r--+  1 wcyim grp_202    9.2K Sep  3 03:04 b5_full_v1.report.json
+-rw-r--r--+  1 wcyim grp_202     353 Sep  3 03:04 b5_full_v1.validate.json
+DIR /work/nvme/bilv/wcyim/transgenic/manifests
+total 80K
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  4 13:18 .
+drwxr-xr-x+ 24 wcyim delta_bilv 4.0K Sep 25 01:48 ..
+-rw-r--r--+  1 wcyim grp_202    2.5K Sep  2 01:48 b5_species_v1.tsv
+-rw-r--r--+  1 wcyim grp_202    3.2K Sep  3 15:23 DATASET_ROLES.est_v1.tsv
+-rw-r--r--+  1 wcyim grp_202     62K Sep  4 15:27 DATASET_ROLES.longread_v1.tsv

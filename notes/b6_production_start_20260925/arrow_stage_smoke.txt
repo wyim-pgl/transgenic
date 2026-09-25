@@ -1,0 +1,5 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+VERSIONS 1.5.5 25.0.1
+ARROW_DUCKDB_STAGE_SMOKE_PASS

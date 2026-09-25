@@ -1,0 +1,15 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+/data/gpfs/home/wyim/b6-production-source-3511a5a.tar.gz: OK
+Athaliana 3702 1529700 1529700
+Bdistachyon 15368 206255 206255
+Gmax 3847 1461724 1461724
+Osativa 4530 1255251 1255251
+Ppatens 3218 382587 382587
+Ptrichocarpa 3694 89943 89943
+Sbicolor 4558 209835 209835
+Sitalica 4555 66027 66027
+Vvinifera 29760 446853 451578
+Filesystem      Size  Used Avail Use% Mounted on
+pronghorn-0      60T   36T   25T  59% /data/gpfs

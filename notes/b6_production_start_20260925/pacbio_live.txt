@@ -1,0 +1,10 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-25T14:32:25-0700
+6172167_[11-48%2]|b6_pb_meta|PENDING|0:00|(JobArrayTaskLimit)
+6172167_10|b6_pb_meta|RUNNING|0:02|cpu-48
+6172167_9|b6_pb_meta|RUNNING|0:08|cpu-48
+      9 COMPLETED|0:0
+      1 PENDING|0:0
+      2 RUNNING|0:0

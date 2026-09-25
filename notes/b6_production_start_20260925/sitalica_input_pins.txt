@@ -1,0 +1,7 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+MANIFEST {"species_id": "Sitalica", "fasta": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Sitalica_312_v2.fa", "fasta_sha256": "e95c37173f26fbf8aa51723a2bf18f1bf6e1ce44129f42a57ebb904595f31ac1", "gff": "/home/pgl/scratch1/wyim/transgenic_data/genomes_src/genomes/Sitalica_312_v2.2.gene_exons.clean.gff3", "gff_sha256": "c2d0d0643bd98537d94c8f34c6c1602c500f90843f88ceb3ae1ea06e4c6c484c", "split_file_sha256": "904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7", "duckdb_version": "1.5.5"}
+PIN /data/gpfs/assoc/pgl/data/Transgenic/training_input/genomes/Sitalica_312_v2.fa e95c37173f26fbf8aa51723a2bf18f1bf6e1ce44129f42a57ebb904595f31ac1 MATCH True
+PIN /data/gpfs/assoc/pgl/data/Transgenic/genomes/Sitalica_312_v2.2.gene_exons.clean.gff3 c2d0d0643bd98537d94c8f34c6c1602c500f90843f88ceb3ae1ea06e4c6c484c MATCH True
+PIN /data/gpfs/assoc/pgl/data/Transgenic/training_input/splits/b5_orthogroup_split_v1.tsv 904c62654ffb68cf811b281be883fe7060398ed296757c98b77a1577794c8cd7 MATCH True

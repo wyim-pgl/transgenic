@@ -1,0 +1,33 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+run            SRR35145693
+species        Ptrichocarpa
+dataset        training/pacbio/Ptrichocarpa/jgi_F1hybrid_PRJNA709498
+role           c2_training_eligible   (by run identity in DATASET_ROLES.longread_v1.tsv, md5 e07dc77124bff2a79a0c2ad09b6545a1)
+reads          /data/gpfs/assoc/pgl/data/Transgenic/evidence/training/pacbio/Ptrichocarpa/jgi_F1hybrid_PRJNA709498/SRR35145693.fa.gz
+reads_md5      0f4cdcb74d84f048739f0f20e2e34d39
+reference      /data/gpfs/assoc/pgl/data/Transgenic/genomes/Ptrichocarpa_533_v4.0.fa
+reference_md5  20c6f4bb6f8b52887a2a08addedac6ea
+uf             none   (PacBio: no §3.3 audit, never -uf; A47.3 rule 3)
+product        A14 (Sequel II/IIe Iso-Seq); issue #60 reversed 2026-09-22 (author decision "원시 CCS 40런을 학습에 쓴다"): raw Iso-Seq CCS, not subreads -- primers on both ends, poly(A
+minimap2       2.28-r1209
+samtools       samtools 1.3.1
+command        minimap2 -t 32 -ax splice:hq -G 200000 --secondary=no --cs=long /data/gpfs/assoc/pgl/data/Transgenic/genomes/Ptrichocarpa_533_v4.0.fa /data/gpfs/assoc/pgl/data/Transgenic/evidence/training/pacbio/Ptrichocarpa/jgi_F1hybrid_PRJNA709498/SRR35145693.fa.gz
+started        2026-09-22T14:04:00-0700
+finished       2026-09-22T14:33:16-0700
+wall_seconds   1756
+bam            /data/gpfs/assoc/pgl/data/Transgenic/evidence/longread_align_v1/Ptrichocarpa/jgi_F1hybrid_PRJNA709498/SRR35145693/SRR35145693.bam
+bam_md5        3a493b9bc5fac3eaa83753cd8924f25a
+paf            /data/gpfs/assoc/pgl/data/Transgenic/evidence/longread_align_v1/Ptrichocarpa/jgi_F1hybrid_PRJNA709498/SRR35145693/SRR35145693.paf.gz
+paf_md5        9c08fc403b78d19092e843728bd563c1
+contig_alias   /data/gpfs/assoc/pgl/data/Transgenic/evidence/longread_align_v1/Ptrichocarpa/jgi_F1hybrid_PRJNA709498/SRR35145693/contig_alias.tsv
+slurm_job      6170399_0 on cpu-50
+
+DONE key=0f4cdcb74d84f048739f0f20e2e34d39:20c6f4bb6f8b52887a2a08addedac6ea:splice_hq
+run=SRR35145693
+preset=splice:hq
+bam_md5=3a493b9bc5fac3eaa83753cd8924f25a
+paf_md5=9c08fc403b78d19092e843728bd563c1
+completed=2026-09-22T14:33:27-0700
+

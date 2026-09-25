@@ -1,0 +1,12 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+Athaliana count 1529700 records 1529700 match True
+Bdistachyon count 206255 records 206255 match True
+Gmax count 1461724 records 1461724 match True
+Osativa count 1255251 records 1255251 match True
+Ppatens count 382587 records 382587 match True
+Ptrichocarpa count 89943 records 89943 match True
+Sbicolor count 209835 records 209835 match True
+Sitalica count 66027 records 66027 match True
+Vvinifera count 446853 records 446853 match True

@@ -1,0 +1,8 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+6172220|FAILED|1:0
+SBATCH_RC=0
+SITALICA_ARROW_RETRY_RESULT 6172228
+
+SITALICA_ARROW_RETRY_ERROR 

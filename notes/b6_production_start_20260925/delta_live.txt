@@ -1,0 +1,67 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-25T15:47:08-05:00
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1022              1499  leakage-controlled ...
+3149359 b5-seed PENDING 11:00:00 gres/gpu:4 /work/nvme/bilv/wcyim/transgenic/repo_dev
+3149363 b5-seed PENDING 11:00:00 gres/gpu:4 /work/nvme/bilv/wcyim/transgenic/repo_dev
+3149362 b5-seed PENDING 11:00:00 gres/gpu:4 /work/nvme/bilv/wcyim/transgenic/repo_dev
+3149361 b5-seed PENDING 11:00:00 gres/gpu:4 /work/nvme/bilv/wcyim/transgenic/repo_dev
+3149360 b5-seed PENDING 11:00:00 gres/gpu:4 /work/nvme/bilv/wcyim/transgenic/repo_dev
+Disk quotas for prj 22169 (pid 22169):
+      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace
+ /work/nvme/bilv 421531876  524288000 576716800       -   18876        0       0       -
+Disk quotas for prj 22169 (pid 22169):
+      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace
+  /work/hdd/bilv 231525840  1048576000 1153433600       -   18876        0       0       -
+total 128K
+drwxr-xr-x+ 24 wcyim delta_bilv 4.0K Sep 25 01:48 .
+drwxrws---+  5 wcyim delta_bilv 4.0K Sep 24 22:41 ..
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  4 13:18 configs
+drwxr-xr-x+  2 wcyim delta_bilv 4.0K Sep  7 21:04 db
+drwxrwx---+  3 wcyim grp_202    4.0K Sep 24 21:47 diagnostics
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  4 13:18 evidence
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  7 20:54 freeze
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  7 21:10 genomes
+drwxr-x---+  3 wcyim grp_202    4.0K Sep 25 01:48 hdd
+drwxrws---+  3 wcyim delta_bilv 4.0K Sep  8 17:30 hf
+-rwxr-xr-x+  1 wcyim grp_202    6.4K Sep  7 21:14 make_manifest.sh
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  4 13:18 manifests
+-rw-r--r--+  1 wcyim grp_202    8.9K Sep  7 21:15 MANIFEST.tsv
+drwxrwx---+  6 wcyim grp_202    4.0K Sep 23 03:56 mvp_est8_20260916_1545
+drwxr-x---+  3 wcyim grp_202    4.0K Sep  8 17:02 nvme
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  4 13:18 protein
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  4 13:18 qc
+-rw-r--r--+  1 wcyim grp_202    2.6K Sep  4 15:28 README.md
+drwxrwx---+ 19 wcyim grp_202    4.0K Sep  9 02:56 repo
+drwxrwx---+ 19 wcyim grp_202    4.0K Sep 24 17:46 repo_b6
+drwxrwx---+ 20 wcyim grp_202    4.0K Sep 24 19:33 repo_b6_cachefix_20260924
+drwxrwx---+ 20 wcyim grp_202    4.0K Sep 24 21:17 repo_b6_devicefix_20260924
+drwxrwx---+ 20 wcyim grp_202    4.0K Sep 25 00:25 repo_b6_unsplit_20260924
+drwxrwx---+ 18 wcyim grp_202    4.0K Sep 22 18:32 repo_dev
+drwxrwx---+ 19 wcyim grp_202    4.0K Sep 10 10:40 repo_seeds
+drwxrws---+ 44 wcyim delta_bilv  12K Sep 25 14:54 runs
+drwxr-xr-x+  2 wcyim grp_202    4.0K Sep  4 13:18 splits
+total 112K
+drwxrws---+  7 wcyim delta_bilv 4.0K Sep 25 14:55 .
+drwxrws---+  3 wcyim delta_bilv 4.0K Sep 25 00:51 ..
+drwxrws---+  3 wcyim delta_bilv 4.0K Sep 25 14:19 archives
+-rwx------+  1 wcyim delta_bilv 9.3K Sep 25 14:52 b6_archive_cleanup_20260925.py
+-rw-------+  1 wcyim delta_bilv 5.1K Sep 25 01:36 b6_filestore_test.py
+-rw-------+  1 wcyim delta_bilv  26K Sep 25 00:52 b6-io-fix-20260924.tar.gz
+-rw-------+  1 wcyim delta_bilv  22K Sep 25 01:04 b6-source-io.sha256
+drwxrws---+  2 wcyim delta_bilv 4.0K Sep 25 14:55 __pycache__
+drwx--S---+ 20 wcyim delta_bilv 4.0K Sep 25 02:44 repo_b6_filestore_20260924
+drwx--S---+ 20 wcyim delta_bilv 4.0K Sep 25 01:10 repo_b6_io_20260924
+-rwx------+  1 wcyim delta_bilv  955 Sep 25 01:04 run_hdd_cp4.sh
+drwxrws---+  3 wcyim delta_bilv 4.0K Sep 25 00:51 runs
+-rw-------+  1 wcyim delta_bilv 4.5K Sep 25 01:04 test_b6_checkpoint_io.py
+JobId=3149359 JobName=b5-seed UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=1713 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Priority Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=11:00:00 TimeMin=N/A SubmitTime=2026-09-14T09:04:18 EligibleTime=2026-09-23T05:20:23 AccrueTime=2026-09-23T05:20:23 StartTime=2026-09-25T19:02:55 EndTime=2026-09-26T06:02:55 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-25T15:47:00 Scheduler=Backfill:* Partition=ghx4 AllocNode:Sid=gh-login03:4039817 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= SchedNodeList=gh076 NumNodes=1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/repo_seeds/deploy/deltaai/train_b5.slurm SubmitLine=sbatch --gpus-per-node=4 --cpus-per-task=64 --exclude=gh062,gh093 --comment=seed123 --time=11:00:00 --dependency=afterany:3149358 --export=ALL,SEED=123,GPUS=4,CHAIN_N=7,CHAIN_MAX=11,CHAIN_PRESUBMITTED=1,LAUNCH_RETRY=0 /work/nvme/bilv/wcyim/transgenic/repo_seeds/deploy/deltaai/train_b5.slurm WorkDir=/work/nvme/bilv/wcyim/transgenic/repo_dev Comment=seed123 StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/repo_dev/b5-seed-3149359.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64
+JobId=3149360 JobName=b5-seed UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=713 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Dependency Dependency=afterany:3149359(unfulfilled) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=11:00:00 TimeMin=N/A SubmitTime=2026-09-14T09:04:18 EligibleTime=Unknown AccrueTime=Unknown StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-14T09:04:18 Scheduler=Main Partition=ghx4 AllocNode:Sid=gh-login03:4039817 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/repo_seeds/deploy/deltaai/train_b5.slurm SubmitLine=sbatch --gpus-per-node=4 --cpus-per-task=64 --exclude=gh062,gh093 --comment=seed123 --time=11:00:00 --dependency=afterany:3149359 --export=ALL,SEED=123,GPUS=4,CHAIN_N=8,CHAIN_MAX=11,CHAIN_PRESUBMITTED=1,LAUNCH_RETRY=0 /work/nvme/bilv/wcyim/transgenic/repo_seeds/deploy/deltaai/train_b5.slurm WorkDir=/work/nvme/bilv/wcyim/transgenic/repo_dev Comment=seed123 StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/repo_dev/b5-seed-3149360.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64
+JobId=3149361 JobName=b5-seed UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=713 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Dependency Dependency=afterany:3149360(unfulfilled) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=11:00:00 TimeMin=N/A SubmitTime=2026-09-14T09:04:18 EligibleTime=Unknown AccrueTime=Unknown StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-14T09:04:18 Scheduler=Main Partition=ghx4 AllocNode:Sid=gh-login03:4039817 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/repo_seeds/deploy/deltaai/train_b5.slurm SubmitLine=sbatch --gpus-per-node=4 --cpus-per-task=64 --exclude=gh062,gh093 --comment=seed123 --time=11:00:00 --dependency=afterany:3149360 --export=ALL,SEED=123,GPUS=4,CHAIN_N=9,CHAIN_MAX=11,CHAIN_PRESUBMITTED=1,LAUNCH_RETRY=0 /work/nvme/bilv/wcyim/transgenic/repo_seeds/deploy/deltaai/train_b5.slurm WorkDir=/work/nvme/bilv/wcyim/transgenic/repo_dev Comment=seed123 StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/repo_dev/b5-seed-3149361.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64
+JobId=3149362 JobName=b5-seed UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=713 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Dependency Dependency=afterany:3149361(unfulfilled) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=11:00:00 TimeMin=N/A SubmitTime=2026-09-14T09:04:18 EligibleTime=Unknown AccrueTime=Unknown StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-14T09:04:18 Scheduler=Main Partition=ghx4 AllocNode:Sid=gh-login03:4039817 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/repo_seeds/deploy/deltaai/train_b5.slurm SubmitLine=sbatch --gpus-per-node=4 --cpus-per-task=64 --exclude=gh062,gh093 --comment=seed123 --time=11:00:00 --dependency=afterany:3149361 --export=ALL,SEED=123,GPUS=4,CHAIN_N=10,CHAIN_MAX=11,CHAIN_PRESUBMITTED=1,LAUNCH_RETRY=0 /work/nvme/bilv/wcyim/transgenic/repo_seeds/deploy/deltaai/train_b5.slurm WorkDir=/work/nvme/bilv/wcyim/transgenic/repo_dev Comment=seed123 StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/repo_dev/b5-seed-3149362.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64
+JobId=3149363 JobName=b5-seed UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=713 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Dependency Dependency=afterany:3149362(unfulfilled) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=11:00:00 TimeMin=N/A SubmitTime=2026-09-14T09:04:18 EligibleTime=Unknown AccrueTime=Unknown StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-14T09:04:18 Scheduler=Main Partition=ghx4 AllocNode:Sid=gh-login03:4039817 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/repo_seeds/deploy/deltaai/train_b5.slurm SubmitLine=sbatch --gpus-per-node=4 --cpus-per-task=64 --exclude=gh062,gh093 --comment=seed123 --time=11:00:00 --dependency=afterany:3149362 --export=ALL,SEED=123,GPUS=4,CHAIN_N=11,CHAIN_MAX=11,CHAIN_PRESUBMITTED=1,LAUNCH_RETRY=0 /work/nvme/bilv/wcyim/transgenic/repo_seeds/deploy/deltaai/train_b5.slurm WorkDir=/work/nvme/bilv/wcyim/transgenic/repo_dev Comment=seed123 StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/repo_dev/b5-seed-3149363.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64

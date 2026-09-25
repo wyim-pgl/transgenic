@@ -1,0 +1,11 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+Collecting duckdb==1.5.5
+  Using cached duckdb-1.5.5-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (4.2 kB)
+Using cached duckdb-1.5.5-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (21.5 MB)
+Installing collected packages: duckdb
+Successfully installed duckdb-1.5.5
+RUNTIME 3.11.14 | packaged by conda-forge | (main, Oct 13 2025, 14:09:32) [GCC 14.3.0] 1.5.5
+MANIFEST_SCHEMA [('species_id', 'VARCHAR', 'YES', None, None, None), ('fasta', 'VARCHAR', 'YES', None, None, None), ('fasta_sha256', 'VARCHAR', 'YES', None, None, None), ('gff', 'VARCHAR', 'YES', None, None, None), ('gff_sha256', 'VARCHAR', 'YES', None, None, None), ('split_file_sha256', 'VARCHAR', 'YES', None, None, None), ('rc_mode', 'VARCHAR', 'YES', None, None, None), ('rows_inserted', 'INTEGER', 'YES', None, None, None), ('rows_rc', 'INTEGER', 'YES', None, None, None), ('rejected', 'INTEGER', 'YES', None, None, None), ('rejected_reasons', 'VARCHAR', 'YES', None, None, None), ('build_version', 'VARCHAR', 'YES', None, None, None), ('ordering_version', 'VARCHAR', 'YES', None, None, None), ('window_policy', 'VARCHAR', 'YES', None, None, None), ('git_commit', 'VARCHAR', 'YES', None, None, None), ('built_at', 'VARCHAR', 'YES', None, None, None), ('duckdb_version', 'VARCHAR', 'YES', None, None, None), ('tier_margin_unguaranteed', 'VARCHAR', 'YES', None, None, None)]
+MANIFEST_RECORD_COUNT (9,)

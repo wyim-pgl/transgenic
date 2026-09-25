@@ -1,0 +1,34 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+3.11.14 | packaged by conda-forge | (main, Oct 22 2025, 22:46:25) [GCC 14.3.0]
+EXCLUDED_AUDIT SRR12822922 excluded
+EXCLUDED_AUDIT SRR12822923 excluded
+EXCLUDED_AUDIT SRR12881185 excluded
+META_PROVENANCE {
+ "batch": 5000,
+ "control_chars_replaced": 0,
+ "count": 66027,
+ "db": "nuccore",
+ "esummary_version": "2.0",
+ "finished": "2026-09-23T18:09:35-07:00",
+ "label": "Sitalica",
+ "output": "est_esummary.tsv",
+ "output_sha256": "3c33055d67c8ac134aee97389c179bca24a7cbd2e0f23c9e25e4c493b5512342",
+ "records": 66027,
+ "script_sha256": "75c1c6f60442e7ac431629aaf150732cee4f28990b6267fcf983ba395077d4c5",
+ "short_batches": 0,
+ "started": "2026-09-23T18:01:12-07:00",
+ "taxid": 4555,
+ "term": "txid4555[Organism] AND gbdiv_est[PROP]",
+ "with_clone": 65383,
+ "with_clone_lib": 66027
+}
+
+cpu-s1-pgl-0 up 14-00:00:00
+cpu-s2-core-0 up 14-00:00:00
+cpu-core-0 up 14-00:00:00
+gpu-s2-core-0 up 14-00:00:00
+gpu-core-0 up 14-00:00:00
+cpu-s3-sponsored-0* up 8:00:00
+cpu-s6-test-0 up 15:00

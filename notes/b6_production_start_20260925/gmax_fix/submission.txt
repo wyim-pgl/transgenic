@@ -1,0 +1,8 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+/data/gpfs/home/wyim/b6-metadata-clone-fix.tar.gz: OK
+SBATCH_RC=0
+GMAX_METADATA_SUBMISSION_RESULT 6172217
+
+GMAX_METADATA_SUBMISSION_ERROR 
