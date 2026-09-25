@@ -280,6 +280,24 @@ def test_ncbi_clone_display_still_refuses_wrong_identity(display_clone):
         CM.check_header_clone('DN591027.1', 'cDNA clone ' + display_clone + ' 5-prime', 'AGTT>Gm-r1030-2842')
 
 
+def test_missing_library_fills_only_records_without_clone_lib(tmp_path, capsys):
+    # author decision 2026-09-25: the Vvinifera records with no /clone_lib take the library 'NCBI-EST'
+    no_lib = ESUMMARY.replace("CF404622.1\tSAMN00739408 Vitis vinifera cv. Pinot Noir PN40024 leaves cDNA library\t",
+                              "CF404622.1\t\t")
+    assert CM.main(_est_meta(tmp_path, meta=no_lib) + ["--bioproject", "P", "--missing-library", "NCBI-EST"]) == 0
+    rows = _read(tmp_path / "c0_metadata.tsv")
+    lib = "SAMN00739408 Vitis vinifera cv. Pinot Noir PN40024 leaves cDNA library"
+    assert [(r["read"], r["library"]) for r in rows[1:]] == [("CF404621.1", lib), ("CF404622.1_part1", "NCBI-EST")]
+    prov = __import__("json").loads((tmp_path / "c0_metadata.tsv.PROVENANCE.json").read_text())
+    assert prov["missing_library"] == "NCBI-EST" and prov["missing_library_records"] == 1
+
+
+def test_missing_library_refuses_blank_or_unknown_value(tmp_path, capsys):
+    for bad in (" ", "unknown"):
+        assert CM.main(_est_meta(tmp_path) + ["--bioproject", "P", "--missing-library", bad]) == 1
+        assert "--missing-library" in capsys.readouterr().err
+
+
 def test_est_meta_fails_closed(tmp_path, capsys):
     assert CM.main(_est_meta(tmp_path)) == 1                                       # no BioProject in esummary
     assert "--est-meta needs --bioproject" in capsys.readouterr().err

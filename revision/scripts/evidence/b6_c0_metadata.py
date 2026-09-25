@@ -288,6 +288,10 @@ def est_rows(args):
         base = PART.fullmatch(name)[1] if PART.fullmatch(name) else name
         require(base in gb, f"{name}: accession {base} has no {source} record (library/clone unknown)")
         lib, clone, bp = gb[base]
+        if not lib and args.missing_library:
+            # author decision 2026-09-25: records with no /clone_lib take one explicit library (Vvinifera 'NCBI-EST')
+            lib = args.missing_library
+            args.missing_library_records += 1
         require(lib, f"{name}: {source} {base} has no /clone_lib qualifier; the library cannot be established")
         require(bp or args.bioproject, f"{name}: {source} {base} has no BioProject DBLINK and no --bioproject was given")
         check_header_clone(name, rest, clone)
@@ -382,9 +386,16 @@ def main(argv=None):
     ap.add_argument("--protocol", choices=("cDNA", "direct_RNA", "unresolved"))
     ap.add_argument("--umi-status", choices=("present", "absent", "unresolved"))
     ap.add_argument("--bioproject")
+    ap.add_argument("--missing-library", help="EST: the library given to records with no /clone_lib (an explicit "
+                                              "author value, recorded in provenance with its record count)")
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
+    args.missing_library_records = 0
     try:
+        if args.missing_library is not None:
+            value = args.missing_library.strip()
+            require(args.source == "est" and value and value != "unknown" and value == args.missing_library,
+                    f"--missing-library {args.missing_library!r} must be a non-blank EST library value other than 'unknown'")
         if args.source == "est":
             require(args.screened and (bool(args.genbank) != bool(args.est_meta)),
                     "--source est needs --screened and exactly one of --genbank / --est-meta")
@@ -400,6 +411,11 @@ def main(argv=None):
             prov["library"] = longread_library(args)      # validated before any file is written; = the '*' row value
         if args.source == "est" and args.est_meta:
             prov["est_meta_sha256"] = verify_sha256_sidecar(args.est_meta)
+        if args.missing_library is not None:
+            def counted(it):        # the count is known only once every record is read; write() dumps after that
+                yield from it
+                prov["missing_library_records"] = args.missing_library_records
+            rows = counted(rows)
         result = write(rows, args.out, prov)
     except (MetadataError, FileExistsError, OSError, KeyError) as exc:
         print(f"b6_c0_metadata failed: {exc}", file=sys.stderr)
