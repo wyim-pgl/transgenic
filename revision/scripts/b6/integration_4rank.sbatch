@@ -34,7 +34,11 @@ case "$GPUS" in 1|2|4) ;; *) echo "REFUSED: $GPUS GPUs; tests run on 1-2 GPUs (A
 echo "repo: $REPO_DIR @ $(git -C "$REPO_DIR" log --oneline -1 | cut -c1-70)  image: $SIF"
 export CUBLAS_WORKSPACE_CONFIG=:4096:8 TRITON_LIBCUDA_PATH=/.singularity.d/libs HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 NCCL_DEBUG=WARN OMP_NUM_THREADS=8
 unset TRANSGENIC_NO_COMPILE TRANSGENIC_NO_GRAD_CKPT TRANSGENIC_CKPT_REENTRANT
-OUT=/work/runs/b6_int4/run_$SLURM_JOB_ID
+RESULTS_DIR=${B6_RESULTS_DIR:-$WORK/runs/b6_int4}
+mkdir -p "$RESULTS_DIR"
+# df free space does not measure the allocation's Lustre pool quota.
+python3 "$REPO_DIR/revision/scripts/b6/storage_preflight.py" "$RESULTS_DIR"
+OUT=/b6-results/run_$SLURM_JOB_ID
 for _g in $(seq 0 $((GPUS - 1))); do
   CUDA_VISIBLE_DEVICES=$_g apptainer exec --nv "$SIF" python -c "import torch; torch.ones(1).cuda(); torch.cuda.synchronize()" \
     || echo "gpu warm-up failed on device $_g; the test follows anyway"
@@ -50,12 +54,12 @@ case $DATA in
   *) echo "REFUSED: DATA=$DATA (synthetic|wp3-fixtures)" >&2; exit 3;;
 esac
 RC=0
-apptainer exec --nv --writable-tmpfs --bind "$WORK":/work --bind "$REPO_DIR":/work/repo "$SIF" bash -lc "
+apptainer exec --nv --writable-tmpfs --bind "$WORK":/work --bind "$REPO_DIR":/work/repo --bind "$RESULTS_DIR":/b6-results "$SIF" bash -lc "
   cd /work/repo && export PYTHONPATH=/work/repo/src HF_HOME=/work/repo/HFmodels && mkdir -p $OUT &&
   accelerate launch --num_processes=$GPUS --mixed_precision=bf16 revision/scripts/b6/integration_4rank.py \
     --model real --config configs/b6_400m_win_v3.json $DATA_ARGS --backend inductor --mixed-precision bf16 \
     --gen-tokens 12 --out $OUT
 " || RC=$?
-case $RC in 0) echo "B6 4-rank integration: PASS ($WORK/runs/b6_int4/run_$SLURM_JOB_ID/report.json)";;
+case $RC in 0) echo "B6 integration: PASS ($RESULTS_DIR/run_$SLURM_JOB_ID/report.json)";;
   2) echo "B6 4-rank integration: FAIL (see report.json)";; 4) echo "B6 4-rank integration: REFUSED counts";; *) echo "B6 4-rank integration: ERROR rc=$RC";; esac
 exit $RC

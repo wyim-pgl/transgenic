@@ -208,78 +208,80 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
         if pending_micro and rt.load_pending_grads(_unwrap(acc, model), resume_dir, acc.process_index) == 0:
             raise RuntimeError(f"{resume_dir} declares {pending_micro} pending micro-batches but no gradients")
         log(f"resumed from {resume_dir}: epoch {start_epoch} step {resume_step} global_step {global_step}")
-    if is_main:
-        rt.record_identity(spec.run_dir, identity, _unwrap(acc, model).chain_alphas(),
-                           dict(spec.link, arm=arm.name, resumed_from=resume_dir, global_step=global_step,
-                                evidence_channel=arm.evidence_channel, gate_status=cfg.get("gate_status")))
-    barrier()
+    with rt.checkpoint_io(acc):
+        if is_main:
+            rt.record_identity(spec.run_dir, identity, _unwrap(acc, model).chain_alphas(),
+                               dict(spec.link, arm=arm.name, resumed_from=resume_dir, global_step=global_step,
+                                    evidence_channel=arm.evidence_channel, gate_status=cfg.get("gate_status")))
     log(f"arm {arm.name}: evidence_channel={arm.evidence_channel} budget={budget or 'stop rule'} "
         f"per-rank accumulation {per_rank_acc} world {world} {cfg.get('gate_status')}")
 
     # ---- checkpoint writers (rank 0 owns directories; every rank saves its RNG state) ----
     def save_latest(epoch0, step, gstep, micro):
-        draw_log.flush()
         tmp = layout.latest_state_dir() + ".tmp"
-        if is_main:
-            shutil.rmtree(tmp, ignore_errors=True)
-            os.makedirs(tmp)
-        barrier()
-        acc.save_state(os.path.join(tmp, "accelerate_state"))
-        barrier()
-        if is_main:
-            rt.write_checkpoint_identity(tmp, identity)
-            with open(os.path.join(tmp, "meta.json"), "w") as fh:
-                json.dump({"epoch": epoch0, "step": step, "global_step": gstep, "pending_micro": micro % per_rank_acc,
-                           "stopper": stopper.state(), "arm": arm.name, "seed": spec.seed,
-                           "identity_sha256": rt.canonical_sha256(identity)}, fh)
-            final, prev = layout.latest_state_dir(), layout.latest_state_dir() + ".prev"
-            shutil.rmtree(prev, ignore_errors=True)
-            if os.path.isdir(final):
-                os.rename(final, prev)
-            os.rename(tmp, final)
-            shutil.rmtree(prev, ignore_errors=True)
-        barrier()
+        with rt.checkpoint_io(acc):
+            draw_log.flush()
+            if is_main:
+                shutil.rmtree(tmp, ignore_errors=True)
+                os.makedirs(tmp)
+        with rt.checkpoint_io(acc):
+            acc.save_state(os.path.join(tmp, "accelerate_state"))
+        with rt.checkpoint_io(acc):
+            if is_main:
+                rt.write_checkpoint_identity(tmp, identity)
+                with open(os.path.join(tmp, "meta.json"), "w") as fh:
+                    json.dump({"epoch": epoch0, "step": step, "global_step": gstep, "pending_micro": micro % per_rank_acc,
+                               "stopper": stopper.state(), "arm": arm.name, "seed": spec.seed,
+                               "identity_sha256": rt.canonical_sha256(identity)}, fh)
+                final, prev = layout.latest_state_dir(), layout.latest_state_dir() + ".prev"
+                shutil.rmtree(prev, ignore_errors=True)
+                if os.path.isdir(final):
+                    os.rename(final, prev)
+                os.rename(tmp, final)
+                shutil.rmtree(prev, ignore_errors=True)
 
     def publish_step(gstep, epoch0):
         final = rt.step_checkpoint_dir(spec.run_dir, gstep)
-        if is_main:
-            tmp = final + ".tmp"
-            shutil.rmtree(tmp, ignore_errors=True)
-            os.makedirs(tmp)
-            aliases = rt.save_weights_deterministic(_unwrap(acc, model), os.path.join(tmp, "model.safetensors"))
-            rt.write_checkpoint_identity(tmp, identity)
-            with open(os.path.join(tmp, "meta.json"), "w") as fh:
-                json.dump({"global_step": gstep, "epoch": epoch0, "arm": arm.name, "seed": spec.seed,
-                           "alphas": _unwrap(acc, model).chain_alphas(), "tied_aliases": aliases}, fh, sort_keys=True)
-            open(os.path.join(tmp, rt.PRUNE_EXEMPT_MARKER), "w").write("A28/plan 9: step checkpoint, never pruned\n")
-            shutil.rmtree(final, ignore_errors=True)
-            os.rename(tmp, final)
-        barrier()
+        with rt.checkpoint_io(acc):
+            if is_main:
+                if os.path.lexists(final):
+                    raise FileExistsError(f"refusing to replace published step checkpoint: {final}")
+                tmp = final + ".tmp"
+                shutil.rmtree(tmp, ignore_errors=True)
+                os.makedirs(tmp)
+                aliases = rt.save_weights_deterministic(_unwrap(acc, model), os.path.join(tmp, "model.safetensors"))
+                rt.write_checkpoint_identity(tmp, identity)
+                with open(os.path.join(tmp, "meta.json"), "w") as fh:
+                    json.dump({"global_step": gstep, "epoch": epoch0, "arm": arm.name, "seed": spec.seed,
+                               "alphas": _unwrap(acc, model).chain_alphas(), "tied_aliases": aliases}, fh, sort_keys=True)
+                open(os.path.join(tmp, rt.PRUNE_EXEMPT_MARKER), "w").write("A28/plan 9: step checkpoint, never pruned\n")
+                os.rename(tmp, final)
         log(f"published {final}")
 
     def save_epoch(epoch1, gstep, micro, losses, is_best):
         tmp = layout.epoch_dir(epoch1) + ".tmp"
         pending = micro % per_rank_acc
-        if is_main:
-            layout.begin_epoch(epoch1)
-            rt.save_weights_deterministic(_unwrap(acc, model), os.path.join(tmp, "model.safetensors"))
-        barrier()
-        acc.save_state(os.path.join(tmp, "accelerate_state"))
-        if pending:
-            rt.save_pending_grads(_unwrap(acc, model), tmp, acc.process_index)
-        barrier()
-        if is_main:
-            rt.write_checkpoint_identity(tmp, identity)
-            with open(os.path.join(tmp, "meta.json"), "w") as fh:
-                json.dump({"epoch": epoch1, "step": 0, "global_step": gstep, "pending_micro": pending,
-                           "stopper": stopper.state(), "arm": arm.name, "seed": spec.seed,
-                           "identity_sha256": rt.canonical_sha256(identity)}, fh)
-            layout.finish_epoch(epoch1, losses["de_novo"], losses["train"],
-                                extra={"global_step": gstep, "eval_evidence_loss": losses["evidence"],
-                                       "is_best": is_best, "stopper": stopper.state()}, is_best=is_best)
-            layout.write_state({"epoch": epoch1, "global_step": gstep, "stopper": stopper.state(), "arm": arm.name})
-            shutil.rmtree(layout.latest_state_dir(), ignore_errors=True)
-        barrier()
+        with rt.checkpoint_io(acc):
+            if is_main:
+                layout.begin_epoch(epoch1)
+                rt.save_weights_deterministic(_unwrap(acc, model), os.path.join(tmp, "model.safetensors"))
+        with rt.checkpoint_io(acc):
+            acc.save_state(os.path.join(tmp, "accelerate_state"))
+        with rt.checkpoint_io(acc):
+            if pending:
+                rt.save_pending_grads(_unwrap(acc, model), tmp, acc.process_index)
+        with rt.checkpoint_io(acc):
+            if is_main:
+                rt.write_checkpoint_identity(tmp, identity)
+                with open(os.path.join(tmp, "meta.json"), "w") as fh:
+                    json.dump({"epoch": epoch1, "step": 0, "global_step": gstep, "pending_micro": pending,
+                               "stopper": stopper.state(), "arm": arm.name, "seed": spec.seed,
+                               "identity_sha256": rt.canonical_sha256(identity)}, fh)
+                layout.finish_epoch(epoch1, losses["de_novo"], losses["train"],
+                                    extra={"global_step": gstep, "eval_evidence_loss": losses["evidence"],
+                                           "is_best": is_best, "stopper": stopper.state()}, is_best=is_best)
+                layout.write_state({"epoch": epoch1, "global_step": gstep, "stopper": stopper.state(), "arm": arm.name})
+                shutil.rmtree(layout.latest_state_dir(), ignore_errors=True)
 
     def reduce_sum(value):
         return float(acc.reduce(torch.as_tensor(value, dtype=torch.float32, device=device), reduction="sum"))
@@ -367,9 +369,9 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
         if gstep == spec.n_pilot:
             publish_step(gstep, epoch)
         if budget is not None and gstep >= budget:
-            if is_main:
-                layout.mark_done()
-            barrier()
+            with rt.checkpoint_io(acc):
+                if is_main:
+                    layout.mark_done()
             return {"done": True, "global_step": gstep, "reason": "n_pilot budget"}
         if spec.stop_at_step is not None and gstep == spec.stop_at_step:
             stop["flag"] = True
@@ -431,13 +433,13 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                                     else (False, False))
             save_epoch(epoch + 1, gstep, micro_done, losses, is_best)
             if should_stop:
-                if is_main:
-                    layout.mark_done()
-                barrier()
+                with rt.checkpoint_io(acc):
+                    if is_main:
+                        layout.mark_done()
                 return {"done": True, "global_step": gstep, "history": history, "reason": "early stop"}
-        if is_main:
-            layout.mark_done()
-        barrier()
+        with rt.checkpoint_io(acc):
+            if is_main:
+                layout.mark_done()
         return {"done": True, "global_step": state["global_step"], "history": history, "reason": "max epochs"}
 
     previous = {}

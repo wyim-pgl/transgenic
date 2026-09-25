@@ -23,6 +23,7 @@ import hashlib
 import json
 import os
 import time
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
@@ -542,6 +543,33 @@ def b5_data_order(train_rns: Sequence[int], seed: int, epoch: int) -> List[int]:
 
 
 # ---- pending gradients at an epoch checkpoint (B5 A28 rule, rank-local) -----------------------------------------
+
+@contextmanager
+def checkpoint_io(accelerator):
+    """Finish rank-local checkpoint I/O, then propagate any failure before the next collective.
+
+    Never place collectives in this context. Accelerate's replicated DDP save_state is local I/O;
+    sharded backends and automatic checkpoint naming can contain barriers and are not supported here.
+    """
+    from accelerate.utils import DistributedType
+    from transgenic.training.mvp_finalize import _collective_preflight
+
+    if accelerator.distributed_type not in (DistributedType.NO, DistributedType.MULTI_CPU, DistributedType.MULTI_GPU):
+        raise RuntimeError("B6 coordinated checkpoint I/O requires replicated DDP or a single process")
+    if accelerator.project_configuration.automatic_checkpoint_naming:
+        raise RuntimeError("B6 coordinated checkpoint I/O forbids automatic checkpoint naming")
+    failure = None
+    try:
+        yield
+    except Exception as exc:
+        failure = exc
+
+    def check():
+        if failure is not None:
+            raise RuntimeError(f"B6 checkpoint I/O failed: {failure}") from failure
+
+    _collective_preflight(accelerator, check)
+
 
 def pending_grads_path(ckpt_dir: str, rank: int) -> str:
     return os.path.join(ckpt_dir, f"pending_grads_rank{rank}.pt")
