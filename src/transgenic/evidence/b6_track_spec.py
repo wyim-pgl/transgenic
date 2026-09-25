@@ -395,15 +395,16 @@ def validate_batch(batch, *, training):
             raise ValueError("labels must be int64 [B, T] in training")
     elif labels is not None:
         raise ValueError("labels must be None outside training")
-    mask = np.asarray(batch["chain_mask"])
+    # These operations work on numpy arrays and torch tensors on their own device.
+    mask = batch["chain_mask"]
     if mask[:, 0].any():
         raise ValueError("chain_mask column 0 must be False")
-    idx = np.asarray(batch["chain_idx"])
+    idx = batch["chain_idx"]
     if (idx[~mask] != 0).any():
         raise ValueError("masked chain_idx must be 0")
     if (idx < 0).any() or (idx >= Lmax // DOWNSAMPLE).any():
         raise ValueError("chain_idx out of [0, Lmax/6)")
-    feat = np.asarray(batch["chain_feat"])
+    feat = batch["chain_feat"]
     if (feat[~mask] != 0).any():
         raise ValueError("masked chain_feat must be 0")
     meta = batch["meta"]
