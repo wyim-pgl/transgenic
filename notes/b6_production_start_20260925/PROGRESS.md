@@ -1,5 +1,11 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## ONT C0 제출: 2026-09-25 18:00 PDT
+
+- ONT metadata 6172290 **90/90 COMPLETED 0:0**. 뷰 생성 시 각 run의 metadata sha·protocol·UMI(absent)를 다시 대조했다([ont_c0_views.txt](ont_c0_views.txt)).
+- [ont_c0.sbatch](ont_c0.sbatch) sha256 `e18b742c…0670`, 16CPU/128G/DuckDB64GB: Osativa **6172409**(28런, 168.4M reads, 14d), Sitalica **6172410**(9런, 85.2M, 10d), Gmax **6172411**(27런, 80.8M, 10d), Vvinifera **6172412**(11런, 43.5M, 6d), Ptrichocarpa **6172413**(8런, 13.8M, 3d), Ppatens **6172414**(7런, 8.1M, 3d). 시간은 추정이며 PacBio 완료 후 처리량으로 재평가한다. GPFS 여유 25TB, 사용자 quota 없음.
+- PacBio C0 3잡은 RUNNING, batch MaxRSS 약4.9–5.1GB(35분 시점).
+
 ## HSP 투영 실패와 원인: 2026-09-25 17:40 PDT
 
 - 파일럿 6172318(Sitalica): 분자맵 성공(66,040행, rejected34,317, sha `757d7781…`), `b6_hsp_project.py`가 `ValueError: query codon truth`로 종료(`est_hsp_contract.py:104`).

@@ -2,7 +2,7 @@
 
 > **현재 작업 정본: [운영학습 착수 준비](../notes/b6_production_start_20260925/PROGRESS.md).** 사용자 운영학습 시작 승인 후 실제 입력을 준비 중이다. **GPU 훈련은 아직 미제출**. 동결 순서는 real4GPU WP5파일럿4142업데이트 후 go판정, 그다음 WP6다.
 >
-> **09-25 17:45PDT 최신:** EST C0 **9종 전부 PASS**(Vvinifera 6172296 포함). HSP 파일럿6172318 실패: DIAMOND 기본 masking이 BTOP에 `X`를 남겨 계약 재생(codon/subject truth)과 충돌(약5.5%행) → 의존잡 6172319–26 취소, **해결방식 저자결정 대기**. ONT metadata 6172290 82/90 진행, 완료 즉시 6종 ONT C0 뷰(`ont_c0_views.py`)·`ont_c0.sbatch` 제출 예정. PacBio C0 3잡 RUNNING(~5GB). 결정 대기: HSP masking 처리, protein roles 행, Athaliana cui2020 정렬 재사용·FLIC 정렬 방식.
+> **09-25 17:45PDT 최신:** EST C0 **9종 전부 PASS**(Vvinifera 6172296 포함). HSP 파일럿6172318 실패: DIAMOND 기본 masking이 BTOP에 `X`를 남겨 계약 재생(codon/subject truth)과 충돌(약5.5%행) → 의존잡 6172319–26 취소, **해결방식 저자결정 대기**. ONT metadata 6172290 90/90 완료 → **ONT C0 6종 6172409–6172414 제출**(Osativa168M reads 14d 등). PacBio C0 3잡 RUNNING(~5GB). 결정 대기: HSP masking 처리, protein roles 행, Athaliana cui2020 정렬 재사용·FLIC 정렬 방식.
 >
 > **09-25 17:00PDT:** 저자결정 3건 반영([기록](../notes/b6_production_start_20260925/AUTHOR_DECISIONS_20260925_evening.md)): UMI 125런 absent 유지, Vvinifera 누락175 library=`NCBI-EST`, extern OOM 전역 무시. 주말 무중단 진행 지시. **EST C0 8종 PASS**. 진행중: Vvinifera EST C0 6172296, ONT metadata 배열6172290(6종90런), PacBio C0 6172281–83, HSP투영 6172318(파일럿)→6172319–26. 보류: Athaliana ONT(정렬 경로/검증런 미정렬), **protein C0는 DATASET_ROLES protein행 부재로 저자결정 필요**. 코드 `d929ba2`(b6-integration, --missing-library).
 >
