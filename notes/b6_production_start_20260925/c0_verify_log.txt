@@ -5,3 +5,4 @@ C0 Sbicolor est PASS reads_in 209441 accepted 195394 retained 83662 molecules 15
 C0 Athaliana est PASS reads_in 1046825 accepted 891439 retained 470315 molecules 918316 exh 0.99991 leak 0 gates_sum 208340 tiles 6350/6350 sha_ok True 1f3bff912091
 C0 Osativa est PASS reads_in 1244141 accepted 1081943 retained 613057 molecules 1189706 exh 0.99936 leak 0 gates_sum 0 tiles 20436/20436 sha_ok True d59c9e1b048f
 C0 Gmax est PASS reads_in 1374461 accepted 1273169 retained 325327 molecules 1033891 exh 0.99872 leak 0 gates_sum 0 tiles 37772/37772 sha_ok True a4a24058da6b
+C0 Vvinifera est PASS reads_in 450180 accepted 391527 retained 205647 molecules 422773 exh 0.99421 leak 0 gates_sum 0 tiles 25253/25253 sha_ok True 7d44330a4c46

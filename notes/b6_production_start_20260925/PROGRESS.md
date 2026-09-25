@@ -1,5 +1,12 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## HSP 투영 실패와 원인: 2026-09-25 17:40 PDT
+
+- 파일럿 6172318(Sitalica): 분자맵 성공(66,040행, rejected34,317, sha `757d7781…`), `b6_hsp_project.py`가 `ValueError: query codon truth`로 종료(`est_hsp_contract.py:104`).
+- **원인 확인([hsp_codon_diag.py](hsp_codon_diag.py)):** Sitalica swissprot raw13 290,009행 중 ok273,064, query codon truth7,944, subject truth8,123, noncanonical protein876. 실패 토큰은 모두 BTOP 문자가 `X`이고 실제 서열은 정상 잔기다(예: query `X` ↔ codon `CAC→H`, subject `X` ↔ 실제 `D`). production blastx(`commands.json`)는 DIAMOND 2.1.24 기본 masking(tantan)으로 실행됐고 `--masking` 지정이 없다. 승인된 계약은 BTOP를 실제 서열로 재생하며 잔기 일치를 요구한다.
+- 의존잡 6172319–6172326은 DependencyNeverSatisfied라 취소했다. **해결 방식은 과학적 계약 변경이라 저자 결정 대기**: (a) BTOP `X`를 masking으로 인정하고 실제 codon/잔기 존재만 검증, (b) `--masking 0`으로 blastx 재실행, (c) 해당 행 제외(약5.5%, 저복잡도 편향).
+- **Athaliana ONT 조사**: cui2020 두 사본은 gzip 시각 2바이트만 다르고 내용 동일(quarantine.md:1319와 일치). builder는 reads 경로를 대조하지 않아 기존 정렬을 정본 dataset 이름의 뷰로 재사용 가능하나, PROVENANCE·BAM header에 제외 사본 경로가 남는다(저자 승인 필요). FLIC 검증3런은 `longread_align.sbatch:70`·`orientation_audit.sbatch:50`이 비학습 런을 거부해 정렬 불가(코드 변경 또는 별도 드라이버 결정 필요). `audit_status=FAIL`은 §3.3 방향성 감사 결과(비가닥)이며 C0는 `uf=`만 읽는다(`b6_build_c0.py:677`).
+
 ## 저자 결정 반영과 후속 제출: 2026-09-25 17:00 PDT
 
 결정 원문과 적용 범위는 [AUTHOR_DECISIONS_20260925_evening.md](AUTHOR_DECISIONS_20260925_evening.md).
@@ -23,6 +30,7 @@
 | Athaliana EST | 6172274 | PASS | 1,046,825 | 891,439 | 918,316 | 0.99991 | 0/0* | 일치 | 3.31G |
 | Osativa EST | 6172276 | PASS | 1,244,141 | 1,081,943 | 1,189,706 | 0.99936 | 0/0 | 일치 | 4.51G |
 | Gmax EST | 6172275 | PASS | 1,374,461 | 1,273,169 | 1,033,891 | **0.99872** | 0/0 | 일치 | 7.57G |
+| Vvinifera EST | 6172296 | PASS | 450,180 | 391,527 | 422,773 | **0.99421** | 0/0 | 일치 | – |
 
 \* Athaliana는 held-out 유전자좌가 있어 `gate_heldout_overlapping`=`gate_heldout_excluded`=104,170(겹친 분자를 모두 제외했다는 계수)이고 위반 지표 `gate_heldout_retained`=0이다.
 

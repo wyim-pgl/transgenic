@@ -16,7 +16,8 @@
 - [x] Sitalica EST C0 재시도 CPU6172228 COMPLETED0:0(3m06s), 생산자QC status=PASS: accepted31,723/retained19,310, exhaustiveness0.99984, leakage_nonzero0, gate_*전부0, sha256 `02116ca6…1064` 로그·QC일치. 반복조회금지.
 - [x] UMI absent 유지·Vvinifera NCBI-EST·extern OOM 무시 저자결정 기록(17:00).
 - [x] EST C0 8종 PASS·해시 일치. Vvinifera metadata 재처리 6172286(NCBI-EST 175) 완료.
-- [ ] **진행중:** Vvinifera EST C0 6172296 / ONT metadata 6172290 → 완료시 6종 ONT C0 뷰·제출 / HSP 6172318→6172319–26 / PacBio C0 6172281–83.
+- [ ] **저자결정 필요:** HSP 투영 BTOP `X`(DIAMOND masking) 처리 (a)X인정 (b)--masking 0 재실행 (c)행 제외. 결정 후 HSP 8종 재제출.
+- [ ] **진행중:** (Vvinifera EST C0 6172296 PASS 완료) / ONT metadata 6172290 → 완료시 6종 ONT C0 뷰·제출 / HSP 6172318→6172319–26 / PacBio C0 6172281–83.
 - [ ] Athaliana ONT: cui2020 정본행↔정렬디렉터리 대응, FLIC 검증3런 정렬(원래 longread 파이프라인) 후 ONT metadata·C0.
 - [ ] **저자결정 필요:** protein C0용 `protein/<Sp>` DATASET_ROLES 행 추가(동결 manifest 변경). 결정 후 protein tool provenance 작성·protein C0.
 - [ ] **이전(16:20):** EST C0 7종 6172274–80, PacBio C0 3종 6172281–83. 각 QC status/leakage/exhaustiveness/해시·스키마 검증. 실패시 원인 확인 후 새 out 경로로 재시도.
