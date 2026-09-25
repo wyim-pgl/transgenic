@@ -267,7 +267,10 @@ def check_header_clone(name, rest, clone):
     if m is None or not clone:
         return
     text = m[1]
-    ok = text.startswith(clone) and (len(text) == len(clone) or text[len(clone)] in " ,;")
+    # NCBI renders '>' as '_' in FASTA titles (e.g. DN591027.1), while GenBank /clone retains it.
+    # Compare display forms only; the original qualifier remains the A11 clone identity in est_rows.
+    ok = any(text.startswith(display) and (len(text) == len(display) or text[len(display)] in " ,;")
+             for display in (clone, clone.replace(">", "_")))
     require(ok, f"{name}: FASTA header 'cDNA clone {text[:60]}' disagrees with the recorded clone {clone!r}")
 
 

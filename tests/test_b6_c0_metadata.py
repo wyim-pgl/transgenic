@@ -262,6 +262,24 @@ def test_est_meta_supplies_full_clone_lib_as_library_and_optional_clone(tmp_path
     assert prov["est_meta_sha256"] == W.sha(tmp_path / "est_meta.tsv")
 
 
+@pytest.mark.parametrize('display_clone', ['AGTT_Gm-r1030-2842', 'AGTT>Gm-r1030-2842'])
+def test_ncbi_fasta_clone_display_keeps_authoritative_clone(tmp_path, display_clone):
+    clone = 'AGTT>Gm-r1030-2842'
+    meta = ('accession_version\tclone_lib\tclone\tbiosample\n'
+            'DN591027.1\tSAMN00158301 Gm-r1030\t' + clone + '\tSAMN00158301\n')
+    screened = '>DN591027.1 cDNA clone ' + display_clone + " 5', mRNA sequence univec=keep:1-100/100\n" + 'A' * 100 + '\n'
+    assert CM.main(_est_meta(tmp_path, meta=meta, screened=screened) + ['--bioproject', 'NCBI_EST:txid3847']) == 0
+    row = _read(tmp_path / 'c0_metadata.tsv')[1]
+    assert row['clone'] == clone  # A11 molecule identity must never use the display-normalized value.
+    assert row['library'] == 'SAMN00158301 Gm-r1030'
+
+
+@pytest.mark.parametrize('display_clone', ['AGTT_Gm-r1030-28420', 'AGTT_Gm-r1030-284X', 'AGTTGm-r1030-2842'])
+def test_ncbi_clone_display_still_refuses_wrong_identity(display_clone):
+    with pytest.raises(CM.MetadataError, match='disagrees'):
+        CM.check_header_clone('DN591027.1', 'cDNA clone ' + display_clone + ' 5-prime', 'AGTT>Gm-r1030-2842')
+
+
 def test_est_meta_fails_closed(tmp_path, capsys):
     assert CM.main(_est_meta(tmp_path)) == 1                                       # no BioProject in esummary
     assert "--est-meta needs --bioproject" in capsys.readouterr().err
