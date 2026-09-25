@@ -28,6 +28,7 @@ spec (channel order, permutations, spec hashes) belongs to ``transgenic.evidence
 """
 from __future__ import annotations
 
+import inspect
 from typing import Optional
 
 import torch
@@ -38,6 +39,9 @@ from transformers.models.led import modeling_led as _led
 
 from transgenic.model import modeling_HyenaTransgenic as _b5
 from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
+
+# LED 4.46 returns per-layer tuples; 4.57 updates one shared EncoderDecoderCache.
+_LED_CACHE_API = "past_key_values" in inspect.signature(_led.LEDDecoderLayer.forward).parameters
 
 # ---- shape contract (plan 7.1, 7.2, 7.7, 9) -------------------------------------------------------------
 B6_EVIDENCE_CHANNELS = 31
@@ -178,34 +182,42 @@ class B6DecoderLayer(_led.LEDDecoderLayer):
 
     def forward(self, hidden_states, attention_mask=None, encoder_hidden_states=None, encoder_attention_mask=None,
                 layer_head_mask=None, cross_attn_layer_head_mask=None, past_key_value=None,
-                output_attentions=False, use_cache=True, chain_memory=None, chain_key_mask=None, chain_row_mask=None):
+                output_attentions=False, use_cache=True, chain_memory=None, chain_key_mask=None, chain_row_mask=None,
+                past_key_values=None, cache_position=None):
+        if _LED_CACHE_API:
+            past_key_value = past_key_values if past_key_values is not None else past_key_value
+            cache_kwargs = dict(past_key_values=past_key_value, cache_position=cache_position)
+        else:
+            cache_kwargs = dict(past_key_value=past_key_value)
         if chain_memory is None:
             return super().forward(hidden_states, attention_mask=attention_mask,
                                    encoder_hidden_states=encoder_hidden_states,
                                    encoder_attention_mask=encoder_attention_mask, layer_head_mask=layer_head_mask,
                                    cross_attn_layer_head_mask=cross_attn_layer_head_mask,
-                                   past_key_value=past_key_value, output_attentions=output_attentions,
-                                   use_cache=use_cache)
-        # Body of LEDDecoderLayer.forward (transformers 4.44-4.57), with the chain block inserted.
+                                   output_attentions=output_attentions, use_cache=use_cache, **cache_kwargs)
+        # LED forward with its version-specific cache contract and the chain block inserted.
         residual = hidden_states
-        self_attn_past_key_value = past_key_value[:2] if past_key_value is not None else None
+        if not _LED_CACHE_API:
+            cache_kwargs = dict(past_key_value=past_key_value[:2] if past_key_value is not None else None)
         hidden_states, self_attn_weights, present_key_value = self.self_attn(
-            hidden_states=hidden_states, past_key_value=self_attn_past_key_value, attention_mask=attention_mask,
-            layer_head_mask=layer_head_mask, output_attentions=output_attentions)
+            hidden_states=hidden_states, attention_mask=attention_mask,
+            layer_head_mask=layer_head_mask, output_attentions=output_attentions, **cache_kwargs)
         hidden_states = F.dropout(hidden_states, p=self.dropout, training=self.training)
         hidden_states = self.self_attn_layer_norm(residual + hidden_states)
 
         cross_attn_weights = None
         if encoder_hidden_states is not None:
             residual = hidden_states
-            cross_attn_past_key_value = past_key_value[-2:] if past_key_value is not None else None
+            if not _LED_CACHE_API:
+                cache_kwargs = dict(past_key_value=past_key_value[-2:] if past_key_value is not None else None)
             hidden_states, cross_attn_weights, cross_attn_present_key_value = self.encoder_attn(
                 hidden_states=hidden_states, key_value_states=encoder_hidden_states,
                 attention_mask=encoder_attention_mask, layer_head_mask=cross_attn_layer_head_mask,
-                past_key_value=cross_attn_past_key_value, output_attentions=output_attentions)
+                output_attentions=output_attentions, **cache_kwargs)
             hidden_states = F.dropout(hidden_states, p=self.dropout, training=self.training)
             hidden_states = self.encoder_attn_layer_norm(residual + hidden_states)
-            present_key_value = present_key_value + cross_attn_present_key_value
+            if not _LED_CACHE_API:
+                present_key_value = present_key_value + cross_attn_present_key_value
 
         hidden_states = self.chain_attn(hidden_states, chain_memory, chain_key_mask, chain_row_mask)
 
@@ -245,7 +257,16 @@ def b6_decoder_forward(decoder, *, input_ids=None, attention_mask=None, encoder_
         input_ids = input_ids.view(-1, input_shape[-1])
     else:
         input_shape = inputs_embeds.size()[:-1]
-    past_key_values_length = past_key_values[0][0].shape[2] if past_key_values is not None else 0
+    checkpointing = bool(getattr(decoder, "gradient_checkpointing", False)) and decoder.training
+    if checkpointing:
+        use_cache = False
+        past_key_values = None
+    if _LED_CACHE_API:
+        if use_cache and past_key_values is None:
+            past_key_values = _led.EncoderDecoderCache(_led.DynamicCache(config=cfg), _led.DynamicCache(config=cfg))
+        past_key_values_length = past_key_values.get_seq_length() if past_key_values is not None else 0
+    else:
+        past_key_values_length = past_key_values[0][0].shape[2] if past_key_values is not None else 0
     if inputs_embeds is None:
         inputs_embeds = decoder.embed_tokens(input_ids)
 
@@ -264,9 +285,6 @@ def b6_decoder_forward(decoder, *, input_ids=None, attention_mask=None, encoder_
     hidden_states = decoder.layernorm_embedding(inputs_embeds + positions)
     hidden_states = F.dropout(hidden_states, p=decoder.dropout, training=decoder.training)
 
-    checkpointing = bool(getattr(decoder, "gradient_checkpointing", False)) and decoder.training
-    if checkpointing:
-        use_cache = False
     for mask, name in ((head_mask, "head_mask"), (cross_attn_head_mask, "cross_attn_head_mask")):
         if mask is not None and mask.size()[0] != len(decoder.layers):
             raise ValueError(f"{name} must cover {len(decoder.layers)} layers")
@@ -285,12 +303,12 @@ def b6_decoder_forward(decoder, *, input_ids=None, attention_mask=None, encoder_
         # unchanged; its compute is discarded instead of skipped.
         drop = (torch.rand([], device=hidden_states.device) < decoder.layerdrop) if decoder.training else None
         layer_input = hidden_states
-        past_key_value = past_key_values[idx] if past_key_values is not None else None
+        past_key_value = (past_key_values if _LED_CACHE_API else past_key_values[idx]) if past_key_values is not None else None
         layer_head = head_mask[idx] if head_mask is not None else None
         cross_head = cross_attn_head_mask[idx] if cross_attn_head_mask is not None else None
         if checkpointing:
             layer_outputs = decoder._gradient_checkpointing_func(
-                layer.__call__, hidden_states, combined_attention_mask, encoder_hidden_states,
+                layer.forward, hidden_states, combined_attention_mask, encoder_hidden_states,
                 encoder_attention_mask, layer_head, cross_head, None, output_attentions, use_cache,
                 chain_memory, chain_key_mask, chain_row_mask)
         else:
@@ -302,14 +320,14 @@ def b6_decoder_forward(decoder, *, input_ids=None, attention_mask=None, encoder_
                                   chain_memory=chain_memory, chain_key_mask=chain_key_mask,
                                   chain_row_mask=chain_row_mask)
         hidden_states = layer_outputs[0] if drop is None else torch.where(drop, layer_input, layer_outputs[0])
-        if use_cache:
+        if use_cache and not _LED_CACHE_API:
             next_decoder_cache += (layer_outputs[3 if output_attentions else 1],)
         if output_attentions:
             all_self_attns += (layer_outputs[1],)
             all_cross_attentions += (layer_outputs[2],)
     if output_hidden_states:
         all_hidden_states += (hidden_states,)
-    next_cache = next_decoder_cache if use_cache else None
+    next_cache = (past_key_values if _LED_CACHE_API else next_decoder_cache) if use_cache else None
     if not return_dict:
         return tuple(v for v in (hidden_states, next_cache, all_hidden_states, all_self_attns, all_cross_attentions)
                      if v is not None)
@@ -367,6 +385,8 @@ class B6TransgenicModel(_b5.transgenicModel):
                 use_cache=None, output_attentions=None, output_hidden_states=None, return_dict=None,
                 evidence_tracks=None, chain_idx=None, chain_feat=None, chain_mask=None, chain_memory=None,
                 chain_key_mask=None):
+        if _LED_CACHE_API and isinstance(past_key_values, tuple):
+            past_key_values = _led.EncoderDecoderCache.from_legacy_cache(past_key_values)
         gathered = chain_idx is not None or chain_feat is not None or chain_mask is not None
         precomputed = chain_memory is not None or chain_key_mask is not None
         if not gathered and not precomputed:
@@ -407,7 +427,7 @@ class B6TransgenicModel(_b5.transgenicModel):
             chain_key_mask = chain_mask
         elif tuple(chain_key_mask.shape) != (downsampled.shape[0], CHAIN_ELEMENTS) or chain_key_mask.dtype != torch.bool:
             raise ValueError(f"chain_key_mask must be bool[{downsampled.shape[0]},{CHAIN_ELEMENTS}]")
-        if past_key_values is not None and isinstance(past_key_values, tuple):
+        if not _LED_CACHE_API and isinstance(past_key_values, tuple):
             past_key_values = _b5.LegacyCacheWrapper(past_key_values)
         decoder_outputs = b6_decoder_forward(
             self.decoder, input_ids=decoder_input_ids, attention_mask=decoder_attention_mask,
@@ -550,6 +570,10 @@ class B6TransgenicForConditionalGeneration(_b5.transgenicForConditionalGeneratio
 
     def prepare_inputs_for_generation(self, decoder_input_ids, past_key_values=None, chain_memory=None,
                                       chain_key_mask=None, **kwargs):
+        # HF 4.57 supplies an empty cache on step zero. B5 would truncate a multi-token prefix.
+        if _LED_CACHE_API and past_key_values is not None and hasattr(past_key_values, "get_seq_length"):
+            if past_key_values.get_seq_length() == 0:
+                past_key_values = None
         prepared = super().prepare_inputs_for_generation(decoder_input_ids, past_key_values=past_key_values,
                                                          **kwargs)
         if chain_memory is not None:
