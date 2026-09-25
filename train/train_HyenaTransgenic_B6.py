@@ -181,7 +181,8 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                thinning_set=list(rt.THINNING_SET), withhold_source_rate=rt.WITHHOLD_SOURCE_RATE,
                withhold_library_rate=rt.WITHHOLD_LIBRARY_RATE,
                compile_policy=(f"torch.compile backend={spec.compile_backend if isinstance(spec.compile_backend, str) else 'custom'};"
-                               f" suppress_errors=False; fallback=failure" if compiled else "eager (not a recipe run)"),
+                               f" suppress_errors=False; optimize_ddp={torch._dynamo.config.optimize_ddp};"
+                               f" fallback=failure" if compiled else "eager (not a recipe run)"),
                checkpointing=ckpt, mixed_precision=spec.mixed_precision, memory_abort_bytes=rt.MEMORY_ABORT_BYTES,
                deterministic=bool(spec.deterministic),
                loss="L_GSF", model_version=_unwrap(acc, model).config.b6_model_version, **_versions())

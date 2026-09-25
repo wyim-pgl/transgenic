@@ -430,6 +430,35 @@ class ReviewRound2Tests(TrainerBase):
 
 
 class CompileAndAbortTests(TrainerBase):
+    def test_b6_compiles_without_ddp_graph_partitioning(self):
+        import torch._dynamo as dynamo
+        dynamo.reset()
+        self.addCleanup(dynamo.reset)
+        model = torch.nn.Linear(3, 2)
+        x = torch.ones(1, 3)
+        expected = model(x).detach()
+        with dynamo.config.patch(optimize_ddp=True, suppress_errors=True):
+            compiled = rt.compile_b6(model, backend="aot_eager")
+            self.assertFalse(dynamo.config.optimize_ddp)
+            self.assertFalse(dynamo.config.suppress_errors)
+            result = compiled(x)
+            result.sum().backward()
+            self.assertTrue(torch.equal(result.detach(), expected))
+            self.assertTrue(torch.equal(model.weight.grad, torch.ones_like(model.weight)))
+
+    def test_resume_refuses_old_partitioned_compile_policy(self):
+        first = self.spec("B6", run="old-compile", stop_at_step=1, compile_backend="aot_eager")
+        self.train_arm(first)
+        cfg_path, _ = rt.identity_paths(first.run_dir)
+        with open(cfg_path) as fh:
+            identity = json.load(fh)
+        # Literal policy recorded by the pre-fix trainer, even on the same library versions.
+        identity["compile_policy"] = "torch.compile backend=aot_eager; suppress_errors=False; fallback=failure"
+        with open(cfg_path, "w") as fh:
+            json.dump(identity, fh)
+        with self.assertRaisesRegex(RuntimeError, "compile_policy"):
+            self.train_arm(self.spec("B6", run="old-compile", resume="auto", compile_backend="aot_eager"))
+
     def test_injected_compile_failure_raises(self):
         import torch._dynamo as dynamo
 

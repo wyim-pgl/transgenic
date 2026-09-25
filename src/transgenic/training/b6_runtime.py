@@ -446,6 +446,9 @@ def compile_b6(model, backend="inductor"):
     import torch
 
     torch._dynamo.config.suppress_errors = False
+    # DDP bucket graph partitioning changed stochastic gradients across a cold resume in CP4.
+    # Keep Inductor and DDP, but compile without that partitioning (2-rank diagnosis 3207863).
+    torch._dynamo.config.optimize_ddp = False
     return torch.compile(model, backend=backend)
 
 
