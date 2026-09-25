@@ -1,0 +1,7 @@
+C0 Bdistachyon est PASS reads_in 206123 accepted 196940 retained 62918 molecules 119422 exh 0.99897 leak 0 gates_sum 0 tiles 14338/14338 sha_ok True c2cf30d7f8bf
+C0 Ptrichocarpa est PASS reads_in 89450 accepted 79129 retained 34625 molecules 69974 exh 0.99913 leak 0 gates_sum 0 tiles 20303/20303 sha_ok True 71fcd37b25a7
+C0 Ppatens est PASS reads_in 381809 accepted 347763 retained 142843 molecules 236483 exh 0.99946 leak 0 gates_sum 0 tiles 21702/21702 sha_ok True 93e2d9bc00d4
+C0 Sbicolor est PASS reads_in 209441 accepted 195394 retained 83662 molecules 158271 exh 0.99873 leak 0 gates_sum 0 tiles 23381/23381 sha_ok True 6890a1679663
+C0 Athaliana est PASS reads_in 1046825 accepted 891439 retained 470315 molecules 918316 exh 0.99991 leak 0 gates_sum 208340 tiles 6350/6350 sha_ok True 1f3bff912091
+C0 Osativa est PASS reads_in 1244141 accepted 1081943 retained 613057 molecules 1189706 exh 0.99936 leak 0 gates_sum 0 tiles 20436/20436 sha_ok True d59c9e1b048f
+C0 Gmax est PASS reads_in 1374461 accepted 1273169 retained 325327 molecules 1033891 exh 0.99872 leak 0 gates_sum 0 tiles 37772/37772 sha_ok True a4a24058da6b

@@ -1,5 +1,7 @@
 # quarantine.md — 격리소
 
+> **전역 규칙(저자 결정 2026-09-25):** Slurm `.extern` 단계의 `OUT_OF_MEMORY 0:125` 표시는 모든 잡에서 무시한다. 판정은 job/batch 상태·ExitCode·산출물 QC·해시로 한다(batch OOM은 해당 없음). [결정 기록](../notes/b6_production_start_20260925/AUTHOR_DECISIONS_20260925_evening.md).
+
 ## §1o — 2026-09-21~23: issue #60 번복 · A46 승인 · WP1 구현에서 폐기한 경로
 
 현재 상태는 [resume](resume.md) / [todo](todo.md) / [RESTART_HANDOFF_20260923](../notes/RESTART_HANDOFF_20260923.md)에 있다. 아래는 **다시 하지 않을 판단과 검증된 대체**다.

@@ -14,7 +14,12 @@
 - [ ] **UMI 추가 확인:** absent125런은 이번 protocol승인에 포함되지 않음. 논문·키트·원자료 근거를 확인하고 미확인값을 확정하지 않는다.
 - [x] Sitalica C0입력준비: 격리container DuckDB1.5.5, genome/GFF/split DBmanifest해시일치, 새symlink view, currentroles/toolprovenance, 독립검토APPROVE. 최초6172220 PyArrow누락실패보존.
 - [x] Sitalica EST C0 재시도 CPU6172228 COMPLETED0:0(3m06s), 생산자QC status=PASS: accepted31,723/retained19,310, exhaustiveness0.99984, leakage_nonzero0, gate_*전부0, sha256 `02116ca6…1064` 로그·QC일치. 반복조회금지.
-- [ ] **실행 중(16:20PDT 제출):** EST C0 7종 6172274–80, PacBio C0 3종 6172281–83. 각 QC status/leakage/exhaustiveness/해시·스키마 검증. 실패시 원인 확인 후 새 out 경로로 재시도.
+- [x] UMI absent 유지·Vvinifera NCBI-EST·extern OOM 무시 저자결정 기록(17:00).
+- [x] EST C0 8종 PASS·해시 일치. Vvinifera metadata 재처리 6172286(NCBI-EST 175) 완료.
+- [ ] **진행중:** Vvinifera EST C0 6172296 / ONT metadata 6172290 → 완료시 6종 ONT C0 뷰·제출 / HSP 6172318→6172319–26 / PacBio C0 6172281–83.
+- [ ] Athaliana ONT: cui2020 정본행↔정렬디렉터리 대응, FLIC 검증3런 정렬(원래 longread 파이프라인) 후 ONT metadata·C0.
+- [ ] **저자결정 필요:** protein C0용 `protein/<Sp>` DATASET_ROLES 행 추가(동결 manifest 변경). 결정 후 protein tool provenance 작성·protein C0.
+- [ ] **이전(16:20):** EST C0 7종 6172274–80, PacBio C0 3종 6172281–83. 각 QC status/leakage/exhaustiveness/해시·스키마 검증. 실패시 원인 확인 후 새 out 경로로 재시도.
 - [ ] protein C0(route-B): EST C0 완료 종부터 HSP 입력(b6_hsp_project.py)·lineage 준비상태 확인.
 - [ ] ONT C0: UMI 저자결정 후 ONT 메타데이터→C0.
 - [ ] **이전 항목:** (해시·스키마 검증 15:53 완료, batch MaxRSS3.98G/32G) est_protein_hsp0행=설계상 정상(route-B는 protein C0, b6_hsp_project.py). 다음: 나머지 종/소스 C0 구축. UMI는 보고서상 no_UMI5/unresolved120 vs TSV absent125 불일치 → 저자결정 대기(TSV 무변경).

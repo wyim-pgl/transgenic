@@ -1,0 +1,1 @@
+{"by_species": {"Gmax": {"cDNA": 27}, "Osativa": {"cDNA": 2, "direct_RNA": 26}, "Ppatens": {"direct_RNA": 7}, "Ptrichocarpa": {"direct_RNA": 8}, "Sitalica": {"cDNA": 9}, "Vvinifera": {"cDNA": 11}}, "tasks": 90}

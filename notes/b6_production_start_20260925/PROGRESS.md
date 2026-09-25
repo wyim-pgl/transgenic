@@ -1,5 +1,33 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## 저자 결정 반영과 후속 제출: 2026-09-25 17:00 PDT
+
+결정 원문과 적용 범위는 [AUTHOR_DECISIONS_20260925_evening.md](AUTHOR_DECISIONS_20260925_evening.md).
+
+- **EST C0 8종 PASS**(아래 표). Sbicolor·Gmax·Bdistachyon EST 단독 exhaustiveness <0.999는 병합 단계 위험으로 유지.
+- **Vvinifera library:** `b6_c0_metadata.py --missing-library` 추가(b6-integration `d929ba2`, 시험 2건 선작성·실패 확인 후 구현, 로컬 21 pass(나머지 실패는 pyarrow 부재로 기준선과 동일), pronghorn 컨테이너 27/27 pass). 소스 `source_missing_library`(tar sha256 `cbdf2d5d…3725`). 재처리 6172286 COMPLETED: reads450,180, `NCBI-EST` 175 records, 출력 sha 일치. **Vvinifera EST C0 6172296 제출.**
+- **ONT 메타데이터:** UMI absent 확정에 따라 6종 90런(cDNA49/direct_RNA41) manifest 동결([prepare_ont_manifest.py](prepare_ont_manifest.py), [ont_manifest.txt](ont_manifest.txt)), 배열 **6172290**(0-89%4, [ont_metadata.sbatch](ont_metadata.sbatch) sha256 `7a31e28f…a934`).
+- **Athaliana ONT 보류(기술 문제):** 정본 행 `ont/Athaliana_cui2020_PRJNA594286` 3런의 정렬은 제외된 사본 이름 `cui2020_PRJNA594286` 아래에 있고 audit도 없다. FLIC 검증 3런은 정렬 자체가 없다. C0는 비제외 역할행을 모두 요구한다. 정렬 경로 대응과 검증런 정렬이 필요하다([ont_c0_readiness.txt](ont_c0_readiness.txt)). Slycopersicum·Zmays는 검증 전용이라 학습 C0 대상 아님.
+- **route-B 입력:** lineage는 swissprot `lineage.tsv`(sha `402bca97…`)를 쓴다. orthodb 413 taxid가 모두 swissprot 2,428에 동일 행으로 포함됨을 확인했다. 분자맵→HSP 투영 [hsp_project.sbatch](hsp_project.sbatch)(sha `daef8ece…4a63`, 128G/24h): Sitalica 파일럿 **6172318**, 나머지 7종 6172319–6172325(afterok 파일럿), Vvinifera 6172326(afterok 파일럿+6172296). 기존 production blastx(6163851, 6164049)를 재사용하며 blastx 재실행 없음.
+- **protein C0 차단(저자 결정 필요):** 동결 manifest `DATASET_ROLES.*`에 `protein/<Sp>` 행이 없어 `--source protein`이 거부된다. protein 도구 provenance 파일도 아직 없다.
+
+## C0 결과 검증 누적 (원문 [c0_verify_log.txt](c0_verify_log.txt))
+
+| 종·소스 | 잡 | status | reads_in | accepted | molecules | exhaustiveness | leak/gates | sha 재계산 | batch MaxRSS |
+|---|---|---|---|---|---|---|---|---|---|
+| Sitalica EST | 6172228 | PASS | 66,040 | 31,723 | 36,510 | 0.99984 | 0/0 | 일치 | 3.98G |
+| Bdistachyon EST | 6172277 | PASS | 206,123 | 196,940 | 119,422 | **0.99897** | 0/0 | 일치 | 3.49G |
+| Ptrichocarpa EST | 6172279 | PASS | 89,450 | 79,129 | 69,974 | 0.99913 | 0/0 | 일치 | 4.06G |
+| Ppatens EST | 6172278 | PASS | 381,809 | 347,763 | 236,483 | 0.99946 | 0/0 | 일치 | – |
+| Sbicolor EST | 6172280 | PASS | 209,441 | 195,394 | 158,271 | **0.99873** | 0/0 | 일치 | – |
+| Athaliana EST | 6172274 | PASS | 1,046,825 | 891,439 | 918,316 | 0.99991 | 0/0* | 일치 | 3.31G |
+| Osativa EST | 6172276 | PASS | 1,244,141 | 1,081,943 | 1,189,706 | 0.99936 | 0/0 | 일치 | 4.51G |
+| Gmax EST | 6172275 | PASS | 1,374,461 | 1,273,169 | 1,033,891 | **0.99872** | 0/0 | 일치 | 7.57G |
+
+\* Athaliana는 held-out 유전자좌가 있어 `gate_heldout_overlapping`=`gate_heldout_excluded`=104,170(겹친 분자를 모두 제외했다는 계수)이고 위반 지표 `gate_heldout_retained`=0이다.
+
+- exhaustiveness 규칙: C0는 소스별 하한 0.99(A49.2)만 강제하고, 종 단위 0.999(rule 4(b))는 병합(`b6_merge_evidence_db.py`)에서 전 소스 합산으로 강제한다(`src/transgenic/evidence/leakage.py:90-97`). **Bdistachyon EST 단독 0.99897 <0.999**라 다른 소스가 합산값을 올리지 못하면 병합이 거부된다. 병합 전 위험으로 기록한다.
+
 ## 전체 C0 구축 제출: 2026-09-25 16:20 PDT
 
 사용자 지시("커밋 하고 전체 진행해 수정 잡제출")에 따라 준비된 모든 EST·PacBio C0를 제출했다. CPU 증거DB 구축이며 GPU 훈련이 아니다. 런타임·입력 규칙은 검증된 Sitalica 6172228과 같다(source3511a5a, micromamba.sif+DuckDB1.5.5/PyArrow25.0.1, seed123, A22+A30 flags, current PREP roles).

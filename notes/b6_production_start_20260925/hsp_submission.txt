@@ -1,0 +1,10 @@
+daef8ece2c85130a0c1766d3569a9fb9d79ed66b505df8fdf48af2e830d44a63  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/hsp_project.sbatch
+SUBMIT Sitalica 6172318 (pilot)
+SUBMIT Athaliana 6172319 afterok:6172318
+SUBMIT Bdistachyon 6172320 afterok:6172318
+SUBMIT Gmax 6172321 afterok:6172318
+SUBMIT Osativa 6172322 afterok:6172318
+SUBMIT Ppatens 6172323 afterok:6172318
+SUBMIT Ptrichocarpa 6172324 afterok:6172318
+SUBMIT Sbicolor 6172325 afterok:6172318
+SUBMIT Vvinifera 6172326 afterok:6172318:6172296
