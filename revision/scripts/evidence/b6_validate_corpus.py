@@ -2,11 +2,16 @@
 """Independent audit of the WP2 rule 5 repair (plan v4.1 §2 acceptance): A40 base vs B6 corpus.
 
     b6_validate_corpus.py --base b5_full_a40.db --corpus b5_full_b6_v1.db --freeze freeze.json
-                          --splits <split TSV> --flags <A22> --build-flags <A22> <A30> --seed <corpus seed>
+                          --splits <split TSV> --flags SPECIES=<A22> [...] --build-flags SPECIES=<A22> SPECIES=<A30>
+                          [--build-flags ...] --seed <corpus seed>
                           --interval-manifest <species>.jsonl [...] [--c0 <C0 or merged DB> ...] [--report out.json]
 
+--flags / --build-flags take the per-species form of b6_build_corpus.py (the bare single-file form only for a
+single-species base).
+
 Checks (any failure exits 1):
-  * freeze / file shas: base, corpus, manifests; ``b6_corpus_meta`` agrees; no WAL.
+  * freeze / file shas: base, corpus, manifests; ``b6_corpus_meta`` agrees; no WAL; every species' flag files hash
+    to the freeze ``species_flags``.
   * the manifest is recomputed from the base with ``leakage.build_leakage_model`` and must be identical.
   * row audit (streamed, ORDER BY rn): same rows; untouched columns identical; ACGT->N only inside the row's repair
     spans and every repair span base is N; test tiles and unrepaired rows byte-identical; regenerated GSF blocks are
@@ -164,8 +169,9 @@ def recount(base_con, manifests_rows, repair_by_rn, drops_by_rn, args, qc):
     for (species,) in base_con.execute("SELECT species_id FROM build_manifest ORDER BY species_id").fetchall():
         m = LK.corpus_manifest(base_con, species)
         genome = b5.load_fasta(args.references.get(species, m["fasta"]))
+        a22, build = args.sflags[species]
         prep = LK.prepare_genes(species=species, gff_path=args.gffs.get(species, m["gff"]), splits_path=args.splits,
-                                flags_path=args.flags, build_flags=args.build_flags, genome=genome)
+                                flags_path=a22, build_flags=build, genome=genome)
         blocks = defaultdict(list)
         for chrom, a, b, sp in base_con.execute("SELECT chromosome, start0, end0, split FROM tile_blocks WHERE species_id "
                                                 "= ? ORDER BY ALL", [species]).fetchall():
@@ -267,6 +273,18 @@ def validate(args):
     require(freeze.get("rule_id") == CR.RULE_ID, f"freeze rule_id {freeze.get('rule_id')!r} != {CR.RULE_ID}")
     require(LK.sha256(args.base) == freeze["base_sha256"], "base sha256 != freeze base_sha256")
     require(LK.sha256(args.corpus) == freeze["out_sha256"], "corpus sha256 != freeze out_sha256")
+    base_con = _ro(args.base)
+    try:
+        species = [r[0] for r in base_con.execute("SELECT species_id FROM build_manifest ORDER BY species_id").fetchall()]
+    finally:
+        base_con.close()
+    args.sflags = CR.species_flags(species, *CR.parse_flag_args(args.flags, args.build_flags))
+    frozen = freeze.get("species_flags")
+    require(isinstance(frozen, dict), "freeze records no per-species species_flags")
+    got = {sp: (r["flags"]["sha256"], [b["sha256"] for b in r["build_flags"]])
+           for sp, r in CR.species_flag_record(args.sflags).items()}
+    want = {sp: (r["flags"]["sha256"], [b["sha256"] for b in r["build_flags"]]) for sp, r in frozen.items()}
+    require(got == want, f"flag file sha256 per species {got} != freeze species_flags {want}")
     manifest_rows, shas = [], {}
     for p in args.interval_manifest:
         rows = LK.read_interval_manifest(p)
@@ -285,8 +303,9 @@ def validate(args):
         require(json.loads(meta["interval_manifest_sha256"]) == shas, "b6_corpus_meta manifest shas != manifests")
         if not args.no_recompute_manifest:
             for sp in sorted(shas):
+                a22, build = args.sflags[sp]
                 model = LK.build_leakage_model(corpus_db=args.base, species=sp, splits_path=args.splits,
-                                               flags_path=args.flags, build_flags=args.build_flags, seed=args.seed,
+                                               flags_path=a22, build_flags=build, seed=args.seed,
                                                fasta_path=args.references.get(sp), gff_path=args.gffs.get(sp))
                 require(LK.interval_manifest_sha256(model.interval_manifest) == shas[sp],
                         f"{sp}: interval manifest != the one recomputed from the base corpus")
@@ -358,8 +377,8 @@ def parse_args(argv):
     ap.add_argument("--corpus", required=True)
     ap.add_argument("--freeze", required=True)
     ap.add_argument("--splits", required=True)
-    ap.add_argument("--flags", required=True)
-    ap.add_argument("--build-flags", nargs="+", required=True)
+    ap.add_argument("--flags", action="append", required=True, help="SPECIES=<A22> per species (as b6_build_corpus)")
+    ap.add_argument("--build-flags", action="append", nargs="+", required=True, help="SPECIES=PATH ... per species")
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--interval-manifest", nargs="+", required=True)
     ap.add_argument("--c0", nargs="+", help="C0 DBs (per species x source, or merged) for the molecule consequences")

@@ -65,6 +65,21 @@ def test_freeze_keys_required(world):
         verify(world, freeze=dict(world.freeze, out_sha256="0" * 64))
 
 
+def test_freeze_species_flags_must_equal_each_c0_recorded_flags(world):
+    """The corpus repair and every C0 of a species used that species' own A22 / A22+A30 files."""
+    sf = world.freeze["species_flags"]
+    with pytest.raises(BD.BindingError, match="species_flags"):
+        verify(world, freeze={k: v for k, v in world.freeze.items() if k != "species_flags"})
+    with pytest.raises(BD.BindingError, match=r"species_flags lacks species \['Athaliana'\]"):
+        verify(world, freeze=dict(world.freeze, species_flags={"Gmax": sf[FX.SPECIES]}))
+    other = {FX.SPECIES: dict(sf[FX.SPECIES], flags={"path": "/x/g.tsv", "sha256": "9" * 64})}
+    with pytest.raises(BD.BindingError, match=r"inputs.flags != freeze species_flags\[Athaliana\].flags"):
+        verify(world, freeze=dict(world.freeze, species_flags=other))
+    short = {FX.SPECIES: dict(sf[FX.SPECIES], build_flags=sf[FX.SPECIES]["build_flags"][:1])}
+    with pytest.raises(BD.BindingError, match="build flags"):
+        verify(world, freeze=dict(world.freeze, species_flags=short))
+
+
 def test_reference_must_equal_c0_inputs_reference(world, tmp_path):
     other = tmp_path / "other.fa"
     other.write_text(Path(world.fasta).read_text().replace("A", "C", 1))

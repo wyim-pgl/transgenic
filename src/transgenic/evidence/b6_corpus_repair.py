@@ -427,9 +427,84 @@ def _species(con):
     return [r[0] for r in con.execute("SELECT species_id FROM build_manifest ORDER BY species_id").fetchall()]
 
 
-def _contexts(con, *, splits, flags, build_flags, seed, components, references, gffs):
+def _flag_file_species(path):
+    """The ``species_id`` values of an A22-schema flag file (rows as ``build_b5.read_qc_flags`` reads them)."""
+    require(os.path.isfile(path), f"flag file {path} missing")
+    with open(path) as fh:
+        header = fh.readline().rstrip("\n").split("\t")
+        require("species_id" in header, f"flag file {path} has no species_id column")
+        i = header.index("species_id")
+        return {c[i] for c in (line.rstrip("\n").split("\t") for line in fh) if len(c) >= 4}
+
+
+def species_flags(species, flags, build_flags):
+    """Per-species flag files ``{species: (a22_path, [build_flag_paths])}``, exactly as each species' C0 build takes
+    them (``--flags <Sp>.geenuff_flags.tsv --build-flags <Sp>.geenuff_flags.tsv <Sp>.swissprot_flags.tsv``).
+
+    ``flags`` / ``build_flags`` are either ``{species: path}`` / ``{species: [paths]}`` (every corpus species, no
+    other), or the legacy single ``path`` / ``[paths]``, accepted only for a single-species corpus: one species'
+    files would give every other species empty flags, so its A22 / A30 hard edge crossers would silently stay
+    unmasked.  Every file must exist and name only its own species."""
+    species = list(species)
+    per = isinstance(flags, dict)
+    require(per == isinstance(build_flags, dict),
+            "--flags and --build-flags must both be per species (SPECIES=PATH) or both the single-species form")
+    if per:
+        fl, bf = dict(flags), {k: list(v) for k, v in build_flags.items()}
+    else:
+        require(len(species) == 1, f"a single --flags file is ambiguous for the {len(species)}-species corpus "
+                                   f"{species}: give --flags SPECIES=PATH and --build-flags SPECIES=PATH per species")
+        fl, bf = {species[0]: flags}, {species[0]: list(build_flags or [])}
+    for name, got in (("--flags", fl), ("--build-flags", bf)):
+        missing, extra = sorted(set(species) - set(got)), sorted(set(got) - set(species))
+        require(not missing, f"{name}: no flag file for species {missing}")
+        require(not extra, f"{name}: species {extra} are not in the corpus build_manifest {species}")
+    out = {}
+    for sp in species:
+        require(bf[sp], f"--build-flags: no flag file for species {sp}")
+        for p in (fl[sp], *bf[sp]):
+            other = sorted(_flag_file_species(p) - {sp})
+            require(not other, f"flag file {p} given for {sp} has rows for other species {other}")
+        out[sp] = (str(fl[sp]), [str(p) for p in bf[sp]])
+    return out
+
+
+def species_flag_record(sflags):
+    """{species: {"flags": {path, sha256}, "build_flags": [{path, sha256}, ...]}} for the freeze and the report."""
+    def rec(p):
+        return {"path": str(Path(p).absolute()), "sha256": LK.sha256(p)}
+
+    return {sp: {"flags": rec(a22), "build_flags": [rec(p) for p in build]} for sp, (a22, build) in sorted(sflags.items())}
+
+
+def parse_flag_args(flags, build_flags):
+    """CLI values -> (flags, build_flags) for ``species_flags``: repeated ``--flags SPECIES=PATH`` and
+    ``--build-flags SPECIES=PATH [SPECIES=PATH ...]`` (a species' build files in the order given), or the legacy
+    ``--flags PATH --build-flags PATH [PATH ...]``.  Mixing the two forms is refused."""
+    def pair(v):
+        k, sep, p = str(v).partition("=")
+        return (k, p) if sep and k and p and "/" not in k else None
+
+    fl = [str(v) for v in flags or []]
+    bf = [str(v) for g in build_flags or [] for v in (g if isinstance(g, (list, tuple)) else [g])]
+    fp, bp = [pair(v) for v in fl], [pair(v) for v in bf]
+    if fp and all(fp) and all(bp):
+        fm, bm = {}, {}
+        for k, p in fp:
+            require(k not in fm, f"--flags names {k} twice")
+            fm[k] = p
+        for k, p in bp:
+            bm.setdefault(k, []).append(p)
+        return fm, bm
+    require(not any(fp) and not any(bp), "--flags/--build-flags mix SPECIES=PATH and bare paths; use SPECIES=PATH")
+    require(len(fl) == 1, "--flags takes SPECIES=PATH per species, or one bare path for a single-species corpus")
+    return fl[0], bf
+
+
+def _contexts(con, *, splits, sflags, seed, components, references, gffs):
     for species in _species(con):
-        yield SpeciesContext(con, species, splits=splits, flags=flags, build_flags=build_flags, seed=seed,
+        a22, build = sflags[species]
+        yield SpeciesContext(con, species, splits=splits, flags=a22, build_flags=build, seed=seed,
                              components=components, reference=(references or {}).get(species),
                              gff=(gffs or {}).get(species))
 
@@ -448,7 +523,8 @@ def measure(base, *, splits, flags, build_flags, seed, manifests, references=Non
     con = _open_ro(base)
     try:
         _require_manifest_coverage(con, components)
-        for ctx in _contexts(con, splits=splits, flags=flags, build_flags=build_flags, seed=seed, components=components,
+        sflags = species_flags(_species(con), flags, build_flags)
+        for ctx in _contexts(con, splits=splits, sflags=sflags, seed=seed, components=components,
                              references=references, gffs=gffs):
             qc = defaultdict(int)
             for rep in iter_species_repairs(con, ctx, qc):
@@ -461,6 +537,7 @@ def measure(base, *, splits, flags, build_flags, seed, manifests, references=Non
         con.close()
     out = report.as_dict()
     out["interval_manifests"] = shas
+    out["species_flags"] = species_flag_record(sflags)
     return report, out
 
 
@@ -509,7 +586,8 @@ def apply(base, out, freeze, *, splits, flags, build_flags, seed, manifests, ref
         dst.execute(LABEL_DROP_DDL)
         dst.execute(META_DDL)
         repair_rows, drop_rows = [], []
-        for ctx in _contexts(src, splits=splits, flags=flags, build_flags=build_flags, seed=seed, components=components,
+        sflags = species_flags(_species(src), flags, build_flags)
+        for ctx in _contexts(src, splits=splits, sflags=sflags, seed=seed, components=components,
                              references=references, gffs=gffs):
             qc = defaultdict(int)
             pending = []
@@ -546,7 +624,7 @@ def apply(base, out, freeze, *, splits, flags, build_flags, seed, manifests, ref
               "base_sha256": base_sha, "out": str(out), "out_sha256": out_sha, "content_sha256": content,
               "interval_manifest_sha256": {k: v["sha256"] for k, v in sorted(shas.items())},
               "interval_manifests": shas, "seed": seed, "code_sha256": _code_shas(), "argv": list(argv),
-              "inputs": _input_shas(splits, flags, build_flags),
+              "inputs": _input_shas(splits), "species_flags": species_flag_record(sflags),
               "species_inputs": _species_inputs(base, references, gffs),
               "counts": measured["counts"], "species_qc": measured["species_qc"],
               "declared_differences": measured["declared_differences"], "events": measured["events"],
@@ -570,12 +648,9 @@ def _row_counts_path(path):
         con.close()
 
 
-def _input_shas(splits, flags, build_flags):
-    out = {"splits": {"path": str(Path(splits).absolute()), "sha256": LK.sha256(splits)},
-           "flags": {"path": str(Path(flags).absolute()), "sha256": LK.sha256(flags)}}
-    for i, p in enumerate(build_flags or []):
-        out[f"build_flags_{i}"] = {"path": str(Path(p).absolute()), "sha256": LK.sha256(p)}
-    return out
+def _input_shas(splits):
+    """Corpus-wide inputs; the flag files are per species (``species_flag_record``)."""
+    return {"splits": {"path": str(Path(splits).absolute()), "sha256": LK.sha256(splits)}}
 
 
 def _species_inputs(base, references, gffs):

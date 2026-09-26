@@ -257,6 +257,7 @@ def _canonical_manifest_sha(rows):
     return BD.interval_manifest_sha256(rows)
 
 
+A22_SHA, A30_SHA = "a2" * 32, "a3" * 32    # the species' flag files as its C0 and the freeze record them
 IMAN_SHA = _canonical_manifest_sha(MANIFEST_ROWS)    # the b6-intervals-v2 manifest sha recorded in the freeze
 FAKE_C0_SHA = {"est": "e" * 64, "ont": "0" * 63 + "1", "pacbio": "0" * 63 + "2", "protein": "0" * 63 + "3"}
 
@@ -326,7 +327,10 @@ def write_c0(tmp, *, molecules=MOLECULES, hsps=HSPS, xjunc=XJUNC, xint=XINT, pro
             scope=scope, gene_id=gene, tile_rn=tile_rn)
     for src in sorted({m[1] for m in molecules}):
         pv = {"inputs": {"corpus": {"path": "a40.db", "sha256": BASE_SHA},
-                         "reference": {"path": "genome.fa", "sha256": reference_sha}},
+                         "reference": {"path": "genome.fa", "sha256": reference_sha},
+                         "flags": {"path": "a22.tsv", "sha256": A22_SHA},
+                         "build_flags_0": {"path": "a22.tsv", "sha256": A22_SHA},
+                         "build_flags_1": {"path": "a30.tsv", "sha256": A30_SHA}},
               "leakage_intervals_sha256": "l" * 64, "interval_manifest_sha256": IMAN_SHA,
               "completeness_codes": {"policy": "null_not_computed_at_c0"}}
         pv.update(provenance_extra.get(src, {}) if provenance_extra else {})
@@ -399,6 +403,10 @@ def writer_a_freeze(corpus, manifests):
             "content_sha256": "c" * 64,
             "interval_manifest_sha256": {k: v["sha256"] for k, v in sorted(manifests.items())},
             "interval_manifests": manifests, "seed": 121, "code_sha256": {}, "argv": [], "inputs": {},
+            "species_flags": {sp: {"flags": {"path": "/x/a22.tsv", "sha256": A22_SHA},
+                                   "build_flags": [{"path": "/x/a22.tsv", "sha256": A22_SHA},
+                                                   {"path": "/x/a30.tsv", "sha256": A30_SHA}]}
+                              for sp in sorted(manifests)},
             "species_inputs": {}, "counts": {}, "species_qc": {}, "declared_differences": {}, "events": {},
             "row_counts": {}, "rows_repaired": 0, "b6_dna_repair_rows": 0, "b6_label_drop_rows": 0,
             "duckdb_version": "1.5.5", "geometry": "D1 default", "grandfathered": "A40 per-gene flanks"}
