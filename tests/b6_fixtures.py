@@ -421,8 +421,12 @@ class Ref:
         self.path, self.sha256 = Path(path), _sha(path)
 
 
-def make_world(tmp, *, molecules=MOLECULES, hsps=HSPS, zero=ZERO, roles_rows=ROLE_ROWS, c0_kw=None):
-    """Build genome, corpus, merged C0, roles, zero lists, panel and the training-family obs cache."""
+def make_world(tmp, *, molecules=MOLECULES, hsps=HSPS, zero=ZERO, roles_rows=ROLE_ROWS, c0_kw=None,
+               relative_manifest=False):
+    """Build genome, corpus, merged C0, roles, zero lists, panel and the training-family obs cache.
+
+    ``relative_manifest``: record the interval manifest path relative to the freeze's directory (the relocatable
+    freeze format, decision 14) instead of the legacy absolute path."""
     from transgenic.evidence import b6_obs_cache as OC
     import duckdb
 
@@ -438,7 +442,8 @@ def make_world(tmp, *, molecules=MOLECULES, hsps=HSPS, zero=ZERO, roles_rows=ROL
     mpath = tmp / "intervals.Athaliana.jsonl"
     if not mpath.exists():
         assert write_interval_manifest(mpath, MANIFEST_ROWS) == IMAN_SHA
-    freeze = writer_a_freeze(corpus, {SPECIES: {"path": str(mpath), "sha256": IMAN_SHA}})
+    mrec = mpath.name if relative_manifest else str(mpath)
+    freeze = writer_a_freeze(corpus, {SPECIES: {"path": mrec, "sha256": IMAN_SHA}})
     freeze_path = tmp / "freeze.json"         # same bytes as freeze_file(tmp, freeze): verify(w) copies stay bound
     freeze_path.write_text(_json.dumps(freeze, indent=1, sort_keys=True) + "\n")
     cache_dir = tmp / "cache_train"           # bound like b6_build_obs_cache: corpus AND freeze (verify_cache checks)

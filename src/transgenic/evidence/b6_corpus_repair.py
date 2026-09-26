@@ -108,15 +108,22 @@ class ComponentIndex:
         return sorted({k[0] for k in self.components})
 
 
-def load_manifests(paths):
-    """Read every ``b6-intervals-v2`` file (canonical, sidecar-verified); one file per species."""
+def load_manifests(paths, *, relative_to=None):
+    """Read every ``b6-intervals-v2`` file (canonical, sidecar-verified); one file per species.
+
+    ``relative_to``: record each path relative to this directory (the freeze's, decision 14) so the freeze and its
+    manifests can move hosts together; consumers resolve it against the freeze's actual location
+    (``b6_bindings.freeze_manifest_path``).  Otherwise the absolute path is recorded (measure report)."""
     rows, shas = [], {}
     for p in paths:
         part = LK.read_interval_manifest(p)
         species = sorted({r["species"] for r in part})
         require(len(species) == 1, f"{p}: an interval manifest must hold exactly one species, found {species}")
         require(species[0] not in shas, f"two interval manifests for {species[0]}")
-        shas[species[0]] = {"path": str(Path(p).absolute()), "sha256": LK.interval_manifest_sha256(part)}
+        path = Path(p).absolute()
+        if relative_to is not None:
+            path = Path(os.path.relpath(path, Path(relative_to).absolute()))
+        shas[species[0]] = {"path": path.as_posix(), "sha256": LK.interval_manifest_sha256(part)}
         rows += part
     return ComponentIndex(rows), shas
 
@@ -489,7 +496,7 @@ def apply(base, out, freeze, *, splits, flags, build_flags, seed, manifests, ref
     require(not bad, f"--apply refused: row-set events {bad} (tiles {report.event_tiles[:10]}); the train rows would "
                      "leave 198,828 (the N_pilot = 4,142 basis, P:999) -- a further amendment is required")
     base_sha = LK.sha256(base)
-    components, shas = load_manifests(manifests)
+    components, shas = load_manifests(manifests, relative_to=freeze.parent)
     tmp = Path(str(out) + ".partial")
     require(not os.path.lexists(tmp) and not os.path.lexists(str(tmp) + ".wal"), f"{tmp} exists; remove it")
     shutil.copyfile(base, tmp)

@@ -275,6 +275,22 @@ def _freeze_manifests(freeze, species_set):
     return man
 
 
+def freeze_manifest_path(freeze_path, rec, species):
+    """Resolve a freeze ``interval_manifests[species].path`` (decision 14): a relative path is resolved against the
+    directory of the freeze file as it is found now (the bundle may have moved hosts); a legacy absolute path is
+    used as recorded.  A path that does not resolve to a file fails closed, naming the recorded path."""
+    raw = _need(rec, "path", f"interval_manifests[{species}]")
+    _require(isinstance(raw, str) and raw, f"freeze interval_manifests[{species}].path must be a non-empty string")
+    path = Path(raw)
+    if path.is_absolute():
+        _require(path.is_file(), f"interval manifest {raw!r} (absolute path recorded in the freeze) missing")
+        return path
+    path = Path(freeze_path).parent / path
+    _require(path.is_file(), f"interval manifest {raw!r} (relative to the freeze directory "
+                             f"{Path(freeze_path).parent}) missing: {path}")
+    return path
+
+
 ZERO_UPSTREAM = {"est": "est_c0", "protein": "protein_c0"}   # b6_routea_agreement QC upstream keys
 
 
@@ -404,7 +420,7 @@ def verify_upstream(*, accept, evidence, roles, zero_lists, freeze=None, corpus=
             for sp in sorted(species_set):
                 rec = _need(locs, sp, "freeze interval_manifests")
                 _require(rec.get("sha256") == man[sp], f"freeze interval_manifests[{sp}] sha != mapping")
-                mpath = Path(_need(rec, "path", f"interval_manifests[{sp}]"))
+                mpath = freeze_manifest_path(freeze_path, rec, sp)
                 _prov_add(provenance, f"interval_manifest:{sp}", mpath)
                 _prov_add(provenance, f"interval_manifest:{sp}.sha256", Path(str(mpath) + ".sha256"))
                 _require(provenance[f"interval_manifest:{sp}"] == man[sp],
@@ -424,7 +440,7 @@ def verify_upstream(*, accept, evidence, roles, zero_lists, freeze=None, corpus=
                     locs = _need(freeze, "interval_manifests", "freeze (legacy C0 revalidation)")
                     rec = _need(locs, sp, "freeze interval_manifests")
                     _require(rec.get("sha256") == man[sp], f"freeze interval_manifests[{sp}] sha != mapping")
-                    rows = read_interval_manifest(_need(rec, "path", f"interval_manifests[{sp}]"), man[sp])
+                    rows = read_interval_manifest(freeze_manifest_path(freeze_path, rec, sp), man[sp])
                     got = revalidate_interval_manifest(legacy, leakage_rerun(p, sp), rows, legacy_intervals_sha256)
                     _require(got == man[sp], f"{where}: revalidated manifest {got} != freeze[{sp}]")
                     revalidated["/".join(key)] = {"c0_sha256": ev_sha, "leakage_intervals_sha256": legacy,
