@@ -170,16 +170,50 @@ def test_est_cap_and_single_record_column():
     assert m.support_counts(observations)["raw_reads"] == 12
 
 
-def test_pcr_units_and_unresolved_nontransitive_group():
+def test_pcr_units_and_nontransitive_chain_is_one_connected_component_molecule():
     observations = [obs(f"r{i}") for i in range(3)]
     for o in observations:
         o.metadata["protocol"] = "cDNA"
     m.assign_molecules(observations)
     assert m.support_counts(observations)["units"] == 1
+    # A~B and B~C within 10 nt on both ends, A!~C (18 nt): decision 9(a) -> one molecule, no refusal.
     for offset, o in zip((0, 9, 18), observations):
         o.alignment = replace(o.alignment, start=51+offset, end=400+offset)
-    with pytest.raises(m.RuleUnresolved, match="non-transitive"):
-        m.assign_molecules(observations)
+    stats = {}
+    m.assign_molecules(observations, pcr_stats=stats)
+    assert len({o.molecule for o in observations}) == 1
+    assert m.support_counts(observations)["units"] == 1
+    assert stats == {"pcr_nonclique_components": 1, "pcr_nonclique_reads": 3}
+    assert m.A16_PCR_LINKAGE == "connected_component"
+    assert m.A16_PCR_LINKAGE_DECISION["linkage"] == m.A16_PCR_LINKAGE
+    # The unit id is the key plus the component's smallest (start, end) pair.
+    key = (observations[0].species, observations[0].assembly, "ONT", "lib",
+           observations[0].alignment.contig, observations[0].strand, observations[0].chain)
+    assert observations[0].molecule == m.hashlib.sha256(repr((key, (51, 400))).encode()).hexdigest()
+
+
+def test_pcr_units_are_independent_of_input_order():
+    import random
+
+    def reads():
+        out = []
+        for i, (s, e) in enumerate([(51, 400), (60, 409), (69, 418), (79, 428), (300, 700), (305, 702)]):
+            o = obs(f"r{i}", run="run1" if i % 2 else "run2")
+            o.metadata["protocol"] = "cDNA"
+            o.alignment = replace(o.alignment, start=s, end=e)
+            out.append(o)
+        return out
+    base = reads()
+    m.assign_molecules(base)
+    want = {o.alignment.read: o.molecule for o in base}
+    assert len(set(want.values())) == 2          # chain r0..r3 (non-clique) and clique r4, r5
+    for seed in range(5):
+        shuffled = reads()
+        random.Random(seed).shuffle(shuffled)
+        stats = {}
+        m.assign_molecules(shuffled, pcr_stats=stats)
+        assert {o.alignment.read: o.molecule for o in shuffled} == want
+        assert stats == {"pcr_nonclique_components": 1, "pcr_nonclique_reads": 4}
 
 
 def test_unknown_umi_status_fails_closed():
@@ -354,8 +388,8 @@ def test_pcr_diagnostic_counts_candidates_without_mutating_or_raising():
     assert [r["non_clique_groups"] for r in d["per_addition"]] == [1, 0]
     assert before == [m.asdict(o) for o in reads + [far]]
     assert d == m.pcr_diagnostics(list(reversed(reads + [far])), additions, specs)
-    with pytest.raises(m.RuleUnresolved):
-        m.assign_molecules(reads)
+    m.assign_molecules(reads)                    # decision 9(a): the non-clique component is one molecule
+    assert len({o.molecule for o in reads}) == 1
 
 
 def test_est_arms_crossed_with_both_readings_in_every_rate():
@@ -417,7 +451,7 @@ def test_b1_missing_orientation_audit_still_refuses(tmp_path):
     assert not (tmp_path / "out").exists()
 
 
-def test_nonclique_cli_keeps_diagnostics_but_no_scores(tmp_path):
+def test_nonclique_cli_scores_one_molecule_and_records_linkage(tmp_path):
     p, config = synthetic_config(tmp_path)
     alignment = tmp_path / "run.sam"
     alignment.write_text("".join(sam(name=f"r{i}", start=51+offset,
@@ -432,12 +466,15 @@ def test_nonclique_cli_keeps_diagnostics_but_no_scores(tmp_path):
     config["runs"][0]["metadata"]["sha256"] = m.digest(meta_path)
     p.write_text(json.dumps(config))
     out = tmp_path / "out"
-    assert m.main(["--config", str(p), "--out", str(out)]) == 2
+    assert m.main(["--config", str(p), "--out", str(out)]) == 0
     report = json.loads((out / "PROVENANCE.json").read_text())
     assert report["pcr_diagnostic"]["non_clique_groups"] == 1
     assert report["pcr_diagnostic"]["per_addition"][0]["non_clique_groups"] == 1
-    assert set(f.name for f in out.iterdir()) == {
-        "PCR_diagnostic_runs.csv", "PCR_diagnostic_additions.csv", "PROVENANCE.json"}
+    assert report["a16_pcr_linkage"] == m.A16_PCR_LINKAGE_DECISION
+    assert report["pcr_units"] == {"pcr_nonclique_components": 1, "pcr_nonclique_reads": 3}
+    assert (out / "DONE").exists() and (out / "per_addition.csv").exists()
+    molecules = {json.loads(line)["molecule"] for line in (out / "C0_observations.jsonl").read_text().splitlines()}
+    assert len(molecules) == 1
     for name, sha in report["outputs_sha256"].items():
         assert m.digest(out / name) == sha
 

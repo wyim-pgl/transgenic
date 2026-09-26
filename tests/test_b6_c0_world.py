@@ -306,6 +306,38 @@ def write_ont_many(tmp, n, run=ONT_MANY_RUN):
     return align, audit_root
 
 
+ONT_NONCLIQUE_RUN = "SRR5"
+ONT_NONCLIQUE_ROLE_ROW = (f"{ONT_DATASET}\t{ONT_NONCLIQUE_RUN}\t{SPECIES}\treference\tPromethION\tRNA-Seq\t1\t5\t\t\t\t"
+                          "c2_training_eligible\tt\t")
+ONT_NONCLIQUE_READS = [
+    # read, exons; one library (no UMI), mono-exonic on the clean span.  n1~n2 and n2~n3 (both ends within 10 nt) but
+    # n1!~n3 (18 nt): a NON-CLIQUE 10-nt PCR-equivalence component (A16, author decision 9(a): ONE molecule).
+    ("n1", [(13001, 13200)]),
+    ("n2", [(13010, 13209)]),
+    ("n3", [(13019, 13218)]),
+    ("n4", [(14001, 14200)]),             # n4~n5: an ordinary clique, a second molecule
+    ("n5", [(14005, 14203)]),
+]
+
+
+def write_ont_nonclique(tmp, run=ONT_NONCLIQUE_RUN):
+    """An ONT cDNA run without UMIs whose reads form one non-clique and one clique PCR-equivalence component."""
+    align, audit_root = tmp / "align", tmp / "audit"
+    lines = [sam(r, "Chr1", ex) for r, ex in ONT_NONCLIQUE_READS]
+    cl_f = "minimap2 -t 32 -ax splice -k14 -G 200000 --secondary=no --cs=long ref.fa reads.fq.gz"
+    cl_a = "minimap2 -t 32 -ax splice -k14 -G 200000 --secondary=yes -N 50 -p 0.5 --cs=long ref.fa reads.fq.gz"
+    d = align / SPECIES / "proj1" / run
+    f = _write_sam(d / f"{run}.sam", cl_f, lines)
+    _write_done(d, f, [("uf", "none")])
+    _write_meta(d, dict(library="SRX1000104", bioproject="PRJ2", genotype_stratum="reference", ingestion_qc_pass="true",
+                        mapping_ambiguous="false", protocol="cDNA", umi_status="absent"),
+                [dict(read=r) for r, _ in ONT_NONCLIQUE_READS])
+    ad = audit_root / SPECIES / "proj1" / run
+    a = _write_sam(ad / f"{run}.audit.sam", cl_a, lines)
+    _write_done(ad, a, [("source", "ont"), ("run", run)])
+    return align, audit_root
+
+
 PACBIO_DATASET = "training/pacbio/Athaliana/proj2"
 PACBIO_RUN = "SRR2"
 PACBIO_READS = [
