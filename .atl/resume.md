@@ -2,7 +2,11 @@
 
 > **현재 작업 정본: [운영학습 착수 준비](../notes/b6_production_start_20260925/PROGRESS.md).** 사용자 운영학습 시작 승인 후 실제 입력을 준비 중이다. **GPU 훈련은 아직 미제출**. 동결 순서는 real4GPU WP5파일럿4142업데이트 후 go판정, 그다음 WP6다.
 >
-> **09-25 17:45PDT 최신:** EST C0 **9종 전부 PASS**(Vvinifera 6172296 포함). HSP 파일럿6172318 실패: DIAMOND 기본 masking이 BTOP에 `X`를 남겨 계약 재생(codon/subject truth)과 충돌(약5.5%행) → 의존잡 6172319–26 취소, **해결방식 저자결정 대기**. ONT metadata 6172290 90/90 완료 → **ONT C0 6종 6172409–6172414 제출**(Osativa168M reads 14d 등). PacBio C0 3잡 RUNNING(~5GB). 결정 대기: HSP masking 처리, protein roles 행, Athaliana cui2020 정렬 재사용·FLIC 정렬 방식.
+> **09-26 새벽 최신:** 전면 병렬화. 실행/대기: PacBio Sbicolor 6172283, ONT C0 Osativa6172409·Sitalica6172410·Gmax6172411·Vvinifera6172567·Ptrichocarpa6172568·Ppatens6172569, HSP 9종 6172570–78(코드6b6dcd3), protein C0 9종 6172579–87(afterok HSP), FLIC 6172527/28→metadata6172588→Athaliana ONT C0 6172589, col0 retry 6172542. 완료 PASS: EST 9종, PacBio Vvinifera·Ptrichocarpa.
+>
+> **09-25 밤:** 결정 5–8 받음(HSP X 인정(a), protein 역할행 추가, cui2020 재사용, FLIC 별도정렬). protein roles 새파일 `DATASET_ROLES.longread_protein_v1.tsv` 생성(기존 무변경). Athaliana ONT metadata 6172498(35런) 제출. HSP 계약수정·FLIC 드라이버는 에이전트 작업 중. PacBio Vvinifera·Ptrichocarpa C0 PASS, Sbicolor PacBio·ONT 6종 C0 진행중.
+>
+> **09-25 17:45PDT:** EST C0 **9종 전부 PASS**(Vvinifera 6172296 포함). HSP 파일럿6172318 실패: DIAMOND 기본 masking이 BTOP에 `X`를 남겨 계약 재생(codon/subject truth)과 충돌(약5.5%행) → 의존잡 6172319–26 취소, **해결방식 저자결정 대기**. ONT metadata 6172290 90/90 완료 → **ONT C0 6종 6172409–6172414 제출**(Osativa168M reads 14d 등). PacBio C0 3잡 RUNNING(~5GB). 결정 대기: HSP masking 처리, protein roles 행, Athaliana cui2020 정렬 재사용·FLIC 정렬 방식.
 >
 > **09-25 17:00PDT:** 저자결정 3건 반영([기록](../notes/b6_production_start_20260925/AUTHOR_DECISIONS_20260925_evening.md)): UMI 125런 absent 유지, Vvinifera 누락175 library=`NCBI-EST`, extern OOM 전역 무시. 주말 무중단 진행 지시. **EST C0 8종 PASS**. 진행중: Vvinifera EST C0 6172296, ONT metadata 배열6172290(6종90런), PacBio C0 6172281–83, HSP투영 6172318(파일럿)→6172319–26. 보류: Athaliana ONT(정렬 경로/검증런 미정렬), **protein C0는 DATASET_ROLES protein행 부재로 저자결정 필요**. 코드 `d929ba2`(b6-integration, --missing-library).
 >

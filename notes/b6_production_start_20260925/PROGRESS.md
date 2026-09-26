@@ -1,10 +1,31 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## 전면 병렬 제출: 2026-09-26 새벽
+
+사용자 지시 "지금 전부 패러럴로 돌려줘". 의존성이 있는 단계는 Slurm `afterok`로 미리 걸어 전 단계가 끝나는 즉시 시작하게 했다.
+
+- **ONT C0 재제출(메모리 축소):** 대기 중이던 Vvinifera·Ptrichocarpa·Ppatens(6172412–14)를 취소하고 48G/DuckDB36GB로 재제출 **6172567–6172569**. 근거: PacBio에서 peak RSS가 DuckDB 한도+약3GB였다. 노드당 할당 가능 메모리는 MemSpecLimit 24GB를 뺀 232GB다.
+- **HSP 계약 수정 `6b6dcd3`**(masked X, opt-in; 파일별 전체시험 1089→1111 pass, 실패 ID 전후 동일). 소스 `source_masked_x`(tar sha `2fab3690…77bb`). **HSP 9종 동시 제출 6172570–6172578**(파일럿 없음, 32G, `hsp_v2/`, [hsp_project.sbatch](hsp_project.sbatch) 원격 sha `866f5201…1efe`).
+- **protein C0 9종 6172579–6172587**(각 HSP afterok, 64G/DuckDB40GB, [protein_c0.sbatch](protein_c0.sbatch) sha `cad2ecd1…ce0f`). tool provenance: miniprot 0.18-r281, DIAMOND 2.1.24.178([protein_c0_provenance.py](protein_c0_provenance.py)).
+- **Athaliana 체인:** FLIC metadata **6172588**(afterok 6172528), Athaliana ONT C0 **6172589**(afterok 6172588+6172542). C0 잡이 [athaliana_ont_view.py](athaliana_ont_view.py)로 뷰(cui2020 정본 이름, audit_view, col0 retry metadata, FLIC)를 만든 뒤 빌드한다.
+
+## 결정 5–8 적용 시작: 2026-09-25 밤
+
+결정 원문·범위는 [AUTHOR_DECISIONS_20260925_evening.md](AUTHOR_DECISIONS_20260925_evening.md) §5–8.
+
+- **5 HSP masked X (a):** 계약·시험 변경을 writer 1명에 위임했다(b6-integration, 시험 선작성). 완료 후 소스 배포 → HSP 8종 재제출.
+- **6 protein 역할행:** 기존 동결 roles는 무변경. 새 `inputs/DATASET_ROLES.longread_protein_v1.tsv`(sha256 `b190e4e8…454e`) = 기존 longread roles + `protein/<Sp>` 9행(run `miniprot`, role c2_training_eligible, genotype_stratum은 각 종 EST 역할행 값). protein C0에서만 `--roles`로 쓴다([protein_roles.txt](protein_roles.txt)).
+- **7 cui2020 재사용:** Athaliana ONT 학습35런(cDNA34/direct_RNA1) manifest를 정본 dataset 기준으로 동결하고 cui2020은 물리 디렉터리 `cui2020_PRJNA594286`·제외 사본 reads 경로로 대응([prepare_ont_manifest_athaliana.py](prepare_ont_manifest_athaliana.py)). metadata 배열 **6172498**(0-34%4, [ont_metadata_athaliana.sbatch](ont_metadata_athaliana.sbatch) sha `5ec6b13f…38fe`). C0 뷰는 primary·audit 모두 정본 이름으로 symlink한다(audit도 뷰 root 사용).
+- **8 FLIC 별도 드라이버:** production 스크립트를 복제하되 역할검사만 3런 검증전용으로 바꾼 드라이버 작성을 에이전트에 위임했다(제출은 검토 후 직접).
+- Athaliana ONT C0는 FLIC 정렬·metadata 완료 후 제출한다.
+- Athaliana ONT metadata 6172498: 32/35 완료, `training/ont/Athaliana/col0_DRP009401` 3런(DRR424731–33) 실패. 원인: dataset 경로에 PRJ* 없음(`b6_c0_metadata.py` longread_rows). ENA API 조회로 DRP009401 = **PRJDB14952** 확인(실험 DRX409928–30이 시트와 일치). 기존 `--bioproject` 옵션으로 새 경로 `metadata/ont_retry/`에 재처리 **6172542**. 실패 출력은 보존.
+- FLIC 별도 드라이버 검토 후 제출: 방향성 감사 **6172527**, 정렬 **6172528**(aftercorr). production 대비 차이는 역할검사·런 목록·driver 표기·덮어쓰기 방지뿐이다([flic_align/](flic_align/)). 중앙 PROVENANCE.tsv scope는 `longread_validation_evidence`.
+
 ## ONT C0 제출: 2026-09-25 18:00 PDT
 
 - ONT metadata 6172290 **90/90 COMPLETED 0:0**. 뷰 생성 시 각 run의 metadata sha·protocol·UMI(absent)를 다시 대조했다([ont_c0_views.txt](ont_c0_views.txt)).
 - [ont_c0.sbatch](ont_c0.sbatch) sha256 `e18b742c…0670`, 16CPU/128G/DuckDB64GB: Osativa **6172409**(28런, 168.4M reads, 14d), Sitalica **6172410**(9런, 85.2M, 10d), Gmax **6172411**(27런, 80.8M, 10d), Vvinifera **6172412**(11런, 43.5M, 6d), Ptrichocarpa **6172413**(8런, 13.8M, 3d), Ppatens **6172414**(7런, 8.1M, 3d). 시간은 추정이며 PacBio 완료 후 처리량으로 재평가한다. GPFS 여유 25TB, 사용자 quota 없음.
-- PacBio C0 3잡은 RUNNING, batch MaxRSS 약4.9–5.1GB(35분 시점).
+- PacBio C0 3잡은 RUNNING, batch MaxRSS 약4.9–5.1GB(35분 시점). Vvinifera PacBio는 1h06m·MaxRSS24.4GB로 끝났다(약37k reads/min). 이 속도면 Osativa ONT 168M reads는 약3일이다. 메모리가 read 수에 비례하는지는 아직 모른다.
 
 ## HSP 투영 실패와 원인: 2026-09-25 17:40 PDT
 
@@ -37,6 +58,10 @@
 | Osativa EST | 6172276 | PASS | 1,244,141 | 1,081,943 | 1,189,706 | 0.99936 | 0/0 | 일치 | 4.51G |
 | Gmax EST | 6172275 | PASS | 1,374,461 | 1,273,169 | 1,033,891 | **0.99872** | 0/0 | 일치 | 7.57G |
 | Vvinifera EST | 6172296 | PASS | 450,180 | 391,527 | 422,773 | **0.99421** | 0/0 | 일치 | – |
+| Vvinifera PacBio | 6172281 | PASS | 2,456,610 | 2,030,546 | 2,456,610 | 0.99758 | 0/0 | 일치 | 24.42G (1h06m) |
+| Ptrichocarpa PacBio | 6172282 | PASS | 9,847,562 | 7,218,072 | 9,847,562 | 0.99939 | 0/0 | 일치 | 66.57G (4h01m) |
+
+메모리 관찰: Ptrichocarpa PacBio MaxRSS 66.6GB는 DuckDB 한도64GB+약2.6GB로, read 수 비례가 아니라 DuckDB 한도에 묶인 것으로 보인다(Vvinifera 2.5M reads는 24.4GB로 한도 미만). 확정은 아니며 ONT 대형 잡(128G)의 batch MaxRSS를 계속 본다. 처리량은 약41k reads/min.
 
 \* Athaliana는 held-out 유전자좌가 있어 `gate_heldout_overlapping`=`gate_heldout_excluded`=104,170(겹친 분자를 모두 제외했다는 계수)이고 위반 지표 `gate_heldout_retained`=0이다.
 

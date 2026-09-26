@@ -24,3 +24,12 @@
 
 - 원문: `주말이라 멈추지 말고 계속 진행해줘`
 - 적용: 승인된 범위의 실데이터 준비를 확인 요청 없이 계속한다. 새 저자 결정이 필요한 과학적 판단은 기록하고 다른 실행 가능한 항목을 진행한다.
+
+## 5–8. 추가 결정 (2026-09-25 밤)
+
+사용자 원문: `1. A 2. 추가 3. 괜ㅊ낳아 4. 별로로 정렬`
+
+5. **HSP 투영 BTOP `X` = (a) 채택.** DIAMOND 기본 masking이 BTOP에 남긴 `X`는 masking된 자리로 인정한다. query `X`는 실제 codon이 정상 sense codon인지, subject `X`는 실제 잔기가 존재하는지만 검증한다. 다른 불일치는 계속 실패로 처리한다. blastx는 재실행하지 않는다.
+6. **protein C0용 DATASET_ROLES `protein/<Sp>` 행 추가 승인.** 기존 동결 파일(`inputs/DATASET_ROLES.longread_v1.tsv`)은 실행 중인 잡이 쓰므로 바이트를 바꾸지 않고, protein 행을 더한 새 파일을 만들어 protein C0에만 쓴다.
+7. **Athaliana cui2020 기존 정렬 재사용 승인.** 두 사본의 내용이 같으므로(gzip 시각 2바이트만 다름) 정본 dataset `ont/Athaliana_cui2020_PRJNA594286` 이름의 뷰로 기존 primary·audit 정렬을 쓴다. PROVENANCE·BAM header에 제외 사본 경로가 남는 것을 수용한다. metadata `--reads`는 정렬이 실제로 쓴 파일(제외 사본 경로)이다.
+8. **Athaliana FLIC 검증3런은 별도 드라이버로 정렬.** 기존 production 스크립트의 역할 검사는 바꾸지 않는다. §3.3 방향성 감사와 primary 정렬을 같은 도구·명령으로 수행하는 별도 스크립트를 쓴다. 검증 전용이라 audit 정렬(-N50)은 필요 없다(`b6_build_c0.py:685`).

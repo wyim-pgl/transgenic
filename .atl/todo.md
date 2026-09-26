@@ -16,7 +16,8 @@
 - [x] Sitalica EST C0 재시도 CPU6172228 COMPLETED0:0(3m06s), 생산자QC status=PASS: accepted31,723/retained19,310, exhaustiveness0.99984, leakage_nonzero0, gate_*전부0, sha256 `02116ca6…1064` 로그·QC일치. 반복조회금지.
 - [x] UMI absent 유지·Vvinifera NCBI-EST·extern OOM 무시 저자결정 기록(17:00).
 - [x] EST C0 8종 PASS·해시 일치. Vvinifera metadata 재처리 6172286(NCBI-EST 175) 완료.
-- [ ] **저자결정 필요:** HSP 투영 BTOP `X`(DIAMOND masking) 처리 (a)X인정 (b)--masking 0 재실행 (c)행 제외. 결정 후 HSP 8종 재제출.
+- [ ] HSP X 인정(결정5): writer 커밋 검토·소스배포 → Sitalica 파일럿 → 8종 HSP 재제출 → protein tool provenance → protein C0 9종(`--roles DATASET_ROLES.longread_protein_v1.tsv`).
+- [ ] Athaliana ONT: metadata 6172498 + FLIC 별도정렬(결정8) → FLIC metadata → cui2020 정본이름 뷰(결정7) → ONT C0.
 - [ ] **진행중:** ONT C0 6172409–14(6종) / PacBio C0 6172281–83 → 각 QC·해시 검증 / HSP 6172318→6172319–26 / PacBio C0 6172281–83.
 - [ ] Athaliana ONT: cui2020 정본행↔정렬디렉터리 대응, FLIC 검증3런 정렬(원래 longread 파이프라인) 후 ONT metadata·C0.
 - [ ] **저자결정 필요:** protein C0용 `protein/<Sp>` DATASET_ROLES 행 추가(동결 manifest 변경). 결정 후 protein tool provenance 작성·protein C0.

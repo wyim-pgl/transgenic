@@ -1,0 +1,1 @@
+WROTE /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/inputs/DATASET_ROLES.longread_protein_v1.tsv b190e4e8de2d522d81201f51a826c5e2bf5e8ddeecbf72fdac4007321459454e protein_rows 9 strata ['reference', 'unknown']

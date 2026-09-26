@@ -1,0 +1,4 @@
+c47a5ecb0b72b69f3523dc48836569d2  flic_longread_align.sbatch
+02e7f48b5eb97c2254cfb57a492bead7  flic_orientation_audit.sbatch
+AUDIT 6172527
+ALIGN 6172528

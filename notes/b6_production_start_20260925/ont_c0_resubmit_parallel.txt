@@ -1,0 +1,9 @@
+RESUBMIT Vvinifera 6172567 mem=48G duckdb=36GB time=6-00:00:00
+RESUBMIT Ptrichocarpa 6172568 mem=48G duckdb=36GB time=3-00:00:00
+RESUBMIT Ppatens 6172569 mem=48G duckdb=36GB time=3-00:00:00
+6172569|b6_ont_c0_Ppatens|PENDING|(Resources)
+6172568|b6_ont_c0_Ptrichocarpa|PENDING|(Resources)
+6172567|b6_ont_c0_Vvinifera|PENDING|(Resources)
+6172411|b6_ont_c0_Gmax|RUNNING|cpu-48
+6172410|b6_ont_c0_Sitalica|RUNNING|cpu-51
+6172409|b6_ont_c0_Osativa|RUNNING|cpu-49

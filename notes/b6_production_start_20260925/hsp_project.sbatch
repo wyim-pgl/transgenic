@@ -3,19 +3,19 @@
 #SBATCH --account=cpu-s1-pgl-0
 #SBATCH --partition=cpu-s1-pgl-0
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=128G
+#SBATCH --mem=32G
 #SBATCH --time=24:00:00
 #SBATCH --output=/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/logs/%x_%j.out
 # Route-B inputs for one species: EST molecule map from the verified EST C0, then the est_protein_hsp projection of
 # the production blastx outputs (orthodb + swissprot). Lineage: swissprot lineage.tsv (orthodb rows are a verified
-# identical subset). No new blastx is run.
+# identical subset). No new blastx is run. Code 6b6dcd3: DIAMOND-masked X accepted (author decision 2026-09-25).
 # Usage: sbatch hsp_project.sbatch <species> <blastx_dir> <est_c0_db>
 set -euo pipefail
 SP=$1 BX=$2 ESTC0=$3
 ROOT=/data/gpfs/assoc/pgl/data/Transgenic
 PREP=$ROOT/evidence/b6_prepare_20260925
-OUT=$PREP/hsp/$SP
-SOURCE=$PREP/source
+OUT=$PREP/hsp_v2/$SP
+SOURCE=$PREP/source_masked_x
 SIF=/data/gpfs/home/wyim/scratch/singularity/micromamba.sif
 PY=/data/gpfs/home/wyim/micromamba/bin/python
 SAMTOOLS=/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/samtools

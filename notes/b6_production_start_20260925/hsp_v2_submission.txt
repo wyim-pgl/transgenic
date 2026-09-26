@@ -1,0 +1,11 @@
+/data/gpfs/home/wyim/b6-src-6b6dcd3.tar.gz: OK
+866f5201fe40e8ebc85e26a9ab421de928ce0bfce2471849095fa4597e921efe  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/hsp_project_v2.sbatch
+SUBMIT Sitalica 6172570
+SUBMIT Athaliana 6172571
+SUBMIT Bdistachyon 6172572
+SUBMIT Gmax 6172573
+SUBMIT Osativa 6172574
+SUBMIT Ppatens 6172575
+SUBMIT Ptrichocarpa 6172576
+SUBMIT Sbicolor 6172577
+SUBMIT Vvinifera 6172578
