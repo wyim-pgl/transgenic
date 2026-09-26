@@ -229,8 +229,10 @@ def rerun_leakage_model(p, species):
 
     inputs = _need(p, "inputs", f"c0_provenance {species}")
     paths = {}
-    for name, rec in inputs.items():
-        if name in ("corpus", "splits", "flags", "gff", "reference") or name.startswith("build_flags_"):
+    order = ("corpus", "splits", "flags", "gff", "reference")
+    for name, rec in sorted(inputs.items(), key=lambda kv: (order.index(kv[0]) if kv[0] in order else len(order),
+                                                            kv[0])):
+        if name in order or name.startswith("build_flags_"):
             path = Path(_need(rec, "path", f"inputs.{name}"))
             _require(path.is_file() and sha256_file(path) == _need(rec, "sha256", f"inputs.{name}"),
                      f"revalidation: recorded input {name} {path} is missing or changed")
@@ -289,6 +291,37 @@ def freeze_manifest_path(freeze_path, rec, species):
     _require(path.is_file(), f"interval manifest {raw!r} (relative to the freeze directory "
                              f"{Path(freeze_path).parent}) missing: {path}")
     return path
+
+
+def freeze_species_flags(freeze, species_set):
+    """The freeze's per-species flag shas {species: (a22 sha, [build flag shas])} (b6_corpus_repair
+    ``species_flags``): every covered species present, every value a sha256."""
+    sf = _need(freeze, "species_flags", "freeze")
+    _require(isinstance(sf, dict), "freeze species_flags must be the per-species mapping {species: {flags, build_flags}}")
+    missing = sorted(species_set - set(sf))
+    _require(not missing, f"freeze species_flags lacks species {missing}")
+    out = {}
+    for sp in sorted(species_set):
+        rec = sf[sp]
+        a22 = _need(_need(rec, "flags", f"freeze species_flags[{sp}]"), "sha256", f"freeze species_flags[{sp}].flags")
+        build = _need(rec, "build_flags", f"freeze species_flags[{sp}]")
+        _require(isinstance(build, list) and build, f"freeze species_flags[{sp}].build_flags must be a non-empty list")
+        build = [_need(b, "sha256", f"freeze species_flags[{sp}].build_flags") for b in build]
+        _require(all(_is_sha(v) for v in (a22, *build)), f"freeze species_flags[{sp}] values must be sha256 hex")
+        out[sp] = (a22, build)
+    return out
+
+
+def c0_flag_shas(p, where):
+    """A C0's recorded (inputs.flags sha, effective build flag shas): ``build_flags_<i>`` in index order, or the
+    A22 file alone when the C0 was built without --build-flags (leakage.prepare_genes' default)."""
+    a22 = _input_sha(p, "flags", where)
+    inputs = p["inputs"]
+    keys = sorted((k for k in inputs if k.startswith("build_flags_")), key=lambda k: int(k.rsplit("_", 1)[1]))
+    _require([int(k.rsplit("_", 1)[1]) for k in keys] == list(range(len(keys))),
+             f"{where}: build_flags_* indices {keys} are not 0..n-1")
+    build = [_input_sha(p, k, where) for k in keys]
+    return a22, build or [a22]
 
 
 ZERO_UPSTREAM = {"est": "est_c0", "protein": "protein_c0"}   # b6_routea_agreement QC upstream keys
@@ -429,9 +462,15 @@ def verify_upstream(*, accept, evidence, roles, zero_lists, freeze=None, corpus=
             _require(not Path(str(corpus) + ".wal").exists(), f"{corpus}.wal exists")
             _require(c_sha == out_sha, f"B6 corpus sha256 {c_sha} != freeze out_sha256 {out_sha}")
             revalidated = {}
+            frozen_flags = freeze_species_flags(freeze, species_set)
             for key, p in sorted(prov.items()):
                 sp, where = key[0], f"c0_provenance {key}"
                 _require(_input_sha(p, "corpus", where) == base, f"{where}: inputs.corpus != freeze base_sha256")
+                a22, build = c0_flag_shas(p, where)
+                _require(a22 == frozen_flags[sp][0], f"{where}: inputs.flags != freeze species_flags[{sp}].flags "
+                                                     "(the repair must use each species' own A22 file)")
+                _require(build == frozen_flags[sp][1], f"{where}: build flags {build} != freeze "
+                                                       f"species_flags[{sp}].build_flags {frozen_flags[sp][1]}")
                 legacy = _need(p, "leakage_intervals_sha256", where)
                 if "interval_manifest_sha256" in p:
                     _require(p["interval_manifest_sha256"] == man[sp],

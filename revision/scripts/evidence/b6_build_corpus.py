@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """WP2 rule 5 repair of the A40 tile corpus into the B6 corpus (plan v4.1 §2; ``transgenic.evidence.b6_corpus_repair``).
 
-    b6_build_corpus.py --base b5_full_a40.db --splits <split TSV> --flags <A22 flags> --build-flags <A22> <A30>
+    b6_build_corpus.py --base b5_full_a40.db --splits <split TSV>
+                       --flags Sp1=<Sp1>.geenuff_flags.tsv [--flags Sp2=... ...]
+                       --build-flags Sp1=<Sp1>.geenuff_flags.tsv Sp1=<Sp1>.swissprot_flags.tsv [--build-flags Sp2=... ...]
                        --seed <corpus build seed> --interval-manifest <species>.b6-intervals-v2.jsonl [...]
                        (--measure-only [--report measure.json] | --apply --out b5_full_b6_v1.db --freeze freeze.json)
+
+Flag files are per species, exactly as each species' C0 build takes them (--flags <Sp>.geenuff_flags.tsv
+--build-flags <Sp>.geenuff_flags.tsv <Sp>.swissprot_flags.tsv): every build_manifest species needs its A22 file and
+its build files, and a file naming another species is refused.  The bare form --flags <A22> --build-flags <A22> <A30>
+is accepted only for a single-species corpus (one species' files would leave every other species' hard edge
+crossers unmasked).  Per-species flag paths and sha256 go into the freeze and the report (``species_flags``).
 
 ``--measure-only`` counts every repair and the two row-set events (a train/valid tile over masked fraction 0.60; an
 RC twin whose tile loses its last labelled gene) and writes nothing but the report.  ``--apply`` measures first and
@@ -43,8 +51,10 @@ def parse_args(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--base", required=True, help="the frozen A40 tile corpus (closed DuckDB, no WAL)")
     ap.add_argument("--splits", required=True)
-    ap.add_argument("--flags", required=True, help="A22 GeenuFF flag file (rule 4(a) hard flags)")
-    ap.add_argument("--build-flags", nargs="+", required=True, help="every flag file the A40 build used (A22 + A30)")
+    ap.add_argument("--flags", action="append", required=True,
+                    help="SPECIES=<Sp>.geenuff_flags.tsv (A22 rule 4(a) hard flags), repeated for every species")
+    ap.add_argument("--build-flags", action="append", nargs="+", required=True,
+                    help="SPECIES=PATH ... every flag file the A40 build used for that species (A22 + A30)")
     ap.add_argument("--seed", type=int, required=True, help="the A40 corpus build seed (verifies every repaired tile)")
     ap.add_argument("--interval-manifest", nargs="+", required=True, help="b6-intervals-v2 JSONL, one per species")
     ap.add_argument("--reference", action="append", help="SPECIES=FASTA override of the build_manifest path")
@@ -63,7 +73,8 @@ def main(argv=None):
     a = parse_args(argv)
     try:
         refs, gffs = _pairs(a.reference, "--reference"), _pairs(a.gff, "--gff")
-        common = dict(splits=a.splits, flags=a.flags, build_flags=a.build_flags, seed=a.seed,
+        flags, build_flags = CR.parse_flag_args(a.flags, a.build_flags)
+        common = dict(splits=a.splits, flags=flags, build_flags=build_flags, seed=a.seed,
                       manifests=a.interval_manifest, references=refs, gffs=gffs)
         if a.measure_only:
             if a.out or a.freeze:

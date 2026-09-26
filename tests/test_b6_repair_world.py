@@ -153,3 +153,66 @@ def test_variant_world_places_the_held_out_component_as_designed(tmp_path):
     model = leakage_model(world)
     he = [iv for iv in model.intervals if iv.cause == "heldout" and iv.tile_rn is None and iv.gene_id == "gHE"]
     assert [(iv.start0, iv.end0) for iv in he] == [(HE_COMPONENT[0] - HE_FLANK, HE_COMPONENT[1] + HE_FLANK)]
+
+
+# ------------------------------------------------------------------ two-species variant (per-species A22 flags)
+SPECIES_B = "Gmax"
+B_A22_GENES = ("gW2",)     # species B: gW2 is A22-hard (missing_start), crossing the 156,460 edge; not A30
+B_A30_GENES = ("gW",)
+FLAG_HEADER = "species_id\tgene_id\ttranscript_id\tflag\tstart\tend\n"
+
+
+def build_two_species_world(tmp, *, rc="all"):
+    """Species A (= ``SPECIES``, the variant world as above) and species B (``SPECIES_B``: the same genome and
+    genes) in ONE corpus, each with its own A22 and A30 flag file as the real per-species QC outputs
+    (training_input/qc/<Sp>.geenuff_flags.tsv / <Sp>.swissprot_flags.tsv).  In B, gW2 is A22-hard and crosses a
+    kept train tile's edge, so B's interval manifest carries an ``a22_hard`` component that A's flags never name."""
+    from transgenic.evidence import leakage as LK
+
+    tmp = Path(tmp)
+    tmp.mkdir(parents=True, exist_ok=True)
+    b5 = LK.load_build_b5()
+    gene_set = genes()
+    fasta, genome = build_genome(tmp, gene_set)
+    lines = ["##gff-version 3"]
+    for gid, (chrom, strand, exons, _, _) in gene_set.items():
+        gs, ge = exons[0][0], exons[-1][1]
+        lines.append(f"{chrom}\tt\tgene\t{gs}\t{ge}\t.\t{strand}\t.\tID={gid};Name={gid}")
+        lines.append(f"{chrom}\tt\tmRNA\t{gs}\t{ge}\t.\t{strand}\t.\tID={gid}.1;Parent={gid}")
+        for k, (s, e) in enumerate(exons):
+            lines.append(f"{chrom}\tt\tCDS\t{s}\t{e}\t.\t{strand}\t0\tID={gid}.1.c{k};Parent={gid}.1")
+    gff = tmp / "genes.gff3"
+    gff.write_text("\n".join(lines) + "\n")
+    split = tmp / "split.tsv"
+    split.write_text("species_id\tgene_id\torthogroup_id\tsplit\tstrict_holdout\tseed\tsource_version\n" + "".join(
+        f"{sp_id}\t{gid}\tOG_{gid}\t{sp}\t{'true' if strict else 'false'}\t123\tv1\n"
+        for sp_id in (SPECIES, SPECIES_B) for gid, (_, _, _, sp, strict) in gene_set.items()))
+    flags = {}
+    for sp_id, a22_genes, a30_genes in ((SPECIES, ("gF",), A30_GENES), (SPECIES_B, B_A22_GENES, B_A30_GENES)):
+        a22 = tmp / f"{sp_id}.geenuff_flags.tsv"
+        a22.write_text(FLAG_HEADER + "".join(f"{sp_id}\t{g}\t\tmissing_start\t\t\n" for g in a22_genes))
+        a30 = tmp / f"{sp_id}.swissprot_flags.tsv"
+        a30.write_text(FLAG_HEADER + "".join(f"{sp_id}\t{g}\t\tswissprot_caution_frameshift\t\t\n" for g in a30_genes))
+        flags[sp_id] = (a22, a30)
+    manifest = tmp / "species.tsv"
+    manifest.write_text("species_id\tspecies\ttable_s1_version\tfasta\tfasta_md5\tgff\tgff_md5\tnote\n" + "".join(
+        f"{sp_id}\t{sp_id}\tT\t{fasta}\t\t{gff}\t\t\n" for sp_id in (SPECIES, SPECIES_B)))
+    corpus = tmp / "corpus.db"
+    b5.build_b5_database(str(corpus), str(manifest), str(split), rc=rc, seed=SEED, verify_md5=False,
+                         window_policy="tile6144-v3", qc_flags_path=[str(p) for pair in flags.values() for p in pair])
+    return {"tmp": tmp, "fasta": fasta, "genome": genome, "gff": gff, "split": split, "flags": flags,
+            "corpus": corpus, "genes": gene_set}
+
+
+def two_species_manifests(world):
+    """Each species' b6-intervals-v2 manifest, built as its C0 builds it: that species' own A22 / A22+A30 files."""
+    from transgenic.evidence import leakage as LK
+
+    out = {}
+    for sp_id, (a22, a30) in world["flags"].items():
+        model = LK.build_leakage_model(corpus_db=world["corpus"], species=sp_id, splits_path=world["split"],
+                                       flags_path=a22, build_flags=[a22, a30], seed=SEED)
+        path = world["tmp"] / f"{sp_id}.b6-intervals-v2.jsonl"
+        LK.write_interval_manifest(model.interval_manifest, path)
+        out[sp_id] = path
+    return out

@@ -160,7 +160,10 @@ def test_freeze_records_the_bindings(world, manifest, applied):
     assert rec["seed"] == RW.SEED and rec["events"] == {"tiles_over_mask_fraction": 0, "rc_twin_orphaned": 0}
     assert rec["counts"][RW.SPECIES]["train"]["closure_member"]["label_drops"] == 1
     assert rec["row_counts"] == CR._row_counts_path(world["corpus"])
-    assert {"splits", "flags", "build_flags_0", "build_flags_1"} <= set(rec["inputs"])
+    assert set(rec["inputs"]) == {"splits"}
+    sf = rec["species_flags"][RW.SPECIES]
+    assert sf["flags"]["sha256"] == LK.sha256(world["a22"])
+    assert [b["sha256"] for b in sf["build_flags"]] == [LK.sha256(world["a22"]), LK.sha256(world["a30"])]
     assert "src/transgenic/evidence/b6_corpus_repair.py" in rec["code_sha256"]
     assert not Path(str(out) + ".wal").exists() and not Path(str(out) + ".partial").exists()
 
@@ -285,3 +288,118 @@ def test_a_wp2_freeze_feeds_a_per_species_consumer(world, applied, c0):
         CR.freeze_manifest_sha256(rec, "Gmax")
     with pytest.raises(CR.RepairError, match="required key"):
         CR.verify_freeze({k: v for k, v in rec.items() if k != "base_sha256"})
+
+
+# ------------------------------------------------------------------------------ per-species A22 / A30 flags
+def _sp_kw(w, manifests, **over):
+    kw = dict(splits=w["split"], seed=RW.SEED, manifests=list(manifests.values()),
+              flags={sp: a22 for sp, (a22, _) in w["flags"].items()},
+              build_flags={sp: [a22, a30] for sp, (a22, a30) in w["flags"].items()})
+    kw.update(over)
+    return kw
+
+
+def _sp_cli(w, manifests, *extra):
+    out = ["--base", str(w["corpus"]), "--splits", str(w["split"]), "--seed", str(RW.SEED),
+           "--interval-manifest", *[str(p) for p in manifests.values()]]
+    for sp, (a22, a30) in w["flags"].items():
+        out += ["--flags", f"{sp}={a22}", "--build-flags", f"{sp}={a22}", f"{sp}={a30}"]
+    return out + list(extra)
+
+
+@pytest.fixture(scope="module")
+def two(tmp_path_factory):
+    w = RW.build_two_species_world(tmp_path_factory.mktemp("two_species"))
+    return w, RW.two_species_manifests(w)
+
+
+def test_species_b_a22_hard_edge_crosser_is_masked_with_its_own_flags(two):
+    w, manifests = two
+    b_a22 = [r for r in LK.read_interval_manifest(manifests[RW.SPECIES_B]) if r["cause"] == "a22_hard"]
+    assert [r["component_id"] for r in b_a22] == ["gW2"]            # B's C0 manifest names the A22-hard seed
+    _, out = CR.measure(w["corpus"], **_sp_kw(w, manifests))
+    assert out["counts"][RW.SPECIES_B]["train"]["a22_hard"]["spans"] > 0
+    assert "a22_hard" not in out["counts"][RW.SPECIES]["train"]    # A's gW2 is A30-only, never an A22 cause
+    for sp, (a22, a30) in w["flags"].items():
+        rec = out["species_flags"][sp]
+        assert rec["flags"] == {"path": str(Path(a22).absolute()), "sha256": LK.sha256(a22)}
+        assert [b["sha256"] for b in rec["build_flags"]] == [LK.sha256(a22), LK.sha256(a30)]
+
+
+def test_one_species_flag_file_is_refused_for_a_multi_species_corpus(two):
+    """The old single --flags / --build-flags form gave species B no flags: its A22-hard edge crosser went unmasked
+    without an error.  It is now refused unless the corpus has a single species."""
+    w, manifests = two
+    a22, a30 = w["flags"][RW.SPECIES]
+    with pytest.raises(CR.RepairError, match="ambiguous"):
+        CR.measure(w["corpus"], **_sp_kw(w, manifests, flags=a22, build_flags=[a22, a30]))
+
+
+def test_a_species_without_its_flags_is_refused(two):
+    w, manifests = two
+    a22, a30 = w["flags"][RW.SPECIES]
+    with pytest.raises(CR.RepairError, match=r"--flags: no flag file for species \['Gmax'\]"):
+        CR.measure(w["corpus"], **_sp_kw(w, manifests, flags={RW.SPECIES: a22}))
+    with pytest.raises(CR.RepairError, match=r"--build-flags: no flag file for species \['Gmax'\]"):
+        CR.measure(w["corpus"], **_sp_kw(w, manifests, build_flags={RW.SPECIES: [a22, a30]}))
+    with pytest.raises(CR.RepairError, match="not in the corpus build_manifest"):
+        CR.measure(w["corpus"], **_sp_kw(w, manifests, flags=dict(_sp_kw(w, manifests)["flags"], Osativa=a22)))
+
+
+def test_a_flag_file_naming_another_species_is_refused(two):
+    w, manifests = two
+    a_a22, a_a30 = w["flags"][RW.SPECIES]
+    kw = _sp_kw(w, manifests)
+    with pytest.raises(CR.RepairError, match="has rows for other species"):
+        CR.measure(w["corpus"], **dict(kw, flags=dict(kw["flags"], Gmax=a_a22)))
+    with pytest.raises(CR.RepairError, match="has rows for other species"):
+        CR.measure(w["corpus"], **dict(kw, build_flags=dict(kw["build_flags"], Gmax=[a_a22, a_a30])))
+
+
+def test_cli_per_species_flags_measure_and_mixed_forms(two, tmp_path, capsys):
+    w, manifests = two
+    report = tmp_path / "measure.json"
+    assert BC.main(_sp_cli(w, manifests, "--measure-only", "--report", str(report))) == 0
+    out = json.loads(report.read_text())
+    assert set(out["species_flags"]) == {RW.SPECIES, RW.SPECIES_B}
+    assert out["counts"][RW.SPECIES_B]["train"]["a22_hard"]["spans"] > 0
+    a22, a30 = w["flags"][RW.SPECIES]
+    mixed = [x for x in _sp_cli(w, manifests, "--measure-only")]
+    mixed[mixed.index(f"{RW.SPECIES}={a22}")] = str(a22)             # one bare --flags among SPECIES=PATH ones
+    assert BC.main(mixed) == 1
+    assert "mix SPECIES=PATH and bare paths" in capsys.readouterr().err
+    single = ["--base", str(w["corpus"]), "--splits", str(w["split"]), "--seed", str(RW.SEED), "--interval-manifest",
+              *[str(p) for p in manifests.values()], "--flags", str(a22), "--build-flags", str(a22), str(a30),
+              "--measure-only"]
+    assert BC.main(single) == 1
+    assert "ambiguous" in capsys.readouterr().err
+
+
+def test_parse_flag_args_keeps_each_species_build_files_in_order():
+    fl, bf = CR.parse_flag_args(["A=/q/a22", "B=/q/b22"], [["A=/q/a22", "A=/q/a30"], ["B=/q/b22", "B=/q/b30"]])
+    assert fl == {"A": "/q/a22", "B": "/q/b22"} and bf == {"A": ["/q/a22", "/q/a30"], "B": ["/q/b22", "/q/b30"]}
+    assert CR.parse_flag_args(["/q/x=1/a22"], [["/q/a22", "/q/a30"]]) == ("/q/x=1/a22", ["/q/a22", "/q/a30"])
+    with pytest.raises(CR.RepairError, match="twice"):
+        CR.parse_flag_args(["A=/q/a", "A=/q/b"], [["A=/q/a"]])
+
+
+def test_two_species_apply_freeze_and_validator_bind_each_species_flags(two, tmp_path, capsys):
+    w, manifests = two
+    out, freeze = tmp_path / "b6.db", tmp_path / "freeze.json"
+    assert BC.main(_sp_cli(w, manifests, "--apply", "--out", str(out), "--freeze", str(freeze))) == 0
+    rec = json.loads(freeze.read_text())
+    for sp, (a22, a30) in w["flags"].items():
+        assert rec["species_flags"][sp]["flags"]["sha256"] == LK.sha256(a22)
+        assert [b["sha256"] for b in rec["species_flags"][sp]["build_flags"]] == [LK.sha256(a22), LK.sha256(a30)]
+    assert rec["counts"][RW.SPECIES_B]["train"]["a22_hard"]["spans"] > 0
+    args = ["--base", str(w["corpus"]), "--corpus", str(out), "--freeze", str(freeze), "--splits", str(w["split"]),
+            "--seed", str(RW.SEED), "--interval-manifest", *[str(p) for p in manifests.values()]]
+    for sp, (a22, a30) in w["flags"].items():
+        args += ["--flags", f"{sp}={a22}", "--build-flags", f"{sp}={a22}", f"{sp}={a30}"]
+    assert VC.main(args + ["--report", str(tmp_path / "v.json")]) == 0
+    assert json.loads((tmp_path / "v.json").read_text())["qc"]["manifests_recomputed"] == 2
+    bad = tmp_path / "freeze_bad.json"
+    rec["species_flags"][RW.SPECIES_B]["flags"]["sha256"] = "0" * 64
+    bad.write_text(json.dumps(rec))
+    assert VC.main([x if x != str(freeze) else str(bad) for x in args] + ["--no-recompute-manifest"]) == 1
+    assert "freeze species_flags" in capsys.readouterr().err
