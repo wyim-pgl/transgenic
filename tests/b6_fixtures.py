@@ -263,7 +263,10 @@ FAKE_C0_SHA = {"est": "e" * 64, "ont": "0" * 63 + "1", "pacbio": "0" * 63 + "2",
 
 
 def write_c0(tmp, *, molecules=MOLECULES, hsps=HSPS, xjunc=XJUNC, xint=XINT, provenance_extra=None,
-             drop_provenance_keys=(), exhaustiveness=None, reference_sha="f" * 64, qc_rows=True):
+             drop_provenance_keys=(), exhaustiveness=None, reference_sha="f" * 64, qc_rows=True,
+             relative_c0_paths=False):
+    """``relative_c0_paths``: record merge_manifest.input_path relative to the merged DB's directory (the
+    relocatable merge format, decision 14; the C0 files sit in ``c0/``) instead of the legacy absolute path."""
     import duckdb
     from transgenic.evidence import c0_schema as CS
 
@@ -340,9 +343,11 @@ def write_c0(tmp, *, molecules=MOLECULES, hsps=HSPS, xjunc=XJUNC, xint=XINT, pro
             ins("c0_provenance", species=SPECIES, source=src, key=k, value=_json.dumps(v, sort_keys=True))
         if qc_rows:
             ins("c0_qc", species=SPECIES, source=src, metric="leakage_nonzero", value=0.0)
-        c0_path = Path(tmp) / f"{SPECIES}.{src}.c0.db"
+        c0_path = Path(tmp) / ("c0" if relative_c0_paths else "") / f"{SPECIES}.{src}.c0.db"
+        c0_path.parent.mkdir(parents=True, exist_ok=True)
         Path(str(c0_path) + ".PROVENANCE.txt").write_text(f"output\t{c0_path}\noutput_sha256\t{FAKE_C0_SHA[src]}\n")
-        ins("merge_manifest", input_path=str(c0_path), input_sha256=FAKE_C0_SHA[src], species=SPECIES, source=src)
+        recorded = c0_path.relative_to(tmp).as_posix() if relative_c0_paths else str(c0_path)
+        ins("merge_manifest", input_path=recorded, input_sha256=FAKE_C0_SHA[src], species=SPECIES, source=src)
     ex = {SPECIES: {"by_source": {s: {"below_cap": 10000, "molecules": 10000} for s in ("est", "ont", "pacbio")}}}
     if exhaustiveness is not None:
         ex = exhaustiveness

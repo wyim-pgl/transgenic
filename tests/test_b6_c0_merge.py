@@ -353,3 +353,46 @@ def test_merge_refuses_an_hsp_whose_library_no_est_member_has(dbs, tmp_path):
     with pytest.raises(M.MergeError, match="stale projection after a metadata correction"):
         M.merge([dbs[0], stale], tmp_path / "s.db")
     assert not (tmp_path / "s.db").exists()
+
+
+# ------------------------------------------------------------------------------ decision 14: relocatable input paths
+def _bundle(dbs, root):
+    """C0 DBs + their .PROVENANCE.txt under ``root/c0`` (the published bytes, unchanged)."""
+    (root / "c0").mkdir(parents=True)
+    out = []
+    for db in dbs:
+        dst = root / "c0" / Path(db).name
+        shutil.copy(db, dst)
+        shutil.copy(str(db) + ".PROVENANCE.txt", str(dst) + ".PROVENANCE.txt")
+        out.append(dst)
+    return out
+
+
+def _manifest(db):
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        return con.execute("SELECT input_path, input_sha256, species, source FROM merge_manifest ORDER BY ALL").fetchall()
+    finally:
+        con.close()
+
+
+def test_merge_records_input_paths_relative_to_the_merged_db_directory(dbs, tmp_path):
+    from transgenic.evidence import b6_bindings as BD
+
+    a = tmp_path / "A"
+    inputs = _bundle(dbs, a)
+    merged = a / "evidence" / "evidence_c0.db"
+    result = M.merge([str(p) for p in inputs], merged)
+    rows = _manifest(merged)
+    assert sorted(r[0] for r in rows) == sorted(f"../c0/{p.name}" for p in inputs)
+    assert sorted(i["path"] for i in result["inputs"]) == sorted(r[0] for r in rows)
+    shutil.copytree(a, tmp_path / "B")                    # the merged DB and its C0 bundle move together
+    shutil.rmtree(a)
+    moved = tmp_path / "B" / "evidence" / "evidence_c0.db"
+    for path, sha, sp, src in rows:
+        pv = BD.merged_input_path(moved, path, f"{sp}/{src}")
+        assert pv == tmp_path / "B" / "c0" / (Path(path).name + ".PROVENANCE.txt")
+        assert BD.recorded_sha(pv.with_name(Path(path).name)) == sha
+    (tmp_path / "B" / "c0" / (Path(rows[0][0]).name + ".PROVENANCE.txt")).unlink()
+    with pytest.raises(BD.BindingError, match="relative to the merged evidence directory"):
+        BD.merged_input_path(moved, rows[0][0], "x")

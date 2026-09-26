@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 from transgenic.evidence import b6_track_spec as TS
@@ -224,7 +225,12 @@ def legacy_intervals_sha256(intervals):
 
 def rerun_leakage_model(p, species):
     """§8.3 (a): rerun build_leakage_model from the C0's RECORDED inputs and seed; each input's bytes must still
-    hash to the recorded sha256."""
+    hash to the recorded sha256.
+
+    Not relocatable, by design: the recorded inputs are the C0 builder's own absolute paths (corpus, splits, flags,
+    GFF, reference), so this runs only where they exist.  It is reached only for a legacy C0 that records no
+    ``interval_manifest_sha256``; every C0 built by b6_build_c0 since plan v4.1 §2.5 records it (the B6 training
+    C0s do), and verify_upstream then compares that sha with the freeze instead of rerunning."""
     from transgenic.evidence import leakage as LK
 
     inputs = _need(p, "inputs", f"c0_provenance {species}")
@@ -235,7 +241,8 @@ def rerun_leakage_model(p, species):
         if name in order or name.startswith("build_flags_"):
             path = Path(_need(rec, "path", f"inputs.{name}"))
             _require(path.is_file() and sha256_file(path) == _need(rec, "sha256", f"inputs.{name}"),
-                     f"revalidation: recorded input {name} {path} is missing or changed")
+                     f"revalidation: recorded input {name} {path} is missing or changed (legacy C0 revalidation "
+                     "reads the builder's recorded absolute input paths; it is not relocatable)")
             paths[name] = str(path)
     for name in ("corpus", "splits", "flags"):
         _require(name in paths, f"revalidation: C0 records no {name} input")
@@ -322,6 +329,24 @@ def c0_flag_shas(p, where):
              f"{where}: build_flags_* indices {keys} are not 0..n-1")
     build = [_input_sha(p, k, where) for k in keys]
     return a22, build or [a22]
+
+
+def merged_input_path(evidence, raw, key):
+    """Resolve a ``merge_manifest.input_path`` (decision 14): a relative path is resolved against the directory of the
+    merged evidence DB as it is found now (the merged DB and its C0 bundle may have moved hosts together, in the same
+    relative layout); a legacy absolute path is used as recorded.  Returns the C0's ``.PROVENANCE.txt`` path, which
+    must exist (fail closed, naming the recorded path)."""
+    _require(isinstance(raw, str) and raw, f"C0 {key}: merge_manifest input_path must be a non-empty string")
+    path = Path(raw)
+    if path.is_absolute():
+        pv = Path(str(path) + ".PROVENANCE.txt")
+        _require(pv.is_file(), f"C0 {key}: PROVENANCE file {pv} missing (absolute input_path recorded by the merge)")
+        return pv
+    base = Path(evidence).absolute().parent
+    pv = Path(os.path.normpath(base / path) + ".PROVENANCE.txt")
+    _require(pv.is_file(), f"C0 {key}: PROVENANCE file of input_path {raw!r} (relative to the merged evidence "
+                           f"directory {base}) missing: {pv}")
+    return pv
 
 
 ZERO_UPSTREAM = {"est": "est_c0", "protein": "protein_c0"}   # b6_routea_agreement QC upstream keys
@@ -419,8 +444,7 @@ def verify_upstream(*, accept, evidence, roles, zero_lists, freeze=None, corpus=
         _snapshot_provenance(provenance, "evidence", evidence)
         for path, sha, sp, src in con.execute("SELECT input_path, input_sha256, species, source FROM merge_manifest "
                                               "ORDER BY species, source").fetchall():
-            pv = Path(str(path) + ".PROVENANCE.txt")
-            _require(pv.is_file(), f"C0 {sp}/{src}: PROVENANCE file {pv} missing")
+            pv = merged_input_path(evidence, path, f"{sp}/{src}")
             rec = dict(line.split("\t", 1) for line in pv.read_text().splitlines() if "\t" in line)
             _require(rec.get("output_sha256", "").strip() == sha,
                      f"C0 {sp}/{src}: PROVENANCE output_sha256 != merge_manifest input sha256")

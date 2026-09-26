@@ -4,7 +4,11 @@ The freeze and its interval manifests are built on one host (pronghorn, /data/gp
 (DeltaAI, inside a container, /work/...).  The freeze therefore records each manifest path relative to the freeze
 file's own directory; consumers resolve it against the freeze's actual location.  Hash verification is unchanged:
 a manifest that does not resolve, or whose bytes differ, fails closed.  Legacy absolute-path freezes still verify
-where the file exists."""
+where the file exists.
+
+The merged evidence DB likewise records each C0 input path relative to its own directory (b6_merge_evidence_db);
+verify_upstream resolves it against the merged DB's actual location, so the C0 bundle (DBs + .PROVENANCE.txt)
+travels with it in the same relative layout."""
 import json
 import os
 import shutil
@@ -132,3 +136,66 @@ def test_apply_writes_manifest_paths_relative_to_the_freeze_directory(tmp_path):
     assert rec["path"] == "../intervals/Athaliana.b6-intervals-v2.jsonl"
     assert (freeze.parent / rec["path"]).resolve() == manifest.resolve()
     assert rec["sha256"] == LK.sha256(manifest)
+
+
+# ------------------------------------------------------------------------------ merged C0 input paths
+def _c0_provenance_files(root):
+    return sorted(Path(root).glob("c0/*.PROVENANCE.txt"))
+
+
+@pytest.fixture
+def relocatable_c0(tmp_path):
+    return _world(tmp_path, relative_manifest=True, c0_kw={"relative_c0_paths": True})
+
+
+def _move_c0_bundle(w, dst):
+    """Copy the whole bundle and remove the build location's C0 PROVENANCE files (and the freeze manifest), so a
+    pass at ``dst`` cannot read them from the original directory."""
+    _move_bundle(w, dst)
+    files = _c0_provenance_files(w.tmp)
+    assert len(files) == 4
+    for f in files:
+        f.unlink()
+    return dst
+
+
+def test_merged_db_records_c0_paths_relative_to_its_directory(relocatable_c0):
+    import duckdb
+
+    con = duckdb.connect(str(relocatable_c0.c0), read_only=True)
+    paths = [r[0] for r in con.execute("SELECT input_path FROM merge_manifest ORDER BY ALL").fetchall()]
+    con.close()
+    assert paths and all(p.startswith("c0/") and not os.path.isabs(p) for p in paths)
+
+
+def test_merged_db_and_c0_bundle_moved_together_verify_there(relocatable_c0, tmp_path):
+    dst = _move_c0_bundle(relocatable_c0, tmp_path / "B")
+    ident = _verify_at(dst, relocatable_c0)
+    assert ident["family"] == "training"
+    c0_entries = {k for k in ident["provenance"] if k.startswith("c0:")}
+    assert len(c0_entries) == 4
+
+
+def test_tampered_c0_provenance_in_the_moved_bundle_fails_closed(relocatable_c0, tmp_path):
+    dst = _move_c0_bundle(relocatable_c0, tmp_path / "B")
+    pv = _c0_provenance_files(dst)[0]
+    pv.write_text(pv.read_text().replace("output_sha256\t", "output_sha256\t0"))
+    with pytest.raises(BD.BindingError, match="PROVENANCE output_sha256 != merge_manifest input sha256"):
+        _verify_at(dst, relocatable_c0)
+
+
+def test_missing_c0_provenance_in_the_moved_bundle_names_the_relative_path(relocatable_c0, tmp_path):
+    dst = _move_c0_bundle(relocatable_c0, tmp_path / "B")
+    _c0_provenance_files(dst)[0].unlink()
+    with pytest.raises(BD.BindingError, match=r"input_path 'c0/Athaliana\.\w+\.c0\.db' \(relative to the merged "
+                                              r"evidence directory"):
+        _verify_at(dst, relocatable_c0)
+
+
+def test_legacy_absolute_c0_path_fails_closed_when_the_file_is_gone(tmp_path):
+    w = _world(tmp_path, relative_manifest=True)            # merge_manifest records absolute C0 paths (legacy)
+    dst = _move_bundle(w, tmp_path / "B")
+    for f in sorted(w.tmp.glob("*.c0.db.PROVENANCE.txt")):
+        f.unlink()
+    with pytest.raises(BD.BindingError, match="absolute input_path recorded by the merge"):
+        _verify_at(dst, w)
