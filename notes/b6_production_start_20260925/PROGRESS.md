@@ -1,5 +1,20 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## interval manifest 확인과 코퍼스 repair 다종 flags 공백 (2026-09-26)
+
+- interval manifest 6172774 9/9 COMPLETED. **9종 모두 manifest sha256 = C0가 기록한 `interval_manifest_sha256`**(Athaliana 30500fb9…, Bdistachyon f53b92ba…, Gmax 9d106e24…, Osativa c1e099bc…, Ppatens 164a9bd5…, Ptrichocarpa 414cd467…, Sbicolor 2f1882b3…, Sitalica 16793df4…, Vvinifera 88ba85ff…). D1 (A)가 C0 제외 구간을 바꾸지 않음을 확인.
+- **코퍼스 repair CLI 공백:** `b6_build_corpus.py --flags`는 단일 A22 파일이고 `b6_corpus_repair._contexts`(L423-425)가 모든 종에 같은 경로를 넘긴다. 실제 A22 flags는 종별 파일(`training_input/qc/<Sp>.geenuff_flags.tsv`, species 열 포함)이다. 한 종 파일만 주면 다른 종은 `rule_flags`가 비어 A22 hard seed가 빠지고, 실패하지 않고 마스크가 덜 적용된다(silent). 시험 world가 1종이라 드러나지 않았다. freeze 경로 에이전트가 같은 파일(`b6_corpus_repair.py`)을 수정 중이라, 그 작업을 합친 뒤 종별 `--flags SPECIES=PATH`(C0와 같은 파일) 지원을 구현하고 measure-only를 돌린다. 합친 A22 파일을 임시로 만들어 쓰는 방식은 C0가 기록한 flags sha와 달라 쓰지 않는다.
+- freeze 상대경로 `a7b13ca` → b6-integration **`83616e4`**: freeze의 interval manifest 경로를 freeze 디렉터리 기준 상대경로로 저장, 실제 freeze 위치에서 해석, 해시 검증 동일, 절대경로(구) 호환. 신규 시험 9개(5실패→9통과). 남은 절대경로: `verify_upstream`이 병합 DB `merge_manifest.input_path`의 `.PROVENANCE.txt`를 연다(pronghorn 경로). 결정 14 범위로 판단해 **종별 flags(FIX 1)와 병합 입력 경로 상대화(FIX 2)**를 worktree `/tmp/b6-repair-merge-paths`에서 에이전트가 구현 중.
+
+## WP5 파일럿 런처·GATED (결정 15·16, 2026-09-26)
+
+- 결정 16(D1=(A) 기본안) 기록. interval manifest 9종 배열 **6172774** 제출([intervals.sbatch](intervals.sbatch), `$PREP/intervals/`) — 결과를 C0의 `interval_manifest_sha256`과 대조 예정.
+- 파일럿 런처 `2a3312c` → b6-integration **`b85b901`**: `--stop-after-updates 4142`(optimizer update, 전 rank 동일), `step_04142/PILOT_FINAL`·meta(`checkpoint_kind: fixed_step`), stop target을 run identity에 포함(불일치 resume 거부), `configs/b6_400m_win_v3_wp5_pilot.json`(GATED, B6/C2, 4 rank, seed123, aug20261037), DeltaAI 템플릿 `revision/scripts/b6/wp5_pilot.sbatch`(BINDINGS 자리표시, 미제출). 신규 시험 `test_b6_pilot.py` 25실패→18통과(+16 subtests, 2-rank gloo 선점/재개 포함).
+- **GATED(결정 15):** 코드상 GATED가 문자열뿐이던 것을 `gate_evidence` 필수로 강화. 증거: 메모리 벤치 3208285(2-rank, peak 62.959GB <100GB), 벤치가 인증한 config sha `7a2246…`, 동결 아키텍처 sha, CP4 3210279·3210585. 새 증거를 만들지 않았다. 4-rank 벤치는 없다(A51이 2-rank 허용).
+- **LR 스케줄:** 전체 run 스케줄을 4,142에서 자름(rule 11: C3/C4/C6 step-N 비교와 일치). t_total=182,270(B5 parity: unsharded 로더 길이/rank당 누적 × max_epochs), warmup 9,113. 에이전트는 4,142가 warm-up(0.45×peak)이라고 보고했으나, **accelerate 0.34 `AcceleratedScheduler.step`은 split_batches=False에서 업데이트당 num_processes(4)번 진행**하므로 4 GPU에서 업데이트 4,142 = scheduler 16,568 > warmup → LR ≈ 0.957×peak(검증: accelerate 소스 직접 확인). 단일 프로세스 가정의 오판이다.
+- 예산: B5 실측 6.15 h/epoch(4 GPU) → 2 epoch ≈ 49 GPU-h/arm(계획 ~25). B6+C2 ≈ 98 GPU-h. 잔액 1,022 − B5 예비 220 = 802에서 파일럿 후 약 704가 남아 WP6(2×400+짧은 arm) 예산 재검토 필요.
+- WP6은 파일럿에서 resume 불가(recipe sha·stop target 다름) → 새로 시작. sbatch 기본 DETERMINISTIC=1(CP4 조건과 동일, 속도 비용).
+
 ## HSP v3 첫 성공과 protein C0 A19 필터 (2026-09-26)
 
 - **Sitalica HSP v3 6172692 COMPLETED**(36m, 0.45GB): orthodb raw 1,371,252 → projected 560,303, dropped(query codon truth) 17,767, length M+I+D 529,002 / M+I+D+F만 95,186, masked-X HSP 41,355; swissprot raw 290,009 → projected 123,872, dropped 1,213.

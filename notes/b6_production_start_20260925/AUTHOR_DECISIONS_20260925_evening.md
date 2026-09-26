@@ -55,3 +55,11 @@
 사용자 원문: `apply the same N=100 rule to all of that species' sources`
 
 - ONT 결과를 기다리지 않고 Gmax(EST+ONT)·Vvinifera(EST+PacBio+ONT)의 모든 소스를 감사 N=100으로 다시 정렬하고 C0를 재빌드한다. 해당 종의 N=50 C0는 병합에 쓰지 않는다.
+
+## 14–15. freeze 경로·config gate (2026-09-26)
+
+사용자 원문: `1. B 2. 바꿔도 됨. 3. 뭐가 필요한지 알려줘`
+
+14. **freeze의 interval manifest 경로 = (b) 코드 변경.** pronghorn에서 만든 freeze/manifest를 DeltaAI에서 경로만 바꿔 쓸 수 있게 한다. 해시 검증은 그대로 유지하고, 경로만 재지정 가능하게 한다.
+15. **`configs/b6_400m_win_v3.json` UNGATED → GATED 전환 승인.** 운영에서 `--allow-ungated`는 쓰지 않는다.
+16. **D1 flank geometry = (A) 기본안 확정** (사용자 원문 `a`, 2026-09-26). 마스크 구간 = C0 rule 4(a) 연결성분 구간(성분 범위 ± A40이 실제로 뽑은 최대 구성원 flank, 없으면 150), 새 난수 없음. C0 제외 구간 불변이라 C0·HSP·protein C0 재빌드 없음(provenance 재검증만). A40 유전자별 flank는 grandfathered이며 A33.3 문자 준수로 주장하지 않는다. 근거: `notes/a46_approval/B6_WP2_WP4_PLAN_v4_20260923.md` §2.3, §11 D1.
