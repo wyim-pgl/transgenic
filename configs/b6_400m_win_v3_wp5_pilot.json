@@ -1,0 +1,115 @@
+{
+  "name": "b6_400m_win_v3_wp5_pilot",
+  "recipe_source": "configs/b5_400m_win_v3.json (A42) + B6 block (A46 rules 6-9, 11; plan B6_WP2_WP4_PLAN_v4 section 9)",
+  "encoder_model": "LongSafari/hyenadna-large-1m-seqlen-hf",
+  "d_model_encoder": 768,
+  "d_model_decoder": 1536,
+  "encoder_layers": 12,
+  "decoder_layers": 12,
+  "encoder_n_layer": 12,
+  "encoder_attention_heads": 6,
+  "decoder_attention_heads": 6,
+  "attention_window": [
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024,
+    1024
+  ],
+  "dropout": 0.1,
+  "do_segment": false,
+  "optimizer": "AdamW",
+  "lr": 5e-05,
+  "weight_decay": 0.02,
+  "effective_batch_size": 96,
+  "lr_schedule": "linear warm-up 5% of total steps, then linear decay",
+  "max_epochs": 22,
+  "checkpoint_rule": "minimum mean validation loss; patience 3 epochs; compare loss to loss (not perplexity)",
+  "split_source": "data/splits/b5_orthogroup_split_v1.tsv (no random_split)",
+  "seeds": {
+    "primary": 123,
+    "confirmatory": [
+      456,
+      789
+    ]
+  },
+  "species_manifest": "data/manifests/b5_species_v1.tsv",
+  "gsf_spec": "docs/gsf_spec_v1.md",
+  "notes": "WP5 pilot (work plan v1.2 WP5; A46 rule 11): configs/b6_400m_win_v3.json unchanged except name, notes, arms and the wp5_pilot block. B6 and C2 train on 4 GPUs (DDP) for exactly N_pilot = 4,142 optimizer updates at seed 123 / aug_seed 20261037 and archive their step_04142 checkpoints (PILOT_FINAL, never best-validation). The LR schedule is the full-run schedule (B5 accounting over max_epochs 22) truncated at 4,142, as for the C3/C4/C6/C7 matched-budget arms. The trainer refuses --allow-ungated, another arm, another stop target or another world size with this config. WP6 full runs use configs/b6_400m_win_v3.json. B6 evidence mode (A46): the B5 win_v3 recipe unchanged (optimizer, lr, schedule, effective batch 96, stop rule, tiers) plus 31 evidence channels through the existing linear fusion and a 512-element chain memory read by a gated cross-attention block in each of the 12 decoder layers (alpha_l = 0 at init, excluded from weight decay). Loss = L_GSF only (A50.2). GATED by author decision 15 (2026-09-26) on the recorded CP2 129 kb memory bench (job 3208285, 2 ranks per A51, 62.959 GB peak reserved per rank <= 100 GB) and CP4 (jobs 3210279, 3210585); gate_evidence records it. The bench certified this file's bytes before the gate flip (certified_config_sha256); only gate_status, gate_evidence and this note changed. Production never uses --allow-ungated.",
+  "window_policy": "tile6144-v3",
+  "window_tiers": [
+    30720,
+    61440,
+    129024
+  ],
+  "max_encoder_seqlen": 129024,
+  "tier_up_prob": 0.3,
+  "min_flank": 1000,
+  "gff_vocab_version": "v3",
+  "vocab_size": 290,
+  "max_decoder_position_embeddings": 8192,
+  "max_label_tokens": 8192,
+  "empty_keep_prob": 0.1,
+  "genes_per_window_cap": 96,
+  "encoder_ffn_dim": 3072,
+  "decoder_ffn_dim": 3072,
+  "base_recipe": "b5_400m_win_v3",
+  "gate_status": "GATED: memory bench passed",
+  "gate_evidence": {
+    "memory_bench_job": "3208285",
+    "memory_bench_world_size": 2,
+    "memory_bench_peak_reserved_gb": 62.959,
+    "memory_bench_report_sha256": "1f66b93a7d77b41cc69501082e544a102917f26f14663e0d06e135ea583f6211",
+    "certified_config_sha256": "7a224645755f6a05400bca4d8d539770790793e5eb72cf45ab10ccd74a2db58d",
+    "architecture_sha256": "7f941f5c32ba77dc79dbcf8c179758d378f0aa012b0cf1a155fc4a6b9d450b7a",
+    "cp4_jobs": {
+      "wp3_fixtures": "3210279",
+      "synthetic": "3210585"
+    },
+    "decision": "author decision 15 (2026-09-26); A51 (gate certified on 2 or 4 ranks); notes/b6_cp4_20260925/FINAL_VERIFICATION.md"
+  },
+  "evidence_channels": 31,
+  "chain_elements": 512,
+  "chain_d_model": 512,
+  "chain_heads": 8,
+  "chain_dropout": 0.1,
+  "loss": "L_GSF",
+  "seed": 123,
+  "aug_seed_base": 20260914,
+  "channel_dropout_p": 0.5,
+  "thinning_set": [
+    0.01,
+    0.1,
+    0.5,
+    1.0
+  ],
+  "withhold_source_rate": 0.1,
+  "withhold_library_rate": 0.1,
+  "n_pilot": 4142,
+  "patience": 3,
+  "memory_abort_gb": 110,
+  "memory_gate_gb": 100,
+  "compile_policy": "torch.compile inductor, whole model; torch._dynamo.config.suppress_errors = False; recompile after warm-up or zero Inductor kernels = failure",
+  "checkpointing": "non-reentrant",
+  "arms": [
+    "B6",
+    "C2"
+  ],
+  "wp5_pilot": {
+    "stop_after_updates": 4142,
+    "arms": [
+      "B6",
+      "C2"
+    ],
+    "world_size": 4,
+    "seed": 123,
+    "aug_seed": 20261037
+  }
+}
