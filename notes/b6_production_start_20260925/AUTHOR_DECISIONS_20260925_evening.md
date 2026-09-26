@@ -41,3 +41,17 @@
 9. **A16 비추이적 10-nt PCR 동치 = (a) 연결성분 전체를 한 분자로 합친다.** UMI absent cDNA ONT의 (library, contig, strand, intron chain) 묶음에서 양 끝 10nt 동치 그래프의 연결성분 하나가 분자 하나다. clique가 아닌 성분도 거부하지 않는다. 비-clique 성분 수와 read 수를 QC에 기록한다.
 10. **HSP 길이 계약:** 행마다 DIAMOND 보고 길이가 M+I+D 또는 M+I+D+F 중 하나와 정확히 같으면 통과. 어느 쪽으로 통과했는지 QC에 기록한다. 둘 다 아니면 11의 제외 대상.
 11. **실제 서열로 재생되지 않는 HSP 행:** 잡을 중단하지 않고 그 행만 제외하며, 제외 이유(메시지 종류)별 개수를 QC에 남긴다. 제외는 fail-closed(투영에 쓰지 않음)이다.
+
+## 12. Bdistachyon exhaustiveness: 감사 N=100 재실행 (2026-09-26)
+
+사용자 원문: `A AND n=100 IS GOOD. WATCHER 20 MIN NOT 5 MIN`
+
+- Bdistachyon(EST 단독, 종 exhaustiveness 0.99897 < 0.999)의 감사 정렬을 **N=100**으로 다시 돌리고 EST C0를 `--audit-n 100`으로 재빌드한다. 종 내 모든 소스는 같은 N을 쓴다(Bdistachyon은 EST뿐).
+- Gmax·Vvinifera가 ONT 결과 후에도 0.999 미만이면 같은 규칙(N=100, 종 내 전 소스)을 적용한다.
+- 감시 주기는 20분.
+
+## 13. Gmax·Vvinifera도 N=100 즉시 적용 (2026-09-26)
+
+사용자 원문: `apply the same N=100 rule to all of that species' sources`
+
+- ONT 결과를 기다리지 않고 Gmax(EST+ONT)·Vvinifera(EST+PacBio+ONT)의 모든 소스를 감사 N=100으로 다시 정렬하고 C0를 재빌드한다. 해당 종의 N=50 C0는 병합에 쓰지 않는다.

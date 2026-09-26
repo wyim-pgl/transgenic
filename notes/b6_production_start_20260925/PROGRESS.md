@@ -1,5 +1,16 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## Gmax·Vvinifera N=100 (결정 13, 2026-09-26)
+
+- 감사 배열 **6172723**(49 task: Gmax EST1+ONT27, Vvinifera EST1+PacBio9+ONT11, %6, [b6_audit_align_n100_gv.sbatch](audit_n100/b6_audit_align_n100_gv.sbatch)) → C0 N=100([c0_n100.sbatch](audit_n100/c0_n100.sbatch)가 [c0_view_n100.py](audit_n100/c0_view_n100.py)로 뷰 생성 후 빌드, source_v3): Gmax EST **6172724**·ONT **6172725**, Vvinifera EST **6172726**·PacBio **6172727**·ONT **6172728** → HSP Gmax **6172729**·Vvinifera **6172731** → protein C0 **6172730**·**6172732**.
+- 대체되어 취소: Gmax/Vvinifera ONT v2(6172710·11), HSP v3(6172698·6172708, 부분출력 `hsp_v3/<sp>.cancelled_n50`), protein(6172699·6172709). 이미 PASS한 N=50 Vvinifera EST·PacBio C0는 보존하되 병합에는 N=100본을 쓴다.
+
+## 종 exhaustiveness 예측과 Bdistachyon N=100 (결정 12, 2026-09-26)
+
+- 완료 C0 계수 합산 예측(병합 게이트 ≥0.999, 종 내 전 소스 동일 N): Athaliana 0.99991·Osativa 0.99936·Ppatens 0.99979·Ptrichocarpa 0.99972·Sbicolor 0.99959·Sitalica 0.99984 OK. **Bdistachyon 0.99897(EST 단독) 병합 거부 확실**, Gmax 0.99872·Vvinifera 0.99708은 ONT 결과 대기.
+- 결정 12(N=100): [audit_n100/](audit_n100/) — `b6_audit_align.sbatch`와 차이는 `-N 100`, OUTROOT `audit_align_n100`, task 1(Bdistachyon EST)뿐. 감사 **6172717** → EST C0 N=100 **6172718**(`c0/Bdistachyon_est_n100`, `--audit-n 100`) → HSP **6172719** → protein C0 **6172720**(protein C0는 병합되는 EST C0 파일과 같은 sha여야 하므로 재연결). 이전 Bdistachyon HSP 6172696(부분출력은 `hsp_v3/Bdistachyon.cancelled_n50`로 이동)·protein 6172697 취소.
+- 감시 주기 20분.
+
 ## 결정 9–11 구현·재제출 (2026-09-26 오전)
 
 - **HSP 행 정책 `396fcbf`**(cherry-pick of 3b85e15): 행마다 M+I+D → M+I+D+F 순으로 길이 계약 확인, QC `length_contract_mid`/`length_contract_midf_only`. contract replay의 ValueError만 행 단위로 제외(`dropped_nonreplaying_hsps`, `dropped_nonreplaying:<class>`). A19·EST FASTA 누락·qlen/slen 불일치·sidecar 등 구조 오류는 그대로 중단.
