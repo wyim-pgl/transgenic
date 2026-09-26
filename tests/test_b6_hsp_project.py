@@ -514,7 +514,8 @@ def test_diamond_masked_x_is_accepted_counted_and_recorded(tmp_path):
     assert prov['masked_x_rule'] == m.MASKED_X_RULE
 
 
-def test_masked_x_over_a_stop_codon_fails_the_run(tmp_path):
+def test_masked_x_over_a_stop_codon_is_dropped_as_nonreplaying(tmp_path):
+    # Was a run failure before decision 11 (2026-09-26): now only that row is dropped.
     cd = coding_dna()
     dna = cd[:30] + 'TAA' + cd[33:]
     fx = Fixture(tmp_path)
@@ -524,5 +525,110 @@ def test_masked_x_over_a_stop_codon_fails_the_run(tmp_path):
            f'10X{protein[10]}29']
     fx.rows['orthodb'] = [row]
     fx.proteins['orthodb'] = {'4081_0:000001': ('4081_0:000001\t4081_0', protein)}
-    with pytest.raises(ValueError, match='query codon truth'):
+    _, rows, qc = fx.run()
+    o = qc['by_source']['orthodb']
+    assert rows == [] and o['dropped_nonreplaying_hsps'] == 1
+    assert o['dropped_nonreplaying:query_codon_truth'] == 1
+
+
+# ---------------------------------------------------------------- row policy (decisions 10-11, 2026-09-26)
+
+def _frameshift_fixture(tmp_path, reported):
+    """A +1 frameshift HSP (M=40, F=1) whose DIAMOND length column is `reported`, plus a clean control."""
+    cd = coding_dna()
+    dna = cd[:30] + 'A' + cd[30:-1]                 # one extra EST base after codon 10
+    fx = Fixture(tmp_path)
+    fx.add_est('e1', dna, (100, 203), 61)
+    protein = translate(cd[:120])
+    shifted = ['e1', str(L), '4081_0:000001', '40', '1', '121', '1', '40', str(reported), '1e-30', '200',
+               '1', '10\\-30']
+    fx.rows['orthodb'] = [shifted]
+    fx.proteins['orthodb'] = {'4081_0:000001': ('4081_0:000001\t4081_0', protein)}
+    fx.add_est('e2', coding_dna(seed=11), (100, 203), 61, pos1=5001)
+    fx.add_hit('orthodb', 'e2', '4081_0:000002', 0, 40)       # strict M+I+D control
+    return fx
+
+
+def test_frameshift_row_reporting_m_plus_i_plus_d_plus_f_is_accepted_and_counted_midf(tmp_path):
+    fx = _frameshift_fixture(tmp_path, reported=41)          # 40 M + 1 F: only MIDF_LENGTH_CONTRACT holds
+    _, rows, qc = fx.run()
+    o = qc['by_source']['orthodb']
+    assert {r['protein_id'] for r in rows} == {'4081_0:000001', '4081_0:000002'}
+    assert o['kept_hsps'] == 2
+    assert (o['length_contract_mid'], o['length_contract_midf_only']) == (1, 1)
+    assert o.get('dropped_nonreplaying_hsps', 0) == 0
+    shifted = sorted((r['genomic_start0'], r['genomic_end0']) for r in rows if r['protein_id'] == '4081_0:000001')
+    assert shifted == [('1000', '1030'), ('1031', '1100'), ('1161', '1182')]
+    assert qc['length_contract_rule'] == m.LENGTH_CONTRACT_RULE and '2026-09-26' in m.LENGTH_CONTRACT_RULE
+    prov = json.loads((tmp_path / 'hsp.tsv.provenance.json').read_text())
+    assert prov['length_contract_rule'] == m.LENGTH_CONTRACT_RULE
+    assert prov['length_contracts_accepted'] == [m.LENGTH_CONTRACT, m.MIDF_LENGTH_CONTRACT]
+    assert prov['row_policy_counts']['orthodb']['length_contract_midf_only'] == 1
+
+
+def test_row_matching_both_length_contracts_counts_as_strict(tmp_path):
+    fx = _frameshift_fixture(tmp_path, reported=40)          # F columns excluded: strict M+I+D holds
+    _, rows, qc = fx.run()
+    o = qc['by_source']['orthodb']
+    assert o['kept_hsps'] == 2 and o['length_contract_mid'] == 2
+    assert o.get('length_contract_midf_only', 0) == 0
+
+
+def test_row_matching_neither_length_contract_is_dropped_and_the_job_continues(tmp_path):
+    fx = _frameshift_fixture(tmp_path, reported=45)
+    _, rows, qc = fx.run()
+    o = qc['by_source']['orthodb']
+    assert {r['protein_id'] for r in rows} == {'4081_0:000002'}
+    assert o['dropped_nonreplaying_hsps'] == 1
+    assert o['dropped_nonreplaying:reported_length_disagrees_with_both_length_contracts'] == 1
+    assert qc['dropped_nonreplaying_hsps'] == 1 and qc['nonreplaying_row_rule'] == m.NONREPLAYING_ROW_RULE
+    prov = json.loads((tmp_path / 'hsp.tsv.provenance.json').read_text())
+    assert prov['nonreplaying_row_rule'] == m.NONREPLAYING_ROW_RULE
+    assert prov['row_policy_counts']['orthodb']['dropped_nonreplaying_hsps'] == 1
+
+
+def test_query_codon_mismatch_is_dropped_and_counted_while_other_rows_project(tmp_path):
+    dna = coding_dna()
+    fx = Fixture(tmp_path)
+    fx.add_est('e1', dna, (100, 203), 61)
+    row = fx.add_hit('orthodb', 'e1', '4081_0:000001', 0, 40)
+    protein = fx.proteins['orthodb']['4081_0:000001'][1]
+    wrong = next(a for a in 'ACDEFGHIKLMNPQRSTVWY' if a != protein[10])
+    row[12] = f'10{wrong}{protein[10]}29'                      # BTOP claims a query residue the codon is not
+    fx.add_hit('orthodb', 'e1', '4081_0:000002', 150, 40)
+    fx.add_hit('swissprot', 'e1', 'P00001', 0, 40)
+    _, rows, qc = fx.run()
+    assert {r['protein_id'] for r in rows} == {'4081_0:000002', 'P00001'}
+    o = qc['by_source']['orthodb']
+    assert o['dropped_nonreplaying_hsps'] == 1 and o['dropped_nonreplaying:query_codon_truth'] == 1
+    assert o['kept_hsps'] == 1 and qc['by_source']['swissprot']['kept_hsps'] == 1
+    assert qc['by_source']['swissprot'].get('dropped_nonreplaying_hsps', 0) == 0
+    assert qc['dropped_nonreplaying_hsps'] == 1
+
+
+def test_qseqid_missing_from_est_fasta_still_aborts(tmp_path):
+    fx = Fixture(tmp_path)
+    fx.add_est('e1', coding_dna(), (100, 203), 61)
+    fx.add_hit('orthodb', 'e1', '4081_0:000001', 0, 40)
+    fx.add_est('e2', coding_dna(seed=11), (100, 203), 61, pos1=5001)
+    fx.add_hit('orthodb', 'e2', '4081_0:000002', 0, 40)
+    del fx.est['e2']                                         # mapped + accepted, but not in the EST FASTA
+    with pytest.raises(ValueError, match='not in the screened EST FASTA'):
         fx.run()
+    assert not (tmp_path / 'hsp.tsv').exists()
+
+
+def test_qlen_disagreeing_with_the_est_record_still_aborts(tmp_path):
+    fx = Fixture(tmp_path)
+    fx.add_est('e1', coding_dna(), (100, 203), 61)
+    row = fx.add_hit('orthodb', 'e1', '4081_0:000001', 0, 40)
+    row[1] = str(L + 3)
+    with pytest.raises(ValueError, match='length mismatch'):
+        fx.run()
+
+
+def test_replay_failure_class_normalises_positions():
+    assert m.replay_failure_class(ValueError('codon truth at 12: AAA != K')) == 'codon_truth'
+    assert m.replay_failure_class(ValueError('protein truth at 5')) == 'protein_truth'
+    assert m.replay_failure_class(ValueError('query codon truth: masked X over a stop/invalid codon')) == \
+        'query_codon_truth'
