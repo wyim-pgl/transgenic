@@ -31,6 +31,11 @@ every input must record a known ``completeness_codes.policy`` in its provenance 
 (the NULL policy is explicit and re-counted here, never silent).  The output is created exclusively (temp file + hard
 link), and its sha256 is written once to ``<out>.sha256`` -- that value is the evidence DB sha256 of rule 9.
 
+Relocatable input paths (author decision 14): ``merge_manifest.input_path`` records each C0 DB path RELATIVE to the
+merged DB's directory (``..`` allowed); consumers (``b6_bindings.merged_input_path``) resolve it against the merged
+DB's actual location.  The C0 DBs and their ``.PROVENANCE.txt`` travel with the merged DB in the same relative
+layout (e.g. pronghorn -> DeltaAI); ``input_sha256`` is unchanged, so hash strength is unchanged.
+
 Row order: the merged tables have NO guaranteed physical row order (DuckDB inserts are not order-preserving across
 inputs and threads); every reader must ``ORDER BY`` a key when order matters.
 """
@@ -238,6 +243,11 @@ def completeness_gate(path, prov, qc):
     return policy
 
 
+def relative_input_path(path, out_dir):
+    """``path`` relative to the merged DB's directory (POSIX separators), as recorded in ``merge_manifest``."""
+    return Path(os.path.relpath(Path(path).absolute(), Path(out_dir).absolute())).as_posix()
+
+
 def merge(inputs, out):
     import duckdb
 
@@ -278,7 +288,8 @@ def merge(inputs, out):
         manifest.append((str(path), digest, key[0], key[1], prov, qc))
     identity = provenance_gate(manifest)
     exhaustiveness = exhaustiveness_gate(manifest)
-    manifest = [m[:4] for m in manifest]
+    attach = [m[0] for m in manifest]
+    manifest = [(relative_input_path(m[0], out.parent),) + tuple(m[1:4]) for m in manifest]
 
     out.parent.mkdir(parents=True, exist_ok=True)
     handle, tmp = tempfile.mkstemp(prefix=out.name + ".partial-", dir=out.parent)
@@ -288,7 +299,7 @@ def merge(inputs, out):
     try:
         con = duckdb.connect(tmp)
         S.create_schema(con, merged=True)
-        for i, (path, _, _, _) in enumerate(manifest):
+        for i, path in enumerate(attach):
             con.execute(f"ATTACH '{path}' AS src{i} (READ_ONLY)")
         for table in S.ALL_TABLES:
             if table in ("merge_manifest", "c0_meta"):
