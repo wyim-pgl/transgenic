@@ -60,10 +60,31 @@ oriented codon translates to a standard sense amino acid (not stop); a subject X
 subject index is inside the protein; the reconstructed/translated strings replayed by
 classify_rich17 carry the TRUE residue, and the BTOP serialization check re-applies the
 mask only at the X positions. Every other disagreement (non-X letters, shifts, bounds,
-equal runs) still fails the run as before; NONCANONICAL_DNA_SCOPE and the noncanonical-
+equal runs) still fails the replay (since decision 11, 2026-09-26, such a row is dropped and
+counted instead of failing the run: NONREPLAYING_ROW_RULE); NONCANONICAL_DNA_SCOPE and the noncanonical-
 protein drop are unchanged. QC per source: `masked_x_hsps` (HSPs whose contract replay
 relied on >=1 masked X), `masked_x_query_positions` / `masked_x_subject_positions`
 (masked BTOP letters accepted), `projected_hsps_with_masked_x` (of those, projected).
+
+Length contract per row: LENGTH_CONTRACT_RULE (author decision 10, 2026-09-26). A row is
+accepted iff DIAMOND's reported length (col 9) equals EITHER M+I+D (LENGTH_CONTRACT, tried
+first) OR M+I+D+F (MIDF_LENGTH_CONTRACT; F = frameshift columns). Sitalica orthodb: 239,178 of
+1,371,252 rows fail the strict contract but pass MIDF. QC per source: `length_contract_mid`
+(accepted under the strict contract, including rows with F = 0 that match both) and
+`length_contract_midf_only` (accepted only under MIDF). est_hsp_contract's default (strict)
+is unchanged for its other callers; this script passes length_contract explicitly.
+
+Non-replaying rows: NONREPLAYING_ROW_RULE (author decision 11, 2026-09-26). A row whose
+contract replay against the real EST / protein raises ValueError (query codon truth, subject
+truth, a reported length matching neither contract, BTOP/serialization disagreements, ...)
+is dropped fail-closed (not projected) and counted per source: `dropped_nonreplaying_hsps`
+plus `dropped_nonreplaying:<class>` (replay_failure_class: message text before ':', positions
+removed, snake_case). ONLY the replay call is guarded. Everything that checks the inputs
+rather than one row's alignment still aborts the run: RAW13 field parsing, A19 lineage,
+a subject absent from the protein FASTA, a mapped qname absent from the EST FASTA, qlen/slen
+disagreeing with the bound sequences, unmapped qnames, provenance / sidecar / command gates,
+duplicate rows. The run-level totals and per-source counters are written to the QC JSON and
+to the provenance record (`row_policy_counts`).
 
 hsp_id = sha256 of '<species>\t<protein_source>\t<raw13 line>'; (hsp_id, interval_index)
 is unique. est_start/est_end = 0-based half-open span of the HSP on the screened EST record
@@ -92,7 +113,7 @@ if str(REPO) not in sys.path:
 
 from revision.scripts.evidence import est_phase_project as geometry  # noqa: E402
 from revision.scripts.evidence.est_hsp_contract import (  # noqa: E402
-    LENGTH_CONTRACT, adapt_raw13, classify_rich17)
+    LENGTH_CONTRACT, MIDF_LENGTH_CONTRACT, adapt_raw13, classify_rich17)
 from revision.scripts.evidence.est_hsp_expanded import CODE  # noqa: E402
 from revision.scripts.evidence.est_phase_accept import parse_row  # noqa: E402
 from revision.scripts.evidence.est_blastx import SPECIES, subject_taxid, taxonomy  # noqa: E402
@@ -121,6 +142,20 @@ MASKED_X_RULE = ('author decision 2026-09-25 (option a): a DIAMOND BTOP X is a m
                  'accepted iff the real codon translates to a sense amino acid (not stop), subject X iff the '
                  'subject index is inside the protein; the TRUE residue is recorded in the replayed strings; '
                  'all other disagreements fail as before (est_hsp_contract masked_x=True)')
+LENGTH_CONTRACTS_ACCEPTED = (LENGTH_CONTRACT, MIDF_LENGTH_CONTRACT)   # tried in this order
+LENGTH_CONTRACT_RULE = ('author decision 10 (2026-09-26): a row is accepted iff the DIAMOND reported length equals '
+                        'M+I+D (' + LENGTH_CONTRACT + ') or M+I+D+F (' + MIDF_LENGTH_CONTRACT + '); the strict '
+                        'contract is tried first, a row matching both counts as length_contract_mid, a row matching '
+                        'only MIDF as length_contract_midf_only (QC per source)')
+NONREPLAYING_ROW_RULE = ('author decision 11 (2026-09-26): a row whose est_hsp_contract replay against the real EST '
+                         'and protein residues raises ValueError (codon/subject truth, length matching neither '
+                         'contract, serialization, ...) is dropped fail-closed and counted per source '
+                         '(dropped_nonreplaying_hsps, dropped_nonreplaying:<class>); input/integrity failures '
+                         '(parsing, A19, missing FASTA records, qlen/slen vs sequences, unmapped qnames, '
+                         'provenance/sidecar gates) still abort the run')
+LENGTH_DISAGREEMENT = 'reported length disagrees with length contract'   # est_hsp_contract message prefix
+BOTH_LENGTHS_DISAGREE = 'reported length disagrees with both length contracts'
+ROW_POLICY_PREFIXES = ('length_contract_', 'dropped_nonreplaying')
 MULTI_HSP_APPLIED_BY = 'b6_build_c0.load_hsp'   # after protein-query eligibility; see module docstring
 MULTI_HSP_SCOPE = ('per (molecule_id, protein_source) among HSPs that are not leakage_excluded, applied by '
                    + MULTI_HSP_APPLIED_BY + ' (not here)')
@@ -445,6 +480,30 @@ def hsp_span0(row):
     return min(row['qs'], row['qe']) - 1, max(row['qs'], row['qe'])
 
 
+def replay_contract(fields, dna, protein):
+    """Approved contract replay under LENGTH_CONTRACT_RULE -> (classify_rich17 result, contract).
+
+    Raises ValueError when the row does not replay (NONREPLAYING_ROW_RULE decides what the caller does).
+    The two attempts share every check except the final length comparison, so a non-length failure
+    of the strict attempt is final.
+    """
+    for contract in LENGTH_CONTRACTS_ACCEPTED:
+        try:
+            # MASKED_X_RULE: DIAMOND default masking puts 'X' into BTOP letters (see module docstring).
+            rich = adapt_raw13(fields, dna, protein, length_contract=contract, masked_x=True)
+            return classify_rich17(rich, dna, protein, length_contract=contract, masked_x=True), contract
+        except ValueError as exc:
+            if not str(exc).startswith(LENGTH_DISAGREEMENT):
+                raise
+    raise ValueError(BOTH_LENGTHS_DISAGREE)
+
+
+def replay_failure_class(exc):
+    """Normalised reason for a replay ValueError: text before ':', ' at <n>' positions removed, snake_case."""
+    text = re.sub(r'\s+at\s+-?\d+\b', '', str(exc).split(':', 1)[0])
+    return re.sub(r'[^a-z0-9]+', '_', text.lower()).strip('_') or 'unspecified'
+
+
 def project_row(fields, source, species, est, proteins, placements, molecules, lineage,
                 est_sha256, qc):
     """One RAW13 row -> dict(molecule_id, hsp_id, meta, intervals) or None (dropped)."""
@@ -481,9 +540,13 @@ def project_row(fields, source, species, est, proteins, placements, molecules, l
         # NONCANONICAL_DNA_SCOPE == 'whole_est': the approved replay needs an all-ACGT query.
         qc['drop_noncanonical_dna_outside_hsp_span_only'] += 1
         return None
-    # MASKED_X_RULE: DIAMOND default masking puts 'X' into BTOP letters (see module docstring).
-    accepted = classify_rich17(adapt_raw13(fields, dna, protein, masked_x=True), dna, protein,
-                               masked_x=True)
+    try:                         # NONREPLAYING_ROW_RULE: only the per-row replay is guarded
+        accepted, contract = replay_contract(fields, dna, protein)
+    except ValueError as exc:
+        qc['dropped_nonreplaying_hsps'] += 1
+        qc['dropped_nonreplaying:' + replay_failure_class(exc)] += 1
+        return None
+    qc['length_contract_mid' if contract == LENGTH_CONTRACT else 'length_contract_midf_only'] += 1
     if not accepted['accepted_by_hsp_rule']:
         raise ValueError('HSP contract disagrees with the RAW13 length column')
     masked = accepted['masked_x']
@@ -499,7 +562,7 @@ def project_row(fields, source, species, est, proteins, placements, molecules, l
     identity = dict(member=row['qseqid'], source_sha256=est_sha256, source_start0=0,
                     source_end0=len(dna), sequence_sha256=sha256_text(dna))
     hsp = dict(identity=identity, id=hsp_id, qstart=row['qs'], qend=row['qe'], frame=row['frame'],
-               producer_contract_sha256=sha256_text(LENGTH_CONTRACT),
+               producer_contract_sha256=sha256_text(contract),
                label_convention=geometry.LABEL_CONVENTION)
     projected = geometry.project(hsp, accepted['codon_events'],
                                  dict(placement, identity=identity, sequence=dna))
@@ -573,9 +636,9 @@ def run(args):
                       accepted_rule=ACCEPTED_RULE, state_columns=STATE_COLUMNS,
                       noncanonical_dna_scope=NONCANONICAL_DNA_SCOPE,
                       masked_x_rule=MASKED_X_RULE,
+                      length_contracts_accepted=list(LENGTH_CONTRACTS_ACCEPTED),
+                      length_contract_rule=LENGTH_CONTRACT_RULE, nonreplaying_row_rule=NONREPLAYING_ROW_RULE,
                       lineage_sha256=sha256_file(args.lineage), code_sha256=code)
-    blob = json.dumps(provenance, sort_keys=True, separators=(',', ':')).encode()
-    provenance_sha256 = hashlib.sha256(blob).hexdigest()
 
     qc = {source: Counter() for source in sources}
     scratch = tempfile.NamedTemporaryFile(dir=args.out.parent, prefix='.b6_hsp_', suffix='.sqlite',
@@ -609,6 +672,14 @@ def run(args):
                              f'(by source: { {s: c["unmapped_qname_hsps"] for s, c in qc.items()} }); '
                              'the blastx query and the map disagree on names (only superseded=true qnames '
                              'of the map may be dropped)')
+        # Every row is decided here, so the record can carry the row-policy outcome (decisions 10-11);
+        # the rows written below cite this hash.
+        row_policy = {s: dict(sorted((k, v) for k, v in c.items() if k.startswith(ROW_POLICY_PREFIXES)))
+                      for s, c in sorted(qc.items())}
+        dropped_nonreplaying = sum(c['dropped_nonreplaying_hsps'] for c in qc.values())
+        provenance.update(row_policy_counts=row_policy, dropped_nonreplaying_hsps=dropped_nonreplaying)
+        blob = json.dumps(provenance, sort_keys=True, separators=(',', ':')).encode()
+        provenance_sha256 = hashlib.sha256(blob).hexdigest()
         molecules_with_rows = set()
         with open(partial, 'x', newline='') as out, open(state_partial, 'x', newline='') as state_out:
             writer = csv.writer(out, delimiter='\t', lineterminator='\n', quoting=csv.QUOTE_NONE, quotechar=None)
@@ -633,6 +704,8 @@ def run(args):
                       molecules_with_phase=len(molecules_with_rows),
                       noncanonical_dna_scope=NONCANONICAL_DNA_SCOPE,
                       masked_x_rule=MASKED_X_RULE,
+                      length_contract_rule=LENGTH_CONTRACT_RULE, nonreplaying_row_rule=NONREPLAYING_ROW_RULE,
+                      dropped_nonreplaying_hsps=dropped_nonreplaying,
                       ests_mapped=len(est), ests_noncanonical_whole_est_rule=ests_noncanonical,
                       superseded_rule=SUPERSEDED_RULE, accepted_rule=ACCEPTED_RULE,
                       note=('no HSP is dropped for phase conflict here: phase_conflict_candidates_pre_eligibility '
