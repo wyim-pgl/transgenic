@@ -1,5 +1,16 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## HSP v3 첫 성공과 protein C0 A19 필터 (2026-09-26)
+
+- **Sitalica HSP v3 6172692 COMPLETED**(36m, 0.45GB): orthodb raw 1,371,252 → projected 560,303, dropped(query codon truth) 17,767, length M+I+D 529,002 / M+I+D+F만 95,186, masked-X HSP 41,355; swissprot raw 290,009 → projected 123,872, dropped 1,213.
+- **protein C0 6172693 실패:** `miniprot query 4555_0:000000: same-species protein (A19)`. miniprot 입력 단백질(faa md5 453cb32b…, OrthoDB 필터본)은 평가종(3702/4577/4081)만 뺐고 학습종 자신의 단백질은 남아 있다. 프로토콜은 "Same-species proteins are never used (A19 cross-species rule)"(WORKPLAN L32)이고 builder는 이를 fail-closed로 강제한다. `accept/` 단계도 A19를 적용하지 않았다.
+- **조치(프로토콜 규칙 적용):** [a19_filter/](a19_filter/) — 종별 miniprot GFF에서 query가 그 종 또는 하위 taxon인 `##PAF` 블록을 제거한 사본 `evidence/protein_alignments_a19/<Sp>/`(DONE: 새 gff_md5, source_gff_md5, lineage sha, 제거 블록 수). 판정은 builder의 `B.A19`(`b6_hsp_project.is_same_species_or_descendant`, 동결 lineage)를 그대로 쓰고 미상 taxon은 중단. miniprot은 query별 독립 정렬이라 사후 제거는 해당 query를 넣지 않은 것과 같다. 필터 배열 **6172756**, protein C0 v4 **6172757–6172765**(`--align-root protein_alignments_a19`, 각 필터 task+HSP afterok). 이전 대기 protein C0(6172695·6172701·03·05·07·6172720·30·32)는 취소.
+
+## C0 이후 runbook 요약 (에이전트 조사, 2026-09-26)
+
+순서: A interval manifest 9종(`b6_leakage_intervals.py`, 지금 가능) → B 코퍼스 repair/freeze(`b6_build_corpus.py --measure-only` 후 `--apply`, `b6_validate_corpus.py`) → C zero list 27개(`b6_routea_agreement.py`, 종×{train_track,valid_track,eval_input}) → D 병합(`b6_merge_evidence_db.py`, DuckDB 한도 미설정이라 Slurm 메모리 넉넉히) → E observation cache(`b6_build_obs_cache.py --family train`) → F bindings JSON(`train_HyenaTransgenic_B6.py:563-572`). **A16 completeness NULL 정책은 파일럿 비차단**(`b6_bindings.py:24,432-434`). DeltaAI: 새 repo 스냅숏 필요(현재 e2a91b7=3511a5a), SIF transgenic-ngc-26.08, 컨테이너 내부 경로 기준.
+**결정 필요:** (1) freeze가 interval manifest 절대경로를 저장해(`b6_corpus_repair.py:119`) pronghorn 경로가 DeltaAI에서 풀리지 않음 → A/B를 DeltaAI 최종 경로에서 만들지, 코드를 바꿀지. (2) `configs/b6_400m_win_v3.json:64` UNGATED → GATED 전환(메모리 벤치는 2GPU였고 CP2는 4rank). (3) D1 flank geometry "pending author confirmation"(plan v4.1 §11). 확인 필요: A-ONT2 dataset 키와 Athaliana ONT C0 정본 dataset 일치.
+
 ## Gmax·Vvinifera N=100 (결정 13, 2026-09-26)
 
 - 감사 배열 **6172723**(49 task: Gmax EST1+ONT27, Vvinifera EST1+PacBio9+ONT11, %6, [b6_audit_align_n100_gv.sbatch](audit_n100/b6_audit_align_n100_gv.sbatch)) → C0 N=100([c0_n100.sbatch](audit_n100/c0_n100.sbatch)가 [c0_view_n100.py](audit_n100/c0_view_n100.py)로 뷰 생성 후 빌드, source_v3): Gmax EST **6172724**·ONT **6172725**, Vvinifera EST **6172726**·PacBio **6172727**·ONT **6172728** → HSP Gmax **6172729**·Vvinifera **6172731** → protein C0 **6172730**·**6172732**.
