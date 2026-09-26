@@ -33,3 +33,11 @@
 6. **protein C0용 DATASET_ROLES `protein/<Sp>` 행 추가 승인.** 기존 동결 파일(`inputs/DATASET_ROLES.longread_v1.tsv`)은 실행 중인 잡이 쓰므로 바이트를 바꾸지 않고, protein 행을 더한 새 파일을 만들어 protein C0에만 쓴다.
 7. **Athaliana cui2020 기존 정렬 재사용 승인.** 두 사본의 내용이 같으므로(gzip 시각 2바이트만 다름) 정본 dataset `ont/Athaliana_cui2020_PRJNA594286` 이름의 뷰로 기존 primary·audit 정렬을 쓴다. PROVENANCE·BAM header에 제외 사본 경로가 남는 것을 수용한다. metadata `--reads`는 정렬이 실제로 쓴 파일(제외 사본 경로)이다.
 8. **Athaliana FLIC 검증3런은 별도 드라이버로 정렬.** 기존 production 스크립트의 역할 검사는 바꾸지 않는다. §3.3 방향성 감사와 primary 정렬을 같은 도구·명령으로 수행하는 별도 스크립트를 쓴다. 검증 전용이라 audit 정렬(-N50)은 필요 없다(`b6_build_c0.py:685`).
+
+## 9–11. HSP 계약·A16 linkage 결정 (2026-09-26)
+
+사용자 원문: `(a) 연결된 묶음 전체를 한 분자로 합치기 (추천). 1. HSP 길이 계약: 행마다 M+I+D나 M+I+D+F 중 하나와 맞으면 통과시키고, 어느 쪽인지 QC에 기록합2. 실제 서열로 재생되지 않는 HSP 행: 잡을 멈추지 말고 그 행만 빼고, 이유별 개수를 QC에`
+
+9. **A16 비추이적 10-nt PCR 동치 = (a) 연결성분 전체를 한 분자로 합친다.** UMI absent cDNA ONT의 (library, contig, strand, intron chain) 묶음에서 양 끝 10nt 동치 그래프의 연결성분 하나가 분자 하나다. clique가 아닌 성분도 거부하지 않는다. 비-clique 성분 수와 read 수를 QC에 기록한다.
+10. **HSP 길이 계약:** 행마다 DIAMOND 보고 길이가 M+I+D 또는 M+I+D+F 중 하나와 정확히 같으면 통과. 어느 쪽으로 통과했는지 QC에 기록한다. 둘 다 아니면 11의 제외 대상.
+11. **실제 서열로 재생되지 않는 HSP 행:** 잡을 중단하지 않고 그 행만 제외하며, 제외 이유(메시지 종류)별 개수를 QC에 남긴다. 제외는 fail-closed(투영에 쓰지 않음)이다.

@@ -2,7 +2,9 @@
 
 > **현재 작업 정본: [운영학습 착수 준비](../notes/b6_production_start_20260925/PROGRESS.md).** 사용자 운영학습 시작 승인 후 실제 입력을 준비 중이다. **GPU 훈련은 아직 미제출**. 동결 순서는 real4GPU WP5파일럿4142업데이트 후 go판정, 그다음 WP6다.
 >
-> **09-26 새벽 최신:** 전면 병렬화. 실행/대기: PacBio Sbicolor 6172283, ONT C0 Osativa6172409·Sitalica6172410·Gmax6172411·Vvinifera6172567·Ptrichocarpa6172568·Ppatens6172569, HSP 9종 6172570–78(코드6b6dcd3), protein C0 9종 6172579–87(afterok HSP), FLIC 6172527/28→metadata6172588→Athaliana ONT C0 6172589, col0 retry 6172542. 완료 PASS: EST 9종, PacBio Vvinifera·Ptrichocarpa.
+> **09-26 오전 최신:** 결정 9–11 구현(b6-integration `396fcbf` HSP 행정책, `0fc80de` A16 연결성분), source_v3 배포·컨테이너시험 186 pass. 재제출: HSP v3 6172692–6172708(짝수), protein C0 6172693–6172709(홀수, afterok), ONT C0 v2 6172710–13(Vvinifera·Gmax·Sitalica·Athaliana). Osativa ONT 6172409 구코드 실행중. PASS: EST9·PacBio3·ONT dRNA2(Ppatens·Ptrichocarpa, 채택률2–3%는 identity0.95 규칙).
+>
+> **09-26 새벽:** 전면 병렬화. 실행/대기: PacBio Sbicolor 6172283, ONT C0 Osativa6172409·Sitalica6172410·Gmax6172411·Vvinifera6172567·Ptrichocarpa6172568·Ppatens6172569, HSP 9종 6172570–78(코드6b6dcd3), protein C0 9종 6172579–87(afterok HSP), FLIC 6172527/28→metadata6172588→Athaliana ONT C0 6172589, col0 retry 6172542. 완료 PASS: EST 9종, PacBio Vvinifera·Ptrichocarpa.
 >
 > **09-25 밤:** 결정 5–8 받음(HSP X 인정(a), protein 역할행 추가, cui2020 재사용, FLIC 별도정렬). protein roles 새파일 `DATASET_ROLES.longread_protein_v1.tsv` 생성(기존 무변경). Athaliana ONT metadata 6172498(35런) 제출. HSP 계약수정·FLIC 드라이버는 에이전트 작업 중. PacBio Vvinifera·Ptrichocarpa C0 PASS, Sbicolor PacBio·ONT 6종 C0 진행중.
 >

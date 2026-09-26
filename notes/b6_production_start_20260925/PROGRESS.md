@@ -1,5 +1,27 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## 결정 9–11 구현·재제출 (2026-09-26 오전)
+
+- **HSP 행 정책 `396fcbf`**(cherry-pick of 3b85e15): 행마다 M+I+D → M+I+D+F 순으로 길이 계약 확인, QC `length_contract_mid`/`length_contract_midf_only`. contract replay의 ValueError만 행 단위로 제외(`dropped_nonreplaying_hsps`, `dropped_nonreplaying:<class>`). A19·EST FASTA 누락·qlen/slen 불일치·sidecar 등 구조 오류는 그대로 중단.
+- **A16 연결성분 `0fc80de`**(cherry-pick of ab793b4): `59_evidence_support.assign_molecules`가 비-clique 성분을 한 분자로 합침. unit id = sha256(key, 성분의 최소 (start,end)); 기존 clique 분자 id는 불변. QC `pcr_nonclique_components`/`pcr_nonclique_reads`, provenance `a16_pcr_linkage`.
+- 병합(`b6_merge_evidence_db.provenance_gate`)은 코드가 아니라 intervals·seed·corpus/splits/flags/reference/gff만 대조하므로(`IDENTITY_INPUTS`), 이미 PASS한 EST·PacBio·direct RNA ONT C0는 재빌드하지 않는다. roles도 대조 대상이 아니라 protein 전용 roles 파일과 충돌하지 않는다.
+- 소스 `source_v3`(tar sha `0dd676a4…0add`). pronghorn 컨테이너(pyarrow 포함) 관련 시험 **186 passed**([source_v3_deploy_tests.txt](source_v3_deploy_tests.txt)).
+- 제출([v3_submission.txt](v3_submission.txt)): HSP v3 9종 6172692·94·96·98·6172700·02·04·06·08, protein C0 9종 6172693·95·97·99·6172701·03·05·07·09(각 HSP afterok), ONT C0 v2 Vvinifera 6172710·Gmax 6172711·Sitalica 6172712·Athaliana 6172713(48G/DuckDB36GB, `_ont_v2`). Osativa 6172409(구코드)는 계속 실행, 실패시 v2로 재제출.
+
+## ONT cDNA C0 실패: A16 비추이적 PCR 동치 (2026-09-26)
+
+- Vvinifera ONT 6172567(cDNA 11런)이 8h52m 후 `A16 molecule units: A16 non-transitive 10-nt PCR equivalence`로 실패(batch MaxRSS 24.1GB, 메모리 문제 아님).
+- 규칙(`revision/scripts/59_evidence_support.py:478-531`): UMI absent cDNA read는 (library, contig, strand, intron chain)으로 묶고 양 끝 10nt 이내를 PCR 동치로 본다. 연결성분이 clique가 아니면 linkage를 고르지 않고 거부한다. 동결 프로토콜이 linkage를 정하지 않은 부분이며, 실데이터 깊이에서는 비-clique 성분이 사실상 필연이다.
+- 영향: cDNA ONT가 있는 모든 종(Vvinifera11·Gmax27·Sitalica9·Athaliana34·Osativa2런). direct_RNA는 read=단위라 무관(Ppatens·Ptrichocarpa PASS).
+- Gmax 6172411(12h36m)·Sitalica 6172410(15h34m)·Athaliana 6172589(8h32m)는 같은 실패가 확실해 취소했다. Osativa 6172409는 cDNA 2런뿐이라 계속 실행한다.
+- **저자 결정 필요:** 비-clique 성분 처리 규칙.
+
+## HSP v2 실패: 길이 계약·잔여 codon 불일치 (2026-09-26)
+
+- 6172570(Sitalica, 코드6b6dcd3)이 46초 만에 `reported length disagrees with length contract: DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_GE30`로 종료. 같은 실패가 예상되어 HSP 6172571–78과 protein C0 6172579–87을 취소했다.
+- masked X 코드로 Sitalica swissprot 290,009행 재진단([hsp_length_diag.py](hsp_length_diag.py)): ok 286,079(X 포함 13,015), **query codon truth 3,052**(X 포함2,932 / X 없음120), noncanonical protein 876. swissprot에서는 길이 실패가 없어 길이 실패는 orthodb 행에서 난 것이다. `b6_hsp_project`는 행 하나라도 실패하면 잡 전체를 중단하므로, 남은 불일치의 원인·처리 방침이 필요하다. 전량 진단 잡 **6172597**(swissprot+orthodb, 토큰 수준 원인) 실행 중.
+- col0 retry 6172542 3/3 완료, FLIC 정렬·metadata 6172588 3/3 완료 → Athaliana ONT C0 6172589 의존 해제.
+
 ## 전면 병렬 제출: 2026-09-26 새벽
 
 사용자 지시 "지금 전부 패러럴로 돌려줘". 의존성이 있는 단계는 Slurm `afterok`로 미리 걸어 전 단계가 끝나는 즉시 시작하게 했다.
@@ -60,6 +82,11 @@
 | Vvinifera EST | 6172296 | PASS | 450,180 | 391,527 | 422,773 | **0.99421** | 0/0 | 일치 | – |
 | Vvinifera PacBio | 6172281 | PASS | 2,456,610 | 2,030,546 | 2,456,610 | 0.99758 | 0/0 | 일치 | 24.42G (1h06m) |
 | Ptrichocarpa PacBio | 6172282 | PASS | 9,847,562 | 7,218,072 | 9,847,562 | 0.99939 | 0/0 | 일치 | 66.57G (4h01m) |
+| Sbicolor PacBio | 6172283 | PASS | 25,091,958 | 20,977,140 | 25,091,958 | 0.99960 | 0/0 | 일치 | – |
+| Ppatens ONT | 6172569 | PASS | 8,125,618 | **158,810 (2.0%)** | 8,125,618 | 0.99980 | 0/0 | 일치 | 15.63G (1h47m) |
+| Ptrichocarpa ONT | 6172568 | PASS | 13,752,619 | **388,829 (2.8%)** | 13,752,619 | 0.99995 | 0/0 | 일치 | 26.45G (3h03m) |
+
+Ppatens ONT(전부 direct_RNA) 채택률 2.0%: rejected identity 5,891,310, unmapped 1,023,288, mapq 497,095, aligned_fraction 422,518. 학습 역할 ONT의 identity 하한 0.95(`59_evidence_support.py:733-735`, PacBio 0.98)가 동결 규칙이며 direct RNA의 전형적 identity(약85–92%)보다 높아 대부분 제외된다. 버그가 아니라 규칙의 결과다. 메모리는 DuckDB36GB 한도로 15.6GB였다.
 
 메모리 관찰: Ptrichocarpa PacBio MaxRSS 66.6GB는 DuckDB 한도64GB+약2.6GB로, read 수 비례가 아니라 DuckDB 한도에 묶인 것으로 보인다(Vvinifera 2.5M reads는 24.4GB로 한도 미만). 확정은 아니며 ONT 대형 잡(128G)의 batch MaxRSS를 계속 본다. 처리량은 약41k reads/min.
 

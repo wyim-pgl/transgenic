@@ -1,0 +1,20 @@
+70a79a5d078776186538385768cec003e7df5ae8c2df910b541e032413903138  hsp_project_v3.sbatch
+b1458314d0fbefb55ffe769010e71728112a18e7d7254f560734fcf8454be81f  protein_c0_v3.sbatch
+cbcdd38a9c73f561b7c1c282a146170cc2d250f77f7f6dedfbcdb69037c86349  ont_c0_v2.sbatch
+2eddd084fde7c25c1c51ce9a74485ae12c9ac77960cfc1857c1a251178cc14e7  athaliana_ont_c0_v2.sbatch
+HSP Sitalica 6172692  PROTEIN_C0 6172693
+HSP Athaliana 6172694  PROTEIN_C0 6172695
+HSP Bdistachyon 6172696  PROTEIN_C0 6172697
+HSP Gmax 6172698  PROTEIN_C0 6172699
+HSP Osativa 6172700  PROTEIN_C0 6172701
+HSP Ppatens 6172702  PROTEIN_C0 6172703
+HSP Ptrichocarpa 6172704  PROTEIN_C0 6172705
+HSP Sbicolor 6172706  PROTEIN_C0 6172707
+HSP Vvinifera 6172708  PROTEIN_C0 6172709
+VIEW Vvinifera runs 11 reads 43502804 {"minimap2": {"version": "2.28-r1209"}, "samtools": {"version": "samtools 1.3.1"}}
+VIEW Gmax runs 27 reads 80791977 {"minimap2": {"version": "2.28-r1209"}, "samtools": {"version": "samtools 1.3.1"}}
+VIEW Sitalica runs 9 reads 85198814 {"minimap2": {"version": "2.28-r1209"}, "samtools": {"version": "samtools 1.3.1"}}
+ONT_C0_v2 Vvinifera 6172710
+ONT_C0_v2 Gmax 6172711
+ONT_C0_v2 Sitalica 6172712
+ONT_C0_v2 Athaliana 6172713

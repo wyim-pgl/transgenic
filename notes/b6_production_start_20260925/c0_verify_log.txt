@@ -8,3 +8,6 @@ C0 Gmax est PASS reads_in 1374461 accepted 1273169 retained 325327 molecules 103
 C0 Vvinifera est PASS reads_in 450180 accepted 391527 retained 205647 molecules 422773 exh 0.99421 leak 0 gates_sum 0 tiles 25253/25253 sha_ok True 7d44330a4c46
 C0 Vvinifera pacbio PASS reads_in 2456610 accepted 2030546 retained 1139387 molecules 2456610 exh 0.99758 leak 0 gates_sum 0 tiles 25253/25253 sha_ok True 244834598ea9
 C0 Ptrichocarpa pacbio PASS reads_in 9847562 accepted 7218072 retained 4361304 molecules 9847562 exh 0.99939 leak 0 gates_sum 0 tiles 20303/20303 sha_ok True 565e5bcba65c
+C0 Sbicolor pacbio PASS reads_in 25091958 accepted 20977140 retained 11140767 molecules 25091958 exh 0.9996 leak 0 gates_sum 0 tiles 23381/23381 sha_ok True 01b1c74e179e
+C0 Ppatens ont PASS reads_in 8125618 accepted 158810 retained 5003695 molecules 8125618 exh 0.9998 leak 0 gates_sum 0 tiles 21702/21702 sha_ok True 6d04bead6fea
+C0 Ptrichocarpa ont PASS reads_in 13752619 accepted 388829 retained 7735021 molecules 13752619 exh 0.99995 leak 0 gates_sum 0 tiles 20303/20303 sha_ok True 60fe3eabc1fe
