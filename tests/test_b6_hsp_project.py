@@ -490,3 +490,39 @@ def test_columns_match_the_c0_schema_contract():
     assert tuple(m.COLUMNS) == c0_schema.HSP_COLUMN_NAMES
     assert m.MOLECULE_STATES == c0_schema.MOLECULE_STATES
     assert getattr(c0_schema, 'HSP_PRIMARY_KEY', ('hsp_id', 'interval_index')) == ('hsp_id', 'interval_index')
+
+
+def test_diamond_masked_x_is_accepted_counted_and_recorded(tmp_path):
+    # Production DIAMOND 2.1.24 (default tantan masking) writes 'X' into BTOP letters
+    # where the real EST codon / protein residue is ordinary (MASKED_X_RULE, 2026-09-25).
+    dna = coding_dna()
+    fx = Fixture(tmp_path)
+    fx.add_est('e1', dna, (100, 203), 61)
+    row = fx.add_hit('orthodb', 'e1', '4081_0:000001', 0, 40)
+    protein = fx.proteins['orthodb']['4081_0:000001'][1]
+    row[12] = f'10X{protein[10]}19{protein[30]}X9'
+    fx.add_hit('orthodb', 'e1', '4081_0:000002', 150, 40)     # unmasked control
+    _, rows, qc = fx.run()
+    got = {pos: v for (_, pos), v in per_base([r for r in rows if r['protein_id'] == '4081_0:000001']).items()}
+    assert got == expected_labels(L, (100, 203), 61, 0, 0, 40, False)
+    o = qc['by_source']['orthodb']
+    assert o['kept_hsps'] == 2
+    assert (o['masked_x_hsps'], o['masked_x_query_positions'], o['masked_x_subject_positions']) == (1, 1, 1)
+    assert o['projected_hsps_with_masked_x'] == 1
+    assert qc['masked_x_rule'] == m.MASKED_X_RULE and '2026-09-25' in m.MASKED_X_RULE
+    prov = json.loads((tmp_path / 'hsp.tsv.provenance.json').read_text())
+    assert prov['masked_x_rule'] == m.MASKED_X_RULE
+
+
+def test_masked_x_over_a_stop_codon_fails_the_run(tmp_path):
+    cd = coding_dna()
+    dna = cd[:30] + 'TAA' + cd[33:]
+    fx = Fixture(tmp_path)
+    fx.add_est('e1', dna, (100, 203), 61)
+    protein = translate(cd[:120])
+    row = ['e1', str(L), '4081_0:000001', '40', '1', '120', '1', '40', '40', '1e-30', '200', '1',
+           f'10X{protein[10]}29']
+    fx.rows['orthodb'] = [row]
+    fx.proteins['orthodb'] = {'4081_0:000001': ('4081_0:000001\t4081_0', protein)}
+    with pytest.raises(ValueError, match='query codon truth'):
+        fx.run()

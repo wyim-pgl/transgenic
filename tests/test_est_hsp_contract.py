@@ -174,3 +174,67 @@ def test_raw_equal_runs_checked_against_dna_and_source_hash():
             api().classify_rich17(bad, dna, protein)
     with pytest.raises(ValueError):
         api().adapt_raw13(row, dna, protein)
+
+
+# DIAMOND default masking (tantan) writes 'X' into BTOP letters where the real
+# sequence has an ordinary residue.  Author decision 2026-09-25 (option a):
+# with masked_x=True a BTOP 'X' is a masked position -- query X is accepted iff
+# the real codon translates to a sense residue, subject X iff the index is inside
+# the protein -- and the reconstructed strings carry the TRUE residue.
+def masked(qg, sg, btop, reverse=False):
+    row, dna, protein = fixture(qg, sg, reverse=reverse)
+    raw = row[:12] + [btop]
+    return raw, row[:12] + [btop] + row[13:], dna, protein
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+@pytest.mark.parametrize('qg,sg,btop,counts', [
+    ('K'*15+'H'+'K'*14, 'K'*15+'H'+'K'*14, '15XH14', dict(query=1, subject=0)),
+    ('K'*15+'K'+'K'*14, 'K'*15+'R'+'K'*14, '15XR14', dict(query=1, subject=0)),
+    ('K'*15+'D'+'K'*14, 'K'*15+'D'+'K'*14, '15DX14', dict(query=0, subject=1)),
+    ('K'*15+'-'+'K'*14, 'K'*15+'D'+'K'*14, '15-X14', dict(query=0, subject=1)),
+    ('K'*15+'H'+'K'*14, 'K'*15+'-'+'K'*14, '15X-14', dict(query=1, subject=0)),
+    ('K'*15+'H'+'K'*14, 'K'*15+'H'+'K'*14, '15XX14', dict(query=1, subject=1)),
+    ('K'*10+'H'+'K'*9+'D'+'K'*9, 'K'*10+'H'+'K'*9+'D'+'K'*9, '10XH9DX9', dict(query=1, subject=1)),
+])
+def test_masked_x_accepted_and_recorded_as_true_residue(qg, sg, btop, counts, reverse):
+    raw, want, dna, protein = masked(qg, sg, btop, reverse)
+    rich = api().adapt_raw13(raw, dna, protein, masked_x=True)
+    assert rich == want                      # raw13 preserved exactly; strings carry TRUE residues
+    assert 'X' not in rich[14] + rich[15] + rich[16]
+    assert rich[16] == ''.join(q for q in qg if q not in '-/\\')
+    result = api().classify_rich17(rich, dna, protein, masked_x=True)
+    assert result['masked_x'] == counts
+    assert result['accepted_by_hsp_rule'] is True
+    # Opt-in: without masked_x the approved strict contract still rejects the row.
+    with pytest.raises(ValueError):
+        api().adapt_raw13(raw, dna, protein)
+    with pytest.raises(ValueError):
+        api().classify_rich17(rich, dna, protein)
+
+
+def test_masked_x_over_stop_codon_rejected():
+    raw, _, dna, protein = masked('K'*30, 'K'*30, '15XK14')
+    stop = dna[:45] + 'TAA' + dna[48:]
+    with pytest.raises(ValueError, match='query codon truth'):
+        api().adapt_raw13(raw, stop, protein, masked_x=True)
+
+
+@pytest.mark.parametrize('btop,message', [
+    ('15RK14', 'query codon truth'),        # non-X query letter disagreeing with the real codon
+    ('15KR14', 'subject truth'),            # non-X subject letter disagreeing with the protein
+    ('30-X', 'subject truth'),              # subject X past the protein end
+    ('15/X15', 'shift must not consume subject'),
+])
+def test_non_x_disagreements_and_bounds_still_rejected_with_masked_x(btop, message):
+    raw, _, dna, protein = masked('K'*30, 'K'*30, btop)
+    with pytest.raises(ValueError, match=message):
+        api().adapt_raw13(raw, dna, protein, masked_x=True)
+
+
+def test_masked_x_replay_rejects_x_opposite_stop_or_gap_in_rich_strings():
+    # A rich row whose gapped string has '*' or '-' under a BTOP X is not a masked residue.
+    row, dna, protein = fixture('K'*15+'-'+'K'*14, 'K'*30)
+    row[12] = '15XK14'
+    with pytest.raises(ValueError):
+        api().classify_rich17(row, dna, protein, masked_x=True)

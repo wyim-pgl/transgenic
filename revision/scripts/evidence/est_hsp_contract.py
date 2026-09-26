@@ -5,11 +5,20 @@ Sequence hashes do not certify FASTA mapping, source files, lineage or A11.
 Rows are field sequences; raw_row_sha256 hashes UTF-8 tab-joined fields without
 line terminator, sequence identities hash exact supplied UTF-8 sequence text.
 No files are read/written and historical NOT_ELICITED artifacts are untouched.
+
+masked_x (keyword, default False = the approved strict contract, unchanged):
+author decision 2026-09-25 (option a) for DIAMOND runs with default masking,
+whose BTOP letters carry 'X' where the real sequence has an ordinary residue.
+With masked_x=True a BTOP 'X' is a masked position: a query X is accepted iff
+the real oriented codon there translates (CODE) to a sense amino acid (not stop),
+a subject X iff the subject index lies inside the protein; the reconstructed
+gapped/translated strings record the TRUE residue, never 'X'. Every other
+disagreement (non-X letters, shift/bounds rules, equal runs) fails as before.
 """
 import hashlib
 from itertools import groupby
 
-from .est_hsp_expanded import CODE, interpret, rc, require
+from .est_hsp_expanded import CODE, SENSE, interpret, rc, require
 from .est_phase_accept import btop_tokens, parse_row
 
 LENGTH_CONTRACT = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_GE30'
@@ -29,7 +38,8 @@ def _validate(row, dna, protein, width):
     return parsed
 
 
-def classify_rich17(row, dna, protein, *, expected_identities=None, length_contract=LENGTH_CONTRACT):
+def classify_rich17(row, dna, protein, *, expected_identities=None, length_contract=LENGTH_CONTRACT,
+                    masked_x=False):
     """Validate truth and the explicit formula, then classify reported length >=30.
 
     A mathematical mode is NOT producer authority. Callers must prove the path.
@@ -38,10 +48,12 @@ def classify_rich17(row, dna, protein, *, expected_identities=None, length_contr
     bases are q0 + direction * [0,1,2]. c0=0 anchors this codon only, NOT a
     projected phase inferred from qframe. Subject indices are zero-based.
     Optional expected_identities checks supplied hashes, not source authority.
+    masked_x: see module docstring; when True the result carries
+    masked_x=dict(query=n, subject=n), the BTOP positions accepted as masked.
     """
     require(length_contract in (LENGTH_CONTRACT, MIDF_LENGTH_CONTRACT), 'unknown length contract')
     _validate(row, dna, protein, 17)
-    result = interpret(row, dna, protein)
+    result = interpret(row, dna, protein, masked_x=masked_x)
     metric = 'columns_excluding_F' if length_contract == LENGTH_CONTRACT else 'columns_including_F'
     require(result['metrics']['reported'] == result['metrics'][metric],
             'reported length disagrees with length contract: ' + length_contract)
@@ -71,18 +83,20 @@ def classify_rich17(row, dna, protein, *, expected_identities=None, length_contr
                    length=1, direction=direction, effect='omitted' if shift['delta'] == 1 else 'reused')
               for shift in result['shifts']]
     accepted = int(row[8]) >= 30
-    return dict(length_contract=length_contract, accepted_by_hsp_rule=accepted,
+    extra = dict(masked_x=result['masked_x']) if masked_x else {}
+    return dict(**extra, length_contract=length_contract, accepted_by_hsp_rule=accepted,
                 diagnostic_disposition='HSP_RULE_ACCEPTED' if accepted else 'BELOW_HSP_LENGTH_30',
                 scope=SCOPE, identities=identities, qseqid=row[0], sseqid=row[2],
                 counts=result['counts'], codon_events=events, frameshifts=shifts)
 
 
-def adapt_raw13(row, dna, protein, *, length_contract=LENGTH_CONTRACT):
+def adapt_raw13(row, dna, protein, *, length_contract=LENGTH_CONTRACT, masked_x=False):
     """Reconstruct diagnostic rich17 fields from actual residues, without engine.
 
     Same caller ID-binding obligation as classify_rich17. Returned fields are
     NOT production/training eligibility or lineage/A11 certification. Original
     raw13 fields are preserved exactly; caller can retain their separate hash.
+    masked_x: see module docstring (BTOP 'X' = masked; TRUE residue recorded).
     """
     require(length_contract in (LENGTH_CONTRACT, MIDF_LENGTH_CONTRACT), 'unknown length contract')
     parsed = _validate(row, dna, protein, 13)
@@ -101,12 +115,19 @@ def adapt_raw13(row, dna, protein, *, length_contract=LENGTH_CONTRACT):
         else:
             require(q != '-' or s != '-', 'double gap')
             if q != '-':
-                require(0 <= pos and pos+3 <= len(dna) and CODE.get(oriented[pos:pos+3]) == q,
-                        'query codon truth')
+                require(0 <= pos and pos+3 <= len(dna), 'query codon truth')
+                residue = CODE.get(oriented[pos:pos+3])
+                if masked_x and q == 'X':
+                    require(residue in SENSE, 'query codon truth: masked X over a stop/invalid codon')
+                    q = residue
+                require(residue == q, 'query codon truth')
                 translated.append(q)
                 pos += 3
             if s != '-':
-                require(subject < len(protein) and protein[subject] == s, 'subject truth')
+                require(subject < len(protein), 'subject truth')
+                if masked_x and s == 'X':
+                    s = protein[subject]
+                require(protein[subject] == s, 'subject truth')
                 subject += 1
             op = 'D' if q == '-' else 'I' if s == '-' else 'M'
         qg.append(q)
@@ -127,5 +148,5 @@ def adapt_raw13(row, dna, protein, *, length_contract=LENGTH_CONTRACT):
                         ''.join(qg), ''.join(sg), ''.join(translated)]
     # Gapped-string-driven replay cross-checks BTOP reconstruction; shared code
     # and genetic code mean this is not independent biological validation.
-    classify_rich17(rich, dna, protein, length_contract=length_contract)
+    classify_rich17(rich, dna, protein, length_contract=length_contract, masked_x=masked_x)
     return rich

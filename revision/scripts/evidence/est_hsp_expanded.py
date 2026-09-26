@@ -13,6 +13,7 @@ import json
 import math
 from pathlib import Path
 import random
+import re
 import shutil
 import signal
 import sys
@@ -46,11 +47,44 @@ def write_json(path, obj):
     Path(path).write_text(json.dumps(obj, indent=2, sort_keys=True) + '\n')
 
 
-def interpret(row, dna, protein, *, shift_sign=1):
+SENSE = frozenset(CODE.values()) - {'*'}
+
+
+def masked_columns(btop, width):
+    """Column indices where BTOP letters are 'X' ({'q': set, 's': set}); None if unparsable.
+
+    Never expands equal runs (a huge digit run only advances the column cursor).
+    """
+    tokens = re.findall(r'\d+|[^\d][^\d]', btop)
+    if ''.join(tokens) != btop:
+        return None
+    cols, masked = 0, dict(q=set(), s=set())
+    for token in tokens:
+        if cols > width:
+            return None
+        if token.isdigit():
+            cols += int(token)
+            continue
+        for side, letter in zip('qs', token):
+            if letter == 'X':
+                masked[side].add(cols)
+        cols += 1
+    return masked if cols == width else None
+
+
+def interpret(row, dna, protein, *, shift_sign=1, masked_x=False):
     """Interpret one rich17 row. shift_sign=-1 is a CPU negative control only.
 
     Unknown positive col9 semantics are reported, not assumed away. Caller must
     treat no consistent reading as inconclusive. M includes substitutions.
+
+    masked_x=True (opt-in; author decision 2026-09-25): a BTOP 'X' letter is a
+    DIAMOND-masked position whose aligned string carries the TRUE residue. The
+    truth checks below run on the true residues unchanged; only the BTOP
+    serialization check re-applies the mask: a query X is accepted iff the true
+    aligned residue there is a sense amino acid, a subject X iff it is a protein
+    residue (never a gap/shift), and a masked column never joins an equal run.
+    Any other BTOP disagreement still fails. Counts are returned as 'masked_x'.
     """
     require(len(row) == 17 and all(row), 'expected 17 nonempty fields')
     qlen, slen = int(row[1]), int(row[3])
@@ -73,14 +107,23 @@ def interpret(row, dna, protein, *, shift_sign=1):
     counts = dict(M=0, I=0, D=0, F=0)
     blocks, frames, shifts, codons, ops, translated = [0], [frame], [], [], [], []
     btop, run = [], 0
-    for q, s in zip(qg, sg):
-        if q == s and q not in '-/\\':
+    bq, bs = list(qg), list(sg)       # BTOP display letters; == aligned strings unless masked_x
+    mask = masked_columns(row[12], len(qg)) if masked_x else None
+    if mask:
+        for i in mask['q']:
+            if qg[i] in SENSE:
+                bq[i] = 'X'
+        for i in mask['s']:
+            if sg[i] not in '-/\\':
+                bs[i] = 'X'
+    for q, s, dq, ds in zip(qg, sg, bq, bs):
+        if dq == ds and dq not in '-/\\' and not (masked_x and dq == 'X'):
             run += 1
         else:
             if run:
                 btop.append(str(run))
                 run = 0
-            btop.append(q + s)
+            btop.append(dq + ds)
         if q in '/\\':
             require(s == '-', 'shift must not consume subject')
             delta = (1 if q == '\\' else -1) * shift_sign
@@ -116,7 +159,11 @@ def interpret(row, dna, protein, *, shift_sign=1):
     m, i, d, f = (counts[k] for k in 'MIDF')
     metrics = dict(reported=length, columns_excluding_F=m+i+d, columns_including_F=m+i+d+f,
                    query_residues=m+i, paired=m, max_block=max(blocks), sum_blocks=sum(blocks))
-    return dict(counts=counts, metrics=metrics, blocks=blocks, frames=frames,
+    extra = {}
+    if masked_x:
+        extra['masked_x'] = dict(query=sum(x == 'X' != y for x, y in zip(bq, qg)),
+                                 subject=sum(x == 'X' != y for x, y in zip(bs, sg)))
+    return dict(**extra, counts=counts, metrics=metrics, blocks=blocks, frames=frames,
                 shifts=shifts, codons=codons, oriented_start=start, oriented_end=end,
                 subject_start=ss, subject_end=se, initial_frame=frame,
                 col9_matches=[key for key, value in metrics.items() if key != 'reported' and value == length],

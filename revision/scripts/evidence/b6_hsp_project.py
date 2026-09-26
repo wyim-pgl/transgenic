@@ -51,6 +51,20 @@ rule) and HSPs dropped only because of bases outside their span
 (`noncanonical_dna_outside_hsp_span_only`, what a span rule would recover); the top-level
 `ests_noncanonical_whole_est_rule` counts mapped ESTs the whole-EST rule drops.
 
+DIAMOND-masked BTOP 'X': MASKED_X_RULE (author decision 2026-09-25, option a). Production
+DIAMOND 2.1.24 blastx runs with default masking (tantan), so BTOP letters carry 'X' where
+the real EST codon / protein residue is ordinary (Sitalica swissprot: ~5.5% of 290,009
+rows failed the strict replay on 'query codon truth' / 'subject truth' for this reason
+alone). The contract is called with masked_x=True: a query X is accepted iff the real
+oriented codon translates to a standard sense amino acid (not stop); a subject X iff the
+subject index is inside the protein; the reconstructed/translated strings replayed by
+classify_rich17 carry the TRUE residue, and the BTOP serialization check re-applies the
+mask only at the X positions. Every other disagreement (non-X letters, shifts, bounds,
+equal runs) still fails the run as before; NONCANONICAL_DNA_SCOPE and the noncanonical-
+protein drop are unchanged. QC per source: `masked_x_hsps` (HSPs whose contract replay
+relied on >=1 masked X), `masked_x_query_positions` / `masked_x_subject_positions`
+(masked BTOP letters accepted), `projected_hsps_with_masked_x` (of those, projected).
+
 hsp_id = sha256 of '<species>\t<protein_source>\t<raw13 line>'; (hsp_id, interval_index)
 is unique. est_start/est_end = 0-based half-open span of the HSP on the screened EST record
 (orientation is in `frame`). phase = est_phase_project.PHASE_CONVENTION.
@@ -103,6 +117,10 @@ ACCEPTED_RULE = ('HSPs of qnames the molecule map flags accepted=false (no A18.5
                  'EST C0: the read is in its molecule for rule 4(b) closure but supplies no observation) are dropped '
                  'and counted (rejected_alignment_qname_hsps); A46 rule 6 projects only through retained observations')
 NONCANONICAL_DNA_SCOPE = 'whole_est'   # approved exact-replay contract; see module docstring
+MASKED_X_RULE = ('author decision 2026-09-25 (option a): a DIAMOND BTOP X is a masked position; query X '
+                 'accepted iff the real codon translates to a sense amino acid (not stop), subject X iff the '
+                 'subject index is inside the protein; the TRUE residue is recorded in the replayed strings; '
+                 'all other disagreements fail as before (est_hsp_contract masked_x=True)')
 MULTI_HSP_APPLIED_BY = 'b6_build_c0.load_hsp'   # after protein-query eligibility; see module docstring
 MULTI_HSP_SCOPE = ('per (molecule_id, protein_source) among HSPs that are not leakage_excluded, applied by '
                    + MULTI_HSP_APPLIED_BY + ' (not here)')
@@ -463,9 +481,16 @@ def project_row(fields, source, species, est, proteins, placements, molecules, l
         # NONCANONICAL_DNA_SCOPE == 'whole_est': the approved replay needs an all-ACGT query.
         qc['drop_noncanonical_dna_outside_hsp_span_only'] += 1
         return None
-    accepted = classify_rich17(adapt_raw13(fields, dna, protein), dna, protein)
+    # MASKED_X_RULE: DIAMOND default masking puts 'X' into BTOP letters (see module docstring).
+    accepted = classify_rich17(adapt_raw13(fields, dna, protein, masked_x=True), dna, protein,
+                               masked_x=True)
     if not accepted['accepted_by_hsp_rule']:
         raise ValueError('HSP contract disagrees with the RAW13 length column')
+    masked = accepted['masked_x']
+    if masked['query'] or masked['subject']:
+        qc['masked_x_hsps'] += 1
+        qc['masked_x_query_positions'] += masked['query']
+        qc['masked_x_subject_positions'] += masked['subject']
     placement = placements.get(row['qseqid'])
     if placement is None:
         qc['drop_no_primary_placement'] += 1
@@ -482,6 +507,8 @@ def project_row(fields, source, species, est, proteins, placements, molecules, l
         qc['drop_' + projected['dropped']] += 1
         return None
     qc['projected_hsps'] += 1
+    if masked['query'] or masked['subject']:
+        qc['projected_hsps_with_masked_x'] += 1
     m = molecules[row['qseqid']]
     est_start, est_end = hsp_span0(row)
     meta = dict(hsp_id=hsp_id, species=species, library=m['library'], molecule_id=m['molecule_id'],
@@ -545,6 +572,7 @@ def run(args):
                       molecule_map_columns=MOLECULE_MAP_COLUMNS, superseded_rule=SUPERSEDED_RULE,
                       accepted_rule=ACCEPTED_RULE, state_columns=STATE_COLUMNS,
                       noncanonical_dna_scope=NONCANONICAL_DNA_SCOPE,
+                      masked_x_rule=MASKED_X_RULE,
                       lineage_sha256=sha256_file(args.lineage), code_sha256=code)
     blob = json.dumps(provenance, sort_keys=True, separators=(',', ':')).encode()
     provenance_sha256 = hashlib.sha256(blob).hexdigest()
@@ -604,6 +632,7 @@ def run(args):
                       by_source={s: dict(sorted(c.items())) for s, c in qc.items()},
                       molecules_with_phase=len(molecules_with_rows),
                       noncanonical_dna_scope=NONCANONICAL_DNA_SCOPE,
+                      masked_x_rule=MASKED_X_RULE,
                       ests_mapped=len(est), ests_noncanonical_whole_est_rule=ests_noncanonical,
                       superseded_rule=SUPERSEDED_RULE, accepted_rule=ACCEPTED_RULE,
                       note=('no HSP is dropped for phase conflict here: phase_conflict_candidates_pre_eligibility '
