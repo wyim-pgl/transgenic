@@ -75,6 +75,31 @@ def test_ont_pcr_equivalence_units(ont_db):
     assert member(ont_db, "o1")[4] == "pcr_equivalence"
 
 
+def test_ont_nonclique_pcr_component_is_one_molecule(world, tmp_path):
+    """A16, author decision 9(a) (2026-09-26): a connected component of the 10-nt PCR-equivalence graph within one
+    library/contig/strand/chain key is ONE molecule whether or not it is a clique.  Before: RuleUnresolved
+    'A16 non-transitive 10-nt PCR equivalence' aborted the whole build (pronghorn job 6172567)."""
+    W.write_ont(tmp_path)
+    W.write_ont_nonclique(tmp_path)
+    roles = W.write_roles(tmp_path, extra_rows=[W.ONT_NONCLIQUE_ROLE_ROW])
+    rc, args = _run(world, tmp_path, source="ont", roles=roles)
+    assert rc == 0
+    db = args[args.index("--out") + 1]
+    assert mol(db, "n1") == mol(db, "n2") == mol(db, "n3")
+    assert mol(db, "n4") == mol(db, "n5") != mol(db, "n1")
+    assert {member(db, r)[4] for r in ("n1", "n2", "n3", "n4", "n5")} == {"pcr_equivalence"}
+    assert mol(db, "o1") == mol(db, "o2") == mol(db, "o4") != mol(db, "o3")     # existing cliques unchanged
+    qc = json.load(open(args[args.index("--qc") + 1]))["qc"]
+    assert qc["pcr_nonclique_components"] == 1 and qc["pcr_nonclique_reads"] == 3
+    prov = json.loads(q(db, "SELECT value FROM c0_provenance WHERE key = 'a16_pcr_linkage'")[0][0])
+    assert prov["linkage"] == "connected_component" and prov["date"] == "2026-09-26"
+
+
+def test_ont_clique_only_build_records_zero_nonclique_counters(ont_db):
+    rows = dict(q(ont_db, "SELECT metric, value FROM c0_qc WHERE metric LIKE 'pcr_nonclique_%'"))
+    assert rows == {"pcr_nonclique_components": 0.0, "pcr_nonclique_reads": 0.0}
+
+
 # ------------------------------------------------------------------------------ rule 4 states and QC
 def test_rule_4_states_per_cause(est_db):
     db, _ = est_db

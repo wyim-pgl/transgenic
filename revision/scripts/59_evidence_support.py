@@ -47,6 +47,23 @@ CHAIN_READINGS = {
 }
 CHAIN_DECISION = {"who": "author", "date": "2026-09-05",
                   "primary_declared_before_real_addition_scoring": True}
+# A16 ONT cDNA (UMI absent) PCR-equivalence linkage.  Two reads of one (species, assembly, source, library, contig,
+# strand, intron chain) key are 10-nt equivalent when |start_a - start_b| <= 10 and |end_a - end_b| <= 10.  Author
+# decision 2026-09-26 (decision 9, option a): each connected component of that graph is ONE molecule, clique or not;
+# a non-clique component is no longer refused.  The unit id is order-independent: sha256 of repr((key, min_ends)),
+# min_ends = the smallest (alignment.start, alignment.end) pair of the component (unique per component, since two
+# reads with equal ends are always linked).
+A16_PCR_LINKAGE = "connected_component"
+A16_PCR_LINKAGE_DECISION = {
+    "linkage": A16_PCR_LINKAGE, "who": "author", "date": "2026-09-26", "decision": 9, "option": "a",
+    "rule": "ONT cDNA reads without UMIs sharing (species, assembly, source, library, contig, strand, intron chain) "
+            "are linked when both alignment ends are within 10 nt; every connected component of the link graph is "
+            "one molecule, whether or not it is a clique",
+    "unit_id": "sha256(repr((key, min_ends))), key = (species, assembly, source, library, contig, strand, chain), "
+               "min_ends = the lexicographically smallest (alignment.start, alignment.end) of the component; "
+               "independent of input order",
+}
+PCR_NONCLIQUE_COUNTERS = ("pcr_nonclique_components", "pcr_nonclique_reads")
 INCOMPLETE_WORK = [
     "disk-backed read indexing for production scale",
     "manifest-wide expected-run reconciliation and frozen-reference identity binding",
@@ -422,7 +439,8 @@ def normalize_clone(value):
 
 
 def pcr_components(pcr):
-    """Connected candidates are diagnostic objects, never automatically molecule units."""
+    """Connected components of the A16 10-nt PCR-equivalence graph per key, with a clique flag.  Each component is one
+    molecule (A16_PCR_LINKAGE, decision 9a); the clique flag feeds diagnostics and QC counters only."""
     for key, group in sorted(pcr.items(), key=lambda item: repr(item[0])):
         group = sorted(group, key=lambda o: (o.alignment.start, o.alignment.end, o.run, o.alignment.read))
         neighbours = [set([i]) for i in range(len(group))]
@@ -475,8 +493,10 @@ def pcr_diagnostics(observations, additions, specs):
                 counting_rule="Global same-library candidates; counted once per run containing a member and once per same-strand overlapping addition. Counts across runs/additions are not additive.")
 
 
-def assign_molecules(observations):
-    """A11/A16 units; refuse a non-transitive PCR component instead of picking a linkage."""
+def assign_molecules(observations, pcr_stats=None):
+    """A11/A16 units.  ONT cDNA without UMIs: one molecule per connected 10-nt PCR-equivalence component (clique or
+    not; A16_PCR_LINKAGE, author decision 2026-09-26).  ``pcr_stats`` (a dict, optional) accumulates
+    pcr_nonclique_components / pcr_nonclique_reads for the non-clique components collapsed."""
     newest = {}
     for o in observations:
         if o.source in ("EST", "FL-cDNA"):
@@ -520,12 +540,15 @@ def assign_molecules(observations):
             pcr[base + (a.contig, o.strand, o.chain)].append(o)
             continue
         o.molecule = hashlib.sha256(repr(key).encode()).hexdigest()
+    if pcr_stats is not None:
+        for counter in PCR_NONCLIQUE_COUNTERS:
+            pcr_stats[counter] = pcr_stats.get(counter, 0)
     for key, group, clique in pcr_components(pcr):
-        if not clique:
-            raise RuleUnresolved("A16 non-transitive 10-nt PCR equivalence: " +
-                                 ", ".join(o.alignment.read for o in group))
-        ends = sorted((o.alignment.start, o.alignment.end) for o in group)
-        unit = hashlib.sha256(repr((key, ends[0])).encode()).hexdigest()
+        if not clique and pcr_stats is not None:
+            pcr_stats["pcr_nonclique_components"] += 1
+            pcr_stats["pcr_nonclique_reads"] += len(group)
+        min_ends = min((o.alignment.start, o.alignment.end) for o in group)
+        unit = hashlib.sha256(repr((key, min_ends)).encode()).hexdigest()
         for o in group:
             o.molecule = unit
     return observations
@@ -909,8 +932,9 @@ def execute(config_path, output, samtools="samtools"):
     require(all(any(s["species"] == a.species for s in specs) for a in additions),
             "species has additions but no declared evidence runs")
     diagnostic = pcr_diagnostics(observations, additions, specs)
-    refusal = ("A16 non-transitive 10-nt PCR equivalence" if diagnostic["non_clique_groups"] else
-               "B1 incomplete implementation: " + "; ".join(INCOMPLETE_WORK) if purpose == "b1" and INCOMPLETE_WORK else None)
+    # Non-clique PCR components are counted above and collapsed into one molecule each (decision 9a); not a stop.
+    refusal = ("B1 incomplete implementation: " + "; ".join(INCOMPLETE_WORK)
+               if purpose == "b1" and INCOMPLETE_WORK else None)
     if refusal:
         # Preserve pre-scoring diagnostics on a scientific stop, with no scores or DONE.
         output.mkdir(parents=True)
@@ -919,13 +943,12 @@ def execute(config_path, output, samtools="samtools"):
         report = dict(status="scoring_refused", reason=refusal, purpose=purpose,
                       inputs_sha256=hashes, pcr_diagnostic=diagnostic,
                       chain_readings=CHAIN_READINGS, chain_reading_decision=CHAIN_DECISION,
-                      incomplete_work=INCOMPLETE_WORK,
+                      a16_pcr_linkage=A16_PCR_LINKAGE_DECISION, incomplete_work=INCOMPLETE_WORK,
                       outputs_sha256={p.name: digest(p) for p in sorted(output.iterdir())})
         (output / "PROVENANCE.json").write_text(json.dumps(report, sort_keys=True, indent=2) + "\n")
-        if diagnostic["non_clique_groups"]:
-            raise RuleUnresolved(refusal)
         raise EvidenceError(refusal)
-    observations = assign_molecules(observations)
+    pcr_units = {}
+    observations = assign_molecules(observations, pcr_stats=pcr_units)
     # Controls are scored before additions (§10); the PCR diagnostic above is unscored.
     controls = [a for a in additions if a.control != "addition"]
     rows = score_scopes(controls, observations, specs)
@@ -946,7 +969,8 @@ def execute(config_path, output, samtools="samtools"):
               "source_thresholds": THRESHOLDS,
               "chain_readings": CHAIN_READINGS,
               "chain_reading_decision": CHAIN_DECISION,
-              "pcr_diagnostic": diagnostic, "incomplete_work": INCOMPLETE_WORK,
+              "pcr_diagnostic": diagnostic, "a16_pcr_linkage": A16_PCR_LINKAGE_DECISION, "pcr_units": pcr_units,
+              "incomplete_work": INCOMPLETE_WORK,
               "missing_outputs": ["P2 reference-alternative recall requires frozen reference alternative IDs/denominator",
                                   "A3 TES/TSS, A6 rarefaction and S12d terminal completeness are separate C0 analyses",
                                   "A7 MAPQ10/placement sensitivities are not primary outcomes"],

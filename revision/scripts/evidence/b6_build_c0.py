@@ -775,6 +775,7 @@ def process_read(ctx, st, run, read, records, meta, equal_best):
             md = obs.metadata
             if source == "ont" and md.get("umi_status") != "present" and md.get("protocol") != "direct_RNA":
                 unit_kind, unit_rule = "pcr", "pcr_equivalence"      # grouped per library/chain after all runs
+                # (one molecule per connected 10-nt component, clique or not: 59.A16_PCR_LINKAGE, decision 9a)
                 unit_key = json.dumps([obs.alignment.contig, obs.strand, obs.chain], separators=(",", ":"))
                 aln_start, aln_end = obs.alignment.start, obs.alignment.end
             else:
@@ -950,7 +951,9 @@ def run_library_qc(ctx, cursor):
 def assign_read_units(ctx, st, cursor):
     """stg.unit for read sources.  EST: newest version per accession stem, then est_units (A11 + A21).
     ONT/PacBio: 59.assign_molecules; PCR-equivalence groups (library, contig, strand, chain) are streamed one at a
-    time into 59.assign_molecules, so its 10-nt clique rule and unit hash are applied unchanged.  Every long-read
+    time into 59.assign_molecules, so its 10-nt linkage and unit hash are applied unchanged: every connected component
+    is one molecule, clique or not (59.A16_PCR_LINKAGE, author decision 2026-09-26, decision 9a), and the non-clique
+    components collapsed are counted in qc pcr_nonclique_components / pcr_nonclique_reads (0 when none).  Every long-read
     unit key is 59's (species, assembly, source, LIBRARY, ...) -- the metadata library (the producer's --library =
     the biological preparation, A11), never the run -- so members of one ZMW / UMI / PCR-equivalence unit that were
     sequenced in two runs of one library form ONE molecule (fix round 6, finding 1); qc counts the libraries that
@@ -969,12 +972,15 @@ def assign_read_units(ctx, st, cursor):
             st.add("unit", member_id=member_id, molecule_id=molecule, unit_rule=rule, superseded=member_id in superseded)
         return
     group, key = [], None
+    qc = ctx["qc"]
+    for counter in ES.PCR_NONCLIQUE_COUNTERS:
+        qc[counter] += 0                        # recorded as 0 in c0_qc when no non-clique component exists
 
     def flush_pcr():
         if not group:
             return
         try:
-            ES.assign_molecules(group)
+            ES.assign_molecules(group, pcr_stats=qc)
         except ES.EvidenceError as exc:
             raise C0Error(f"A16 molecule units: {exc}") from exc
         for o in group:
@@ -1846,6 +1852,7 @@ def provenance_hash(ctx, args, argv, tool_shas, code, duckdb_version, rows, excl
             "miniprot_max_placements": MINIPROT_MAX_PLACEMENTS,
             "exhaustiveness_rule": EXHAUSTIVENESS_RULE,
             "completeness_codes": COMPLETENESS_CODES_POLICY,
+            "a16_pcr_linkage": ES.A16_PCR_LINKAGE_DECISION,
             "multi_hsp_rule": {"rule": GEOM.MULTI_HSP_RULE, "applied_by": MULTI_HSP_APPLIED_BY,
                                "scope": "per (molecule_id, protein_source), separately within each population and never "
                                         "across: training = HSPs that are not leakage_excluded; excluded = the "
