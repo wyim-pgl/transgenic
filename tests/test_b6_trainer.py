@@ -531,7 +531,11 @@ class CompileAndAbortTests(TrainerBase):
             rt.build_b6_optimizer(model, 1e-3, 0.02, expected_alphas=12)
 
     def test_main_refuses_ungated_config(self):
-        cfg = os.path.join(ROOT, "configs", "b6_400m_win_v3.json")
+        # The production config is GATED (author decision 15); an UNGATED copy must still be refused.
+        cfg = os.path.join(self.tmp.name, "ungated.json")
+        body = json.load(open(os.path.join(ROOT, "configs", "b6_400m_win_v3.json")))
+        body.pop("gate_evidence")
+        json.dump(dict(body, gate_status=rt.GATE_STATUS), open(cfg, "w"))
         with self.assertRaisesRegex(SystemExit, "UNGATED"):
             trainer.main(["--config", cfg, "--arm", "B6", "--bindings", "x", "--output-dir", self.tmp.name])
         with self.assertRaises(SystemExit):
@@ -546,7 +550,7 @@ class ConfigTests(unittest.TestCase):
                     "dropout", "lr", "weight_decay", "effective_batch_size", "max_epochs", "window_tiers",
                     "max_encoder_seqlen", "vocab_size", "max_label_tokens", "encoder_model"):
             self.assertEqual(cfg[key], b5[key], key)
-        self.assertEqual(cfg["gate_status"], rt.GATE_STATUS)
+        self.assertEqual(cfg["gate_status"], rt.GATED_STATUS)          # author decision 15 (2026-09-26)
         kw = rt.b6_model_kwargs(cfg)
         self.assertEqual((kw["evidence_channels"], kw["b6_chain_d_model"], kw["b6_chain_heads"]), (31, 512, 8))
 

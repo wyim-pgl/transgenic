@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """B6 evidence-mode trainer (plan B6_WP2_WP4_PLAN_v4 section 9; protocol A46 rules 8, 9, 11, 15).
 
-UNGATED: memory bench not yet run. Plan section 10 puts CP3 (this file) after CP2 (the 129 kb memory bench,
-<= 100 GB peak reserved per rank). The code is written ahead of that gate on instruction and is NOT ready:
-``main`` refuses to start unless the config's gate_status says the bench passed, or --allow-ungated is given
-for an integration test. No B6 pilot may start before the rule 15 four-rank integration passes either.
+Gate: ``main`` refuses to start unless the config's gate_status says the CP2 memory bench passed (a GATED config
+carries the bench record, b6_runtime.check_gate_evidence), or --allow-ungated is given for an integration test.
+The production config is GATED since author decision 15 (2026-09-26; bench 3208285 on 2 ranks per A51, CP4
+3210279/3210585). Production never uses --allow-ungated; the WP5 pilot config refuses it.
 
 What it does, relative to the B5 trainer (train/train_HyenaTransgenic.py, which stays untouched):
   * model = B6TransgenicForConditionalGeneration (tracks K = 31 + chain memory + 12 gated chain blocks);
@@ -13,6 +13,10 @@ What it does, relative to the B5 trainer (train/train_HyenaTransgenic.py, which 
   * loss = L_GSF only; stop rule on de novo validation L_GSF (patience 3, ceiling 22) for B6 and C2, evidence
     validation L_GSF logged; C3/C4/C6/C7 stop at exactly N_pilot = 4,142 optimizer updates;
   * every arm publishes ``step_04142/`` (model.safetensors, meta.json, PRUNE_EXEMPT) at update 4,142;
+  * WP5 pilot (--stop-after-updates 4142 or configs/b6_400m_win_v3_wp5_pilot.json): B6/C2 stop at exactly 4,142
+    optimizer updates on every rank, ``step_04142/`` is marked PILOT_FINAL (meta pilot_final, never best-validation),
+    TRAINING_DONE is written; the stop target is in the run identity, so a resume with another target is refused.
+    The LR schedule is the full-run schedule truncated at 4,142 (A46 rule 11 matched budget with C3/C4/C6/C7);
   * AdamW as B5 with every chain gate alpha outside weight decay; the B5 LR schedule, including its world-size
     accounting (steps_per_epoch from the unsharded loader length), so the schedule is B5's;
   * torch.compile with suppress_errors off; zero Inductor kernels after warm-up or a recompile of an already
@@ -65,6 +69,8 @@ class B6TrainSpec:
     resume: Optional[str] = None
     link: Dict = field(default_factory=dict)
     stop_at_step: Optional[int] = None                 # test hook: behave as if USR1 arrived at this update
+    stop_after_updates: Optional[int] = None           # WP5 pilot: hard stop at exactly N_pilot optimizer updates
+    required_world_size: Optional[int] = None          # WP5 pilot config: 4 ranks (refuse any other world size)
     memory_probe: Optional[Callable[[], int]] = None   # test hook: reserved bytes of this rank (default CUDA)
     deterministic: bool = False                        # torch.use_deterministic_algorithms (GPU byte stability)
     record_sha256_fn: Optional[Callable] = None        # WP3 b6_bindings.canonical_record_sha256 (main always sets it)
@@ -122,6 +128,9 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
         raise ValueError(f"accumulation_steps {total_acc} is not divisible by the world size {world}")
     per_rank_acc = total_acc // world
     budget = rt.budget_steps(arm, spec.n_pilot)
+    pilot_target = rt.pilot_stop_target(spec.stop_after_updates, spec.n_pilot)
+    if spec.required_world_size is not None and world != spec.required_world_size:
+        raise ValueError(f"world size {world} != {spec.required_world_size} required by the WP5 pilot config")
     layout = rt.CheckpointLayout(spec.run_dir)
     stopper = rt.EarlyStopper(patience=spec.patience)
     torch.set_float32_matmul_precision("high")
@@ -166,8 +175,10 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
     # B5 parity (train_HyenaTransgenic.py:347-352): the unsharded loader length over the per-rank accumulation.
     steps_per_epoch = max(1, math.ceil(len(train_dl) / per_rank_acc))
     t_total = steps_per_epoch * int(cfg["max_epochs"])
-    scheduler = get_linear_schedule_with_warmup(optimizer, int(t_total * float(cfg.get("lr_warmup_fraction", 0.05))),
-                                                t_total)
+    # The WP5 pilot keeps this full-run schedule and stops at N_pilot (truncation, not a schedule sized to N): rule 11
+    # compares it with the C3/C4/C6/C7 step-N checkpoints, which train on this same schedule.
+    warmup_steps = int(t_total * float(cfg.get("lr_warmup_fraction", 0.05)))
+    scheduler = get_linear_schedule_with_warmup(optimizer, warmup_steps, t_total)
     model, optimizer, train_dl, eval_dl, scheduler = acc.prepare(model, optimizer, train_dl, eval_dl, scheduler)
 
     # ---- identity (rule 9) and resume ----
@@ -177,7 +188,8 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                data_order_policy="B5 order; sha256 of the canonical first 1,000 rows per epoch (data_order.jsonl)",
                batch_size=spec.batch_size, accumulation_steps=total_acc, world_size=world,
                effective_batch=spec.batch_size * total_acc, max_epochs=spec.max_epochs, patience=spec.patience,
-               budget=arm.budget, n_pilot=spec.n_pilot, channel_dropout_p=rt.CHANNEL_DROPOUT_P,
+               budget=arm.budget, n_pilot=spec.n_pilot, stop_after_updates=pilot_target,
+               channel_dropout_p=rt.CHANNEL_DROPOUT_P,
                thinning_set=list(rt.THINNING_SET), withhold_source_rate=rt.WITHHOLD_SOURCE_RATE,
                withhold_library_rate=rt.WITHHOLD_LIBRARY_RATE,
                compile_policy=(f"torch.compile backend={spec.compile_backend if isinstance(spec.compile_backend, str) else 'custom'};"
@@ -207,6 +219,9 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
             stopper.load_state(meta["stopper"])
         if pending_micro and rt.load_pending_grads(_unwrap(acc, model), resume_dir, acc.process_index) == 0:
             raise RuntimeError(f"{resume_dir} declares {pending_micro} pending micro-batches but no gradients")
+        if pilot_target is not None and global_step >= pilot_target:
+            raise RuntimeError(f"resume refused: {resume_dir} is at update {global_step}, not before the WP5 stop "
+                               f"target {pilot_target}")
         log(f"resumed from {resume_dir}: epoch {start_epoch} step {resume_step} global_step {global_step}")
     with rt.checkpoint_io(acc):
         if is_main:
@@ -214,6 +229,7 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                                dict(spec.link, arm=arm.name, resumed_from=resume_dir, global_step=global_step,
                                     evidence_channel=arm.evidence_channel, gate_status=cfg.get("gate_status")))
     log(f"arm {arm.name}: evidence_channel={arm.evidence_channel} budget={budget or 'stop rule'} "
+        f"stop_after_updates={pilot_target} schedule t_total={t_total} warmup={warmup_steps} "
         f"per-rank accumulation {per_rank_acc} world {world} {cfg.get('gate_status')}")
 
     # ---- checkpoint writers (rank 0 owns directories; every rank saves its RNG state) ----
@@ -232,6 +248,7 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                 with open(os.path.join(tmp, "meta.json"), "w") as fh:
                     json.dump({"epoch": epoch0, "step": step, "global_step": gstep, "pending_micro": micro % per_rank_acc,
                                "stopper": stopper.state(), "arm": arm.name, "seed": spec.seed,
+                               "stop_after_updates": pilot_target,
                                "identity_sha256": rt.canonical_sha256(identity)}, fh)
                 final, prev = layout.latest_state_dir(), layout.latest_state_dir() + ".prev"
                 shutil.rmtree(prev, ignore_errors=True)
@@ -249,12 +266,23 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                 tmp = final + ".tmp"
                 shutil.rmtree(tmp, ignore_errors=True)
                 os.makedirs(tmp)
-                aliases = rt.save_weights_deterministic(_unwrap(acc, model), os.path.join(tmp, "model.safetensors"))
+                weights = os.path.join(tmp, "model.safetensors")
+                aliases = rt.save_weights_deterministic(_unwrap(acc, model), weights)
                 rt.write_checkpoint_identity(tmp, identity)
+                pilot_final = pilot_target is not None and gstep == pilot_target
                 with open(os.path.join(tmp, "meta.json"), "w") as fh:
                     json.dump({"global_step": gstep, "epoch": epoch0, "arm": arm.name, "seed": spec.seed,
-                               "alphas": _unwrap(acc, model).chain_alphas(), "tied_aliases": aliases}, fh, sort_keys=True)
+                               "alphas": _unwrap(acc, model).chain_alphas(), "tied_aliases": aliases,
+                               "checkpoint_kind": "fixed_step", "selection": rt.FIXED_STEP_SELECTION,
+                               "pilot_final": pilot_final, "stop_after_updates": pilot_target,
+                               "model_sha256": rt.file_sha256(weights), "lr": scheduler.get_last_lr()[0],
+                               "schedule_total_steps": t_total, "schedule_warmup_steps": warmup_steps},
+                              fh, sort_keys=True)
                 open(os.path.join(tmp, rt.PRUNE_EXEMPT_MARKER), "w").write("A28/plan 9: step checkpoint, never pruned\n")
+                if pilot_final:
+                    open(os.path.join(tmp, rt.PILOT_FINAL_MARKER), "w").write(
+                        f"WP5 pilot-final checkpoint at exactly {gstep} optimizer updates (A46 rule 11); "
+                        "never a best-validation checkpoint\n")
                 os.rename(tmp, final)
         log(f"published {final}")
 
@@ -373,6 +401,14 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                 if is_main:
                     layout.mark_done()
             return {"done": True, "global_step": gstep, "reason": "n_pilot budget"}
+        if pilot_target is not None and gstep >= pilot_target:
+            # gstep is identical on every rank (same micro-batch count), so all ranks stop at this update together.
+            with rt.checkpoint_io(acc):
+                if is_main:
+                    layout.mark_done()
+            log(f"WP5 pilot: stopped at exactly {gstep} optimizer updates")
+            return {"done": True, "global_step": gstep, "reason": "stop_after_updates",
+                    "pilot_final": rt.step_checkpoint_dir(spec.run_dir, gstep)}
         if spec.stop_at_step is not None and gstep == spec.stop_at_step:
             stop["flag"] = True
         stop_now = bool(stop["flag"])
@@ -398,6 +434,11 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
             loader.set_epoch(epoch)
         for index, batch in enumerate(loader, start=skip):
             yield index, batch
+
+    def require_pilot_target():
+        if pilot_target is not None and state["global_step"] < pilot_target:
+            raise RuntimeError(f"training ended at update {state['global_step']}, before the stop target "
+                               f"{pilot_target}; raise max_epochs (no TRAINING_DONE written)")
 
     def train_loop():
         history = []
@@ -433,10 +474,12 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                                     else (False, False))
             save_epoch(epoch + 1, gstep, micro_done, losses, is_best)
             if should_stop:
+                require_pilot_target()
                 with rt.checkpoint_io(acc):
                     if is_main:
                         layout.mark_done()
                 return {"done": True, "global_step": gstep, "history": history, "reason": "early stop"}
+        require_pilot_target()
         with rt.checkpoint_io(acc):
             if is_main:
                 layout.mark_done()
@@ -555,9 +598,11 @@ def main(argv=None) -> Dict:
     args = rt.parse_args_b6(argv)
     cfg = rt.load_b6_config(args.config)
     cfg["_sha256"] = rt.file_sha256(args.config)
-    if cfg["gate_status"] != "GATED: memory bench passed" and not args.allow_ungated:
+    if cfg["gate_status"] != rt.GATED_STATUS and not args.allow_ungated:
         raise SystemExit(f"REFUSED: {cfg['gate_status']} (plan 10 CP2). Pass --allow-ungated only for the "
                          "rule 15 integration test.")
+    pilot = rt.resolve_wp5_pilot(cfg, args.arm, seed=args.seed, stop_after_updates=args.stop_after_updates,
+                                 allow_ungated=args.allow_ungated) or {}
     arm = rt.ARMS[args.arm]
     b6_dataset, b6_aug, b6_bindings, b6_context, b6_obs_cache, b6_roles = _wp3()
     # INTEGRATION POINT (WP2/WP3 of 2026-09-24; re-check at the b6-integration merge). --bindings is a JSON manifest
@@ -585,6 +630,8 @@ def main(argv=None) -> Dict:
                        compile_backend=None if args.compile_backend == "none" else args.compile_backend,
                        compile_warmup_steps=args.compile_warmup_steps, resume=args.resume,
                        deterministic=args.deterministic,
+                       stop_after_updates=pilot.get("stop_after_updates"),
+                       required_world_size=pilot.get("world_size"),
                        link={"slurm_job_id": os.environ.get("SLURM_JOB_ID"), "argv": list(argv or sys.argv[1:])})
     return run_b6(spec, build_model(cfg), train_ds, eval_ds, collate_fn=b6_dataset.b6_collate_fn_torch,
                   train_sampler=WP3EpochKeys(b6_dataset.B6EpochSampler, train_rns, args.seed),

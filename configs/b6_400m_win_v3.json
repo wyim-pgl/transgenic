@@ -42,7 +42,7 @@
   },
   "species_manifest": "data/manifests/b5_species_v1.tsv",
   "gsf_spec": "docs/gsf_spec_v1.md",
-  "notes": "B6 evidence mode (A46): the B5 win_v3 recipe unchanged (optimizer, lr, schedule, effective batch 96, stop rule, tiers) plus 31 evidence channels through the existing linear fusion and a 512-element chain memory read by a gated cross-attention block in each of the 12 decoder layers (alpha_l = 0 at init, excluded from weight decay). Loss = L_GSF only (A50.2). gate_status stays UNGATED until the 129 kb memory bench passes (plan section 10 CP2).",
+  "notes": "B6 evidence mode (A46): the B5 win_v3 recipe unchanged (optimizer, lr, schedule, effective batch 96, stop rule, tiers) plus 31 evidence channels through the existing linear fusion and a 512-element chain memory read by a gated cross-attention block in each of the 12 decoder layers (alpha_l = 0 at init, excluded from weight decay). Loss = L_GSF only (A50.2). GATED by author decision 15 (2026-09-26) on the recorded CP2 129 kb memory bench (job 3208285, 2 ranks per A51, 62.959 GB peak reserved per rank <= 100 GB) and CP4 (jobs 3210279, 3210585); gate_evidence records it. The bench certified this file's bytes before the gate flip (certified_config_sha256); only gate_status, gate_evidence and this note changed. Production never uses --allow-ungated.",
   "window_policy": "tile6144-v3",
   "window_tiers": [
     30720,
@@ -61,7 +61,20 @@
   "encoder_ffn_dim": 3072,
   "decoder_ffn_dim": 3072,
   "base_recipe": "b5_400m_win_v3",
-  "gate_status": "UNGATED: memory bench not yet run",
+  "gate_status": "GATED: memory bench passed",
+  "gate_evidence": {
+    "memory_bench_job": "3208285",
+    "memory_bench_world_size": 2,
+    "memory_bench_peak_reserved_gb": 62.959,
+    "memory_bench_report_sha256": "1f66b93a7d77b41cc69501082e544a102917f26f14663e0d06e135ea583f6211",
+    "certified_config_sha256": "7a224645755f6a05400bca4d8d539770790793e5eb72cf45ab10ccd74a2db58d",
+    "architecture_sha256": "7f941f5c32ba77dc79dbcf8c179758d378f0aa012b0cf1a155fc4a6b9d450b7a",
+    "cp4_jobs": {
+      "wp3_fixtures": "3210279",
+      "synthetic": "3210585"
+    },
+    "decision": "author decision 15 (2026-09-26); A51 (gate certified on 2 or 4 ranks); notes/b6_cp4_20260925/FINAL_VERIFICATION.md"
+  },
   "evidence_channels": 31,
   "chain_elements": 512,
   "chain_d_model": 512,

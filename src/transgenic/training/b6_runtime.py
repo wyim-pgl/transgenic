@@ -1,9 +1,9 @@
 """B6 trainer runtime (plan B6_WP2_WP4_PLAN_v4 section 9; protocol A46 rules 8, 9, 11, 15).
 
-UNGATED: memory bench not yet run. Plan section 10 orders CP2 (129 kb memory bench, <= 100 GB peak reserved
-per rank) before CP3 (trainer code). This module and train/train_HyenaTransgenic_B6.py were written ahead of
-the gate on instruction; they are not ready, and no B6 run may start until the bench has passed and the
-4-rank integration (CP4, rule 15) has passed.
+Gate: plan section 10 orders CP2 (129 kb memory bench, <= 100 GB peak reserved per rank) before any B6 run.
+The bench passed on 2 ranks (job 3208285, A51) and CP4 passed (jobs 3210279, 3210585); author decision 15
+(2026-09-26) set configs/b6_400m_win_v3.json to GATED. A GATED config must carry that evidence
+(``check_gate_evidence``); ``--allow-ungated`` stays an integration-test switch only.
 
 Contents
   * batch contract (plan 7.7): ``validate_b6_batch``
@@ -14,6 +14,8 @@ Contents
   * compile policy: ``compile_b6`` (suppress_errors off), ``CompileGuard`` (recompile after warm-up raises),
     ``check_inductor_kernels`` (zero Inductor kernels after warm-up raises)
   * ``memory_abort`` (> 110 GB reserved on any rank writes MEMORY_ABORT), budget and step-checkpoint rules
+  * WP5 pilot: ``pilot_stop_target`` (hard stop at exactly N_pilot optimizer updates, part of the run identity)
+    and ``resolve_wp5_pilot`` (the gated pilot config block: B6/C2, seed 123, aug_seed 20261037, 4 ranks)
 Torch is imported lazily so the torch-free parts run in the duckdb-only test environment, as b5_runtime does.
 """
 from __future__ import annotations
@@ -31,6 +33,7 @@ from transgenic.training.b5_runtime import (CheckpointLayout, EarlyStopper, accu
                                             epoch_batches, load_b5_config, model_kwargs, resolve_checkpointing)
 
 GATE_STATUS = "UNGATED: memory bench not yet run"
+GATED_STATUS = "GATED: memory bench passed"
 
 # ---- frozen numbers (rules 8, 9, 11; plan 9) ------------------------------------------------------------------
 SEED = 123
@@ -177,6 +180,65 @@ def step_checkpoint_dir(run_dir: str, step: int) -> str:
     return os.path.join(run_dir, f"step_{step:05d}")
 
 
+# ---- WP5 pilot (work plan v1.2 WP5; A46 rule 11) ----------------------------------------------------------------
+# The pilot trains B6 and C2 for exactly N_pilot optimizer updates and archives the step-N checkpoint. The LR
+# schedule is the full-run schedule (B5 accounting over max_epochs) truncated at N, NOT a schedule sized to N: rule
+# 11 compares B6/C2 at step N with the final step-N checkpoints of C3/C4/C6/C7, whose budget is "exactly the WP5
+# pilot's optimizer-update count" on the full-run schedule, so every arm must share one schedule up to step N.
+
+PILOT_FINAL_MARKER = "PILOT_FINAL"
+FIXED_STEP_SELECTION = "fixed optimizer-update count; never a best-validation checkpoint"
+WP5_PILOT = {"stop_after_updates": N_PILOT, "arms": ["B6", "C2"], "world_size": 4, "seed": SEED,
+             "aug_seed": AUG_SEED}
+
+
+def pilot_stop_target(stop_after_updates: Optional[int], n_pilot: int) -> Optional[int]:
+    """The hard stop, in optimizer updates. The only admissible target is N_pilot (rule 11 has no other fixed
+    budget), so the step checkpoint published at N_pilot is the pilot-final checkpoint."""
+    if stop_after_updates is None:
+        return None
+    if int(stop_after_updates) != int(n_pilot):
+        raise ValueError(f"stop_after_updates {stop_after_updates} must equal N_pilot {n_pilot} (A46 rule 11)")
+    return int(stop_after_updates)
+
+
+def check_wp5_pilot_block(cfg: Mapping, path: str) -> None:
+    block = cfg.get("wp5_pilot")
+    if block is None:
+        return
+    if cfg.get("gate_status") != GATED_STATUS:
+        raise ValueError(f"{path}: a wp5_pilot config must be {GATED_STATUS!r}, not {cfg.get('gate_status')!r}")
+    if not isinstance(block, Mapping) or set(block) != set(WP5_PILOT):
+        raise ValueError(f"{path}: wp5_pilot must have exactly the keys {sorted(WP5_PILOT)}")
+    for key, value in WP5_PILOT.items():
+        if block[key] != value:
+            raise ValueError(f"{path}: wp5_pilot {key} = {block[key]!r}, frozen value {value!r}")
+
+
+def resolve_wp5_pilot(cfg: Mapping, arm: str, *, seed: int, stop_after_updates: Optional[int],
+                      allow_ungated: bool) -> Optional[Dict[str, int]]:
+    """{'stop_after_updates', 'world_size'} for a run, or None for a full-budget run without a stop.
+
+    With a wp5_pilot config the stop target is the block's (an explicit --stop-after-updates must equal it), the
+    arm must be B6 or C2 and --allow-ungated is refused. Without one, --stop-after-updates alone still requests the
+    N_pilot stop (the config's own gate applies)."""
+    block = cfg.get("wp5_pilot")
+    if block is None:
+        target = pilot_stop_target(stop_after_updates, int(cfg["n_pilot"]))
+        return None if target is None else {"stop_after_updates": target, "world_size": None}
+    if allow_ungated:
+        raise ValueError("REFUSED: the WP5 pilot config is a production run; --allow-ungated is not accepted")
+    if arm not in block["arms"]:
+        raise ValueError(f"REFUSED: arm {arm} is not a WP5 pilot arm {block['arms']}")
+    if seed != block["seed"]:
+        raise ValueError(f"REFUSED: seed {seed} != WP5 pilot seed {block['seed']}")
+    if stop_after_updates is not None and int(stop_after_updates) != block["stop_after_updates"]:
+        raise ValueError(f"REFUSED: --stop-after-updates {stop_after_updates} != the pilot config's "
+                         f"{block['stop_after_updates']}")
+    target = pilot_stop_target(block["stop_after_updates"], int(cfg["n_pilot"]))
+    return {"stop_after_updates": target, "world_size": int(block["world_size"])}
+
+
 # ---- optimizer ------------------------------------------------------------------------------------------------
 
 ALPHA_SUFFIX = "chain_attn.alpha"
@@ -263,9 +325,36 @@ def load_b6_config(path: str) -> Dict:
     for key, value in B6_CONFIG_REQUIRED.items():
         if cfg.get(key) != value:
             raise ValueError(f"{path}: {key} = {cfg.get(key)!r}, frozen value {value!r}")
-    if cfg.get("gate_status") not in (GATE_STATUS, "GATED: memory bench passed"):
+    if cfg.get("gate_status") not in (GATE_STATUS, GATED_STATUS):
         raise ValueError(f"{path}: gate_status {cfg.get('gate_status')!r} is not a recognised state")
+    check_gate_evidence(cfg, path)
+    check_wp5_pilot_block(cfg, path)
     return cfg
+
+
+# The CP2 record a GATED config must carry (A51: certified on 2 or 4 ranks; 1 rank is a pre-check only). The bench
+# certified the config bytes of its run (certified_config_sha256, UNGATED at the time) and the BUILT architecture;
+# the architecture digest is bound here, so a GATED config of a different model is refused.
+GATE_EVIDENCE_KEYS = ("memory_bench_job", "memory_bench_world_size", "memory_bench_peak_reserved_gb",
+                      "memory_bench_report_sha256", "certified_config_sha256", "architecture_sha256", "cp4_jobs",
+                      "decision")
+
+
+def check_gate_evidence(cfg: Mapping, path: str) -> None:
+    if cfg.get("gate_status") != GATED_STATUS:
+        return
+    ev = cfg.get("gate_evidence")
+    if not isinstance(ev, Mapping) or set(ev) != set(GATE_EVIDENCE_KEYS):
+        raise ValueError(f"{path}: a GATED config needs gate_evidence with exactly {list(GATE_EVIDENCE_KEYS)}")
+    if ev["memory_bench_world_size"] not in (2, 4):
+        raise ValueError(f"{path}: gate_evidence memory_bench_world_size must be 2 or 4 (A51)")
+    if not float(ev["memory_bench_peak_reserved_gb"]) <= MEMORY_GATE_BYTES / 10 ** 9:
+        raise ValueError(f"{path}: gate_evidence peak reserved above the {MEMORY_GATE_BYTES // 10 ** 9} GB gate")
+    for key in ("memory_bench_report_sha256", "certified_config_sha256", "architecture_sha256"):
+        if not _is_sha(ev[key]):
+            raise ValueError(f"{path}: gate_evidence {key} must be a sha256")
+    if ev["architecture_sha256"] != FROZEN_ARCHITECTURE_SHA256:
+        raise ValueError(f"{path}: gate_evidence architecture_sha256 is not this checkout's frozen architecture")
 
 
 def b6_model_kwargs(cfg: Mapping) -> Dict:
@@ -353,7 +442,7 @@ def identity_from_bindings(record: Mapping, record_sha256_fn=None) -> Dict[str, 
 
 RUN_KEYS = ("recipe_sha256", "arm", "seed", "aug_seed", "init_policy", "init_weights_sha256", "data_order_policy",
             "batch_size", "accumulation_steps", "world_size", "effective_batch", "max_epochs", "patience", "budget",
-            "n_pilot", "channel_dropout_p", "thinning_set", "withhold_source_rate", "withhold_library_rate",
+            "n_pilot", "stop_after_updates", "channel_dropout_p", "thinning_set", "withhold_source_rate", "withhold_library_rate",
             "compile_policy", "checkpointing", "mixed_precision", "memory_abort_bytes", "deterministic", "loss",
             "model_version", "torch", "transformers", "accelerate", "duckdb")
 
@@ -655,6 +744,9 @@ def parse_args_b6(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
                    help="torch.use_deterministic_algorithms (needs CUBLAS_WORKSPACE_CONFIG=:4096:8); recorded")
     p.add_argument("--allow-ungated", action="store_true",
                    help="acknowledge that the memory gate has not passed (integration tests only)")
+    p.add_argument("--stop-after-updates", type=int, default=None,
+                   help="WP5 pilot: stop at exactly this many optimizer updates (must equal N_pilot = 4,142) and "
+                        "mark step_04142 as the pilot-final checkpoint; the wp5_pilot config sets it itself")
     a = p.parse_args(argv)
     if a.seed != SEED:
         p.error(f"rule 11: every B6 arm uses seed {SEED}")
