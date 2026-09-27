@@ -317,12 +317,30 @@ def test_freeze_and_loader_see_the_reduced_train_rows_and_n_pilot(evworld):
         trainer.bind_freeze_n_pilot(evworld["freeze"], {"provenance": {"freeze": "0" * 64}}, len(train), value)
 
 
-def test_n_pilot_formula_is_the_trainer_rule_and_gives_4142_on_the_a46_basis():
+def test_n_pilot_formula_is_the_trainer_rule_and_gives_4142_on_the_a46_basis_and_4099_repaired():
     from transgenic.training import b6_runtime as rt
 
     assert (CR.PILOT_EPOCHS, CR.PILOT_EFFECTIVE_BATCH, CR.N_PILOT_FORMULA) == (
         rt.PILOT_EPOCHS, rt.EFFECTIVE_BATCH, rt.N_PILOT_FORMULA)
-    assert CR.n_pilot_record(198828)["value"] == rt.n_pilot_from_train_rows(198828) == rt.N_PILOT == 4142
+    assert CR.n_pilot_record(198828)["value"] == rt.n_pilot_from_train_rows(198828) == 4142
+    assert CR.n_pilot_record(196774)["value"] == rt.n_pilot_from_train_rows(196774) == rt.N_PILOT == 4099
+
+
+def test_bind_n_pilot_accepts_the_repaired_corpus_freeze_with_the_updated_configs_and_refuses_4142():
+    """Decision 18: the 9-species measure_v2.json of b6_prepare_20260925 gives train_rows 196,774 -> N_pilot 4,099."""
+    from transgenic.training import b6_runtime as rt
+
+    freeze = {"n_pilot": {"value": 4099, "formula": rt.N_PILOT_FORMULA, "train_rows": 196774, "epochs": 2,
+                          "effective_batch": 96, "train_rows_predicate": CR.LOADER_TRAIN_PREDICATE}}
+    assert freeze["n_pilot"] == CR.n_pilot_record(196774)
+    for name in ("b6_400m_win_v3.json", "b6_400m_win_v3_wp5_pilot.json"):
+        cfg = rt.load_b6_config(str(Path(__file__).resolve().parents[1] / "configs" / name))
+        assert rt.bind_n_pilot(freeze, 196774, cfg["n_pilot"]) == 4099
+        assert cfg.get("wp5_pilot", {"stop_after_updates": 4099})["stop_after_updates"] == 4099
+    with pytest.raises(ValueError, match="config n_pilot 4142 != the corpus freeze N_pilot 4099"):
+        rt.bind_n_pilot(freeze, 196774, 4142)
+    with pytest.raises(ValueError, match="train_rows"):
+        rt.bind_n_pilot(freeze, 198828, 4099)
 
 
 def test_validator_confirms_the_dropped_rows_and_rejects_a_hidden_drop(evworld, tmp_path, capsys):

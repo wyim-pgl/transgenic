@@ -1,6 +1,6 @@
 """B6 trainer acceptance (plan v4.1 section 9, "Trainer acceptance"), CPU, tiny model, synthetic plan-7.7 data.
 
-N_pilot is scaled down (6 instead of 4,142) and the step checkpoint published at it stands for step_04142;
+N_pilot is scaled down (6 instead of 4,099) and the step checkpoint published at it stands for step_04099;
 the resume at step 5 stands for the resume at 4,000. Everything else is the production code path.
 """
 import copy

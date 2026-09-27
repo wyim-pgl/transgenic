@@ -48,7 +48,7 @@ def parse_args(argv=None):
     p.add_argument("--tier", type=int, default=30720, help="tile length of the synthetic rows")
     p.add_argument("--rows", type=int, default=48, help="training rows (forward/RC pairs; split over ranks)")
     p.add_argument("--accumulation", type=int, default=8, help="recipe total, divided by the world size")
-    p.add_argument("--n-pilot", type=int, default=5, help="scaled stand-in for the 4,142-update checkpoint")
+    p.add_argument("--n-pilot", type=int, default=5, help="scaled stand-in for the N_pilot (4,099)-update checkpoint")
     p.add_argument("--stop-at", type=int, default=3, help="preemption point of the resumed run")
     p.add_argument("--backend", default="inductor")
     p.add_argument("--mixed-precision", default="bf16", choices=("bf16", "no"))

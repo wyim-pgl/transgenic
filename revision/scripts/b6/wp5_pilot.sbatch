@@ -12,10 +12,10 @@
 #SBATCH --output=%x-%j.out
 #
 # WP5 pilot (work plan v1.2 WP5; A46 rule 11): one arm (B6 or C2) per run, 4 GPUs (DDP), seed 123,
-# aug_seed 20261037, exactly N_pilot = 4,142 optimizer updates, then step_04142/ (PILOT_FINAL, PRUNE_EXEMPT) and
+# aug_seed 20261037, exactly N_pilot = 4,099 optimizer updates, then step_04099/ (PILOT_FINAL, PRUNE_EXEMPT) and
 # TRAINING_DONE. The gated config configs/b6_400m_win_v3_wp5_pilot.json pins arm set, stop target, seed and world
 # size; the trainer refuses --allow-ungated with it, and this script never passes it. LR schedule = the full-run
-# schedule truncated at 4,142 (the C3/C4/C6/C7 matched-budget schedule).
+# schedule truncated at 4,099 (the C3/C4/C6/C7 matched-budget schedule).
 #
 # TEMPLATE, NOT SUBMITTED. The real-data inputs do not exist yet: BINDINGS must name the WP3 binding manifest
 #   {"evidence", "roles", "cache", "freeze", "corpus", "references": {species: fasta}}
@@ -36,7 +36,7 @@ command -v apptainer >/dev/null 2>&1 || module load apptainer
 WORK=$SCRATCH/transgenic
 SIF=${SIF:-$SCRATCH/containers/transgenic-ngc-26.08.sif}
 REPO_DIR=${REPO_DIR:-$WORK/repo_b6}
-N_PILOT=4142
+N_PILOT=4099
 CONFIG=configs/b6_400m_win_v3_wp5_pilot.json
 [ -s "$SIF" ] || { echo "REFUSED: SIF not found: $SIF" >&2; exit 3; }
 [ -d "$REPO_DIR/.git" ] || { echo "REFUSED: REPO_DIR is not a git checkout: $REPO_DIR" >&2; exit 3; }
