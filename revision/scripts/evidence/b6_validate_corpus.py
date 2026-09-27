@@ -22,6 +22,11 @@ Checks (any failure exits 1):
   * independent recount: every seed edge crosser (leak or hard) of every kept train/valid forward tile has its
     component repaired, and no other component is; no labelled gene intersects a repair span.
   * counts by species x split x cause equal the freeze.
+  * row-set drop (author decision 18): the base rows missing from the corpus are exactly the ``b6_row_drop`` rows
+    and the freeze ``row_set_drop`` tiles; each is a train/valid tile whose independently recomputed repair crosses
+    masked fraction 0.60 or orphans its RC twin (or that tile's RC twin), every such tile is dropped with its twin,
+    their window_genes are gone, and the freeze ``train_rows`` / ``n_pilot`` equal floor(loader train rows * 2 / 96)
+    of the corpus.
   * molecule consequences (``--c0``): every C0 molecule with a decision placement (``audit_placement``) overlapping a
     shared-cause span is ``excluded_heldout`` (scope all) or ``train_tiles_excluded`` (scope train_tiles, train tile);
     the two declared differences (A30-only spans, A48 edge_partial spans) are reported, not failed.
@@ -83,17 +88,21 @@ def _in_spans(merged, p):
     return i >= 0 and merged[i][0] <= p < merged[i][1]
 
 
-def audit_rows(base_con, b6_con, repairs, drops, qc):
-    """Streamed row audit; ``repairs[rn]`` = [(start0, end0), ...] genomic; ``drops[rn]`` = {gene_id}."""
+def audit_rows(base_con, b6_con, repairs, drops, qc, dropped=()):
+    """Streamed row audit; ``repairs[rn]`` = [(start0, end0), ...] genomic; ``drops[rn]`` = {gene_id};
+    ``dropped``: base rns the corpus no longer holds (decision 18), skipped on the base side."""
     gc = LK.load_build_b5().gc
     b5 = LK.load_build_b5()
     cols = _columns(base_con)
     require(cols == _columns(b6_con), "geneList columns differ between base and corpus")
     idx = {c: i for i, c in enumerate(cols)}
-    sel = "SELECT " + ", ".join(cols) + " FROM geneList ORDER BY rn"
+    sel = "SELECT " + ", ".join(cols) + " FROM geneList"
     ca, cb = base_con.cursor(), b6_con.cursor()
-    ca.execute(sel)
-    cb.execute(sel)
+    if dropped:
+        ca.execute(sel + " WHERE NOT list_contains(?, rn) ORDER BY rn", [sorted(dropped)])
+    else:
+        ca.execute(sel + " ORDER BY rn")
+    cb.execute(sel + " ORDER BY rn")
     fwd = {}
     try:
         while True:
@@ -150,19 +159,79 @@ def audit_rows(base_con, b6_con, repairs, drops, qc):
         cb.close()
 
 
-def audit_window_genes(base_con, b6_con, drop_keys):
+def audit_window_genes(base_con, b6_con, drop_keys, dropped_windows=()):
+    """A40 minus B6 == the label drops plus every window_genes row of a dropped window (decision 18)."""
     q = "SELECT species_id, window_id, gene_id, is_rc FROM window_genes ORDER BY ALL"
     a = Counter(base_con.execute(q).fetchall())
     b = Counter(b6_con.execute(q).fetchall())
     require(not (b - a), f"window_genes rows added: {sorted((b - a).elements())[:5]}")
     removed = a - b
-    require(removed == Counter(drop_keys), f"window_genes removed {sorted(removed.elements())[:5]} != label drops "
-                                           f"{sorted(drop_keys)[:5]}")
+    gone = set(dropped_windows)
+    want = Counter(drop_keys) + Counter({k: n for k, n in a.items() if (k[0], k[1]) in gone})
+    require(removed == want, f"window_genes removed {sorted(removed.elements())[:5]} != label drops + dropped windows "
+                             f"{sorted(want.elements())[:5]}")
     return sum(removed.values())
 
 
-def recount(base_con, manifests_rows, repair_by_rn, drops_by_rn, args, qc):
-    """Independent seed recount per kept train/valid forward tile, interval equality and closure."""
+def audit_row_drop(base_con, b6_con, freeze, meta, qc):
+    """The decision-18 drop record: table == freeze, rows gone from the corpus, each a train/valid base row whose
+    forward tile's twin (if any) is dropped with it.  Returns {rn: record}."""
+    require("b6_row_drop" in {r[0] for r in b6_con.execute("SELECT table_name FROM information_schema.tables").fetchall()},
+            "corpus has no b6_row_drop table")
+    policy = freeze.get("row_set_policy")
+    require(policy in (CR.ROW_SET_REFUSE, CR.ROW_SET_DROP) and meta.get("row_set_policy") == policy,
+            f"row_set_policy freeze {policy!r} / b6_corpus_meta {meta.get('row_set_policy')!r}")
+    rows = b6_con.execute("SELECT " + ", ".join(CR.ROW_DROP_COLUMNS) + " FROM b6_row_drop ORDER BY rn").fetchall()
+    recs = [dict(zip(CR.ROW_DROP_COLUMNS, r)) for r in rows]
+    require(recs == freeze["row_set_drop"]["tiles"], "b6_row_drop != freeze row_set_drop tiles")
+    require(policy == CR.ROW_SET_DROP or not recs, "rows dropped under the refuse policy")
+    by_rn = {r["rn"]: r for r in recs}
+    if by_rn:
+        present = {x[0] for x in b6_con.execute("SELECT rn FROM geneList WHERE list_contains(?, rn)",
+                                                [sorted(by_rn)]).fetchall()}
+        require(not present, f"dropped rows still in the corpus: {sorted(present)[:5]}")
+        base = {x[0]: x[1:] for x in base_con.execute(
+            "SELECT rn, geneModel, species_id, split, is_rc FROM geneList WHERE list_contains(?, rn)",
+            [sorted(by_rn)]).fetchall()}
+        wids = {(r["species_id"], r["wid"]): r["rn"] for r in recs}
+        for rn, r in by_rn.items():
+            require(base.get(rn) == (r["wid"], r["species_id"], r["split"], r["is_rc"]),
+                    f"b6_row_drop rn {rn} does not describe the base row {base.get(rn)}")
+            require(r["split"] in ("train", "valid", None), f"dropped rn {rn} is a {r['split']} row")
+            fwid = r["wid"][:-3] if r["is_rc"] else r["wid"]
+            require(wids.get((r["species_id"], fwid)) == r["forward_rn"], f"dropped RC rn {rn} without its forward tile")
+            twin = base_con.execute("SELECT rn FROM geneList WHERE species_id = ? AND geneModel = ?",
+                                    [r["species_id"], fwid + "-rc"]).fetchall()
+            require(not twin or (r["species_id"], fwid + "-rc") in wids, f"dropped tile rn {rn} kept its RC twin")
+    for r in recs:
+        qc["rows_dropped_" + ("rc" if r["is_rc"] else "forward")] += 1
+    return by_rn
+
+
+def audit_events(base_con, rn, wid, species, spans, gene_by_id, rc_mode):
+    """Independent row-set events of one repaired forward tile: masked fraction of the base sequence with its repair
+    spans set to N, and the RC twin's condition over the labelled genes the spans leave (``b6_corpus_repair``
+    ``repair_tile`` semantics, recomputed from the base window_genes)."""
+    gc = LK.load_build_b5().gc
+    seq, ws, we = base_con.execute("SELECT sequence, start, fin FROM geneList WHERE rn = ?", [rn]).fetchone()
+    chars = list(seq)
+    for a, b in spans:
+        chars[a - ws:b - ws] = "N" * (b - a)
+    over = gc.masked_fraction("".join(chars)) > gc.MASK_FRACTION_MAX
+    labelled = [gid for (gid,) in base_con.execute("SELECT gene_id FROM window_genes WHERE species_id = ? AND "
+                                                   "window_id = ? AND NOT is_rc ORDER BY gene_id", [species, wid]).fetchall()]
+    after = [gene_by_id[g] for g in labelled if not any(gene_by_id[g].start0 < b and gene_by_id[g].end0 > a
+                                                         for a, b in spans)]
+    twin = base_con.execute("SELECT count(*) FROM geneList WHERE species_id = ? AND geneModel = ?",
+                            [species, wid + "-rc"]).fetchone()[0]
+    orphan = bool(twin) and not CR._rc_condition(rc_mode, after)
+    return ";".join(e for e, hit in zip(CR.EVENTS, (over, orphan)) if hit)
+
+
+def recount(base_con, manifests_rows, repair_by_rn, drops_by_rn, args, qc, dropped=None):
+    """Independent seed recount per kept train/valid forward tile, interval equality and closure; for every repaired
+    forward tile, its row-set events decide exactly which tiles decision 18 dropped (``dropped``: {rn: record})."""
+    dropped = dropped or {}
     gc = LK.load_build_b5().gc
     comps = CR.ComponentIndex(manifests_rows)
     b5 = LK.load_build_b5()
@@ -178,6 +247,9 @@ def recount(base_con, manifests_rows, repair_by_rn, drops_by_rn, args, qc):
             blocks[chrom].append((a, b, sp))
         rows = base_con.execute("SELECT rn, geneModel, chromosome, start, fin, is_rc FROM geneList WHERE species_id = ? "
                                 "ORDER BY rn", [species]).fetchall()
+        gene_by_id = {g.gene_id: g for gs in prep.by_chrom.values() for g in gs}
+        rc_mode = base_con.execute("SELECT DISTINCT rc_mode FROM build_manifest WHERE species_id = ?",
+                                   [species]).fetchall()[0][0]
         for rn, wid, chrom, ws, we, is_rc in rows:
             split = gc.tile_split(blocks[chrom], ws, we)
             got = {(r["component_id"], r["cause"], r["scope"], r["start0"], r["end0"]) for r in repair_by_rn.get(rn, [])}
@@ -193,6 +265,18 @@ def recount(base_con, manifests_rows, repair_by_rn, drops_by_rn, args, qc):
                         require(comp is not None, f"tile {rn}: seed {g.gene_id} has no manifest component")
                         for cause, scope, _ in comp.causes:
                             want.add((comp.component_id, cause, scope, max(ws, comp.start0), min(we, comp.end0)))
+            if want and not is_rc:
+                events = audit_events(base_con, rn, wid, species, sorted({(w[3], w[4]) for w in want}),
+                                      gene_by_id, rc_mode)
+                rec = dropped.get(rn)
+                require(bool(events) == (rec is not None),
+                        f"tile {rn} ({wid}): recomputed row-set events {events!r} but dropped={rec is not None}")
+                if rec is not None:
+                    require(rec["events"] == events, f"tile {rn}: dropped for {rec['events']!r}, recomputed {events!r}")
+                    qc["tiles_dropped_events_confirmed"] += 1
+            if rn in dropped:
+                require(want, f"dropped rn {rn} ({wid}) has no repair (not an event tile)")
+                continue
             require(got == want, f"tile {rn} ({wid}): repair rows {sorted(got)} != independent recount {sorted(want)}")
             if got and not is_rc:
                 qc["tiles_recounted_repaired"] += 1
@@ -344,9 +428,11 @@ def validate(args):
             drop_keys.append((species_of[rn], wid[:-3] if is_rc else wid, gid, is_rc))
             if not is_rc:
                 drop_counts[(species_of[rn], splits[rn], cause)] += 1
-        audit_rows(base_con, b6_con, repairs, drops, qc)
-        qc["window_genes_removed"] = audit_window_genes(base_con, b6_con, drop_keys)
-        recount(base_con, manifest_rows, repair_by_rn, drops, args, qc)
+        dropped = audit_row_drop(base_con, b6_con, freeze, meta, qc)
+        audit_rows(base_con, b6_con, repairs, drops, qc, dropped=set(dropped))
+        qc["window_genes_removed"] = audit_window_genes(
+            base_con, b6_con, drop_keys, {(r["species_id"], r["wid"]) for r in dropped.values() if not r["is_rc"]})
+        recount(base_con, manifest_rows, repair_by_rn, drops, args, qc, dropped=dropped)
         audit_closure(b6_con, repair_by_rn, qc)
         counts = {}
         for r in repair_rows:
@@ -359,6 +445,11 @@ def validate(args):
                 "label_drops"] += n
         require(counts == freeze["counts"], f"counts {counts} != freeze {freeze['counts']}")
         require(_row_counts(b6_con) == freeze["row_counts"], "row counts != freeze")
+        train_rows = CR.loader_train_rows(b6_con)
+        require(freeze.get("train_rows") == train_rows and freeze.get("n_pilot") == CR.n_pilot_record(train_rows),
+                f"freeze train_rows / n_pilot {freeze.get('train_rows')} / {freeze.get('n_pilot')} != corpus loader "
+                f"train rows {train_rows} -> {CR.n_pilot_record(train_rows)}")
+        qc["train_rows"], qc["n_pilot"] = train_rows, freeze["n_pilot"]["value"]
     finally:
         base_con.close()
         b6_con.close()

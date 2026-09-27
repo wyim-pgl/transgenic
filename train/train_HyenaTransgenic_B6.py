@@ -26,6 +26,7 @@ What it does, relative to the B5 trainer (train/train_HyenaTransgenic.py, which 
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -555,6 +556,16 @@ def corpus_rows(corpus_path):
     return split["train"], split["valid"], c3
 
 
+def bind_freeze_n_pilot(freeze_path, record, train_rows, config_n_pilot):
+    """N_pilot from the corpus freeze the bindings verified (its bytes are provenance["freeze"]), checked against the
+    loader's train rows and the config (``rt.bind_n_pilot``; decision 18)."""
+    with open(freeze_path, "rb") as fh:
+        raw = fh.read()
+    if hashlib.sha256(raw).hexdigest() != record["provenance"]["freeze"]:
+        raise ValueError(f"{freeze_path}: freeze changed after the bindings verified it")
+    return rt.bind_n_pilot(json.loads(raw), train_rows, config_n_pilot)
+
+
 def _wp3():
     """WP3 modules (Writer B) and WP2 roles (Writer A). Imported by full module path; absent before the
     b6-integration merge."""
@@ -616,6 +627,7 @@ def main(argv=None) -> Dict:
                                     aug_seed=rt.AUG_SEED_BASE + args.seed)
     corpus = b6_context.B6Corpus(paths["corpus"], cache, expected_sha256=record["corpus_sha256"])
     train_rns, valid_rns, c3_rows = corpus_rows(paths["corpus"])
+    n_pilot = bind_freeze_n_pilot(paths["freeze"], record, len(train_rns), cfg["n_pilot"])
     c3 = b6_aug.c3_donor_map(c3_rows, rt.AUG_SEED_BASE + args.seed) if arm.name == "C3" else None
     common = dict(arm=arm.dataset_arm, aug_seed=rt.AUG_SEED_BASE + args.seed,
                   encode_dna=b6_dataset.hyena_char_encoder(cfg["encoder_model"]),
@@ -630,7 +642,7 @@ def main(argv=None) -> Dict:
                        compile_backend=None if args.compile_backend == "none" else args.compile_backend,
                        compile_warmup_steps=args.compile_warmup_steps, resume=args.resume,
                        deterministic=args.deterministic,
-                       stop_after_updates=pilot.get("stop_after_updates"),
+                       n_pilot=n_pilot, stop_after_updates=pilot.get("stop_after_updates"),
                        required_world_size=pilot.get("world_size"),
                        link={"slurm_job_id": os.environ.get("SLURM_JOB_ID"), "argv": list(argv or sys.argv[1:])})
     return run_b6(spec, build_model(cfg), train_ds, eval_ds, collate_fn=b6_dataset.b6_collate_fn_torch,

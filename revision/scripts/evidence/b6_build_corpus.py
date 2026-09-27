@@ -5,7 +5,8 @@
                        --flags Sp1=<Sp1>.geenuff_flags.tsv [--flags Sp2=... ...]
                        --build-flags Sp1=<Sp1>.geenuff_flags.tsv Sp1=<Sp1>.swissprot_flags.tsv [--build-flags Sp2=... ...]
                        --seed <corpus build seed> --interval-manifest <species>.b6-intervals-v2.jsonl [...]
-                       (--measure-only [--report measure.json] | --apply --out b5_full_b6_v1.db --freeze freeze.json)
+                       (--measure-only [--report measure.json]
+                        | --apply [--drop-row-set-events] --out b5_full_b6_v1.db --freeze freeze.json)
 
 Flag files are per species, exactly as each species' C0 build takes them (--flags <Sp>.geenuff_flags.tsv
 --build-flags <Sp>.geenuff_flags.tsv <Sp>.swissprot_flags.tsv): every build_manifest species needs its A22 file and
@@ -14,9 +15,13 @@ is accepted only for a single-species corpus (one species' files would leave eve
 crossers unmasked).  Per-species flag paths and sha256 go into the freeze and the report (``species_flags``).
 
 ``--measure-only`` counts every repair and the two row-set events (a train/valid tile over masked fraction 0.60; an
-RC twin whose tile loses its last labelled gene) and writes nothing but the report.  ``--apply`` measures first and
-refuses if either event is non-zero; otherwise it copies ``--base`` to ``--out`` (exclusive create, single-threaded
-DuckDB, CHECKPOINT, no WAL left) and updates rows in place, then writes the freeze JSON (exclusive create).
+RC twin whose tile loses its last labelled gene) and writes nothing but the report; its ``row_set_drop`` lists the
+rows ``--drop-row-set-events`` would delete (species, rn, wid, split, event) and the resulting loader train rows and
+N_pilot = floor(train_rows * 2 / 96).  ``--apply`` measures first and refuses if either event is non-zero, unless
+``--drop-row-set-events`` (author decision 18) is given: then every event tile is deleted together with its RC twin
+(recorded in the ``b6_row_drop`` table and the freeze).  It copies ``--base`` to ``--out`` (exclusive create,
+single-threaded DuckDB, CHECKPOINT, no WAL left) and updates rows in place, then writes the freeze JSON (exclusive
+create) with ``row_set_policy``, ``row_set_drop``, ``train_rows`` and ``n_pilot``.
 ``--interval-manifest`` takes one b6-intervals-v2 file per species (b6_leakage_intervals.py --manifest-out).
 ``--reference`` / ``--gff`` take SPECIES=PATH overrides for relocated build_manifest paths (sha256 still verified).
 """
@@ -62,6 +67,9 @@ def parse_args(argv):
     mode = ap.add_mutually_exclusive_group(required=True)
     mode.add_argument("--measure-only", action="store_true")
     mode.add_argument("--apply", action="store_true")
+    ap.add_argument("--drop-row-set-events", action="store_true",
+                    help="--apply: delete every row-set event tile with its RC twin (author decision 18) instead of "
+                         "refusing; N_pilot is recomputed from the remaining train rows")
     ap.add_argument("--out", help="B6 corpus DB (--apply)")
     ap.add_argument("--freeze", help="freeze JSON (--apply)")
     ap.add_argument("--report", help="measurement JSON (--measure-only; exclusive create)")
@@ -77,22 +85,28 @@ def main(argv=None):
         common = dict(splits=a.splits, flags=flags, build_flags=build_flags, seed=a.seed,
                       manifests=a.interval_manifest, references=refs, gffs=gffs)
         if a.measure_only:
-            if a.out or a.freeze:
-                raise CR.RepairError("--out/--freeze are --apply options")
+            if a.out or a.freeze or a.drop_row_set_events:
+                raise CR.RepairError("--out/--freeze/--drop-row-set-events are --apply options")
             _, out = CR.measure(a.base, **common)
             if a.report:
                 with open(a.report, "x") as fh:
                     json.dump(out, fh, indent=1, sort_keys=True)
                     fh.write("\n")
-            print(json.dumps({"events": out["events"], "counts": out["counts"]}, sort_keys=True))
+            drop = out["row_set_drop"]
+            print(json.dumps({"events": out["events"], "counts": out["counts"],
+                              "row_set_drop": {k: drop[k] for k in ("forward_tiles", "rc_rows", "counts",
+                                                                    "train_rows_before", "train_rows_after")},
+                              "n_pilot": drop["n_pilot"]["value"]}, sort_keys=True))
             return 0
         if not (a.out and a.freeze):
             raise CR.RepairError("--apply requires --out and --freeze")
-        record = CR.apply(a.base, a.out, a.freeze, argv=argv, **common)
+        record = CR.apply(a.base, a.out, a.freeze, argv=argv, drop_row_set_events=a.drop_row_set_events, **common)
     except (CR.RepairError, LK.LeakageError, FileExistsError, OSError) as exc:
         print(f"b6_build_corpus failed: {exc}", file=sys.stderr)
         return 1
-    print(json.dumps({"out_sha256": record["out_sha256"], "rows_repaired": record["rows_repaired"]}, sort_keys=True))
+    print(json.dumps({"out_sha256": record["out_sha256"], "rows_repaired": record["rows_repaired"],
+                      "row_set_policy": record["row_set_policy"], "rows_dropped": record["row_set_drop"]["rows"],
+                      "train_rows": record["train_rows"], "n_pilot": record["n_pilot"]["value"]}, sort_keys=True))
     return 0
 
 

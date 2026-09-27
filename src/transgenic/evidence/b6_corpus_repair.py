@@ -17,9 +17,19 @@ coordinates; only sequence, label and the derived columns change.
    ``gff`` is regenerated with ``window_to_gsf_v3``; tokens, ``n_transcripts``, ``qc_flags``, ``strict_holdout`` and
    ``window_genes`` follow.
 5. The RC twin is ``revcomp`` of the repaired forward tile with ``reverse_complement_v3`` of the regenerated GSF.
-6. Two events would change the row set -- a train/valid tile above masked fraction 0.60, and an RC twin whose tile
-   loses its last labelled gene (or, under ``isoform-only``, its last multi-isoform gene) -- and ``apply`` refuses
-   if either is non-zero (N_pilot = 4,142 rests on 198,828 train rows; a further amendment is then required).
+6. Two events would change the row set -- a train/valid tile above masked fraction 0.60 (the build's own
+   ``build_b5.py:602`` rule), and an RC twin whose tile loses its last labelled gene (or, under ``isoform-only``,
+   its last multi-isoform gene).  By default ``apply`` refuses if either is non-zero.  With
+   ``drop_row_set_events=True`` (author decision 18, 2026-09-27; CLI ``--drop-row-set-events``) every event tile is
+   deleted TOGETHER WITH its RC twin from the output corpus -- the rows the build itself would not have kept -- and
+   nothing else changes: surviving rows keep rn/wid/order and are byte-identical to the non-dropping repair, test
+   tiles are untouched, the window_genes of a dropped window go with it, and ``b6_row_drop`` records every deleted
+   row.  Deleting (rather than ``train_weight = 0`` or a split change) is the one mechanism every consumer already
+   honours: the trainer's train/valid lists, the C3 donor map (``split IN ('train','valid')``, no weight filter) and
+   ``B6Corpus.row`` all stop seeing the rows, and no unrepaired or over-masked sequence stays in the corpus.
+7. N_pilot (A46 rule 11, amended by decision 18) = floor(train_rows * 2 / 96) over the output corpus' loader train
+   rows (``LOADER_TRAIN_PREDICATE``, the trainer's ``corpus_rows``); measure projects it, the freeze records it
+   (``n_pilot``) and the trainer binds its N_pilot to that record (``b6_runtime.bind_n_pilot``).
 
 Every tile that is repaired is first verified against the replayed A40 masking (``leakage.verify_tile``), its
 labelled genes against ``window_genes`` and its stored GSF, and its RC twin against the forward row.
@@ -50,7 +60,20 @@ REPAIR_DDL = ("CREATE TABLE b6_dna_repair (rn INTEGER NOT NULL, wid VARCHAR NOT 
               "is_rc BOOLEAN NOT NULL)")
 LABEL_DROP_DDL = "CREATE TABLE b6_label_drop (rn INTEGER NOT NULL, gene_id VARCHAR NOT NULL, cause VARCHAR NOT NULL)"
 META_DDL = "CREATE TABLE b6_corpus_meta (key VARCHAR NOT NULL PRIMARY KEY, value VARCHAR NOT NULL)"
+ROW_DROP_COLUMNS = ("rn", "wid", "species_id", "split", "is_rc", "forward_rn", "events", "detail")
+ROW_DROP_DDL = ("CREATE TABLE b6_row_drop (rn INTEGER NOT NULL, wid VARCHAR NOT NULL, species_id VARCHAR NOT NULL, "
+                "split VARCHAR, is_rc BOOLEAN NOT NULL, forward_rn INTEGER NOT NULL, events VARCHAR NOT NULL, "
+                "detail VARCHAR NOT NULL)")
+ROW_SET_REFUSE = "refuse"
+ROW_SET_DROP = "drop_event_tiles_with_rc_twins"      # author decision 18 (2026-09-27)
 BATCH = 256
+
+# N_pilot (A46 rule 11; decision 18 numeric amendment): floor(train_rows * epochs / effective_batch) over the loader
+# train rows of the output corpus.  The trainer's corpus_rows / isoformDataHyena select exactly these rows.
+PILOT_EPOCHS = 2
+PILOT_EFFECTIVE_BATCH = 96
+N_PILOT_FORMULA = "floor(train_rows * epochs / effective_batch)"
+LOADER_TRAIN_PREDICATE = "split = 'train' AND gff IS NOT NULL AND COALESCE(train_weight, 1.0) > 0"
 
 
 class RepairError(ValueError):
@@ -386,6 +409,7 @@ class Report:
     events: dict = field(default_factory=lambda: {e: 0 for e in EVENTS})
     event_tiles: list = field(default_factory=list)   # (species, rn, wid, event, detail)
     declared_differences: dict = field(default_factory=dict)
+    drop_tiles: dict = field(default_factory=dict)    # (species, forward rn) -> (wid, rc rn | None, events, detail)
 
     def add(self, rep, qc):
         c = self.counts.setdefault(rep.species, {}).setdefault(rep.split, {})
@@ -409,6 +433,12 @@ class Report:
         if rep.rc_orphan:
             self.events["rc_twin_orphaned"] += 1
             self.event_tiles.append((rep.species, rep.rn, rep.wid, "rc_twin_orphaned", rep.rc_orphan))
+        if rep.over_mask or rep.rc_orphan:
+            ev = [e for e, hit in zip(EVENTS, (rep.over_mask, rep.rc_orphan)) if hit]
+            det = ([f"masked_fraction={rep.masked_fraction:.4f}"] if rep.over_mask else []) + (
+                [f"rc_orphan={rep.rc_orphan}"] if rep.rc_orphan else [])
+            self.drop_tiles[(rep.species, rep.rn)] = (rep.wid, rep.rc["rn"] if rep.rc else None, ";".join(ev),
+                                                      ";".join(det))
 
     def as_dict(self):
         return {"rule_id": RULE_ID, "species_qc": self.species, "counts": self.counts, "events": self.events,
@@ -517,7 +547,74 @@ def _require_manifest_coverage(con, components):
         require(species in have or n == 0, f"{species}: no interval manifest supplied for a species with train/valid tiles")
 
 
+# ----------------------------------------------------------------------------------------- row-set drop (decision 18)
+def n_pilot_record(train_rows):
+    """The N_pilot the freeze binds (A46 rule 11 as amended by decision 18), with its formula and inputs."""
+    train_rows = int(train_rows)
+    return {"value": train_rows * PILOT_EPOCHS // PILOT_EFFECTIVE_BATCH, "formula": N_PILOT_FORMULA,
+            "train_rows": train_rows, "epochs": PILOT_EPOCHS, "effective_batch": PILOT_EFFECTIVE_BATCH,
+            "train_rows_predicate": LOADER_TRAIN_PREDICATE}
+
+
+def _loader_where(con):
+    cols = {r[1] for r in con.execute("PRAGMA table_info('geneList')").fetchall()}
+    return LOADER_TRAIN_PREDICATE if "train_weight" in cols else "split = 'train' AND gff IS NOT NULL"
+
+
+def loader_train_rows(con, rns=None):
+    """Rows the trainer's train list holds (``corpus_rows``); with ``rns``, only those among them."""
+    if rns is None:
+        return con.execute(f"SELECT count(*) FROM geneList WHERE {_loader_where(con)}").fetchone()[0]
+    if not rns:
+        return 0
+    return con.execute(f"SELECT count(*) FROM geneList WHERE {_loader_where(con)} AND list_contains(?, rn)",
+                       [sorted(rns)]).fetchone()[0]
+
+
+def drop_plan(con, report):
+    """Decision 18: every row-set event tile and its RC twin, as stored in the base corpus (ROW_DROP_COLUMNS rows,
+    rn order).  Only train/valid tiles have events; a test row here fails closed."""
+    twin_of, meta = {}, {}
+    for (sp, rn), (wid, rc_rn, ev, det) in sorted(report.drop_tiles.items()):
+        meta[rn] = (sp, wid, ev, det)
+        if rc_rn is not None:
+            twin_of[rc_rn] = rn
+    rns = sorted(set(meta) | set(twin_of))
+    if not rns:
+        return []
+    rows = con.execute("SELECT rn, geneModel, species_id, split, is_rc FROM geneList WHERE list_contains(?, rn) "
+                       "ORDER BY rn", [rns]).fetchall()
+    require([r[0] for r in rows] == rns, "row-set drop: an event tile or its RC twin is missing from the base")
+    out = []
+    for rn, wid, sp, split, is_rc in rows:
+        fwd = twin_of[rn] if is_rc else rn
+        require(bool(is_rc) == (rn in twin_of), f"row-set drop: rn {rn} is_rc {is_rc} disagrees with the repair")
+        fsp, fwid, ev, det = meta[fwd]
+        require(sp == fsp and wid == (fwid + "-rc" if is_rc else fwid),
+                f"row-set drop: rn {rn} ({sp} {wid}) is not event tile {fwd} ({fsp} {fwid}) or its RC twin")
+        require(split in ("train", "valid", None), f"row-set drop: rn {rn} is a {split} row; test rows are untouched")
+        out.append((rn, wid, sp, split, bool(is_rc), fwd, ev, det))
+    return out
+
+
+def drop_summary(con, rows):
+    """What the drop removes and the resulting loader train rows / N_pilot (measured on the base corpus)."""
+    counts = {}
+    for rn, _, sp, split, is_rc, *_ in rows:
+        c = counts.setdefault(sp, {}).setdefault(split or "null", {"forward": 0, "rc": 0})
+        c["rc" if is_rc else "forward"] += 1
+    before = loader_train_rows(con)
+    dropped_train = loader_train_rows(con, [r[0] for r in rows])
+    return {"policy": ROW_SET_DROP, "tiles": [dict(zip(ROW_DROP_COLUMNS, r)) for r in rows],
+            "forward_tiles": sum(not r[4] for r in rows), "rc_rows": sum(r[4] for r in rows), "rows": len(rows),
+            "counts": counts, "train_rows_before": before, "train_rows_dropped": dropped_train,
+            "train_rows_after": before - dropped_train, "n_pilot_before": n_pilot_record(before),
+            "n_pilot": n_pilot_record(before - dropped_train)}
+
+
 def measure(base, *, splits, flags, build_flags, seed, manifests, references=None, gffs=None):
+    """Count every repair and the row-set events; ``row_set_drop`` is what ``--drop-row-set-events`` would delete
+    and the train rows / N_pilot it would leave."""
     components, shas = load_manifests(manifests)
     report = Report()
     con = _open_ro(base)
@@ -533,9 +630,11 @@ def measure(base, *, splits, flags, build_flags, seed, manifests, references=Non
             report.declared_differences[ctx.species] = {
                 "a30_only_spans_masked_not_c0_excluded": qc["a30_only_spans"],
                 "edge_partial_c0_excluded_not_masked": qc["edge_partial_unmasked"]}
+        drop = drop_summary(con, drop_plan(con, report))
     finally:
         con.close()
     out = report.as_dict()
+    out["row_set_drop"] = drop
     out["interval_manifests"] = shas
     out["species_flags"] = species_flag_record(sflags)
     return report, out
@@ -560,8 +659,26 @@ def _row_counts(con):
     return out
 
 
-def apply(base, out, freeze, *, splits, flags, build_flags, seed, manifests, references=None, gffs=None, argv=()):
-    """Refuse on any row-set event (measured first), then copy A40 -> ``out`` and update rows in place."""
+def _subtract_rows(counts, rows):
+    out = json.loads(json.dumps(counts))
+    by = out["by_species_split_rc"]
+    for _, _, sp, split, is_rc, *_ in rows:
+        c = by[sp][split or "null"]
+        k = "rc" if is_rc else "forward"
+        c[k] -= 1
+        if not c[k]:
+            del c[k]
+        if not c:
+            del by[sp][split or "null"]
+        out["total"] -= 1
+        out["train"] -= split == "train"
+    return out
+
+
+def apply(base, out, freeze, *, splits, flags, build_flags, seed, manifests, references=None, gffs=None, argv=(),
+          drop_row_set_events=False):
+    """Measure first; on any row-set event refuse (default) or, with ``drop_row_set_events`` (decision 18), delete
+    exactly the event tiles and their RC twins.  Then copy A40 -> ``out`` and update rows in place."""
     import duckdb
 
     out, freeze = Path(out).absolute(), Path(freeze).absolute()
@@ -570,8 +687,14 @@ def apply(base, out, freeze, *, splits, flags, build_flags, seed, manifests, ref
     report, measured = measure(base, splits=splits, flags=flags, build_flags=build_flags, seed=seed,
                                manifests=manifests, references=references, gffs=gffs)
     bad = {k: v for k, v in report.events.items() if v}
-    require(not bad, f"--apply refused: row-set events {bad} (tiles {report.event_tiles[:10]}); the train rows would "
-                     "leave 198,828 (the N_pilot = 4,142 basis, P:999) -- a further amendment is required")
+    require(drop_row_set_events or not bad,
+            f"--apply refused: row-set events {bad} (tiles {report.event_tiles[:10]}); the train rows would leave "
+            "198,828 (the N_pilot = 4,142 basis, P:999) -- a further amendment is required (author decision 18: "
+            "--drop-row-set-events drops every event tile with its RC twin and recomputes N_pilot)")
+    policy = ROW_SET_DROP if drop_row_set_events else ROW_SET_REFUSE
+    plan = [tuple(t[c] for c in ROW_DROP_COLUMNS) for t in measured["row_set_drop"]["tiles"]]
+    drop_fwd = {(r[2], r[0]) for r in plan if not r[4]}
+    require(drop_fwd == set(report.drop_tiles), "row-set drop plan != the measured event tiles")
     base_sha = LK.sha256(base)
     components, shas = load_manifests(manifests, relative_to=freeze.parent)
     tmp = Path(str(out) + ".partial")
@@ -585,37 +708,52 @@ def apply(base, out, freeze, *, splits, flags, build_flags, seed, manifests, ref
         dst.execute(REPAIR_DDL)
         dst.execute(LABEL_DROP_DDL)
         dst.execute(META_DDL)
+        dst.execute(ROW_DROP_DDL)
         repair_rows, drop_rows = [], []
+        kept, seen = Report(), set()
         sflags = species_flags(_species(src), flags, build_flags)
         for ctx in _contexts(src, splits=splits, sflags=sflags, seed=seed, components=components,
                              references=references, gffs=gffs):
             qc = defaultdict(int)
             pending = []
             for rep in iter_species_repairs(src, ctx, qc):
-                require(not rep.over_mask and not rep.rc_orphan, f"tile {rep.rn}: row-set event appeared between passes")
+                event = rep.over_mask or bool(rep.rc_orphan)
+                require(event == ((rep.species, rep.rn) in drop_fwd),
+                        f"tile {rep.rn}: row-set event set changed between passes")
+                if event:
+                    seen.add((rep.species, rep.rn))       # decision 18: deleted below with its RC twin
+                    continue
+                kept.add(rep, defaultdict(int))
                 pending.append(rep)
                 if len(pending) >= BATCH:
                     _write_batch(dst, pending, repair_rows, drop_rows)
                     pending = []
             _write_batch(dst, pending, repair_rows, drop_rows)
+        require(seen == drop_fwd, "row-set event tiles differ between passes")
         repair_rows.sort()
         drop_rows.sort()
         if repair_rows:
             dst.executemany("INSERT INTO b6_dna_repair VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", repair_rows)
         if drop_rows:
             dst.executemany("INSERT INTO b6_label_drop VALUES (?,?,?)", drop_rows)
+        wg_dropped = _drop_rows(dst, plan)
         meta = {"rule_id": RULE_ID, "corpus_version": CORPUS_VERSION, "base_sha256": base_sha, "seed": str(seed),
                 "interval_manifest_sha256": json.dumps({k: v["sha256"] for k, v in sorted(shas.items())},
-                                                       sort_keys=True)}
+                                                       sort_keys=True), "row_set_policy": policy}
         dst.executemany("INSERT INTO b6_corpus_meta VALUES (?, ?)", sorted(meta.items()))
         row_counts = _row_counts(dst)
+        train_rows = loader_train_rows(dst)
         dst.execute("CHECKPOINT")
     finally:
         src.close()
         dst.close()
     require(not os.path.exists(str(tmp) + ".wal"), f"{tmp}.wal remains after CHECKPOINT; refusing to publish")
     base_counts = _row_counts_path(base)
-    require(base_counts == row_counts, f"row counts changed: {base_counts} -> {row_counts}")
+    want_counts = _subtract_rows(base_counts, plan)
+    require(want_counts == row_counts, f"row counts {row_counts} != base {base_counts} minus the dropped rows")
+    require(train_rows == measured["row_set_drop"]["train_rows_after"],
+            f"loader train rows {train_rows} != measured projection {measured['row_set_drop']['train_rows_after']}")
+    drop_rec = dict(measured["row_set_drop"], policy=policy, window_genes_dropped=wg_dropped)
     os.link(tmp, out)
     tmp.unlink()
     out_sha = LK.sha256(out)
@@ -626,8 +764,10 @@ def apply(base, out, freeze, *, splits, flags, build_flags, seed, manifests, ref
               "interval_manifests": shas, "seed": seed, "code_sha256": _code_shas(), "argv": list(argv),
               "inputs": _input_shas(splits), "species_flags": species_flag_record(sflags),
               "species_inputs": _species_inputs(base, references, gffs),
-              "counts": measured["counts"], "species_qc": measured["species_qc"],
+              "counts": kept.counts, "measured_counts": measured["counts"], "species_qc": measured["species_qc"],
               "declared_differences": measured["declared_differences"], "events": measured["events"],
+              "row_set_policy": policy, "row_set_drop": drop_rec, "base_row_counts": base_counts,
+              "train_rows": train_rows, "n_pilot": n_pilot_record(train_rows),
               "row_counts": row_counts, "rows_repaired": len({r[0] for r in repair_rows}),
               "b6_dna_repair_rows": len(repair_rows), "b6_label_drop_rows": len(drop_rows),
               "duckdb_version": duckdb.__version__,
@@ -638,6 +778,23 @@ def apply(base, out, freeze, *, splits, flags, build_flags, seed, manifests, ref
         json.dump(record, fh, indent=1, sort_keys=True)
         fh.write("\n")
     return record
+
+
+def _drop_rows(dst, plan):
+    """Delete the planned rows, the window_genes of their windows, and record them in ``b6_row_drop``."""
+    if not plan:
+        return 0
+    windows = sorted({(r[2], r[1]) for r in plan if not r[4]})
+    require(all(wid.startswith(sp + ":") for sp, wid in windows), "row-set drop: a window id without its species")
+    q = "SELECT count(*) FROM window_genes"
+    before = dst.execute(q).fetchone()[0]
+    dst.execute("DELETE FROM window_genes WHERE list_contains(?, window_id)", [[w for _, w in windows]])
+    n_rows = dst.execute("SELECT count(*) FROM geneList").fetchone()[0]
+    dst.execute("DELETE FROM geneList WHERE list_contains(?, rn)", [[r[0] for r in plan]])
+    require(n_rows - dst.execute("SELECT count(*) FROM geneList").fetchone()[0] == len(plan),
+            "row-set drop deleted a different number of rows than planned")
+    dst.executemany("INSERT INTO b6_row_drop VALUES (?,?,?,?,?,?,?,?)", sorted(plan))
+    return before - dst.execute(q).fetchone()[0]
 
 
 def _row_counts_path(path):
