@@ -11,12 +11,12 @@ What it does, relative to the B5 trainer (train/train_HyenaTransgenic.py, which 
   * one arm per run (B6, C2, C3, C4, C6, C7; rule 11), all at seed 123 and aug_seed 20261037; arms differ only
     by the dataset arm (C3 donor evidence) and the tensor transform ``b6_runtime.apply_arm``, which uses no RNG;
   * loss = L_GSF only; stop rule on de novo validation L_GSF (patience 3, ceiling 22) for B6 and C2, evidence
-    validation L_GSF logged; C3/C4/C6/C7 stop at exactly N_pilot = 4,142 optimizer updates;
-  * every arm publishes ``step_04142/`` (model.safetensors, meta.json, PRUNE_EXEMPT) at update 4,142;
-  * WP5 pilot (--stop-after-updates 4142 or configs/b6_400m_win_v3_wp5_pilot.json): B6/C2 stop at exactly 4,142
-    optimizer updates on every rank, ``step_04142/`` is marked PILOT_FINAL (meta pilot_final, never best-validation),
+    validation L_GSF logged; C3/C4/C6/C7 stop at exactly N_pilot = 4,099 optimizer updates;
+  * every arm publishes ``step_04099/`` (model.safetensors, meta.json, PRUNE_EXEMPT) at update 4,099;
+  * WP5 pilot (--stop-after-updates 4099 or configs/b6_400m_win_v3_wp5_pilot.json): B6/C2 stop at exactly 4,099
+    optimizer updates on every rank, ``step_04099/`` is marked PILOT_FINAL (meta pilot_final, never best-validation),
     TRAINING_DONE is written; the stop target is in the run identity, so a resume with another target is refused.
-    The LR schedule is the full-run schedule truncated at 4,142 (A46 rule 11 matched budget with C3/C4/C6/C7);
+    The LR schedule is the full-run schedule truncated at 4,099 (A46 rule 11 matched budget with C3/C4/C6/C7);
   * AdamW as B5 with every chain gate alpha outside weight decay; the B5 LR schedule, including its world-size
     accounting (steps_per_epoch from the unsharded loader length), so the schedule is B5's;
   * torch.compile with suppress_errors off; zero Inductor kernels after warm-up or a recompile of an already

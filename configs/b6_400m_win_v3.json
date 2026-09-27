@@ -68,12 +68,13 @@
     "memory_bench_peak_reserved_gb": 62.959,
     "memory_bench_report_sha256": "1f66b93a7d77b41cc69501082e544a102917f26f14663e0d06e135ea583f6211",
     "certified_config_sha256": "7a224645755f6a05400bca4d8d539770790793e5eb72cf45ab10ccd74a2db58d",
+    "certified_gated_fields_sha256": "ef29013acd47514a183c0a086b29f3d11ef4511ee32514bea9aac16c1e65ce3f",
     "architecture_sha256": "7f941f5c32ba77dc79dbcf8c179758d378f0aa012b0cf1a155fc4a6b9d450b7a",
     "cp4_jobs": {
       "wp3_fixtures": "3210279",
       "synthetic": "3210585"
     },
-    "decision": "author decision 15 (2026-09-26); A51 (gate certified on 2 or 4 ranks); notes/b6_cp4_20260925/FINAL_VERIFICATION.md"
+    "decision": "author decision 15 (2026-09-26); A51 (gate certified on 2 or 4 ranks); notes/b6_cp4_20260925/FINAL_VERIFICATION.md; decision 18 (2026-09-27): n_pilot 4,142 -> 4,099 on the repaired corpus, outside the gated fields"
   },
   "evidence_channels": 31,
   "chain_elements": 512,
@@ -92,7 +93,7 @@
   ],
   "withhold_source_rate": 0.1,
   "withhold_library_rate": 0.1,
-  "n_pilot": 4142,
+  "n_pilot": 4099,
   "patience": 3,
   "memory_abort_gb": 110,
   "memory_gate_gb": 100,

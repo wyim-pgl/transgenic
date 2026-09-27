@@ -39,14 +39,15 @@ GATED_STATUS = "GATED: memory bench passed"
 SEED = 123
 AUG_SEED_BASE = 20260914
 AUG_SEED = AUG_SEED_BASE + SEED                       # 20261037
-# N_pilot = floor(train_rows * PILOT_EPOCHS / EFFECTIVE_BATCH) (A46 rule 11; decision 18 numeric amendment). 4,142 is
-# the A46 freeze-checklist value on 198,828 train rows; the binding value is the corpus freeze's ``n_pilot`` record
-# (b6_corpus_repair.n_pilot_record), which ``bind_n_pilot`` checks against this constant, the config and the loader.
-# Once the decision-18 corpus is applied and its freeze says N != 4142, update together (one A46 rule 11 amendment):
+# N_pilot = floor(train_rows * PILOT_EPOCHS / EFFECTIVE_BATCH) (A46 rule 11; decision 18 numeric amendment). 4,099 is
+# the value on the repaired corpus's 196,774 train rows (decision 18: row-set event tiles dropped with their RC twins;
+# measure_v2.json of b6_prepare_20260925); it replaced the A46 freeze-checklist 4,142 on 198,828 rows. The binding
+# value is the corpus freeze's ``n_pilot`` record (b6_corpus_repair.n_pilot_record), which ``bind_n_pilot`` checks
+# against this constant, the config and the loader. A further change updates together (one A46 rule 11 amendment):
 # N_PILOT here, configs/b6_400m_win_v3.json n_pilot, configs/b6_400m_win_v3_wp5_pilot.json n_pilot and
-# wp5_pilot.stop_after_updates (and its notes), revision/scripts/b6/wp5_pilot.sbatch N_PILOT=, and the literal 4142
-# in tests/test_b6_pilot.py.
-N_PILOT = 4142
+# wp5_pilot.stop_after_updates (and its notes), revision/scripts/b6/wp5_pilot.sbatch N_PILOT=, and the literal N_PILOT
+# in tests/test_b6_pilot.py. n_pilot is outside the memory-gated fields (GATE_EXEMPT_KEYS), so the CP2 gate holds.
+N_PILOT = 4099
 EFFECTIVE_BATCH = 96
 PILOT_EPOCHS = 2
 N_PILOT_FORMULA = "floor(train_rows * epochs / effective_batch)"
@@ -117,7 +118,7 @@ class ArmPreset:
     name: str
     tracks: str              # draw | zero | donor | binary | phase_zero
     chains: str              # draw | masked | donor
-    budget: str              # full (stop rule) | n_pilot (fixed 4,142 updates, final step)
+    budget: str              # full (stop rule) | n_pilot (fixed N_PILOT updates, final step)
     dataset_arm: str         # what the WP3 dataset is asked to build (C3 needs donor evidence)
     evidence_channel: str    # logged: on | off
 
@@ -370,11 +371,22 @@ def load_b6_config(path: str) -> Dict:
 
 
 # The CP2 record a GATED config must carry (A51: certified on 2 or 4 ranks; 1 rank is a pre-check only). The bench
-# certified the config bytes of its run (certified_config_sha256, UNGATED at the time) and the BUILT architecture;
-# the architecture digest is bound here, so a GATED config of a different model is refused.
+# certified the config bytes of its run (certified_config_sha256 = configs/b6_400m_win_v3.json at ce22b2f, UNGATED at
+# the time) and the BUILT architecture; the architecture digest is bound here, so a GATED config of a different model
+# is refused. certified_gated_fields_sha256 is ``gated_fields_sha256`` of those certified bytes as ``load_b5_config``
+# loads them (defaults applied): every config field except GATE_EXEMPT_KEYS (labels, the gate record itself, arm
+# selection and the pilot budget -- none changes the model, batch, window or memory shape) must equal the certified
+# run's, so the decision-18 n_pilot amendment keeps the gate while any change of a memory-relevant field (batch,
+# tiers, seq len, layers, checkpointing) breaks it.
 GATE_EVIDENCE_KEYS = ("memory_bench_job", "memory_bench_world_size", "memory_bench_peak_reserved_gb",
-                      "memory_bench_report_sha256", "certified_config_sha256", "architecture_sha256", "cp4_jobs",
-                      "decision")
+                      "memory_bench_report_sha256", "certified_config_sha256", "certified_gated_fields_sha256",
+                      "architecture_sha256", "cp4_jobs", "decision")
+GATE_EXEMPT_KEYS = frozenset({"name", "notes", "gate_status", "gate_evidence", "arms", "wp5_pilot", "n_pilot"})
+
+
+def gated_fields_sha256(cfg: Mapping) -> str:
+    """Canonical digest of the config fields the CP2 memory bench certified (all but GATE_EXEMPT_KEYS)."""
+    return canonical_sha256({k: v for k, v in cfg.items() if k not in GATE_EXEMPT_KEYS})
 
 
 def check_gate_evidence(cfg: Mapping, path: str) -> None:
@@ -387,9 +399,13 @@ def check_gate_evidence(cfg: Mapping, path: str) -> None:
         raise ValueError(f"{path}: gate_evidence memory_bench_world_size must be 2 or 4 (A51)")
     if not float(ev["memory_bench_peak_reserved_gb"]) <= MEMORY_GATE_BYTES / 10 ** 9:
         raise ValueError(f"{path}: gate_evidence peak reserved above the {MEMORY_GATE_BYTES // 10 ** 9} GB gate")
-    for key in ("memory_bench_report_sha256", "certified_config_sha256", "architecture_sha256"):
+    for key in ("memory_bench_report_sha256", "certified_config_sha256", "certified_gated_fields_sha256",
+                "architecture_sha256"):
         if not _is_sha(ev[key]):
             raise ValueError(f"{path}: gate_evidence {key} must be a sha256")
+    if gated_fields_sha256(cfg) != ev["certified_gated_fields_sha256"]:
+        raise ValueError(f"{path}: gate_evidence certified_gated_fields_sha256 does not match this config's "
+                         f"memory-gated fields (all but {sorted(GATE_EXEMPT_KEYS)}): the CP2 bench did not certify it")
     if ev["architecture_sha256"] != FROZEN_ARCHITECTURE_SHA256:
         raise ValueError(f"{path}: gate_evidence architecture_sha256 is not this checkout's frozen architecture")
 
@@ -782,8 +798,8 @@ def parse_args_b6(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--allow-ungated", action="store_true",
                    help="acknowledge that the memory gate has not passed (integration tests only)")
     p.add_argument("--stop-after-updates", type=int, default=None,
-                   help="WP5 pilot: stop at exactly this many optimizer updates (must equal N_pilot = 4,142) and "
-                        "mark step_04142 as the pilot-final checkpoint; the wp5_pilot config sets it itself")
+                   help="WP5 pilot: stop at exactly this many optimizer updates (must equal N_pilot = 4,099) and "
+                        "mark step_04099 as the pilot-final checkpoint; the wp5_pilot config sets it itself")
     a = p.parse_args(argv)
     if a.seed != SEED:
         p.error(f"rule 11: every B6 arm uses seed {SEED}")

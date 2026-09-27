@@ -2,8 +2,9 @@
 the step-N checkpoint as the pilot-final one (never best-validation) and exit; resume lands on N; the stop target is
 part of the run identity; the pilot config is gated and refuses --allow-ungated.
 
-N_pilot is scaled down (6 instead of 4,142) as in tests/test_b6_trainer.py; the production path is unchanged.
+N_pilot is scaled down (6 instead of 4,099) as in tests/test_b6_trainer.py; the production path is unchanged.
 """
+import hashlib
 import json
 import os
 import shutil
@@ -102,11 +103,11 @@ class PilotStopTests(TrainerBase):
             self.train_arm(self.spec("B6", run="tgt", stop_after_updates=5, resume="auto"))
 
     def test_stop_target_must_equal_n_pilot(self):
-        for bad in (0, 5, 7, 4142):
+        for bad in (0, 5, 7, 4142, 4099):
             with self.subTest(target=bad), self.assertRaisesRegex(ValueError, "must equal N_pilot"):
                 rt.pilot_stop_target(bad, 6)
         self.assertIsNone(rt.pilot_stop_target(None, 6))
-        self.assertEqual(rt.pilot_stop_target(4142, rt.N_PILOT), 4142)
+        self.assertEqual(rt.pilot_stop_target(4099, rt.N_PILOT), 4099)
 
     def test_unreachable_target_fails_without_training_done(self):
         spec = self.spec("B6", run="short", stop_after_updates=6, max_epochs=1)          # 1 epoch = 4 updates
@@ -134,10 +135,10 @@ class PilotConfigGateTests(TrainerBase):
     def test_pilot_config_is_gated_and_pins_the_pilot(self):
         cfg = rt.load_b6_config(PILOT_CFG)
         self.assertEqual(cfg["gate_status"], rt.GATED_STATUS)
-        self.assertEqual(cfg["wp5_pilot"], {"stop_after_updates": 4142, "arms": ["B6", "C2"], "world_size": 4,
+        self.assertEqual(cfg["wp5_pilot"], {"stop_after_updates": 4099, "arms": ["B6", "C2"], "world_size": 4,
                                             "seed": 123, "aug_seed": 20261037})
         self.assertEqual(rt.resolve_wp5_pilot(cfg, "C2", seed=123, stop_after_updates=None, allow_ungated=False),
-                         {"stop_after_updates": 4142, "world_size": 4})
+                         {"stop_after_updates": 4099, "world_size": 4})
         base = json.load(open(BASE_CFG))
         for key, value in base.items():                    # the pilot config is the production recipe plus the block
             if key not in ("name", "notes", "arms"):
@@ -166,13 +167,13 @@ class PilotConfigGateTests(TrainerBase):
             with self.assertRaisesRegex(RuntimeError, "reached WP3 inputs"):
                 self._main()
             with self.assertRaisesRegex(RuntimeError, "reached WP3 inputs"):
-                self._main("--stop-after-updates", "4142", arm="C2")
+                self._main("--stop-after-updates", "4099", arm="C2")
 
     def test_stop_flag_without_pilot_config_still_needs_the_gate(self):
         ungated = self._copy("plain_ungated.json", lambda c: (c.pop("wp5_pilot"), c.pop("gate_evidence"),
                                                               c.update(gate_status=rt.GATE_STATUS)))
         with self.assertRaisesRegex(SystemExit, "UNGATED"):
-            self._main("--stop-after-updates", "4142", config=ungated)
+            self._main("--stop-after-updates", "4099", config=ungated)
         with self.assertRaisesRegex(ValueError, "must equal N_pilot"):
             self._main("--stop-after-updates", "100", config=BASE_CFG)
 
@@ -184,7 +185,7 @@ class PilotLauncherTests(TrainerBase):
         text = open(self.SBATCH).read()
         code = [line for line in text.splitlines() if not line.lstrip().startswith("#")]
         self.assertFalse([line for line in code if "--allow-ungated" in line])
-        for needle in ("#SBATCH --gpus-per-node=4", "configs/b6_400m_win_v3_wp5_pilot.json", "N_PILOT=4142",
+        for needle in ("#SBATCH --gpus-per-node=4", "configs/b6_400m_win_v3_wp5_pilot.json", "N_PILOT=4099",
                        "--stop-after-updates $N_PILOT", "--seed 123", "--resume auto", "--num_processes=4"):
             self.assertIn(needle, text)
 
@@ -223,10 +224,42 @@ class ProductionGateTests(TrainerBase):
                  "one_rank": lambda c: c["gate_evidence"].update(memory_bench_world_size=1),
                  "over": lambda c: c["gate_evidence"].update(memory_bench_peak_reserved_gb=100.5),
                  "arch": lambda c: c["gate_evidence"].update(architecture_sha256="0" * 64),
-                 "report": lambda c: c["gate_evidence"].update(memory_bench_report_sha256="short")}
+                 "report": lambda c: c["gate_evidence"].update(memory_bench_report_sha256="short"),
+                 "fields": lambda c: c["gate_evidence"].update(certified_gated_fields_sha256="0" * 64)}
         for name, edit in cases.items():
             with self.subTest(case=name), self.assertRaisesRegex(ValueError, "gate_evidence"):
                 rt.load_b6_config(edited(f"{name}.json", edit))
+
+
+    def test_n_pilot_amendment_keeps_the_gate_but_memory_fields_break_it(self):
+        """Decision 18 moved n_pilot 4,142 -> 4,099 after the CP2 bench; n_pilot (like names, notes, arms and the
+        pilot block) is outside the certified fields, every memory-relevant field is inside them."""
+        for path in (BASE_CFG, PILOT_CFG):
+            cfg = rt.load_b6_config(path)
+            self.assertEqual(cfg["n_pilot"], 4099)
+            for n in (4142, 4099):                                        # the certified value and the amendment
+                rt.check_gate_evidence(dict(cfg, n_pilot=n), path)
+            memory_edits = {"effective_batch_size": 192, "max_encoder_seqlen": 262144, "decoder_layers": 13,
+                            "window_tiers": [30720, 61440, 262144], "genes_per_window_cap": 192,
+                            "checkpointing": "none", "max_label_tokens": 16384}
+            for key, value in memory_edits.items():
+                with self.subTest(config=os.path.basename(path), key=key), \
+                        self.assertRaisesRegex(ValueError, "certified_gated_fields_sha256"):
+                    rt.check_gate_evidence(dict(cfg, **{key: value}), path)
+
+    def test_certified_fields_digest_is_that_of_the_bench_config_bytes(self):
+        import subprocess
+        from transgenic.training import b5_runtime
+        try:
+            blob = subprocess.run(["git", "-C", ROOT, "show", "ce22b2f:configs/b6_400m_win_v3.json"],
+                                  capture_output=True, check=True).stdout
+        except (OSError, subprocess.CalledProcessError):
+            self.skipTest("git history with ce22b2f unavailable")
+        ev = json.load(open(BASE_CFG))["gate_evidence"]
+        self.assertEqual(hashlib.sha256(blob).hexdigest(), ev["certified_config_sha256"])
+        path = os.path.join(self.tmp.name, "certified.json")
+        open(path, "wb").write(blob)
+        self.assertEqual(rt.gated_fields_sha256(b5_runtime.load_b5_config(path)), ev["certified_gated_fields_sha256"])
 
 
 # ---- two CPU ranks over gloo (the CP4 harness of tests/test_b6_checkpoint_io.py) --------------------------------
