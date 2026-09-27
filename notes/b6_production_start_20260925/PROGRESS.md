@@ -1,5 +1,13 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## 코퍼스 drop 모드·N_pilot 4,099 (결정 18, 2026-09-27)
+
+- drop 모드 `cf1a30f` → b6-integration **`c422e5e`**(source_v5, tar sha `000e4822…182f`): `--apply --drop-row-set-events`가 사건 타일·RC twin·window_genes 행을 **삭제**(A40 빌드도 0.60 초과 타일은 버림; train_weight=0은 C3 donor 선택에 남아 부적합). 생존 행 rn/wid·바이트 불변, `b6_row_drop` 테이블, freeze에 `row_set_drop`·`train_rows`·`n_pilot`(식 포함). 트레이너는 `rt.bind_n_pilot`으로 freeze 값에 결속(행 수·config 불일치시 거부). 시험 `test_b6_corpus_repair` 26→32 통과.
+- 정정: 사건 1,817건 중 76 타일은 두 사건 모두 → **실제 forward 1,741 타일**.
+- **measure v2 6173258**([corpus_measure_v2_summary.txt](corpus_measure_v2_summary.txt)): 삭제 2,230행(forward 1,741 + RC 489), **학습 행 198,828 → 196,774, N_pilot 4,142 → 4,099**(floor(×2÷96)). 종별 학습 forward: Vvinifera 783, Gmax 219, Bdistachyon 144, Sbicolor 130, Athaliana 86, Ptrichocarpa 70, Sitalica 60, Osativa 58, Ppatens 54.
+- **코퍼스 apply 6173268**([corpus_apply.sbatch](corpus_apply.sbatch)) → `$PREP/corpus/b5_full_b6_v1.db` + `freeze.json`(interval manifest는 `../intervals/` 상대경로).
+- **N_pilot 4,099 반영 `eb43f0f` → b6-integration `27c34ba`:** N_PILOT·두 config·파일럿 stop_after_updates·wp5_pilot.sbatch·시험. gate는 오히려 강화: 이전 `certified_config_sha256`은 형식만 확인했으나, 이제 `certified_gated_fields_sha256`(벤치가 실제 실행한 ce22b2f config에서 면제 필드 name/notes/gate_status/gate_evidence/arms/wp5_pilot/n_pilot을 뺀 전 필드 digest)를 대조. batch·seq len·decoder 층 등 변경시 gate 실패(시험). 개정 기록: [A46_RULE11_NPILOT_AMENDMENT_20260927.md](../a46_approval/A46_RULE11_NPILOT_AMENDMENT_20260927.md)(동결 문서 본문은 수정 안 함).
+
 ## 결정 17–18 적용 (2026-09-27)
 
 - **Vvinifera N=500(결정 17):** [audit_n500/](audit_n500/) — `b6_audit_align.sbatch`와 차이는 `-N 500`, OUTROOT `audit_align_n500`, task(8,127–137,178–186)뿐. 감사 **6173193**(21) → C0 N=500 EST **6173194**·PacBio **6173195**·ONT **6173196**(`c0/Vvinifera_<src>_n500`, `--audit-n 500`) → HSP **6173197** → protein C0 **6173198**. 대체되어 취소/보존: protein C0 N=100 6172765(취소, `out_superseded_n100`), HSP N=100 산출물 `hsp_v3/Vvinifera.superseded_n100`.
