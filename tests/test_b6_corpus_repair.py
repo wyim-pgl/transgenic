@@ -2,6 +2,7 @@
 4(a) component interval, closure, RC twin, row-set refusal, freeze, independent validation and C0 consequences."""
 import json
 import shutil
+import sys
 from pathlib import Path
 
 import pytest
@@ -159,7 +160,9 @@ def test_freeze_records_the_bindings(world, manifest, applied):
     assert rec["interval_manifest_sha256"] == {RW.SPECIES: LK.sha256(manifest)}
     assert rec["seed"] == RW.SEED and rec["events"] == {"tiles_over_mask_fraction": 0, "rc_twin_orphaned": 0}
     assert rec["counts"][RW.SPECIES]["train"]["closure_member"]["label_drops"] == 1
-    assert rec["row_counts"] == CR._row_counts_path(world["corpus"])
+    assert rec["row_counts"] == CR._row_counts_path(world["corpus"]) == rec["base_row_counts"]
+    assert rec["row_set_policy"] == CR.ROW_SET_REFUSE and rec["row_set_drop"]["tiles"] == []
+    assert rec["n_pilot"] == CR.n_pilot_record(rec["train_rows"]) and rec["counts"] == rec["measured_counts"]
     assert set(rec["inputs"]) == {"splits"}
     sf = rec["species_flags"][RW.SPECIES]
     assert sf["flags"]["sha256"] == LK.sha256(world["a22"])
@@ -194,6 +197,151 @@ def test_apply_refuses_when_a_tile_crosses_the_mask_fraction_or_loses_its_last_l
     assert BC.main(_cli(world, man, "--apply", "--out", str(out), "--freeze", str(freeze))) == 1
     assert "further amendment" in capsys.readouterr().err
     assert not out.exists() and not freeze.exists() and not Path(str(out) + ".partial").exists()
+
+
+# ------------------------------------------------------------------------------ decision 18: drop the event tiles
+def _trainer():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("train_b6_corpus_rows",
+                                                  Path(__file__).resolve().parents[1] / "train" /
+                                                  "train_HyenaTransgenic_B6.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod                      # dataclasses resolve annotations through sys.modules
+    spec.loader.exec_module(mod)
+    return mod
+
+
+@pytest.fixture(scope="module")
+def evworld(tmp_path_factory):
+    """The refuse world applied with --drop-row-set-events, and the same repair with the events not acted on."""
+    tmp = tmp_path_factory.mktemp("event_world")
+    w = RW.build_world(tmp / "w", refuse=True)
+    man = tmp / "m.jsonl"
+    LK.write_interval_manifest(RW.leakage_model(w).interval_manifest, man)
+    report = tmp / "measure.json"
+    assert BC.main(_cli(w, man, "--measure-only", "--report", str(report))) == 0
+    out, freeze = tmp / "b6_drop.db", tmp / "drop_freeze.json"
+    assert BC.main(_cli(w, man, "--apply", "--drop-row-set-events", "--out", str(out), "--freeze", str(freeze))) == 0
+    real = CR.repair_tile
+
+    def events_ignored(*a, **k):
+        rep = real(*a, **k)
+        rep.over_mask, rep.rc_orphan = False, None
+        return rep
+
+    mp = pytest.MonkeyPatch()
+    mp.setattr(CR, "repair_tile", events_ignored)
+    try:
+        ref = tmp / "b6_keep.db"
+        CR.apply(w["corpus"], ref, tmp / "keep_freeze.json", **_kw(w, man))
+    finally:
+        mp.undo()
+    return {"world": w, "manifest": man, "report": json.loads(report.read_text()), "out": out, "freeze": freeze,
+            "rec": json.loads(freeze.read_text()), "ref": ref}
+
+
+def _dropped(ev):
+    return q(ev["out"], "SELECT " + ", ".join(CR.ROW_DROP_COLUMNS) + " FROM b6_row_drop ORDER BY rn")
+
+
+def test_drop_mode_deletes_exactly_the_event_tiles_and_their_rc_twins(evworld):
+    base, out, rep = evworld["world"]["corpus"], evworld["out"], evworld["report"]
+    fwd = {rn for _, rn, _, _, _ in rep["event_tiles"]}
+    wids = {wid for _, _, wid, _, _ in rep["event_tiles"]}
+    twins = {rn for (rn,) in q(base, "SELECT rn FROM geneList WHERE list_contains(?, geneModel)",
+                               [[w + "-rc" for w in wids]])}
+    assert rep["events"] == {"tiles_over_mask_fraction": 1, "rc_twin_orphaned": 2} and twins
+    gone = {r[0] for r in q(base, "SELECT rn FROM geneList")} - {r[0] for r in q(out, "SELECT rn FROM geneList")}
+    assert gone == fwd | twins == {r[0] for r in _dropped(evworld)}
+    rows = [dict(zip(CR.ROW_DROP_COLUMNS, r)) for r in _dropped(evworld)]
+    assert rows == evworld["rec"]["row_set_drop"]["tiles"] == rep["row_set_drop"]["tiles"]
+    assert {r["split"] for r in rows} <= {"train", "valid"}
+    assert all(r["forward_rn"] in fwd for r in rows)
+    assert "tiles_over_mask_fraction;rc_twin_orphaned" in {r["events"] for r in rows}      # gBIG's tile: both events
+    assert not q(out, "SELECT * FROM window_genes WHERE list_contains(?, window_id)", [sorted(wids)])
+    test = "SELECT * FROM geneList WHERE split = 'test' ORDER BY rn"
+    assert q(out, test) == q(base, test)
+    assert evworld["rec"]["row_set_policy"] == CR.ROW_SET_DROP
+    assert dict(q(out, "SELECT key, value FROM b6_corpus_meta"))["row_set_policy"] == CR.ROW_SET_DROP
+
+
+def test_surviving_rows_are_byte_identical_to_the_non_dropping_repair(evworld):
+    out, ref = evworld["out"], evworld["ref"]
+    rns = sorted(r[0] for r in _dropped(evworld))
+    windows = sorted({r[1] for r in _dropped(evworld) if not r[4]})
+    assert q(out, "SELECT * FROM geneList ORDER BY rn") == q(
+        ref, "SELECT * FROM geneList WHERE NOT list_contains(?, rn) ORDER BY rn", [rns])
+    assert q(out, "SELECT * FROM window_genes ORDER BY ALL") == q(
+        ref, "SELECT * FROM window_genes WHERE NOT list_contains(?, window_id) ORDER BY ALL", [windows])
+    for t in ("b6_dna_repair", "b6_label_drop"):
+        assert q(out, f"SELECT * FROM {t} ORDER BY ALL") == q(
+            ref, f"SELECT * FROM {t} WHERE NOT list_contains(?, rn) ORDER BY ALL", [rns])
+    for t in ("tile_blocks", "gene_key_map", "gene_split", "build_manifest", "rejected_records"):
+        assert q(out, f"SELECT * FROM {t} ORDER BY ALL") == q(ref, f"SELECT * FROM {t} ORDER BY ALL"), t
+
+
+def test_freeze_and_loader_see_the_reduced_train_rows_and_n_pilot(evworld):
+    base, out, rec = evworld["world"]["corpus"], evworld["out"], evworld["rec"]
+    rows = [dict(zip(CR.ROW_DROP_COLUMNS, r)) for r in _dropped(evworld)]
+    trainer = _trainer()
+    base_train, base_valid, _ = trainer.corpus_rows(base)
+    train, valid, c3 = trainer.corpus_rows(out)
+    dropped_train = {r["rn"] for r in rows if r["split"] == "train"} & set(base_train)
+    assert dropped_train and len(train) == len(base_train) - len(dropped_train) == rec["train_rows"]
+    assert set(valid) == set(base_valid) - {r["rn"] for r in rows}
+    assert not {r["rn"] for r in rows} & {r[0] for r in c3}                          # no C3 donor from a dropped tile
+    assert rec["n_pilot"] == {"value": len(train) * 2 // 96, "formula": "floor(train_rows * epochs / effective_batch)",
+                              "train_rows": len(train), "epochs": 2, "effective_batch": 96,
+                              "train_rows_predicate": CR.LOADER_TRAIN_PREDICATE}
+    drop = rec["row_set_drop"]
+    assert (drop["train_rows_before"], drop["train_rows_after"]) == (len(base_train), len(train))
+    assert drop["n_pilot"] == rec["n_pilot"] == evworld["report"]["row_set_drop"]["n_pilot"]
+    per = {}
+    for r in rows:
+        c = per.setdefault(r["species_id"], {}).setdefault(r["split"], {"forward": 0, "rc": 0})
+        c["rc" if r["is_rc"] else "forward"] += 1
+    assert drop["counts"] == per and drop["rows"] == len(rows) and drop["window_genes_dropped"] > 0
+    assert rec["row_counts"]["train"] == rec["base_row_counts"]["train"] - sum(r["split"] == "train" for r in rows)
+    rt = trainer.rt
+    assert rt.bind_n_pilot(rec, len(train), rec["n_pilot"]["value"]) == rec["n_pilot"]["value"]
+    with pytest.raises(ValueError, match="config n_pilot 4142 != the corpus freeze N_pilot"):
+        rt.bind_n_pilot(rec, len(train), 4142)
+    with pytest.raises(ValueError, match="train_rows"):
+        rt.bind_n_pilot(rec, len(base_train), rec["n_pilot"]["value"])
+    with pytest.raises(ValueError, match="no n_pilot"):
+        rt.bind_n_pilot({k: v for k, v in rec.items() if k != "n_pilot"}, len(train), 0)
+    value, verified = rec["n_pilot"]["value"], {"provenance": {"freeze": LK.sha256(evworld["freeze"])}}
+    assert trainer.bind_freeze_n_pilot(evworld["freeze"], verified, len(train), value) == value     # main's binding
+    with pytest.raises(ValueError, match="changed after the bindings verified it"):
+        trainer.bind_freeze_n_pilot(evworld["freeze"], {"provenance": {"freeze": "0" * 64}}, len(train), value)
+
+
+def test_n_pilot_formula_is_the_trainer_rule_and_gives_4142_on_the_a46_basis():
+    from transgenic.training import b6_runtime as rt
+
+    assert (CR.PILOT_EPOCHS, CR.PILOT_EFFECTIVE_BATCH, CR.N_PILOT_FORMULA) == (
+        rt.PILOT_EPOCHS, rt.EFFECTIVE_BATCH, rt.N_PILOT_FORMULA)
+    assert CR.n_pilot_record(198828)["value"] == rt.n_pilot_from_train_rows(198828) == rt.N_PILOT == 4142
+
+
+def test_validator_confirms_the_dropped_rows_and_rejects_a_hidden_drop(evworld, tmp_path, capsys):
+    w, man, out, freeze, rec = (evworld[k] for k in ("world", "manifest", "out", "freeze", "rec"))
+    report = tmp_path / "v.json"
+    assert VC.main(_validate_args(w, man, out, freeze, "--report", str(report))) == 0
+    qc = json.loads(report.read_text())["qc"]
+    assert qc["tiles_dropped_events_confirmed"] == len({r[5] for r in _dropped(evworld)})
+    assert qc["train_rows"] == rec["train_rows"]
+    fwd = next(r for r in _dropped(evworld) if not r[4])
+    bad, f = _tamper((out, freeze, rec), tmp_path, "DELETE FROM b6_row_drop WHERE rn = ?", [fwd[0]])
+    f.write_text(json.dumps(dict(json.loads(f.read_text()), row_set_drop=dict(
+        rec["row_set_drop"], tiles=[t for t in rec["row_set_drop"]["tiles"] if t["rn"] != fwd[0]]))))
+    assert VC.main(_validate_args(w, man, bad, f, "--no-recompute-manifest")) == 1
+    assert "FAILED" in capsys.readouterr().err
+
+
+def test_drop_flag_is_an_apply_option(world, manifest, tmp_path):
+    assert BC.main(_cli(world, manifest, "--measure-only", "--drop-row-set-events")) == 1
 
 
 # ------------------------------------------------------------------------------ fail-closed inputs

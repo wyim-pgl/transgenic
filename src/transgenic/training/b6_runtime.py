@@ -39,8 +39,17 @@ GATED_STATUS = "GATED: memory bench passed"
 SEED = 123
 AUG_SEED_BASE = 20260914
 AUG_SEED = AUG_SEED_BASE + SEED                       # 20261037
+# N_pilot = floor(train_rows * PILOT_EPOCHS / EFFECTIVE_BATCH) (A46 rule 11; decision 18 numeric amendment). 4,142 is
+# the A46 freeze-checklist value on 198,828 train rows; the binding value is the corpus freeze's ``n_pilot`` record
+# (b6_corpus_repair.n_pilot_record), which ``bind_n_pilot`` checks against this constant, the config and the loader.
+# Once the decision-18 corpus is applied and its freeze says N != 4142, update together (one A46 rule 11 amendment):
+# N_PILOT here, configs/b6_400m_win_v3.json n_pilot, configs/b6_400m_win_v3_wp5_pilot.json n_pilot and
+# wp5_pilot.stop_after_updates (and its notes), revision/scripts/b6/wp5_pilot.sbatch N_PILOT=, and the literal 4142
+# in tests/test_b6_pilot.py.
 N_PILOT = 4142
 EFFECTIVE_BATCH = 96
+PILOT_EPOCHS = 2
+N_PILOT_FORMULA = "floor(train_rows * epochs / effective_batch)"
 MAX_EPOCHS = 22
 PATIENCE = 3
 CHANNEL_DROPOUT_P = 0.5
@@ -190,6 +199,34 @@ PILOT_FINAL_MARKER = "PILOT_FINAL"
 FIXED_STEP_SELECTION = "fixed optimizer-update count; never a best-validation checkpoint"
 WP5_PILOT = {"stop_after_updates": N_PILOT, "arms": ["B6", "C2"], "world_size": 4, "seed": SEED,
              "aug_seed": AUG_SEED}
+
+
+def n_pilot_from_train_rows(train_rows: int) -> int:
+    return int(train_rows) * PILOT_EPOCHS // EFFECTIVE_BATCH
+
+
+def bind_n_pilot(freeze: Mapping, train_rows: int, config_n_pilot: int) -> int:
+    """N_pilot bound to the corpus freeze (decision 18): the freeze's ``n_pilot`` record must follow the rule 11
+    formula (effective batch 96, 2 epochs) over exactly the loader's train rows (``len(train_rns)``), and the
+    config's n_pilot must equal it -- a stale constant or a corpus of another row set refuses the run."""
+    rec = freeze.get("n_pilot") if isinstance(freeze, Mapping) else None
+    if not isinstance(rec, Mapping):
+        raise ValueError("corpus freeze records no n_pilot (pre-decision-18 freeze); rebuild it with b6_build_corpus.py")
+    want = {"formula": N_PILOT_FORMULA, "epochs": PILOT_EPOCHS, "effective_batch": EFFECTIVE_BATCH}
+    got = {k: rec.get(k) for k in want}
+    if got != want:
+        raise ValueError(f"corpus freeze n_pilot {got} != the rule 11 formula {want}")
+    if rec.get("train_rows") != int(train_rows):
+        raise ValueError(f"corpus freeze n_pilot train_rows {rec.get('train_rows')} != the loader's {train_rows} "
+                         "train rows")
+    value = n_pilot_from_train_rows(train_rows)
+    if rec.get("value") != value:
+        raise ValueError(f"corpus freeze n_pilot {rec.get('value')} != floor({train_rows} * {PILOT_EPOCHS} / "
+                         f"{EFFECTIVE_BATCH}) = {value}")
+    if int(config_n_pilot) != value:
+        raise ValueError(f"config n_pilot {config_n_pilot} != the corpus freeze N_pilot {value} (A46 rule 11, "
+                         "decision 18): update N_PILOT and the configs' n_pilot / wp5_pilot.stop_after_updates")
+    return value
 
 
 def pilot_stop_target(stop_after_updates: Optional[int], n_pilot: int) -> Optional[int]:
