@@ -1,0 +1,131 @@
+/declared_differences/Athaliana/a30_only_spans_masked_not_c0_excluded 47
+/declared_differences/Athaliana/edge_partial_c0_excluded_not_masked 2993
+/declared_differences/Bdistachyon/a30_only_spans_masked_not_c0_excluded 0
+/declared_differences/Bdistachyon/edge_partial_c0_excluded_not_masked 6752
+/declared_differences/Gmax/a30_only_spans_masked_not_c0_excluded 0
+/declared_differences/Gmax/edge_partial_c0_excluded_not_masked 11128
+/declared_differences/Osativa/a30_only_spans_masked_not_c0_excluded 0
+/declared_differences/Osativa/edge_partial_c0_excluded_not_masked 7253
+/declared_differences/Ppatens/a30_only_spans_masked_not_c0_excluded 0
+/declared_differences/Ppatens/edge_partial_c0_excluded_not_masked 6751
+/declared_differences/Ptrichocarpa/a30_only_spans_masked_not_c0_excluded 0
+/declared_differences/Ptrichocarpa/edge_partial_c0_excluded_not_masked 7224
+/declared_differences/Sbicolor/a30_only_spans_masked_not_c0_excluded 0
+/declared_differences/Sbicolor/edge_partial_c0_excluded_not_masked 6529
+/declared_differences/Sitalica/a30_only_spans_masked_not_c0_excluded 0
+/declared_differences/Sitalica/edge_partial_c0_excluded_not_masked 5826
+/declared_differences/Vvinifera/a30_only_spans_masked_not_c0_excluded 0
+/declared_differences/Vvinifera/edge_partial_c0_excluded_not_masked 11161
+/event_tiles [list len 1817]
+/events/rc_twin_orphaned 336
+/events/tiles_over_mask_fraction 1481
+/interval_manifests/Athaliana/path /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/intervals/Athaliana.intervals_v2.jsonl
+/interval_manifests/Athaliana/sha256 30500fb9ab760247f03b03e2e8bf3b1ad8b9625a342800770f36095d0967ec0e
+/interval_manifests/Bdistachyon/path /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/intervals/Bdistachyon.intervals_v2.jsonl
+/interval_manifests/Bdistachyon/sha256 f53b92bac931a7ad67e5907f0bfc29c99398a9b02f6f30863117f23744fdd1d8
+/interval_manifests/Gmax/path /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/intervals/Gmax.intervals_v2.jsonl
+/interval_manifests/Gmax/sha256 9d106e24e1f83a64d054253d397cdf5945456fa5f94afe3bc60e786ca5714873
+/interval_manifests/Osativa/path /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/intervals/Osativa.intervals_v2.jsonl
+/interval_manifests/Osativa/sha256 c1e099bca5470fc8b867fb8456fae6fd9da051701f6df7ef0947e6e3c5005a62
+/interval_manifests/Ppatens/path /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/intervals/Ppatens.intervals_v2.jsonl
+/interval_manifests/Ppatens/sha256 164a9bd5c36e28640dbd39a2fc8a77c76ac4eba53493a9617c6468d62b3c7b17
+/interval_manifests/Ptrichocarpa/path /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/intervals/Ptrichocarpa.intervals_v2.jsonl
+/interval_manifests/Ptrichocarpa/sha256 414cd467aaa58c46f82b1cd8424c2385b8e4e5cbeeb842496b0afdfc7e2054bc
+/interval_manifests/Sbicolor/path /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/intervals/Sbicolor.intervals_v2.jsonl
+/interval_manifests/Sbicolor/sha256 2f1882b3fffc84a944185b0566205394674343d3b57d2a5270e6486d9ca10e16
+/interval_manifests/Sitalica/path /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/intervals/Sitalica.intervals_v2.jsonl
+/interval_manifests/Sitalica/sha256 16793df40781b8929c0defac84f7cdaa426ce1cc06b1bf08cd6dda50c55bd1bc
+/interval_manifests/Vvinifera/path /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/intervals/Vvinifera.intervals_v2.jsonl
+/interval_manifests/Vvinifera/sha256 88ba85fffdbad697d577377133e75b14dfe5aae912f4b27ded80b49966c3c880
+/rule_id rule5-leak-hard-c0interval-v1
+/species_qc/Athaliana/a30_only_spans 47
+/species_qc/Athaliana/edge_partial_unmasked 2993
+/species_qc/Athaliana/label_drops 183
+/species_qc/Athaliana/rc_twins_repaired 1603
+/species_qc/Athaliana/repair_spans 2705
+/species_qc/Athaliana/tiles_forward 6350
+/species_qc/Athaliana/tiles_repaired 2343
+/species_qc/Athaliana/tiles_test_untouched 744
+/species_qc/Bdistachyon/edge_partial_unmasked 6752
+/species_qc/Bdistachyon/label_drops 335
+/species_qc/Bdistachyon/rc_twins_repaired 1971
+/species_qc/Bdistachyon/repair_spans 4055
+/species_qc/Bdistachyon/tiles_forward 14338
+/species_qc/Bdistachyon/tiles_repaired 3685
+/species_qc/Bdistachyon/tiles_test_untouched 2086
+/species_qc/Gmax/edge_partial_unmasked 11128
+/species_qc/Gmax/label_drops 223
+/species_qc/Gmax/rc_twins_repaired 2873
+/species_qc/Gmax/repair_spans 6767
+/species_qc/Gmax/tiles_forward 37772
+/species_qc/Gmax/tiles_repaired 6222
+/species_qc/Gmax/tiles_test_untouched 6112
+/species_qc/Osativa/edge_partial_unmasked 7253
+/species_qc/Osativa/label_drops 91
+/species_qc/Osativa/rc_twins_repaired 1388
+/species_qc/Osativa/repair_spans 3839
+/species_qc/Osativa/tiles_forward 20436
+/species_qc/Osativa/tiles_repaired 3577
+/species_qc/Osativa/tiles_test_untouched 3362
+/species_qc/Ppatens/edge_partial_unmasked 6751
+/species_qc/Ppatens/label_drops 244
+/species_qc/Ppatens/rc_twins_repaired 1778
+/species_qc/Ppatens/repair_spans 2297
+/species_qc/Ppatens/tiles_forward 21702
+/species_qc/Ppatens/tiles_repaired 2207
+/species_qc/Ppatens/tiles_test_untouched 3280
+/species_qc/Ptrichocarpa/edge_partial_unmasked 7224
+/species_qc/Ptrichocarpa/label_drops 153
+/species_qc/Ptrichocarpa/rc_twins_repaired 1913
+/species_qc/Ptrichocarpa/repair_spans 4388
+/species_qc/Ptrichocarpa/tiles_forward 20303
+/species_qc/Ptrichocarpa/tiles_repaired 4037
+/species_qc/Ptrichocarpa/tiles_test_untouched 3027
+/species_qc/Sbicolor/edge_partial_unmasked 6529
+/species_qc/Sbicolor/label_drops 270
+/species_qc/Sbicolor/rc_twins_repaired 1452
+/species_qc/Sbicolor/repair_spans 3825
+/species_qc/Sbicolor/tiles_forward 23381
+/species_qc/Sbicolor/tiles_repaired 3591
+/species_qc/Sbicolor/tiles_test_untouched 3978
+/species_qc/Sitalica/edge_partial_unmasked 5826
+/species_qc/Sitalica/label_drops 146
+/species_qc/Sitalica/rc_twins_repaired 1147
+/species_qc/Sitalica/repair_spans 3462
+/species_qc/Sitalica/tiles_forward 19536
+/species_qc/Sitalica/tiles_repaired 3233
+/species_qc/Sitalica/tiles_test_untouched 3842
+/species_qc/Vvinifera/edge_partial_unmasked 11161
+/species_qc/Vvinifera/label_drops 1231
+/species_qc/Vvinifera/rc_twins_repaired 1696
+/species_qc/Vvinifera/repair_spans 6204
+/species_qc/Vvinifera/tiles_forward 25253
+/species_qc/Vvinifera/tiles_repaired 5628
+/species_qc/Vvinifera/tiles_test_untouched 4450
+example ["Athaliana", 9, "Athaliana:Chr1:124595-155315", "tiles_over_mask_fraction", "0.6164"]
+Traceback (most recent call last):
+  File "<stdin>", line 9, in <module>
+  File "<stdin>", line 9, in <listcomp>
+AttributeError: 'list' object has no attribute 'get'
+geneList cols ['geneModel', 'start', 'fin', 'strand', 'chromosome', 'sequence', 'gff', 'static_fpb', 'static_tpb', 'five_prime_buf', 'three_prime_buf', 'rn', 'species_id', 'gene_id', 'orthogroup_id', 'split', 'strict_holdout', 'is_rc', 'ordering_version', 'build_version', 'source_fasta_sha256', 'source_gff_sha256', 'split_file_sha256', 'window_policy', 'gsf_token_count', 'contig_boundary', 'n_transcripts', 'train_weight', 'qc_flags', 'gene_id_original']
+Traceback (most recent call last):
+  File "/data/gpfs/home/wyim/ev.py", line 10, in <module>
+    con.executemany("insert into ev values (?,?,?,?)", [(e[1],e[0],e[3],float(e[4])) for e in ev])
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/gpfs/home/wyim/ev.py", line 10, in <listcomp>
+    con.executemany("insert into ev values (?,?,?,?)", [(e[1],e[0],e[3],float(e[4])) for e in ev])
+                                                                        ^^^^^^^^^^^
+ValueError: could not convert string to float: 'isoform_condition'
+EV ('rc_twin_orphaned', 'train', 303)
+EV ('rc_twin_orphaned', 'valid', 33)
+EV ('tiles_over_mask_fraction', 'train', 1373)
+EV ('tiles_over_mask_fraction', 'valid', 108)
+ALL ('test', 48343)
+ALL ('train', 198828)
+ALL ('valid', 25977)
+VAL ('tiles_over_mask_fraction', 1481, '0.6000', '1.0000')
+VAL ('rc_twin_orphaned', 336, 'isoform_condition', 'last_labelled_gene')
+ORPH ('isoform_condition', 196)
+ORPH ('last_labelled_gene', 140)
+RC (False, 'train', 1676)
+RC (False, 'valid', 141)

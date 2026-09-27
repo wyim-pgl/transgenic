@@ -1,5 +1,33 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+## 결정 17–18 적용 (2026-09-27)
+
+- **Vvinifera N=500(결정 17):** [audit_n500/](audit_n500/) — `b6_audit_align.sbatch`와 차이는 `-N 500`, OUTROOT `audit_align_n500`, task(8,127–137,178–186)뿐. 감사 **6173193**(21) → C0 N=500 EST **6173194**·PacBio **6173195**·ONT **6173196**(`c0/Vvinifera_<src>_n500`, `--audit-n 500`) → HSP **6173197** → protein C0 **6173198**. 대체되어 취소/보존: protein C0 N=100 6172765(취소, `out_superseded_n100`), HSP N=100 산출물 `hsp_v3/Vvinifera.superseded_n100`.
+- **Osativa HSP 6172700 TIMEOUT(24h)**: raw13 orthodb 2.7GB+swissprot 1.0GB로 최대(Athaliana 20M raw 12.6h). 부분출력 `hsp_v3/Osativa.timeout_6172700` 보존, **6173182**(4d) 재제출, protein C0 **6173183** 재연결(이전 6172760 취소).
+- **코퍼스 사건 타일 제외(결정 18):** worktree `/tmp/b6-corpus-drop-events`에서 에이전트가 drop 모드(사건 타일+RC twin 제외, 제외 목록·학습 행 수·N_pilot 기록, N_pilot을 freeze 기록값에 결속)를 시험 선작성으로 구현 중.
+
+## Vvinifera ONT N=100도 exhaustiveness 미달 (2026-09-27)
+
+- 6172728(Vvinifera ONT C0 N=100) 10h28m 후 실패: `per-source audit exhaustiveness 0.989313 < 0.99 (415,516 of 38,881,271 molecules have >= N=100 secondary placements)`. 소스별 하한 0.99조차 미달.
+- Vvinifera N=100: EST 0.99527, PacBio 0.99823, EST+PacBio 0.99780. ONT 없이도, ONT를 넣어도(≈0.990) 종 0.999에 못 미친다. T2T 참조의 반복 영역에 매핑되는 read가 많은 것으로 보인다(확인 전).
+- **진단(학습 입력 아님) 6173012**([vv_n_diag/](vv_n_diag/)): N=100 audit BAM에서 secondary ≥100 read를 소스별로 세고, 표본 최대 2만 read를 같은 audit 명령에 `-N 5000`으로 재정렬해 실제 배치 수 분포와 N=200/500/1000/2000/5000에서 여전히 cap에 걸리는 비율을 추정한다. 이 결과로 필요한 N 또는 대안을 저자에게 제시한다.
+- Gmax ONT N=100(6172725)은 진행 중이며 같은 문제가 있을 수 있다.
+- **진단 결과 6173132**(v1 6173012는 좌표 정렬 BAM을 이름 정렬 없이 세어 무효, [result_6173132.txt](vv_n_diag/result_6173132.txt)): cap에 걸린 read의 실제 secondary 배치 수가 **약 330–345에 몰려 있다**(EST median 338/max 349, PacBio 337/378, ONT 334/513) — 약 340 사본짜리 한 반복 계열로 보인다(계열 미확인). N=200에서 여전히 cap: EST 89.6%, PacBio 82.0%, ONT 78.4%. **N=500에서 EST·PacBio 0%, ONT 0.02%**(전체 415,516 중 약 80분자) → N=500이면 모든 소스 exhaustiveness ≈ 0.9999. **저자 결정 필요:** Vvinifera 전 소스 N=500.
+
+## 코퍼스 measure 결과: row-set 사건 발생 → 개정 필요 (2026-09-26)
+
+- 6172912는 build_manifest의 원래 GFF 경로(pgl-gpu)가 없어 18초 만에 실패(보고서 없음). `--reference/--gff SP=PATH`(sha 검증 유지)로 C0와 같은 pronghorn 경로를 넘겨 **6172957 COMPLETED**([corpus_measure_summary.txt](corpus_measure_summary.txt)).
+- repair 규모: 종별 tiles_repaired Athaliana 2,343 … Vvinifera 5,628, label_drops 합 2,876, 선언된 차이(A30 전용 47, edge_partial 미마스크)는 계획대로.
+- **row-set 사건 1,817 타일(모두 forward):** masked fraction >0.60 1,481개(학습 1,373/검증 108, 값 0.6000–1.0000), RC twin orphaned 336개(학습 303/검증 33; last_labelled_gene 140, isoform_condition 196). 학습 forward 1,676개 → RC 포함 최대 3,352 학습 행(1.69%) 변동.
+- 계획 §2 7항: 사건이 0이 아니면 `--apply` 거부, N_pilot = 198,828 × 2 ÷ 96 = 4,142(A46 동결 체크리스트 L222) 기준이 깨지므로 **추가 개정 필요**. 코드는 N_pilot을 재정의하지 않는다. **저자 결정 대기.**
+
+## 코퍼스 repair 수정·measure 제출 (2026-09-26)
+
+- **FIX 1 `27d5960`→`4d1b752`:** repair가 모든 종에 한 flags 세트를 쓰던 버그를 수정. 구 코드에서 2종 world(Gmax gW2가 A22-hard 경계 교차)로 Gmax a22_hard span이 오류 없이 사라지는 것을 재현했다. 이제 `--flags SP=PATH`, `--build-flags SP=PATH ...` 종별 지정, 누락·타종 행 거부, freeze·report에 `species_flags`(경로+sha) 기록, `b6_validate_corpus`·`b6_bindings`가 C0의 `inputs.flags`/`build_flags_*` sha와 freeze를 대조. 우리 C0는 종별 geenuff+swissprot을 썼으므로 일치한다.
+- **FIX 2 `9886d05`→`b009dcc`:** 병합 DB가 C0 경로를 병합 DB 디렉터리 기준 상대경로로 기록, 실제 위치에서 해석(절대경로 구호환). DeltaAI에는 병합 DB·C0 DB·`.PROVENANCE.txt`를 같은 상대 배치로 복사해야 한다. `rerun_leakage_model`(interval_manifest_sha256 없는 구 C0용)은 절대경로 유지(우리 C0는 모두 해당 필드 있음).
+- 전체 시험(파일별): 1701→1715 pass, 실패 ID 111개 동일. 소스 `source_v4`(tar sha `fa76b9f2…6972`).
+- **코퍼스 measure-only 6172912**([corpus_measure.sbatch](corpus_measure.sbatch), 9종 종별 flags, interval manifest 9개, seed123) → `$PREP/corpus/measure.json`. 두 row-set 사건(masked>0.60 타일, 마지막 유전자를 잃는 RC twin)이 0이면 `--apply`.
+
 ## interval manifest 확인과 코퍼스 repair 다종 flags 공백 (2026-09-26)
 
 - interval manifest 6172774 9/9 COMPLETED. **9종 모두 manifest sha256 = C0가 기록한 `interval_manifest_sha256`**(Athaliana 30500fb9…, Bdistachyon f53b92ba…, Gmax 9d106e24…, Osativa c1e099bc…, Ppatens 164a9bd5…, Ptrichocarpa 414cd467…, Sbicolor 2f1882b3…, Sitalica 16793df4…, Vvinifera 88ba85ff…). D1 (A)가 C0 제외 구간을 바꾸지 않음을 확인.
@@ -122,6 +150,19 @@
 | Sbicolor PacBio | 6172283 | PASS | 25,091,958 | 20,977,140 | 25,091,958 | 0.99960 | 0/0 | 일치 | – |
 | Ppatens ONT | 6172569 | PASS | 8,125,618 | **158,810 (2.0%)** | 8,125,618 | 0.99980 | 0/0 | 일치 | 15.63G (1h47m) |
 | Ptrichocarpa ONT | 6172568 | PASS | 13,752,619 | **388,829 (2.8%)** | 13,752,619 | 0.99995 | 0/0 | 일치 | 26.45G (3h03m) |
+| Sitalica protein (v4, A19 필터) | 6172884 | PASS | 13,277,098 alignments | 9,933,446 | 9,478,796 | – | 0/– | 일치 | 46.22G (2h12m) |
+| Vvinifera EST N=100 | 6172726 | PASS | 450,180 | 391,525 | – | 0.99527 (N=50 0.99421) | 0/0 | 일치 | – |
+| Ptrichocarpa protein (v4) | 6172762 | PASS | 17,209,338 alignments | 13,700,953 | – | – | 0/0 | 일치 | – (HSP rows 4,985,073) |
+| Vvinifera PacBio N=100 | 6172727 | PASS | 2,456,610 | – | 2,456,610 | 0.99823 (N=50 0.99758) | 0/– | 일치 | – |
+| **Bdistachyon EST N=100** | 6172718 | PASS | 206,123 | 196,940 | – | **0.99991** (N=50 0.99897) → 종 게이트 통과 | 0/0 | 일치 | – |
+| Bdistachyon protein (v4, EST N=100 기준) | 6172758 | PASS | 12,831,257 alignments | 9,667,028 | – | – | 0/0 | 일치 | – (HSP rows 12,171,912) |
+| Sbicolor protein (v4) | 6172763 | PASS | 13,563,716 alignments | 10,143,776 | – | – | 0/0 | 일치 | – (HSP rows 11,757,036) |
+| Athaliana protein (v4) | 6172757 | PASS | 12,734,296 alignments | 10,187,273 | – | – | 0/0 | 일치 | – (HSP rows 30,023,629) |
+| Ppatens protein (v4) | 6172761 | PASS | 12,411,963 alignments | 8,501,694 | – | – | 0/0 | 일치 | – (HSP rows 14,338,137) |
+
+Vvinifera EST+PacBio(N=100) 종 합산 0.99780(유실 6,349/2.88M). ONT(N=100)가 약 3.5M 이상의 거의 무손실 분자를 더하면 0.999를 넘는다.
+
+Sitalica protein C0: HSP rows 1,684,115(분자 내 phase 충돌로 172,806 행 제외, 누출 제외 865,379), miniprot cap(21) 291. 첫 v4 시도 6172764는 이전 실패의 qc.json이 `out/`에 남아 FileExistsError → `out_failed_6172693_6172764`로 옮기고 재제출.
 
 Ppatens ONT(전부 direct_RNA) 채택률 2.0%: rejected identity 5,891,310, unmapped 1,023,288, mapq 497,095, aligned_fraction 422,518. 학습 역할 ONT의 identity 하한 0.95(`59_evidence_support.py:733-735`, PacBio 0.98)가 동결 규칙이며 direct RNA의 전형적 identity(약85–92%)보다 높아 대부분 제외된다. 버그가 아니라 규칙의 결과다. 메모리는 DuckDB36GB 한도로 15.6GB였다.
 

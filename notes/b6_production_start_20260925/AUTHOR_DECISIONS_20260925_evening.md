@@ -63,3 +63,10 @@
 14. **freeze의 interval manifest 경로 = (b) 코드 변경.** pronghorn에서 만든 freeze/manifest를 DeltaAI에서 경로만 바꿔 쓸 수 있게 한다. 해시 검증은 그대로 유지하고, 경로만 재지정 가능하게 한다.
 15. **`configs/b6_400m_win_v3.json` UNGATED → GATED 전환 승인.** 운영에서 `--allow-ungated`는 쓰지 않는다.
 16. **D1 flank geometry = (A) 기본안 확정** (사용자 원문 `a`, 2026-09-26). 마스크 구간 = C0 rule 4(a) 연결성분 구간(성분 범위 ± A40이 실제로 뽑은 최대 구성원 flank, 없으면 150), 새 난수 없음. C0 제외 구간 불변이라 C0·HSP·protein C0 재빌드 없음(provenance 재검증만). A40 유전자별 flank는 grandfathered이며 A33.3 문자 준수로 주장하지 않는다. 근거: `notes/a46_approval/B6_WP2_WP4_PLAN_v4_20260923.md` §2.3, §11 D1.
+
+## 17–18. Vvinifera N=500, 코퍼스 사건 타일 제외 (2026-09-27)
+
+사용자 원문: `Vvinifera audit at N=500, and dropping the 1,817 corpus tiles.`
+
+17. **Vvinifera 감사 N=500.** 종 내 전 소스(EST 1, PacBio 9, ONT 11)의 감사 정렬을 `-N 500`으로 다시 돌리고 C0 3종을 `--audit-n 500`으로 재빌드한다. HSP·protein C0는 새 EST C0 기준으로 다시 만든다. 근거: 진단 6173132(cap read의 실제 배치 수 약 330–345, N=500에서 cap 잔존 ONT 0.02%·EST/PacBio 0%). Gmax는 이번 결정 범위가 아니다(ONT N=100 결과 후 별도 판단).
+18. **코퍼스 repair row-set 사건 타일 제외.** masked fraction >0.60 타일 1,481개와 RC twin이 마지막 라벨을 잃는 타일 336개(합 1,817 forward, 학습 1,676·검증 141)를 그 RC twin과 함께 train/valid에서 제외하고, N_pilot을 실제 남는 학습 행 수로 다시 계산한다(N_pilot = floor(학습 행 × 2 ÷ 96); 기존 198,828 → 4,142). 모든 arm이 같은 새 N_pilot을 쓴다. 이는 A46 rule 11의 수치 개정이다.

@@ -11,3 +11,14 @@ C0 Ptrichocarpa pacbio PASS reads_in 9847562 accepted 7218072 retained 4361304 m
 C0 Sbicolor pacbio PASS reads_in 25091958 accepted 20977140 retained 11140767 molecules 25091958 exh 0.9996 leak 0 gates_sum 0 tiles 23381/23381 sha_ok True 01b1c74e179e
 C0 Ppatens ont PASS reads_in 8125618 accepted 158810 retained 5003695 molecules 8125618 exh 0.9998 leak 0 gates_sum 0 tiles 21702/21702 sha_ok True 6d04bead6fea
 C0 Ptrichocarpa ont PASS reads_in 13752619 accepted 388829 retained 7735021 molecules 13752619 exh 0.99995 leak 0 gates_sum 0 tiles 20303/20303 sha_ok True 60fe3eabc1fe
+C0 Sitalica protein PASS sha_ok True aba00e223dab leak 0
+{'accepted_reads': 9933446, 'completeness_codes_accepted_rows': 9933446, 'completeness_codes_null_accepted_rows': 9933446, 'hsp_dropped_phase_conflict_within_molecule': 42697, 'hsp_dropped_phase_conflict_within_molecule_excluded': 47537, 'hsp_dropped_phase_conflict_within_molecule_excluded_orthodb': 38458, 'hsp_dropped_phase_conflict_within_molecule_excluded_swissprot': 9079, 'hsp_dropped_phase_conflict_within_molecule_orthodb': 34237, 'hsp_dropped_phase_conflict_within_molecule_swissprot': 8460, 'hsp_provenance_verified': 1, 'hsp_rows': 1684115, 'hsp_rows_dropped_phase_conflict_within_molecule': 172806, 'hsp_rows_dropped_phase_conflict_within_molecule_excluded': 186200, 'hsp_rows_excluded': 865379, 'hsp_rows_excluded_by_protein_query_only': 34043, 'hsp_rows_inside_accepted_est_placement': 2043121, 'hsp_rows_train_tiles_excluded': 353516, 'hsp_rows_train_tiles_excluded_by_protein_query_only': 37966, 'hsp_state_sidecar_rows': 684175, 'molecules_in': 9478796, 'protein_alignments_at_miniprot_cap_21': 291, 'protein_excluded_b_miniprot_cap': 291, 'reads_in': 13277098}
+C0 Vvinifera_est_n100 PASS sha_ok True 3c719b47b9ef leak 0 gates 0 exh 0.9952740596017248 audit_n 100 reads_in 450180 accepted 391525 hsp_rows None
+C0 Ptrichocarpa_protein_v1 PASS sha_ok True f29e77fa349c leak 0 gates 0 exh None audit_n None reads_in 17209338 accepted 13700953 hsp_rows 4985073
+C0 Vvinifera_pacbio_n100 PASS sha_ok True leak 0 exh 0.9982288600958231 audit_n 100 below 2452259 mol 2456610
+Vvinifera est+pacbio N=100 species so far 0.9977950137234262 lost 6349
+C0 Bdistachyon_protein_v1 PASS sha_ok True 7887dfb0d630 leak 0 gates 0 exh None audit_n None reads_in 12831257 accepted 9667028 hsp_rows 12171912
+C0 Sbicolor_protein_v1 PASS sha_ok True 888d84899749 leak 0 gates 0 exh None audit_n None reads_in 13563716 accepted 10143776 hsp_rows 11757036
+C0 Bdistachyon_est_n100 PASS sha_ok True e1c5ecc41bd4 leak 0 gates 0 exh 0.9999078896685702 audit_n 100 reads_in 206123 accepted 196940 hsp_rows None
+C0 Athaliana_protein_v1 PASS sha_ok True 462fc8ab138d leak 0 gates 0 exh None audit_n None reads_in 12734296 accepted 10187273 hsp_rows 30023629
+C0 Ppatens_protein_v1 PASS sha_ok True a4884d516917 leak 0 gates 0 exh None audit_n None reads_in 12411963 accepted 8501694 hsp_rows 14338137
