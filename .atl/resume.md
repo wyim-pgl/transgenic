@@ -1,4 +1,11 @@
-# 재시작 정본: 2026-09-25 실제 B6 훈련 착수 준비
+# 재시작 정본: 2026-09-28 B6 실데이터 증거 DB 구축 (C0 마무리)
+
+> 📌 **먼저 [RESTART_HANDOFF_20260928](../notes/RESTART_HANDOFF_20260928.md)를 읽는다.** 코드 위치·C0 표·실행 중 잡·다음 단계·저자 결정 1–18이 모두 거기 있다. 세부 실행 로그는 [PROGRESS.md](../notes/b6_production_start_20260925/PROGRESS.md), 결정 원문은 [AUTHOR_DECISIONS](../notes/b6_production_start_20260925/AUTHOR_DECISIONS_20260925_evening.md). 아래의 09-27 이전 블록은 **역사 기록**이다.
+>
+> **2026-09-28 14:30 PDT 실측:** GPU 훈련 **미제출**. b6-integration HEAD `27c34ba`(`/tmp/b6-integration`, 미병합·미push). C0 PASS: EST 9종, PacBio 3종, ONT 4종(Ppatens·Ptrichocarpa·Sitalica·Gmax), protein 6종. 종 exhaustiveness 게이트: 전 종 통과 또는 통과 예상(Bdistachyon·Gmax N=100, Vvinifera N=500). **B6 코퍼스 완료·검증 PASS**(`$PREP/corpus/b5_full_b6_v1.db`, train_rows 196,774, **N_pilot 4,099**). 실행 중: HSP Vvinifera 6173197·Gmax 6173591·Osativa 6173182 → protein C0 6173198·6173592·6173183, ONT C0 Athaliana 6173686·Osativa 6173687. 감시 20분 간격. **다음:** C0 완료 → zero list 27 → 병합 → 코퍼스 `--c0` 재검증 → obs cache → bindings → DeltaAI → 파일럿 제출 전 사용자 확인.
+
+## 이전 기록 (2026-09-25 ~ 09-27, 역사)
+
 
 > **현재 작업 정본: [운영학습 착수 준비](../notes/b6_production_start_20260925/PROGRESS.md).** 사용자 운영학습 시작 승인 후 실제 입력을 준비 중이다. **GPU 훈련은 아직 미제출**. 동결 순서는 real4GPU WP5파일럿4142업데이트 후 go판정, 그다음 WP6다.
 >

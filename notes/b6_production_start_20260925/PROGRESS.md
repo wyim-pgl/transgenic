@@ -1,5 +1,20 @@
 # 실제 B6 훈련 착수 준비: 2026-09-25
 
+> 📌 최신 상태 요약·다음 단계는 [RESTART_HANDOFF_20260928](../RESTART_HANDOFF_20260928.md). 이 파일은 시간 역순 실행 로그다.
+
+## B6 코퍼스 생성 완료 (2026-09-27)
+
+- **apply 6173268 COMPLETED**(2h22m, MaxRSS 38.3GB, [corpus_apply_result.txt](corpus_apply_result.txt)): `$PREP/corpus/b5_full_b6_v1.db` 23.8GB, out_sha256 `6583b1b202c4c5b93b88f893e6c15f267a5ec54f0c2db675b29466071f15111c`, rows_repaired 48,114, rows_dropped 2,230, **train_rows 196,774, n_pilot 4,099**, interval manifest 경로 `../intervals/<Sp>.intervals_v2.jsonl`(상대).
+- 독립 검증 6173280은 64G에서 batch OOM(14분, 62.3GB) → 200G로 **6173357 COMPLETED, status PASS**(`validate_noc0.json`). 병합 DB 생성 후 `--c0`로 다시 검증.
+- **Gmax N=100 종 게이트 통과:** EST N=100 6172724 PASS(0.99918), ONT N=100 6172725 PASS(80,791,977 reads, 채택 6,784,482, 0.99982) → **종 0.99981 ≥ 0.999**. Gmax는 N=500 불필요.
+- **Sitalica ONT v2 6172712 PASS**(A16 연결성분 첫 cDNA ONT): 85,198,814 reads, 채택 1,051,344(1.2%, identity 0.95 규칙), exhaustiveness 0.99993, 비-clique 성분 20,460개(433,683 reads)를 한 분자씩으로 합침, sha 일치, 누출 0.
+- **Vvinifera EST N=500 6173194 PASS:** exhaustiveness 0.99527(N=100) → **0.99997**, audit_n 500, sha 일치(진단 예측과 일치). PacBio·ONT N=500과 HSP 6173197 진행.
+- **Vvinifera PacBio N=500 6173195 PASS:** exhaustiveness 1.0(N=100 0.99823), sha 일치.
+- **Vvinifera ONT N=500 6173196 PASS:** 43,502,804 reads, 채택 7,135,854, exhaustiveness 0.9999966 → **Vvinifera 종 0.9999965 ≥ 0.999, 병합 게이트 통과**(EST 0.99997·PacBio 1.0·ONT 0.999997, 모두 N=500).
+- **Osativa ONT v2 6172995 FAILED**(30h37m): DuckDB `failed to pin block ... 33.5 GiB/33.5 GiB used`(한도 36GB에서 commit 불가). `out/`(qc.json만)을 `out_failed_6172995`로 보존, 128G/DuckDB 96GB로 **6173687** 재제출.
+- **Athaliana ONT C0 6172713 batch OOM**(39h03m, 46.4GB/48G; 160M reads·38런 중 cDNA 34런 — A16 PCR 묶음이 Python 메모리를 씀). 구 run 디렉터리 `c0/Athaliana_ont_v2.oom_6172713`으로 보존, 200G/DuckDB 64GB로 **6173686** 재제출([athaliana_ont_c0_v2_mem200.sbatch](athaliana_ont_c0_v2_mem200.sbatch)).
+- Gmax HSP 6172729 TIMEOUT(24h, 4.3GB) → 부분출력 `hsp_v3/Gmax.timeout_6172729`, **6173591**(4d) 재제출, protein C0 **6173592** 재연결(6172759 취소).
+
 ## 코퍼스 drop 모드·N_pilot 4,099 (결정 18, 2026-09-27)
 
 - drop 모드 `cf1a30f` → b6-integration **`c422e5e`**(source_v5, tar sha `000e4822…182f`): `--apply --drop-row-set-events`가 사건 타일·RC twin·window_genes 행을 **삭제**(A40 빌드도 0.60 초과 타일은 버림; train_weight=0은 C3 donor 선택에 남아 부적합). 생존 행 rn/wid·바이트 불변, `b6_row_drop` 테이블, freeze에 `row_set_drop`·`train_rows`·`n_pilot`(식 포함). 트레이너는 `rt.bind_n_pilot`으로 freeze 값에 결속(행 수·config 불일치시 거부). 시험 `test_b6_corpus_repair` 26→32 통과.

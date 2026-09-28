@@ -22,3 +22,23 @@ C0 Sbicolor_protein_v1 PASS sha_ok True 888d84899749 leak 0 gates 0 exh None aud
 C0 Bdistachyon_est_n100 PASS sha_ok True e1c5ecc41bd4 leak 0 gates 0 exh 0.9999078896685702 audit_n 100 reads_in 206123 accepted 196940 hsp_rows None
 C0 Athaliana_protein_v1 PASS sha_ok True 462fc8ab138d leak 0 gates 0 exh None audit_n None reads_in 12734296 accepted 10187273 hsp_rows 30023629
 C0 Ppatens_protein_v1 PASS sha_ok True a4884d516917 leak 0 gates 0 exh None audit_n None reads_in 12411963 accepted 8501694 hsp_rows 14338137
+C0 Gmax_est_n100 PASS sha_ok True d89ac07df13d leak 0 gates 0 exh 0.9991788302635384 audit_n 100 reads_in 1374461 accepted 1273167 hsp_rows None
+C0 Gmax_ont_n100 PASS sha_ok True 840d2bb60d11 leak 0 gates 0 exh 0.9998173496103168 audit_n 100 reads_in 80791977 accepted 6784482 hsp_rows None
+Gmax species N=100 0.9998088694271433 OK
+VALIDATE keys ['counts', 'qc', 'status']
+status PASS None None
+{"counts": {"Athaliana": {"train": {"a22_hard": {"label_drops": 0, "spans": 26}, "a30_only": {"label_drops": 0, "spans": 38}, "closure_flank": {"label_drops": 75, "spans": 0}, "closure_member": {"label_drops": 60, "spans": 0}, "heldout": {"label_drops": 0, "spans": 615}, "test_orthogroup": {"label_drops": 0, "spans": 1822}, "valid_orthogroup": {"label_drops": 0, "spans": 340}}, "valid": {"a22_hard
+6172729.batch|4309240K|1-00:00:19
+Gmax.molecule_map.tsv
+Gmax.molecule_map.tsv.PROVENANCE.txt
+Gmax.molecule_map.tsv.sha256
+C0 Sitalica_ont_v2 PASS sha_ok True 97140a2e6034 leak 0 gates 0 exh 0.9999329583582615 audit_n 50 reads_in 85198814 accepted 1051344 hsp_rows None
+{'pcr_nonclique_components': 20460, 'pcr_nonclique_reads': 433683}
+C0 Vvinifera_est_n500 PASS sha_ok True dd531715be15 leak 0 gates 0 exh 0.999971615973584 audit_n 500 reads_in 450180 accepted 391525 hsp_rows None
+C0 Vvinifera_pacbio_n500 PASS sha_ok True 23acd9edc0a1 leak 0 gates 0 exh 1.0 audit_n 500 reads_in 2456610 accepted 2030546 hsp_rows None
+* Increasing the memory limit (SET memory_limit='...GB')
+
+See also https://duckdb.org/docs/stable/guides/performance/how_to_tune_workloads
+6172995.batch|FAILED|44508412K
+C0 Vvinifera_ont_n500 PASS sha_ok True 9a1c7795a317 leak 0 gates 0 exh 0.9999965536110492 audit_n 500 reads_in 43502804 accepted 7135854 hsp_rows None
+Vvinifera species N=500 0.9999965038865886 OK

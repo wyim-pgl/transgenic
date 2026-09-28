@@ -22,3 +22,9 @@ VIEW Osativa runs 28 reads 168373888 {"minimap2": {"version": "2.28-r1209"}, "sa
 ONT_C0_v2 Osativa 6172995 (old 6172409 failed A16 non-transitive after 26h52m)
 6172760 b6_prot_c0_Osativa PENDING DependencyNeverSatisfied
 HSP Osativa 6173182 (4d; 6172700 timed out at 24h)  PROTEIN_C0 6173183
+6172759 b6_prot_c0_Gmax PENDING DependencyNeverSatisfied
+HSP Gmax 6173591 (4d; 6172729 timed out at 24h)  PROTEIN_C0 6173592
+7adbaa346d095ea0072c8bf9665f8351ef2d503cbe304c23233f1271588f3f32  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/athaliana_ont_c0_v2_mem200.sbatch
+6173686
+Osativa.ont.qc.json
+6173687

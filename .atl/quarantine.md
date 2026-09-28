@@ -2,6 +2,28 @@
 
 > **전역 규칙(저자 결정 2026-09-25):** Slurm `.extern` 단계의 `OUT_OF_MEMORY 0:125` 표시는 모든 잡에서 무시한다. 판정은 job/batch 상태·ExitCode·산출물 QC·해시로 한다(batch OOM은 해당 없음). [결정 기록](../notes/b6_production_start_20260925/AUTHOR_DECISIONS_20260925_evening.md).
 
+## §1p — 2026-09-25~28: B6 실데이터 C0·코퍼스 구축에서 폐기한 경로
+
+현재 상태는 [RESTART_HANDOFF_20260928](../notes/RESTART_HANDOFF_20260928.md). 아래는 **다시 하지 않을 판단과 검증된 대체**다.
+
+| 폐기한 경로/오해 | 검증된 대체·주의 |
+|---|---|
+| 호스트 python으로 `duckdb_runtime`을 import했다(GLIBC_2.23 없음으로 실패). | DuckDB 작업은 `micromamba.sif` 컨테이너 안에서만 한다. 호스트 python은 sylvan env(`/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python`)이며 `python3` 명령은 없다. |
+| build_manifest에 적힌 원래 reference/GFF 경로(pgl-gpu `/home/pgl/scratch1/...`)를 그대로 썼다(코퍼스 measure 18초 실패). | pronghorn에서는 `--reference SP=PATH --gff SP=PATH`(sha 검증 유지)로 `training_input/genomes`·`genomes` 경로를 넘긴다. |
+| DIAMOND BTOP를 그대로 실제 서열에 재생했다(masking `X`로 codon/subject truth 실패). | 결정 5·10·11: masked X 인정, 길이는 M+I+D 또는 M+I+D+F, 재생 불가 행만 제외+QC(`6b6dcd3`, `396fcbf`). blastx는 재실행하지 않는다. |
+| miniprot GFF를 그대로 protein C0에 넣었다(A19 same-species로 거부). | `a19_filter_miniprot.py`로 종별 same-species query 블록을 뺀 `evidence/protein_alignments_a19/`를 쓴다(builder A19 함수·동결 lineage 사용). |
+| A16 비-clique PCR 성분을 거부하는 원 규칙으로 cDNA ONT C0를 돌렸다(모든 cDNA 종 실패). | 결정 9: 연결성분 = 한 분자(`0fc80de`, source_v3 이상). |
+| 코퍼스 repair에 A22 flags 한 파일을 모든 종에 넘겼다(다른 종 A22-hard가 오류 없이 빠짐). | 종별 `--flags SP=PATH`·`--build-flags SP=PATH ...`(`4d1b752`). 합친 flags 파일은 C0 기록 sha와 달라 쓰지 않는다. |
+| audit BAM에서 read별 secondary 수를 `uniq -c`로 바로 셌다(좌표 정렬이라 무의미한 결과). | read 이름으로 정렬한 뒤 센다(`LC_ALL=C sort`). |
+| 종 exhaustiveness를 N=100이면 충분하다고 가정했다(Vvinifera ONT 0.9893). | 진단(cap read 재정렬 -N 5000): Vvinifera cap read는 배치 약 330–345에 몰림 → N=500. 필요 N은 진단으로 정하고 한 종의 전 소스를 같은 N으로 다시 만든다. |
+| 큰 종의 HSP 투영을 24h 제한으로 냈다(Osativa·Gmax TIMEOUT). | raw13이 큰 종(Athaliana·Gmax·Osativa)은 4d. SQLite 임시파일이 GPFS에 수~십 GB 생긴다. |
+| 대형 ONT C0를 48G/DuckDB36GB로 냈다(Athaliana batch OOM, Osativa DuckDB 한도 초과). | cDNA가 많은 대형 ONT는 200G/DuckDB64GB, 대형 dRNA 위주는 128G/DuckDB96GB. |
+| 코퍼스 독립 검증을 64G로 냈다(OOM). | 200G. |
+| 이전 실패 잡의 `out/`을 남긴 채 재제출했다(builder가 기존 qc.json 때문에 거부). | 재제출 전 `out/`을 `out_failed_<job>`로 옮기고 새 `out/`을 만든다. 산출물은 지우지 않는다. |
+| 한 종의 EST C0를 다시 만들고 그 종의 HSP·protein C0는 그대로 두었다. | 병합은 protein C0가 기록한 EST C0 sha와 병합되는 EST C0가 같아야 한다 → EST C0를 바꾸면 HSP·protein C0도 다시 만든다. |
+| 파일럿 LR이 4 GPU에서 아직 warm-up이라고 판단했다(단일 프로세스 가정). | accelerate `AcceleratedScheduler`는 split_batches=False에서 업데이트당 num_processes 스텝 → 4 GPU 업데이트 4,099 ≈ scheduler 16.4k > warmup 9,113. |
+| 사건 항목 1,817개를 타일 수로 보고했다. | 76 타일이 두 사건에 모두 해당 → 실제 forward 1,741 타일. |
+
 ## §1o — 2026-09-21~23: issue #60 번복 · A46 승인 · WP1 구현에서 폐기한 경로
 
 현재 상태는 [resume](resume.md) / [todo](todo.md) / [RESTART_HANDOFF_20260923](../notes/RESTART_HANDOFF_20260923.md)에 있다. 아래는 **다시 하지 않을 판단과 검증된 대체**다.

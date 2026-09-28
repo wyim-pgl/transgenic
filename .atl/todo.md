@@ -1,4 +1,28 @@
-# Todo: 현재 실행 목록 (2026-09-25, 실제 B6 훈련 착수)
+# Todo: 현재 실행 목록 (2026-09-28, B6 실데이터 증거 DB 마무리)
+
+정본: [RESTART_HANDOFF_20260928](../notes/RESTART_HANDOFF_20260928.md). 저자 결정 1–18 반영 완료. 아래 체크리스트가 현재 실행 지시이고, 그 아래 09-25 절은 역사 기록이다.
+
+## 지금 (C0 마무리)
+
+- [ ] HSP Vvinifera **6173197**(24h 제한, N=100 때 17h30m) → protein C0 **6173198**. 제한 초과시 4d로 재제출·protein 재연결(Osativa·Gmax 선례).
+- [ ] HSP Gmax **6173591**(4d) → protein C0 **6173592**.
+- [ ] HSP Osativa **6173182**(4d) → protein C0 **6173183**.
+- [ ] ONT C0 Athaliana **6173686**(200G/DuckDB64GB, `c0/Athaliana_ont_v2`, 뷰는 잡이 `athaliana_ont_view_v2.py`로 생성).
+- [ ] ONT C0 Osativa **6173687**(128G/DuckDB96GB, `c0/Osativa_ont_v2`).
+- [ ] 각 완료 C0: `~/c0v.py <dir>:<Sp>:<src>`로 status·sha·leak·gates·exhaustiveness 확인 → PROGRESS 표·c0_verify_log 기록. Athaliana·Osativa는 종 exhaustiveness ≥0.999 재확인.
+
+## 다음 (C0 전부 PASS 후, 순서대로)
+
+- [ ] zero list 27개(`b6_routea_agreement.py`, 종 × train_track/valid_track/eval_input; protein GFF는 `protein_alignments_a19`).
+- [ ] 병합 `b6_merge_evidence_db.py`(인계 문서 §2의 C0 파일만; 메모리 넉넉히).
+- [ ] 코퍼스 재검증 `b6_validate_corpus.py --c0 <merged>`(200G).
+- [ ] obs cache `b6_build_obs_cache.py --family train`.
+- [ ] bindings JSON 작성·`verify_inputs(accept=("training",))`.
+- [ ] DeltaAI 전송(병합 DB·C0·PROVENANCE, freeze·intervals를 같은 상대 배치로) + 새 repo 스냅숏(`27c34ba`+) + 해시 대조.
+- [ ] **GPU 제출 전 사용자 확인:** WP5 파일럿 B6·C2(`wp5_pilot.sbatch`, 4 GPU, 4,099 updates, ≈98 GPU-h). WP6 예산 부족 가능성 함께 보고.
+
+## 이전 기록 (2026-09-25, 역사)
+
 
 ## 현재: 실제 데이터 준비 후 WP5 실제 훈련
 
