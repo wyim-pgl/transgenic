@@ -36,6 +36,11 @@ merged DB's directory (``..`` allowed); consumers (``b6_bindings.merged_input_pa
 DB's actual location.  The C0 DBs and their ``.PROVENANCE.txt`` travel with the merged DB in the same relative
 layout (e.g. pronghorn -> DeltaAI); ``input_sha256`` is unchanged, so hash strength is unchanged.
 
+DuckDB resources: ``--memory-limit`` / ``--threads`` set the DuckDB ``memory_limit`` / ``threads`` of the merge
+connection (unset = DuckDB defaults, whose memory limit is a share of the HOST memory, not of the Slurm allocation),
+and it spills to ``--temp-dir`` (default ``<out>.partial-*.spill``, removed after the merge).
+``preserve_insertion_order`` is always off.  The applied values are read back and returned under ``duckdb``.
+
 Row order: the merged tables have NO guaranteed physical row order (DuckDB inserts are not order-preserving across
 inputs and threads); every reader must ``ORDER BY`` a key when order matters.
 """
@@ -45,6 +50,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -248,7 +254,11 @@ def relative_input_path(path, out_dir):
     return Path(os.path.relpath(Path(path).absolute(), Path(out_dir).absolute())).as_posix()
 
 
-def merge(inputs, out):
+def lit(value):
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def merge(inputs, out, *, memory_limit=None, threads=None, temp_dir=None):
     import duckdb
 
     out = Path(out).absolute()
@@ -295,9 +305,22 @@ def merge(inputs, out):
     handle, tmp = tempfile.mkstemp(prefix=out.name + ".partial-", dir=out.parent)
     os.close(handle)
     os.unlink(tmp)
+    spill = Path(temp_dir) if temp_dir is not None else Path(tmp + ".spill")
+    own_spill = temp_dir is None
     con = None
     try:
         con = duckdb.connect(tmp)
+        if memory_limit is not None:
+            con.execute(f"SET memory_limit = {lit(memory_limit)}")
+        if threads is not None:
+            require(int(threads) >= 1, f"threads must be >= 1, got {threads}")
+            con.execute(f"SET threads = {int(threads)}")
+        con.execute(f"SET temp_directory = {lit(spill)}")
+        con.execute("SET preserve_insertion_order = false")
+        settings = dict(zip(("memory_limit", "threads", "temp_directory", "preserve_insertion_order"),
+                            con.execute("SELECT current_setting('memory_limit'), current_setting('threads'), "
+                                        "current_setting('temp_directory'), "
+                                        "current_setting('preserve_insertion_order')").fetchone()))
         S.create_schema(con, merged=True)
         for i, path in enumerate(attach):
             con.execute(f"ATTACH '{path}' AS src{i} (READ_ONLY)")
@@ -328,21 +351,34 @@ def merge(inputs, out):
             con.close()
         for p in (Path(tmp), Path(tmp + ".wal")):
             p.unlink(missing_ok=True)
+        if own_spill:
+            shutil.rmtree(spill, ignore_errors=True)
     digest = sha256(out)
     with open(str(out) + ".sha256", "x") as fh:
         fh.write(f"{digest}  {out.name}\n")
     return {"output": str(out), "sha256": digest, "inputs": [{"path": m[0], "sha256": m[1], "species": m[2], "source": m[3]}
                                                              for m in manifest], "identity": identity,
-            "exhaustiveness": exhaustiveness}
+            "exhaustiveness": exhaustiveness, "duckdb": settings}
+
+
+def _positive_int(text):
+    value = int(text)
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be >= 1, got {value}")
+    return value
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--inputs", nargs="+", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--memory-limit", help="DuckDB memory_limit, e.g. 170GB (default: DuckDB's host-memory share)")
+    ap.add_argument("--threads", type=_positive_int, help="DuckDB threads (default: DuckDB's)")
+    ap.add_argument("--temp-dir", help="DuckDB spill directory (default <out>.partial-*.spill, removed afterwards)")
     args = ap.parse_args(argv)
     try:
-        result = merge(args.inputs, args.out)
+        result = merge(args.inputs, args.out, memory_limit=args.memory_limit, threads=args.threads,
+                       temp_dir=args.temp_dir)
     except (MergeError, S.SchemaError, FileExistsError, OSError) as exc:
         print(f"b6_merge_evidence_db failed: {exc}", file=sys.stderr)
         return 1

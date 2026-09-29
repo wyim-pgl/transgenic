@@ -396,3 +396,60 @@ def test_merge_records_input_paths_relative_to_the_merged_db_directory(dbs, tmp_
     (tmp_path / "B" / "c0" / (Path(rows[0][0]).name + ".PROVENANCE.txt")).unlink()
     with pytest.raises(BD.BindingError, match="relative to the merged evidence directory"):
         BD.merged_input_path(moved, rows[0][0], "x")
+
+
+def _normalised_memory(value):
+    con = duckdb.connect()
+    try:
+        con.execute(f"SET memory_limit = '{value}'")
+        return con.execute("SELECT current_setting('memory_limit')").fetchone()[0]
+    finally:
+        con.close()
+
+
+def test_merge_applies_duckdb_resource_settings_and_removes_its_spill_directory(dbs, tmp_path):
+    out = tmp_path / "limited" / "evidence_c0.db"
+    result = M.merge(dbs, out, memory_limit="256MB", threads=1)
+    settings = result["duckdb"]
+    assert settings["memory_limit"] == _normalised_memory("256MB")
+    assert settings["threads"] == 1
+    assert settings["preserve_insertion_order"] is False
+    assert Path(settings["temp_directory"]).name.startswith("evidence_c0.db.partial-")
+    assert settings["temp_directory"].endswith(".spill")
+    assert not list(out.parent.glob("*.spill")), "the spill directory is removed after the merge"
+    assert sorted(p.name for p in out.parent.iterdir()) == ["evidence_c0.db", "evidence_c0.db.sha256"]
+    for table in ("evidence_alignment", "junction", "molecule_member", "est_protein_hsp"):
+        assert count(out, table) == sum(count(d, table) for d in dbs), table
+
+
+def test_merge_without_resource_options_keeps_duckdb_defaults_but_no_insertion_order(dbs, tmp_path):
+    result = M.merge(dbs, tmp_path / "evidence_c0.db")
+    settings = result["duckdb"]
+    con = duckdb.connect()
+    try:
+        default_threads = con.execute("SELECT current_setting('threads')").fetchone()[0]
+    finally:
+        con.close()
+    assert settings["threads"] == default_threads
+    assert settings["preserve_insertion_order"] is False
+
+
+def test_merge_cli_passes_memory_limit_threads_and_temp_dir(dbs, tmp_path, capsys):
+    spill = tmp_path / "spill_here"
+    spill.mkdir()                                  # DuckDB creates it only when it actually spills
+    (spill / "keep").write_text("caller-owned")
+    out = tmp_path / "cli" / "evidence_c0.db"
+    assert M.main(["--inputs", *dbs, "--out", str(out), "--memory-limit", "256MB", "--threads", "2",
+                   "--temp-dir", str(spill)]) == 0
+    settings = json.loads(capsys.readouterr().out)["duckdb"]
+    assert settings["threads"] == 2
+    assert settings["memory_limit"] == _normalised_memory("256MB")
+    assert settings["temp_directory"] == str(spill)
+    assert (spill / "keep").read_text() == "caller-owned", "a caller-supplied temp directory is left in place"
+
+
+def test_merge_cli_refuses_a_non_positive_thread_count(dbs, tmp_path, capsys):
+    with pytest.raises(SystemExit):
+        M.main(["--inputs", *dbs, "--out", str(tmp_path / "x.db"), "--threads", "0"])
+    assert "must be >= 1, got 0" in capsys.readouterr().err
+    assert not (tmp_path / "x.db").exists()
