@@ -488,3 +488,129 @@ def test_tier_disagreement_flag_even_when_both_chains_complete():
     assert row["chain_reading_report"]["chain_support_single_read"]["tier"] == "T1"
     assert row["chain_reading_report"]["chain_support_threshold"]["tier"] == "T2"
     assert row["tier_disagreement"]
+
+
+# ---------------------------------------------------------------- pcr_components: union-find == pairwise (A16, decision 9a)
+def _reference_pcr_components(pcr):
+    """The pairwise-neighbour implementation this module used up to 2026-09-30 (kept verbatim as the oracle)."""
+    for key, group in sorted(pcr.items(), key=lambda item: repr(item[0])):
+        group = sorted(group, key=lambda o: (o.alignment.start, o.alignment.end, o.run, o.alignment.read))
+        neighbours = [set([i]) for i in range(len(group))]
+        for i, o in enumerate(group):
+            for j in range(i + 1, len(group)):
+                p = group[j]
+                if p.alignment.start - o.alignment.start > 10:
+                    break
+                if abs(p.alignment.end - o.alignment.end) <= 10:
+                    neighbours[i].add(j)
+                    neighbours[j].add(i)
+        visited = set()
+        for i in range(len(group)):
+            if i in visited:
+                continue
+            component, pending = set(), [i]
+            while pending:
+                j = pending.pop()
+                if j not in component:
+                    component.add(j)
+                    pending.extend(neighbours[j] - component)
+            visited.update(component)
+            members = [group[j] for j in sorted(component)]
+            yield key, members, all(neighbours[j] == component for j in component)
+
+
+def _pcr_read(i, start, end, run="run1"):
+    return types.SimpleNamespace(run=run, alignment=types.SimpleNamespace(read=f"r{i:06d}", start=start, end=end))
+
+
+def _random_pcr(rng, n_keys=3):
+    pcr = {}
+    for k in range(n_keys):
+        reads, i = [], 0
+        for _ in range(rng.randint(1, 6)):                      # clusters: dense stacks, chains, scattered reads
+            s0, e0 = rng.randint(0, 400), rng.randint(500, 900)
+            kind = rng.choice(("stack", "chain", "spread"))
+            for _ in range(rng.randint(1, 40)):
+                if kind == "stack":
+                    s, e = s0 + rng.randint(0, 3), e0 + rng.randint(0, 3)
+                elif kind == "chain":
+                    s0, e0 = s0 + rng.randint(0, 12), e0 + rng.randint(-12, 12)
+                    s, e = s0, e0
+                else:
+                    s, e = s0 + rng.randint(-30, 30), e0 + rng.randint(-30, 30)
+                reads.append(_pcr_read(i, s, e, run=rng.choice(("run1", "run2"))))
+                i += 1
+        rng.shuffle(reads)
+        pcr[("sp", "asm", "ONT", "lib", f"Chr{k}", rng.choice(("+", "-", None)), ())] = reads
+    return pcr
+
+
+def _shape(components):
+    return [(key, [o.alignment.read + o.run for o in members], clique) for key, members, clique in components]
+
+
+def test_pcr_components_union_find_equals_the_pairwise_reference_on_random_groups():
+    import random
+    for seed in range(300):
+        pcr = _random_pcr(random.Random(seed))
+        assert _shape(m.pcr_components(pcr)) == _shape(_reference_pcr_components(pcr)), seed
+
+
+def test_assign_molecules_units_and_counters_are_unchanged_by_the_union_find():
+    import random
+    for seed in range(40):
+        rng = random.Random(1000 + seed)
+        observations = [obs(f"r{i}") for i in range(60)]
+        for o in observations:
+            o.metadata["protocol"] = "cDNA"
+            o.alignment = replace(o.alignment, start=51 + rng.randint(0, 40), end=400 + rng.randint(0, 40))
+        got_stats, want_stats = {}, {}
+        m.assign_molecules(observations, pcr_stats=got_stats)
+        got = [o.molecule for o in observations]
+        real = m.pcr_components
+        try:
+            m.pcr_components = _reference_pcr_components
+            m.assign_molecules(observations, pcr_stats=want_stats)
+        finally:
+            m.pcr_components = real
+        assert got == [o.molecule for o in observations] and got_stats == want_stats, seed
+
+
+def test_pcr_components_memory_stays_linear_in_a_dense_stack():
+    import tracemalloc
+    reads = [_pcr_read(i, 1000 + i % 3, 2000 + i % 4) for i in range(1000)]        # 12 distinct (start, end) points
+    reads += [_pcr_read(1000 + i, 5000 + 15 * i, 6000) for i in range(20)]        # 20 singletons
+    pcr = {("sp", "asm", "ONT", "lib", "ChrC", None, ()): reads}
+    tracemalloc.start()
+    try:
+        components = list(m.pcr_components(pcr))
+        peak = tracemalloc.get_traced_memory()[1]
+    finally:
+        tracemalloc.stop()
+    assert len(components) == 21
+    assert components[0][2] is True and len(components[0][1]) == 1000
+    assert peak < 8 * 1024 * 1024, peak         # pairwise neighbour sets: ~48 MiB for these 1,000 stacked reads
+
+
+def test_pcr_components_time_is_bounded_for_many_distinct_ends_in_one_start_window():
+    import time
+    reads = [_pcr_read(i, 1000 + i % 5, 2000 + i) for i in range(20000)]          # 20,000 distinct ends, 5 starts
+    pcr = {("sp", "asm", "ONT", "lib", "Chr1", None, ()): reads}
+    t0 = time.perf_counter()
+    components = list(m.pcr_components(pcr))
+    assert time.perf_counter() - t0 < 20       # a pairwise sweep of this window compares ~2e8 pairs
+    assert len(components) == 1 and components[0][2] is False
+    small = {key: group[:300] for key, group in pcr.items()}
+    assert _shape(m.pcr_components(small)) == _shape(_reference_pcr_components(small))
+
+
+def test_pcr_components_edge_cases_match_the_reference():
+    chain = [_pcr_read(i, 100 + 7 * i, 900 + 7 * i) for i in range(5000)]         # one long transitive chain
+    cases = [{}, {("k",): []}, {("sp", "asm", "ONT", "lib", "Chr1", None, ()): chain},
+             {("sp", "asm", "ONT", "lib", "Chr1", None, ()): [_pcr_read(0, 1, 50), _pcr_read(1, 1, 50)],
+              ("sp", "asm", "ONT", "lib", "Chr1", "+", ()): [_pcr_read(2, 1, 50)],
+              ("sp", "asm", "ONT", "lib", "Chr1", "-", ()): [_pcr_read(3, 5, 55, run="run2")]}]
+    for pcr in cases:
+        assert _shape(m.pcr_components(pcr)) == _shape(_reference_pcr_components(pcr))
+    got = list(m.pcr_components(cases[2]))
+    assert len(got) == 1 and len(got[0][1]) == 5000 and got[0][2] is False

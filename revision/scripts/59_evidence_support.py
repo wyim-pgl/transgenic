@@ -8,6 +8,7 @@ samtools. A PAF alone cannot establish the SAM supplementary/chimera exclusions.
 See EVIDENCE_SCORER_READINGS.md for the input contract and unresolved rule gates.
 """
 import argparse
+import bisect
 import csv
 import gzip
 import hashlib
@@ -440,31 +441,59 @@ def normalize_clone(value):
 
 def pcr_components(pcr):
     """Connected components of the A16 10-nt PCR-equivalence graph per key, with a clique flag.  Each component is one
-    molecule (A16_PCR_LINKAGE, decision 9a); the clique flag feeds diagnostics and QC counters only."""
+    molecule (A16_PCR_LINKAGE, decision 9a); the clique flag feeds diagnostics and QC counters only.
+
+    Two reads are linked when both alignment ends differ by <= 10 nt.  Reads with identical (start, end) are always
+    linked, so the graph is built over the distinct points with union-find: an explicit neighbour set per read grew
+    with the square of a dense stack (1M unspliced reads of one Athaliana ONT library/contig, 2026-09-30).  A component
+    is a clique iff its start range and its end range are both <= 10 (then every pair differs by <= 10 on both ends,
+    and the extreme pairs otherwise are not linked) -- the flag the pairwise test gave.  Components are yielded in the
+    order of their first read in the sorted group, members in sorted order, exactly as before."""
     for key, group in sorted(pcr.items(), key=lambda item: repr(item[0])):
         group = sorted(group, key=lambda o: (o.alignment.start, o.alignment.end, o.run, o.alignment.read))
-        neighbours = [set([i]) for i in range(len(group))]
-        for i, o in enumerate(group):
-            for j in range(i + 1, len(group)):
-                p = group[j]
-                if p.alignment.start - o.alignment.start > 10:
-                    break
-                if abs(p.alignment.end - o.alignment.end) <= 10:
-                    neighbours[i].add(j)
-                    neighbours[j].add(i)
-        visited = set()
-        for i in range(len(group)):
-            if i in visited:
-                continue
-            component, pending = set(), [i]
-            while pending:
-                j = pending.pop()
-                if j not in component:
-                    component.add(j)
-                    pending.extend(neighbours[j] - component)
-            visited.update(component)
-            members = [group[j] for j in sorted(component)]
-            yield key, members, all(neighbours[j] == component for j in component)
+        points, point_of = [], []
+        for o in group:                         # identical (start, end) are adjacent in the sorted group
+            p = (o.alignment.start, o.alignment.end)
+            if not points or points[-1] != p:
+                points.append(p)
+            point_of.append(len(points) - 1)
+        parent = list(range(len(points)))
+
+        def find(x):
+            root = x
+            while parent[root] != root:
+                root = parent[root]
+            while parent[x] != root:
+                parent[x], x = root, parent[x]
+            return root
+
+        # Neighbours of a point are found per start value in [start, start + 10] by bisecting that start's sorted ends
+        # to [end - 10, end + 10]: at most 11 bisects plus the linked points, so a start window with many distinct ends
+        # is not scanned pairwise.  Same links as the sorted sweep (points are sorted by (start, end)).
+        runs = {}                               # start -> [first, last + 1) indices of its points
+        for index, (start, _end) in enumerate(points):
+            runs.setdefault(start, [index, index])[1] = index + 1
+        ends = [end for _start, end in points]
+        for i, (start, end) in enumerate(points):
+            for other in range(start, start + 11):
+                run = runs.get(other)
+                if run is None:
+                    continue
+                lo, hi = run
+                a = bisect.bisect_left(ends, end - 10, lo, hi)
+                b = bisect.bisect_right(ends, end + 10, lo, hi)
+                for j in range(max(a, i + 1), b):
+                    ra, rb = find(i), find(j)
+                    if ra != rb:
+                        parent[max(ra, rb)] = min(ra, rb)
+        components = defaultdict(list)
+        for index, point in enumerate(point_of):
+            components[find(point)].append(index)
+        for indices in sorted(components.values(), key=lambda c: c[0]):
+            members = [group[j] for j in indices]
+            starts = [o.alignment.start for o in members]
+            ends = [o.alignment.end for o in members]
+            yield key, members, max(starts) - min(starts) <= 10 and max(ends) - min(ends) <= 10
 
 
 def pcr_diagnostics(observations, additions, specs):
