@@ -12,8 +12,10 @@ and upstream shas); the published cache is then re-verified with ``verify_cache`
 Every input is sha-bound into the cache manifest (evidence snapshot = recorded sidecar/PROVENANCE sha; roles =
 sidecar; zero lists + their QC JSON (``<tsv>.qc.json`` unless given as ``pop:species:tsv:qc``); reference; corpus;
 code).  The cache directory must not exist or be empty (caches are immutable).
-Rows are extracted and their shards written one (species, chrom) at a time (memory bounded by the largest
-chromosome); the cache is byte-identical to a one-shot ``write_cache(extract_rows(...))`` build.
+Rows are extracted and their shards written one (species, chrom) at a time: row memory is bounded by the largest
+chromosome, plus species-wide state (the EST molecule map and the dropped-molecule id / library sets, which are
+unioned across chromosomes before counting); the cache is byte-identical to a one-shot ``write_cache(extract_rows(...))``
+build.
 """
 from __future__ import annotations
 

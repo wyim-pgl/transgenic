@@ -174,3 +174,23 @@ def test_chrom_filter_needs_a_species(world):
             OC.extract_rows(con, world.roles, "train", chrom=FX.CHROM)
     finally:
         con.close()
+
+
+def test_species_chroms_skips_a_scaffold_with_only_rejected_alignments(world, multi, tmp_path):
+    db = tmp_path / "rejected_only.db"
+    shutil.copyfile(multi, db)
+    con = duckdb.connect(str(db))
+    try:
+        cols = [c for c, _ in CS.table_columns("evidence_alignment")]
+        exprs = [("alignment_id || '~rej'" if c == "alignment_id" else "'ChrRej'" if c == "chrom"
+                  else "false" if c == "accepted" else c) for c in cols]
+        con.execute(f"INSERT INTO evidence_alignment SELECT {', '.join(exprs)} FROM evidence_alignment "
+                    "WHERE species = ? LIMIT 1", [SP])
+    finally:
+        con.close()
+    con = _connect(db)
+    try:
+        assert "ChrRej" not in OC.species_chroms(con, SP)
+        assert OC.species_chroms(con, SP) == OC.species_chroms(_connect(multi), SP)
+    finally:
+        con.close()

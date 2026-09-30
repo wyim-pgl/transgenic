@@ -126,10 +126,12 @@ def check_species_coverage(con, species):
 
 
 def species_chroms(con, species):
-    """Sorted chromosomes holding rows of ``species`` in any extracted table (the per-chrom build's shard keys); a NULL
-    chrom outside evidence_alignment (where it marks an unplaced record) is refused."""
+    """Sorted chromosomes holding rows of ``species`` in any extracted table (the per-chrom build's shard keys): accepted
+    primary placements (the only alignments extraction reads, so a rejected- or secondary-only scaffold costs no pass),
+    HSPs and exclusions; a NULL chrom outside evidence_alignment (where it marks an unplaced record) is refused."""
     found = set()
-    for table, cond in (("evidence_alignment", " AND chrom IS NOT NULL"), ("est_protein_hsp", ""),
+    for table, cond in (("evidence_alignment", " AND placement_kind = 'primary' AND accepted AND chrom IS NOT NULL"),
+                        ("est_protein_hsp", ""),
                         ("excluded_junction_coordinate", ""), ("excluded_interval", "")):
         found.update(c for (c,) in con.execute(f"SELECT DISTINCT chrom FROM {table} WHERE species = ?{cond}",
                                                [species]).fetchall())
@@ -237,39 +239,40 @@ def extract_rows(con, roles, family, *, species=None, chrom=None, check_states=T
         if src != "protein":
             rows.append(dict(base, row_type="track", kind="alignment", strand=tstrand, phase=-1, start0=s0, end0=e0,
                              organism="", introns="", introns_ok="", units_key=""))
-    for aid, strand, s0, e0 in con.execute("SELECT alignment_id, strand, start0, end0 FROM aligned_block" + where_sp +
-                                           " ORDER BY alignment_id, alignment_block_index", params).fetchall():
-        if aid not in aln:
-            continue
-        base, organism = aln[aid]
-        kind = "protein" if base["source"] == "protein" else "block"
-        rows.append(dict(base, row_type="track", kind=kind, strand=strand, phase=-1, start0=s0, end0=e0,
-                         organism=organism, introns="", introns_ok="", units_key=""))
-    for aid, strand, s0, e0 in con.execute(
-            "SELECT alignment_id, strand, start0, end0 FROM junction_observation WHERE accepted AND strand IN ('+','-')"
-            " AND start0 IS NOT NULL" + and_sp + " ORDER BY alignment_id, intron_index", params).fetchall():
-        if aid not in aln or aln[aid][0]["source"] == "protein":
-            continue
-        rows.append(dict(aln[aid][0], row_type="track", kind="junction", strand=strand, phase=-1, start0=s0, end0=e0,
-                         organism="", introns="", introns_ok="", units_key=""))
-    # chains: accepted primary placement, strand +/-, >= 1 intron; introns in transcription order
-    chains = con.execute(f"""
-        SELECT pc.chain_id, pc.alignment_id, pc.strand, pc.start0, pc.end0,
-               string_agg(CAST(i.donor0 AS VARCHAR) || '-' || CAST(i.acceptor0 AS VARCHAR), ',' ORDER BY i.tx_order),
-               string_agg(CASE WHEN i.accepted AND i.donor0 IS NOT NULL THEN '1' ELSE '0' END, ',' ORDER BY i.tx_order),
-               count(*), count(i.donor0)
-        FROM partial_chain pc JOIN partial_chain_intron i ON i.chain_id = pc.chain_id
-        WHERE pc.strand IN ('+', '-') AND pc.n_introns >= 1{and_pc}
-        GROUP BY pc.chain_id, pc.alignment_id, pc.strand, pc.start0, pc.end0
-        ORDER BY pc.chain_id""", pc_params).fetchall()
-    for cid, aid, strand, s0, e0, introns, oks, n, n_coord in chains:
-        if aid not in aln or aln[aid][0]["source"] == "protein":
-            continue
-        _require(n == n_coord, f"chain {cid}: strand {strand} chain has an intron without donor0/acceptor0")
-        base = aln[aid][0]
-        rows.append(dict(base, row_type="chain", kind="chain", strand=strand, phase=-1, start0=s0, end0=e0,
-                         organism="", introns=introns, introns_ok=oks,
-                         units_key=f"{base['source']}\t{strand}\t{introns}"))
+    if aln:                                  # blocks/junctions/chains only extend admitted alignments
+        for aid, strand, s0, e0 in con.execute("SELECT alignment_id, strand, start0, end0 FROM aligned_block" + where_sp +
+                                               " ORDER BY alignment_id, alignment_block_index", params).fetchall():
+            if aid not in aln:
+                continue
+            base, organism = aln[aid]
+            kind = "protein" if base["source"] == "protein" else "block"
+            rows.append(dict(base, row_type="track", kind=kind, strand=strand, phase=-1, start0=s0, end0=e0,
+                             organism=organism, introns="", introns_ok="", units_key=""))
+        for aid, strand, s0, e0 in con.execute(
+                "SELECT alignment_id, strand, start0, end0 FROM junction_observation WHERE accepted AND strand IN ('+','-')"
+                " AND start0 IS NOT NULL" + and_sp + " ORDER BY alignment_id, intron_index", params).fetchall():
+            if aid not in aln or aln[aid][0]["source"] == "protein":
+                continue
+            rows.append(dict(aln[aid][0], row_type="track", kind="junction", strand=strand, phase=-1, start0=s0, end0=e0,
+                             organism="", introns="", introns_ok="", units_key=""))
+        # chains: accepted primary placement, strand +/-, >= 1 intron; introns in transcription order
+        chains = con.execute(f"""
+            SELECT pc.chain_id, pc.alignment_id, pc.strand, pc.start0, pc.end0,
+                   string_agg(CAST(i.donor0 AS VARCHAR) || '-' || CAST(i.acceptor0 AS VARCHAR), ',' ORDER BY i.tx_order),
+                   string_agg(CASE WHEN i.accepted AND i.donor0 IS NOT NULL THEN '1' ELSE '0' END, ',' ORDER BY i.tx_order),
+                   count(*), count(i.donor0)
+            FROM partial_chain pc JOIN partial_chain_intron i ON i.chain_id = pc.chain_id
+            WHERE pc.strand IN ('+', '-') AND pc.n_introns >= 1{and_pc}
+            GROUP BY pc.chain_id, pc.alignment_id, pc.strand, pc.start0, pc.end0
+            ORDER BY pc.chain_id""", pc_params).fetchall()
+        for cid, aid, strand, s0, e0, introns, oks, n, n_coord in chains:
+            if aid not in aln or aln[aid][0]["source"] == "protein":
+                continue
+            _require(n == n_coord, f"chain {cid}: strand {strand} chain has an intron without donor0/acceptor0")
+            base = aln[aid][0]
+            rows.append(dict(base, row_type="chain", kind="chain", strand=strand, phase=-1, start0=s0, end0=e0,
+                             organism="", introns=introns, introns_ok=oks,
+                             units_key=f"{base['source']}\t{strand}\t{introns}"))
     # route-B phase rows, keyed to their EST molecule (dataset/run/state of the EST molecule)
     # One (dataset, run, role) per EST molecule, or refuse: the representative decides route-B admission, so it is
     # never picked arbitrarily (any_value) when a molecule's members disagree (none do in the B6 EST C0s, 09-30).
