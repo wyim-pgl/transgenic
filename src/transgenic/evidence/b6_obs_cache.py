@@ -27,6 +27,9 @@ arms (the >= 121 arm), non-primary/unaccepted placements (never selected), exclu
 of train_track ESTs whose HSP is leakage-excluded (the protein query was excluded).
 
 Roles are selected by (dataset, run) only (plan §3); a dataset absent from DATASET_ROLES is neither input nor score.
+
+b6_build_obs_cache extracts and writes one species at a time (``extract_rows(species=)`` + ``CacheWriter``) to bound
+memory; the published cache is byte-identical to the one-shot ``write_cache(extract_rows(...))``.
 """
 from __future__ import annotations
 
@@ -103,20 +106,28 @@ def _mol_states(con):
     _require(not bad, f"molecule_member: molecules with inconsistent state across members: {bad}")
 
 
-def extract_rows(con, roles, family, *, species=None):
+def extract_rows(con, roles, family, *, species=None, check_states=True):
     """Return (rows: list[dict], drops: {(species, source, cause): n_molecules}, libraries).
 
     ``libraries`` = {population: {species: sorted [(source, library), ...]}} over track sources (est/ont/pacbio)
     of admitted rows; it defines the per-source masks (plan §7.1).
+    ``species``: every query is restricted to that species in SQL (the per-species build of b6_build_obs_cache);
+    the rows are then exactly the one-shot rows of that species, in the same relative order.  ``check_states``:
+    run the global molecule-state check (``_mol_states``); a per-species build runs it once, not per species.
     """
     _require(family in FAMILIES, f"family {family!r} not in {FAMILIES}")
-    _mol_states(con)
+    if check_states:
+        _mol_states(con)
     ridx = roles_index(roles)
     sp_filter = ""
     params = []
     if species is not None:
         sp_filter = " AND a.species = ?"
         params = [species]
+    # per-table species clauses: empty (the unchanged one-shot SQL) unless ``species`` is given
+    where_sp, and_sp, and_pc = ("", "", "") if species is None else (
+        " WHERE species = ?", " AND species = ?", " AND pc.species = ? AND i.species = ?")
+    pc_params = [] if species is None else [species, species]
     drops = {}
 
     def drop(sp, src, cause, mid):
@@ -163,8 +174,8 @@ def extract_rows(con, roles, family, *, species=None):
         if src != "protein":
             rows.append(dict(base, row_type="track", kind="alignment", strand=tstrand, phase=-1, start0=s0, end0=e0,
                              organism="", introns="", introns_ok="", units_key=""))
-    for aid, strand, s0, e0 in con.execute("SELECT alignment_id, strand, start0, end0 FROM aligned_block "
-                                           "ORDER BY alignment_id, alignment_block_index").fetchall():
+    for aid, strand, s0, e0 in con.execute("SELECT alignment_id, strand, start0, end0 FROM aligned_block" + where_sp +
+                                           " ORDER BY alignment_id, alignment_block_index", params).fetchall():
         if aid not in aln:
             continue
         base, organism = aln[aid]
@@ -173,21 +184,21 @@ def extract_rows(con, roles, family, *, species=None):
                          organism=organism, introns="", introns_ok="", units_key=""))
     for aid, strand, s0, e0 in con.execute(
             "SELECT alignment_id, strand, start0, end0 FROM junction_observation WHERE accepted AND strand IN ('+','-')"
-            " AND start0 IS NOT NULL ORDER BY alignment_id, intron_index").fetchall():
+            " AND start0 IS NOT NULL" + and_sp + " ORDER BY alignment_id, intron_index", params).fetchall():
         if aid not in aln or aln[aid][0]["source"] == "protein":
             continue
         rows.append(dict(aln[aid][0], row_type="track", kind="junction", strand=strand, phase=-1, start0=s0, end0=e0,
                          organism="", introns="", introns_ok="", units_key=""))
     # chains: accepted primary placement, strand +/-, >= 1 intron; introns in transcription order
-    chains = con.execute("""
+    chains = con.execute(f"""
         SELECT pc.chain_id, pc.alignment_id, pc.strand, pc.start0, pc.end0,
                string_agg(CAST(i.donor0 AS VARCHAR) || '-' || CAST(i.acceptor0 AS VARCHAR), ',' ORDER BY i.tx_order),
                string_agg(CASE WHEN i.accepted AND i.donor0 IS NOT NULL THEN '1' ELSE '0' END, ',' ORDER BY i.tx_order),
                count(*), count(i.donor0)
         FROM partial_chain pc JOIN partial_chain_intron i ON i.chain_id = pc.chain_id
-        WHERE pc.strand IN ('+', '-') AND pc.n_introns >= 1
+        WHERE pc.strand IN ('+', '-') AND pc.n_introns >= 1{and_pc}
         GROUP BY pc.chain_id, pc.alignment_id, pc.strand, pc.start0, pc.end0
-        ORDER BY pc.chain_id""").fetchall()
+        ORDER BY pc.chain_id""", pc_params).fetchall()
     for cid, aid, strand, s0, e0, introns, oks, n, n_coord in chains:
         if aid not in aln or aln[aid][0]["source"] == "protein":
             continue
@@ -203,7 +214,7 @@ def extract_rows(con, roles, family, *, species=None):
                    any_value(m.molecule_state), bool_or(m.train_tiles_excluded), min(a.arm)
             FROM evidence_alignment a JOIN {_MOL} m
               ON m.species = a.species AND m.source = a.source AND m.member_id = a.member_id
-            WHERE a.source = 'est' GROUP BY a.species, m.molecule_id""").fetchall():
+            WHERE a.source = 'est'{sp_filter} GROUP BY a.species, m.molecule_id""", params).fetchall():
         est_mol[(sp, mid)] = (ds, run, role, state, tte, arm)
     hsp_params, hsp_filter = [], ""
     if species is not None:
@@ -227,19 +238,16 @@ def extract_rows(con, roles, family, *, species=None):
                          start0=g0, end0=g1, organism="", introns="", introns_ok="", units_key=""))
     if family == "train":
         for sp, chrom, strand, kind, coord in con.execute(
-                "SELECT DISTINCT species, chrom, strand, kind, coordinate0 FROM excluded_junction_coordinate "
-                "ORDER BY 1, 2, 3, 4, 5").fetchall():
-            if species is not None and sp != species:
-                continue
+                "SELECT DISTINCT species, chrom, strand, kind, coordinate0 FROM excluded_junction_coordinate" +
+                where_sp + " ORDER BY 1, 2, 3, 4, 5", params).fetchall():
             rows.append(dict(species=sp, chrom=chrom, source="", dataset="", run="", library="", molecule_id="",
                              molecule_state="", train_tiles_excluded=False, b6_input=False, b6_score=False,
                              b6_input_scope="-", row_type="xjunc", kind=kind, strand=strand, phase=-1,
                              start0=coord, end0=coord + 1, organism="", introns="", introns_ok="", units_key=""))
         for sp, chrom, s0, e0, cause, scope, gene, tile_rn in con.execute(
                 "SELECT DISTINCT species, chrom, start0, end0, cause, scope, coalesce(gene_id, ''), "
-                "coalesce(tile_rn, -1) FROM excluded_interval ORDER BY 1, 2, 3, 4, 5, 6, 7, 8").fetchall():
-            if species is not None and sp != species:
-                continue
+                "coalesce(tile_rn, -1) FROM excluded_interval" + where_sp + " ORDER BY 1, 2, 3, 4, 5, 6, 7, 8",
+                params).fetchall():
             rows.append(dict(species=sp, chrom=chrom, source="", dataset="", run="", library="", molecule_id="",
                              molecule_state="", train_tiles_excluded=False, b6_input=False, b6_score=False,
                              b6_input_scope="-", row_type="xint", kind=cause, strand=scope, phase=-1,
@@ -277,50 +285,78 @@ def _canon(obj):
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
+class CacheWriter:
+    """Incremental ``write_cache``: ``add_rows`` writes the shards of the (species, chrom) keys in ``rows`` (each key
+    once, so a key's rows must come in one call), ``finish`` writes the zero lists and the manifest.  Output bytes equal
+    ``write_cache`` over the concatenated rows: shard files depend only on their own rows (stable per-shard sort) and
+    the manifest lists shards sorted by (species, chrom) whatever the order of the ``add_rows`` calls."""
+
+    def __init__(self, out_dir, *, family):
+        out = Path(out_dir)
+        _require(not out.exists() or not any(out.iterdir()), f"{out} exists and is not empty; caches are immutable")
+        out.mkdir(parents=True, exist_ok=True)
+        _require(family in FAMILIES, f"bad family {family!r}")
+        self.out, self.family = out, family
+        self._shards = {}                  # (species, chrom) -> shard manifest entry
+        self._finished = False
+
+    def add_rows(self, rows):
+        """Write one parquet shard per (species, chrom) of ``rows``; a key already written is refused."""
+        _require(not self._finished, f"{self.out}: cache already finished")
+        out = self.out
+        shards = {}
+        for r in rows:
+            shards.setdefault((r["species"], r["chrom"]), []).append(r)
+        again = sorted(set(shards) & set(self._shards))
+        _require(not again, f"shards {again} already written; a (species, chrom) shard is written once")
+        for (sp, chrom), rs in sorted(shards.items()):
+            rs.sort(key=lambda r: (r["row_type"], r["start0"], r["end0"], r["kind"], r["source"], r["molecule_id"],
+                                   r["strand"], r["phase"], r["introns"]))
+            table = pa.Table.from_pylist([{c: r.get(c, -1 if c == "tile_rn" else ("" if c == "query_id" else None))
+                                           for c in COLUMNS} for r in rs], schema=SCHEMA)
+            name = f"shard.{sp}.{chrom}.parquet"
+            _require("/" not in sp and "/" not in chrom, f"bad shard key {(sp, chrom)}")
+            pq.write_table(table, out / name, compression="zstd", use_dictionary=True, write_statistics=False)
+            self._shards[(sp, chrom)] = {"species": sp, "chrom": chrom, "file": name, "rows": len(rs),
+                                         "sha256": sha256_file(out / name)}
+
+    def finish(self, *, libraries, drops, bindings, zero_lists=None):
+        """Write zero lists + manifest.json (+ sidecar); returns the manifest dict."""
+        _require(not self._finished, f"{self.out}: cache already finished")
+        self._finished = True
+        out = self.out
+        shard_meta = [self._shards[k] for k in sorted(self._shards)]
+        zero_meta = {}
+        for pop, per in sorted((zero_lists or {}).items()):
+            _require(pop in POPULATIONS, f"zero list population {pop!r}")
+            for sp, (tsv, qc) in sorted(per.items()):
+                qc_obj = json.loads(Path(qc).read_text())
+                _require(qc_obj.get("population") == pop, f"zero-list QC {qc} names population "
+                                                          f"{qc_obj.get('population')!r}, expected {pop!r}")
+                dst_t, dst_q = out / f"zero.{pop}.{sp}.tsv", out / f"zero.{pop}.{sp}.qc.json"
+                dst_t.write_bytes(Path(tsv).read_bytes())
+                dst_q.write_bytes(Path(qc).read_bytes())
+                zero_meta.setdefault(pop, {})[sp] = {"tsv": dst_t.name, "tsv_sha256": sha256_file(dst_t),
+                                                     "qc": dst_q.name, "qc_sha256": sha256_file(dst_q),
+                                                     "upstream": qc_obj.get("upstream", {})}
+        manifest = {"cache_version": CACHE_VERSION, "family": self.family, "spec": dict(TS.SPEC_SHAS),
+                    "shards": shard_meta, "zero_lists": zero_meta, "libraries": libraries,
+                    "drops": [[sp, src, cause, n] for (sp, src, cause), n in sorted(drops.items())],
+                    "bindings": dict(sorted(bindings.items()))}
+        (out / "manifest.json").write_text(_canon(manifest) + "\n")
+        (out / "manifest.json.sha256").write_text(f"{sha256_file(out / 'manifest.json')}  manifest.json\n")
+        return manifest
+
+
 def write_cache(out_dir, rows, *, family, libraries, drops, bindings, zero_lists=None):
-    """Write shards + zero lists + manifest.json; returns the manifest dict.
+    """Write shards + zero lists + manifest.json; returns the manifest dict (one-shot ``CacheWriter``).
 
     ``bindings``: {name: sha256} of the upstream artefacts (evidence, corpus/reference, roles, code, ...).
     ``zero_lists``: {population: {species: (tsv_path, qc_json_path)}} copied into the cache and hashed.
     """
-    out = Path(out_dir)
-    _require(not out.exists() or not any(out.iterdir()), f"{out} exists and is not empty; caches are immutable")
-    out.mkdir(parents=True, exist_ok=True)
-    _require(family in FAMILIES, f"bad family {family!r}")
-    shards = {}
-    for r in rows:
-        shards.setdefault((r["species"], r["chrom"]), []).append(r)
-    shard_meta = []
-    for (sp, chrom), rs in sorted(shards.items()):
-        rs.sort(key=lambda r: (r["row_type"], r["start0"], r["end0"], r["kind"], r["source"], r["molecule_id"],
-                               r["strand"], r["phase"], r["introns"]))
-        table = pa.Table.from_pylist([{c: r.get(c, -1 if c == "tile_rn" else ("" if c == "query_id" else None))
-                                       for c in COLUMNS} for r in rs], schema=SCHEMA)
-        name = f"shard.{sp}.{chrom}.parquet"
-        _require("/" not in sp and "/" not in chrom, f"bad shard key {(sp, chrom)}")
-        pq.write_table(table, out / name, compression="zstd", use_dictionary=True, write_statistics=False)
-        shard_meta.append({"species": sp, "chrom": chrom, "file": name, "rows": len(rs),
-                           "sha256": sha256_file(out / name)})
-    zero_meta = {}
-    for pop, per in sorted((zero_lists or {}).items()):
-        _require(pop in POPULATIONS, f"zero list population {pop!r}")
-        for sp, (tsv, qc) in sorted(per.items()):
-            qc_obj = json.loads(Path(qc).read_text())
-            _require(qc_obj.get("population") == pop, f"zero-list QC {qc} names population "
-                                                      f"{qc_obj.get('population')!r}, expected {pop!r}")
-            dst_t, dst_q = out / f"zero.{pop}.{sp}.tsv", out / f"zero.{pop}.{sp}.qc.json"
-            dst_t.write_bytes(Path(tsv).read_bytes())
-            dst_q.write_bytes(Path(qc).read_bytes())
-            zero_meta.setdefault(pop, {})[sp] = {"tsv": dst_t.name, "tsv_sha256": sha256_file(dst_t),
-                                                 "qc": dst_q.name, "qc_sha256": sha256_file(dst_q),
-                                                 "upstream": qc_obj.get("upstream", {})}
-    manifest = {"cache_version": CACHE_VERSION, "family": family, "spec": dict(TS.SPEC_SHAS),
-                "shards": shard_meta, "zero_lists": zero_meta, "libraries": libraries,
-                "drops": [[sp, src, cause, n] for (sp, src, cause), n in sorted(drops.items())],
-                "bindings": dict(sorted(bindings.items()))}
-    (out / "manifest.json").write_text(_canon(manifest) + "\n")
-    (out / "manifest.json.sha256").write_text(f"{sha256_file(out / 'manifest.json')}  manifest.json\n")
-    return manifest
+    writer = CacheWriter(out_dir, family=family)
+    writer.add_rows(rows)
+    return writer.finish(libraries=libraries, drops=drops, bindings=bindings, zero_lists=zero_lists)
 
 
 # ------------------------------------------------------------------------------------------------ loader

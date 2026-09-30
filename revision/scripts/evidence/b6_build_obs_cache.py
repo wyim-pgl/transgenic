@@ -12,6 +12,8 @@ and upstream shas); the published cache is then re-verified with ``verify_cache`
 Every input is sha-bound into the cache manifest (evidence snapshot = recorded sidecar/PROVENANCE sha; roles =
 sidecar; zero lists + their QC JSON (``<tsv>.qc.json`` unless given as ``pop:species:tsv:qc``); reference; corpus;
 code).  The cache directory must not exist or be empty (caches are immutable).
+Rows are extracted and their shards written one covered species at a time (memory bounded by the largest species);
+the cache is byte-identical to a one-shot ``write_cache(extract_rows(...))`` build.
 """
 from __future__ import annotations
 
@@ -70,6 +72,26 @@ class _Ref:
         self.sha256 = OC.sha256_file(self.path)
 
 
+def extract_by_species(con, roles, family, species, writer, *, log=None):
+    """Extract and write each species (sorted) through ``writer``; returns (drops, libraries) merged exactly as the
+    one-shot ``extract_rows`` returns them.  The global molecule-state check runs once, before the first species."""
+    drops, libs = {}, {}
+    for k, sp in enumerate(sorted(species)):
+        rows, d, lb = OC.extract_rows(con, roles, family, species=sp, check_states=k == 0)
+        writer.add_rows(rows)
+        print(f"b6_build_obs_cache: species {sp}: {len(rows)} rows", file=log or sys.stderr, flush=True)
+        del rows
+        if set(d) & set(drops):
+            raise OC.CacheError(f"{sp}: drop keys {sorted(set(d) & set(drops))} seen for an earlier species")
+        drops.update(d)
+        for pop, per in lb.items():
+            have = libs.setdefault(pop, {})
+            if set(per) & set(have):
+                raise OC.CacheError(f"{sp}: {pop} libraries {sorted(set(per) & set(have))} seen for an earlier species")
+            have.update(per)
+    return dict(sorted(drops.items())), libs
+
+
 def main(argv=None, *, roles_loader=default_roles_loader, leakage_rerun=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--evidence", required=True)
@@ -99,7 +121,8 @@ def main(argv=None, *, roles_loader=default_roles_loader, leakage_rerun=None):
         raise SystemExit(f"b6_build_obs_cache: upstream verification failed: {exc}") from exc
     ev_sha, con = BD.open_snapshot(a.evidence, expected=ident["evidence_sha256"])
     try:
-        rows, drops, libs = OC.extract_rows(con, roles, a.family)
+        writer = OC.CacheWriter(a.out, family=a.family)
+        drops, libs = extract_by_species(con, roles, a.family, {sp for sp, _src in ident["coverage"]}, writer)
     finally:
         con.close()
     bindings = {"evidence_sha256": ev_sha, "roles_sha256": roles.sha256,
@@ -108,8 +131,7 @@ def main(argv=None, *, roles_loader=default_roles_loader, leakage_rerun=None):
     if a.corpus:
         bindings["corpus_sha256"] = ident["corpus_sha256"]
         bindings["freeze_sha256"] = OC.sha256_file(a.freeze)
-    man = OC.write_cache(a.out, rows, family=a.family, libraries=libs, drops=drops, bindings=bindings,
-                         zero_lists=zero)
+    man = writer.finish(libraries=libs, drops=drops, bindings=bindings, zero_lists=zero)
     BD.verify_cache(OC.ObsCache(a.out), ident)             # the published cache re-verifies against its upstream
     print(json.dumps({"out": a.out, "shards": len(man["shards"]), "rows": sum(s["rows"] for s in man["shards"]),
                       "drops": man["drops"]}, sort_keys=True))
