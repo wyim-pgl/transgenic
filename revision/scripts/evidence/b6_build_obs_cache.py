@@ -12,8 +12,8 @@ and upstream shas); the published cache is then re-verified with ``verify_cache`
 Every input is sha-bound into the cache manifest (evidence snapshot = recorded sidecar/PROVENANCE sha; roles =
 sidecar; zero lists + their QC JSON (``<tsv>.qc.json`` unless given as ``pop:species:tsv:qc``); reference; corpus;
 code).  The cache directory must not exist or be empty (caches are immutable).
-Rows are extracted and their shards written one covered species at a time (memory bounded by the largest species);
-the cache is byte-identical to a one-shot ``write_cache(extract_rows(...))`` build.
+Rows are extracted and their shards written one (species, chrom) at a time (memory bounded by the largest
+chromosome); the cache is byte-identical to a one-shot ``write_cache(extract_rows(...))`` build.
 """
 from __future__ import annotations
 
@@ -73,25 +73,39 @@ class _Ref:
 
 
 def extract_by_species(con, roles, family, species, writer, *, log=None):
-    """Extract and write each species (sorted) through ``writer``; returns (drops, libraries) merged exactly as the
-    one-shot ``extract_rows`` returns them.  The global molecule-state check runs once, before the first species; a DB
-    with rows of a species outside ``species`` is refused before anything is written."""
+    """Extract and write each species (sorted) one chromosome at a time through ``writer``; returns (drops, libraries)
+    equal to the one-shot ``extract_rows``: drop molecule ids and library pairs are unioned across chromosomes, then
+    counted/sorted.  The coverage and molecule-state checks run once, before anything is written."""
     OC.check_species_coverage(con, species)
-    drops, libs = {}, {}
-    for k, sp in enumerate(sorted(species)):
-        rows, d, lb = OC.extract_rows(con, roles, family, species=sp, check_states=k == 0)
-        writer.add_rows(rows)
-        print(f"b6_build_obs_cache: species {sp}: {len(rows)} rows", file=log or sys.stderr, flush=True)
-        del rows
-        if set(d) & set(drops):
-            raise OC.CacheError(f"{sp}: drop keys {sorted(set(d) & set(drops))} seen for an earlier species")
-        drops.update(d)
-        for pop, per in lb.items():
-            have = libs.setdefault(pop, {})
-            if set(per) & set(have):
-                raise OC.CacheError(f"{sp}: {pop} libraries {sorted(set(per) & set(have))} seen for an earlier species")
-            have.update(per)
-    return dict(sorted(drops.items())), libs
+    OC.check_molecule_states(con)
+    out = log or sys.stderr
+    drops, libs = {}, OC.population_libraries([], family)
+    for sp in sorted(species):
+        est_mol = OC.est_molecules(con, sp)             # species-level: EST members may align on other chromosomes
+        sp_drops, sp_libs, n_sp = {}, {}, 0
+        for chrom in OC.species_chroms(con, sp):
+            rows, d, lb = OC.extract_rows(con, roles, family, species=sp, chrom=chrom, check_states=False,
+                                          est_mol=est_mol, raw_drops=True)
+            bad = {(r["species"], r["chrom"]) for r in rows} - {(sp, chrom)}
+            if bad:
+                raise OC.CacheError(f"{sp} {chrom}: extracted rows of other shard keys {sorted(bad)}")
+            writer.add_rows(rows)
+            n_sp += len(rows)
+            print(f"b6_build_obs_cache: chrom {sp} {chrom}: {len(rows)} rows", file=out, flush=True)
+            del rows
+            for k, ids in d.items():
+                sp_drops.setdefault(k, set()).update(ids)
+            for pop, per in lb.items():
+                for lsp, pairs in per.items():
+                    sp_libs.setdefault(pop, {}).setdefault(lsp, set()).update(map(tuple, pairs))
+        print(f"b6_build_obs_cache: species {sp}: {n_sp} rows", file=out, flush=True)
+        foreign = sorted(({k[0] for k in sp_drops} | {lsp for per in sp_libs.values() for lsp in per}) - {sp})
+        if foreign:
+            raise OC.CacheError(f"{sp}: drops or libraries of other species {foreign}")
+        drops.update((k, len(ids)) for k, ids in sp_drops.items())
+        for pop, per in sp_libs.items():
+            libs[pop].update((lsp, sorted(pairs)) for lsp, pairs in per.items())
+    return dict(sorted(drops.items())), {pop: dict(sorted(per.items())) for pop, per in libs.items()}
 
 
 def main(argv=None, *, roles_loader=default_roles_loader, leakage_rerun=None):

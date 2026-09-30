@@ -28,8 +28,9 @@ of train_track ESTs whose HSP is leakage-excluded (the protein query was exclude
 
 Roles are selected by (dataset, run) only (plan §3); a dataset absent from DATASET_ROLES is neither input nor score.
 
-b6_build_obs_cache extracts and writes one species at a time (``extract_rows(species=)`` + ``CacheWriter``) to bound
-memory; the published cache is byte-identical to the one-shot ``write_cache(extract_rows(...))``.
+b6_build_obs_cache extracts and writes one (species, chrom) at a time (``extract_rows(species=, chrom=)`` +
+``CacheWriter``) to bound memory; the published cache is byte-identical to the one-shot
+``write_cache(extract_rows(...))``.
 """
 from __future__ import annotations
 
@@ -98,7 +99,7 @@ _ALN = f"""SELECT a.alignment_id, a.species, a.source, a.dataset, a.run, a.libra
            WHERE a.placement_kind = 'primary' AND a.accepted AND a.chrom IS NOT NULL"""
 
 
-def _mol_states(con):
+def check_molecule_states(con):
     """Molecule-level state consistency: a molecule is one unit everywhere (rule 3)."""
     bad = con.execute("""SELECT species, source, molecule_id FROM molecule_member
                          GROUP BY species, source, molecule_id
@@ -124,18 +125,52 @@ def check_species_coverage(con, species):
     _require(not found, f"rows outside the covered species {allowed}: {'; '.join(found)}")
 
 
-def extract_rows(con, roles, family, *, species=None, check_states=True):
+def species_chroms(con, species):
+    """Sorted chromosomes holding rows of ``species`` in any extracted table (the per-chrom build's shard keys); a NULL
+    chrom outside evidence_alignment (where it marks an unplaced record) is refused."""
+    found = set()
+    for table, cond in (("evidence_alignment", " AND chrom IS NOT NULL"), ("est_protein_hsp", ""),
+                        ("excluded_junction_coordinate", ""), ("excluded_interval", "")):
+        found.update(c for (c,) in con.execute(f"SELECT DISTINCT chrom FROM {table} WHERE species = ?{cond}",
+                                               [species]).fetchall())
+    _require(None not in found, f"{species}: rows with a NULL chrom outside evidence_alignment")
+    return sorted(found)
+
+
+def est_molecules(con, species=None):
+    """{(species, molecule_id): (dataset, run, role, state, train_tiles_excluded, arm)} of EST molecules (all species
+    or one); route-B rows are admitted under it.  A molecule with members in two (dataset, run, role) is refused."""
+    params, sp_filter = ([], "") if species is None else ([species], " AND a.species = ?")
+    est_mol = {}
+    for sp, mid, ds, run, role, state, tte, arm, n_drr in con.execute(f"""
+            SELECT a.species, m.molecule_id, min(a.dataset), min(a.run), min(a.role),
+                   min(m.molecule_state), bool_or(m.train_tiles_excluded), min(a.arm),
+                   count(DISTINCT (a.dataset, a.run, a.role))
+            FROM evidence_alignment a JOIN {_MOL} m
+              ON m.species = a.species AND m.source = a.source AND m.member_id = a.member_id
+            WHERE a.source = 'est'{sp_filter} GROUP BY a.species, m.molecule_id""", params).fetchall():
+        _require(n_drr == 1, f"EST molecule {mid} ({sp}) has members in more than one (dataset, run, role); its "
+                             "route-B rows have no single role to be admitted under")
+        est_mol[(sp, mid)] = (ds, run, role, state, tte, arm)
+    return est_mol
+
+
+def extract_rows(con, roles, family, *, species=None, chrom=None, check_states=True, est_mol=None, raw_drops=False):
     """Return (rows: list[dict], drops: {(species, source, cause): n_molecules}, libraries).
 
     ``libraries`` = {population: {species: sorted [(source, library), ...]}} over track sources (est/ont/pacbio)
     of admitted rows; it defines the per-source masks (plan §7.1).
     ``species``: every query is restricted to that species in SQL (the per-species build of b6_build_obs_cache);
-    the rows are then exactly the one-shot rows of that species, in the same relative order.  ``check_states``:
-    run the global molecule-state check (``_mol_states``); a per-species build runs it once, not per species.
+    the rows are then exactly the one-shot rows of that species, in the same relative order.  ``chrom`` (with
+    ``species``): likewise restricted to that chromosome (block/junction/chain rows by an alignment semi-join); EST
+    molecules stay species-level (``est_mol``: a precomputed ``est_molecules(con, species)``).  ``raw_drops``: drops
+    as {key: set of molecule ids}, to be unioned (not summed) across chromosomes.  ``check_states``: run the global
+    molecule-state check (``check_molecule_states``); a per-species build runs it once, not per species.
     """
     _require(family in FAMILIES, f"family {family!r} not in {FAMILIES}")
+    _require(chrom is None or species is not None, f"chrom {chrom!r} given without a species")
     if check_states:
-        _mol_states(con)
+        check_molecule_states(con)
     ridx = roles_index(roles)
     sp_filter = ""
     params = []
@@ -146,6 +181,16 @@ def extract_rows(con, roles, family, *, species=None, check_states=True):
     where_sp, and_sp, and_pc = ("", "", "") if species is None else (
         " WHERE species = ?", " AND species = ?", " AND pc.species = ? AND i.species = ?")
     pc_params = [] if species is None else [species, species]
+    aln_params, hsp_params = list(params), list(params)
+    if chrom is not None:                  # alignment-joined tables: semi-join on the species+chrom alignments
+        sp_filter += " AND a.chrom = ?"
+        aln_params.append(chrom)
+        semi = " AND alignment_id IN (SELECT alignment_id FROM evidence_alignment WHERE species = ? AND chrom = ?)"
+        where_sp, and_sp = where_sp + semi, and_sp + semi
+        and_pc += semi.replace("alignment_id", "pc.alignment_id", 1)
+        params = [species, species, chrom]
+        pc_params = [species, species, species, chrom]
+        hsp_params.append(chrom)
     drops = {}
 
     def drop(sp, src, cause, mid):
@@ -174,13 +219,13 @@ def extract_rows(con, roles, family, *, species=None, check_states=True):
 
     rows = []
     aln = {}
-    for (aid, sp, src, ds, run, lib, role, chrom, s0, e0, tstrand, arm, read, mid, state, tte) in con.execute(
-            _ALN + sp_filter + " ORDER BY a.species, a.source, a.alignment_id", params).fetchall():
+    for (aid, sp, src, ds, run, lib, role, chrom_, s0, e0, tstrand, arm, read, mid, state, tte) in con.execute(
+            _ALN + sp_filter + " ORDER BY a.species, a.source, a.alignment_id", aln_params).fetchall():
         ok = admit(sp, src, ds, run, role, state, arm, mid)
         if ok is None:
             continue
         b_in, b_sc, scope = ok
-        base = dict(species=sp, chrom=chrom, source=src, dataset=ds, run=run, library=lib, molecule_id=mid,
+        base = dict(species=sp, chrom=chrom_, source=src, dataset=ds, run=run, library=lib, molecule_id=mid,
                     molecule_state=state, train_tiles_excluded=bool(tte), b6_input=b_in, b6_score=b_sc,
                     b6_input_scope=scope)
         organism = ""
@@ -228,21 +273,11 @@ def extract_rows(con, roles, family, *, species=None, check_states=True):
     # route-B phase rows, keyed to their EST molecule (dataset/run/state of the EST molecule)
     # One (dataset, run, role) per EST molecule, or refuse: the representative decides route-B admission, so it is
     # never picked arbitrarily (any_value) when a molecule's members disagree (none do in the B6 EST C0s, 09-30).
-    est_mol = {}
-    for sp, mid, ds, run, role, state, tte, arm, n_drr in con.execute(f"""
-            SELECT a.species, m.molecule_id, min(a.dataset), min(a.run), min(a.role),
-                   min(m.molecule_state), bool_or(m.train_tiles_excluded), min(a.arm),
-                   count(DISTINCT (a.dataset, a.run, a.role))
-            FROM evidence_alignment a JOIN {_MOL} m
-              ON m.species = a.species AND m.source = a.source AND m.member_id = a.member_id
-            WHERE a.source = 'est'{sp_filter} GROUP BY a.species, m.molecule_id""", params).fetchall():
-        _require(n_drr == 1, f"EST molecule {mid} ({sp}) has members in more than one (dataset, run, role); its "
-                             "route-B rows have no single role to be admitted under")
-        est_mol[(sp, mid)] = (ds, run, role, state, tte, arm)
-    hsp_params, hsp_filter = [], ""
-    if species is not None:
-        hsp_filter, hsp_params = " WHERE species = ?", [species]
-    for sp, mid, lib, chrom, g0, g1, strand, phase, lexc, ttexc in con.execute(
+    # (species-level even under ``chrom``: a molecule's EST members may align on another chromosome)
+    if est_mol is None:
+        est_mol = est_molecules(con, species)
+    hsp_filter = "" if species is None else " WHERE species = ?" + ("" if chrom is None else " AND chrom = ?")
+    for sp, mid, lib, chrom_, g0, g1, strand, phase, lexc, ttexc in con.execute(
             "SELECT species, molecule_id, library, chrom, genomic_start0, genomic_end0, strand, phase, "
             "leakage_excluded, train_tiles_excluded FROM est_protein_hsp" + hsp_filter +
             " ORDER BY species, hsp_id, interval_index", hsp_params).fetchall():
@@ -255,29 +290,30 @@ def extract_rows(con, roles, family, *, species=None, check_states=True):
             drop(sp, "est", "phase_hsp_leakage_excluded", mid)
             continue
         b_in, b_sc, scope = ok
-        rows.append(dict(species=sp, chrom=chrom, source="est", dataset=ds, run=run, library=lib, molecule_id=mid,
+        rows.append(dict(species=sp, chrom=chrom_, source="est", dataset=ds, run=run, library=lib, molecule_id=mid,
                          molecule_state=state, train_tiles_excluded=bool(tte or ttexc), b6_input=b_in, b6_score=b_sc,
                          b6_input_scope=scope, row_type="track", kind="phase", strand=strand, phase=int(phase),
                          start0=g0, end0=g1, organism="", introns="", introns_ok="", units_key=""))
     if family == "train":
-        for sp, chrom, strand, kind, coord in con.execute(
+        xwhere, xparams = hsp_filter, hsp_params
+        for sp, chrom_, strand, kind, coord in con.execute(
                 "SELECT DISTINCT species, chrom, strand, kind, coordinate0 FROM excluded_junction_coordinate" +
-                where_sp + " ORDER BY 1, 2, 3, 4, 5", params).fetchall():
-            rows.append(dict(species=sp, chrom=chrom, source="", dataset="", run="", library="", molecule_id="",
+                xwhere + " ORDER BY 1, 2, 3, 4, 5", xparams).fetchall():
+            rows.append(dict(species=sp, chrom=chrom_, source="", dataset="", run="", library="", molecule_id="",
                              molecule_state="", train_tiles_excluded=False, b6_input=False, b6_score=False,
                              b6_input_scope="-", row_type="xjunc", kind=kind, strand=strand, phase=-1,
                              start0=coord, end0=coord + 1, organism="", introns="", introns_ok="", units_key=""))
-        for sp, chrom, s0, e0, cause, scope, gene, tile_rn in con.execute(
+        for sp, chrom_, s0, e0, cause, scope, gene, tile_rn in con.execute(
                 "SELECT DISTINCT species, chrom, start0, end0, cause, scope, coalesce(gene_id, ''), "
-                "coalesce(tile_rn, -1) FROM excluded_interval" + where_sp + " ORDER BY 1, 2, 3, 4, 5, 6, 7, 8",
-                params).fetchall():
-            rows.append(dict(species=sp, chrom=chrom, source="", dataset="", run="", library="", molecule_id="",
+                "coalesce(tile_rn, -1) FROM excluded_interval" + xwhere + " ORDER BY 1, 2, 3, 4, 5, 6, 7, 8",
+                xparams).fetchall():
+            rows.append(dict(species=sp, chrom=chrom_, source="", dataset="", run="", library="", molecule_id="",
                              molecule_state="", train_tiles_excluded=False, b6_input=False, b6_score=False,
                              b6_input_scope="-", row_type="xint", kind=cause, strand=scope, phase=-1,
                              start0=s0, end0=e0, organism="", introns="", introns_ok="", units_key=gene,
                              tile_rn=int(tile_rn)))
     libraries = population_libraries(rows, family)
-    return rows, {k: len(v) for k, v in sorted(drops.items())}, libraries
+    return rows, {k: (v if raw_drops else len(v)) for k, v in sorted(drops.items())}, libraries
 
 
 def _pop_ok(population, r):
