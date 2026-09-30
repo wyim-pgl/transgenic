@@ -280,3 +280,12 @@ def test_coverage_check_sees_exclusion_tables_too(world, tmp_path):
         OC.check_species_coverage(con, [FX.SPECIES, OTHER])
     finally:
         con.close()
+
+
+def test_coverage_check_refuses_an_empty_species_list(world):
+    con = duckdb.connect(str(world.c0), read_only=True)
+    try:
+        with pytest.raises(OC.CacheError, match="no covered species"):
+            OC.check_species_coverage(con, [])
+    finally:
+        con.close()

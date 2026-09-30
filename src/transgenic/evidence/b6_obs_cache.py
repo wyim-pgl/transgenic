@@ -111,11 +111,12 @@ def check_species_coverage(con, species):
     """Refuse a DB holding rows of a species outside ``species`` in any table with a species column (a per-species
     build over the covered species would otherwise drop them silently, masks included)."""
     allowed = sorted(set(species))
+    _require(allowed, "no covered species: an empty coverage would match no rows and hide every species")
     found = []
     for table in CS.ALL_TABLES:
         if table in ("c0_meta", "merge_manifest") or "species" not in dict(CS.table_columns(table)):
             continue
-        marks = ", ".join("?" * len(allowed)) or "NULL"
+        marks = ", ".join("?" * len(allowed))
         extra = [r[0] for r in con.execute(f"SELECT DISTINCT species FROM {table} WHERE species NOT IN ({marks}) "
                                            "ORDER BY 1", allowed).fetchall()]
         if extra:
