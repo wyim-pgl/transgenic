@@ -491,3 +491,62 @@ def test_every_data_table_keeps_a_schema_primary_key_so_the_merge_checks_its_dup
 def test_c0_inputs_still_declare_their_primary_keys(dbs):
     for db in dbs:
         assert set(S.DATA_TABLES) <= _declared_primary_keys(db), db
+
+
+
+def _unique_keys_except(db, target):
+    """Make every keyed data table of ``db`` key-disjoint from the original (suffix its first text key column) except
+    ``target``, whose keys stay identical: a merge with the original then collides on ``target`` only."""
+    con = duckdb.connect(str(db))
+    try:
+        for table in S.DATA_TABLES:
+            if table == target:
+                continue
+            types = dict(S.table_columns(table))
+            col = next((c for c in S.primary_key(table) if c not in ("species", "source")
+                        and types[c].upper().startswith("VARCHAR")), None)
+            if col is not None:
+                con.execute(f"UPDATE {table} SET {col} = {col} || '~u'")
+    finally:
+        con.close()
+
+
+@pytest.mark.parametrize("target", ["aligned_block", "junction_support", "chain_junction"])
+def test_duplicate_keys_in_a_later_table_are_refused_without_declared_primary_keys(dbs, tmp_path, target):
+    clone = _copy(dbs[0], tmp_path, "clone.db")
+    con = duckdb.connect(str(clone))
+    for table in S.DATA_TABLES:
+        con.execute(f"UPDATE {table} SET source = 'pacbio'")
+    for table in ("c0_qc", "c0_provenance", "excluded_interval", "heldout_locus", "molecule_exclusion", "audit_placement",
+                  "excluded_junction_coordinate"):
+        con.execute(f"UPDATE {table} SET source = 'pacbio'")
+    con.execute("UPDATE c0_meta SET value = 'pacbio' WHERE key = 'source'")
+    con.close()
+    _unique_keys_except(clone, target)
+    _republish(clone)
+    with pytest.raises(M.MergeError, match=f"duplicate {target} key"):
+        M.merge([dbs[0], clone], tmp_path / "x.db")
+    assert not (tmp_path / "x.db").exists()
+
+
+@pytest.mark.parametrize("fail", [False, True])
+def test_owned_spill_directory_is_removed_after_success_and_failure(dbs, tmp_path, monkeypatch, fail):
+    real = M.hsp_gate
+
+    def spilling_gate(con):                     # stand in for a real spill: DuckDB creates the directory lazily
+        spill = Path(con.execute("SELECT current_setting('temp_directory')").fetchone()[0])
+        spill.mkdir(parents=True, exist_ok=True)
+        (spill / "duckdb_temp_block").write_bytes(b"x")
+        if fail:
+            raise M.MergeError("injected failure after spilling")
+        return real(con)
+
+    monkeypatch.setattr(M, "hsp_gate", spilling_gate)
+    out = tmp_path / "m" / "evidence_c0.db"
+    if fail:
+        with pytest.raises(M.MergeError, match="injected"):
+            M.merge(dbs, out, memory_limit="256MB")
+        assert sorted(p.name for p in out.parent.iterdir()) == []
+    else:
+        M.merge(dbs, out, memory_limit="256MB")
+        assert sorted(p.name for p in out.parent.iterdir()) == ["evidence_c0.db", "evidence_c0.db.sha256"]

@@ -43,6 +43,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from transgenic.evidence import b6_track_spec as TS
+from transgenic.evidence import c0_schema as CS
 
 CACHE_VERSION = "b6-obs-cache-v1"
 FAMILIES = ("train", "eval")
@@ -104,6 +105,22 @@ def _mol_states(con):
                          HAVING count(DISTINCT molecule_state) > 1 OR count(DISTINCT train_tiles_excluded) > 1
                          LIMIT 5""").fetchall()
     _require(not bad, f"molecule_member: molecules with inconsistent state across members: {bad}")
+
+
+def check_species_coverage(con, species):
+    """Refuse a DB holding rows of a species outside ``species`` in any table with a species column (a per-species
+    build over the covered species would otherwise drop them silently, masks included)."""
+    allowed = sorted(set(species))
+    found = []
+    for table in CS.ALL_TABLES:
+        if table in ("c0_meta", "merge_manifest") or "species" not in dict(CS.table_columns(table)):
+            continue
+        marks = ", ".join("?" * len(allowed)) or "NULL"
+        extra = [r[0] for r in con.execute(f"SELECT DISTINCT species FROM {table} WHERE species NOT IN ({marks}) "
+                                           "ORDER BY 1", allowed).fetchall()]
+        if extra:
+            found.append(f"{table}: {extra}")
+    _require(not found, f"rows outside the covered species {allowed}: {'; '.join(found)}")
 
 
 def extract_rows(con, roles, family, *, species=None, check_states=True):
@@ -208,13 +225,18 @@ def extract_rows(con, roles, family, *, species=None, check_states=True):
                          organism="", introns=introns, introns_ok=oks,
                          units_key=f"{base['source']}\t{strand}\t{introns}"))
     # route-B phase rows, keyed to their EST molecule (dataset/run/state of the EST molecule)
+    # One (dataset, run, role) per EST molecule, or refuse: the representative decides route-B admission, so it is
+    # never picked arbitrarily (any_value) when a molecule's members disagree (none do in the B6 EST C0s, 09-30).
     est_mol = {}
-    for sp, mid, ds, run, role, state, tte, arm in con.execute(f"""
-            SELECT a.species, m.molecule_id, any_value(a.dataset), any_value(a.run), any_value(a.role),
-                   any_value(m.molecule_state), bool_or(m.train_tiles_excluded), min(a.arm)
+    for sp, mid, ds, run, role, state, tte, arm, n_drr in con.execute(f"""
+            SELECT a.species, m.molecule_id, min(a.dataset), min(a.run), min(a.role),
+                   min(m.molecule_state), bool_or(m.train_tiles_excluded), min(a.arm),
+                   count(DISTINCT (a.dataset, a.run, a.role))
             FROM evidence_alignment a JOIN {_MOL} m
               ON m.species = a.species AND m.source = a.source AND m.member_id = a.member_id
             WHERE a.source = 'est'{sp_filter} GROUP BY a.species, m.molecule_id""", params).fetchall():
+        _require(n_drr == 1, f"EST molecule {mid} ({sp}) has members in more than one (dataset, run, role); its "
+                             "route-B rows have no single role to be admitted under")
         est_mol[(sp, mid)] = (ds, run, role, state, tte, arm)
     hsp_params, hsp_filter = [], ""
     if species is not None:

@@ -220,3 +220,63 @@ def test_cache_writer_refuses_a_non_empty_directory(tmp_path):
     (tmp_path / "c" / "x").write_text("x")
     with pytest.raises(OC.CacheError, match="immutable"):
         OC.CacheWriter(tmp_path / "c", family="train")
+
+
+# -------------------------------------------------------------------------------- review fixes (Codex)
+def test_est_molecule_spanning_two_dataset_runs_is_refused_not_picked_arbitrarily(world, tmp_path):
+    db = tmp_path / "multirun.db"
+    shutil.copyfile(world.c0, db)
+    con = duckdb.connect(str(db))
+    try:
+        mid, member = con.execute("SELECT m.molecule_id, m.member_id FROM molecule_member m JOIN est_protein_hsp h "
+                                  "ON h.species = m.species AND h.molecule_id = m.molecule_id "
+                                  "WHERE m.source = 'est' LIMIT 1").fetchone()
+        mcols = [c for c, _ in CS.table_columns("molecule_member")]
+        con.execute(f"INSERT INTO molecule_member SELECT {', '.join(c + (' || ' + repr('~r2') if c == 'member_id' else '') for c in mcols)} "
+                    "FROM molecule_member WHERE member_id = ? AND source = 'est'", [member])
+        acols = [c for c, _ in CS.table_columns("evidence_alignment")]
+        exprs = [(f"{c} || '~r2'" if c in ("alignment_id", "member_id") else "run || '_second'" if c == "run" else c)
+                 for c in acols]
+        con.execute(f"INSERT INTO evidence_alignment SELECT {', '.join(exprs)} FROM evidence_alignment "
+                    "WHERE member_id = ? AND source = 'est'", [member])
+    finally:
+        con.close()
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        with pytest.raises(OC.CacheError, match=r"more than one \(dataset, run, role\)"):
+            OC.extract_rows(con, world.roles, "train")
+        with pytest.raises(OC.CacheError, match=r"more than one \(dataset, run, role\)"):
+            OC.extract_rows(con, world.roles, "train", species=FX.SPECIES)
+    finally:
+        con.close()
+    assert mid
+
+
+def test_per_species_build_refuses_rows_of_a_species_outside_the_coverage(world, two, tmp_path):
+    con = duckdb.connect(str(two), read_only=True)
+    try:
+        with pytest.raises(OC.CacheError, match="outside the covered species"):
+            BOC.extract_by_species(con, world.roles, "train", [FX.SPECIES], OC.CacheWriter(tmp_path / "c",
+                                                                                          family="train"))
+        assert not any((tmp_path / "c").iterdir()), "nothing is written before the coverage check"
+    finally:
+        con.close()
+
+
+def test_coverage_check_sees_exclusion_tables_too(world, tmp_path):
+    db = tmp_path / "foreign_mask.db"
+    shutil.copyfile(world.c0, db)
+    con = duckdb.connect(str(db))
+    try:
+        cols = [c for c, _ in CS.table_columns("excluded_interval")]
+        con.execute(f"INSERT INTO excluded_interval SELECT {', '.join(repr(OTHER) if c == 'species' else c for c in cols)} "
+                    "FROM excluded_interval LIMIT 1")
+    finally:
+        con.close()
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        with pytest.raises(OC.CacheError, match=f"excluded_interval.*{OTHER}"):
+            OC.check_species_coverage(con, [FX.SPECIES])
+        OC.check_species_coverage(con, [FX.SPECIES, OTHER])
+    finally:
+        con.close()

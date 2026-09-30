@@ -74,7 +74,9 @@ class _Ref:
 
 def extract_by_species(con, roles, family, species, writer, *, log=None):
     """Extract and write each species (sorted) through ``writer``; returns (drops, libraries) merged exactly as the
-    one-shot ``extract_rows`` returns them.  The global molecule-state check runs once, before the first species."""
+    one-shot ``extract_rows`` returns them.  The global molecule-state check runs once, before the first species; a DB
+    with rows of a species outside ``species`` is refused before anything is written."""
+    OC.check_species_coverage(con, species)
     drops, libs = {}, {}
     for k, sp in enumerate(sorted(species)):
         rows, d, lb = OC.extract_rows(con, roles, family, species=sp, check_states=k == 0)
