@@ -36,6 +36,11 @@ merged DB's directory (``..`` allowed); consumers (``b6_bindings.merged_input_pa
 DB's actual location.  The C0 DBs and their ``.PROVENANCE.txt`` travel with the merged DB in the same relative
 layout (e.g. pronghorn -> DeltaAI); ``input_sha256`` is unchanged, so hash strength is unchanged.
 
+Primary keys: the merged data tables and ``est_protein_hsp`` are created WITHOUT a declared PRIMARY KEY (DuckDB
+builds an ART index in memory at commit and cannot spill it; the 9-species aligned_block alone has 712M keys).  The
+same keys are enforced by the duplicate-key check that runs on every keyed table before its INSERT (a merge with a
+duplicate is refused), and ``c0_meta`` key ``primary_keys`` records this.  The per-species C0 DBs keep their keys.
+
 DuckDB resources: ``--memory-limit`` / ``--threads`` set the DuckDB ``memory_limit`` / ``threads`` of the merge
 connection (unset = DuckDB defaults, whose memory limit is a share of the HOST memory, not of the Slurm allocation),
 and it spills to ``--temp-dir`` (default ``<out>.partial-*.spill``, removed after the merge).
@@ -72,6 +77,10 @@ EXHAUSTIVENESS_METRICS = ("exhaustiveness_below_cap", "exhaustiveness_molecules"
 
 class MergeError(ValueError):
     pass
+
+
+PRIMARY_KEY_NOTE = {"declared": False, "enforced_by": "b6_merge_evidence_db duplicate-key check",
+                    "tables": sorted(set(S.DATA_TABLES) | {"est_protein_hsp"})}
 
 
 def require(ok, message):
@@ -321,7 +330,7 @@ def merge(inputs, out, *, memory_limit=None, threads=None, temp_dir=None):
                             con.execute("SELECT current_setting('memory_limit'), current_setting('threads'), "
                                         "current_setting('temp_directory'), "
                                         "current_setting('preserve_insertion_order')").fetchone()))
-        S.create_schema(con, merged=True)
+        S.create_schema(con, merged=True, data_primary_keys=False)
         for i, path in enumerate(attach):
             con.execute(f"ATTACH '{path}' AS src{i} (READ_ONLY)")
         for table in S.ALL_TABLES:
@@ -339,6 +348,7 @@ def merge(inputs, out, *, memory_limit=None, threads=None, temp_dir=None):
         con.executemany("INSERT INTO merge_manifest VALUES (?, ?, ?, ?)", manifest)
         con.execute("INSERT INTO c0_meta VALUES ('merged_inputs', ?)", [json.dumps(sorted(m[1] for m in manifest))])
         con.execute("INSERT INTO c0_meta VALUES ('exhaustiveness', ?)", [json.dumps(exhaustiveness, sort_keys=True)])
+        con.execute("INSERT INTO c0_meta VALUES ('primary_keys', ?)", [json.dumps(PRIMARY_KEY_NOTE, sort_keys=True)])
         for i in range(len(manifest)):
             con.execute(f"DETACH src{i}")
         S.verify_schema(con, merged=True)

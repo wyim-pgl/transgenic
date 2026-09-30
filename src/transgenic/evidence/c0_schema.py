@@ -345,7 +345,8 @@ def table_columns(name):
 ALL_TABLES = tuple(DATA_TABLES) + ("est_protein_hsp",) + tuple(QC_TABLES)
 
 
-def ddl(name):
+def ddl(name, *, primary_key=True):
+    """CREATE TABLE for ``name``; ``primary_key=False`` omits the PRIMARY KEY clause only (columns and CHECKs kept)."""
     cols = table_columns(name)
     parts = [f"{c} {t}" for c, t in cols]
     if name in DATA_TABLES:
@@ -357,7 +358,7 @@ def ddl(name):
                   "CHECK (genomic_start0 >= 0 AND genomic_end0 > genomic_start0)", "CHECK (est_end > est_start)"]
     else:
         pk = QC_TABLES[name][1]
-    if pk:
+    if pk and primary_key:
         parts.append("PRIMARY KEY (" + ", ".join(pk) + ")")
     return f"CREATE TABLE {name} (\n  " + ",\n  ".join(parts) + "\n)"
 
@@ -370,12 +371,18 @@ def primary_key(name):
     return QC_TABLES[name][1]
 
 
-def create_schema(con, *, merged=False):
-    """Create every C0 table and stamp the schema version; ``merge_manifest`` only in merged DBs."""
+def create_schema(con, *, merged=False, data_primary_keys=True):
+    """Create every C0 table and stamp the schema version; ``merge_manifest`` only in merged DBs.
+
+    ``data_primary_keys=False`` (the merged evidence DB) creates the data tables and ``est_protein_hsp`` without their
+    PRIMARY KEY: DuckDB builds a key's ART index in memory at commit, which does not fit for the 9-species merge;
+    the merge enforces the same keys with its own duplicate check.  The logical keys (``primary_key``) and the
+    schema hash are unchanged."""
     for name in ALL_TABLES:
         if name == "merge_manifest" and not merged:
             continue
-        con.execute(ddl(name))
+        big = name in DATA_TABLES or name == "est_protein_hsp"
+        con.execute(ddl(name, primary_key=data_primary_keys or not big))
     con.execute("INSERT INTO c0_meta VALUES ('schema_version', ?), ('schema_sha256', ?)",
                 [C0_SCHEMA_VERSION, schema_sha256()])
 

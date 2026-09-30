@@ -453,3 +453,41 @@ def test_merge_cli_refuses_a_non_positive_thread_count(dbs, tmp_path, capsys):
         M.main(["--inputs", *dbs, "--out", str(tmp_path / "x.db"), "--threads", "0"])
     assert "must be >= 1, got 0" in capsys.readouterr().err
     assert not (tmp_path / "x.db").exists()
+
+
+def _declared_primary_keys(db):
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        return {r[0] for r in con.execute("SELECT table_name FROM duckdb_constraints() "
+                                          "WHERE constraint_type = 'PRIMARY KEY'").fetchall()}
+    finally:
+        con.close()
+
+
+def test_merged_db_declares_no_primary_key_on_data_tables_but_keeps_check_constraints(dbs, tmp_path):
+    out = tmp_path / "evidence_c0.db"
+    M.merge(dbs, out)
+    big = set(S.DATA_TABLES) | {"est_protein_hsp"}
+    declared = _declared_primary_keys(out)
+    assert not declared & big, "an ART index on a data table must fit in memory at commit (DuckDB)"
+    assert {"c0_meta", "c0_qc", "c0_provenance", "merge_manifest"} <= declared
+    con = duckdb.connect(str(out), read_only=True)
+    try:
+        checks = con.execute("SELECT count(*) FROM duckdb_constraints() WHERE table_name = 'chain_junction' "
+                             "AND constraint_type = 'CHECK'").fetchone()[0]
+        note = json.loads(dict(con.execute("SELECT key, value FROM c0_meta").fetchall())["primary_keys"])
+    finally:
+        con.close()
+    assert checks > 0
+    assert note["declared"] is False and note["enforced_by"] == "b6_merge_evidence_db duplicate-key check"
+    assert sorted(note["tables"]) == sorted(big)
+
+
+def test_every_data_table_keeps_a_schema_primary_key_so_the_merge_checks_its_duplicates():
+    for table in list(S.DATA_TABLES) + ["est_protein_hsp"]:
+        assert S.primary_key(table), table
+
+
+def test_c0_inputs_still_declare_their_primary_keys(dbs):
+    for db in dbs:
+        assert set(S.DATA_TABLES) <= _declared_primary_keys(db), db

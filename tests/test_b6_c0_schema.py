@@ -69,3 +69,24 @@ def test_est_protein_hsp_key_is_hsp_and_interval_and_carries_train_tiles_flag():
     assert "train_tiles_excluded" in [c for c, _ in S.table_columns("est_protein_hsp")][23:]
     assert "PRIMARY KEY (hsp_id, interval_index)" in S.ddl("est_protein_hsp")
     assert S.PHASE_CONVENTION == "codon_position_at_genomic_start0_v1"
+
+
+def test_ddl_without_primary_key_keeps_columns_and_checks():
+    for name in NINE + ("est_protein_hsp",):
+        with_pk, without = S.ddl(name), S.ddl(name, primary_key=False)
+        assert "PRIMARY KEY" in with_pk and "PRIMARY KEY" not in without, name
+        assert without.count("CHECK") == with_pk.count("CHECK"), name
+
+
+def test_create_schema_can_omit_data_table_primary_keys_only():
+    con = duckdb.connect()
+    S.create_schema(con, merged=True, data_primary_keys=False)
+    declared = {r[0] for r in con.execute("SELECT table_name FROM duckdb_constraints() "
+                                          "WHERE constraint_type = 'PRIMARY KEY'").fetchall()}
+    assert not declared & (set(S.DATA_TABLES) | {"est_protein_hsp"})
+    assert {"c0_meta", "c0_qc", "c0_provenance", "merge_manifest"} <= declared
+    assert S.verify_schema(con, merged=True)["schema_version"] == "c0-v1"
+    default = duckdb.connect()
+    S.create_schema(default)
+    assert set(S.DATA_TABLES) <= {r[0] for r in default.execute(
+        "SELECT table_name FROM duckdb_constraints() WHERE constraint_type = 'PRIMARY KEY'").fetchall()}
