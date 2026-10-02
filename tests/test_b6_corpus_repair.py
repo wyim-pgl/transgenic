@@ -397,6 +397,162 @@ def test_c0_molecule_states_match_the_repair_geometry(c0):
     assert state["mW"] == ("train_track", False)
 
 
+# ------------------------------------------------------------------------------ C0 audit memory (source_v14)
+def _normalised_memory(value):
+    con = duckdb.connect()
+    try:
+        con.execute(f"SET memory_limit = '{value}'")
+        return con.execute("SELECT current_setting('memory_limit')").fetchone()[0]
+    finally:
+        con.close()
+
+
+def _tamper_c0(c0, tmp_path, sql, params=()):
+    db, _ = c0
+    bad = tmp_path / "bad_c0.db"
+    shutil.copyfile(db, bad)
+    con = duckdb.connect(str(bad))
+    con.execute(sql, list(params))
+    con.execute("CHECKPOINT")
+    con.close()
+    return bad
+
+
+def _molecule_audit_inputs(manifest, corpus):
+    """``repair_rows`` and ``manifest_by_comp`` exactly as ``b6_validate_corpus.validate`` hands them to
+    ``audit_molecules``."""
+    from collections import defaultdict
+
+    by_comp = defaultdict(list)
+    for r in LK.read_interval_manifest(manifest):
+        by_comp[(r["species"], r["chrom"], r["component_id"])].append(r)
+    splits = dict(q(corpus, "SELECT rn, coalesce(split, 'train') FROM geneList ORDER BY rn"))
+    repair_rows = []
+    for row in q(corpus, "SELECT " + ", ".join(CR.REPAIR_COLUMNS) + " FROM b6_dna_repair ORDER BY ALL"):
+        r = dict(zip(CR.REPAIR_COLUMNS, row))
+        r["species"], r["chrom"], r["wid"], r["split"] = r["species_id"], r["chromosome"], r["wid"], splits[r["rn"]]
+        repair_rows.append(r)
+    return repair_rows, by_comp
+
+
+def _old_audit_molecules(c0_paths, repair_rows, manifest_by_comp, qc):
+    """The c8e01f4 ``audit_molecules`` verbatim (every molecule state materialised in a Python dict): the reference
+    the streamed SQL lookup must reproduce."""
+    from collections import defaultdict
+
+    shared = defaultdict(list)
+    a30 = defaultdict(list)
+    for r in repair_rows:
+        if r["is_rc"]:
+            continue
+        comp_rows = manifest_by_comp[(r["species"], r["chrom"], r["component_id"])]
+        c0 = {(x["cause"], x["scope"]): x["c0_exclusion"] for x in comp_rows}
+        target = shared if c0[(r["cause"], r["scope"])] else a30
+        target[(r["species"], r["chrom"])].append((r["start0"], r["end0"], r["scope"], r["split"]))
+    for path in c0_paths:
+        con = duckdb.connect(str(path), read_only=True)
+        try:
+            states = {}
+            for sp, src, mid, state, tte in con.execute(
+                    "SELECT species, source, molecule_id, min(molecule_state), bool_or(train_tiles_excluded) "
+                    "FROM molecule_member GROUP BY ALL ORDER BY ALL").fetchall():
+                states[(sp, src, mid)] = (state, tte)
+            cur = con.cursor()
+            cur.execute("SELECT species, source, molecule_id, chrom, start0, end0 FROM audit_placement ORDER BY ALL")
+            seen_bad, seen_ok, seen_a30 = set(), set(), set()
+            while True:
+                rows = cur.fetchmany(4096)
+                if not rows:
+                    break
+                for sp, src, mid, chrom, s, e in rows:
+                    key = (sp, src, mid)
+                    state, tte = states.get(key, (None, None))
+                    VC.require(state is not None, f"{path}: placement of unknown molecule {key}")
+                    for a, b, scope, split in shared.get((sp, chrom), ()):
+                        if s < b and e > a:
+                            ok = state == "excluded_heldout" if scope == "all" else (
+                                state == "excluded_heldout" or (split == "train" and bool(tte)) or split != "train")
+                            (seen_ok if ok else seen_bad).add(key)
+                    for a, b, _, _ in a30.get((sp, chrom), ()):
+                        if s < b and e > a and state == "train_track" and not tte:
+                            seen_a30.add(key)
+            cur.close()
+            VC.require(not seen_bad, f"{path}: molecules overlapping a shared-cause repair span are admitted: "
+                                     f"{sorted(seen_bad)[:5]}")
+            qc["c0_molecules_consistent"] += len(seen_ok)
+            qc["declared_a30_only_admitted_molecules"] += len(seen_a30)
+            ep = con.execute("SELECT count(*) FROM excluded_interval WHERE cause = 'edge_partial'").fetchone()[0]
+            qc["declared_edge_partial_intervals_in_c0"] += ep
+        finally:
+            con.close()
+
+
+def test_validator_applies_and_records_duckdb_memory_limit_and_threads(world, manifest, applied, c0, tmp_path):
+    out, freeze, _ = applied
+    c0_db, _ = c0
+    report = tmp_path / "limited.json"
+    assert VC.main(_validate_args(world, manifest, out, freeze, "--c0", str(c0_db), "--report", str(report),
+                                  "--no-recompute-manifest", "--memory-limit", "1GB", "--threads", "2")) == 0
+    settings = json.loads(report.read_text())["duckdb"]
+    assert settings["threads"] == 2
+    assert settings["memory_limit"] == _normalised_memory("1GB")
+    assert settings["preserve_insertion_order"] is False
+    spill = Path(settings["temp_directory"])
+    assert spill.parent == tmp_path and not spill.exists()      # spill dir next to the report, removed afterwards
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["limited.json"]
+
+
+def test_audit_molecules_rejects_a_placement_of_an_unknown_molecule(manifest, applied, c0, tmp_path):
+    from collections import Counter
+
+    out, _, _ = applied
+    bad = _tamper_c0(c0, tmp_path, "INSERT INTO audit_placement SELECT species, source, 'ghost-molecule', 'ghost-member', "
+                                   "origin, placement_kind, chrom, start0, end0, mapq FROM audit_placement LIMIT 1")
+    repair_rows, by_comp = _molecule_audit_inputs(manifest, out)
+    with pytest.raises(VC.ValidationError, match="placement of unknown molecule"):
+        VC.audit_molecules([str(bad)], repair_rows, by_comp, Counter())
+    with pytest.raises(VC.ValidationError, match="placement of unknown molecule"):
+        _old_audit_molecules([str(bad)], repair_rows, by_comp, Counter())
+
+
+def test_audit_molecules_equals_the_dict_based_lookup_with_and_without_memory_options(world, manifest, applied, c0,
+                                                                                       tmp_path):
+    from collections import Counter
+
+    out, freeze, _ = applied
+    c0_db, _ = c0
+    keys = ("c0_molecules_consistent", "declared_a30_only_admitted_molecules", "declared_edge_partial_intervals_in_c0")
+    plain, limited = tmp_path / "plain.json", tmp_path / "limited.json"
+    assert VC.main(_validate_args(world, manifest, out, freeze, "--c0", str(c0_db), "--report", str(plain),
+                                  "--no-recompute-manifest")) == 0
+    assert VC.main(_validate_args(world, manifest, out, freeze, "--c0", str(c0_db), "--report", str(limited),
+                                  "--no-recompute-manifest", "--memory-limit", "1GB", "--threads", "1")) == 0
+    qc_plain, qc_limited = json.loads(plain.read_text())["qc"], json.loads(limited.read_text())["qc"]
+    assert qc_plain == qc_limited
+    repair_rows, by_comp = _molecule_audit_inputs(manifest, out)
+    old = Counter()
+    _old_audit_molecules([str(c0_db)], repair_rows, by_comp, old)
+    assert old["c0_molecules_consistent"] >= 2 and old["declared_a30_only_admitted_molecules"] == 1
+    assert {k: qc_plain[k] for k in keys} == {k: old[k] for k in keys}
+    new = Counter()
+    VC.audit_molecules([str(c0_db)], repair_rows, by_comp, new)
+    assert new == old
+
+
+def test_audit_molecules_still_rejects_an_admitted_molecule_on_a_shared_span(manifest, applied, c0, tmp_path):
+    from collections import Counter
+
+    out, _, _ = applied
+    bad = _tamper_c0(c0, tmp_path, "UPDATE molecule_member SET molecule_state = 'train_track', train_tiles_excluded = false "
+                                   "WHERE read_name = 'mA'")
+    repair_rows, by_comp = _molecule_audit_inputs(manifest, out)
+    with pytest.raises(VC.ValidationError, match="shared-cause repair span are admitted") as new:
+        VC.audit_molecules([str(bad)], repair_rows, by_comp, Counter())
+    with pytest.raises(VC.ValidationError, match="shared-cause repair span are admitted") as old:
+        _old_audit_molecules([str(bad)], repair_rows, by_comp, Counter())
+    assert str(new.value) == str(old.value)
+
+
 def _tamper(applied, tmp_path, sql, params=()):
     out, freeze, rec = applied
     bad = tmp_path / "bad.db"

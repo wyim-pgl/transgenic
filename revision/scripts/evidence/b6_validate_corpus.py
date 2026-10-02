@@ -5,9 +5,17 @@
                           --splits <split TSV> --flags SPECIES=<A22> [...] --build-flags SPECIES=<A22> SPECIES=<A30>
                           [--build-flags ...] --seed <corpus seed>
                           --interval-manifest <species>.jsonl [...] [--c0 <C0 or merged DB> ...] [--report out.json]
+                          [--memory-limit 150GB] [--threads N] [--temp-dir DIR]
 
 --flags / --build-flags take the per-species form of b6_build_corpus.py (the bare single-file form only for a
 single-species base).
+
+DuckDB resources: ``--memory-limit`` / ``--threads`` are applied to every connection the validator opens (the C0
+molecule audit aggregates hundreds of millions of ``molecule_member`` rows on the merged evidence DB; without a limit
+DuckDB assumes ~80% of the host's RAM, above a Slurm cgroup).  Spills go to ``--temp-dir`` or, by default, to a
+``b6_validate_corpus.spill-*`` directory next to ``--report`` (system temp without a report) that is removed
+afterwards; ``preserve_insertion_order`` is off (every result-bearing query orders explicitly).  The values DuckDB
+reports back are recorded in the report under ``duckdb``.
 
 Checks (any failure exits 1):
   * freeze / file shas: base, corpus, manifests; ``b6_corpus_meta`` agrees; no WAL; every species' flag files hash
@@ -37,7 +45,9 @@ import argparse
 import bisect
 import json
 import os
+import shutil
 import sys
+import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -60,12 +70,54 @@ def require(ok, message):
         raise ValidationError(message)
 
 
-def _ro(path):
+def lit(value):
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def _positive_int(text):
+    value = int(text)
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be >= 1, got {value}")
+    return value
+
+
+class DuckDBSettings:
+    """DuckDB resource settings applied to every connection the validator opens (as b6_merge_evidence_db.py);
+    ``applied`` holds the values DuckDB reports back from the first connection, recorded in the report."""
+
+    SETTINGS = ("memory_limit", "threads", "temp_directory", "preserve_insertion_order")
+
+    def __init__(self, memory_limit=None, threads=None, temp_directory=None):
+        self.memory_limit, self.threads, self.temp_directory = memory_limit, threads, temp_directory
+        self.applied = None
+
+    def apply(self, con):
+        if self.memory_limit is not None:
+            con.execute(f"SET memory_limit = {lit(self.memory_limit)}")
+        if self.threads is not None:
+            require(int(self.threads) >= 1, f"threads must be >= 1, got {self.threads}")
+            con.execute(f"SET threads = {int(self.threads)}")
+        if self.temp_directory is not None:
+            con.execute(f"SET temp_directory = {lit(self.temp_directory)}")
+        con.execute("SET preserve_insertion_order = false")
+        if self.applied is None:
+            self.applied = dict(zip(self.SETTINGS, con.execute(
+                "SELECT " + ", ".join(f"current_setting('{s}')" for s in self.SETTINGS)).fetchone()))
+
+
+def _ro(path, duck=None):
     import duckdb
 
     require(os.path.isfile(path), f"missing {path}")
     require(not os.path.exists(str(path) + ".wal"), f"{path} has a WAL")
-    return duckdb.connect(str(path), read_only=True)
+    con = duckdb.connect(str(path), read_only=True)
+    if duck is not None:
+        try:
+            duck.apply(con)
+        except Exception:
+            con.close()
+            raise
+    return con
 
 
 def _columns(con):
@@ -302,8 +354,22 @@ def audit_closure(b6_con, repair_by_rn, qc):
         qc["tiles_closure_checked"] += 1
 
 
-def audit_molecules(c0_paths, repair_rows, manifest_by_comp, qc):
-    """Molecule consequences in C0 (plan v4.1 §2 acceptance)."""
+MOLECULE_PLACEMENT_SQL = """\
+WITH molecule_state AS (
+    SELECT species, source, molecule_id, min(molecule_state) AS state, bool_or(train_tiles_excluded) AS tte
+    FROM molecule_member GROUP BY species, source, molecule_id)
+SELECT p.species, p.source, p.molecule_id, p.chrom, p.start0, p.end0, m.state, m.tte
+FROM audit_placement p LEFT JOIN molecule_state m USING (species, source, molecule_id)
+ORDER BY p.species, p.source, p.molecule_id, p.chrom, p.start0, p.end0"""
+
+
+def audit_molecules(c0_paths, repair_rows, manifest_by_comp, qc, duck=None):
+    """Molecule consequences in C0 (plan v4.1 §2 acceptance).
+
+    The per-molecule state (``min(molecule_state)``, ``bool_or(train_tiles_excluded)`` over ``molecule_member``) is
+    joined to ``audit_placement`` inside DuckDB and streamed in the placement order (species, source, molecule_id,
+    chrom, start0, end0); a placement whose molecule has no ``molecule_member`` row arrives with a NULL state.  Nothing
+    per molecule is held in Python (the merged evidence DB has hundreds of millions of molecules)."""
     shared = defaultdict(list)          # chrom -> (start0, end0, scope, tile_split)
     a30 = defaultdict(list)
     for r in repair_rows:
@@ -314,23 +380,17 @@ def audit_molecules(c0_paths, repair_rows, manifest_by_comp, qc):
         target = shared if c0[(r["cause"], r["scope"])] else a30
         target[(r["species"], r["chrom"])].append((r["start0"], r["end0"], r["scope"], r["split"]))
     for path in c0_paths:
-        con = _ro(path)
+        con = _ro(path, duck)
         try:
-            states = {}
-            for sp, src, mid, state, tte in con.execute(
-                    "SELECT species, source, molecule_id, min(molecule_state), bool_or(train_tiles_excluded) "
-                    "FROM molecule_member GROUP BY ALL ORDER BY ALL").fetchall():
-                states[(sp, src, mid)] = (state, tte)
             cur = con.cursor()
-            cur.execute("SELECT species, source, molecule_id, chrom, start0, end0 FROM audit_placement ORDER BY ALL")
+            cur.execute(MOLECULE_PLACEMENT_SQL)
             seen_bad, seen_ok, seen_a30 = set(), set(), set()
             while True:
                 rows = cur.fetchmany(4096)
                 if not rows:
                     break
-                for sp, src, mid, chrom, s, e in rows:
+                for sp, src, mid, chrom, s, e, state, tte in rows:
                     key = (sp, src, mid)
-                    state, tte = states.get(key, (None, None))
                     require(state is not None, f"{path}: placement of unknown molecule {key}")
                     for a, b, scope, split in shared.get((sp, chrom), ()):
                         if s < b and e > a:
@@ -352,12 +412,31 @@ def audit_molecules(c0_paths, repair_rows, manifest_by_comp, qc):
 
 
 def validate(args):
+    """Run the audit with the DuckDB resource settings of ``args``; an owned spill directory (no ``--temp-dir``) is
+    created next to the report (system temp without one) and removed afterwards, pass or fail."""
+    temp_dir = getattr(args, "temp_dir", None)
+    if temp_dir is not None:
+        spill = Path(temp_dir).absolute()
+    else:
+        spill = Path(tempfile.mkdtemp(prefix="b6_validate_corpus.spill-",
+                                      dir=str(Path(args.report).absolute().parent) if args.report else None))
+    duck = DuckDBSettings(getattr(args, "memory_limit", None), getattr(args, "threads", None), spill)
+    try:
+        out = _validate(args, duck)
+    finally:
+        if temp_dir is None:
+            shutil.rmtree(spill, ignore_errors=True)
+    out["duckdb"] = duck.applied
+    return out
+
+
+def _validate(args, duck):
     qc = Counter()
     freeze = json.loads(Path(args.freeze).read_text())
     require(freeze.get("rule_id") == CR.RULE_ID, f"freeze rule_id {freeze.get('rule_id')!r} != {CR.RULE_ID}")
     require(LK.sha256(args.base) == freeze["base_sha256"], "base sha256 != freeze base_sha256")
     require(LK.sha256(args.corpus) == freeze["out_sha256"], "corpus sha256 != freeze out_sha256")
-    base_con = _ro(args.base)
+    base_con = _ro(args.base, duck)
     try:
         species = [r[0] for r in base_con.execute("SELECT species_id FROM build_manifest ORDER BY species_id").fetchall()]
     finally:
@@ -379,7 +458,7 @@ def validate(args):
     by_comp = defaultdict(list)
     for r in manifest_rows:
         by_comp[(r["species"], r["chrom"], r["component_id"])].append(r)
-    base_con, b6_con = _ro(args.base), _ro(args.corpus)
+    base_con, b6_con = _ro(args.base, duck), _ro(args.corpus, duck)
     try:
         meta = dict(b6_con.execute("SELECT key, value FROM b6_corpus_meta ORDER BY key").fetchall())
         require(meta.get("rule_id") == CR.RULE_ID and meta.get("base_sha256") == freeze["base_sha256"],
@@ -454,7 +533,7 @@ def validate(args):
         base_con.close()
         b6_con.close()
     if args.c0:
-        audit_molecules(args.c0, repair_rows, by_comp, qc)
+        audit_molecules(args.c0, repair_rows, by_comp, qc, duck)
     return {"status": "PASS", "qc": dict(sorted(qc.items())), "counts": counts}
 
 
@@ -478,6 +557,11 @@ def parse_args(argv):
     ap.add_argument("--no-recompute-manifest", action="store_true",
                     help="skip recomputing the manifest from the base (default: recompute and require equality)")
     ap.add_argument("--report")
+    ap.add_argument("--memory-limit", help="DuckDB memory_limit for every connection, e.g. 150GB (default: DuckDB's "
+                                           "host-memory share; set it below the Slurm allocation)")
+    ap.add_argument("--threads", type=_positive_int, help="DuckDB threads for every connection (default: DuckDB's)")
+    ap.add_argument("--temp-dir", help="DuckDB spill directory (default: b6_validate_corpus.spill-* next to --report, "
+                                       "or in the system temp directory, removed afterwards)")
     a = ap.parse_args(argv)
     a.references = dict(v.split("=", 1) for v in a.reference or [])
     a.gffs = dict(v.split("=", 1) for v in a.gff or [])
