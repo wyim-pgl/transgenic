@@ -581,10 +581,14 @@ def parse_args(argv):
 
 
 def main(argv=None):
+    import duckdb
+
     a = parse_args(sys.argv[1:] if argv is None else argv)
     try:
         out = validate(a)
-    except (ValidationError, CR.RepairError, LK.LeakageError, OSError, KeyError) as exc:
+    except (ValidationError, CR.RepairError, LK.LeakageError, OSError, KeyError, duckdb.Error) as exc:
+        # duckdb.Error: e.g. a malformed --memory-limit rejected by SET, or a corrupt DB; validate() has already
+        # removed its owned spill directory.
         print(f"b6_validate_corpus FAILED: {exc}", file=sys.stderr)
         return 1
     if a.report:

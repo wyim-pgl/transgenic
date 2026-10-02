@@ -502,6 +502,16 @@ def test_validator_applies_and_records_duckdb_memory_limit_and_threads(world, ma
     assert sorted(p.name for p in tmp_path.iterdir()) == ["limited.json"]
 
 
+def test_a_malformed_memory_limit_fails_closed_and_leaves_no_spill_directory(world, manifest, applied, tmp_path, capsys):
+    out, freeze, _ = applied
+    report = tmp_path / "bogus.json"
+    assert VC.main(_validate_args(world, manifest, out, freeze, "--report", str(report), "--no-recompute-manifest",
+                                  "--memory-limit", "bogus")) == 1
+    err = capsys.readouterr().err
+    assert "b6_validate_corpus FAILED" in err and "Traceback" not in err
+    assert not report.exists() and sorted(p.name for p in tmp_path.iterdir()) == []
+
+
 def test_audit_molecules_rejects_a_placement_of_an_unknown_molecule(manifest, applied, c0, tmp_path):
     from collections import Counter
 
