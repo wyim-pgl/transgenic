@@ -5,17 +5,21 @@
                           --splits <split TSV> --flags SPECIES=<A22> [...] --build-flags SPECIES=<A22> SPECIES=<A30>
                           [--build-flags ...] --seed <corpus seed>
                           --interval-manifest <species>.jsonl [...] [--c0 <C0 or merged DB> ...] [--report out.json]
-                          [--memory-limit 150GB] [--threads N] [--temp-dir DIR]
+                          [--memory-limit 80GB] [--threads N] [--temp-dir DIR]
 
 --flags / --build-flags take the per-species form of b6_build_corpus.py (the bare single-file form only for a
 single-species base).
 
 DuckDB resources: ``--memory-limit`` / ``--threads`` are applied to every connection the validator opens (the C0
 molecule audit aggregates hundreds of millions of ``molecule_member`` rows on the merged evidence DB; without a limit
-DuckDB assumes ~80% of the host's RAM, above a Slurm cgroup).  Spills go to ``--temp-dir`` or, by default, to a
-``b6_validate_corpus.spill-*`` directory next to ``--report`` (system temp without a report) that is removed
-afterwards; ``preserve_insertion_order`` is off (every result-bearing query orders explicitly).  The values DuckDB
-reports back are recorded in the report under ``duckdb``.
+DuckDB assumes ~80% of the host's RAM, above a Slurm cgroup).  ``memory_limit`` is per DuckDB instance, i.e. per
+connection, not per process: two connections (base and corpus) are open together during the corpus checks, one
+during the C0 audit, and the Python heap comes on top, so keep instances x limit + Python heap below the allocation.
+Spills go to ``--temp-dir`` or, by default, to a ``b6_validate_corpus.spill-*`` directory next to ``--report``
+(system temp without a report); its path is printed to stderr at start and it is removed on normal exit, pass or
+fail -- after an OOM kill or SIGKILL nothing runs, so delete it by hand.  ``preserve_insertion_order`` is off
+(every result-bearing query orders explicitly).  The values DuckDB reports back are recorded in the report under
+``duckdb``.
 
 Checks (any failure exits 1):
   * freeze / file shas: base, corpus, manifests; ``b6_corpus_meta`` agrees; no WAL; every species' flag files hash
@@ -368,8 +372,9 @@ def audit_molecules(c0_paths, repair_rows, manifest_by_comp, qc, duck=None):
 
     The per-molecule state (``min(molecule_state)``, ``bool_or(train_tiles_excluded)`` over ``molecule_member``) is
     joined to ``audit_placement`` inside DuckDB and streamed in the placement order (species, source, molecule_id,
-    chrom, start0, end0); a placement whose molecule has no ``molecule_member`` row arrives with a NULL state.  Nothing
-    per molecule is held in Python (the merged evidence DB has hundreds of millions of molecules)."""
+    chrom, start0, end0); a placement whose molecule has no ``molecule_member`` row arrives with a NULL state.  Python
+    no longer holds a state per molecule (the merged evidence DB has hundreds of millions); what it keeps, as before,
+    are the ``seen_*`` key sets of the molecules whose placements overlap a repair span, a small subset."""
     shared = defaultdict(list)          # chrom -> (start0, end0, scope, tile_split)
     a30 = defaultdict(list)
     for r in repair_rows:
@@ -413,13 +418,17 @@ def audit_molecules(c0_paths, repair_rows, manifest_by_comp, qc, duck=None):
 
 def validate(args):
     """Run the audit with the DuckDB resource settings of ``args``; an owned spill directory (no ``--temp-dir``) is
-    created next to the report (system temp without one) and removed afterwards, pass or fail."""
+    created next to the report (system temp without one) and removed on normal exit, pass or fail.  Its path is
+    printed to stderr first: a kill (OOM, SIGKILL) skips the cleanup and the directory must be deleted by hand."""
     temp_dir = getattr(args, "temp_dir", None)
     if temp_dir is not None:
         spill = Path(temp_dir).absolute()
+        print(f"duckdb spill directory: {spill} (--temp-dir; not removed)", file=sys.stderr)
     else:
         spill = Path(tempfile.mkdtemp(prefix="b6_validate_corpus.spill-",
                                       dir=str(Path(args.report).absolute().parent) if args.report else None))
+        print(f"duckdb spill directory: {spill} (removed on normal exit; delete it by hand after a kill)",
+              file=sys.stderr)
     duck = DuckDBSettings(getattr(args, "memory_limit", None), getattr(args, "threads", None), spill)
     try:
         out = _validate(args, duck)
@@ -557,11 +566,14 @@ def parse_args(argv):
     ap.add_argument("--no-recompute-manifest", action="store_true",
                     help="skip recomputing the manifest from the base (default: recompute and require equality)")
     ap.add_argument("--report")
-    ap.add_argument("--memory-limit", help="DuckDB memory_limit for every connection, e.g. 150GB (default: DuckDB's "
-                                           "host-memory share; set it below the Slurm allocation)")
+    ap.add_argument("--memory-limit", help="DuckDB memory_limit PER CONNECTION (DuckDB instance), e.g. 80GB (default: "
+                                           "DuckDB's host-memory share); two connections are open during the corpus "
+                                           "checks, one during the C0 audit, plus the Python heap: keep instances x "
+                                           "limit + heap below the Slurm allocation")
     ap.add_argument("--threads", type=_positive_int, help="DuckDB threads for every connection (default: DuckDB's)")
-    ap.add_argument("--temp-dir", help="DuckDB spill directory (default: b6_validate_corpus.spill-* next to --report, "
-                                       "or in the system temp directory, removed afterwards)")
+    ap.add_argument("--temp-dir", help="DuckDB spill directory, kept afterwards (default: b6_validate_corpus.spill-* "
+                                       "next to --report, or in the system temp directory, printed to stderr and "
+                                       "removed on normal exit; after an OOM kill delete it by hand)")
     a = ap.parse_args(argv)
     a.references = dict(v.split("=", 1) for v in a.reference or [])
     a.gffs = dict(v.split("=", 1) for v in a.gff or [])
