@@ -246,18 +246,17 @@ def main(argv=None, *, roles_loader=default_roles_loader, leakage_rerun=None):
         raise SystemExit(f"b6_build_obs_cache: upstream verification failed: {exc}") from exc
     import duckdb
 
-    spill = given_spill_dir(a.temp_dir) if a.temp_dir is not None else None
-    own_spill = a.temp_dir is None
+    spill, own_spill = None, a.temp_dir is None
     try:
         ev_sha, con = BD.open_snapshot(a.evidence, expected=ident["evidence_sha256"])
         try:
             duck = DuckDBSettings(a.memory_limit, a.threads)
             try:
                 duck.apply(con)                         # before anything is created: a rejected setting leaves nothing
-                if own_spill:
-                    spill = owned_spill_dir(a.out)
+                spill = owned_spill_dir(a.out) if own_spill else given_spill_dir(a.temp_dir)
                 duck.set_temp_directory(con, spill)
-            except (duckdb.Error, OC.CacheError) as exc:  # e.g. a malformed or too small --memory-limit
+            except (duckdb.Error, OC.CacheError, OSError) as exc:  # a malformed / too small --memory-limit, or the
+                # owned spill directory could not be created (spill is still None: nothing to clean up)
                 raise SystemExit(f"b6_build_obs_cache: duckdb settings rejected (--memory-limit {a.memory_limit!r}, "
                                  f"--threads {a.threads!r}, --temp-dir {a.temp_dir!r}): {exc}") from exc
             print("b6_build_obs_cache: duckdb settings " + json.dumps(duck.applied, sort_keys=True, default=str),

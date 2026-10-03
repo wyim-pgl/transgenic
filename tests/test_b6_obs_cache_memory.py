@@ -110,6 +110,14 @@ def test_memory_limit_below_one_gb_is_refused_from_its_read_back_value(world, tm
     assert not out.parent.exists()
 
 
+def test_rejected_memory_limit_does_not_create_a_missing_temp_dir(world, tmp_path):
+    spill, out = tmp_path / "spill" / "not_yet", tmp_path / "cache_dir" / "cache"
+    with pytest.raises(SystemExit) as info:
+        _build(world, tmp_path, out, ["--memory-limit", "512MB", "--temp-dir", str(spill)])
+    assert info.value.code.startswith("b6_build_obs_cache: duckdb settings rejected")
+    assert not spill.exists() and not spill.parent.exists() and not out.parent.exists()
+
+
 def test_unwritable_temp_dir_fails_up_front_on_the_normal_failure_path(world, tmp_path):
     blocker = tmp_path / "not_a_dir"
     blocker.write_text("")
