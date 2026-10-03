@@ -97,8 +97,35 @@ def test_malformed_memory_limit_fails_on_the_normal_failure_path_and_leaves_no_s
     assert isinstance(info.value.code, str)                          # the CLI's message path: exit 1, one line
     assert info.value.code.startswith("b6_build_obs_cache: ")
     assert "bogus" in info.value.code and "Traceback" not in info.value.code
-    assert list(out.parent.glob(SPILL_GLOB)) == []
-    assert not out.exists()                                          # nothing written before the settings held
+    assert not out.parent.exists()                                   # nothing created before the settings held:
+    assert list(tmp_path.glob("*/" + SPILL_GLOB)) == []              # no parent, no spill directory, no cache
+
+
+def test_memory_limit_below_one_gb_is_refused_from_its_read_back_value(world, tmp_path):
+    out = tmp_path / "cache_dir" / "cache"
+    with pytest.raises(SystemExit) as info:
+        _build(world, tmp_path, out, ["--memory-limit", "512MB"])     # SET accepts it; the floor check does not
+    assert isinstance(info.value.code, str) and info.value.code.startswith("b6_build_obs_cache: ")
+    assert "'512MB'" in info.value.code and "1 GB floor" in info.value.code
+    assert not out.parent.exists()
+
+
+def test_unwritable_temp_dir_fails_up_front_on_the_normal_failure_path(world, tmp_path):
+    blocker = tmp_path / "not_a_dir"
+    blocker.write_text("")
+    out = tmp_path / "cache_dir" / "cache"
+    with pytest.raises(SystemExit) as info:
+        _build(world, tmp_path, out, ["--temp-dir", str(blocker / "spill")])
+    assert isinstance(info.value.code, str)
+    assert info.value.code.startswith(f"b6_build_obs_cache: --temp-dir {blocker / 'spill'} is not a writable directory")
+    assert not out.parent.exists()
+
+
+def test_parse_memory_reads_duckdb_units():
+    assert BOC.parse_memory("953.6 MiB") == pytest.approx(953.6 * 2**20)
+    assert BOC.parse_memory("1.0 GiB") == 2**30
+    assert BOC.parse_memory("12 bytes") == 12
+    assert BOC.parse_memory("80%") is None and BOC.parse_memory("1GB") is None
 
 
 def test_threads_one_builds_and_is_read_back(world, tmp_path, capsys):

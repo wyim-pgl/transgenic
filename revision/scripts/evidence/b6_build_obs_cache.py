@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -101,42 +102,75 @@ def _positive_int(text):
     return value
 
 
+_MEMORY_UNITS = {"bytes": 1, "KiB": 1 << 10, "MiB": 1 << 20, "GiB": 1 << 30, "TiB": 1 << 40, "PiB": 1 << 50}
+MIN_MEMORY_LIMIT = 1_000_000_000      # 1 GB: the read-back is rounded to 0.1 unit, so 0.1% below it is accepted
+
+
+def parse_memory(text):
+    """Bytes of a DuckDB memory read-back such as ``'953.6 MiB'``; None when the format is not recognised."""
+    number, _sep, unit = str(text).strip().partition(" ")
+    try:
+        return float(number) * _MEMORY_UNITS[unit]
+    except (KeyError, ValueError):
+        return None
+
+
 class DuckDBSettings:
     """DuckDB resource settings applied to the evidence connection (as b6_merge_evidence_db.py / b6_validate_corpus.py);
     ``applied`` holds the values DuckDB reports back.  SET works on a read-only connection; nothing here touches the
-    cache: the values are logged to stderr only."""
+    cache: the values are logged to stderr only.  ``apply`` sets and checks memory_limit / threads first (a rejected
+    value raises before any directory is created), ``set_temp_directory`` then sets the spill directory and reads
+    everything back."""
 
     SETTINGS = ("memory_limit", "threads", "temp_directory")
 
-    def __init__(self, memory_limit=None, threads=None, temp_directory=None):
-        self.memory_limit, self.threads, self.temp_directory = memory_limit, threads, temp_directory
+    def __init__(self, memory_limit=None, threads=None):
+        self.memory_limit, self.threads = memory_limit, threads
         self.applied = None
 
     def apply(self, con):
         if self.memory_limit is not None:
             con.execute(f"SET memory_limit = {lit(self.memory_limit)}")
+            got = con.execute("SELECT current_setting('memory_limit')").fetchone()[0]
+            nbytes = parse_memory(got)
+            if nbytes is None or nbytes < MIN_MEMORY_LIMIT * 0.999:
+                raise OC.CacheError(f"--memory-limit {self.memory_limit!r} reads back as {got!r}: below the 1 GB floor "
+                                    f"(the build needs a chromosome's result set plus working memory in RAM)")
         if self.threads is not None:                      # >= 1 by argparse (_positive_int)
             con.execute(f"SET threads = {int(self.threads)}")
-        if self.temp_directory is not None:
-            con.execute(f"SET temp_directory = {lit(self.temp_directory)}")
+
+    def set_temp_directory(self, con, spill):
+        con.execute(f"SET temp_directory = {lit(spill)}")
         self.applied = dict(zip(self.SETTINGS, con.execute(
             "SELECT " + ", ".join(f"current_setting('{s}')" for s in self.SETTINGS)).fetchone()))
 
 
-def spill_dir(temp_dir, out):
-    """(spill directory, owned): ``--temp-dir`` as given (kept), else a fresh ``b6_build_obs_cache.spill-*`` directory
-    inside the parent of ``--out`` (the cache's GPFS, not the node's /tmp), to be removed by the caller.  Its path is
-    printed to stderr first: a kill (OOM, SIGKILL) skips the cleanup and the directory must be deleted by hand."""
-    if temp_dir is not None:
-        spill = Path(temp_dir).absolute()
-        print(f"duckdb spill directory: {spill} (--temp-dir; not removed)", file=sys.stderr, flush=True)
-        return spill, False
+def given_spill_dir(temp_dir):
+    """``--temp-dir`` (kept afterwards): created when missing and probed for writability up front, so an unwritable
+    spill directory fails here and not at the first spill in the middle of the run."""
+    spill = Path(temp_dir).absolute()
+    try:
+        spill.mkdir(parents=True, exist_ok=True)
+        handle, probe = tempfile.mkstemp(prefix=".b6_build_obs_cache.probe-", dir=str(spill))
+        os.close(handle)
+        os.unlink(probe)
+    except OSError as exc:
+        raise SystemExit(f"b6_build_obs_cache: --temp-dir {spill} is not a writable directory: {exc}") from exc
+    print(f"duckdb spill directory: {spill} (--temp-dir; not removed)", file=sys.stderr, flush=True)
+    return spill
+
+
+def owned_spill_dir(out):
+    """A fresh ``b6_build_obs_cache.spill-*`` directory inside the parent of ``--out`` (the cache's GPFS, not the node's
+    /tmp), to be removed by the caller; created only once the DuckDB settings held, so a rejected option leaves no
+    directory behind (the parent is created here, as CacheWriter would moments later).  Its path is printed to stderr
+    first: a kill (OOM, SIGKILL) skips the cleanup and the directory must be deleted by hand."""
     parent = Path(out).absolute().parent
-    parent.mkdir(parents=True, exist_ok=True)          # CacheWriter creates it moments later anyway
+    parent.mkdir(parents=True, exist_ok=True)
     spill = Path(tempfile.mkdtemp(prefix="b6_build_obs_cache.spill-", dir=str(parent)))
     print(f"duckdb spill directory: {spill} (removed on normal exit; delete it by hand after a kill)",
           file=sys.stderr, flush=True)
-    return spill, True
+    return spill
 
 
 def extract_by_species(con, roles, family, species, writer, *, log=None):
@@ -212,14 +246,18 @@ def main(argv=None, *, roles_loader=default_roles_loader, leakage_rerun=None):
         raise SystemExit(f"b6_build_obs_cache: upstream verification failed: {exc}") from exc
     import duckdb
 
-    spill, own_spill = spill_dir(a.temp_dir, a.out)
+    spill = given_spill_dir(a.temp_dir) if a.temp_dir is not None else None
+    own_spill = a.temp_dir is None
     try:
         ev_sha, con = BD.open_snapshot(a.evidence, expected=ident["evidence_sha256"])
         try:
-            duck = DuckDBSettings(a.memory_limit, a.threads, spill)
+            duck = DuckDBSettings(a.memory_limit, a.threads)
             try:
-                duck.apply(con)                         # before anything is written: a rejected setting leaves no cache
-            except duckdb.Error as exc:                 # e.g. a malformed --memory-limit rejected by SET
+                duck.apply(con)                         # before anything is created: a rejected setting leaves nothing
+                if own_spill:
+                    spill = owned_spill_dir(a.out)
+                duck.set_temp_directory(con, spill)
+            except (duckdb.Error, OC.CacheError) as exc:  # e.g. a malformed or too small --memory-limit
                 raise SystemExit(f"b6_build_obs_cache: duckdb settings rejected (--memory-limit {a.memory_limit!r}, "
                                  f"--threads {a.threads!r}, --temp-dir {a.temp_dir!r}): {exc}") from exc
             print("b6_build_obs_cache: duckdb settings " + json.dumps(duck.applied, sort_keys=True, default=str),
@@ -229,7 +267,7 @@ def main(argv=None, *, roles_loader=default_roles_loader, leakage_rerun=None):
         finally:
             con.close()
     finally:
-        if own_spill:
+        if own_spill and spill is not None:
             shutil.rmtree(spill, ignore_errors=True)
     bindings = {"evidence_sha256": ev_sha, "roles_sha256": roles.sha256,
                 "reference_sha256": ident["reference_sha256"],
