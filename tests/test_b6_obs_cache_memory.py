@@ -45,7 +45,10 @@ def _scratch_readback(memory_limit, threads):
         con.close()
 
 
-def test_resource_options_are_applied_and_read_back_and_the_cache_bytes_are_unchanged(world, tmp_path, capsys):
+def test_resource_options_are_applied_and_read_back_and_leave_the_cache_bytes_unchanged(world, tmp_path, capsys):
+    """Same code, with vs without the options: every file under --out (manifest included) is byte-identical, and the
+    stderr line carries DuckDB's read-back values.  (Builder-vs-one-shot equivalence, which the base commit also
+    satisfies, is test_b6_obs_cache_stream.test_builder_cache_is_byte_identical_to_one_shot_write_cache.)"""
     plain, limited, spill = tmp_path / "plain" / "cache", tmp_path / "limited" / "cache", tmp_path / "spill"
     spill.mkdir()
     assert _build(world, tmp_path, plain) == 0
@@ -57,7 +60,7 @@ def test_resource_options_are_applied_and_read_back_and_the_cache_bytes_are_unch
     assert applied["memory_limit"] == want_mem
     assert applied["threads"] == want_threads == 2
     assert applied["temp_directory"] == str(spill)
-    assert applied["preserve_insertion_order"] is False
+    assert set(applied) == {"memory_limit", "threads", "temp_directory"}  # nothing else is SET (insertion order kept)
     assert _spill_line(err) == f"{spill} (--temp-dir; not removed)"
     assert spill.is_dir()                                            # a given --temp-dir is left alone
     assert list(limited.parent.glob(SPILL_GLOB)) == []               # ... and no owned one is created
@@ -98,8 +101,8 @@ def test_malformed_memory_limit_fails_on_the_normal_failure_path_and_leaves_no_s
     assert not out.exists()                                          # nothing written before the settings held
 
 
-@pytest.mark.parametrize("threads", ["0", "-1", "two"])
-def test_threads_must_be_a_positive_int(world, tmp_path, threads):
-    with pytest.raises(SystemExit) as info:
-        _build(world, tmp_path, tmp_path / "cache", ["--threads", threads])
-    assert info.value.code == 2                                      # argparse usage error
+def test_threads_one_builds_and_is_read_back(world, tmp_path, capsys):
+    out = tmp_path / "cache_dir" / "cache"
+    assert _build(world, tmp_path, out, ["--threads", "1"]) == 0
+    assert _settings_line(capsys.readouterr().err)["threads"] == 1
+    assert (out / "manifest.json").is_file()

@@ -20,15 +20,16 @@ build.
 
 DuckDB resources: ``--memory-limit`` / ``--threads`` are applied to the one read-only evidence connection of the run
 (without a limit DuckDB's buffer pool grows towards ~80% of the host's RAM, above a Slurm cgroup: the 9-species train
-build was OOM-killed at 178 GB after six species); the Python heap (one chromosome's rows) comes on top, so keep
-limit + heap below the allocation.  Spills go to ``--temp-dir`` (kept) or, by default, to an owned
+build was OOM-killed at 178 GB after six species).  Operators and intermediates spill under the limit, but a query's
+result set counts against it and does not spill: the limit must exceed the largest per-chromosome result set plus
+working memory, or that query errors instead of using RAM; the Python heap of one chromosome's rows comes on top, so
+keep limit + heap below the allocation.  Spills go to ``--temp-dir`` (kept) or, by default, to an owned
 ``b6_build_obs_cache.spill-*`` directory inside the parent of ``--out``, printed to stderr at start and removed on
-normal exit, pass or fail -- after an OOM kill or SIGKILL nothing runs, so delete it by hand.
-``preserve_insertion_order`` is off: every result-bearing query of ``b6_obs_cache`` orders explicitly by a unique key
-(alignment_id; (alignment_id, block/intron index); chain_id with introns by the per-chain tx_order permutation;
-(species, hsp_id, interval_index); DISTINCT rows by all their columns), the per-shard sort then fixes the shard order,
-and the GROUP BY lookups (EST molecules, molecule members) are keyed, never iterated.  The values DuckDB reports back
-are logged to stderr only; the manifest, provenance and cache identity are unchanged by these options.
+normal exit, pass or fail -- after an OOM kill or SIGKILL nothing runs, so delete it by hand.  Only these two
+settings and the spill directory are set; ``preserve_insertion_order`` stays at DuckDB's default, the one the
+production shards were built under.  The values DuckDB reports back are logged to stderr only.  Shards and every
+other written value are unchanged by these options; the manifest differs from an older build only in this script's
+own ``bindings.code_sha256`` (``CODE`` includes the script), which ``verify_cache`` does not compare.
 """
 from __future__ import annotations
 
@@ -105,7 +106,7 @@ class DuckDBSettings:
     ``applied`` holds the values DuckDB reports back.  SET works on a read-only connection; nothing here touches the
     cache: the values are logged to stderr only."""
 
-    SETTINGS = ("memory_limit", "threads", "temp_directory", "preserve_insertion_order")
+    SETTINGS = ("memory_limit", "threads", "temp_directory")
 
     def __init__(self, memory_limit=None, threads=None, temp_directory=None):
         self.memory_limit, self.threads, self.temp_directory = memory_limit, threads, temp_directory
@@ -114,13 +115,10 @@ class DuckDBSettings:
     def apply(self, con):
         if self.memory_limit is not None:
             con.execute(f"SET memory_limit = {lit(self.memory_limit)}")
-        if self.threads is not None:
-            if int(self.threads) < 1:
-                raise OC.CacheError(f"threads must be >= 1, got {self.threads}")
+        if self.threads is not None:                      # >= 1 by argparse (_positive_int)
             con.execute(f"SET threads = {int(self.threads)}")
         if self.temp_directory is not None:
             con.execute(f"SET temp_directory = {lit(self.temp_directory)}")
-        con.execute("SET preserve_insertion_order = false")
         self.applied = dict(zip(self.SETTINGS, con.execute(
             "SELECT " + ", ".join(f"current_setting('{s}')" for s in self.SETTINGS)).fetchone()))
 
@@ -189,7 +187,9 @@ def main(argv=None, *, roles_loader=default_roles_loader, leakage_rerun=None):
     ap.add_argument("--zero", action="append", help="population:species:tsv[:qc]")
     ap.add_argument("--out", required=True)
     ap.add_argument("--memory-limit", help="DuckDB memory_limit of the evidence connection, e.g. 120GB (default: "
-                                           "DuckDB's host-memory share, ~80%% of the node, above a Slurm cgroup)")
+                                           "DuckDB's host-memory share, ~80%% of the node, above a Slurm cgroup); "
+                                           "result sets do not spill, so it must exceed the largest per-chromosome "
+                                           "result set plus working memory (one chromosome's Python rows come on top)")
     ap.add_argument("--threads", type=_positive_int, help="DuckDB threads (default: DuckDB's)")
     ap.add_argument("--temp-dir", help="DuckDB spill directory, kept afterwards (default: b6_build_obs_cache.spill-* "
                                        "inside the parent of --out, removed on normal exit; after an OOM kill "
