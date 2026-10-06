@@ -77,14 +77,27 @@ class ShapeParserTests(unittest.TestCase):
 class ArgumentTests(unittest.TestCase):
     def test_defaults_match_the_trainer_run(self):
         a = diag.parse_args(["--out", "x.json"])
-        self.assertEqual((a.config, a.deterministic, a.dense_tracks, a.chain_elements, a.accum, a.world_size,
-                          a.compile_warmup_steps),
-                         ("configs/b6_400m_win_v3_wp5_pilot.json", True, True, 511, None, 4, 3))
+        self.assertEqual((a.config, a.deterministic, a.ddp, a.arm, a.dense_tracks, a.chain_elements, a.accum,
+                          a.world_size, a.compile_warmup_steps),
+                         ("configs/b6_400m_win_v3_wp5_pilot.json", True, True, "B6", True, 511, None, 4, 3))
         self.assertEqual(a.shape_list, diag.parse_shapes(diag.DEFAULT_SHAPES))
 
     def test_on_off_switches(self):
-        a = diag.parse_args(["--out", "x.json", "--deterministic", "off", "--no-dense-tracks", "--accum", "6"])
-        self.assertEqual((a.deterministic, a.dense_tracks, a.accum), (False, False, 6))
+        a = diag.parse_args(["--out", "x.json", "--deterministic", "off", "--no-dense-tracks", "--accum", "6",
+                             "--ddp", "off", "--arm", "C2", "--measure-minutes", "8"])
+        self.assertEqual((a.deterministic, a.dense_tracks, a.accum, a.ddp, a.arm, a.measure_minutes),
+                         (False, False, 6, False, "C2", 8.0))
+
+    def test_full_run_schedule_matches_the_trainer_formula(self):
+        cfg = rt.load_b6_config(PILOT_CFG)
+        s = diag.full_run_schedule(cfg, 24)
+        # rows = 4,099 * 96 / 2 = 196,752; ceil(rows / 24) = 8,198 updates per epoch; x 22 epochs; 5% warm-up
+        self.assertEqual((s["train_rows_approx"], s["steps_per_epoch"], s["t_total"], s["warmup_steps"]),
+                         (196752, 8198, 180356, 9017))
+
+    def test_rank_out_paths(self):
+        self.assertEqual(diag.rank_out_path("/o/a_trainer.json", 0), "/o/a_trainer.json")
+        self.assertEqual(diag.rank_out_path("/o/a_trainer.json", 1), "/o/a_trainer.rank1.json")
 
     def test_refused_arguments_exit_with_the_refused_code(self):
         for argv in (["--out", "x.json", "--shapes", "7:10"], ["--out", "x.json", "--updates", "0"],
@@ -128,7 +141,7 @@ class OomAndSummaryTests(unittest.TestCase):
                  env=dict(PYTORCH_CUDA_ALLOC_CONF=None),
                  micro_batches=[_mb(1, 129024, 4480, 60.0, 70.0, 3, 1.5), _mb(2, 30720, 1500, 20.0, 72.0, 5),
                                 _mb(3, 129024, 4480, 62.5, 80.0, 5, 6.0)],
-                 updates=[dict(update=1, max_reserved_bytes=int(81 * GIB))],
+                 updates=[dict(update=1, after_micro_batch=2, max_reserved_bytes=int(81 * GIB))],
                  oom=dict(micro_batch=4, tier=129024, labels=8192, phase="backward"))
         r.update(kw)
         return r
@@ -139,7 +152,7 @@ class OomAndSummaryTests(unittest.TestCase):
         self.assertAlmostEqual(s["per_shape"]["129024:4480"]["peak_allocated_gib"], 62.5, places=6)
         self.assertAlmostEqual(s["per_shape"]["129024:4480"]["peak_reserved_gib"], 80.0, places=6)
         self.assertAlmostEqual(s["per_shape"]["129024:4480"]["max_inactive_split_gib"], 6.0, places=6)
-        self.assertAlmostEqual(s["peak_reserved_gib"], 80.0, places=6)
+        self.assertAlmostEqual(s["peak_reserved_gib"], 81.0, places=6)          # optimizer-update peak counts
         self.assertAlmostEqual(s["update_peak_reserved_gib"], 81.0, places=6)
         self.assertEqual((s["compiled_graphs"], s["oom_shape"], s["oom_phase"], s["micro_batches"], s["updates"]),
                          (5, "129024:8192", "backward", 3, 1))
@@ -164,6 +177,57 @@ class OomAndSummaryTests(unittest.TestCase):
             self.assertEqual(diag.summarize_main([p]), diag.EXIT_OK)
             self.assertEqual(diag.summarize_main([p, os.path.join(d, "missing.json")]), diag.EXIT_ERROR)
 
+    def test_run_maxima_include_the_oom_point_and_optimizer_updates(self):
+        r = dict(label="a", status="oom", settings=dict(accum=2), env={},
+                 micro_batches=[_mb(1, 129024, 4480, 60.0, 70.0, 3)],
+                 updates=[dict(update=1, after_micro_batch=2, max_allocated_bytes=int(61 * GIB),
+                               max_reserved_bytes=int(71 * GIB))],
+                 oom=dict(micro_batch=3, tier=129024, labels=4480, phase="backward",
+                          memory=dict(max_allocated_bytes=int(87 * GIB), max_reserved_bytes=int(93 * GIB),
+                                      inactive_split_bytes=int(6 * GIB))))
+        s = diag.summarize_report(r)
+        self.assertAlmostEqual(s["peak_allocated_gib"], 87.0, places=6)
+        self.assertAlmostEqual(s["peak_reserved_gib"], 93.0, places=6)
+        self.assertAlmostEqual(s["per_shape"]["129024:4480"]["peak_reserved_gib"], 93.0, places=6)
+        self.assertEqual(s["per_shape"]["129024:4480"]["n"], 2)
+        r2 = dict(r, oom=None, status="completed")
+        self.assertAlmostEqual(diag.summarize_report(r2)["peak_reserved_gib"], 71.0, places=6)    # update peak
+
+    def test_classification_comes_from_the_json_status(self):
+        self.assertEqual([diag.classify(x) for x in (None, dict(status="completed"), dict(status="time_budget"),
+                                                     dict(status="oom"), dict(status="error"), dict(status="running"))],
+                         ["missing", "finished", "finished", "oom", "error", "incomplete"])
+        with tempfile.TemporaryDirectory() as d:
+            ok, oom, run = (os.path.join(d, n) for n in ("ok.json", "oom.json", "run.json"))
+            diag.write_json(ok, dict(label="ok", status="completed", micro_batches=[], updates=[]))
+            diag.write_json(oom, self.report())
+            diag.write_json(run, dict(label="run", status="running", micro_batches=[], updates=[]))
+            self.assertEqual(diag.summarize_main([ok, oom]), diag.EXIT_OK)
+            self.assertEqual(diag.summarize_main([ok, run]), diag.EXIT_ERROR)
+
+    def test_growth_slope_per_100_micro_batches_after_warm_up(self):
+        accum = 4
+        mbs = []
+        for i in range(1, 41):                      # warm-up = 1 update = micro-batches 1..4 (excluded)
+            leak = (i * 0.01 if i > 4 else 50.0)   # 0.01 GiB per micro-batch after warm-up; junk inside warm-up
+            mb = _mb(i, 129024 if i % 2 else 30720, 8192 if i % 2 else 1500, 60.0, 70.0, 5)
+            mb.update(allocated_after_backward_bytes=int((10 + leak) * GIB), reserved_bytes=int(70 * GIB))
+            mbs.append(mb)
+        ups = [dict(update=u, after_micro_batch=u * accum, allocated_after_step_zero_grad_bytes=int((5 + u * 0.04) * GIB),
+                    reserved_bytes=int(70 * GIB), inactive_split_bytes=0) for u in range(1, 11)]
+        g = diag.growth_slopes(dict(settings=dict(accum=accum, compile_warmup_steps=1), micro_batches=mbs, updates=ups))
+        self.assertAlmostEqual(g["update_first_mb"]["alloc"], 1.0, places=2)     # 0.01 GiB/mb -> 1 GiB / 100 mb
+        self.assertEqual(g["update_first_mb"]["n"], 9)                             # mbs 5, 9, ..., 37
+        self.assertAlmostEqual(g["update_first_mb"]["resv"], 0.0, places=6)
+        self.assertAlmostEqual(g["after_update"]["alloc"], 1.0, places=2)         # 0.04 GiB per 4 mb
+        self.assertAlmostEqual(g["shape:129024:8192"]["alloc"], 1.0, places=2)
+        self.assertIn("shape:30720:1500", g)
+        self.assertIsNone(diag.slope_per_100([(1.0, 5.0)]))
+        text = diag.format_table([dict(label="g", status="completed", settings=dict(accum=accum, compile_warmup_steps=1),
+                                       env={}, micro_batches=mbs, updates=ups)])
+        self.assertIn("growth after warm-up", text)
+        self.assertIn("update_first_mb", text)
+
     def test_empty_running_report_summarizes(self):
         s = diag.summarize_report(dict(status="running", micro_batches=[], updates=[]))
         self.assertEqual((s["peak_reserved_gib"], s["compiled_graphs"], s["oom_shape"]), (0.0, None, None))
@@ -182,6 +246,8 @@ class BatchTests(unittest.TestCase):
         a0 = diag.parse_args(["--out", "x.json", "--no-dense-tracks"])
         self.assertEqual(torch.count_nonzero(diag.make_batch(torch, cfg, a0, 3072, 64, 1,
                                                              torch.device("cpu"))["evidence_tracks"]).item(), 0)
+        rt.validate_b6_batch(b)                     # the trainer's check passes on the diagnostic's batch
+        self.assertEqual(rt.model_inputs(rt.apply_arm(b, rt.ARMS["C2"]))["chain_mask"].sum().item(), 0)
         other = diag.make_batch(torch, cfg, a, 3072, 64, 2, torch.device("cpu"))
         self.assertFalse(torch.equal(b["input_ids"], other["input_ids"]))
 
