@@ -448,13 +448,15 @@ def test_prebuild_sidecar_rehash_and_tmp_sweep(synth, tmp_path, monkeypatch):
     OC.prebuild_mmap(synth, mmap_dir=mm)
     d = OC.ObsCache(synth, mmap_dir=mm).derived_path("Athaliana", "Chr2")
     assert OC._sidecar(d).read_text().split()[0] == OC.sha256_file(d)
-    old_tmp, new_tmp = mm / f".{d.name}.1.aa.tmp", mm / f".{d.name}.2.bb.tmp"
-    old_tmp.write_bytes(b"x")
-    new_tmp.write_bytes(b"y")
-    os.utime(old_tmp, (1, 1))
+    old_tmp, new_tmp = mm / f".{d.name}.1.deadbeef.tmp", mm / f".{d.name}.2.cafef00d.tmp"
+    old_side_tmp, unrelated = mm / f".{d.name}.sha256.3.0badf00d.tmp", mm / ".foo.tmp"
+    for q in (old_tmp, new_tmp, old_side_tmp, unrelated):
+        q.write_bytes(b"x")
+    for q in (old_tmp, old_side_tmp, unrelated):
+        os.utime(q, (1, 1))
     calls = _hash_calls(monkeypatch)
     recs = OC.prebuild_mmap(synth, mmap_dir=mm)
-    assert not old_tmp.exists() and new_tmp.exists()
+    assert not old_tmp.exists() and not old_side_tmp.exists() and new_tmp.exists() and unrelated.exists()
     assert [r["built"] for r in recs] == [False] * len(CHROMS)
     parquet = [c for c in calls if c.endswith(".parquet")]
     assert parquet == [f"shard.Athaliana.{c}.parquet" for c in CHROMS]       # each parquet hashed once
@@ -468,3 +470,38 @@ def test_prebuild_sidecar_rehash_and_tmp_sweep(synth, tmp_path, monkeypatch):
     OC._sidecar(d).unlink()                                                  # no sidecar: rebuilt from the parquet
     assert [r["built"] for r in OC.prebuild_mmap(synth, mmap_dir=mm)] == [c == "Chr2" for c in CHROMS]
     _assert_shard_equal(OC.ObsCache(synth, mmap_dir=mm, require_prebuilt=True), ReferenceCache(synth), "Chr2")
+
+
+def test_sweep_tolerates_a_tmp_file_vanishing(tmp_path, monkeypatch):
+    gone = tmp_path / f".{'a' * 64}.arrow.7.deadbeef.tmp"
+    kept = tmp_path / f".{'b' * 64}.arrow.8.deadbeef.tmp"
+    for q in (gone, kept):
+        q.write_bytes(b"x")
+        os.utime(q, (1, 1))
+    real_stat = type(gone).stat
+
+    def stat(self, *a, **kw):
+        if self.name == gone.name:                                         # removed by someone else meanwhile
+            self.unlink(missing_ok=True)
+        return real_stat(self, *a, **kw)
+
+    monkeypatch.setattr(type(gone), "stat", stat)
+    assert OC._sweep_tmp(tmp_path) == [kept.name]
+
+
+def test_unreadable_derived_file_is_a_cache_error(synth, tmp_path):
+    if os.geteuid() == 0:
+        pytest.skip("root ignores file permissions")
+    mm = tmp_path / "m"
+    OC.prebuild_mmap(synth, mmap_dir=mm)
+    d = OC.ObsCache(synth, mmap_dir=mm).derived_path("Athaliana", "Chr1")
+    d.chmod(0o000)
+    try:
+        with pytest.raises(OC.CacheError, match="delete it and rerun the prebuild"):
+            OC.ObsCache(synth, mmap_dir=mm, require_prebuilt=True).shard("Athaliana", "Chr1")
+    finally:
+        d.chmod(0o644)
+    d.unlink()
+    d.mkdir()                                                              # IsADirectoryError
+    with pytest.raises(OC.CacheError, match="delete it and rerun the prebuild"):
+        OC.ObsCache(synth, mmap_dir=mm).shard("Athaliana", "Chr1")

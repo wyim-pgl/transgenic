@@ -37,6 +37,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -648,11 +649,9 @@ def open_derived(path):
     file is a CacheError (only the footer, schema and metadata are checked here; the content hash is checked by
     ``prebuild_mmap`` against ``<path>.sha256``)."""
     try:
-        source = pa.memory_map(str(path), "r")
+        return pa.ipc.open_file(pa.memory_map(str(path), "r")).read_all()
     except FileNotFoundError:
         return None
-    try:
-        return pa.ipc.open_file(source).read_all()
     except (pa.ArrowException, OSError, ValueError) as e:
         raise CacheError(f"{path}: unreadable derived shard ({e}); delete it and rerun the prebuild") from e
 
@@ -666,16 +665,16 @@ def write_derived(path, table):
     try:
         with pa.OSFile(str(tmp), "wb") as sink, pa.ipc.new_file(sink, table.schema) as w:
             w.write_table(table)
-        fd = os.open(tmp, os.O_RDONLY)
-        try:
-            os.fsync(fd)
-        finally:
-            os.close(fd)
+        _fsync(tmp)
         os.replace(tmp, path)
     finally:
         if tmp.exists():
             tmp.unlink()
-    fd = os.open(path.parent, os.O_RDONLY)
+    _fsync(path.parent)
+
+
+def _fsync(path):
+    fd = os.open(path, os.O_RDONLY)
     try:
         os.fsync(fd)
     finally:
@@ -687,11 +686,17 @@ def _sidecar(path):
 
 
 def write_sidecar(path):
-    """``<path>.sha256`` = sha256 of the derived file (written atomically)."""
+    """``<path>.sha256`` = sha256 of the derived file (tmp + fsync + rename + directory fsync)."""
     side = _sidecar(path)
     tmp = side.parent / f".{side.name}.{os.getpid()}.{os.urandom(4).hex()}.tmp"
-    tmp.write_text(f"{sha256_file(path)}  {Path(path).name}\n")
-    os.replace(tmp, side)
+    try:
+        tmp.write_text(f"{sha256_file(path)}  {Path(path).name}\n")
+        _fsync(tmp)
+        os.replace(tmp, side)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+    _fsync(side.parent)
 
 
 def build_derived(f, shard_meta, path):
@@ -743,7 +748,10 @@ class ObsCache:
     ``require_prebuilt`` (env ``B6_OBS_CACHE_REQUIRE_PREBUILT=1``; the production setting): nothing is built in the
     process; a missing derived file or a missing ``<derived>.sha256`` sidecar (written by ``prebuild_mmap``) is a
     CacheError.  The derived file's content hash is checked by ``prebuild_mmap`` only, not per process; opening checks
-    the footer, schema and the recorded source sha256 / rows / MMAP_VERSION."""
+    the footer, schema and the recorded source sha256 / rows / MMAP_VERSION, not the file size or content.  The
+    sidecar is written after its derived file, so a crash between the two leaves a derived file without a sidecar
+    (rebuilt by the next prebuild) but a derived file replaced after its sidecar is not noticed until a prebuild
+    re-hashes it: rerun the prebuild check right before each training submission."""
 
     def __init__(self, path, *, verify_shards=True, max_shards=None, mmap_dir=None, require_prebuilt=None):
         self.path = Path(path)
@@ -857,14 +865,23 @@ class ObsCache:
         return list(self.shard(species, chrom).xint)
 
 
+_TMP_NAME = re.compile(r"\.[0-9a-f]{64}\.arrow(\.sha256)?\.[0-9]+\.[0-9a-f]{8}\.tmp")   # write_derived / write_sidecar
+
+
 def _sweep_tmp(mmap_dir, now=None):
-    """Remove abandoned ``.<name>.<pid>.<rand>.tmp`` files older than TMP_SWEEP_AGE_S; returns their names."""
+    """Remove abandoned write_derived / write_sidecar tmp files (``.<sha>.arrow[.sha256].<pid>.<rand>.tmp``) older than
+    TMP_SWEEP_AGE_S; other files are left alone.  Returns the removed names."""
     now = time.time() if now is None else now
     gone = []
     for q in Path(mmap_dir).glob(".*.tmp") if Path(mmap_dir).is_dir() else ():
-        if now - q.stat().st_mtime > TMP_SWEEP_AGE_S:
-            q.unlink()
-            gone.append(q.name)
+        if not _TMP_NAME.fullmatch(q.name):
+            continue
+        try:
+            if now - q.stat().st_mtime > TMP_SWEEP_AGE_S:
+                q.unlink()
+                gone.append(q.name)
+        except FileNotFoundError:
+            continue
     return sorted(gone)
 
 
