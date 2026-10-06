@@ -36,11 +36,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
 from transgenic.evidence import b6_track_spec as TS
@@ -422,9 +425,61 @@ def write_cache(out_dir, rows, *, family, libraries, drops, bindings, zero_lists
 
 
 # ------------------------------------------------------------------------------------------------ loader
+# Shards are read through a derived, uncompressed Arrow IPC file per shard (``<mmap_dir>/<shard sha256>.arrow``),
+# built once from the sha-verified parquet and memory-mapped zero-copy: its pages live in the page cache, shared by
+# every process on the node and reclaimable, instead of one private object-array copy per process.  The cache
+# directory itself is never written; the derived files are a disposable runtime sidecar keyed by the verified shard
+# sha (and MMAP_VERSION), so they cannot go stale.
+MMAP_VERSION = "b6-obs-cache-mmap-v1"
+MMAP_DIR_ENV = "B6_OBS_CACHE_MMAP_DIR"
+MAX_SHARDS_ENV = "B6_OBS_CACHE_MAX_SHARDS"
+DEFAULT_MAX_SHARDS = 64        # open shards (mmap + small Python objects) kept per process
+DICT_VOCAB_MAX = 1 << 16       # a string column with at most this many distinct values keeps a Python vocab
+_ORDER, _ORDER_START = "_order", "_order_start"   # track row indices sorted by start0, then chain rows; padded -1
+
+
+def default_mmap_dir(cache_path):
+    """``<cache parent>/<cache name>.mmap_v1``: next to the cache directory, never inside it."""
+    p = Path(os.path.abspath(cache_path))
+    return p.parent / f"{p.name}.mmap_v1"
+
+
+class StrColumn:
+    """A shard string column without one Python str per row: integer codes into the column's distinct values.
+
+    ``col[i]`` -> the value (str or None) and ``col[idx]`` (integer or boolean array) -> an object ndarray, equal to
+    indexing ``ChunkedArray.to_numpy(zero_copy_only=False)``.  Up to ``DICT_VOCAB_MAX`` distinct values the vocab is
+    an object ndarray; beyond that it stays an Arrow array and only the selected rows are decoded."""
+
+    __slots__ = ("codes", "vocab", "_arrow")
+
+    def __init__(self, codes, dictionary):
+        self.codes = codes
+        self._arrow = None if len(dictionary) <= DICT_VOCAB_MAX else dictionary
+        self.vocab = dictionary.to_numpy(zero_copy_only=False) if self._arrow is None else None
+
+    def __len__(self):
+        return len(self.codes)
+
+    def mask(self, value):
+        """Boolean mask of the rows equal to ``value`` (whole column, decoded through the vocab only)."""
+        hit = np.nonzero(self.vocab == value)[0] if self._arrow is None else \
+            np.nonzero(pc.equal(self._arrow, value).fill_null(False).to_numpy(zero_copy_only=False))[0]
+        return np.isin(self.codes, hit) if len(hit) else np.zeros(len(self.codes), bool)
+
+    def __getitem__(self, key):
+        if isinstance(key, (int, np.integer)):
+            code = int(self.codes[key])
+            return self.vocab[code] if self._arrow is None else self._arrow[code].as_py()
+        codes = self.codes[key]
+        if self._arrow is None:
+            return self.vocab[codes]
+        return self._arrow.take(pa.array(codes.astype(np.int64, copy=False))).to_numpy(zero_copy_only=False)
+
+
 @dataclass
 class Shard:
-    cols: dict                 # column -> numpy array (object for strings)
+    cols: dict                 # column -> numpy array (fixed width, mmap-backed) or StrColumn (strings)
     track_idx: np.ndarray      # row indices of track rows sorted by start0
     track_start: np.ndarray
     track_maxlen: int
@@ -435,10 +490,186 @@ class Shard:
     xint: list                 # [(start0, end0, cause, scope, tile_rn)]
 
 
-class ObsCache:
-    """Read-only cache.  Verifies manifest sidecar, spec shas and (lazily, on first use) each shard's sha256."""
+def _env_limit(name, value, default):
+    if value is not None:
+        return value
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    _require(raw.isdigit() and int(raw) > 0, f"{name}={raw!r}: expected a positive integer")
+    return int(raw)
 
-    def __init__(self, path, *, verify_shards=True):
+
+def derive_table(f, source_sha256):
+    """Parquet shard -> the derived table: strings as dictionary<int8|16|32, large_string> (nulls encoded), numeric
+    columns as the exact numpy arrays the reader exposes (bool stored as uint8), plus the start-sorted track/chain
+    index columns.  Schema metadata binds it to ``source_sha256`` and ``MMAP_VERSION``."""
+    t = pq.read_table(f)
+    _require(tuple(t.schema.names) == COLUMNS, f"{f}: columns {t.schema.names} != {COLUMNS}")
+    n = t.num_rows
+    fields, arrays, np_cols = [], [], {}
+    for c in COLUMNS:
+        col = t.column(c)
+        if pa.types.is_string(col.type):
+            enc = col.dictionary_encode(null_encoding="encode").chunks
+            dictionary = enc[0].dictionary if enc else pa.array([], pa.string())
+            _require(all(ch.dictionary.equals(dictionary) for ch in enc[1:]), f"{f}: {c} chunk dictionaries differ")
+            codes = np.concatenate([ch.indices.to_numpy(zero_copy_only=False) for ch in enc]) if enc \
+                else np.zeros(0, np.int32)
+            width = np.int8 if len(dictionary) <= 1 << 7 else np.int16 if len(dictionary) <= 1 << 15 else np.int32
+            arr = pa.DictionaryArray.from_arrays(pa.array(codes.astype(width, copy=False)),
+                                                 dictionary.cast(pa.large_string()))
+            kind = "str"
+            if c == "row_type":
+                rt = StrColumn(codes, dictionary)
+        else:
+            a = col.to_numpy(zero_copy_only=False)
+            if c in ("start0", "end0"):
+                a = a.astype(np.int64, copy=False)
+            np_cols[c] = a
+            if a.dtype == object:                      # a boolean column with nulls: converted when opened
+                arr, kind = col.combine_chunks(), "object"
+            elif a.dtype == bool:
+                arr, kind = pa.array(a.view(np.uint8)), "bool"
+            else:
+                arr, kind = pa.array(a), a.dtype.str
+        fields.append(pa.field(c, arr.type, metadata={"np": kind}))
+        arrays.append(arr)
+    start, end = np_cols["start0"], np_cols["end0"]
+
+    def index(mask):
+        idx = np.nonzero(mask)[0]
+        idx = idx[np.argsort(start[idx], kind="stable")]
+        ml = int((end[idx] - start[idx]).max()) if len(idx) else 0
+        return idx, start[idx], ml
+
+    ti, ts, tml = index(rt.mask("track"))
+    ci, cs, cml = index(rt.mask("chain"))
+    del rt, t
+    pad = n - len(ti) - len(ci)
+    order = np.concatenate([ti, ci, np.full(pad, -1, np.int64)]).astype(np.int64)
+    order_start = np.concatenate([ts, cs, np.zeros(pad, np.int64)]).astype(np.int64)
+    for name, a in ((_ORDER, order), (_ORDER_START, order_start)):
+        fields.append(pa.field(name, pa.int64(), metadata={"np": "<i8"}))
+        arrays.append(pa.array(a))
+    meta = {"mmap_version": MMAP_VERSION, "source_sha256": source_sha256, "rows": str(n), "n_track": str(len(ti)),
+            "n_chain": str(len(ci)), "track_maxlen": str(tml), "chain_maxlen": str(cml)}
+    return pa.Table.from_arrays(arrays, schema=pa.schema(fields, metadata=meta))
+
+
+def _check_derived(table, path, shard_meta):
+    m = {k.decode(): v.decode() for k, v in (table.schema.metadata or {}).items()}
+    _require(m.get("mmap_version") == MMAP_VERSION and m.get("source_sha256") == shard_meta["sha256"]
+             and m.get("rows") == str(shard_meta["rows"]) and table.num_rows == shard_meta["rows"]
+             and tuple(table.schema.names) == COLUMNS + (_ORDER, _ORDER_START),
+             f"{path}: derived shard does not match manifest shard {shard_meta['file']} "
+             f"(sha {shard_meta['sha256']}, {shard_meta['rows']} rows, {MMAP_VERSION}); delete it to rebuild")
+    return m
+
+
+def _single(col):
+    if col.num_chunks == 1:
+        return col.chunk(0)
+    if pa.types.is_dictionary(col.type):
+        _require(col.num_chunks == 0, "derived shard: dictionary column in several chunks")
+        return pa.DictionaryArray.from_arrays(pa.array([], pa.int32()), pa.array([], pa.large_string()))
+    return col.combine_chunks()
+
+
+def shard_from_table(table, path, shard_meta):
+    """Shard over a derived table (memory-mapped or in memory).  Numeric columns and the index arrays are zero-copy
+    numpy views; only the vocabularies (<= DICT_VOCAB_MAX values per column) and xjunc/xint become Python objects."""
+    m = _check_derived(table, path, shard_meta)
+    cols = {}
+    for c, field in zip(COLUMNS, table.schema):
+        a, kind = _single(table.column(c)), field.metadata[b"np"].decode()
+        if kind == "str":
+            cols[c] = StrColumn(a.indices.to_numpy(zero_copy_only=True), a.dictionary)
+        elif kind == "object":
+            cols[c] = a.to_numpy(zero_copy_only=False)
+        elif kind == "bool":
+            cols[c] = a.to_numpy(zero_copy_only=True).view(np.bool_)
+        else:
+            cols[c] = a.to_numpy(zero_copy_only=True)
+            _require(cols[c].dtype.str == kind, f"{path}: column {c} dtype {cols[c].dtype.str} != {kind}")
+    order = _single(table.column(_ORDER)).to_numpy(zero_copy_only=True)
+    order_start = _single(table.column(_ORDER_START)).to_numpy(zero_copy_only=True)
+    nt, nc = int(m["n_track"]), int(m["n_chain"])
+    rt, start, end = cols["row_type"], cols["start0"], cols["end0"]
+    xj = [(cols["strand"][i], cols["kind"][i], int(start[i])) for i in np.nonzero(rt.mask("xjunc"))[0]]
+    xi = [(int(start[i]), int(end[i]), cols["kind"][i], cols["strand"][i], int(cols["tile_rn"][i]))
+          for i in np.nonzero(rt.mask("xint"))[0]]
+    return Shard(cols, order[:nt], order_start[:nt], int(m["track_maxlen"]), order[nt:nt + nc],
+                 order_start[nt:nt + nc], int(m["chain_maxlen"]), xj, xi)
+
+
+def open_derived(path):
+    """Memory-map a derived shard file (zero-copy); None if it does not exist."""
+    try:
+        source = pa.memory_map(str(path), "r")
+    except FileNotFoundError:
+        return None
+    return pa.ipc.open_file(source).read_all()
+
+
+def write_derived(path, table):
+    """Atomic write (tmp + fsync + rename).  Concurrent writers each write their own tmp file; the last rename wins
+    and every candidate holds the same derived content."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.parent / f".{path.name}.{os.getpid()}.{os.urandom(4).hex()}.tmp"
+    try:
+        with pa.OSFile(str(tmp), "wb") as sink, pa.ipc.new_file(sink, table.schema) as w:
+            w.write_table(table)
+        fd = os.open(tmp, os.O_RDONLY)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        os.replace(tmp, path)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+    fd = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+class _BuildLock:
+    """Advisory flock on ``<derived>.lock`` so one process builds a shard while the others wait for it.  Where the
+    filesystem has no flock (some Lustre/NFS mounts) it is a no-op and the atomic rename keeps concurrent builds safe."""
+
+    def __init__(self, path):
+        self.path = Path(f"{path}.lock")
+        self.fd = None
+
+    def __enter__(self):
+        import fcntl
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.fd = os.open(self.path, os.O_RDWR | os.O_CREAT, 0o644)
+        try:
+            fcntl.flock(self.fd, fcntl.LOCK_EX)
+        except OSError:
+            pass
+        return self
+
+    def __exit__(self, *exc):
+        os.close(self.fd)          # releases the flock
+
+
+class ObsCache:
+    """Read-only cache.  Verifies manifest sidecar, spec shas and (lazily, on first use) each shard's sha256.
+
+    A shard is served from its derived memory-mapped file ``<mmap_dir>/<shard sha256>.arrow`` (``mmap_dir``: argument,
+    env ``B6_OBS_CACHE_MMAP_DIR``, default ``default_mmap_dir(path)``).  A missing derived file is built from the parquet
+    after its sha256 is verified against the manifest (under ``_BuildLock``); an existing one is accepted when its
+    recorded source sha256, row count and MMAP_VERSION match the manifest entry.  ``verify_shards=False`` never writes
+    a derived file: an unverified parquet is converted in memory.  Open shards are kept in an LRU of ``max_shards``
+    (env ``B6_OBS_CACHE_MAX_SHARDS``, default 64); the most recently used shard is always kept."""
+
+    def __init__(self, path, *, verify_shards=True, max_shards=None, mmap_dir=None):
         self.path = Path(path)
         mf = self.path / "manifest.json"
         side = self.path / "manifest.json.sha256"
@@ -450,7 +681,12 @@ class ObsCache:
         _require(self.manifest.get("spec") == TS.SPEC_SHAS,
                  f"cache built under spec {self.manifest.get('spec')} != current {TS.SPEC_SHAS}")
         self.family = self.manifest["family"]
-        self._shards = {}
+        self._shards = OrderedDict()       # (species, chrom) -> Shard, least recently used first
+        self._empty = {}                   # keys without a shard (not counted by the LRU)
+        self.max_shards = _env_limit(MAX_SHARDS_ENV, max_shards, DEFAULT_MAX_SHARDS)
+        env_dir = os.environ.get(MMAP_DIR_ENV, "").strip()
+        self.mmap_dir = Path(mmap_dir) if mmap_dir is not None else Path(env_dir) if env_dir else \
+            default_mmap_dir(self.path)
         self._meta = {(s["species"], s["chrom"]): s for s in self.manifest["shards"]}
         self.verify_shards = verify_shards
         self._zero = {}
@@ -482,42 +718,40 @@ class ObsCache:
         return [(max(s, ws), min(e, we)) for s, e in self._zero[key].get(chrom, []) if s < we and e > ws]
 
     # -- shards
+    def derived_path(self, species, chrom):
+        return self.mmap_dir / f"{self._meta[(species, chrom)]['sha256']}.arrow"
+
     def shard(self, species, chrom):
         key = (species, chrom)
-        if key in self._shards:
-            return self._shards[key]
+        sh = self._shards.get(key)
+        if sh is not None:
+            self._shards.move_to_end(key)
+            return sh
         meta = self._meta.get(key)
         if meta is None:
-            empty = np.zeros(0, np.int64)
-            sh = Shard({c: np.zeros(0, object) for c in COLUMNS}, empty, empty, 0, empty, empty, 0, [], [])
-            self._shards[key] = sh
-            return sh
-        f = self.path / meta["file"]
-        if self.verify_shards:
-            _require(sha256_file(f) == meta["sha256"], f"shard {f} sha256 changed since the cache was built")
-        t = pq.read_table(f)
-        _require(tuple(t.schema.names) == COLUMNS, f"{f}: columns {t.schema.names} != {COLUMNS}")
-        cols = {}
-        for c in COLUMNS:
-            arr = t.column(c).to_numpy(zero_copy_only=False)
-            cols[c] = arr
-        rt = cols["row_type"]
-        start, end = cols["start0"].astype(np.int64), cols["end0"].astype(np.int64)
-        cols["start0"], cols["end0"] = start, end
-
-        def index(mask):
-            idx = np.nonzero(mask)[0]
-            idx = idx[np.argsort(start[idx], kind="stable")]
-            ml = int((end[idx] - start[idx]).max()) if len(idx) else 0
-            return idx, start[idx], ml
-
-        ti, ts, tml = index(rt == "track")
-        ci, cs, cml = index(rt == "chain")
-        xj = [(cols["strand"][i], cols["kind"][i], int(start[i])) for i in np.nonzero(rt == "xjunc")[0]]
-        xi = [(int(start[i]), int(end[i]), cols["kind"][i], cols["strand"][i], int(cols["tile_rn"][i]))
-              for i in np.nonzero(rt == "xint")[0]]
-        sh = Shard(cols, ti, ts, tml, ci, cs, cml, xj, xi)
+            if key not in self._empty:
+                empty = np.zeros(0, np.int64)
+                self._empty[key] = Shard({c: np.zeros(0, object) for c in COLUMNS}, empty, empty, 0, empty, empty, 0,
+                                         [], [])
+            return self._empty[key]
+        f, derived = self.path / meta["file"], self.derived_path(*key)
+        if not self.verify_shards:
+            table = open_derived(derived)
+            sh = shard_from_table(table if table is not None else derive_table(f, meta["sha256"]), derived, meta)
+        else:
+            table = open_derived(derived)
+            if table is None:
+                with _BuildLock(derived):
+                    table = open_derived(derived)          # built by another process meanwhile
+                    if table is None:
+                        _require(sha256_file(f) == meta["sha256"], f"shard {f} sha256 changed since the cache was built")
+                        write_derived(derived, derive_table(f, meta["sha256"]))
+                        pa.default_memory_pool().release_unused()
+                        table = open_derived(derived)
+            sh = shard_from_table(table, derived, meta)
         self._shards[key] = sh
+        while len(self._shards) > max(self.max_shards, 1):
+            self._shards.popitem(last=False)
         return sh
 
     @staticmethod
@@ -540,3 +774,26 @@ class ObsCache:
 
     def excluded_intervals(self, species, chrom):
         return list(self.shard(species, chrom).xint)
+
+
+def prebuild_mmap(cache_path, *, mmap_dir=None, log=None):
+    """Build, or check, the derived file of every manifest shard of a cache (run once before training).
+
+    Each shard's parquet sha256 is verified against the manifest, then its derived file is built (or an existing one is
+    opened and its recorded source sha256 / rows / MMAP_VERSION checked).  Returns one record per shard."""
+    cache = ObsCache(cache_path, max_shards=1, mmap_dir=mmap_dir)
+    out = []
+    for meta in cache.manifest["shards"]:
+        key = (meta["species"], meta["chrom"])
+        f, derived = cache.path / meta["file"], cache.derived_path(*key)
+        _require(sha256_file(f) == meta["sha256"], f"shard {f} sha256 changed since the cache was built")
+        existed = derived.is_file()
+        cache.shard(*key)
+        _check_derived(open_derived(derived), derived, meta)
+        rec = {"species": key[0], "chrom": key[1], "rows": meta["rows"], "source_sha256": meta["sha256"],
+               "derived": str(derived), "derived_bytes": derived.stat().st_size, "built": not existed}
+        out.append(rec)
+        if log is not None:
+            log(rec)
+    return out
+
