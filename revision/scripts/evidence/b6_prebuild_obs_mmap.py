@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Pre-build the memory-mapped derived shard files of a B6 observation cache (run once, before training).
 
-For every manifest shard: verify the parquet sha256 against the manifest, then build ``<mmap dir>/<shard sha256>.arrow``
-(or check an existing one's recorded source sha256, rows and version).  The cache directory is not written.  The mmap
-dir defaults to ``<cache parent>/<cache name>.mmap_v1`` (``--mmap-dir`` or env B6_OBS_CACHE_MMAP_DIR override it; the
-trainer must see the same directory).  Prints one JSON line per shard and a summary line.
+Run serially, once.  Removes abandoned tmp files older than an hour, then for every manifest shard: verify the parquet
+sha256 against the manifest, build ``<mmap dir>/<shard sha256>.arrow`` + its ``.sha256`` sidecar (or re-hash an
+existing one against its sidecar and check its recorded source sha256, rows and version).  The cache directory is not
+written.  The mmap dir defaults to ``<cache parent>/<cache name>.mmap_v1`` (``--mmap-dir`` or env
+B6_OBS_CACHE_MMAP_DIR override it; the trainer must see the same directory and should run with
+B6_OBS_CACHE_REQUIRE_PREBUILT=1).  Prints one JSON line per shard and a summary line.
 """
 from __future__ import annotations
 

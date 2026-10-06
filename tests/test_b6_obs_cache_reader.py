@@ -150,7 +150,7 @@ def test_lru_keeps_at_most_the_bound_and_reloads_identically(synth):
 
 def test_lru_default_and_env(synth, monkeypatch):
     monkeypatch.delenv(OC.MAX_SHARDS_ENV, raising=False)
-    assert OC.ObsCache(synth).max_shards == OC.DEFAULT_MAX_SHARDS == 64
+    assert OC.ObsCache(synth).max_shards == OC.DEFAULT_MAX_SHARDS == 512            # > the 455 train_v1 shards
     monkeypatch.setenv(OC.MAX_SHARDS_ENV, "3")
     assert OC.ObsCache(synth).max_shards == 3
     assert OC.ObsCache(synth, max_shards=5).max_shards == 5          # an explicit argument wins over the env
@@ -158,9 +158,14 @@ def test_lru_default_and_env(synth, monkeypatch):
     for chrom in CHROMS:
         cache.shard("Athaliana", chrom)
         assert list(cache._shards) == [("Athaliana", chrom)]          # the newest shard is always kept
-    monkeypatch.setenv(OC.MAX_SHARDS_ENV, "0")
-    with pytest.raises(OC.CacheError, match="positive integer"):
-        OC.ObsCache(synth)
+    for bad in ("0", "abc", "1.5", "-3", "\u00b2"):                       # "\u00b2" (superscript 2): isdigit, not decimal
+        monkeypatch.setenv(OC.MAX_SHARDS_ENV, bad)
+        with pytest.raises(OC.CacheError, match="positive integer"):
+            OC.ObsCache(synth)
+    monkeypatch.delenv(OC.MAX_SHARDS_ENV)
+    for bad in (0, -1, 1.5, True):
+        with pytest.raises(OC.CacheError, match="positive integer"):
+            OC.ObsCache(synth, max_shards=bad)
 
 
 def _hash_calls(monkeypatch):
@@ -335,3 +340,131 @@ def test_world_tracks_and_chains_unchanged(world):
             assert c1.qc == c2.qc
             n += 1
     assert n >= 20
+
+
+# ------------------------------------------------------------------------------------------- review follow-ups
+def test_open_decodes_nothing_and_xj_xi_are_lazy_and_equal(synth, tmp_path):
+    cache, ref = OC.ObsCache(synth, mmap_dir=tmp_path / "m"), ReferenceCache(synth)
+    for chrom in CHROMS:
+        sh = cache.shard("Athaliana", chrom)
+        assert sh._xjunc is None and sh._xint is None
+        assert all(c._vocab is None for c in sh.cols.values() if isinstance(c, OC.StrColumn))
+        assert cache.excluded_junctions("Athaliana", chrom) == ref.excluded_junctions("Athaliana", chrom)
+        assert cache.excluded_intervals("Athaliana", chrom) == ref.excluded_intervals("Athaliana", chrom)
+        assert sh._xjunc is not None and sh._xint is not None and cache.shard("Athaliana", chrom) is sh
+        assert sh.cols["molecule_id"]._vocab is None                      # untouched columns stay undecoded
+
+
+def _one_shard_cache(tmp_path, rows):
+    out = tmp_path / "c"
+    OC.write_cache(out, rows, family="train", libraries={}, drops={}, bindings={})
+    return out
+
+
+def _assert_shard_equal(cache, ref, chrom="Chr1"):
+    for acc in ("track_rows", "chain_rows"):
+        (sn, i_n), (sr, i_r) = getattr(cache, acc)("Athaliana", chrom, -10, 10**9), \
+            getattr(ref, acc)("Athaliana", chrom, -10, 10**9)
+        assert i_n.dtype == i_r.dtype and i_n.tolist() == i_r.tolist()
+        for c in OC.COLUMNS:
+            _assert_same_values(sn.cols[c][i_n], sr.cols[c][i_r])
+    assert cache.excluded_junctions("Athaliana", chrom) == ref.excluded_junctions("Athaliana", chrom)
+    assert cache.excluded_intervals("Athaliana", chrom) == ref.excluded_intervals("Athaliana", chrom)
+
+
+def test_bool_column_with_nulls_matches_the_object_reader(tmp_path):
+    rows = synthetic_rows(np.random.default_rng(11), 400, "Chr1")
+    for r in rows[::3]:
+        r["train_tiles_excluded"] = None
+    out = _one_shard_cache(tmp_path, rows)
+    cache, ref = OC.ObsCache(out), ReferenceCache(out)
+    assert cache.shard("Athaliana", "Chr1").cols["train_tiles_excluded"].dtype == object
+    _assert_shard_equal(cache, ref)
+    _assert_shard_equal(OC.ObsCache(out), ref)                               # reopened from the derived file
+
+
+def test_zero_row_shard(tmp_path):
+    import json
+    out = _one_shard_cache(tmp_path, synthetic_rows(np.random.default_rng(1), 5, "Chr1"))
+    pq.write_table(OC.SCHEMA.empty_table(), out / "shard.Athaliana.Chr1.parquet")
+    m = json.loads((out / "manifest.json").read_text())
+    m["shards"][0].update(rows=0, sha256=OC.sha256_file(out / "shard.Athaliana.Chr1.parquet"))
+    (out / "manifest.json").write_text(OC._canon(m) + "\n")
+    (out / "manifest.json.sha256").write_text(f"{OC.sha256_file(out / 'manifest.json')}  manifest.json\n")
+    _assert_shard_equal(OC.ObsCache(out), ReferenceCache(out))
+    _assert_shard_equal(OC.ObsCache(out), ReferenceCache(out))               # reopened from the derived file
+    assert OC.prebuild_mmap(out)[0]["rows"] == 0
+
+
+@pytest.mark.parametrize("damage", ["truncate", "garbage", "empty"])
+def test_damaged_derived_file_is_a_cache_error(synth, tmp_path, damage):
+    mm = tmp_path / "m"
+    OC.ObsCache(synth, mmap_dir=mm).shard("Athaliana", "Chr1")
+    d = OC.ObsCache(synth, mmap_dir=mm).derived_path("Athaliana", "Chr1")
+    data = d.read_bytes()
+    d.write_bytes({"truncate": data[: len(data) // 2], "garbage": os.urandom(len(data)), "empty": b""}[damage])
+    with pytest.raises(OC.CacheError, match="delete it and rerun the prebuild"):
+        OC.ObsCache(synth, mmap_dir=mm).shard("Athaliana", "Chr1")
+
+
+def test_require_prebuilt_never_builds(synth, tmp_path, monkeypatch):
+    mm = tmp_path / "m"
+    monkeypatch.setenv(OC.REQUIRE_PREBUILT_ENV, "1")
+    cache = OC.ObsCache(synth, mmap_dir=mm)
+    assert cache.require_prebuilt
+    with pytest.raises(OC.CacheError, match="sidecar is missing"):
+        cache.shard("Athaliana", "Chr1")
+    assert not mm.exists()                                                  # no build, no lock file
+    OC.ObsCache(synth, mmap_dir=mm, require_prebuilt=False).shard("Athaliana", "Chr1")   # build-on-miss, no sidecar
+    with pytest.raises(OC.CacheError, match="sidecar is missing"):
+        OC.ObsCache(synth, mmap_dir=mm).shard("Athaliana", "Chr1")
+    OC.prebuild_mmap(synth, mmap_dir=mm)
+    ref = ReferenceCache(synth)
+    for chrom in CHROMS:
+        _assert_shard_equal(OC.ObsCache(synth, mmap_dir=mm), ref, chrom)
+    monkeypatch.setenv(OC.REQUIRE_PREBUILT_ENV, "yes")
+    with pytest.raises(OC.CacheError, match="expected 0 or 1"):
+        OC.ObsCache(synth)
+
+
+def test_unwritable_mmap_dir_is_a_cache_error(synth, tmp_path):
+    if os.geteuid() == 0:
+        pytest.skip("root ignores directory permissions")
+    ro = tmp_path / "ro"
+    ro.mkdir()
+    ro.chmod(0o500)
+    try:
+        for mm in (ro, ro / "sub"):
+            with pytest.raises(OC.CacheError, match="cannot"):
+                OC.ObsCache(synth, mmap_dir=mm).shard("Athaliana", "Chr1")
+            with pytest.raises(OC.CacheError, match="cannot"):
+                OC.prebuild_mmap(synth, mmap_dir=mm)
+    finally:
+        ro.chmod(0o700)
+
+
+def test_prebuild_sidecar_rehash_and_tmp_sweep(synth, tmp_path, monkeypatch):
+    mm = tmp_path / "m"
+    OC.prebuild_mmap(synth, mmap_dir=mm)
+    d = OC.ObsCache(synth, mmap_dir=mm).derived_path("Athaliana", "Chr2")
+    assert OC._sidecar(d).read_text().split()[0] == OC.sha256_file(d)
+    old_tmp, new_tmp = mm / f".{d.name}.1.aa.tmp", mm / f".{d.name}.2.bb.tmp"
+    old_tmp.write_bytes(b"x")
+    new_tmp.write_bytes(b"y")
+    os.utime(old_tmp, (1, 1))
+    calls = _hash_calls(monkeypatch)
+    recs = OC.prebuild_mmap(synth, mmap_dir=mm)
+    assert not old_tmp.exists() and new_tmp.exists()
+    assert [r["built"] for r in recs] == [False] * len(CHROMS)
+    parquet = [c for c in calls if c.endswith(".parquet")]
+    assert parquet == [f"shard.Athaliana.{c}.parquet" for c in CHROMS]       # each parquet hashed once
+    assert [c for c in calls if c.endswith(".arrow")] == [OC.ObsCache(synth, mmap_dir=mm).derived_path(
+        "Athaliana", c).name for c in CHROMS]                                # each derived file re-hashed once
+    data = bytearray(d.read_bytes())
+    data[len(data) // 3] ^= 1                                                # content damage the footer check misses
+    d.write_bytes(bytes(data))
+    with pytest.raises(OC.CacheError, match="sha256 != "):
+        OC.prebuild_mmap(synth, mmap_dir=mm)
+    OC._sidecar(d).unlink()                                                  # no sidecar: rebuilt from the parquet
+    assert [r["built"] for r in OC.prebuild_mmap(synth, mmap_dir=mm)] == [c == "Chr2" for c in CHROMS]
+    _assert_shard_equal(OC.ObsCache(synth, mmap_dir=mm, require_prebuilt=True), ReferenceCache(synth), "Chr2")
