@@ -185,6 +185,8 @@ def parse_args(argv=None):
     p.add_argument("--out", default=None, help="JSON report (rewritten after every micro-batch)")
     p.add_argument("--summarize", nargs="+", default=None, metavar="JSON",
                    help="print the comparison table of existing reports and exit (no torch, no GPU)")
+    p.add_argument("--ranks", type=int, default=1,
+                   help="--summarize: ranks per configuration (rank r > 0 read from <stem>.rank<r>.json)")
     a = p.parse_args(argv)
     if a.summarize:
         return a
@@ -196,6 +198,8 @@ def parse_args(argv=None):
             raise Refused("--updates must be >= 1")
         if a.accum is not None and a.accum < 1:
             raise Refused("--accum must be >= 1")
+        if a.compile_warmup_steps < 0:
+            raise Refused("--compile-warmup-steps must be >= 0")
         if a.world_size < 1:
             raise Refused("--world-size must be >= 1")
         if not 0 <= a.chain_elements <= rt.CHAIN_ELEMENTS - 1:
@@ -266,6 +270,26 @@ def growth_slopes(report: Dict) -> Dict[str, Dict]:
         out[name] = dict(n=len(rows), **{label: slope_per_100([(float(r[xkey]), float(r.get(key, 0))) for r in rows])
                                          for label, key in metrics})
     return out
+
+
+def scheduler_ticks_per_update(production_world: int, world: int) -> int:
+    """accelerate's prepared scheduler steps once per process per update (AcceleratedScheduler, split_batches off):
+    production at world W advances W ticks per update, this run advances ``world`` per call, so call
+    production_world // world times (>= 1)."""
+    return max(1, int(production_world) // max(1, int(world)))
+
+
+def measurement_start(t_start: float, warmup_updates: int) -> Optional[float]:
+    """When the post-warm-up window opens: immediately for zero warm-up updates, else at the end of the warm-up."""
+    return t_start if int(warmup_updates) <= 0 else None
+
+
+def budget_reached(now: float, t_start: float, t_measure: Optional[float], max_minutes: Optional[float],
+                   measure_minutes: Optional[float]) -> bool:
+    if max_minutes is not None and (now - t_start) / 60.0 >= max_minutes:
+        return True
+    return (measure_minutes is not None and t_measure is not None
+            and (now - t_measure) / 60.0 >= measure_minutes)
 
 
 def summarize_report(report: Dict) -> Dict:
@@ -350,25 +374,60 @@ def write_json(path: str, obj: Dict) -> None:
     os.replace(tmp, path)
 
 
-def summarize_main(paths: Sequence[str]) -> int:
-    """Table plus one CLASS line per path. 0 when every report finished or recorded an OOM, else 1."""
-    reports, classes = [], []
+CLASS_PRECEDENCE = ("oom", "error", "missing", "incomplete", "finished")
+
+
+def aggregate_ranks(rank_reports: Sequence[Optional[Dict]]) -> Dict:
+    """One configuration over all its expected rank reports (None = missing). Any rank's OOM makes the configuration
+    ``oom`` with that rank's shape and peaks; otherwise error > missing > incomplete > finished."""
+    classes = [classify(r) for r in rank_reports]
+    cls = next(c for c in CLASS_PRECEDENCE if c in classes)
+    out = dict(classification=cls, ranks=classes, rank=None, oom_shape=None, peak_allocated_gib=None,
+               peak_reserved_gib=None)
+    present = [(k, r) for k, r in enumerate(rank_reports) if r is not None]
+    if cls == "oom":
+        k, r = next((k, r) for k, r in present if classify(r) == "oom")
+        s = summarize_report(r)
+        out.update(rank=k, oom_shape=s["oom_shape"], oom_phase=s["oom_phase"], oom_micro_batch=s["oom_micro_batch"],
+                   peak_allocated_gib=s["peak_allocated_gib"], peak_reserved_gib=s["peak_reserved_gib"])
+    elif present:
+        sums = [(k, summarize_report(r)) for k, r in present]
+        k, s = max(sums, key=lambda ks: ks[1]["peak_reserved_gib"])
+        out.update(rank=k, peak_allocated_gib=max(x["peak_allocated_gib"] for _, x in sums),
+                   peak_reserved_gib=s["peak_reserved_gib"])
+    return out
+
+
+def _read_report(path: str) -> Optional[Dict]:
+    try:
+        with open(path) as fh:
+            r = json.load(fh)
+    except (OSError, ValueError) as exc:
+        print(f"== {path}: no readable report ({type(exc).__name__}: {exc})")
+        return None
+    r.setdefault("out", path)
+    return r
+
+
+def summarize_main(paths: Sequence[str], ranks: int = 1) -> int:
+    """Per configuration (rank-0 path given; ranks 1..N-1 read from rank_out_path): one table per rank report and one
+    CLASS line aggregated over every expected rank. 0 when every configuration finished or recorded an OOM, else 1."""
+    classes = []
     for p in paths:
-        try:
-            with open(p) as fh:
-                r = json.load(fh)
-        except (OSError, ValueError) as exc:
-            print(f"== {p}: no readable report ({type(exc).__name__}: {exc})")
-            classes.append((p, "missing"))
-            continue
-        r.setdefault("out", p)
-        reports.append(r)
-        classes.append((r.get("label") or p, classify(r)))
-    if reports:
-        print(format_table(reports))
-    for name, c in classes:
-        print(f"CLASS {name}: {c}")
-    return EXIT_OK if all(c in ("finished", "oom") for _, c in classes) else EXIT_ERROR
+        rank_reports = [_read_report(rank_out_path(p, k)) for k in range(max(1, int(ranks)))]
+        present = [r for r in rank_reports if r is not None]
+        if present:
+            print(format_table(present))
+        agg = aggregate_ranks(rank_reports)
+        name = (present[0].get("label") if present else None) or p
+        detail = (f" rank {agg['rank']} shape {agg['oom_shape']} ({agg.get('oom_phase')}) peak allocated "
+                  f"{agg['peak_allocated_gib']:.2f} / reserved {agg['peak_reserved_gib']:.2f} GiB"
+                  if agg["classification"] == "oom" else
+                  (f" peak allocated {agg['peak_allocated_gib']:.2f} / reserved {agg['peak_reserved_gib']:.2f} GiB"
+                   if agg["peak_reserved_gib"] is not None else ""))
+        print(f"CLASS {name}: {agg['classification']} (ranks {','.join(agg['ranks'])}){detail}")
+        classes.append(agg["classification"])
+    return EXIT_OK if all(c in ("finished", "oom") for c in classes) else EXIT_ERROR
 
 
 # ---- GPU part ----------------------------------------------------------------------------------------------------
@@ -516,7 +575,9 @@ def run(args) -> int:
 
     seq = shape_sequence(args.shape_list, args.updates * accum)
     t_start = time.time()
-    t_measure = None
+    t_measure = measurement_start(t_start, args.compile_warmup_steps)
+    ticks = scheduler_ticks_per_update(args.world_size, world)
+    report["settings"]["scheduler_ticks_per_update_call"] = ticks
     phase, tier, labels, i = "setup", None, None, 0
     exit_code = EXIT_OK
     try:
@@ -549,7 +610,8 @@ def run(args) -> int:
                 torch.cuda.reset_peak_memory_stats(device)
                 clip_grad_norm_(model.parameters(), 1.0)
                 optimizer.step()
-                scheduler.step()
+                for _ in range(ticks):                  # production: 4 ranks x 1 tick each per update
+                    scheduler.step()
                 optimizer.zero_grad(set_to_none=True)
                 torch.cuda.synchronize(device)
                 up = dict(update=u_idx, after_micro_batch=i, **_mem(torch, device),
@@ -576,10 +638,7 @@ def run(args) -> int:
                       f"alloc_after_step {up['allocated_after_step_zero_grad_bytes'] / GIB:6.2f} "
                       f"peak_resv {up['max_reserved_bytes'] / GIB:6.2f} GiB graphs {up['compiled_graphs']}"
                       + (f" GUARD: {up['guard_error']}" if up["guard_error"] else ""), flush=True)
-                now = time.time()
-                over = ((args.max_minutes is not None and (now - t_start) / 60.0 >= args.max_minutes)
-                        or (args.measure_minutes is not None and t_measure is not None
-                            and (now - t_measure) / 60.0 >= args.measure_minutes))
+                over = budget_reached(time.time(), t_start, t_measure, args.max_minutes, args.measure_minutes)
                 if agreed(over):
                     report["status"] = "time_budget"
                     save()
@@ -613,7 +672,7 @@ def run(args) -> int:
 def main(argv=None) -> int:
     args = parse_args(argv)
     if args.summarize:
-        return summarize_main(args.summarize)
+        return summarize_main(args.summarize, args.ranks)
     return run(args)
 
 

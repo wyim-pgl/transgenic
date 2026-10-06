@@ -228,6 +228,37 @@ class OomAndSummaryTests(unittest.TestCase):
         self.assertIn("growth after warm-up", text)
         self.assertIn("update_first_mb", text)
 
+    def test_ranks_aggregate_and_any_rank_oom_makes_the_configuration_oom(self):
+        with tempfile.TemporaryDirectory() as d:
+            r0 = os.path.join(d, "a_trainer.json")
+            diag.write_json(r0, dict(label="a_trainer", status="completed", settings=dict(accum=2), env={},
+                                     micro_batches=[_mb(1, 129024, 4480, 60.0, 70.0, 3)], updates=[]))
+            self.assertEqual(diag.summarize_main([r0], ranks=2), diag.EXIT_ERROR)      # rank 1 missing
+            diag.write_json(diag.rank_out_path(r0, 1), self.report())                    # rank 1 OOM
+            self.assertEqual(diag.summarize_main([r0], ranks=2), diag.EXIT_OK)
+        agg = diag.aggregate_ranks([dict(status="completed", micro_batches=[], updates=[]), self.report()])
+        self.assertEqual((agg["classification"], agg["rank"], agg["oom_shape"], agg["ranks"]),
+                         ("oom", 1, "129024:8192", ["finished", "oom"]))
+        self.assertEqual(diag.aggregate_ranks([dict(status="completed"), None])["classification"], "missing")
+        self.assertEqual(diag.aggregate_ranks([dict(status="error"), dict(status="running")])["classification"], "error")
+        self.assertEqual(diag.parse_args(["--summarize", "a.json", "--ranks", "2"]).ranks, 2)
+
+    def test_scheduler_advances_as_production_world_four(self):
+        self.assertEqual(diag.scheduler_ticks_per_update(4, 1), 4)
+        self.assertEqual(diag.scheduler_ticks_per_update(4, 2), 2)
+        self.assertEqual(diag.scheduler_ticks_per_update(4, 4), 1)
+
+    def test_zero_warmup_opens_the_measurement_window_immediately(self):
+        t0 = 1000.0
+        self.assertEqual(diag.measurement_start(t0, 0), t0)
+        self.assertIsNone(diag.measurement_start(t0, 3))
+        self.assertTrue(diag.budget_reached(t0 + 61, t0, diag.measurement_start(t0, 0), None, 1.0))
+        self.assertFalse(diag.budget_reached(t0 + 61, t0, diag.measurement_start(t0, 3), None, 1.0))
+        self.assertTrue(diag.budget_reached(t0 + 120, t0, None, 2.0, None))
+        self.assertEqual(diag.parse_args(["--out", "x.json", "--compile-warmup-steps", "0"]).compile_warmup_steps, 0)
+        with self.assertRaises(SystemExit):
+            diag.parse_args(["--out", "x.json", "--compile-warmup-steps", "-1"])
+
     def test_empty_running_report_summarizes(self):
         s = diag.summarize_report(dict(status="running", micro_batches=[], updates=[]))
         self.assertEqual((s["peak_reserved_gib"], s["compiled_graphs"], s["oom_shape"]), (0.0, None, None))

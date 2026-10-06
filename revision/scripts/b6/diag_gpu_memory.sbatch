@@ -20,14 +20,16 @@
 #   sbatch --gpus-per-node=2 --export=ALL,RANKS=2 revision/scripts/b6/diag_gpu_memory.sbatch
 # Each run: TORCH_LOGS=recompiles, its own JSON and log, time caps. One failing configuration does not stop the others.
 # Every configuration is classified from the status in its JSON (finished / oom / error / incomplete / missing),
+# aggregated over every rank's JSON (<label>.json, <label>.rank1.json; any rank's OOM makes it oom),
 # never from the launcher's exit code (torchrun and accelerate turn exit 5 into 1).
 #
 # Time budget (60 min job): the 4-GPU smoke ran ~15 s per optimizer update of 24 micro-batches per rank, i.e.
 # ~0.6 s per micro-batch (129k tiers longer, ~0.9 s). Per configuration: ~1 min model load + several minutes of
 # compile warm-up (the first 3 updates, one graph per new tier / label-dynamic recompile), then MEASURE minutes of
-# post-warm-up updates, stopped at an update boundary (cap UPDATES). a/b measure 10 min (~850 micro-batches, ~35
-# updates at ACCUM 24), c measures 8 min (~28 updates): all >= 25 updates (600 micro-batches) at the estimate.
-# Expected ~16 + 16 + 14 min; hard caps (timeout) 19 + 19 + 16 = 54 min. The JSON is rewritten after every
+# post-warm-up updates, stopped at an update boundary (cap UPDATES). a/b measure 9 min (~770 micro-batches, ~32
+# updates at ACCUM 24), c measures 7 min (~600 micro-batches, ~25 updates) at the estimate.
+# Expected ~15 + 15 + 13 min; hard caps (timeout + 1 min kill grace) 18 + 18 + 15 = 51 min, leaving >= 9 min
+# for GPU warm-up and the summary. The JSON is rewritten after every
 # micro-batch, so a run killed by its cap still leaves its measurements (classified incomplete).
 #
 # NOT SUBMITTED by the writer. Submit only after the author's go-ahead:
@@ -82,9 +84,9 @@ done
 run_config() {   # $1 = label; returns the launcher's exit code (124/137 when timeout stopped it); not used to classify
   local label=$1 det alloc measure maxmin cap
   case "$label" in
-    a_trainer)    det=on;  alloc="unset PYTORCH_CUDA_ALLOC_CONF"; measure=${MEASURE_A:-10}; maxmin=17; cap=19;;
-    b_expandable) det=on;  alloc="export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"; measure=${MEASURE_B:-10}; maxmin=17; cap=19;;
-    c_nondet)     det=off; alloc="unset PYTORCH_CUDA_ALLOC_CONF"; measure=${MEASURE_C:-8}; maxmin=14; cap=16;;
+    a_trainer)    det=on;  alloc="unset PYTORCH_CUDA_ALLOC_CONF"; measure=${MEASURE_A:-9}; maxmin=16; cap=17;;
+    b_expandable) det=on;  alloc="export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"; measure=${MEASURE_B:-9}; maxmin=16; cap=17;;
+    c_nondet)     det=off; alloc="unset PYTORCH_CUDA_ALLOC_CONF"; measure=${MEASURE_C:-7}; maxmin=13; cap=14;;
     *) echo "unknown configuration $label" >&2; return 4;;
   esac
   local extra=""
@@ -116,7 +118,7 @@ echo "===== summary (job $JOB; classification from each JSON's status; rank-1 JS
 for label in $CONFIGS; do echo "$label launcher_rc=${RCS[$label]}"; done
 SUMRC=0
 apptainer exec --bind "$WORK":/work --bind "$REPO_DIR":/work/repo "$SIF" bash -lc "
-  cd /work/repo && PYTHONPATH=/work/repo/src python revision/scripts/b6/diag_gpu_memory.py --summarize ${JSONS[*]}
+  cd /work/repo && PYTHONPATH=/work/repo/src python revision/scripts/b6/diag_gpu_memory.py --summarize ${JSONS[*]} --ranks $RANKS
 " || SUMRC=$?
 echo "driver_peak_mem_mib: $(awk -F', ' '{if($3+0>m)m=$3+0} END{print m+0}' "$MEMLOG")"
 echo "outputs: $OUT_HOST"
