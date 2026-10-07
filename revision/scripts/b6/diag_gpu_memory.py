@@ -183,6 +183,15 @@ def parse_args(argv=None):
                    help="stop at the first update boundary after this wall time from the first micro-batch")
     p.add_argument("--seed", type=int, default=rt.SEED)
     p.add_argument("--out", default=None, help="JSON report (rewritten after every micro-batch)")
+    p.add_argument("--real-bindings", default=None, metavar="JSON",
+                   help="real-data replay: the trainer's WP3 binding manifest (switches off the synthetic shape loop)")
+    p.add_argument("--real-from-draw-log", default=None, metavar="TSV",
+                   help="replay the last --last rows of a trainer draw_log/rankNN.tsv (row, epoch, uniforms sha256)")
+    p.add_argument("--last", type=int, default=40, help="draw-log rows to replay, in draw order (default 40)")
+    p.add_argument("--real-indices", default=None,
+                   help="extra samples after the draw-log ones: comma list or file of rn or rn:epoch (epoch 0)")
+    p.add_argument("--real-verify", action="store_true",
+                   help="also run the trainer's verify_training_inputs (~15 min) and hash-check the corpus")
     p.add_argument("--summarize", nargs="+", default=None, metavar="JSON",
                    help="print the comparison table of existing reports and exit (no torch, no GPU)")
     p.add_argument("--ranks", type=int, default=1,
@@ -198,6 +207,12 @@ def parse_args(argv=None):
             raise Refused("--updates must be >= 1")
         if a.accum is not None and a.accum < 1:
             raise Refused("--accum must be >= 1")
+        if a.real_bindings and not (a.real_from_draw_log or a.real_indices):
+            raise Refused("--real-bindings needs --real-from-draw-log and/or --real-indices")
+        if (a.real_from_draw_log or a.real_indices) and not a.real_bindings:
+            raise Refused("--real-from-draw-log / --real-indices need --real-bindings")
+        if a.last < 1:
+            raise Refused("--last must be >= 1")
         if a.compile_warmup_steps < 0:
             raise Refused("--compile-warmup-steps must be >= 0")
         if a.world_size < 1:
@@ -270,6 +285,106 @@ def growth_slopes(report: Dict) -> Dict[str, Dict]:
         out[name] = dict(n=len(rows), **{label: slope_per_100([(float(r[xkey]), float(r.get(key, 0))) for r in rows])
                                          for label, key in metrics})
     return out
+
+
+# ---- real-data replay helpers (torch-free) ------------------------------------------------------------------------
+
+LABEL_PAD = -100
+# dims allowed to differ between a real and a synthetic batch (DNA length L, label length T); every other dim is fixed
+VARIABLE_DIMS = {"input_ids": (1,), "attention_mask": (1,), "evidence_tracks": (1,), "labels": (1,)}
+
+
+def parse_draw_log(lines: Iterable[str], last: int) -> List[Tuple[int, int, str]]:
+    """Trainer draw_log/rankNN.tsv rows ``row\tepoch\tuniforms_sha256`` (log_draws: meta row = corpus rn, the epoch,
+    and b6_aug draw.sha256()); the last ``last`` rows in draw order."""
+    rows = []
+    for n, line in enumerate(lines, start=1):
+        line = line.rstrip("\n")
+        if not line.strip():
+            continue
+        parts = line.split("\t")
+        if len(parts) != 3:
+            raise Refused(f"draw log line {n}: expected 3 tab-separated columns, got {len(parts)}")
+        try:
+            rn, ep = int(parts[0]), int(parts[1])
+        except ValueError:
+            raise Refused(f"draw log line {n}: row and epoch must be integers") from None
+        sha = parts[2].strip()
+        if len(sha) != 64 or any(c not in "0123456789abcdef" for c in sha):
+            raise Refused(f"draw log line {n}: {sha!r} is not a sha256 hex digest")
+        rows.append((rn, ep, sha))
+    if not rows:
+        raise Refused("empty draw log")
+    return rows[-int(last):]
+
+
+def parse_index_list(text: str) -> List[Tuple[int, int]]:
+    """'rn' or 'rn:epoch' items separated by commas, whitespace or newlines; epoch defaults to 0."""
+    out = []
+    for item in str(text).replace(",", " ").split():
+        parts = item.split(":")
+        try:
+            if len(parts) == 1:
+                out.append((int(parts[0]), 0))
+            elif len(parts) == 2:
+                out.append((int(parts[0]), int(parts[1])))
+            else:
+                raise ValueError
+        except ValueError:
+            raise Refused(f"index {item!r} is not rn or rn:epoch") from None
+    return out
+
+
+def read_index_arg(value: str) -> List[Tuple[int, int]]:
+    """--real-indices: a file of indices when the path exists, else the literal list."""
+    if os.path.isfile(value):
+        with open(value) as fh:
+            return parse_index_list(fh.read())
+    return parse_index_list(value)
+
+
+def signature_diff(real: Dict[str, Dict], synth: Dict[str, Dict]) -> List[str]:
+    """Differences of a real batch signature {key: {"shape": [...], "dtype": str}} from the synthetic one: keys on
+    one side only, dtype or rank differences, and fixed (non-L, non-T) dims that differ."""
+    out = []
+    for k in sorted(set(real) - set(synth)):
+        out.append(f"{k}: only in the real batch {real[k]['shape']} {real[k]['dtype']}")
+    for k in sorted(set(synth) - set(real)):
+        out.append(f"{k}: only in the synthetic batch {synth[k]['shape']} {synth[k]['dtype']}")
+    for k in sorted(set(real) & set(synth)):
+        r, y = real[k], synth[k]
+        if r["dtype"] != y["dtype"]:
+            out.append(f"{k}: dtype {r['dtype']} (synthetic {y['dtype']})")
+        if len(r["shape"]) != len(y["shape"]):
+            out.append(f"{k}: rank {len(r['shape'])} {r['shape']} (synthetic {y['shape']})")
+            continue
+        fixed = [d for d in range(len(r["shape"])) if d not in VARIABLE_DIMS.get(k, ())]
+        bad = [d for d in fixed if r["shape"][d] != y["shape"][d]]
+        if bad:
+            out.append(f"{k}: fixed dims {bad} differ: {r['shape']} (synthetic {y['shape']})")
+    return out
+
+
+def format_real_table(report: Dict) -> str:
+    """Replayed samples sorted by peak allocated (an OOM sample sorts by its OOM-point peak)."""
+    rows = []
+    for s in report.get("samples", []):
+        mem = s.get("memory") or {}
+        rows.append((mem.get("max_allocated_bytes", 0), s))
+    rows.sort(key=lambda t: -t[0])
+    lines = [f"   {'order':>5} {'rn':>10} {'ep':>3} {'L':>7} {'attn':>7} {'T':>5} {'nonpad':>6} {'chains':>6} "
+             f"{'alloc_GiB':>9} {'resv_GiB':>9} {'sha':>5} status"]
+    for alloc, s in rows:
+        d = s.get("describe") or {}
+        mem = s.get("memory") or {}
+        sha = {True: "ok", False: "DIFF", None: "-"}[s.get("draw_sha_match")]
+        lines.append(f"   {s.get('order', 0):>5} {s['rn']:>10} {s.get('epoch', 0):>3} {str(d.get('L', '-')):>7} "
+                     f"{str(d.get('attended', '-')):>7} {str(d.get('label_len', '-')):>5} "
+                     f"{str(d.get('label_nonpad', '-')):>6} {str(d.get('chain_elements', '-')):>6} "
+                     f"{alloc / GIB:>9.2f} {mem.get('max_reserved_bytes', 0) / GIB:>9.2f} {sha:>5} {s.get('status')}")
+    diffs = report.get("signature_diff_vs_synthetic") or []
+    lines.append("   real vs synthetic batch keys/shapes: " + ("; ".join(diffs) if diffs else "no difference beyond L and T"))
+    return "\n".join(lines)
 
 
 def scheduler_ticks_per_update(production_world: int, world: int) -> int:
@@ -363,6 +478,9 @@ def format_table(reports: Iterable[Dict]) -> str:
         for name, g in s["growth"].items():
             lines.append(f"   {name:>20} {g['n']:>4} {_fmt_slope(g['alloc'])} {_fmt_slope(g['resv'])} "
                          f"{_fmt_slope(g['inact'])}")
+        if r.get("mode") == "real":
+            lines.append(f"   real-data replay ({len(r.get('samples', []))} samples, sorted by peak allocated):")
+            lines.append(format_real_table(r))
     return "\n".join(lines)
 
 
@@ -468,6 +586,210 @@ def _wrap_ddp_like_accelerate(torch, acc, model):
     return model, kwargs
 
 
+def _load_trainer():
+    """train/train_HyenaTransgenic_B6.py as a module, for its own dataset-building functions."""
+    import importlib.util
+    path = os.path.abspath(os.path.join(HERE, "..", "..", "..", "train", "train_HyenaTransgenic_B6.py"))
+    spec = importlib.util.spec_from_file_location("b6_trainer_for_diag", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod                   # its dataclasses resolve annotations through sys.modules
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def build_real_inputs(args, cfg, report) -> SimpleNamespace:
+    """The trainer main()'s train dataset: same functions and arguments (arm B6 dataset arm, aug_seed, encoders,
+    ObsCache from the bindings, honouring B6_OBS_CACHE_REQUIRE_PREBUILT). verify_training_inputs runs only with
+    --real-verify; without it B6Corpus gets expected_sha256=None, which skips only the corpus hash check (the
+    dataset object reads the same files the same way)."""
+    tr = _load_trainer()
+    b6_dataset, b6_aug, b6_bindings, b6_context, b6_obs_cache, b6_roles = tr._wp3()
+    with open(args.real_bindings) as fh:
+        paths = json.load(fh)
+    t0 = time.time()
+    cache = b6_obs_cache.ObsCache(paths["cache"])
+    expected = None
+    if args.real_verify:
+        roles = b6_roles.load_roles(paths["roles"])
+        record = tr.verify_training_inputs(paths, roles=roles, cache=cache, b6_bindings=b6_bindings,
+                                           aug_seed=rt.AUG_SEED_BASE + args.seed)
+        expected = record["corpus_sha256"]
+    corpus = b6_context.B6Corpus(paths["corpus"], cache, expected_sha256=expected)
+    train_rns, _, _ = tr.corpus_rows(paths["corpus"])
+    arm = rt.ARMS[args.arm]
+    c3 = None                                         # main(): donor map only for C3; the replay arms are B6/C2
+    common = dict(arm=arm.dataset_arm, aug_seed=rt.AUG_SEED_BASE + args.seed,
+                  encode_dna=b6_dataset.hyena_char_encoder(cfg["encoder_model"]),
+                  tokenize_gsf=b6_dataset.gff_label_tokenizer(cfg.get("gff_vocab_version", "v3")), c3_donors=c3)
+    train_ds = b6_dataset.B6Dataset(corpus, cache, mode="train_track", **common)
+    samples = []
+    if args.real_from_draw_log:
+        with open(args.real_from_draw_log) as fh:
+            for rn, ep, sha in parse_draw_log(fh, args.last):
+                samples.append(dict(rn=rn, epoch=ep, logged_sha=sha, source="draw_log"))
+    if args.real_indices:
+        for rn, ep in read_index_arg(args.real_indices):
+            samples.append(dict(rn=rn, epoch=ep, logged_sha=None, source="extra"))
+    train_set = set(int(x) for x in train_rns)
+    report["real"] = dict(bindings=os.path.abspath(args.real_bindings), paths=paths, draw_log=args.real_from_draw_log,
+                          last=args.last, extra=args.real_indices, verify_training_inputs=bool(args.real_verify),
+                          corpus_sha256_checked=expected is not None, dataset_mode="train_track",
+                          dataset_arm=arm.dataset_arm, aug_seed=rt.AUG_SEED_BASE + args.seed,
+                          setup_seconds=round(time.time() - t0, 1), n_samples=len(samples),
+                          not_in_train_split=[s["rn"] for s in samples if s["rn"] not in train_set])
+    return SimpleNamespace(ds=train_ds, collate=b6_dataset.b6_collate_fn_torch, samples=samples)
+
+
+def _signature(torch, batch) -> Dict[str, Dict]:
+    return {k: dict(shape=list(v.shape), dtype=str(v.dtype)) for k, v in batch.items() if torch.is_tensor(v)}
+
+
+def describe_batch(torch, batch) -> Dict:
+    """Keys/shapes/dtypes, label length and non-pad count, chain elements, attended bases and the non-zero fraction
+    of evidence_tracks per channel group."""
+    tr = batch["evidence_tracks"]
+    groups = dict(mask=list(rt.MASK_CHANNELS), phase=list(rt.PHASE_CHANNELS), count=list(rt.COUNT_CHANNELS),
+                  all=list(range(int(tr.shape[-1]))))
+    frac = {}
+    for name, ch in groups.items():
+        if ch:
+            sub = tr[..., ch]
+            frac[name] = round(float(torch.count_nonzero(sub)) / max(1, sub.numel()), 6)
+    labels = batch.get("labels")
+    return dict(signature=_signature(torch, batch), L=int(batch["input_ids"].shape[1]),
+                attended=int(batch["attention_mask"].sum()),
+                label_len=(int(labels.shape[1]) if labels is not None else None),
+                label_nonpad=(int((labels != LABEL_PAD).sum()) if labels is not None else None),
+                chain_elements=int(batch["chain_mask"].sum()), track_nonzero_fraction=frac)
+
+
+def run_real(T, real) -> int:
+    """One micro-batch per replayed sample (batch_size 1), trainer order of operations; an OOM is recorded, the
+    accumulation window is discarded (zero_grad, no optimizer step), the cache emptied, the DDP wrapper rebuilt
+    (a backward that died mid-reduction leaves the reducer unusable) and the replay continues."""
+    import gc
+    torch, acc, args, report, device = T.torch, T.acc, T.args, T.report, T.device
+    ticks = scheduler_ticks_per_update(args.world_size, T.world)
+    report["settings"]["scheduler_ticks_per_update_call"] = ticks
+    synth = bench.synthetic_batch(torch, T.cfg, SimpleNamespace(tier=3072, label_tokens=64,
+                                                                chain_elements=args.chain_elements, seed=args.seed),
+                                  torch.device("cpu"), 0)
+    synth_sig = _signature(torch, synth)
+    report["synthetic_signature"] = synth_sig
+    report["samples"], report["ooms"] = [], []
+    diffs: List[str] = []
+    window_failed, micro, t_start = False, 0, time.time()
+    for order, smp in enumerate(real.samples, start=1):
+        rec = dict(order=order, rn=smp["rn"], epoch=smp["epoch"], source=smp["source"], logged_sha=smp["logged_sha"],
+                   status="running", draw_sha_match=None)
+        report["samples"].append(rec)
+        phase, failed_oom, failed = "dataset", False, False
+        out = inputs = batch = None
+        try:
+            t0 = time.perf_counter()
+            batch = real.collate([real.ds[(smp["rn"], smp["epoch"])]])
+            rec["dataset_seconds"] = round(time.perf_counter() - t0, 3)
+            got_sha = batch["meta"]["uniforms_sha256"][0]
+            rec["sample_sha"] = got_sha
+            if smp["logged_sha"] is not None:
+                rec["draw_sha_match"] = (got_sha == smp["logged_sha"])
+            phase = "batch"
+            torch.cuda.reset_peak_memory_stats(device)
+            batch = {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()}
+            rt.validate_b6_batch(batch)                     # trainer line 453
+            d = describe_batch(torch, batch)
+            rec["describe"] = d
+            for x in signature_diff(d["signature"], synth_sig):
+                if x not in diffs:
+                    diffs.append(x)
+            inputs = rt.model_inputs(rt.apply_arm(batch, T.arm))
+            torch._dynamo.maybe_mark_dynamic(inputs["labels"], 1)
+            t0 = time.perf_counter()
+            phase = "forward"
+            out = T.model(**inputs)
+            phase = "backward"
+            acc.backward(out.loss / T.accum)
+            torch.cuda.synchronize(device)
+            rec.update(status="ok", seconds=round(time.perf_counter() - t0, 3), loss=float(out.loss.detach().float()),
+                       memory=_mem(torch, device), compiled_graphs=rt.compiled_graph_count())
+            mb = dict(micro_batch=order, tier=d["L"], labels=d["label_len"], **rec["memory"],
+                      compiled_graphs=rec["compiled_graphs"], rn=smp["rn"])
+            mb["allocated_after_backward_bytes"] = mb.pop("allocated_bytes")
+            report["micro_batches"].append(mb)
+        except Exception as exc:                     # noqa: BLE001 - recorded per sample; the replay continues
+            failed = True
+            if is_oom(exc, T.oom_types):
+                failed_oom = True
+                d = rec.get("describe") or {}
+                o = dict(order=order, rn=smp["rn"], micro_batch=order, tier=d.get("L"), labels=d.get("label_len"),
+                         phase=phase, message=str(exc)[:4000], memory=_mem(torch, device),
+                         memory_stats={k: torch.cuda.memory_stats(device).get(k) for k in STAT_KEYS},
+                         memory_summary=torch.cuda.memory_summary(device, abbreviated=False))
+                rec.update(status="oom", phase=phase, memory=o["memory"])
+                report["ooms"].append(o)
+                if report["oom"] is None:
+                    report["oom"] = o
+                print(f"OOM rn {smp['rn']} (order {order}) L {d.get('L')} T {d.get('label_len')} phase {phase}",
+                      file=sys.stderr, flush=True)
+                print(o["memory_summary"], file=sys.stderr, flush=True)
+            else:
+                rec.update(status="error", phase=phase, error=f"{type(exc).__name__}: {str(exc)[:2000]}")
+                print(f"ERROR rn {smp['rn']} ({phase}): {rec['error']}", file=sys.stderr, flush=True)
+        if failed:
+            out = inputs = batch = None
+            if phase in ("forward", "backward") or failed_oom:
+                window_failed = True
+                T.optimizer.zero_grad(set_to_none=True)
+                if isinstance(T.model, torch.nn.parallel.DistributedDataParallel) and phase in ("forward", "backward"):
+                    inner = T.model.module
+                    T.model = None
+                    gc.collect()
+                    T.model, _ = _wrap_ddp_like_accelerate(torch, acc, inner)
+                    rec["ddp_rewrapped"] = True
+            gc.collect()
+            torch.cuda.empty_cache()
+        d = rec.get("describe") or {}
+        mem = rec.get("memory") or {}
+        keys = ", ".join("%s:%s:%s" % (k, tuple(v["shape"]), v["dtype"]) for k, v in d.get("signature", {}).items())
+        print(f"real {order:3d} rn {smp['rn']} ep {smp['epoch']} {rec['status']:>5} L {d.get('L')} attn {d.get('attended')} "
+              f"T {d.get('label_len')} nonpad {d.get('label_nonpad')} chains {d.get('chain_elements')} "
+              f"tracks_nz {d.get('track_nonzero_fraction')} peak_alloc {mem.get('max_allocated_bytes', 0) / GIB:6.2f} "
+              f"peak_resv {mem.get('max_reserved_bytes', 0) / GIB:6.2f} GiB sha {rec['draw_sha_match']} "
+              f"keys {{{keys}}}",
+              flush=True)
+        if rec["status"] in ("ok", "oom") or phase in ("forward", "backward"):
+            micro += 1
+            if micro % T.accum == 0:
+                up = dict(update=micro // T.accum, after_micro_batch=order, skipped=window_failed)
+                torch.cuda.reset_peak_memory_stats(device)
+                if window_failed:                       # never step on a window with a failed micro-batch
+                    T.optimizer.zero_grad(set_to_none=True)
+                else:
+                    T.clip_grad_norm_(T.model.parameters(), 1.0)
+                    T.optimizer.step()
+                    for _ in range(ticks):
+                        T.scheduler.step()
+                    T.optimizer.zero_grad(set_to_none=True)
+                torch.cuda.synchronize(device)
+                up.update(_mem(torch, device))
+                up["allocated_after_step_zero_grad_bytes"] = up.pop("allocated_bytes")
+                report["updates"].append(up)
+                window_failed = False
+        report["signature_diff_vs_synthetic"] = diffs
+        T.save()
+        if args.max_minutes is not None and (time.time() - t_start) / 60.0 >= args.max_minutes:
+            report["stopped_by_time_budget_after"] = order
+            break
+    statuses = [s["status"] for s in report["samples"]]
+    report["status"] = ("oom" if "oom" in statuses else "error" if "error" in statuses else
+                        "time_budget" if report.get("stopped_by_time_budget_after") else "completed")
+    report.update(elapsed_seconds=round(time.time() - t_start, 1), dynamo_counters=_dynamo_counters(),
+                  final_compiled_graphs=rt.compiled_graph_count(), finished_at=time.strftime("%Y-%m-%dT%H:%M:%S"))
+    T.save()
+    print(format_table([report]), flush=True)
+    return EXIT_OOM if report["status"] == "oom" else EXIT_ERROR if report["status"] == "error" else EXIT_OK
+
+
 def run(args) -> int:
     import torch
     import torch.distributed as dist
@@ -495,6 +817,9 @@ def run(args) -> int:
     if not args.ddp and world != 1:
         print(f"REFUSED: --ddp off runs one process (got {world})", file=sys.stderr)
         return EXIT_REFUSED
+    if args.real_bindings and world != 1:
+        print("REFUSED: the real-data replay runs on one rank", file=sys.stderr)
+        return EXIT_REFUSED
     out_path = rank_out_path(args.out, rank)
     oom_types = tuple(t for t in (getattr(torch, "OutOfMemoryError", None),
                                   getattr(torch.cuda, "OutOfMemoryError", None)) if t is not None)
@@ -518,7 +843,8 @@ def run(args) -> int:
                   differences_from_production=["synthetic batches (bench_memory_129k.synthetic_batch)",
                                                "no evaluation pass",
                                                "schedule train rows derived from n_pilot (LR values only)"],
-                  micro_batches=[], updates=[], oom=None, error=None)
+                  micro_batches=[], updates=[], oom=None, error=None,
+                  mode="real" if args.real_bindings else "synthetic")
 
     def save():
         write_json(out_path, report)
@@ -528,6 +854,14 @@ def run(args) -> int:
         # Exactly train_HyenaTransgenic_B6.run_b6 (spec.deterministic); needs CUBLAS_WORKSPACE_CONFIG=:4096:8.
         torch.use_deterministic_algorithms(True)
         torch.backends.cudnn.deterministic, torch.backends.cudnn.benchmark = True, False
+    real = None
+    if args.real_bindings:
+        try:
+            real = build_real_inputs(args, cfg, report)
+        except Refused as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return EXIT_REFUSED
+        save()
     torch.manual_seed(rt.SEED)                      # train_HyenaTransgenic_B6.build_model
     torch.cuda.manual_seed_all(rt.SEED)
     model = B6TransgenicForConditionalGeneration(b6_config(**rt.b6_model_kwargs(cfg)))
@@ -567,6 +901,12 @@ def run(args) -> int:
                   optimize_ddp=bool(torch._dynamo.config.optimize_ddp),
                   model_static_allocated_bytes=int(torch.cuda.memory_allocated(device)))
     save()
+    if real is not None:
+        T = SimpleNamespace(torch=torch, acc=acc, model=model, optimizer=optimizer, scheduler=scheduler,
+                            clip_grad_norm_=clip_grad_norm_, report=report, save=save, device=device, world=world,
+                            accum=accum, arm=arm, cfg=cfg, args=args, oom_types=oom_types)
+        model = None                     # T.model is the only reference, so a rebuilt DDP wrapper frees the old one
+        return run_real(T, real)
 
     def agreed(flag: bool) -> bool:
         if world > 1:

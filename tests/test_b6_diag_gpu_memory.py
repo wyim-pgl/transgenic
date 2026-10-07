@@ -264,6 +264,97 @@ class OomAndSummaryTests(unittest.TestCase):
         self.assertEqual((s["peak_reserved_gib"], s["compiled_graphs"], s["oom_shape"]), (0.0, None, None))
 
 
+SHA_A, SHA_B = "a" * 64, "0123456789abcdef" * 4
+
+
+class RealReplayParsingTests(unittest.TestCase):
+    def test_draw_log_last_rows_in_draw_order(self):
+        lines = [f"{100 + i}\t0\t{SHA_A}\n" for i in range(50)] + ["\n"]
+        rows = diag.parse_draw_log(lines, 40)
+        self.assertEqual(len(rows), 40)
+        self.assertEqual((rows[0], rows[-1]), ((110, 0, SHA_A), (149, 0, SHA_A)))
+        self.assertEqual(diag.parse_draw_log([f"7\t1\t{SHA_B}"], 40), [(7, 1, SHA_B)])
+
+    def test_draw_log_refuses_malformed_rows(self):
+        for bad in ([f"7\t0"], [f"x\t0\t{SHA_A}"], ["7\t0\tnot-a-sha"], [f"7\t0\t{SHA_A.upper()}"], []):
+            with self.subTest(bad=bad):
+                with self.assertRaises(diag.Refused):
+                    diag.parse_draw_log(bad, 40)
+
+    def test_index_list_and_file(self):
+        self.assertEqual(diag.parse_index_list("5, 6:1\n7"), [(5, 0), (6, 1), (7, 0)])
+        for bad in ("5:x", "a", "1:2:3"):
+            with self.assertRaises(diag.Refused):
+                diag.parse_index_list(bad)
+        with tempfile.TemporaryDirectory() as d:
+            f = os.path.join(d, "idx.txt")
+            with open(f, "w") as fh:
+                fh.write("11\n12:0\n")
+            self.assertEqual(diag.read_index_arg(f), [(11, 0), (12, 0)])
+        self.assertEqual(diag.read_index_arg("13,14"), [(13, 0), (14, 0)])
+
+    def test_trainer_module_loads_with_its_dataset_functions(self):
+        tr = diag._load_trainer()
+        for name in ("_wp3", "verify_training_inputs", "corpus_rows", "build_model"):
+            self.assertTrue(callable(getattr(tr, name)), name)
+
+    def test_real_mode_arguments(self):
+        a = diag.parse_args(["--out", "x.json", "--real-bindings", "b.json", "--real-from-draw-log", "r.tsv"])
+        self.assertEqual((a.real_bindings, a.real_from_draw_log, a.last, a.real_indices, a.real_verify),
+                         ("b.json", "r.tsv", 40, None, False))
+        for argv in (["--out", "x.json", "--real-bindings", "b.json"],
+                     ["--out", "x.json", "--real-indices", "5"],
+                     ["--out", "x.json", "--real-bindings", "b.json", "--real-indices", "5", "--last", "0"]):
+            with self.subTest(argv=argv):
+                with self.assertRaises(SystemExit) as cm:
+                    diag.parse_args(argv)
+                self.assertEqual(cm.exception.code, diag.EXIT_REFUSED)
+
+    def test_signature_diff_ignores_L_and_T_only(self):
+        synth = {"input_ids": dict(shape=[1, 3072], dtype="torch.int64"),
+                 "labels": dict(shape=[1, 64], dtype="torch.int64"),
+                 "chain_idx": dict(shape=[1, 512, 2], dtype="torch.int64"),
+                 "evidence_tracks": dict(shape=[1, 3072, 31], dtype="torch.float16")}
+        same = {"input_ids": dict(shape=[1, 129024], dtype="torch.int64"),
+                "labels": dict(shape=[1, 8000], dtype="torch.int64"),
+                "chain_idx": dict(shape=[1, 512, 2], dtype="torch.int64"),
+                "evidence_tracks": dict(shape=[1, 129024, 31], dtype="torch.float16")}
+        self.assertEqual(diag.signature_diff(same, synth), [])
+        real = dict(same, chain_idx=dict(shape=[1, 1024, 2], dtype="torch.int32"),
+                    extra=dict(shape=[1, 4], dtype="torch.bool"))
+        real.pop("labels")
+        diff = diag.signature_diff(real, synth)
+        self.assertTrue(any(x.startswith("extra: only in the real batch") for x in diff))
+        self.assertTrue(any(x.startswith("labels: only in the synthetic batch") for x in diff))
+        self.assertTrue(any("chain_idx: dtype torch.int32" in x for x in diff))
+        self.assertTrue(any("chain_idx: fixed dims [1]" in x for x in diff))
+
+    def real_report(self):
+        def smp(order, rn, alloc, status="ok", match=True):
+            return dict(order=order, rn=rn, epoch=0, status=status, draw_sha_match=match,
+                        describe=dict(L=129024, attended=129000, label_len=8192, label_nonpad=8192, chain_elements=300),
+                        memory=dict(max_allocated_bytes=int(alloc * GIB), max_reserved_bytes=int((alloc + 5) * GIB)))
+        return dict(label="real_a_trainer", mode="real", status="oom", settings=dict(accum=24), env={},
+                    micro_batches=[_mb(1, 129024, 8192, 58.0, 63.0, 3), _mb(2, 129024, 8192, 61.0, 66.0, 3)],
+                    updates=[], samples=[smp(1, 11, 58.0), smp(2, 22, 61.0, match=False),
+                                         smp(3, 33, 87.0, status="oom", match=None)],
+                    oom=dict(micro_batch=3, rn=33, tier=129024, labels=8192, phase="backward",
+                             memory=dict(max_allocated_bytes=int(87 * GIB), max_reserved_bytes=int(92 * GIB))),
+                    signature_diff_vs_synthetic=["chain_idx: dtype torch.int32 (synthetic torch.int64)"])
+
+    def test_real_table_sorted_by_peak_allocated_with_the_diff(self):
+        text = diag.format_real_table(self.real_report())
+        body = text.splitlines()[1:4]
+        self.assertEqual([int(l.split()[1]) for l in body], [33, 22, 11])
+        self.assertIn("oom", body[0])
+        self.assertIn("DIFF", body[1])
+        self.assertIn("chain_idx: dtype torch.int32", text)
+        s = diag.summarize_report(self.real_report())
+        self.assertAlmostEqual(s["peak_allocated_gib"], 87.0, places=6)
+        self.assertEqual(s["classification"], "oom")
+        self.assertIn("real-data replay (3 samples", diag.format_table([self.real_report()]))
+
+
 @unittest.skipUnless(HAVE_TORCH, "torch not installed")
 class BatchTests(unittest.TestCase):
     def test_batch_is_the_bench_contract_at_the_requested_shape(self):
@@ -279,6 +370,10 @@ class BatchTests(unittest.TestCase):
                                                              torch.device("cpu"))["evidence_tracks"]).item(), 0)
         rt.validate_b6_batch(b)                     # the trainer's check passes on the diagnostic's batch
         self.assertEqual(rt.model_inputs(rt.apply_arm(b, rt.ARMS["C2"]))["chain_mask"].sum().item(), 0)
+        d = diag.describe_batch(torch, b)
+        self.assertEqual((d["L"], d["attended"], d["label_len"], d["label_nonpad"], d["chain_elements"]),
+                         (3072, 3072, 64, 64, 511))
+        self.assertEqual(d["track_nonzero_fraction"]["all"], 1.0)
         other = diag.make_batch(torch, cfg, a, 3072, 64, 2, torch.device("cpu"))
         self.assertFalse(torch.equal(b["input_ids"], other["input_ids"]))
 
