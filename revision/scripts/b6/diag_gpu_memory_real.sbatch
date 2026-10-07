@@ -12,7 +12,8 @@
 #
 # B6 real-data memory replay (diag_gpu_memory.py --real-bindings): the synthetic diagnostic (job 3322147) peaked at
 # 58.5 GiB allocated while the real 4-GPU smoke OOMed at 87 GiB, so a real batch carries something the synthetic one
-# does not. Replays, one micro-batch per sample on 1 GPU, the last LAST rows of the smoke's rank-3 draw log (rank 3
+# does not. Replays, one micro-batch per sample on 1 GPU, the last LAST rows (start rounded down to the trainer's
+# 24-micro-batch window boundary; AdamW moments materialised first) of the smoke's rank-3 draw log (rank 3
 # OOMed in the compiled backward; the trainer writes a row just before that sample's forward), then EXTRA samples,
 # with the trainer's dataset (WP3 bindings, B6Dataset train_track, b6_collate_fn_torch, validate_b6_batch, apply_arm
 # B6), model, compile, 1-rank DDP wrap, per-rank accumulation 24 and deterministic algorithms (configuration a).
@@ -22,7 +23,7 @@
 # OOMed: recorded with memory_summary, the replay continued). The trainer's ~15 min input verification is skipped
 # (VERIFY=1 runs it); the dataset object is the same (only the corpus hash check is skipped).
 #
-# Time: ~1 min model load + dataset open, compile warm-up per new DNA length (several minutes), ~40-50 samples at a few
+# Time: ~1 min model load + dataset open, compile warm-up per new DNA length (several minutes), 40-63 samples at a few
 # s each (CPU rasterisation + compiled step). Caps: 20 min diagnostic budget, timeout 22 min + 1 min kill grace per
 # configuration = 46 min, leaving >= 14 min for GPU warm-up and the summary.
 #

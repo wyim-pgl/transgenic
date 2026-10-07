@@ -193,6 +193,20 @@ class OomAndSummaryTests(unittest.TestCase):
         r2 = dict(r, oom=None, status="completed")
         self.assertAlmostEqual(diag.summarize_report(r2)["peak_reserved_gib"], 71.0, places=6)    # update peak
 
+    def test_peak_and_oom_fields_take_the_worst_of_all_ooms(self):
+        def o(n, alloc, phase):
+            return dict(micro_batch=n, tier=129024, labels=4000 + n, phase=phase,
+                        memory=dict(max_allocated_bytes=int(alloc * GIB), max_reserved_bytes=int((alloc + 2) * GIB)))
+        first, worst = o(1, 80.0, "backward"), o(2, 90.0, "optimizer_step")
+        r = dict(label="r", status="oom", settings=dict(accum=24), env={}, micro_batches=[], updates=[],
+                 oom=first, ooms=[first, worst])
+        s = diag.summarize_report(r)
+        self.assertAlmostEqual(s["peak_allocated_gib"], 90.0, places=6)
+        self.assertAlmostEqual(s["peak_reserved_gib"], 92.0, places=6)
+        self.assertEqual((s["oom_shape"], s["oom_micro_batch"], s["oom_phase"], s["n_ooms"]),
+                         ("129024:4002", 2, "optimizer_step", 2))
+        self.assertEqual(set(s["per_shape"]), {"129024:4001", "129024:4002"})
+
     def test_classification_comes_from_the_json_status(self):
         self.assertEqual([diag.classify(x) for x in (None, dict(status="completed"), dict(status="time_budget"),
                                                      dict(status="oom"), dict(status="error"), dict(status="running"))],
@@ -267,19 +281,85 @@ class OomAndSummaryTests(unittest.TestCase):
 SHA_A, SHA_B = "a" * 64, "0123456789abcdef" * 4
 
 
+class GuardedUpdateTests(unittest.TestCase):
+    def calls(self, *, window_failed=False, step_exc=None, ticks=4):
+        log = []
+
+        def step():
+            log.append("step")
+            if step_exc is not None:
+                raise step_exc
+        oom_seen = []
+        result = diag.guarded_update(window_failed=window_failed, clip=lambda: log.append("clip"), step=step,
+                                     sched_step=lambda: log.append("sched"), ticks=ticks,
+                                     zero_grad=lambda: log.append("zero_grad"), oom_types=(FakeOOM,),
+                                     on_oom=lambda exc: oom_seen.append(str(exc)))
+        return result, log, oom_seen
+
+    def test_normal_update_steps_the_scheduler_per_production_tick(self):
+        self.assertEqual(self.calls(), ("stepped", ["clip", "step", "sched", "sched", "sched", "sched", "zero_grad"], []))
+
+    def test_failed_window_is_never_stepped(self):
+        self.assertEqual(self.calls(window_failed=True), ("skipped", ["zero_grad"], []))
+
+    def test_optimizer_oom_is_recorded_inside_the_handler(self):
+        result, log, seen = self.calls(step_exc=FakeOOM("CUDA out of memory in AdamW"))
+        self.assertEqual((result, log, seen), ("oom", ["clip", "step", "zero_grad"], ["CUDA out of memory in AdamW"]))
+        result, _, seen = self.calls(step_exc=RuntimeError("CUDA out of memory. Tried to allocate 2 GiB"))
+        self.assertEqual((result, len(seen)), ("oom", 1))
+
+    def test_other_step_errors_propagate(self):
+        with self.assertRaises(ValueError):
+            self.calls(step_exc=ValueError("bad"))
+
+
+class FakeOOM(RuntimeError):
+    pass
+
+
 class RealReplayParsingTests(unittest.TestCase):
-    def test_draw_log_last_rows_in_draw_order(self):
+    def test_draw_log_rows_in_draw_order(self):
         lines = [f"{100 + i}\t0\t{SHA_A}\n" for i in range(50)] + ["\n"]
-        rows = diag.parse_draw_log(lines, 40)
-        self.assertEqual(len(rows), 40)
-        self.assertEqual((rows[0], rows[-1]), ((110, 0, SHA_A), (149, 0, SHA_A)))
-        self.assertEqual(diag.parse_draw_log([f"7\t1\t{SHA_B}"], 40), [(7, 1, SHA_B)])
+        rows = diag.parse_draw_log(lines)
+        self.assertEqual(len(rows), 50)
+        self.assertEqual((rows[0], rows[-1]), ((100, 0, SHA_A), (149, 0, SHA_A)))
+        self.assertEqual(diag.parse_draw_log([f"7\t1\t{SHA_B}"]), [(7, 1, SHA_B)])
+
+    def test_replay_starts_on_a_trainer_window_boundary(self):
+        # smoke rank 3: 3,915 rows, accum 24 -> last 40 start at row 3,876, rounded down to the boundary 3,865
+        self.assertEqual(diag.aligned_replay_window(3915, 40, 24), (3865, 3915))
+        self.assertEqual(diag.window_position(3865, 24), 0)
+        self.assertEqual(diag.window_position(3915, 24), 2)              # the last (OOM) row: 3rd of its window
+        self.assertEqual(diag.window_position(3912, 24), 23)             # an update boundary
+        self.assertEqual(diag.aligned_replay_window(30, 40, 24), (1, 30))
+        self.assertEqual(diag.aligned_replay_window(48, 24, 24), (25, 48))
+        self.assertEqual(diag.aligned_replay_window(49, 24, 24), (25, 49))
+        with self.assertRaises(diag.Refused):
+            diag.aligned_replay_window(0, 40, 24)
+
+    def test_replay_plan_keeps_rows_positions_and_continues_with_extras(self):
+        rows = [(1000 + k, 0, SHA_A) for k in range(1, 51)]                 # row k -> rn 1000 + k
+        plan = diag.replay_plan(rows, [(7, 0), (8, 1)], last=10, accum=24)
+        self.assertEqual(plan[0]["row_number"], 25)                         # 41 rounded down to 25
+        self.assertEqual([p["window_pos"] for p in plan[:2]], [0, 1])
+        self.assertEqual((plan[25]["row_number"], plan[25]["rn"], plan[25]["window_pos"]), (50, 1050, 1))
+        self.assertEqual([(p["rn"], p["epoch"], p["row_number"], p["window_pos"], p["logged_sha"]) for p in plan[-2:]],
+                         [(7, 0, 51, 2, None), (8, 1, 52, 3, None)])
+        self.assertEqual([p["row_number"] for p in diag.replay_plan([], [(5, 0)], 40, 24)], [1])
+
+    def test_sha_mismatch_detection(self):
+        plan = diag.replay_plan([(1, 0, SHA_A), (2, 0, SHA_B)], [(3, 0)], last=40, accum=24)
+        bad = diag.sha_mismatches(plan, lambda rn, ep: SHA_A)
+        self.assertEqual([(b["row_number"], b["rn"]) for b in bad], [(2, 2)])
+        self.assertEqual(diag.sha_mismatches(plan, lambda rn, ep: {1: SHA_A, 2: SHA_B}[rn]), [])
+        self.assertEqual(diag.classify(dict(status="sha_mismatch")), "sha_mismatch")
+        self.assertEqual(diag.aggregate_ranks([dict(status="sha_mismatch")])["classification"], "sha_mismatch")
 
     def test_draw_log_refuses_malformed_rows(self):
         for bad in ([f"7\t0"], [f"x\t0\t{SHA_A}"], ["7\t0\tnot-a-sha"], [f"7\t0\t{SHA_A.upper()}"], []):
             with self.subTest(bad=bad):
                 with self.assertRaises(diag.Refused):
-                    diag.parse_draw_log(bad, 40)
+                    diag.parse_draw_log(bad)
 
     def test_index_list_and_file(self):
         self.assertEqual(diag.parse_index_list("5, 6:1\n7"), [(5, 0), (6, 1), (7, 0)])
@@ -345,7 +425,7 @@ class RealReplayParsingTests(unittest.TestCase):
     def test_real_table_sorted_by_peak_allocated_with_the_diff(self):
         text = diag.format_real_table(self.real_report())
         body = text.splitlines()[1:4]
-        self.assertEqual([int(l.split()[1]) for l in body], [33, 22, 11])
+        self.assertEqual([int(l.split()[3]) for l in body], [33, 22, 11])
         self.assertIn("oom", body[0])
         self.assertIn("DIFF", body[1])
         self.assertIn("chain_idx: dtype torch.int32", text)

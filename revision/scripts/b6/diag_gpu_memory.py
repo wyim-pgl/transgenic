@@ -52,7 +52,7 @@ import bench_memory_129k as bench  # noqa: E402  (also puts <repo>/src on sys.pa
 from transgenic.training import b6_runtime as rt  # noqa: E402
 
 GIB = 2 ** 30
-EXIT_OK, EXIT_ERROR, EXIT_REFUSED, EXIT_OOM = 0, 1, 4, 5
+EXIT_OK, EXIT_ERROR, EXIT_REFUSED, EXIT_OOM, EXIT_SHA_MISMATCH = 0, 1, 4, 5, 6
 DEFAULT_CONFIG = "configs/b6_400m_win_v3_wp5_pilot.json"
 DEFAULT_SHAPES = ("129024:4480,129024:8192,61440:3000,30720:1500,129024:6000,"
                   "129024:4480,61440:3000,129024:8192")
@@ -247,6 +247,8 @@ def classify(report: Optional[Dict]) -> str:
         return "oom"
     if status == "error":
         return "error"
+    if status == "sha_mismatch":
+        return "sha_mismatch"
     return "incomplete"
 
 
@@ -294,9 +296,9 @@ LABEL_PAD = -100
 VARIABLE_DIMS = {"input_ids": (1,), "attention_mask": (1,), "evidence_tracks": (1,), "labels": (1,)}
 
 
-def parse_draw_log(lines: Iterable[str], last: int) -> List[Tuple[int, int, str]]:
-    """Trainer draw_log/rankNN.tsv rows ``row\tepoch\tuniforms_sha256`` (log_draws: meta row = corpus rn, the epoch,
-    and b6_aug draw.sha256()); the last ``last`` rows in draw order."""
+def parse_draw_log(lines: Iterable[str]) -> List[Tuple[int, int, str]]:
+    """Every row of a trainer draw_log/rankNN.tsv, ``row\tepoch\tuniforms_sha256`` (log_draws: meta row = corpus rn,
+    the epoch, and b6_aug draw.sha256()), in draw order. Row k (1-based) was the rank's k-th micro-batch."""
     rows = []
     for n, line in enumerate(lines, start=1):
         line = line.rstrip("\n")
@@ -315,7 +317,76 @@ def parse_draw_log(lines: Iterable[str], last: int) -> List[Tuple[int, int, str]
         rows.append((rn, ep, sha))
     if not rows:
         raise Refused("empty draw log")
-    return rows[-int(last):]
+    return rows
+
+
+def aligned_replay_window(total_rows: int, last: int, accum: int) -> Tuple[int, int]:
+    """1-based (first, end) draw-log rows to replay: covers the last ``last`` rows and starts on one of the trainer's
+    accumulation-window boundaries (the trainer zeroes gradients every ``accum`` micro-batches counted from row 1 of
+    the link, so a row's window position is (row - 1) mod accum)."""
+    if total_rows < 1 or last < 1 or accum < 1:
+        raise Refused("draw-log rows, --last and accum must be >= 1")
+    first = max(1, total_rows - int(last) + 1)
+    first = ((first - 1) // accum) * accum + 1
+    return first, total_rows
+
+
+def window_position(row_number: int, accum: int) -> int:
+    return (int(row_number) - 1) % int(accum)
+
+
+def replay_plan(draw_rows: Sequence[Tuple[int, int, str]], extra: Sequence[Tuple[int, int]], last: int,
+                accum: int) -> List[Dict]:
+    """Samples in replay order with their draw-log row number and window position; extras continue the windows
+    after the last draw-log row (positions the trainer never reached)."""
+    plan = []
+    end = len(draw_rows)
+    if draw_rows:
+        first, end = aligned_replay_window(len(draw_rows), last, accum)
+        for k in range(first, end + 1):
+            rn, ep, sha = draw_rows[k - 1]
+            plan.append(dict(row_number=k, window_pos=window_position(k, accum), rn=rn, epoch=ep, logged_sha=sha,
+                             source="draw_log"))
+    for j, (rn, ep) in enumerate(extra, start=1):
+        plan.append(dict(row_number=end + j, window_pos=window_position(end + j, accum), rn=rn, epoch=ep,
+                         logged_sha=None, source="extra"))
+    return plan
+
+
+def sha_mismatches(plan: Sequence[Dict], draw_sha) -> List[Dict]:
+    """Draw-log rows whose logged uniforms sha differs from ``draw_sha(rn, epoch)``."""
+    bad = []
+    for p in plan:
+        if p["logged_sha"] is not None:
+            got = draw_sha(p["rn"], p["epoch"])
+            if got != p["logged_sha"]:
+                bad.append(dict(row_number=p["row_number"], rn=p["rn"], epoch=p["epoch"], logged=p["logged_sha"],
+                                computed=got))
+    return bad
+
+
+def guarded_update(*, window_failed: bool, clip, step, sched_step, ticks: int, zero_grad,
+                   oom_types: Tuple[type, ...] = (), on_oom=None) -> str:
+    """The trainer's update at a window boundary, with the OOM handler around it: 'skipped' (a micro-batch of the
+    window failed: zero_grad, no step), 'stepped', or 'oom' (on_oom(exc) records it, then zero_grad). Other errors
+    propagate."""
+    if window_failed:
+        zero_grad()
+        return "skipped"
+    try:
+        clip()
+        step()
+        for _ in range(int(ticks)):
+            sched_step()
+        zero_grad()
+        return "stepped"
+    except Exception as exc:                         # noqa: BLE001 - only an OOM is handled here
+        if not is_oom(exc, oom_types):
+            raise
+        if on_oom is not None:
+            on_oom(exc)
+        zero_grad()
+        return "oom"
 
 
 def parse_index_list(text: str) -> List[Tuple[int, int]]:
@@ -372,13 +443,14 @@ def format_real_table(report: Dict) -> str:
         mem = s.get("memory") or {}
         rows.append((mem.get("max_allocated_bytes", 0), s))
     rows.sort(key=lambda t: -t[0])
-    lines = [f"   {'order':>5} {'rn':>10} {'ep':>3} {'L':>7} {'attn':>7} {'T':>5} {'nonpad':>6} {'chains':>6} "
+    lines = [f"   {'order':>5} {'row':>6} {'pos':>3} {'rn':>10} {'ep':>3} {'L':>7} {'attn':>7} {'T':>5} {'nonpad':>6} {'chains':>6} "
              f"{'alloc_GiB':>9} {'resv_GiB':>9} {'sha':>5} status"]
     for alloc, s in rows:
         d = s.get("describe") or {}
         mem = s.get("memory") or {}
         sha = {True: "ok", False: "DIFF", None: "-"}[s.get("draw_sha_match")]
-        lines.append(f"   {s.get('order', 0):>5} {s['rn']:>10} {s.get('epoch', 0):>3} {str(d.get('L', '-')):>7} "
+        lines.append(f"   {s.get('order', 0):>5} {str(s.get('row_number', '-')):>6} {str(s.get('window_pos', '-')):>3} "
+                     f"{s['rn']:>10} {s.get('epoch', 0):>3} {str(d.get('L', '-')):>7} "
                      f"{str(d.get('attended', '-')):>7} {str(d.get('label_len', '-')):>5} "
                      f"{str(d.get('label_nonpad', '-')):>6} {str(d.get('chain_elements', '-')):>6} "
                      f"{alloc / GIB:>9.2f} {mem.get('max_reserved_bytes', 0) / GIB:>9.2f} {sha:>5} {s.get('status')}")
@@ -421,19 +493,21 @@ def summarize_report(report: Dict) -> Dict:
 
     mbs = report.get("micro_batches", [])
     ups = report.get("updates", [])
-    oom = report.get("oom") or None
+    ooms = [o for o in (report.get("ooms") or []) if o] or ([report["oom"]] if report.get("oom") else [])
     for mb in mbs:
         fold(shape_key(mb["tier"], mb["labels"]), mb["max_allocated_bytes"], mb["max_reserved_bytes"],
              mb.get("inactive_split_bytes", 0))
-    oom_mem = (oom or {}).get("memory") or {}
-    if oom and oom.get("tier") is not None and oom_mem:
-        fold(shape_key(oom["tier"], oom["labels"]), oom_mem.get("max_allocated_bytes", 0),
-             oom_mem.get("max_reserved_bytes", 0), oom_mem.get("inactive_split_bytes", 0))
     allocs = [m["max_allocated_bytes"] for m in mbs] + [u.get("max_allocated_bytes", 0) for u in ups]
     resvs = [m["max_reserved_bytes"] for m in mbs] + [u.get("max_reserved_bytes", 0) for u in ups]
-    if oom_mem:
-        allocs.append(oom_mem.get("max_allocated_bytes", 0))
-        resvs.append(oom_mem.get("max_reserved_bytes", 0))
+    for o in ooms:
+        mem = o.get("memory") or {}
+        if o.get("tier") is not None and o.get("labels") is not None and mem:
+            fold(shape_key(o["tier"], o["labels"]), mem.get("max_allocated_bytes", 0),
+                 mem.get("max_reserved_bytes", 0), mem.get("inactive_split_bytes", 0))
+        allocs.append(mem.get("max_allocated_bytes", 0))
+        resvs.append(mem.get("max_reserved_bytes", 0))
+    # the OOM fields describe the worst OOM (highest peak allocated at its failure point)
+    oom = max(ooms, key=lambda o: (o.get("memory") or {}).get("max_allocated_bytes", 0)) if ooms else None
     return dict(
         label=report.get("label") or os.path.basename(str(report.get("out", ""))),
         status=report.get("status"), classification=classify(report),
@@ -446,7 +520,9 @@ def summarize_report(report: Dict) -> Dict:
         update_peak_reserved_gib=max((u.get("max_reserved_bytes", 0) for u in ups), default=0) / GIB,
         compiled_graphs=(mbs[-1]["compiled_graphs"] if mbs else None),
         alloc_retries=(mbs[-1].get("num_alloc_retries") if mbs else None),
-        oom_shape=(shape_key(oom["tier"], oom["labels"]) if oom and oom.get("tier") is not None else None),
+        oom_shape=(shape_key(oom["tier"], oom["labels"])
+                   if oom and oom.get("tier") is not None and oom.get("labels") is not None else None),
+        n_ooms=len(ooms),
         oom_micro_batch=(oom.get("micro_batch") if oom else None),
         oom_phase=(oom.get("phase") if oom else None),
         per_shape=per_shape, growth=growth_slopes(report))
@@ -492,7 +568,7 @@ def write_json(path: str, obj: Dict) -> None:
     os.replace(tmp, path)
 
 
-CLASS_PRECEDENCE = ("oom", "error", "missing", "incomplete", "finished")
+CLASS_PRECEDENCE = ("oom", "sha_mismatch", "error", "missing", "incomplete", "finished")
 
 
 def aggregate_ranks(rank_reports: Sequence[Optional[Dict]]) -> Dict:
@@ -597,7 +673,11 @@ def _load_trainer():
     return mod
 
 
-def build_real_inputs(args, cfg, report) -> SimpleNamespace:
+class ShaMismatch(RuntimeError):
+    pass
+
+
+def build_real_inputs(args, cfg, report, accum: int) -> SimpleNamespace:
     """The trainer main()'s train dataset: same functions and arguments (arm B6 dataset arm, aug_seed, encoders,
     ObsCache from the bindings, honouring B6_OBS_CACHE_REQUIRE_PREBUILT). verify_training_inputs runs only with
     --real-verify; without it B6Corpus gets expected_sha256=None, which skips only the corpus hash check (the
@@ -622,21 +702,28 @@ def build_real_inputs(args, cfg, report) -> SimpleNamespace:
                   encode_dna=b6_dataset.hyena_char_encoder(cfg["encoder_model"]),
                   tokenize_gsf=b6_dataset.gff_label_tokenizer(cfg.get("gff_vocab_version", "v3")), c3_donors=c3)
     train_ds = b6_dataset.B6Dataset(corpus, cache, mode="train_track", **common)
-    samples = []
+    draw_rows = []
     if args.real_from_draw_log:
         with open(args.real_from_draw_log) as fh:
-            for rn, ep, sha in parse_draw_log(fh, args.last):
-                samples.append(dict(rn=rn, epoch=ep, logged_sha=sha, source="draw_log"))
-    if args.real_indices:
-        for rn, ep in read_index_arg(args.real_indices):
-            samples.append(dict(rn=rn, epoch=ep, logged_sha=None, source="extra"))
+            draw_rows = parse_draw_log(fh)
+    extra = read_index_arg(args.real_indices) if args.real_indices else []
+    samples = replay_plan(draw_rows, extra, args.last, accum)
+    aug_seed = rt.AUG_SEED_BASE + args.seed
+    # the dataset's own draw (B6Dataset.evidence: b6_aug.make_draw(aug_seed, ctx.row = str(rn), epoch)); checked for
+    # every draw-log row before any model work, and again per sample on the built batch's meta
+    bad = sha_mismatches(samples, lambda rn, ep: b6_aug.make_draw(aug_seed, str(int(rn)), ep).sha256())
     train_set = set(int(x) for x in train_rns)
     report["real"] = dict(bindings=os.path.abspath(args.real_bindings), paths=paths, draw_log=args.real_from_draw_log,
                           last=args.last, extra=args.real_indices, verify_training_inputs=bool(args.real_verify),
                           corpus_sha256_checked=expected is not None, dataset_mode="train_track",
                           dataset_arm=arm.dataset_arm, aug_seed=rt.AUG_SEED_BASE + args.seed,
                           setup_seconds=round(time.time() - t0, 1), n_samples=len(samples),
-                          not_in_train_split=[s["rn"] for s in samples if s["rn"] not in train_set])
+                          draw_log_rows=len(draw_rows), accum=accum,
+                          replay_rows=([samples[0]["row_number"], len(draw_rows)] if draw_rows else None),
+                          not_in_train_split=[s["rn"] for s in samples if s["rn"] not in train_set],
+                          sha_mismatches=bad)
+    if bad:
+        raise ShaMismatch(f"{len(bad)} draw-log rows do not match the dataset draw, first {bad[0]}")
     return SimpleNamespace(ds=train_ds, collate=b6_dataset.b6_collate_fn_torch, samples=samples)
 
 
@@ -664,9 +751,13 @@ def describe_batch(torch, batch) -> Dict:
 
 
 def run_real(T, real) -> int:
-    """One micro-batch per replayed sample (batch_size 1), trainer order of operations; an OOM is recorded, the
-    accumulation window is discarded (zero_grad, no optimizer step), the cache emptied, the DDP wrapper rebuilt
-    (a backward that died mid-reduction leaves the reducer unusable) and the replay continues."""
+    """One micro-batch per replayed sample (batch_size 1) in the trainer's order of operations and accumulation
+    windows (the plan starts on a window boundary; a row's window position is (row - 1) mod accum). Before the
+    replay the AdamW moments the trainer holds are materialised (one optimizer step with zero gradients at schedule
+    step 0, lr 0: exp_avg / exp_avg_sq allocated, weights unchanged). A draw-sha mismatch stops before that sample's
+    forward (status sha_mismatch). An OOM in a micro-batch is recorded, its window discarded (zero_grad, no step),
+    the cache emptied, the DDP wrapper rebuilt (a backward that died mid-reduction leaves the reducer unusable), and
+    the replay continues; an OOM in the optimizer step is recorded as phase optimizer_step."""
     import gc
     torch, acc, args, report, device = T.torch, T.acc, T.args, T.report, T.device
     ticks = scheduler_ticks_per_update(args.world_size, T.world)
@@ -678,11 +769,42 @@ def run_real(T, real) -> int:
     report["synthetic_signature"] = synth_sig
     report["samples"], report["ooms"] = [], []
     diffs: List[str] = []
-    window_failed, micro, t_start = False, 0, time.time()
+
+    # AdamW state as the trainer holds it after its first update
+    before = int(torch.cuda.memory_allocated(device))
+    for prm in T.model.parameters():
+        if prm.requires_grad:
+            prm.grad = torch.zeros_like(prm)
+    lr_now = [g["lr"] for g in T.optimizer.param_groups]
+    T.optimizer.step()
+    T.optimizer.zero_grad(set_to_none=True)
+    torch.cuda.synchronize(device)
+    report["optimizer_state"] = dict(method="one AdamW step with zero gradients before the replay",
+                                     lr_at_step=lr_now, allocated_delta_bytes=int(torch.cuda.memory_allocated(device)) - before,
+                                     allocated_after_bytes=int(torch.cuda.memory_allocated(device)))
+    T.save()
+
+    def record_oom(order, smp, d, phase, exc):
+        o = dict(order=order, rn=smp["rn"], row_number=smp["row_number"], window_pos=smp["window_pos"],
+                 micro_batch=order, tier=d.get("L"), labels=d.get("label_len"), phase=phase,
+                 message=str(exc)[:4000], memory=_mem(torch, device),
+                 memory_stats={k: torch.cuda.memory_stats(device).get(k) for k in STAT_KEYS},
+                 memory_summary=torch.cuda.memory_summary(device, abbreviated=False))
+        report["ooms"].append(o)
+        if report["oom"] is None:
+            report["oom"] = o
+        print(f"OOM rn {smp['rn']} (row {smp['row_number']}, window pos {smp['window_pos']}) L {d.get('L')} "
+              f"T {d.get('label_len')} phase {phase}", file=sys.stderr, flush=True)
+        print(o["memory_summary"], file=sys.stderr, flush=True)
+        return o
+
+    window_failed, t_start, hard_stop = False, time.time(), None
     for order, smp in enumerate(real.samples, start=1):
-        rec = dict(order=order, rn=smp["rn"], epoch=smp["epoch"], source=smp["source"], logged_sha=smp["logged_sha"],
-                   status="running", draw_sha_match=None)
+        rec = dict(order=order, rn=smp["rn"], epoch=smp["epoch"], source=smp["source"], row_number=smp["row_number"],
+                   window_pos=smp["window_pos"], logged_sha=smp["logged_sha"], status="running", draw_sha_match=None)
         report["samples"].append(rec)
+        if smp["window_pos"] == 0:
+            window_failed = False                       # a new trainer window starts with zeroed gradients
         phase, failed_oom, failed = "dataset", False, False
         out = inputs = batch = None
         try:
@@ -693,6 +815,9 @@ def run_real(T, real) -> int:
             rec["sample_sha"] = got_sha
             if smp["logged_sha"] is not None:
                 rec["draw_sha_match"] = (got_sha == smp["logged_sha"])
+                if not rec["draw_sha_match"]:
+                    raise ShaMismatch(f"rn {smp['rn']} row {smp['row_number']}: sample sha {got_sha} != logged "
+                                      f"{smp['logged_sha']}")
             phase = "batch"
             torch.cuda.reset_peak_memory_stats(device)
             batch = {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()}
@@ -713,28 +838,26 @@ def run_real(T, real) -> int:
             rec.update(status="ok", seconds=round(time.perf_counter() - t0, 3), loss=float(out.loss.detach().float()),
                        memory=_mem(torch, device), compiled_graphs=rt.compiled_graph_count())
             mb = dict(micro_batch=order, tier=d["L"], labels=d["label_len"], **rec["memory"],
-                      compiled_graphs=rec["compiled_graphs"], rn=smp["rn"])
+                      compiled_graphs=rec["compiled_graphs"], rn=smp["rn"], window_pos=smp["window_pos"])
             mb["allocated_after_backward_bytes"] = mb.pop("allocated_bytes")
             report["micro_batches"].append(mb)
+        except ShaMismatch as exc:
+            rec.update(status="sha_mismatch", error=str(exc))
+            hard_stop = str(exc)
         except Exception as exc:                     # noqa: BLE001 - recorded per sample; the replay continues
             failed = True
             if is_oom(exc, T.oom_types):
                 failed_oom = True
-                d = rec.get("describe") or {}
-                o = dict(order=order, rn=smp["rn"], micro_batch=order, tier=d.get("L"), labels=d.get("label_len"),
-                         phase=phase, message=str(exc)[:4000], memory=_mem(torch, device),
-                         memory_stats={k: torch.cuda.memory_stats(device).get(k) for k in STAT_KEYS},
-                         memory_summary=torch.cuda.memory_summary(device, abbreviated=False))
+                o = record_oom(order, smp, rec.get("describe") or {}, phase, exc)
                 rec.update(status="oom", phase=phase, memory=o["memory"])
-                report["ooms"].append(o)
-                if report["oom"] is None:
-                    report["oom"] = o
-                print(f"OOM rn {smp['rn']} (order {order}) L {d.get('L')} T {d.get('label_len')} phase {phase}",
-                      file=sys.stderr, flush=True)
-                print(o["memory_summary"], file=sys.stderr, flush=True)
             else:
                 rec.update(status="error", phase=phase, error=f"{type(exc).__name__}: {str(exc)[:2000]}")
                 print(f"ERROR rn {smp['rn']} ({phase}): {rec['error']}", file=sys.stderr, flush=True)
+        if hard_stop:
+            report.update(status="sha_mismatch", error=hard_stop)
+            T.save()
+            print(f"SHA_MISMATCH: {hard_stop}", file=sys.stderr, flush=True)
+            return EXIT_SHA_MISMATCH
         if failed:
             out = inputs = batch = None
             if phase in ("forward", "backward") or failed_oom:
@@ -751,37 +874,43 @@ def run_real(T, real) -> int:
         d = rec.get("describe") or {}
         mem = rec.get("memory") or {}
         keys = ", ".join("%s:%s:%s" % (k, tuple(v["shape"]), v["dtype"]) for k, v in d.get("signature", {}).items())
-        print(f"real {order:3d} rn {smp['rn']} ep {smp['epoch']} {rec['status']:>5} L {d.get('L')} attn {d.get('attended')} "
-              f"T {d.get('label_len')} nonpad {d.get('label_nonpad')} chains {d.get('chain_elements')} "
-              f"tracks_nz {d.get('track_nonzero_fraction')} peak_alloc {mem.get('max_allocated_bytes', 0) / GIB:6.2f} "
-              f"peak_resv {mem.get('max_reserved_bytes', 0) / GIB:6.2f} GiB sha {rec['draw_sha_match']} "
-              f"keys {{{keys}}}",
-              flush=True)
-        if rec["status"] in ("ok", "oom") or phase in ("forward", "backward"):
-            micro += 1
-            if micro % T.accum == 0:
-                up = dict(update=micro // T.accum, after_micro_batch=order, skipped=window_failed)
-                torch.cuda.reset_peak_memory_stats(device)
-                if window_failed:                       # never step on a window with a failed micro-batch
-                    T.optimizer.zero_grad(set_to_none=True)
-                else:
-                    T.clip_grad_norm_(T.model.parameters(), 1.0)
-                    T.optimizer.step()
-                    for _ in range(ticks):
-                        T.scheduler.step()
-                    T.optimizer.zero_grad(set_to_none=True)
-                torch.cuda.synchronize(device)
-                up.update(_mem(torch, device))
-                up["allocated_after_step_zero_grad_bytes"] = up.pop("allocated_bytes")
-                report["updates"].append(up)
-                window_failed = False
+        print(f"real {order:3d} row {smp['row_number']} pos {smp['window_pos']:2d} rn {smp['rn']} ep {smp['epoch']} "
+              f"{rec['status']:>5} L {d.get('L')} attn {d.get('attended')} T {d.get('label_len')} "
+              f"nonpad {d.get('label_nonpad')} chains {d.get('chain_elements')} tracks_nz {d.get('track_nonzero_fraction')} "
+              f"peak_alloc {mem.get('max_allocated_bytes', 0) / GIB:6.2f} peak_resv {mem.get('max_reserved_bytes', 0) / GIB:6.2f} "
+              f"GiB sha {rec['draw_sha_match']} keys {{{keys}}}", flush=True)
         report["signature_diff_vs_synthetic"] = diffs
-        T.save()
+        T.save()                                        # the sample's record is on disk before the step
+        if smp["window_pos"] == T.accum - 1:            # the trainer's update boundary
+            up = dict(update=len(report["updates"]) + 1, after_micro_batch=order, after_row=smp["row_number"],
+                      rn=smp["rn"])
+            torch.cuda.reset_peak_memory_stats(device)
+            try:
+                result = guarded_update(
+                    window_failed=window_failed,
+                    clip=lambda: T.clip_grad_norm_(T.model.parameters(), 1.0), step=T.optimizer.step,
+                    sched_step=T.scheduler.step, ticks=ticks,
+                    zero_grad=lambda: T.optimizer.zero_grad(set_to_none=True), oom_types=T.oom_types,
+                    on_oom=lambda exc: record_oom(order, smp, d, "optimizer_step", exc))
+            except Exception as exc:                 # noqa: BLE001 - a non-OOM step failure ends the replay
+                report.update(status="error", error=f"optimizer step: {type(exc).__name__}: {str(exc)[:2000]}")
+                T.save()
+                print(report["error"], file=sys.stderr, flush=True)
+                return EXIT_ERROR
+            if result == "oom":
+                gc.collect()
+                torch.cuda.empty_cache()
+            torch.cuda.synchronize(device)
+            up.update(result=result, skipped=(result != "stepped"), **_mem(torch, device))
+            up["allocated_after_step_zero_grad_bytes"] = up.pop("allocated_bytes")
+            report["updates"].append(up)
+            window_failed = False
+            T.save()
         if args.max_minutes is not None and (time.time() - t_start) / 60.0 >= args.max_minutes:
             report["stopped_by_time_budget_after"] = order
             break
     statuses = [s["status"] for s in report["samples"]]
-    report["status"] = ("oom" if "oom" in statuses else "error" if "error" in statuses else
+    report["status"] = ("oom" if report["ooms"] else "error" if "error" in statuses else
                         "time_budget" if report.get("stopped_by_time_budget_after") else "completed")
     report.update(elapsed_seconds=round(time.time() - t_start, 1), dynamo_counters=_dynamo_counters(),
                   final_compiled_graphs=rt.compiled_graph_count(), finished_at=time.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -857,10 +986,15 @@ def run(args) -> int:
     real = None
     if args.real_bindings:
         try:
-            real = build_real_inputs(args, cfg, report)
+            real = build_real_inputs(args, cfg, report, accum)
         except Refused as exc:
             print(f"REFUSED: {exc}", file=sys.stderr)
             return EXIT_REFUSED
+        except ShaMismatch as exc:
+            report.update(status="sha_mismatch", error=str(exc))
+            save()
+            print(f"SHA_MISMATCH: {exc}", file=sys.stderr)
+            return EXIT_SHA_MISMATCH
         save()
     torch.manual_seed(rt.SEED)                      # train_HyenaTransgenic_B6.build_model
     torch.cuda.manual_seed_all(rt.SEED)
