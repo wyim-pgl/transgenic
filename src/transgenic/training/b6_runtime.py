@@ -11,7 +11,7 @@ Contents
   * optimizer groups with every chain gate alpha outside weight decay: ``build_b6_optimizer``
   * run identity: ``build_run_identity``, ``check_run_config_b6`` (required key set, missing on either side
     refuses), ``write_runtime_identity`` (rule 9 fields plus per-layer alpha per link)
-  * compile policy: ``compile_b6`` (suppress_errors off), ``CompileGuard`` (recompile after warm-up raises),
+  * compile policy: ``compile_b6`` (suppress_errors off), ``CompileGuard`` (bounded graphs per tile tier),
     ``check_inductor_kernels`` (zero Inductor kernels after warm-up raises)
   * ``memory_abort`` (> 110 GB reserved on any rank writes MEMORY_ABORT), budget and step-checkpoint rules
   * WP5 pilot: ``pilot_stop_target`` (hard stop at exactly N_pilot optimizer updates, part of the run identity)
@@ -584,14 +584,37 @@ def record_identity(run_dir: str, identity: Mapping, alphas: Sequence[float], li
 
 # ---- compile policy (rule 9: a Dynamo fallback is a failure) ---------------------------------------------------
 
+# A Dynamo graph per (tile tier, labels range, grad mode): 3 tiers x 2 label ranges (one Inductor split on
+# labels.size(1)) x 2 (train, eval under no_grad) = 12, plus 4 margin.
+B6_GRAPHS_PER_SHAPE = 2
+B6_RECOMPILE_LIMIT = 16
+
+
+def _set_first(config, names, value) -> None:
+    """Set the first attribute of ``names`` this torch version has (recompile_limit was cache_size_limit)."""
+    for name in names:
+        if hasattr(config, name):
+            setattr(config, name, value)
+            return
+    raise RuntimeError(f"torch._dynamo.config has none of {names}")
+
+
 def compile_b6(model, backend="inductor"):
-    """Whole-model torch.compile with suppress_errors off. B5 turns it on (train_HyenaTransgenic.py:320)."""
+    """Whole-model torch.compile with suppress_errors off. B5 turns it on (train_HyenaTransgenic.py:320).
+
+    automatic_dynamic_shapes is off: a recompile after a DNA-length change would otherwise compile L symbolic, and
+    that 129,024 graph OOM-ed on a GH200 (92 GiB vs 37 GiB static). Only dims marked explicitly stay dynamic (the
+    trainer's labels dim 1), so every tile tier gets its own static graph. The recompile limit covers those graphs
+    (B6_RECOMPILE_LIMIT) and hitting it raises instead of falling back to eager."""
     import torch
 
     torch._dynamo.config.suppress_errors = False
     # DDP bucket graph partitioning changed stochastic gradients across a cold resume in CP4.
     # Keep Inductor and DDP, but compile without that partitioning (2-rank diagnosis 3207863).
     torch._dynamo.config.optimize_ddp = False
+    torch._dynamo.config.automatic_dynamic_shapes = False
+    _set_first(torch._dynamo.config, ("recompile_limit", "cache_size_limit"), B6_RECOMPILE_LIMIT)
+    _set_first(torch._dynamo.config, ("fail_on_recompile_limit_hit", "fail_on_cache_limit_hit"), True)
     return torch.compile(model, backend=backend)
 
 
@@ -606,23 +629,38 @@ def inductor_kernel_count() -> int:
 
 
 class CompileGuard:
-    """Recompiles are allowed during warm-up and on the first sight of a new batch shape (a new tile tier);
-    any later compile raises. ``suppress_errors`` switched back on also raises."""
+    """Bounds Dynamo graphs per batch shape (``shape_key``, the DNA tile tier). A new shape may compile at any time.
+    A seen shape may compile again up to B6_GRAPHS_PER_SHAPE graphs in all: with static L its second graph is the
+    Inductor split on labels.size(1), which can first appear long after warm-up (update ~165 in the smoke). Beyond
+    that, after warm-up, a recompile raises; more than ``max_total_graphs`` graphs raise at any time.
+    ``suppress_errors`` switched back on also raises. Observe after every forward so a compile is charged to the
+    shape that triggered it."""
 
-    def __init__(self, warmup_steps: int):
+    def __init__(self, warmup_steps: int, max_total_graphs: int = B6_RECOMPILE_LIMIT,
+                 graphs_per_shape: int = B6_GRAPHS_PER_SHAPE):
         self.warmup_steps = int(warmup_steps)
-        self.seen = set()
+        self.max_total_graphs = int(max_total_graphs)
+        self.graphs_per_shape = int(graphs_per_shape)
+        self.per_shape = {}
         self.graphs = None
 
     def observe(self, optimizer_step: int, shape_key, graphs_now: int, suppress_errors: bool) -> None:
         if suppress_errors:
             raise RuntimeError("torch._dynamo.config.suppress_errors is on: an eager fallback would be silent")
         new = self.graphs is not None and graphs_now > self.graphs
-        if new and optimizer_step > self.warmup_steps and shape_key in self.seen:
-            raise RuntimeError(f"recompile after warm-up at optimizer step {optimizer_step} for an already "
-                               f"compiled shape {shape_key}; graphs {self.graphs} -> {graphs_now}")
+        if shape_key not in self.per_shape:
+            self.per_shape[shape_key] = 1
+        elif new:
+            self.per_shape[shape_key] += 1
+            if optimizer_step > self.warmup_steps and self.per_shape[shape_key] > self.graphs_per_shape:
+                raise RuntimeError(f"recompile after warm-up at optimizer step {optimizer_step} for an already "
+                                   f"compiled shape {shape_key} (graph {self.per_shape[shape_key]} for this shape, "
+                                   f"limit {self.graphs_per_shape}); graphs {self.graphs} -> {graphs_now}")
+        total = sum(self.per_shape.values())
+        if total > self.max_total_graphs:
+            raise RuntimeError(f"{total} graphs in total over shapes {sorted(self.per_shape)} exceed "
+                               f"{self.max_total_graphs} at optimizer step {optimizer_step}")
         self.graphs = graphs_now
-        self.seen.add(shape_key)
 
 
 def inductor_activity() -> int:
