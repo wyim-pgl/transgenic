@@ -172,7 +172,7 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
     graphs_before = rt.compiled_graph_count() if compiled else 0
     if compiled:
         model = rt.compile_b6(model, backend=spec.compile_backend)
-    guard = rt.CompileGuard(spec.compile_warmup_steps)
+    guard = rt.CompileGuard(spec.compile_warmup_steps, graphs_before=graphs_before)
     optimizer = rt.build_b6_optimizer(model, float(cfg["lr"]), float(cfg["weight_decay"]), expected_alphas=n_layers)
     optimizer.zero_grad(set_to_none=True)
     # B5 parity (train_HyenaTransgenic.py:347-352): the unsharded loader length over the per-rank accumulation.

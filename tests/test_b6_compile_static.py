@@ -79,6 +79,26 @@ class CompileGuardTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "total"):
             guard.observe(4, (1, 64), 4, False)
 
+    def test_several_graphs_in_one_observation_raise_after_warmup(self):
+        guard = rt.CompileGuard(warmup_steps=0, graphs_before=16)
+        guard.observe(1, (1, 48), 17, False)
+        with self.assertRaisesRegex(RuntimeError, "recompile after warm-up"):
+            guard.observe(2, (1, 48), 20, False)
+
+    def test_two_graphs_in_one_forward_for_a_new_tier_count_as_two(self):
+        guard = rt.CompileGuard(warmup_steps=0, graphs_before=5)
+        guard.observe(1, (1, 96), 7, False)
+        self.assertEqual(guard.per_shape[(1, 96)], 2)
+        with self.assertRaisesRegex(RuntimeError, "recompile after warm-up"):
+            guard.observe(2, (1, 96), 8, False)
+
+    def test_total_cap_over_train_and_eval_keys_gives_the_intended_message(self):
+        guard = rt.CompileGuard(warmup_steps=0, max_total_graphs=2)
+        guard.observe(1, (1, 8), 1, False)
+        guard.observe(1, ("eval", 1, 8), 2, False)
+        with self.assertRaisesRegex(RuntimeError, "graphs in total exceed 2"):
+            guard.observe(2, ("eval", 1, 16), 3, False)
+
     def test_default_total_cap_is_the_recompile_limit(self):
         self.assertEqual(rt.CompileGuard(3).max_total_graphs, rt.B6_RECOMPILE_LIMIT)
 

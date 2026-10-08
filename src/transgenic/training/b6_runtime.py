@@ -629,38 +629,39 @@ def inductor_kernel_count() -> int:
 
 
 class CompileGuard:
-    """Bounds Dynamo graphs per batch shape (``shape_key``, the DNA tile tier). A new shape may compile at any time.
-    A seen shape may compile again up to B6_GRAPHS_PER_SHAPE graphs in all: with static L its second graph is the
-    Inductor split on labels.size(1), which can first appear long after warm-up (update ~165 in the smoke). Beyond
-    that, after warm-up, a recompile raises; more than ``max_total_graphs`` graphs raise at any time.
-    ``suppress_errors`` switched back on also raises. Observe after every forward so a compile is charged to the
-    shape that triggered it."""
+    """Bounds Dynamo graphs per batch shape (``shape_key``, the DNA tile tier) on real graph counts: every
+    observation charges ``graphs_now`` minus the previous count (from the explicit ``graphs_before`` baseline) to
+    the observed shape. A shape may hold B6_GRAPHS_PER_SHAPE graphs: with static L the second is the Inductor split
+    on labels.size(1), which can first appear long after warm-up (update ~165 in the smoke). After warm-up a shape
+    beyond that raises, and more than ``max_total_graphs`` graphs raise at any time. ``suppress_errors`` switched
+    back on also raises. Observe after every forward so a compile is charged to the shape that triggered it."""
 
     def __init__(self, warmup_steps: int, max_total_graphs: int = B6_RECOMPILE_LIMIT,
-                 graphs_per_shape: int = B6_GRAPHS_PER_SHAPE):
+                 graphs_per_shape: int = B6_GRAPHS_PER_SHAPE, graphs_before: int = 0):
         self.warmup_steps = int(warmup_steps)
         self.max_total_graphs = int(max_total_graphs)
         self.graphs_per_shape = int(graphs_per_shape)
         self.per_shape = {}
-        self.graphs = None
+        self.graphs = int(graphs_before)
 
     def observe(self, optimizer_step: int, shape_key, graphs_now: int, suppress_errors: bool) -> None:
         if suppress_errors:
             raise RuntimeError("torch._dynamo.config.suppress_errors is on: an eager fallback would be silent")
-        new = self.graphs is not None and graphs_now > self.graphs
-        if shape_key not in self.per_shape:
-            self.per_shape[shape_key] = 1
-        elif new:
-            self.per_shape[shape_key] += 1
-            if optimizer_step > self.warmup_steps and self.per_shape[shape_key] > self.graphs_per_shape:
-                raise RuntimeError(f"recompile after warm-up at optimizer step {optimizer_step} for an already "
-                                   f"compiled shape {shape_key} (graph {self.per_shape[shape_key]} for this shape, "
-                                   f"limit {self.graphs_per_shape}); graphs {self.graphs} -> {graphs_now}")
+        delta = int(graphs_now) - self.graphs
+        if delta < 0:
+            raise RuntimeError(f"Dynamo graph count went down ({self.graphs} -> {graphs_now}): counters were reset")
+        count = self.per_shape.get(shape_key, 0) + delta
+        self.per_shape[shape_key] = count
+        if delta and optimizer_step > self.warmup_steps and count > self.graphs_per_shape:
+            raise RuntimeError(f"recompile after warm-up at optimizer step {optimizer_step} for shape {shape_key}: "
+                               f"{count} graphs for this shape, limit {self.graphs_per_shape}; "
+                               f"graphs {self.graphs} -> {graphs_now}")
         total = sum(self.per_shape.values())
         if total > self.max_total_graphs:
-            raise RuntimeError(f"{total} graphs in total over shapes {sorted(self.per_shape)} exceed "
-                               f"{self.max_total_graphs} at optimizer step {optimizer_step}")
-        self.graphs = graphs_now
+            shapes = ", ".join(f"{k}: {v}" for k, v in self.per_shape.items())
+            raise RuntimeError(f"{total} graphs in total exceed {self.max_total_graphs} at optimizer step "
+                               f"{optimizer_step} ({shapes})")
+        self.graphs = int(graphs_now)
 
 
 def inductor_activity() -> int:
