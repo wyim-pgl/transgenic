@@ -71,36 +71,43 @@ class CompileGuardTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "recompile after warm-up"):
             guard.observe(40, (1, 96), 5, False)
 
-    def test_total_graph_cap_raises_on_too_many_tiers(self):
-        guard = rt.CompileGuard(warmup_steps=0, max_total_graphs=3)
+    def test_total_compile_event_cap_raises_on_too_many_tiers(self):
+        guard = rt.CompileGuard(warmup_steps=0, max_compile_events=3)
         guard.observe(1, (1, 8), 1, False)
         guard.observe(2, (1, 16), 2, False)
         guard.observe(3, (1, 32), 3, False)
-        with self.assertRaisesRegex(RuntimeError, "total"):
+        with self.assertRaisesRegex(RuntimeError, "compile events in total exceed 3"):
             guard.observe(4, (1, 64), 4, False)
 
     def test_several_graphs_in_one_observation_raise_after_warmup(self):
         guard = rt.CompileGuard(warmup_steps=0, graphs_before=16)
         guard.observe(1, (1, 48), 17, False)
         with self.assertRaisesRegex(RuntimeError, "recompile after warm-up"):
-            guard.observe(2, (1, 48), 20, False)
+            guard.observe(2, (1, 48), 20, False)               # delta 3 > first compile 1
 
-    def test_two_graphs_in_one_forward_for_a_new_tier_count_as_two(self):
+    def test_two_graphs_in_one_forward_for_a_new_tier_set_its_first_delta(self):
         guard = rt.CompileGuard(warmup_steps=0, graphs_before=5)
         guard.observe(1, (1, 96), 7, False)
-        self.assertEqual(guard.per_shape[(1, 96)], 2)
+        self.assertEqual(guard.first_delta[(1, 96)], 2)
+        guard.observe(2, (1, 96), 9, False)                    # its labels split, 2 graphs again
         with self.assertRaisesRegex(RuntimeError, "recompile after warm-up"):
-            guard.observe(2, (1, 96), 8, False)
+            guard.observe(3, (1, 96), 10, False)              # third compile event
+
+    def test_new_key_with_five_graphs_after_warmup_is_allowed(self):
+        guard = rt.CompileGuard(warmup_steps=3, graphs_before=5)
+        guard.observe(1, (1, 48), 6, False)
+        guard.observe(4, ("eval", 1, 48), 11, False)          # first eval forward, graph breaks
+        self.assertEqual(guard.first_delta[("eval", 1, 48)], 5)
 
     def test_total_cap_over_train_and_eval_keys_gives_the_intended_message(self):
-        guard = rt.CompileGuard(warmup_steps=0, max_total_graphs=2)
+        guard = rt.CompileGuard(warmup_steps=0, max_compile_events=2)
         guard.observe(1, (1, 8), 1, False)
         guard.observe(1, ("eval", 1, 8), 2, False)
-        with self.assertRaisesRegex(RuntimeError, "graphs in total exceed 2"):
+        with self.assertRaisesRegex(RuntimeError, "compile events in total exceed 2"):
             guard.observe(2, ("eval", 1, 16), 3, False)
 
-    def test_default_total_cap_is_the_recompile_limit(self):
-        self.assertEqual(rt.CompileGuard(3).max_total_graphs, rt.B6_RECOMPILE_LIMIT)
+    def test_default_cap_is_the_recompile_limit(self):
+        self.assertEqual(rt.CompileGuard(3).max_compile_events, rt.B6_RECOMPILE_LIMIT)
 
     def test_suppress_errors_raises(self):
         with self.assertRaisesRegex(RuntimeError, "suppress_errors"):

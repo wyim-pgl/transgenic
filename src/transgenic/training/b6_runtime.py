@@ -629,19 +629,28 @@ def inductor_kernel_count() -> int:
 
 
 class CompileGuard:
-    """Bounds Dynamo graphs per batch shape (``shape_key``, the DNA tile tier) on real graph counts: every
-    observation charges ``graphs_now`` minus the previous count (from the explicit ``graphs_before`` baseline) to
-    the observed shape. A shape may hold B6_GRAPHS_PER_SHAPE graphs: with static L the second is the Inductor split
-    on labels.size(1), which can first appear long after warm-up (update ~165 in the smoke). After warm-up a shape
-    beyond that raises, and more than ``max_total_graphs`` graphs raise at any time. ``suppress_errors`` switched
-    back on also raises. Observe after every forward so a compile is charged to the shape that triggered it."""
+    """Bounds Dynamo recompiles per batch shape (``shape_key``, the DNA tile tier) on compile EVENTS: an
+    observation whose graph count rose (delta = graphs_now - previous count, from the explicit ``graphs_before``
+    baseline) is one event charged to the observed shape. Observe after every forward so the event lands on the
+    shape that triggered it.
 
-    def __init__(self, warmup_steps: int, max_total_graphs: int = B6_RECOMPILE_LIMIT,
+    * A shape's first event is allowed at any step with any delta (graph breaks may split one forward into several
+      graphs); its delta is recorded as ``first_delta``.
+    * After warm-up, a later event for that shape is allowed while the shape has at most B6_GRAPHS_PER_SHAPE events
+      in all (with static L the second is the Inductor split on labels.size(1), first seen long after warm-up, update
+      ~165 in the smoke) and its delta is at most ``first_delta``; otherwise it raises. During warm-up anything goes,
+      but events are still counted.
+    * More than ``max_compile_events`` events in total (warm-up included) raise at any time. Each event is one
+      recompile of the compiled frame, the unit Dynamo's recompile limit counts, so the cap is B6_RECOMPILE_LIMIT.
+    * ``suppress_errors`` switched back on raises."""
+
+    def __init__(self, warmup_steps: int, max_compile_events: int = B6_RECOMPILE_LIMIT,
                  graphs_per_shape: int = B6_GRAPHS_PER_SHAPE, graphs_before: int = 0):
         self.warmup_steps = int(warmup_steps)
-        self.max_total_graphs = int(max_total_graphs)
+        self.max_compile_events = int(max_compile_events)
         self.graphs_per_shape = int(graphs_per_shape)
-        self.per_shape = {}
+        self.events = {}
+        self.first_delta = {}
         self.graphs = int(graphs_before)
 
     def observe(self, optimizer_step: int, shape_key, graphs_now: int, suppress_errors: bool) -> None:
@@ -650,18 +659,26 @@ class CompileGuard:
         delta = int(graphs_now) - self.graphs
         if delta < 0:
             raise RuntimeError(f"Dynamo graph count went down ({self.graphs} -> {graphs_now}): counters were reset")
-        count = self.per_shape.get(shape_key, 0) + delta
-        self.per_shape[shape_key] = count
-        if delta and optimizer_step > self.warmup_steps and count > self.graphs_per_shape:
-            raise RuntimeError(f"recompile after warm-up at optimizer step {optimizer_step} for shape {shape_key}: "
-                               f"{count} graphs for this shape, limit {self.graphs_per_shape}; "
-                               f"graphs {self.graphs} -> {graphs_now}")
-        total = sum(self.per_shape.values())
-        if total > self.max_total_graphs:
-            shapes = ", ".join(f"{k}: {v}" for k, v in self.per_shape.items())
-            raise RuntimeError(f"{total} graphs in total exceed {self.max_total_graphs} at optimizer step "
+        previous, self.graphs = self.graphs, int(graphs_now)
+        if delta == 0:
+            return
+        if shape_key not in self.first_delta:
+            self.first_delta[shape_key] = delta
+            self.events[shape_key] = 1
+        else:
+            self.events[shape_key] += 1
+            if optimizer_step > self.warmup_steps and (self.events[shape_key] > self.graphs_per_shape
+                                                       or delta > self.first_delta[shape_key]):
+                raise RuntimeError(f"recompile after warm-up at optimizer step {optimizer_step} for shape "
+                                   f"{shape_key}: compile event {self.events[shape_key]} (limit "
+                                   f"{self.graphs_per_shape}), {delta} graphs (first compile "
+                                   f"{self.first_delta[shape_key]}); "
+                                   f"graphs {previous} -> {graphs_now}")
+        total = sum(self.events.values())
+        if total > self.max_compile_events:
+            shapes = ", ".join(f"{k}: {v}" for k, v in self.events.items())
+            raise RuntimeError(f"{total} compile events in total exceed {self.max_compile_events} at optimizer step "
                                f"{optimizer_step} ({shapes})")
-        self.graphs = int(graphs_now)
 
 
 def inductor_activity() -> int:
