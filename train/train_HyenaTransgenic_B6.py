@@ -19,8 +19,10 @@ What it does, relative to the B5 trainer (train/train_HyenaTransgenic.py, which 
     The LR schedule is the full-run schedule truncated at 4,099 (A46 rule 11 matched budget with C3/C4/C6/C7);
   * AdamW as B5 with every chain gate alpha outside weight decay; the B5 LR schedule, including its world-size
     accounting (steps_per_epoch from the unsharded loader length), so the schedule is B5's;
-  * torch.compile with suppress_errors off; zero Inductor kernels after warm-up or a recompile of an already
-    compiled shape after warm-up raises (rule 9);
+  * torch.compile with suppress_errors off and automatic_dynamic_shapes off (each DNA tile tier compiles a static
+    graph; only labels dim 1 is dynamic); zero Inductor kernels after warm-up raises, and so does, after warm-up,
+    a third graph for an already compiled tier (the second is the Inductor split on the labels length) or more
+    graphs in total than the recompile limit (rule 9);
   * MEMORY_ABORT above 110 GB reserved on any rank; runtime identity with a required key set, verified on
     every link; per-layer alpha recorded at every link start.
 """
@@ -195,6 +197,9 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                withhold_library_rate=rt.WITHHOLD_LIBRARY_RATE,
                compile_policy=(f"torch.compile backend={spec.compile_backend if isinstance(spec.compile_backend, str) else 'custom'};"
                                f" suppress_errors=False; optimize_ddp={torch._dynamo.config.optimize_ddp};"
+                               f" automatic_dynamic_shapes={torch._dynamo.config.automatic_dynamic_shapes}"
+                               f" (labels dim 1 dynamic, DNA length static); recompile_limit={rt.B6_RECOMPILE_LIMIT};"
+                               f" graphs_per_tier={rt.B6_GRAPHS_PER_SHAPE};"
                                f" fallback=failure" if compiled else "eager (not a recipe run)"),
                checkpointing=ckpt, mixed_precision=spec.mixed_precision, memory_abort_bytes=rt.MEMORY_ABORT_BYTES,
                deterministic=bool(spec.deterministic),
@@ -379,11 +384,8 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
         scheduler.step()
         optimizer.zero_grad(set_to_none=True)
         state["link_updates"] += 1
-        if compiled:
-            guard.observe(state["link_updates"], tuple(inputs["input_ids"].shape), rt.compiled_graph_count(),
-                          bool(torch._dynamo.config.suppress_errors))
-            if state["link_updates"] == spec.compile_warmup_steps:
-                verify_compile()
+        if compiled and state["link_updates"] == spec.compile_warmup_steps:
+            verify_compile()
         if spec.memory_probe is not None:
             reserved = int(spec.memory_probe())
         else:
@@ -456,6 +458,11 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                 if compiled:
                     torch._dynamo.maybe_mark_dynamic(inputs["labels"], 1)
                 out = model(**inputs)
+                if compiled:
+                    # After every forward, so a compile is charged to the tile tier that triggered it (an
+                    # accumulation window mixes tiers); the step is the update this micro-batch belongs to.
+                    guard.observe(state["link_updates"] + 1, tuple(inputs["input_ids"].shape),
+                                  rt.compiled_graph_count(), bool(torch._dynamo.config.suppress_errors))
                 total_loss += out.loss.detach().float()
                 acc.backward(out.loss / per_rank_acc)
                 micro_done += 1
