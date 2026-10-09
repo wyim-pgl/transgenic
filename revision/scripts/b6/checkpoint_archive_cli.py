@@ -375,7 +375,9 @@ def pull(target, manifest, options):
         remote = target['remote']
         shell = ' '.join(shlex.quote(x) for x in ['ssh', '-o', 'BatchMode=yes', '-o',
                      'ConnectTimeout=%d' % remote['connect_timeout']])
-        argv = ['rsync', '-r', '--checksum', '--protect-args', '--no-links', '--no-devices', '--no-specials',
+        # Only the locked, unpublished private stage is writable here. Keep
+        # interrupted data at its expected pathname rather than rsync tempnames.
+        argv = ['rsync', '-r', '--inplace', '--checksum', '--protect-args', '--no-links', '--no-devices', '--no-specials',
                 '--no-perms', '--no-owner', '--no-group', '--omit-dir-times',
                 '--exclude=/.archive_receipt.json', '--timeout=%d' % target.get('rsync_timeout', 120), '-e', shell]
         if 'rate_limit_bytes' in target:

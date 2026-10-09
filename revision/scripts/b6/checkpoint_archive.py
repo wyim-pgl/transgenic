@@ -594,6 +594,10 @@ def publish_received(manifest, destination_root, receiver, storage_check=None,
         if (not set(f['path'] for f in files).issubset(f['path'] for f in manifest['files']) or
                 not set(dirs).issubset(manifest['directories'])):
             raise ArchiveError('unexpected received stage contents')
+        # In-place transport may resume only stage-owned payload inodes. A
+        # hardlink would otherwise let it overwrite data outside this stage.
+        if any(os.lstat(os.path.join(stage, row['path'])).st_nlink != 1 for row in files):
+            raise ArchiveError('hardlinked received stage payload refused')
         receiver(stage)
         _verify_bytes(manifest, stage)
         for row in manifest['files']:

@@ -430,6 +430,44 @@ else: sys.exit(1)
             if process.poll() is None: process.kill(); process.wait()
             process.stdout.close(); process.stderr.close()
 
+    def test_real_rsync_interrupted_private_stage_retries_without_payload_debris(self):
+        real_rsync = shutil.which('rsync', path=self.env.get('PATH'))
+        if real_rsync is None:
+            self.skipTest('real rsync required for transport interruption regression')
+        source = self.run / 'epoch_02'
+        (source / 'model.safetensors').write_bytes(b'a' * (1024 * 1024))
+        (source / 'accelerate_state/model.safetensors').write_bytes(b'b' * (512 * 1024))
+        self.target['max_bytes'] = 2 * 1024 * 1024
+        self.transport()
+        # Adapt only the host:path operand to local storage. The real rsync
+        # engine, receiver, temporary-file behavior and process timeout run.
+        transport = self.root / 'bin' / 'rsync'
+        transport.write_text('#!' + sys.executable + '\nimport os,sys\n' +
+                             'args=sys.argv[1:]\nargs[-2]=args[-2].split(":",1)[1]\n' +
+                             'os.execv(' + repr(real_rsync) + ',[' + repr(real_rsync) + ']+args)\n')
+        self.target['remote']['timeout'] = 2
+        # Force process interruption before rsync's own graceful timeout can
+        # clean its temporary payload, reproducing the host restart failure.
+        self.target['rsync_timeout'] = 10
+        self.target['rate_limit_bytes'] = 32768
+        result, records = self.call('--apply', '--remove-source')
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertTrue(source.exists())
+        manifest = core.prepare(str(self.run), 2)
+        stage = Path(core.archive_path(manifest, str(self.dest))).parent / ('.stage-' + manifest['manifest_id'])
+        staged = sorted(str(p.relative_to(stage)) for p in stage.rglob('*') if p.is_file())
+        self.assertTrue(staged, 'real rsync did not reach the private stage')
+        self.target['remote']['timeout'] = 10
+        self.target['rsync_timeout'] = 10
+        self.target.pop('rate_limit_bytes')
+        result, records = self.call('--apply', '--remove-source')
+        self.assertEqual(result.returncode, 0, 'interrupted stage files: ' + repr(staged) + '\n' + result.stdout)
+        receipt = next(r['receipt'] for r in records if r['status'] == 'verified')
+        self.assertEqual(core.verify_archive(manifest, receipt['archive_path']), receipt)
+        self.assertEqual((Path(receipt['archive_path']) / 'model.safetensors').read_bytes(), b'a' * (1024 * 1024))
+        self.assertEqual((Path(receipt['archive_path']) / 'accelerate_state/model.safetensors').read_bytes(), b'b' * (512 * 1024))
+        self.assertFalse(source.exists())
+
 
 class ReceivedTests(unittest.TestCase):
     setUp = CLITests.setUp
@@ -484,6 +522,31 @@ class ReceivedTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout)
         self.assertIn('removed', [r['status'] for r in records])
         self.assertEqual(core.pending_cleanup(manifest['source_root']), [])
+
+    def test_received_stage_hardlink_cannot_overwrite_unrelated_file(self):
+        manifest = core.prepare(str(self.run), 2)
+        def interrupted(stage):
+            shutil.copyfile(str(self.run / 'epoch_02' / 'model.safetensors'),
+                            str(Path(stage) / 'model.safetensors'))
+            raise OSError('interrupted receiver')
+        with self.assertRaises(OSError):
+            core.publish_received(manifest, str(self.dest), interrupted)
+        stage = Path(core.archive_path(manifest, str(self.dest))).parent / ('.stage-' + manifest['manifest_id'])
+        outside = self.root / 'unrelated_data'
+        outside.write_bytes(b'preserve unrelated bytes')
+        (stage / 'model.safetensors').unlink()
+        os.link(str(outside), str(stage / 'model.safetensors'))
+        def receive(stage):
+            for p in (self.run / 'epoch_02').rglob('*'):
+                out = Path(stage) / p.relative_to(self.run / 'epoch_02')
+                if p.is_dir(): out.mkdir(parents=True, exist_ok=True)
+                else:
+                    out.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(str(p), str(out))
+        with self.assertRaises(core.ArchiveError):
+            core.publish_received(manifest, str(self.dest), receive)
+        self.assertEqual(outside.read_bytes(), b'preserve unrelated bytes')
+        self.assertTrue((self.run / 'epoch_02').exists())
 
 
 if __name__ == '__main__':
