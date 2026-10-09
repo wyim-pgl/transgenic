@@ -198,31 +198,48 @@ def _best(run):
     return int(match.group(1))
 
 
-def plan(run_dir, min_age_seconds=0, max_epoch=None, max_bytes=None, now=None):
-    """Metadata-only inventory; max_bytes bounds total candidate bytes.
-
-    Malformed epochs are refused individually, and still count toward latest-two
-    protection. No weights are read or hashed. Invalid best links fail closed.
-    """
-    run = _canonical(run_dir)
-    if min_age_seconds < 0 or (max_bytes is not None and max_bytes < 0):
-        raise ArchiveError('negative policy limit')
+def _classified_epochs(run):
+    """Shared metadata-only definition of completed, distinct epochs."""
     entries = sorted((int(EPOCH.match(n).group(1)), n) for n in os.listdir(run) if EPOCH.match(n))
     numbers = [n for n, name in entries]
     if len(set(numbers)) != len(numbers):
         raise ArchiveError('duplicate epoch numbers')
-    best = _best(run)
-    protected = set(numbers[-2:])
-    if best is not None:
-        protected.add(best)
-    candidates, refused, total = [], [], 0
-    now = time.time() if now is None else now
+    completed, refused = [], []
     for epoch, name in entries:
         try:
             files, dirs = _complete(os.path.join(run, name), epoch)
         except (ArchiveError, OSError, ValueError, TypeError) as exc:
             refused.append(dict(epoch=epoch, name=name, reason=str(exc)))
             continue
+        completed.append((epoch, name, files, dirs))
+    return completed, refused
+
+
+def _protected_epochs(run, completed, extra=None):
+    numbers = {entry[0] for entry in completed}
+    if extra is not None:
+        numbers.add(extra)  # A validated, receipt-bound renamed source tombstone.
+    protected = set(sorted(numbers)[-2:])
+    best = _best(run)
+    if best is not None:
+        protected.add(best)
+    return protected
+
+
+def plan(run_dir, min_age_seconds=0, max_epoch=None, max_bytes=None, now=None):
+    """Metadata-only inventory; max_bytes bounds total candidate bytes.
+
+    Retain the latest two completed epochs. Refuse incomplete epochs separately;
+    they cannot displace completed epochs from protection. No weights read/hash.
+    """
+    run = _canonical(run_dir)
+    if min_age_seconds < 0 or (max_bytes is not None and max_bytes < 0):
+        raise ArchiveError('negative policy limit')
+    completed, refused = _classified_epochs(run)
+    protected = _protected_epochs(run, completed)
+    candidates, total = [], 0
+    now = time.time() if now is None else now
+    for epoch, name, files, dirs in completed:
         size = sum(f['size'] for f in files)
         newest = max([os.lstat(os.path.join(run, name)).st_mtime] +
                      [f['signature'][3] / 1e9 for f in files])
@@ -237,11 +254,8 @@ def plan(run_dir, min_age_seconds=0, max_epoch=None, max_bytes=None, now=None):
 
 
 def _eligible(run, epoch, extra=False):
-    # Include a renamed tombstone epoch when recomputing latest-two protection.
-    names = [int(EPOCH.match(n).group(1)) for n in os.listdir(run) if EPOCH.match(n)]
-    if extra and epoch not in names:
-        names.append(epoch)
-    if epoch in sorted(names)[-2:] or epoch == _best(run):
+    completed, refused = _classified_epochs(run)
+    if epoch in _protected_epochs(run, completed, extra=epoch if extra else None):
         raise ArchiveError('epoch is currently protected')
 
 
@@ -381,6 +395,28 @@ def _verify_bytes(manifest, path):
         raise ArchiveError('archive content mismatch')
 
 
+def _recover_receipt_temp(manifest, stage, target):
+    """Recover only the bound, complete temporary receipt from this stage."""
+    path = os.path.join(stage, RECEIPT + '.tmp')
+    if not os.path.lexists(path):
+        return
+    before = os.lstat(path)
+    if not stat.S_ISREG(before.st_mode):
+        raise ArchiveError('unsafe temporary archive receipt')
+    try:
+        value = _json(path)
+    except (OSError, ValueError, TypeError) as exc:
+        raise ArchiveError('invalid temporary archive receipt: ' + str(exc))
+    if (not isinstance(value, dict) or
+            set(value) != {'version', 'manifest_id', 'manifest', 'archive_path', 'storage'} or
+            value.get('version') != VERSION or value.get('manifest_id') != manifest['manifest_id'] or
+            value.get('manifest') != manifest or value.get('archive_path') != target or
+            not isinstance(value.get('storage'), dict) or _signature(os.lstat(path)) != _signature(before)):
+        raise ArchiveError('temporary archive receipt is not bound to this transaction')
+    os.unlink(path)
+    _sync(stage)
+
+
 def verify_archive(manifest, archive_path):
     """Independently read all destination bytes and validate published receipt."""
     _validate(manifest)
@@ -478,6 +514,7 @@ def transfer(manifest, destination_root, storage_check=None, required_pool=None,
                 os.unlink(path)
             _copy(os.path.join(run, manifest['name'], row['path']), path, row['signature'], rate_limit_bytes)
             _storage(path, 0, storage_check, required_pool, required_project, min_free_bytes)
+        _recover_receipt_temp(manifest, stage, target)
         _verify_bytes(manifest, stage)
         _source(manifest)
         _protect(manifest)

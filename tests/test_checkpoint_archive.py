@@ -354,6 +354,87 @@ a.transfer(m, sys.argv[3])
         receipt = archive.transfer(manifest, str(self.dest))
         self.assertEqual(archive.verify_archive(manifest, receipt['archive_path']), receipt)
 
+    def test_incomplete_newer_epoch_preserves_latest_two_completed(self):
+        (self.run / 'epoch_05').mkdir()
+        result = archive.plan(str(self.run))
+        self.assertEqual([c['epoch'] for c in result['candidates']], [2])
+        self.assertEqual(result['protected'], [1, 3, 4])
+        with self.assertRaises(archive.ArchiveError):
+            archive.prepare(str(self.run), 3)
+
+    def test_duplicate_numeric_epoch_alias_cannot_weaken_cleanup_protection(self):
+        manifest, receipt = self.copied()
+        shutil.copytree(str(self.run / 'epoch_04'), str(self.run / 'epoch_4'))
+        with self.assertRaises(archive.ArchiveError):
+            archive.cleanup(manifest, receipt)
+        self.assertTrue((self.run / 'epoch_02').exists())
+
+    def test_new_incomplete_epoch_cannot_weaken_cleanup_protection(self):
+        manifest, receipt = self.copied()
+        shutil.rmtree(str(self.run / 'epoch_04'))
+        (self.run / 'epoch_05').mkdir()
+        with self.assertRaises(archive.ArchiveError):
+            archive.cleanup(manifest, receipt)
+        self.assertTrue((self.run / 'epoch_02/model.safetensors').exists())
+
+    def test_incomplete_newer_epoch_cannot_weaken_tombstone_protection(self):
+        manifest, receipt = self.copied()
+        real = os.unlink
+        count = [0]
+        def interrupted(path, *args, **kwargs):
+            if '.archive-removing-' in path:
+                count[0] += 1
+                if count[0] == 2:
+                    raise OSError('interrupted removal')
+            return real(path, *args, **kwargs)
+        with mock.patch.object(archive.os, 'unlink', side_effect=interrupted):
+            with self.assertRaises(OSError):
+                archive.cleanup(manifest, receipt)
+        tomb = next(self.run.glob('.archive-removing-*'))
+        before = sorted(str(p.relative_to(tomb)) for p in tomb.rglob('*'))
+        shutil.rmtree(str(self.run / 'epoch_04'))
+        (self.run / 'epoch_05').mkdir()
+        with self.assertRaises(archive.ArchiveError):
+            archive.cleanup(manifest, receipt)
+        self.assertEqual(sorted(str(p.relative_to(tomb)) for p in tomb.rglob('*')), before)
+
+    def interrupted_receipt(self):
+        manifest = self.prepared()
+        real = os.replace
+        def interrupted(src, dst):
+            if dst.endswith('/.archive_receipt.json'):
+                raise OSError('receipt replace interrupted')
+            return real(src, dst)
+        with mock.patch.object(archive.os, 'replace', side_effect=interrupted):
+            with self.assertRaises(OSError):
+                archive.transfer(manifest, str(self.dest))
+        stage = next(self.dest.glob('run-*/.stage-*'))
+        return manifest, stage
+
+    def test_interrupted_receipt_write_restarts_successfully(self):
+        manifest, stage = self.interrupted_receipt()
+        self.assertTrue((stage / '.archive_receipt.json.tmp').exists())
+        receipt = archive.transfer(manifest, str(self.dest))
+        self.assertEqual(archive.verify_archive(manifest, receipt['archive_path']), receipt)
+        self.assertFalse((Path(receipt['archive_path']) / '.archive_receipt.json.tmp').exists())
+        self.assertTrue((self.run / 'epoch_02').exists())
+
+    def test_unrecognized_or_symlink_receipt_temp_is_refused(self):
+        manifest, stage = self.interrupted_receipt()
+        temp = stage / '.archive_receipt.json.tmp'
+        temp.write_text('{}')
+        with self.assertRaises(archive.ArchiveError):
+            archive.transfer(manifest, str(self.dest))
+        self.assertEqual(temp.read_text(), '{}')
+        temp.unlink()
+        unrelated = self.root / 'unrelated'
+        unrelated.write_text('preserve')
+        temp.symlink_to(unrelated)
+        with self.assertRaises(archive.ArchiveError):
+            archive.transfer(manifest, str(self.dest))
+        self.assertTrue(temp.is_symlink())
+        self.assertEqual(unrelated.read_text(), 'preserve')
+
 
 if __name__ == '__main__':
     unittest.main()
