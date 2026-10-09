@@ -16,6 +16,7 @@ import os
 import re
 import stat
 import time
+import uuid
 
 VERSION = 1
 RECEIPT = '.archive_receipt.json'
@@ -396,23 +397,39 @@ def _verify_bytes(manifest, path):
 
 
 def _recover_receipt_temp(manifest, stage, target):
-    """Recover only the bound, complete temporary receipt from this stage."""
+    """Preserve interrupted receipt control bytes outside checkpoint payload.
+
+    Ownership comes from the exact private manifest-named stage/control path,
+    not from trusting possibly empty or truncated receipt JSON. A new receipt
+    is constructed only after the ordinary independent payload verification.
+    """
     path = os.path.join(stage, RECEIPT + '.tmp')
     if not os.path.lexists(path):
         return
+    if (stage != os.path.join(os.path.dirname(target), '.stage-' + manifest['manifest_id']) or
+            any(row['path'] == RECEIPT + '.tmp' for row in manifest['files'])):
+        raise ArchiveError('temporary receipt is not private transaction control state')
     before = os.lstat(path)
     if not stat.S_ISREG(before.st_mode):
         raise ArchiveError('unsafe temporary archive receipt')
+    digest = _digest(path, _signature(before))
+    control = _canonical(os.path.join(os.path.dirname(stage),
+                         '.receipt-recovery-' + manifest['manifest_id']), create=True)
+    preserved = os.path.join(control, 'receipt-' + uuid.uuid4().hex)
+    # link() exclusively creates a new name: never overwrite unknown control
+    # data. Both names stay on the destination filesystem; no data is discarded
+    # if the process dies between this link and unlinking the staging name.
+    os.link(path, preserved, follow_symlinks=False)
+    after = os.lstat(preserved)
+    if (not stat.S_ISREG(after.st_mode) or _signature(after)[:4] != _signature(before)[:4] or
+            _signature(os.lstat(path)) != _signature(after) or _digest(preserved) != digest):
+        raise ArchiveError('temporary archive receipt changed during quarantine')
+    fd = os.open(preserved, os.O_RDONLY | os.O_NOFOLLOW)
     try:
-        value = _json(path)
-    except (OSError, ValueError, TypeError) as exc:
-        raise ArchiveError('invalid temporary archive receipt: ' + str(exc))
-    if (not isinstance(value, dict) or
-            set(value) != {'version', 'manifest_id', 'manifest', 'archive_path', 'storage'} or
-            value.get('version') != VERSION or value.get('manifest_id') != manifest['manifest_id'] or
-            value.get('manifest') != manifest or value.get('archive_path') != target or
-            not isinstance(value.get('storage'), dict) or _signature(os.lstat(path)) != _signature(before)):
-        raise ArchiveError('temporary archive receipt is not bound to this transaction')
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    _sync(control)
     os.unlink(path)
     _sync(stage)
 

@@ -419,13 +419,18 @@ a.transfer(m, sys.argv[3])
         self.assertFalse((Path(receipt['archive_path']) / '.archive_receipt.json.tmp').exists())
         self.assertTrue((self.run / 'epoch_02').exists())
 
-    def test_unrecognized_or_symlink_receipt_temp_is_refused(self):
+    def test_unrecognized_receipt_temp_is_quarantined_without_trusting_it(self):
         manifest, stage = self.interrupted_receipt()
         temp = stage / '.archive_receipt.json.tmp'
         temp.write_text('{}')
-        with self.assertRaises(archive.ArchiveError):
-            archive.transfer(manifest, str(self.dest))
-        self.assertEqual(temp.read_text(), '{}')
+        receipt = archive.transfer(manifest, str(self.dest))
+        preserved = list(self.dest.glob('run-*/.receipt-recovery-*/*'))
+        self.assertEqual([p.read_bytes() for p in preserved], [b'{}'])
+        self.assertEqual(archive.verify_archive(manifest, receipt['archive_path']), receipt)
+
+    def test_symlink_receipt_temp_is_refused(self):
+        manifest, stage = self.interrupted_receipt()
+        temp = stage / '.archive_receipt.json.tmp'
         temp.unlink()
         unrelated = self.root / 'unrelated'
         unrelated.write_text('preserve')
@@ -434,6 +439,58 @@ a.transfer(m, sys.argv[3])
             archive.transfer(manifest, str(self.dest))
         self.assertTrue(temp.is_symlink())
         self.assertEqual(unrelated.read_text(), 'preserve')
+
+    def killed_receipt(self, partial):
+        manifest = self.prepared()
+        request = self.root / 'request.json'
+        request.write_text(json.dumps(manifest))
+        code = '''import sys, os, signal, json
+sys.path.insert(0, sys.argv[1])
+import checkpoint_archive as a
+m = json.load(open(sys.argv[2]))
+real = os.open
+def opening(path, flags, *args, **kwargs):
+    fd = real(path, flags, *args, **kwargs)
+    if path.endswith('/.archive_receipt.json.tmp'):
+        if sys.argv[4] == 'partial':
+            os.write(fd, b'{"version":1,"manifest_id":')
+            os.fsync(fd)
+        os.kill(os.getpid(), signal.SIGKILL)
+    return fd
+a.os.open = opening
+a.transfer(m, sys.argv[3])
+'''
+        result = subprocess.run([sys.executable, '-c', code, str(MODULE.parent), str(request),
+                                 str(self.dest), 'partial' if partial else 'empty'])
+        self.assertEqual(result.returncode, -9)
+        stage = next(self.dest.glob('run-*/.stage-*'))
+        expected = b'{"version":1,"manifest_id":' if partial else b''
+        self.assertEqual((stage / '.archive_receipt.json.tmp').read_bytes(), expected)
+        return manifest, expected
+
+    def assert_receipt_restart(self, partial):
+        manifest, expected = self.killed_receipt(partial)
+        self.assertTrue((self.run / 'epoch_02/model.safetensors').exists())
+        receipt = archive.transfer(manifest, str(self.dest))
+        self.assertEqual(archive.verify_archive(manifest, receipt['archive_path']), receipt)
+        preserved = list(self.dest.glob('run-*/.receipt-recovery-*/*'))
+        self.assertEqual([p.read_bytes() for p in preserved], [expected])
+        self.assertEqual(archive.transfer(manifest, str(self.dest)), receipt)
+        self.assertEqual((self.run / 'epoch_02/model.safetensors').read_bytes(), b'weights\x02')
+
+    def test_sigkill_before_receipt_write_recovers_empty_temp(self):
+        self.assert_receipt_restart(partial=False)
+
+    def test_sigkill_during_receipt_write_recovers_truncated_temp(self):
+        self.assert_receipt_restart(partial=True)
+
+    def test_receipt_recovery_does_not_accept_unexpected_checkpoint_payload(self):
+        manifest, stage = self.interrupted_receipt()
+        (stage / 'unrelated').write_bytes(b'preserve')
+        with self.assertRaises(archive.ArchiveError):
+            archive.transfer(manifest, str(self.dest))
+        self.assertEqual((stage / 'unrelated').read_bytes(), b'preserve')
+        self.assertTrue((self.run / 'epoch_02').exists())
 
 
 if __name__ == '__main__':
