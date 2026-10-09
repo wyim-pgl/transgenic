@@ -5,7 +5,7 @@ User authorized implementation and repeated small-file login-node tests, then ex
 ## Platforms and scope
 
 - Python 3.6+ standard library on DeltaAI; no torch or package installation required for archive tools.
-- Source runs: B5 seed123 and B6/C2 WP5 runs. Immutable completed `epoch_NN` directories only in v1. Never archive `latest_state*`, `.tmp`, `step_*`/PILOT_FINAL, latest two completed epochs, or the `best` target.
+- Source runs: B5 seed123 and B6/C2 WP5 runs. Immutable completed `epoch_NN` directories only in v1. Never archive `latest_state*`, `.tmp`, `step_*`/PILOT_FINAL, latest two completed epochs, or the `best` target. These best/latest protections apply to training-run inputs. An explicitly configured archive input may forward an already-verified immutable HDD archive after independently verifying its prior receipt and preserving upstream provenance; never infer archive status solely from its directory name.
 - Copy entire epoch (weights, optimizer, RNG, pending gradients, metadata). Reject symlinks/special files inside checkpoint trees, overlapping roots and path traversal. Treat malformed checkpoint metadata as refusal, not proof of eligibility.
 - Destination backends: DeltaAI HDD (actual Lustre `ddn_hdd` pool and project quota verified) and pronghorn (pull from DeltaAI over existing `ssh dtai` connection; source is NVMe or an already-verified HDD archive). Source deletion remains opt-in at CLI level; ordinary invocations only plan/dry-run.
 - Actual 99 GiB production cleanup is not a test. Deploy and run read-only production inventory plus small disposable actual transfers. Do not enable unbounded production deletion on a login node.
