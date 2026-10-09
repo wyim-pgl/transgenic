@@ -535,16 +535,96 @@ def transfer(manifest, destination_root, storage_check=None, required_pool=None,
         _verify_bytes(manifest, stage)
         _source(manifest)
         _protect(manifest)
-        receipt = dict(version=VERSION, manifest_id=manifest['manifest_id'], manifest=manifest,
-                       archive_path=target, storage=evidence)
-        _save(os.path.join(stage, RECEIPT), receipt)
-        for directory in sorted(manifest['directories'], key=lambda p: p.count('/'), reverse=True):
-            _sync(os.path.join(stage, directory))
-        _sync(stage)
-        os.rename(stage, target)  # Only destination-native files move here.
-        _sync(parent)
-        _sync(dest)
-        return verify_archive(manifest, target)
+        return _publish_stage(manifest, stage, target, dest, evidence)
+
+
+def _publish_stage(manifest, stage, target, dest, evidence):
+    """Common independently verified, durable destination-native publication."""
+    _recover_receipt_temp(manifest, stage, target)
+    _verify_bytes(manifest, stage)
+    for row in manifest['files']:
+        fd = os.open(os.path.join(stage, row['path']), os.O_RDONLY | os.O_NOFOLLOW)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+    receipt = dict(version=VERSION, manifest_id=manifest['manifest_id'], manifest=manifest,
+                   archive_path=target, storage=evidence)
+    _save(os.path.join(stage, RECEIPT), receipt)
+    for directory in sorted(manifest['directories'], key=lambda p: p.count('/'), reverse=True):
+        _sync(os.path.join(stage, directory))
+    _sync(stage)
+    os.rename(stage, target)
+    _sync(os.path.dirname(target))
+    _sync(dest)
+    return verify_archive(manifest, target)
+
+
+def publish_received(manifest, destination_root, receiver, storage_check=None,
+                     required_pool=None, required_project=None, min_free_bytes=0):
+    """Receive into a controlled stage under destination lock, verify and publish.
+
+    receiver(stage) is the authenticated transport boundary. It must not remove
+    source data. Publication independently verifies every byte, exact topology,
+    current storage placement and durability; transport exit status is no proof.
+    This API cannot inspect a remote source: its helper must revalidate source
+    before publication and again before any opt-in cleanup acknowledgment.
+    """
+    _validate(manifest)
+    if min_free_bytes < 0:
+        raise ArchiveError('invalid space limit')
+    dest = _canonical(destination_root, create=True)
+    with locked(dest):
+        target = archive_path(manifest, dest)
+        parent = _canonical(os.path.dirname(target), create=True)
+        if os.path.lexists(target):
+            receipt = verify_archive(manifest, target)
+            for row in manifest['files']:
+                _storage(os.path.join(target, row['path']), 0, storage_check,
+                         required_pool, required_project, min_free_bytes)
+            return receipt
+        evidence = _storage(parent, manifest['bytes'], storage_check, required_pool,
+                            required_project, min_free_bytes)
+        stage = _canonical(os.path.join(parent, '.stage-' + manifest['manifest_id']), create=True)
+        _storage(stage, manifest['bytes'], storage_check, required_pool, required_project, min_free_bytes)
+        _recover_receipt_temp(manifest, stage, target)
+        # Refuse unsafe existing stage entries before a transport can follow them.
+        files, dirs = _tree(stage, ignore_receipt=True)
+        if (not set(f['path'] for f in files).issubset(f['path'] for f in manifest['files']) or
+                not set(dirs).issubset(manifest['directories'])):
+            raise ArchiveError('unexpected received stage contents')
+        receiver(stage)
+        _verify_bytes(manifest, stage)
+        for row in manifest['files']:
+            _storage(os.path.join(stage, row['path']), 0, storage_check,
+                     required_pool, required_project, min_free_bytes)
+        return _publish_stage(manifest, stage, target, dest, evidence)
+
+
+def pending_cleanup(run_dir):
+    """Metadata-only discovery of bound unfinished source cleanup journals."""
+    run = _canonical(run_dir)
+    state = os.path.join(run, '.checkpoint_archive', 'cleanup')
+    if not os.path.lexists(state):
+        return []
+    _canonical(state)
+    result = []
+    for name in sorted(os.listdir(state)):
+        if not name.endswith('.json'):
+            continue  # A private interrupted .tmp is not yet an authorized journal.
+        transaction = _json(os.path.join(state, name))
+        manifest = _validate(transaction['manifest'])
+        receipt = transaction['receipt']
+        if (name != manifest['manifest_id'] + '.json' or manifest['source_root'] != run or
+                transaction.get('version') != VERSION or
+                transaction.get('status') not in ('prepared', 'removed') or
+                receipt.get('manifest') != manifest or
+                receipt.get('manifest_id') != manifest['manifest_id'] or
+                receipt.get('version') != VERSION):
+            raise ArchiveError('invalid pending cleanup journal')
+        if transaction['status'] != 'removed':
+            result.append(transaction)
+    return result
 
 
 def cleanup(manifest, receipt, verifier=None):
