@@ -535,13 +535,14 @@ def transfer(manifest, destination_root, storage_check=None, required_pool=None,
         _verify_bytes(manifest, stage)
         _source(manifest)
         _protect(manifest)
-        return _publish_stage(manifest, stage, target, dest, evidence)
+        return _publish_stage(manifest, stage, target, dest, evidence, bytes_verified=True)
 
 
-def _publish_stage(manifest, stage, target, dest, evidence):
+def _publish_stage(manifest, stage, target, dest, evidence, bytes_verified=False):
     """Common independently verified, durable destination-native publication."""
     _recover_receipt_temp(manifest, stage, target)
-    _verify_bytes(manifest, stage)
+    if not bytes_verified:
+        _verify_bytes(manifest, stage)
     for row in manifest['files']:
         fd = os.open(os.path.join(stage, row['path']), os.O_RDONLY | os.O_NOFOLLOW)
         try:
@@ -598,7 +599,7 @@ def publish_received(manifest, destination_root, receiver, storage_check=None,
         for row in manifest['files']:
             _storage(os.path.join(stage, row['path']), 0, storage_check,
                      required_pool, required_project, min_free_bytes)
-        return _publish_stage(manifest, stage, target, dest, evidence)
+        return _publish_stage(manifest, stage, target, dest, evidence, bytes_verified=True)
 
 
 def pending_cleanup(run_dir):

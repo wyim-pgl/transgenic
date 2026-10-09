@@ -197,6 +197,9 @@ if os.environ.get('FAIL_RSYNC'): sys.exit(23)
         self.target['remote']['helper'] = str(helper)
         result, records = self.call('--apply', '--remove-source')
         self.assertNotEqual(result.returncode, 0, result.stdout)
+        error = next(r for r in records if r['status'] == 'error')
+        self.assertEqual(error['phase'], 'after_ack')
+        self.assertEqual(error['source_state'], 'cleanup_outcome_unknown')
         pending = core.pending_cleanup(str(self.run))
         self.assertEqual(len(pending), 1)
         self.assertFalse((self.run / 'epoch_02').exists())
@@ -293,6 +296,113 @@ if os.environ.get('FAIL_RSYNC'): sys.exit(23)
             result, records = self.call('--apply', '--remove-source')
             self.assertNotEqual(result.returncode, 0)
             self.assertTrue((self.run / 'epoch_02').exists())
+
+
+    def test_destination_lock_is_held_through_remote_unlink(self):
+        self.transport()
+        helper = self.root / 'lock_probe_helper.py'
+        marker = self.root / 'destination_lock_probe'
+        helper.write_text("import sys, runpy\nsys.path.insert(0, " + repr(str(CLI.parent)) + ")\nimport checkpoint_archive as core\noriginal = core.os.unlink\n" +
+            "def probe(path, *args, **kwargs):\n    if '.archive-removing-' in str(path):\n        try:\n            with core.locked(" + repr(str(self.dest)) + "): raise AssertionError('destination unprotected')\n" +
+            "        except core.ArchiveError:\n            with open(" + repr(str(marker)) + ", 'w') as out: out.write('blocked')\n    return original(path, *args, **kwargs)\n" +
+            "core.os.unlink = probe\nrunpy.run_path(" + repr(str(CLI)) + ", run_name='__main__')\n")
+        self.target['remote']['helper'] = str(helper)
+        result, records = self.call('--apply', '--remove-source')
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(marker.read_text(), 'blocked')
+
+    def test_lustre_checks_accept_regular_file_flags_and_refuse_bad_file_pool(self):
+        binpath = self.root / 'bin'
+        binpath.mkdir()
+        lfs = binpath / 'lfs'
+        lfs.write_text('#!' + sys.executable + '\n' + """import os, sys
+args = sys.argv[1:]
+path = args[-1]
+if args[0] == 'project':
+    project = 7 if os.environ.get('WRONG_PROJECT') else 22169
+    print('%d %s %s' % (project, 'P' if os.path.isdir(path) else '-', path))
+elif args[0] == 'getstripe':
+    pool = 'ddn_ssd' if os.environ.get('BAD_FILE_POOL') and os.path.isfile(path) else 'ddn_hdd'
+    print('lmm_pool: ' + pool)
+elif args[0] == 'quota':
+    print('%s 100 1000000 1000000' % path)
+else: sys.exit(1)
+""")
+        lfs.chmod(0o755)
+        self.env['PATH'] = str(binpath) + os.pathsep + self.env['PATH']
+        self.target['storage'] = dict(kind='lustre', required_pool='ddn_hdd', required_project=22169, mount=str(self.root))
+        for key in ('WRONG_PROJECT', 'BAD_FILE_POOL'):
+            self.env[key] = '1'
+            result, records = self.call('--apply', '--remove-source')
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertTrue((self.run / 'epoch_02').exists())
+            self.env.pop(key)
+            shutil.rmtree(str(self.dest), ignore_errors=True)
+        result, records = self.call('--apply', '--remove-source')
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertFalse((self.run / 'epoch_02').exists())
+
+    def test_target_selector_limits_host_execution(self):
+        other = dict(self.target, name='other-host', source_root=str(self.root / 'missing'))
+        self.config.write_text(json.dumps(dict(version=1, targets=[self.target, other])))
+        result = subprocess.run([sys.executable, str(CLI), '--config', str(self.config),
+                                 '--target', 'other-host'], stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, env=self.env, universal_newlines=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        records = [json.loads(line) for line in result.stdout.splitlines()]
+        self.assertEqual([r['target'] for r in records], ['other-host'])
+        self.assertEqual(records[0]['status'], 'waiting')
+
+    def test_archive_target_does_not_resume_another_epoch_journal(self):
+        (self.run / 'best').unlink()
+        upstream = self.root / 'upstream'
+        first = core.transfer(core.prepare(str(self.run), 1), str(upstream))
+        second = core.transfer(core.prepare(str(self.run), 2), str(upstream))
+        forwarded = core.prepare_archive(first['archive_path'])
+        receipt = core.transfer(forwarded, str(self.dest))
+        original = core.os.unlink
+        def fail(path, *args, **kwargs):
+            if '.archive-removing-' in str(path): raise OSError('interrupted')
+            return original(path, *args, **kwargs)
+        with mock.patch.object(core.os, 'unlink', side_effect=fail):
+            with self.assertRaises(OSError): core.cleanup(forwarded, receipt)
+        self.target.update(source_kind='archive', source_root=second['archive_path'])
+        result, records = self.call('--apply', '--remove-source')
+        self.assertEqual(result.returncode, 0, result.stdout)
+        pending = core.pending_cleanup(forwarded['source_root'])
+        self.assertEqual([t['manifest']['name'] for t in pending], ['epoch_01'])
+        self.assertFalse(Path(second['archive_path']).exists())
+
+    def test_partial_protocol_frame_obeys_deadline(self):
+        script = "import sys;sys.path.insert(0," + repr(str(CLI.parent)) + ");import checkpoint_archive_cli as c\n" + \
+                 "try: c.read_json(sys.stdin.buffer, .1)\nexcept c.core.ArchiveError: sys.exit(0)\nsys.exit(1)"
+        process = subprocess.Popen([sys.executable, '-c', script], stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.env)
+        try:
+            process.stdin.write(b'{'); process.stdin.flush()
+            try: status = process.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                process.kill(); process.wait()
+                self.fail('partial frame ignored protocol deadline')
+            self.assertEqual(status, 0, process.stderr.read())
+        finally:
+            if process.poll() is None: process.kill(); process.wait()
+            process.stdin.close(); process.stdout.close(); process.stderr.close()
+
+    def test_backpressured_protocol_write_obeys_deadline(self):
+        script = "import sys;sys.path.insert(0," + repr(str(CLI.parent)) + ");import checkpoint_archive_cli as c\n" + \
+                 "try: c.FrameChannel(None,sys.stdout.buffer,.1).write_json({'data':'x'*1000000})\nexcept c.core.ArchiveError: sys.exit(0)\nsys.exit(1)"
+        process = subprocess.Popen([sys.executable, '-c', script], stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, env=self.env)
+        try:
+            try: status = process.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                process.kill(); process.wait()
+                self.fail('backpressured write ignored protocol deadline')
+            self.assertEqual(status, 0, process.stderr.read())
+        finally:
+            if process.poll() is None: process.kill(); process.wait()
+            process.stdout.close(); process.stderr.close()
 
 
 class ReceivedTests(unittest.TestCase):

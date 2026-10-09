@@ -22,6 +22,14 @@ from storage_preflight import quota_headroom
 LIMIT = 64 * 1024 * 1024  # Bound protocol metadata, not checkpoint data.
 
 
+class CleanupTransportError(core.ArchiveError):
+    def __init__(self, message, authorized):
+        super().__init__(message)
+        self.phase = 'after_ack' if authorized else 'before_ack'
+        self.source_state = 'cleanup_outcome_unknown' if authorized else 'retained'
+
+
+
 def emit(status, **fields):
     fields.update(status=status)
     print(json.dumps(fields, sort_keys=True), flush=True)
@@ -153,6 +161,10 @@ def inventory(source_kind, source_root, age, max_epoch, max_bytes):
     if not os.path.exists(root):
         return dict(waiting=True, pending=[], plan=None)
     pending = core.pending_cleanup(root)
+    pending = [t for t in pending if
+               ('upstream_receipt' in t['manifest']) == (source_kind == 'archive') and
+               (source_kind == 'run' or
+                os.path.join(t['manifest']['source_root'], t['manifest']['name']) == source_root)]
     if not os.path.exists(source_root):
         return dict(waiting=not bool(pending), pending=pending, plan=None)
     if source_kind == 'run':
@@ -175,6 +187,7 @@ def inventory(source_kind, source_root, age, max_epoch, max_bytes):
 
 def request_for(target, action, **fields):
     fields.update(action=action, source_kind=target['source_kind'], source_root=target['source_root'])
+    if target['transport'] == 'ssh-pull': fields['protocol_timeout'] = target['remote']['timeout']
     return fields
 
 
@@ -194,23 +207,76 @@ def stored_manifest(request):
     return manifest
 
 
-def read_json(stream, timeout=None):
-    if timeout is not None and not select.select([stream], [], [], timeout)[0]:
-        raise core.ArchiveError('acknowledgment timed out')
-    line = stream.readline(LIMIT + 1)
-    if not line or len(line) > LIMIT or not line.endswith(b'\n'):
-        raise core.ArchiveError('missing or oversized protocol message')
-    return json.loads(line.decode('utf-8'))
+class FrameChannel:
+    """Deadline-bounded POSIX frame I/O; retain prefetched bytes on one channel."""
+    def __init__(self, reader, writer, timeout):
+        number(timeout, 'protocol timeout', positive=True)
+        self.reader = reader.fileno() if reader is not None else None
+        self.writer = writer.fileno() if writer is not None else None
+        self.deadline = time.monotonic() + timeout
+        self.buffer = bytearray()
+        for fd in (self.reader, self.writer):
+            if fd is not None:
+                fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
+
+    def _wait(self, writing=False):
+        remaining = self.deadline - time.monotonic()
+        if remaining <= 0:
+            raise core.ArchiveError('protocol deadline exceeded')
+        reads, writes, _ = select.select([] if writing else [self.reader],
+                                         [self.writer] if writing else [], [], remaining)
+        if not (writes if writing else reads):
+            raise core.ArchiveError('protocol deadline exceeded')
+
+    def read_json(self):
+        while b'\n' not in self.buffer:
+            if len(self.buffer) > LIMIT:
+                raise core.ArchiveError('oversized protocol message')
+            self._wait()
+            try:
+                data = os.read(self.reader, min(65536, LIMIT + 1 - len(self.buffer)))
+            except BlockingIOError:
+                continue
+            if not data:
+                raise core.ArchiveError('missing protocol message')
+            self.buffer.extend(data)
+        boundary = self.buffer.index(b'\n') + 1
+        if boundary > LIMIT:
+            raise core.ArchiveError('oversized protocol message')
+        line = bytes(self.buffer[:boundary])
+        del self.buffer[:boundary]
+        return json.loads(line.decode('utf-8'))
+
+    def write_json(self, value):
+        data = encoded(value)
+        offset = 0
+        while offset < len(data):
+            self._wait(writing=True)
+            try:
+                sent = os.write(self.writer, data[offset:offset + 65536])
+            except BlockingIOError:
+                continue
+            if not sent:
+                raise core.ArchiveError('protocol write failed')
+            offset += sent
+
+
+def read_json(stream, timeout=120):
+    return FrameChannel(stream, None, timeout).read_json()
 
 
 def helper():
-    request = read_json(sys.stdin.buffer)
+    channel = FrameChannel(sys.stdin.buffer, sys.stdout.buffer, 120)
+    request = channel.read_json()
+    protocol_timeout = request.get('protocol_timeout', 120)
+    number(protocol_timeout, 'protocol_timeout', positive=True)
+    channel.deadline = time.monotonic() + protocol_timeout
     action = request.get('action')
     allowed = {'plan': ('min_age_seconds', 'max_epoch', 'max_bytes'), 'prepare': ('epoch',),
                'validate': ('manifest_id',), 'cleanup': ('manifest_id', 'receipt', 'ack_timeout')}
     if action not in allowed:
         raise core.ArchiveError('unknown helper action')
-    keys(request, ('action', 'source_kind', 'source_root') + allowed[action],
+    keys(request, ('action', 'source_kind', 'source_root', 'protocol_timeout') + allowed[action],
          ('action', 'source_kind', 'source_root') + allowed[action])
     if request['source_kind'] not in ('run', 'archive'):
         raise core.ArchiveError('invalid source_kind')
@@ -246,13 +312,14 @@ def helper():
                 # This live authenticated boundary trusts the coordinator's independent
                 # hashing/fsync under destination lock, not a dictionary's assertion.
                 nonce = uuid.uuid4().hex
-                emit('ack_required', nonce=nonce, manifest_id=m['manifest_id'])
-                ack = read_json(sys.stdin.buffer, request['ack_timeout'])
+                channel.write_json(dict(status='ack_required', nonce=nonce, manifest_id=m['manifest_id']))
+                channel.deadline = min(channel.deadline, time.monotonic() + request['ack_timeout'])
+                ack = channel.read_json()
                 if ack != dict(nonce=nonce, manifest_id=m['manifest_id'], receipt=r):
                     raise core.ArchiveError('stale or mismatched live acknowledgment')
                 return r
             result = core.cleanup(manifest, receipt, verifier=verified)
-    emit('ok', result=result)
+    channel.write_json(dict(status='ok', result=result))
 
 
 def storage_options(target):
@@ -318,22 +385,30 @@ def remove_remote(target, manifest, receipt):
                               ack_timeout=target['remote']['timeout'])
         process = subprocess.Popen(ssh_argv(target), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, start_new_session=True)
+        authorized = False
+        channel = FrameChannel(process.stdout, process.stdin, target['remote']['timeout'])
         try:
-            process.stdin.write(encoded(request)); process.stdin.flush()
-            challenge = read_json(process.stdout, target['remote']['timeout'])
+            channel.write_json(request)
+            challenge = channel.read_json()
             if (challenge.get('status') != 'ack_required' or
                     challenge.get('manifest_id') != manifest['manifest_id'] or
                     not re.match(r'^[0-9a-f]{32}$', str(challenge.get('nonce', '')))):
                 raise core.ArchiveError('source cleanup challenge refused')
-            process.stdin.write(encoded(dict(nonce=challenge['nonce'], manifest_id=manifest['manifest_id'], receipt=receipt)))
-            process.stdin.flush()
-            out, err = process.communicate(timeout=target['remote']['timeout'])
-            if process.returncode or len(out) > LIMIT:
+            # Any attempted ACK write is conservatively treated as possibly delivered.
+            authorized = True
+            channel.write_json(dict(nonce=challenge['nonce'], manifest_id=manifest['manifest_id'], receipt=receipt))
+            answer = channel.read_json()
+            remaining = channel.deadline - time.monotonic()
+            if remaining <= 0: raise core.ArchiveError('protocol deadline exceeded')
+            out, err = process.communicate(timeout=remaining)
+            if process.returncode or out.strip() or channel.buffer.strip():
                 raise core.ArchiveError('source cleanup transport failed; inspect/resume journal')
-            answer = json.loads(out.decode())
             if answer.get('status') != 'ok' or answer.get('result') != dict(status='removed', manifest_id=manifest['manifest_id']):
                 raise core.ArchiveError('source cleanup did not acknowledge removal')
             return answer['result']
+        except (core.ArchiveError, OSError, ValueError, subprocess.SubprocessError) as exc:
+            stop(process)
+            raise CleanupTransportError(str(exc), authorized)
         except BaseException:
             stop(process)
             raise
@@ -388,6 +463,7 @@ def pass_target(target, apply, remove):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config')
+    parser.add_argument('--target', action='append', help='select a named target; may be repeated')
     parser.add_argument('--helper', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--apply', action='store_true')
     parser.add_argument('--remove-source', action='store_true')
@@ -399,7 +475,7 @@ def main():
     args = parser.parse_args()
     try:
         if args.helper:
-            if args.config or args.apply or args.remove_source or args.once or args.watch or args.cycles is not None:
+            if args.config or args.target or args.apply or args.remove_source or args.once or args.watch or args.cycles is not None:
                 raise core.ArchiveError('helper accepts only stdin protocol')
             helper(); return 0
         if not args.config or (args.remove_source and not args.apply):
@@ -410,12 +486,19 @@ def main():
         elif args.cycles is not None:
             raise core.ArchiveError('--cycles requires --watch')
         targets = config(args.config)
+        if args.target:
+            if set(args.target) - set(t['name'] for t in targets):
+                raise core.ArchiveError('unknown target selector')
+            targets = [t for t in targets if t['name'] in args.target]
         failed = False
         for cycle in range(args.cycles if args.watch else 1):
             for target in targets:
                 try: pass_target(target, args.apply, args.remove_source)
                 except (core.ArchiveError, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
-                    emit('error', target=target['name'], error=str(exc)); failed = True
+                    fields = dict(target=target['name'], error=str(exc))
+                    if isinstance(exc, CleanupTransportError):
+                        fields.update(phase=exc.phase, source_state=exc.source_state)
+                    emit('error', **fields); failed = True
             if args.watch and cycle + 1 < args.cycles:
                 time.sleep(args.interval)
         return 1 if failed else 0
