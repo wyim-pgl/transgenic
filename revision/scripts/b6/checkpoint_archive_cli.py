@@ -116,9 +116,18 @@ def encoded(value):
 
 
 def stop(process):
-    if process.poll() is None:
+    # The leader may already have exited while a descendant holds the pipes.
+    try:
         os.killpg(process.pid, signal.SIGKILL)
-    process.communicate()
+    except ProcessLookupError:
+        pass
+    try:
+        process.communicate(timeout=1)
+    except subprocess.TimeoutExpired:
+        for stream in (process.stdin, process.stdout, process.stderr):
+            if stream is not None: stream.close()
+        if process.poll() is None: process.kill()
+        process.wait(timeout=1)
 
 
 def command(argv, data=None, timeout=120):

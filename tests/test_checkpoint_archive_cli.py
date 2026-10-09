@@ -404,6 +404,22 @@ else: sys.exit(1)
             if process.poll() is None: process.kill(); process.wait()
             process.stdout.close(); process.stderr.close()
 
+    def test_transport_timeout_kills_pipe_holding_descendant(self):
+        child = "import subprocess,sys;subprocess.Popen([sys.executable,'-c','import time;time.sleep(3)'])"
+        script = "import sys;sys.path.insert(0," + repr(str(CLI.parent)) + ");import checkpoint_archive_cli as c\n" + \
+                 "try: c.command([sys.executable,'-c'," + repr(child) + "],timeout=.1)\nexcept c.core.ArchiveError: sys.exit(0)\nsys.exit(1)"
+        process = subprocess.Popen([sys.executable, '-c', script], stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, env=self.env)
+        try:
+            try: status = process.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                process.kill(); process.wait()
+                self.fail('transport descendant kept timeout cleanup blocked')
+            self.assertEqual(status, 0, process.stderr.read())
+        finally:
+            if process.poll() is None: process.kill(); process.wait()
+            process.stdout.close(); process.stderr.close()
+
 
 class ReceivedTests(unittest.TestCase):
     setUp = CLITests.setUp
