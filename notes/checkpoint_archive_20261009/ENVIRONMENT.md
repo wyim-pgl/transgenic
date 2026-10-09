@@ -8,7 +8,7 @@
 - HDD parent `/work/hdd/bilv/wcyim/transgenic`; pool ddn_hdd, project22169; quota1000GiB soft1100GiB hard; used829.286GiB, free170.714GiB at13:43CDT.
 - Main HDD consumer `/work/hdd/bilv/wcyim/transgenic/b6_prep_20260925/merged/b6_v1/evidence_c0.db` =786283638784bytes (~732.28GiB). Do not modify input evidence.
 - Both pools are one Lustre filesystem, st_dev3290199710. Rename keeps SSD pool; a fresh file under HDD inherits HDD. Actual 1MiB copy hash equality proved previously.
-- fcntl.flock tested on each pool with a competing Python process: exclusive contender rejected; locks usable. Test files removed.
+- fcntl.flock tested on each pool with a competing Python process: exclusive contender rejected; locks usable. /work mount options include flock (not localflock): rw,nosuid,nodev,flock,lazystatfs,encrypt. Cross-node contention itself has not been directly tested. Test files removed.
 - All B5 and WP5 training links were pending at13:39CDT. User systemd is running, but no service/timer should be enabled for production cleanup implicitly.
 
 ## Pronghorn

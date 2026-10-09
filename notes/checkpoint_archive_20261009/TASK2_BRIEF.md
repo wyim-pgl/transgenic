@@ -24,7 +24,7 @@ Source cleanup must occur only after coordinator has independently verified and 
 
 Automatic restart must discover source cleanup journals/tombstones, not only normal epoch candidates (a tombstoned epoch no longer appears in plan). Add a reviewed metadata-only pending-transactions API/helper action if needed; validate stored receipt against configured destination/root and reverify its bytes before resuming cleanup. Default dry-run reports pending transactions without changing them. Keep pending transaction bytes within the configured per-pass limits.
 
-Auth loss/timeout/changed source/low quota leaves source. Replay and ambiguous acknowledgment handling must be explicit, idempotent and testable. JSON status should distinguish copied, verified, removed, protected, waiting and error; dry-run does no binary hashing or destination/source metadata mutation. Watch must not spin after error or hide failure.
+Auth loss/timeout before cleanup authorization, changed source, or low quota leaves source. Once durable independently verified destination is acknowledged and cleanup authorized, a disconnect can leave partial or complete removal; report ambiguity and recover via journal rather than claiming source remained intact. Replay and ambiguous acknowledgment handling must be explicit, idempotent and testable. JSON status should distinguish copied, verified, removed, protected, waiting and error; dry-run does no binary hashing or destination/source metadata mutation. Watch must not spin after error or hide failure.
 
 ## Tests and report
 
