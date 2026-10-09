@@ -459,6 +459,22 @@ class ReceivedTests(unittest.TestCase):
         self.assertIn('removed', [r['status'] for r in records])
         self.assertEqual(core.pending_cleanup(str(self.run)), [])
 
+    def test_archive_trailing_slash_discovers_and_resumes_pending_cleanup(self):
+        prior = core.transfer(core.prepare(str(self.run), 2), str(self.root / 'upstream'))
+        manifest = core.prepare_archive(prior['archive_path'])
+        receipt = core.transfer(manifest, str(self.dest))
+        original = core.os.unlink
+        def fail(path, *args, **kwargs):
+            if '.archive-removing-' in str(path): raise OSError('interrupted')
+            return original(path, *args, **kwargs)
+        with mock.patch.object(core.os, 'unlink', side_effect=fail):
+            with self.assertRaises(OSError): core.cleanup(manifest, receipt)
+        self.target.update(source_kind='archive', source_root=prior['archive_path'] + '/')
+        result, records = self.call('--apply', '--remove-source')
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn('removed', [r['status'] for r in records])
+        self.assertEqual(core.pending_cleanup(manifest['source_root']), [])
+
 
 if __name__ == '__main__':
     unittest.main()

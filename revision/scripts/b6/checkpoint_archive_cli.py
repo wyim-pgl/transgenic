@@ -55,7 +55,7 @@ def keys(value, allowed, required=()):
 def absolute(path):
     if not isinstance(path, str) or not os.path.isabs(path) or '\x00' in path or '\n' in path or '\r' in path:
         raise core.ArchiveError('absolute single-line path required')
-    return path
+    return os.path.normpath(path)
 
 
 def config(path):
@@ -75,7 +75,8 @@ def config(path):
         names.add(target['name'])
         if target['transport'] not in ('local', 'ssh-pull') or target['source_kind'] not in ('run', 'archive'):
             raise core.ArchiveError('explicit transport/source_kind required')
-        absolute(target['source_root']); absolute(target['destination_root'])
+        target['source_root'] = absolute(target['source_root'])
+        target['destination_root'] = absolute(target['destination_root'])
         for name in ('max_bytes', 'max_checkpoints'):
             integer(target[name], name, 1)
         integer(target['min_free_bytes'], 'min_free_bytes')
@@ -90,7 +91,7 @@ def config(path):
             if storage['required_pool'] != 'ddn_hdd':
                 raise core.ArchiveError('Lustre archive requires ddn_hdd')
             integer(storage['required_project'], 'required_project', 1)
-            absolute(storage['mount'])
+            storage['mount'] = absolute(storage['mount'])
         elif storage != dict(kind='local'):
             raise core.ArchiveError('unsupported storage policy')
         if target['transport'] == 'ssh-pull':
@@ -99,7 +100,8 @@ def config(path):
                  ('host', 'python', 'helper', 'timeout', 'connect_timeout'))
             if not isinstance(remote['host'], str) or not re.match(r'^[A-Za-z0-9][A-Za-z0-9_.@-]*$', remote['host']):
                 raise core.ArchiveError('invalid SSH host')
-            absolute(remote['python']); absolute(remote['helper'])
+            remote['python'] = absolute(remote['python'])
+            remote['helper'] = absolute(remote['helper'])
             number(remote['timeout'], 'remote timeout', positive=True)
             integer(remote['connect_timeout'], 'connect_timeout', 1)
             integer(target.get('rsync_timeout', 120), 'rsync_timeout', 1)
@@ -162,10 +164,12 @@ def remote_call(target, request):
 
 
 def run_root(source_kind, source_root):
+    source_root = absolute(source_root)
     return source_root if source_kind == 'run' else os.path.dirname(source_root)
 
 
 def inventory(source_kind, source_root, age, max_epoch, max_bytes):
+    source_root = absolute(source_root)
     root = run_root(source_kind, source_root)
     if not os.path.exists(root):
         return dict(waiting=True, pending=[], plan=None)
@@ -289,7 +293,7 @@ def helper():
          ('action', 'source_kind', 'source_root') + allowed[action])
     if request['source_kind'] not in ('run', 'archive'):
         raise core.ArchiveError('invalid source_kind')
-    absolute(request['source_root'])
+    request['source_root'] = absolute(request['source_root'])
     if action == 'plan':
         number(request['min_age_seconds'], 'age')
         integer(request['max_bytes'], 'max_bytes', 1)
