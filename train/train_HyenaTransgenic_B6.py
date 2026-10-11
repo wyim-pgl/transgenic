@@ -267,8 +267,6 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
         final = rt.step_checkpoint_dir(spec.run_dir, gstep)
         with rt.checkpoint_io(acc):
             if is_main:
-                if os.path.lexists(final):
-                    raise FileExistsError(f"refusing to replace published step checkpoint: {final}")
                 tmp = final + ".tmp"
                 shutil.rmtree(tmp, ignore_errors=True)
                 os.makedirs(tmp)
@@ -284,12 +282,45 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                                "model_sha256": rt.file_sha256(weights), "lr": scheduler.get_last_lr()[0],
                                "schedule_total_steps": t_total, "schedule_warmup_steps": warmup_steps},
                               fh, sort_keys=True)
-                open(os.path.join(tmp, rt.PRUNE_EXEMPT_MARKER), "w").write("A28/plan 9: step checkpoint, never pruned\n")
+                with open(os.path.join(tmp, rt.PRUNE_EXEMPT_MARKER), "w") as fh:
+                    fh.write("A28/plan 9: step checkpoint, never pruned\n")
                 if pilot_final:
-                    open(os.path.join(tmp, rt.PILOT_FINAL_MARKER), "w").write(
-                        f"WP5 pilot-final checkpoint at exactly {gstep} optimizer updates (A46 rule 11); "
-                        "never a best-validation checkpoint\n")
-                os.rename(tmp, final)
+                    with open(os.path.join(tmp, rt.PILOT_FINAL_MARKER), "w") as fh:
+                        fh.write(f"WP5 pilot-final checkpoint at exactly {gstep} optimizer updates (A46 rule 11); "
+                                 "never a best-validation checkpoint\n")
+                if os.path.lexists(final):
+                    # A previous link may have published these exact weights and then failed before DONE.
+                    # Recompute from resumable state and verify the fresh candidate; never overwrite a publication.
+                    try:
+                        if os.path.islink(final) or not os.path.isdir(final):
+                            raise ValueError("not a regular directory")
+                        required = ["model.safetensors", "meta.json", rt.CHECKPOINT_IDENTITY,
+                                    rt.PRUNE_EXEMPT_MARKER]
+                        if pilot_final:
+                            required.append(rt.PILOT_FINAL_MARKER)
+                        for name in required:
+                            path = os.path.join(final, name)
+                            if os.path.islink(path) or not os.path.isfile(path):
+                                raise ValueError(f"missing or non-regular {name}")
+                        rt.check_checkpoint_identity(final, identity)
+                        with open(os.path.join(final, "meta.json")) as fh:
+                            published_meta = json.load(fh)
+                        with open(os.path.join(tmp, "meta.json")) as fh:
+                            candidate_meta = json.load(fh)
+                        if published_meta != candidate_meta:
+                            raise ValueError("metadata differs from the recomputed checkpoint")
+                        if rt.file_sha256(os.path.join(final, "model.safetensors")) != candidate_meta["model_sha256"]:
+                            raise ValueError("weights differ from the recomputed checkpoint")
+                        for name in required[3:]:
+                            with open(os.path.join(final, name), "rb") as old, open(os.path.join(tmp, name), "rb") as new:
+                                if old.read() != new.read():
+                                    raise ValueError(f"invalid {name}")
+                    except Exception as exc:
+                        raise RuntimeError(f"refusing conflicting published step checkpoint {final}: {exc}") from exc
+                    finally:
+                        shutil.rmtree(tmp)
+                else:
+                    os.rename(tmp, final)
         log(f"published {final}")
 
     def save_epoch(epoch1, gstep, micro, losses, is_best):
@@ -398,17 +429,14 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
             log(json.dumps({"global_step": gstep, "epoch": epoch, "loss": float(out.loss.detach()),
                             "lr": scheduler.get_last_lr()[0], "alphas": _unwrap(acc, model).chain_alphas()}))
         if gstep == spec.n_pilot:
+            with rt.checkpoint_io(acc):
+                if not state["compile_verified"]:
+                    verify_compile()
             publish_step(gstep, epoch)
         if budget is not None and gstep >= budget:
-            with rt.checkpoint_io(acc):
-                if is_main:
-                    layout.mark_done()
             return {"done": True, "global_step": gstep, "reason": "n_pilot budget"}
         if pilot_target is not None and gstep >= pilot_target:
             # gstep is identical on every rank (same micro-batch count), so all ranks stop at this update together.
-            with rt.checkpoint_io(acc):
-                if is_main:
-                    layout.mark_done()
             log(f"WP5 pilot: stopped at exactly {gstep} optimizer updates")
             return {"done": True, "global_step": gstep, "reason": "stop_after_updates",
                     "pilot_final": rt.step_checkpoint_dir(spec.run_dir, gstep)}
@@ -483,14 +511,8 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
             save_epoch(epoch + 1, gstep, micro_done, losses, is_best)
             if should_stop:
                 require_pilot_target()
-                with rt.checkpoint_io(acc):
-                    if is_main:
-                        layout.mark_done()
                 return {"done": True, "global_step": gstep, "history": history, "reason": "early stop"}
         require_pilot_target()
-        with rt.checkpoint_io(acc):
-            if is_main:
-                layout.mark_done()
         return {"done": True, "global_step": state["global_step"], "history": history, "reason": "max epochs"}
 
     previous = {}
@@ -501,8 +523,13 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
             pass
     try:
         result = train_loop()
-        if not state["compile_verified"] and state["link_updates"]:
-            verify_compile()                    # a link shorter than the warm-up is still checked
+        with rt.checkpoint_io(acc):
+            if not state["compile_verified"] and state["link_updates"]:
+                verify_compile()                # a link shorter than the warm-up is still checked on every rank
+        if result.get("done"):
+            with rt.checkpoint_io(acc):
+                if is_main:
+                    layout.mark_done()
         return result
     finally:
         draw_log.close()

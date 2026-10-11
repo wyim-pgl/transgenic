@@ -52,8 +52,8 @@ GPUS=${SLURM_GPUS_ON_NODE:-0}
 
 RUN_HOST=$WORK/runs/b6_wp5_pilot_$ARM
 RUN=/work/runs/b6_wp5_pilot_$ARM
-if [ -f "$RUN_HOST/TRAINING_DONE" ]; then echo "pilot $ARM already finished ($RUN_HOST/TRAINING_DONE); nothing to do"; exit 0; fi
 if [ -f "$RUN_HOST/TRAINING_FAILED" ]; then echo "REFUSED: $RUN_HOST/TRAINING_FAILED exists; remove it deliberately first" >&2; exit 1; fi
+if [ -f "$RUN_HOST/TRAINING_DONE" ]; then echo "pilot $ARM already finished ($RUN_HOST/TRAINING_DONE); nothing to do"; exit 0; fi
 mkdir -p "$RUN_HOST"
 for _m in "$RUN_HOST"/LINK_ACTIVE.*; do
   [ -e "$_m" ] || continue
@@ -110,6 +110,11 @@ while :; do
 done
 
 STEP=$RUN_HOST/step_$(printf %05d $N_PILOT)
+if [ "$TRAIN_RC" -ne 0 ]; then
+  echo "WP5 pilot $ARM: trainer failed (rc=$TRAIN_RC); see $RUN_HOST/train.err" >&2
+  touch "$RUN_HOST/TRAINING_FAILED"
+  exit 1
+fi
 if [ -f "$RUN_HOST/TRAINING_DONE" ]; then
   [ -f "$STEP/PILOT_FINAL" ] || { echo "FAIL: TRAINING_DONE without $STEP/PILOT_FINAL" >&2; touch "$RUN_HOST/TRAINING_FAILED"; exit 1; }
   echo "WP5 pilot $ARM finished at $N_PILOT updates: $STEP model.safetensors sha256 $(sha256sum "$STEP/model.safetensors" | cut -d' ' -f1)"
