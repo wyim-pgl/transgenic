@@ -483,7 +483,7 @@ class CompileAndAbortTests(TrainerBase):
             dynamo.reset()
 
     def test_compile_guard_and_kernel_check(self):
-        guard = rt.CompileGuard(warmup_steps=2)
+        guard = rt.CompileGuard(warmup_steps=2, graphs_per_shape=2)
         guard.observe(1, (1, 48), 1, False)
         guard.observe(2, (1, 48), 3, False)                # warm-up recompile allowed
         guard.observe(3, (1, 96), 4, False)                # new tier: allowed

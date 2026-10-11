@@ -46,15 +46,9 @@ class CompileB6PolicyTests(unittest.TestCase):
     def test_compile_b6_sets_cache_size_limit_on_older_torch(self):
         self.check("cache_size_limit", "fail_on_cache_limit_hit")
 
-    def test_recompile_limit_covers_tiers_label_ranges_and_grad_modes(self):
-        self.assertGreaterEqual(rt.B6_RECOMPILE_LIMIT, 3 * rt.B6_GRAPHS_PER_SHAPE * 2)
-        self.assertLessEqual(rt.B6_RECOMPILE_LIMIT, 16)
-        self.assertEqual(rt.B6_GRAPHS_PER_SHAPE, 2)
-
-
 class CompileGuardTests(unittest.TestCase):
     def test_second_graph_for_seen_length_after_warmup_allowed_once(self):
-        guard = rt.CompileGuard(warmup_steps=2)
+        guard = rt.CompileGuard(warmup_steps=2, graphs_per_shape=2)
         guard.observe(1, (1, 48), 1, False)
         guard.observe(2, (1, 48), 1, False)
         guard.observe(165, (1, 48), 2, False)              # labels crossed the Inductor fusion threshold
@@ -63,7 +57,7 @@ class CompileGuardTests(unittest.TestCase):
             guard.observe(167, (1, 48), 3, False)
 
     def test_new_tier_after_warmup_allowed_with_its_own_label_split(self):
-        guard = rt.CompileGuard(warmup_steps=1)
+        guard = rt.CompileGuard(warmup_steps=1, graphs_per_shape=2)
         guard.observe(1, (1, 48), 1, False)
         guard.observe(10, (1, 96), 2, False)               # new tier
         guard.observe(20, (1, 96), 3, False)               # its label split
@@ -86,7 +80,7 @@ class CompileGuardTests(unittest.TestCase):
             guard.observe(2, (1, 48), 20, False)               # delta 3 > first compile 1
 
     def test_two_graphs_in_one_forward_for_a_new_tier_set_its_first_delta(self):
-        guard = rt.CompileGuard(warmup_steps=0, graphs_before=5)
+        guard = rt.CompileGuard(warmup_steps=0, graphs_before=5, graphs_per_shape=2)
         guard.observe(1, (1, 96), 7, False)
         self.assertEqual(guard.first_delta[(1, 96)], 2)
         guard.observe(2, (1, 96), 9, False)                    # its labels split, 2 graphs again

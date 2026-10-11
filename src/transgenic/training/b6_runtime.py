@@ -549,13 +549,15 @@ def build_run_identity(run: Mapping, bindings: Mapping, record_sha256_fn=None) -
 
 
 def check_run_config_b6(first: Mapping, current: Mapping) -> None:
-    """Refuse a resume unless every required key is present on BOTH sides and equal (no 'if key exists')."""
+    """Require all identity fields; permit only the documented directional guard-limit upgrade."""
     for key in IDENTITY_REQUIRED_KEYS:
         if key not in first:
             raise RuntimeError(f"resume refused: {key} missing from the run's first identity")
         if key not in current:
             raise RuntimeError(f"resume refused: {key} missing from the current identity")
         if first[key] != current[key]:
+            if key == "compile_policy" and (first[key], current[key]) == LABEL_FUSION_POLICY_UPGRADE:
+                continue  # abort limits only; every other field still has to match
             raise RuntimeError(f"resume refused: {key} differs ({first[key]!r} != {current[key]!r})")
 
 
@@ -567,9 +569,15 @@ def record_identity(run_dir: str, identity: Mapping, alphas: Sequence[float], li
     """First link: write run_config_b6.json. Every link: verify it, then append this link's section, with
     per-layer alpha at link start, to runtime_identity.txt (rule 9)."""
     cfg_path, txt_path = identity_paths(run_dir)
+    transition = None
     if os.path.exists(cfg_path):
         with open(cfg_path) as fh:
-            check_run_config_b6(json.load(fh), identity)
+            first = json.load(fh)
+        check_run_config_b6(first, identity)
+        if first["compile_policy"] != identity["compile_policy"]:
+            transition = {"from": first["compile_policy"], "to": identity["compile_policy"],
+                          "reason": "NGC label fusion intervals; guard limits only",
+                          "evidence": "notes/c2_compile_recovery_20261011.md"}
     else:
         with open(cfg_path + ".tmp", "w") as fh:
             json.dump(dict(identity), fh, indent=1, sort_keys=True)
@@ -577,6 +585,8 @@ def record_identity(run_dir: str, identity: Mapping, alphas: Sequence[float], li
     lines = [f"# link {link.get('link', '?')} {time.strftime('%Y-%m-%dT%H:%M:%S')}"]
     lines += [f"{k}={json.dumps(identity[k], sort_keys=True)}" for k in sorted(identity)]
     lines += [f"link.{k}={json.dumps(v, sort_keys=True)}" for k, v in sorted(link.items())]
+    if transition is not None:
+        lines.append("link.compile_policy_transition=" + json.dumps(transition, sort_keys=True))
     lines += [f"alpha.layer{i:02d}={a!r}" for i, a in enumerate(alphas)]
     with open(txt_path, "a") as fh:
         fh.write("\n".join(lines) + "\n")
@@ -584,10 +594,19 @@ def record_identity(run_dir: str, identity: Mapping, alphas: Sequence[float], li
 
 # ---- compile policy (rule 9: a Dynamo fallback is a failure) ---------------------------------------------------
 
-# A Dynamo graph per (tile tier, labels range, grad mode): 3 tiers x 2 label ranges (one Inductor split on
-# labels.size(1)) x 2 (train, eval under no_grad) = 12, plus 4 margin.
-B6_GRAPHS_PER_SHAPE = 2
-B6_RECOMPILE_LIMIT = 16
+# NGC26.08 MixOrderReduction.can_fuse splits labels at 3414 and4096 (real C2 replay3360978).
+# Capacity for 3 DNA tiers x 3 label intervals x 2 grad modes; static DNA and fatal fallback remain required.
+B6_GRAPHS_PER_SHAPE = 3
+B6_RECOMPILE_LIMIT = 18
+
+# A narrowly directional compatibility exception for existing233574a checkpoints. No compiler/model operation
+# changes: only the abort limits above. Keep exact strings, so later policy changes require a separate proof.
+_STATIC_INDUCTOR_POLICY = ("torch.compile backend=inductor; suppress_errors=False; optimize_ddp=False;"
+                           " automatic_dynamic_shapes=False (labels dim 1 dynamic, DNA length static);")
+LABEL_FUSION_POLICY_UPGRADE = (
+    _STATIC_INDUCTOR_POLICY + " recompile_limit=16; graphs_per_tier=2; fallback=failure",
+    _STATIC_INDUCTOR_POLICY + " recompile_limit=18; graphs_per_tier=3; fallback=failure",
+)
 
 
 def _set_first(config, names, value) -> None:
@@ -637,8 +656,8 @@ class CompileGuard:
     * A shape's first event is allowed at any step with any delta (graph breaks may split one forward into several
       graphs); its delta is recorded as ``first_delta``.
     * After warm-up, a later event for that shape is allowed while the shape has at most B6_GRAPHS_PER_SHAPE events
-      in all (with static L the second is the Inductor split on labels.size(1), first seen long after warm-up, update
-      ~165 in the smoke) and its delta is at most ``first_delta``; otherwise it raises. During warm-up anything goes,
+      in all (with static L Inductor has three label intervals, first observed in C2 at updates1,164,280)
+      and its delta is at most ``first_delta``; otherwise it raises. During warm-up anything goes,
       but events are still counted.
     * More than ``max_compile_events`` events in total (warm-up included) raise at any time. Each event is one
       recompile of the compiled frame, the unit Dynamo's recompile limit counts, so the cap is B6_RECOMPILE_LIMIT.
