@@ -116,6 +116,50 @@ class CompileHistoryTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             check_inputs(entry.entries[0], {'labels': marked}, {}, 0)
 
+    def test_real_weak_dynamic_markers_are_bound_distinctly_for_replay(self):
+        history = self.history()
+        labels = torch.tensor([[1, 4, 2]])
+        torch._dynamo.maybe_mark_dynamic(labels, 1)
+        history.observe(position(), {'labels': labels}, {}, rng_state(), 0, 1)
+        entry = history.entries[0]
+        check_inputs(entry, {'labels': labels}, {}, 0)
+        unmarked = labels.clone()
+        with self.assertRaises(ValueError):
+            check_inputs(entry, {'labels': unmarked}, {}, 0)
+        different_weak = labels.clone()
+        torch._dynamo.maybe_mark_dynamic(different_weak, 0)
+        with self.assertRaises(ValueError):
+            check_inputs(entry, {'labels': different_weak}, {}, 0)
+        strong = labels.clone()
+        torch._dynamo.mark_dynamic(strong, 1)
+        with self.assertRaises(ValueError):
+            check_inputs(entry, {'labels': strong}, {}, 0)
+        self.assertEqual(entry['ranks'][0]['inputs']['labels']['dynamic_dims'], [])
+        self.assertEqual(entry['ranks'][0]['inputs']['labels']['weak_dynamic_dims'], [1])
+
+    def test_recomputed_digest_cannot_hide_weak_dynamic_marker_damage(self):
+        history = self.history()
+        labels = torch.tensor([[1, 4, 2]])
+        torch._dynamo.maybe_mark_dynamic(labels, 1)
+        history.observe(position(), {'labels': labels}, {}, rng_state(), 0, 1)
+        mutations = [lambda d: d.pop('weak_dynamic_dims'),
+                     lambda d: d.update(weak_dynamic_dims=[2]),
+                     lambda d: d.update(weak_dynamic_dims=[1, 1]),
+                     lambda d: d.update(weak_dynamic_dims=[True]),
+                     lambda d: d.update(weak_dynamic_dims='1')]
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / 'history.json'
+            for mutation in mutations:
+                with self.subTest(mutation=mutation):
+                    payload = history.to_payload()
+                    payload['checkpoint'] = dict(CHECKPOINT)
+                    mutation(payload['entries'][0]['ranks'][0]['inputs']['labels'])
+                    raw = canonical(payload)
+                    path.write_bytes(raw)
+                    with self.assertRaises(ValueError):
+                        CompileHistory.load(path, hashlib.sha256(raw).hexdigest(), history.identity,
+                                            history.fingerprint, LocalAccelerator(), checkpoint=CHECKPOINT)
+
     def test_scalar_none_and_bfloat16_inputs(self):
         inputs = {'x': torch.tensor([1, 2], dtype=torch.bfloat16), 'optional': None,
                   'flag': True, 'count': 3, 'scale': 1.5, 'name': 'x'}

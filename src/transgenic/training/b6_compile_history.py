@@ -120,7 +120,8 @@ def input_signature(inputs):
             result[name] = dict(kind='tensor', sha256=hashlib.sha256(raw).hexdigest(),
                                 dtype=str(value.dtype), shape=list(value.shape), stride=list(value.stride()),
                                 requires_grad=value.requires_grad,
-                                dynamic_dims=sorted(getattr(value, '_dynamo_dynamic_indices', set())))
+                                dynamic_dims=sorted(getattr(value, '_dynamo_dynamic_indices', set())),
+                                weak_dynamic_dims=sorted(getattr(value, '_dynamo_weak_dynamic_indices', set())))
         elif value is None or type(value) in (str, bool, int, float):
             raw = _canonical(value)
             result[name] = dict(kind='scalar', type='null' if value is None else type(value).__name__,
@@ -137,14 +138,16 @@ def _validate_signature(signature):
         _require(type(descriptor) is dict, 'invalid input descriptor')
         kind = descriptor.get('kind')
         if kind == 'tensor':
-            _keys(descriptor, {'kind', 'sha256', 'dtype', 'shape', 'stride', 'requires_grad', 'dynamic_dims'}, 'tensor descriptor')
+            _keys(descriptor, {'kind', 'sha256', 'dtype', 'shape', 'stride', 'requires_grad', 'dynamic_dims', 'weak_dynamic_dims'}, 'tensor descriptor')
             _require(descriptor['dtype'] in _DTYPES, 'invalid input dtype')
-            shape, stride, dynamic = (descriptor[key] for key in ('shape', 'stride', 'dynamic_dims'))
+            shape, stride = (descriptor[key] for key in ('shape', 'stride'))
             _require(type(shape) is list and all(_integer(item) for item in shape), 'invalid input shape')
             _require(type(stride) is list and len(stride) == len(shape) and all(_integer(item) for item in stride), 'invalid input stride')
             _require(type(descriptor['requires_grad']) is bool, 'invalid input requires_grad')
-            _require(type(dynamic) is list and all(_integer(item) and item < len(shape) for item in dynamic)
-                     and dynamic == sorted(set(dynamic)), 'invalid input dynamic dimensions')
+            for field in ('dynamic_dims', 'weak_dynamic_dims'):
+                dynamic = descriptor[field]
+                _require(type(dynamic) is list and all(_integer(item) and item < len(shape) for item in dynamic)
+                         and dynamic == sorted(set(dynamic)), f'invalid input {field}')
         elif kind == 'scalar':
             _keys(descriptor, {'kind', 'sha256', 'type', 'value'}, 'scalar descriptor')
             value = descriptor['value']

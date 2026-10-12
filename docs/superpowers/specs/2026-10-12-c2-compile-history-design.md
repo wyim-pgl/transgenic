@@ -11,6 +11,9 @@ Create `src/transgenic/training/b6_compile_history.py` with:
 
 - `input_signature(inputs) -> dict`: per-name value SHA256, dtype, shape, stride,
   requires_grad, and explicitly marked dynamic dimensions for tensor inputs.
+  Bind strong `_dynamo_dynamic_indices` as `dynamic_dims` and weak
+  `_dynamo_weak_dynamic_indices` as `weak_dynamic_dims` distinctly; both fields
+  are required sorted unique in-range integer arrays (empty when unmarked).
   Support None and JSON scalars; refuse unsupported values. Hash dense tensor
   bytes in CPU contiguous order while separately binding original layout.
 - `encode_rng(state) -> dict` / `decode_rng(payload) -> dict`: lossless safe JSON
