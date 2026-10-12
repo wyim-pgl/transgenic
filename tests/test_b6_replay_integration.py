@@ -190,6 +190,76 @@ class ReplayHelperTests(unittest.TestCase):
         self.assertNotEqual(before['inductor']['fx_graph_cache'], changed['inductor']['fx_graph_cache'])
         self.assertEqual(dict(os.environ), environment)
 
+    def test_fingerprint_distinguishes_default_cache_roots_without_side_effects(self):
+        import os
+        import tempfile
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from transformers import PretrainedConfig
+        from transgenic.training.b6_compile_replay import runtime_fingerprint
+        from torch._inductor.runtime.cache_dir_utils import default_cache_dir
+        spec = SimpleNamespace(compile_backend='inductor', mixed_precision='no', cfg={})
+        model = SimpleNamespace(config=PretrainedConfig())
+        acc = SimpleNamespace(device=torch.device('cpu'), num_processes=4)
+        environment = {key: value for key, value in os.environ.items()
+                       if key not in ('TORCHINDUCTOR_CACHE_DIR', 'TRITON_CACHE_DIR')}
+        with tempfile.TemporaryDirectory() as root, patch.dict(os.environ, environment, clear=True):
+            fingerprints, defaults = [], []
+            for allocation in ('allocation-a', 'allocation-b'):
+                candidate = Path(root) / allocation
+                with patch.object(tempfile, 'tempdir', str(candidate)), \
+                     patch('os.makedirs', side_effect=AssertionError('fingerprinting creates cache directories')), \
+                     patch('torch.cuda._lazy_init', side_effect=AssertionError('CPU fingerprint initializes CUDA')):
+                    defaults.append(default_cache_dir())
+                    fingerprints.append(runtime_fingerprint(spec, model, acc, 'none'))
+                self.assertFalse(candidate.exists())
+                self.assertEqual(dict(os.environ), environment)
+            self.assertNotEqual(defaults[0], defaults[1])
+            self.assertNotEqual(fingerprints[0], fingerprints[1])
+            for fingerprint, default in zip(fingerprints, defaults):
+                self.assertEqual(fingerprint['cache_paths']['inductor'], default)
+                self.assertEqual(fingerprint['cache_paths']['triton'],
+                                 {'policy': 'inductor_per_device', 'root': os.path.join(default, 'triton'),
+                                  'device_component': 'decimal_device_index'})
+
+    def test_fingerprint_binds_explicit_cache_paths_without_changing_them(self):
+        import os
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from transformers import PretrainedConfig
+        from transgenic.training.b6_compile_replay import runtime_fingerprint
+        spec = SimpleNamespace(compile_backend='inductor', mixed_precision='no', cfg={})
+        model = SimpleNamespace(config=PretrainedConfig())
+        acc = SimpleNamespace(device=torch.device('cpu'), num_processes=4)
+        with patch.dict(os.environ, {'TORCHINDUCTOR_CACHE_DIR': '/proof/cache/inductor',
+                                    'TRITON_CACHE_DIR': '/proof/cache/triton'}):
+            before = dict(os.environ)
+            fingerprint = runtime_fingerprint(spec, model, acc, 'none')
+            self.assertIn('cache_paths', fingerprint)
+            self.assertEqual(fingerprint['cache_paths']['inductor'], '/proof/cache/inductor')
+            self.assertEqual(fingerprint['cache_paths']['triton'],
+                             {'policy': 'explicit', 'directory': '/proof/cache/triton'})
+            self.assertEqual(dict(os.environ), before)
+
+    def test_fingerprint_binds_native_triton_explicit_blank_policy(self):
+        import os
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from transformers import PretrainedConfig
+        import triton.runtime.cache as triton_cache
+        from transgenic.training.b6_compile_replay import runtime_fingerprint
+        spec = SimpleNamespace(compile_backend='inductor', mixed_precision='no', cfg={})
+        model = SimpleNamespace(config=PretrainedConfig())
+        acc = SimpleNamespace(device=torch.device('cpu'), num_processes=4)
+        with patch.dict(os.environ, {'TRITON_CACHE_DIR': '', 'TRITON_HOME': '/proof/triton-home'}):
+            before = dict(os.environ)
+            fingerprint = runtime_fingerprint(spec, model, acc, 'none')
+            # Modern Triton preserves empty (its manager later refuses it); legacy
+            # Triton uses the native home fallback. Fingerprinting changes neither.
+            expected = '' if hasattr(triton_cache, 'knobs') else '/proof/triton-home/.triton/cache'
+            self.assertEqual(fingerprint['cache_paths']['triton']['directory'], expected)
+            self.assertEqual(dict(os.environ), before)
+
 
 class TinyReplayModel(torch.nn.Module):
     def __init__(self):

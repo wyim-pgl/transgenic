@@ -2,7 +2,8 @@
 
 Cache directory paths are bound literally: this deliberately requires the same
 operational cache configuration on all ranks/links, including shared defaults.
-No node-local path normalization or cache disabling is performed.
+The default Triton device suffix is represented as a shared deterministic policy;
+no node-local root normalization or cache disabling is performed.
 """
 from contextlib import ExitStack, contextmanager
 import copy
@@ -29,6 +30,43 @@ LEGACY_PROVENANCE = 'metadata-derived candidate; not an observed compiler ledger
 
 def checkpoint_position(meta):
     return {key: meta[key] for key in ('epoch', 'step', 'global_step', 'pending_micro')}
+
+
+def _cache_paths():
+    """Bind Inductor's path policy without invoking its mkdir/env/CUDA helpers.
+
+    Inductor's default Triton path ends with the decimal device index. Bind the
+    shared root and that deterministic suffix policy rather than one rank's
+    device index; the fingerprint already binds world size and GPU type. Relative
+    paths bind their absolute location in this process's working directory.
+    Inductor sets its own Triton default, bypassing Triton's native HOME default;
+    the native setting is relevant only when an explicit override is present.
+    """
+    from torch._inductor.runtime.cache_dir_utils import default_cache_dir
+
+    inductor = os.environ.get('TORCHINDUCTOR_CACHE_DIR')
+    if inductor is None:
+        inductor = default_cache_dir()
+    inductor = os.path.abspath(inductor) if inductor else inductor
+    triton = os.environ.get('TRITON_CACHE_DIR')
+    if triton is None:
+        triton_path = dict(policy='inductor_per_device', root=os.path.join(inductor, 'triton'),
+                           device_component='decimal_device_index')
+    else:
+        # Inductor passes an explicit override through unchanged. The consuming
+        # Triton version decides blank/whitespace behavior; read its pure setting,
+        # never construct a FileCacheManager (which creates directories).
+        try:
+            import triton.runtime.cache as native_cache
+        except ImportError:
+            pass  # Triton absent is separately bound by the version fingerprint.
+        else:
+            if hasattr(native_cache, 'knobs'):
+                triton = native_cache.knobs.cache.dir
+            else:
+                triton = triton.strip() or native_cache.default_cache_dir()
+        triton_path = dict(policy='explicit', directory=os.path.abspath(triton) if triton else triton)
+    return dict(inductor=inductor, triton=triton_path)
 
 
 def runtime_fingerprint(spec, original_model, accelerator, checkpointing):
@@ -73,6 +111,7 @@ def runtime_fingerprint(spec, original_model, accelerator, checkpointing):
                                              'bundled_autotune_remote_cache', 'bundle_triton_into_fx_graph_cache',
                                              'global_cache_dir', 'max_autotune', 'max_autotune_gemm',
                                              'triton.cudagraphs']),
+                cache_paths=_cache_paths(),
                 effective_caches=dict(fx_local=bool(inductor.fx_graph_cache and not inductor.force_disable_caches),
                                       fx_remote=bool(aot_cache.should_use_remote_fx_graph_cache() and not inductor.force_disable_caches),
                                       aot_local=bool(aot_cache.should_use_local_autograd_cache()),
