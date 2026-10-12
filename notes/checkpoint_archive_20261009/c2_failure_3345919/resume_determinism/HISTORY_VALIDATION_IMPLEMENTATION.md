@@ -42,8 +42,29 @@ PYTHONPATH=/tmp/b6-spec-review-deps:/tmp/b6-c2-recompile/src:/tmp/b6-c2-recompil
 
 Final suite result: **17 tests passed in42.542s (exit0)**, including all seven initial regressions. `bash -n history_validation.sbatch`, Python py_compile of helper/tests, and git diff --check passed. The controller owns independent review, graph refresh, immutable v2 deployment, allocated NGC/four-GPU verification, submission journal and push. Scientific equality, runtime feasibility within two hours, and actual recorded slot6718 evidence remain allocated-job gates; local fixtures do not claim those gates passed.
 
-Helper bytes for immutable v2 staging:
+Helper bytes at97c0408 (historical snapshot; superseded by compatibility follow-up below):
 
 - `history_proof.py` SHA256`2829645e6bd9d1dd62d9112b89fd6ee3423dd6533e11090345820536613a2e35`
 - `test_history_proof.py` SHA256`7e29f37001032eb15bb3b72a090ac7ef12097fcaf1aa1d765d34ff6e39793bc2`
+- `history_validation.sbatch` SHA256`dce7af8a1da97ee9dc9989dbdebb68765b072e53c22dfefaf09c0928b45e359b`
+
+## Controller-approved host Python3.6 interoperability follow-up
+
+The controller additionally authorized a narrow change to probe.py: dataclasses is imported only inside its training run function, and history_proof.py likewise imports it only inside run. The allocated training closures retain the same dataclasses.replace behavior. Graft's exhaustive indexed search found no probe.dataclasses caller; its broader dataclasses search confirmed the two helper uses occur only in run.bounded.
+
+A fresh `python -S` subprocess parses the actual history_proof.py and probe.py using `ast.parse(feature_version=(3,6))`, forbids imports of torch/numpy/accelerate/dataclasses, imports the real helper, accepts a complete prior report and rejects missing/string success evidence. Its final sys.modules check confirms none of the forbidden modules was loaded. This verifies Python3.6 grammar and the stdlib-only validator import path; it does not claim execution under a local Python3.6 interpreter or extend host support to check_prior/training paths.
+
+RED: the new compatibility test failed in0.137s with blocked module import:dataclasses. GREEN: the new test and all three relevant prior-proof regressions passed (4 tests in11.044s, exit0):
+
+```bash
+PYTHONPATH=/tmp/b6-spec-review-deps:/tmp/b6-c2-recompile/src:/tmp/b6-c2-recompile /home/wyim/miniconda3/envs/pdb/bin/python -m unittest discover -s notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism -p test_history_proof.py -k prior -v
+```
+
+Fresh py_compile of helper/probe/tests and git diff --check passed. The full17-test suite was not repeated for this isolated import relocation, per controller instruction; the new compatibility test brings the suite to18 tests. No immutable remote v1 bytes were changed.
+
+Updated immutable v2 helper bytes:
+
+- `history_proof.py` SHA256`4ab97872c850d22fc8398de99bac4acf9eda5a898979150ba0f8452f95718ec4`
+- `probe.py` SHA256`9edf1eb412275f998cd0614d5b0ea12203433c52b0192da557aa860ab9ab65dc`
+- `test_history_proof.py` SHA256`2409784293d524efa0421487618e9266aefdd9e230ffb4a37dc2b2c2394138f7`
 - `history_validation.sbatch` SHA256`dce7af8a1da97ee9dc9989dbdebb68765b072e53c22dfefaf09c0928b45e359b`

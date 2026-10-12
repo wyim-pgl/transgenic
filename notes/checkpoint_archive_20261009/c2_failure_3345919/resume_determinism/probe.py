@@ -1,6 +1,5 @@
 """Diagnostic only: real C2 trainer, immutable inputs, fresh-process resume comparison."""
 import argparse
-import dataclasses
 import hashlib
 import importlib.util
 import json
@@ -144,6 +143,7 @@ def verify(args):
 
 
 def run(args):
+    import dataclasses
     import torch
     import accelerate
     t = load_trainer()

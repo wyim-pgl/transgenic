@@ -515,6 +515,44 @@ class HistoryProofTests(unittest.TestCase):
             self.assertTrue(seen.exists(), result.stderr)
             self.assertFalse(forbidden.exists())
 
+    def test_prior_validator_imports_on_python36_grammar_without_training_dependencies(self):
+        # A fresh interpreter avoids modules imported by this torch-based test suite.
+        script = """
+import ast
+import builtins
+import importlib.util
+import json
+from pathlib import Path
+import sys
+original_import = builtins.__import__
+def guarded_import(name, *args, **kwargs):
+    if name.split('.')[0] in {'torch', 'numpy', 'accelerate', 'dataclasses'}:
+        raise ImportError('blocked module import: ' + name)
+    return original_import(name, *args, **kwargs)
+builtins.__import__ = guarded_import
+path = Path(sys.argv[1])
+for source in (path, path.with_name('probe.py')):
+    ast.parse(source.read_text(), filename=str(source), feature_version=(3, 6))
+spec = importlib.util.spec_from_file_location('standalone_history_proof', path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+payload = json.loads(sys.stdin.read())
+module.validate_prior_proof(payload)
+for invalid in ({'passed': True}, dict(payload, passed='true')):
+    try:
+        module.validate_prior_proof(invalid)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('invalid pure prior proof accepted')
+assert not any(name.split('.')[0] in {'torch', 'numpy', 'accelerate', 'dataclasses'} for name in sys.modules)
+print('PURE_PRIOR_PY36_COMPATIBLE')
+"""
+        result = subprocess.run([sys.executable, '-S', '-c', script, str(ROOT / 'history_proof.py')],
+                                input=json.dumps(self.prior_report()), capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), 'PURE_PRIOR_PY36_COMPATIBLE')
+
 
 if __name__ == '__main__':
     unittest.main()

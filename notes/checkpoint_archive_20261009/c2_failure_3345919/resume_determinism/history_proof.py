@@ -1,7 +1,6 @@
 """Diagnostic acceptance for implemented compiler history; never a production launcher."""
 import argparse
 import contextlib
-import dataclasses
 import functools
 import hashlib
 import importlib.util
@@ -99,6 +98,7 @@ def snapshot_step(args):
 def run(args):
     """Run a bounded real4GPU proof link after this allocation verified all inputs."""
     selected_snapshot = snapshot_step(args)
+    import dataclasses
     import accelerate
     import torch
     from transgenic.training import b6_compile_replay as replay
