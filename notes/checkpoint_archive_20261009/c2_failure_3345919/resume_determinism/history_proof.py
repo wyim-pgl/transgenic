@@ -8,6 +8,7 @@ import importlib.util
 import json
 import math
 import os
+import re
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -16,6 +17,9 @@ probe = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(probe)
 
 HISTORICAL_210_LOSS = 3.2567708492279053
+PROFILES = {'resume210': (200, 210, 220), 'validate400': (200, 400, 410)}
+STATE_KEYS = {'optimizer.bin', 'scheduler.bin'} | {f'random_states_{rank}.pkl' for rank in range(4)}
+TRACE_KEYS = {'inputs', 'shapes', 'rng_before', 'rng_after', 'loss', 'context', 'gradients', 'boundary_rng'}
 SLOTS = list(range(1, 16)) + [3915]
 PREFIX_SHA256 = {
     '0': 'f6c2eecc10921cf621479e005db1361e61dfc8e81d5aa8c5b6ca676c84650de5',
@@ -85,8 +89,16 @@ class TrainingTrace:
         self.stream.close()
 
 
+def snapshot_step(args):
+    selected = getattr(args, 'snapshot_step', 210)
+    require(type(selected) is int and selected in (210, 400), 'unsupported snapshot step')
+    require(type(args.stop) is int and selected < args.stop, 'snapshot must precede stop')
+    return selected
+
+
 def run(args):
     """Run a bounded real4GPU proof link after this allocation verified all inputs."""
+    selected_snapshot = snapshot_step(args)
     import accelerate
     import torch
     from transgenic.training import b6_compile_replay as replay
@@ -171,7 +183,7 @@ def run(args):
             if (rank == 0 and str(source) == str(Path(args.run) / 'latest_state.tmp') and
                     str(destination) == str(Path(args.run) / 'latest_state')):
                 meta = json.loads((Path(destination) / 'meta.json').read_text())
-                if meta['global_step'] == 210:
+                if meta['global_step'] == selected_snapshot:
                     probe.clone(args.run, args.snapshot)
                     trace.emit('snapshot_published', path=args.snapshot,
                                checkpoint={key: meta[key] for key in ('epoch', 'step', 'global_step', 'pending_micro')},
@@ -227,12 +239,12 @@ def make_bootstrap(run, receipt, prefix_sha256):
                 provenance='metadata-derived candidate; not an observed compiler ledger')
 
 
-def _trace(run, rank):
+def _trace(run, rank, *, start_step, snapshot_step, stop_step):
     rows = [json.loads(line) for line in (run / f'trace_rank{rank}.jsonl').read_text().splitlines()]
     require(all(type(row.get('rank')) is int and row['rank'] == rank for row in rows), 'wrong trace rank')
     prepared = [row for row in rows if row['event'] == 'prepared']
     finished = [row for row in rows if row['event'] == 'finished']
-    start = 4800 if run.name == 'continuous' else 5040
+    start = (start_step if run.name == 'continuous' else snapshot_step) * 24
     require(len(prepared) == len(finished) == 1, 'missing/duplicate trace lifecycle records')
     require(rows[0] == prepared[0] and rows[-1] == finished[0], 'trace lifecycle order')
     require(prepared[0]['micro'] == start, 'trace starts at wrong checkpoint')
@@ -240,16 +252,16 @@ def _trace(run, rank):
     require(reducer.get('world_size') == 4 and reducer.get('rank') == rank and reducer.get('backend_name') == 'nccl',
             'trace is not four-rank NCCL DDP')
     result = finished[0].get('result', {})
-    require(finished[0]['micro'] == 5280 and result.get('preempted') is True and result.get('global_step') == 220
+    require(finished[0]['micro'] == stop_step * 24 and result.get('preempted') is True and result.get('global_step') == stop_step
             and result.get('history') == [] and not result.get('done'),
             'trace worker did not complete the required updates')
     snapshots = [row for row in rows if row['event'] == 'snapshot_published']
     if run.name == 'continuous' and rank == 0:
-        snapshot = run.parent / 'at210'
-        require(len(snapshots) == 1 and snapshots[0]['micro'] == 5040, 'missing/duplicate trace snapshot')
-        expected = dict(epoch=0, step=5040, global_step=210, pending_micro=0)
+        snapshot = run.parent / f'at{snapshot_step}'
+        require(len(snapshots) == 1 and snapshots[0]['micro'] == snapshot_step * 24, 'missing/duplicate trace snapshot')
+        expected = dict(epoch=0, step=snapshot_step * 24, global_step=snapshot_step, pending_micro=0)
         require(snapshots[0].get('checkpoint') == expected, 'trace snapshot checkpoint mismatch')
-        require(Path(snapshots[0]['path']).name == 'at210', 'trace snapshot destination mismatch')
+        require(Path(snapshots[0]['path']).name == f'at{snapshot_step}', 'trace snapshot destination mismatch')
         receipt_path = snapshot / 'DIAGNOSTIC_SOURCE.json'
         require(snapshots[0].get('receipt_sha256') == probe.sha(receipt_path), 'trace snapshot receipt mismatch')
         receipt = json.loads(receipt_path.read_text())
@@ -285,7 +297,7 @@ def require_operating_fingerprint(value):
             env.get('TRITON_CACHE_DIR') == '/work/compiler_cache/c2_history_v1/triton', 'wrong shared cache namespace')
 
 
-def _checkpoint_binding(run, position):
+def _checkpoint_binding(run, position, *, specialization=False):
     from transgenic.training.b6_compile_history import CompileHistory
     checkpoint = run / 'latest_state'
     meta = json.loads((checkpoint / 'meta.json').read_text())
@@ -313,12 +325,19 @@ def _checkpoint_binding(run, position):
                                grad_enabled=True, optimizer_step=(slot - 1) // 24) for slot in SLOTS]
     require([entry['position'] for entry in entries[:16]] == expected_positions,
             'wrong bootstrap history slots')
+    if specialization:
+        position = dict(phase='train', epoch=0, batch_index=6717, view='arm', training=True,
+                        grad_enabled=True, optimizer_step=279)
+        events = [entry for entry in entries if entry['origin'] == 'observed' and entry['position'] == position]
+        require(len(events) == 1, 'missing/duplicate rank3 specialization at slot6718')
+        rank3 = events[0]['ranks'][3]
+        require(rank3['delta'] > 0, 'rank3 specialization lacks an observed graph event')
+        require(rank3['inputs'].get('input_ids', {}).get('shape') == [1, 129024] and
+                rank3['inputs'].get('labels', {}).get('shape') == [1, 3924], 'wrong rank3 specialization shapes')
     return meta['compile_history_sha256']
 
 
-def compare_pair(root):
-    """Require complete four-rank numerical equality and the original210 scalar."""
-    root = Path(root)
+def _pinned_manifest(root):
     manifest = json.loads((root / 'bootstrap.json').read_text())
     receipt = json.loads(Path(__file__).with_name('original_checkpoint_receipt.json').read_text())
     expected_manifest = dict(version=1, kind='reconstructed_legacy_compile_bootstrap',
@@ -329,41 +348,145 @@ def compare_pair(root):
         provenance='metadata-derived candidate; not an observed compiler ledger')
     require(json.dumps(manifest, sort_keys=True, allow_nan=False) == json.dumps(expected_manifest, sort_keys=True),
             'bootstrap does not match the pinned original checkpoint and draw evidence')
+
+
+def compare_pair(root, *, profile='resume210'):
+    """Require complete four-rank numerical equality and the original210 scalar."""
+    require(profile in PROFILES, 'unsupported proof profile')
+    start_step, selected_snapshot, stop_step = PROFILES[profile]
+    start_micro, snapshot_micro, stop_micro = (step * 24 for step in PROFILES[profile])
+    root = Path(root)
+    _pinned_manifest(root)
     left, right = root / 'continuous', root / 'resumed'
-    histories = [_checkpoint_binding(run, dict(epoch=0, global_step=220, step=5280, pending_micro=0))
+    histories = [_checkpoint_binding(run, dict(epoch=0, global_step=stop_step, step=stop_micro, pending_micro=0),
+                                     specialization=profile == 'validate400')
                  for run in (left, right)]
-    _checkpoint_binding(root / 'at210', dict(epoch=0, global_step=210, step=5040, pending_micro=0))
+    _checkpoint_binding(root / f'at{selected_snapshot}',
+                        dict(epoch=0, global_step=selected_snapshot, step=snapshot_micro, pending_micro=0))
     a, b = probe.checkpoint(left), probe.checkpoint(right)
     different = sorted(key for key in set(a['model']) | set(b['model']) if a['model'].get(key) != b['model'].get(key))
     states = {key: a['state'].get(key) == b['state'].get(key) for key in set(a['state']) | set(b['state'])}
     traces = {}
     historical = None
     for rank in range(4):
-        x, y = _trace(left, rank), _trace(right, rank)
-        require(set(x['forward']) == set(range(4801, 5281)), f'incomplete continuous trace rank{rank}')
-        require(set(y['forward']) == set(range(5041, 5281)), f'incomplete resumed trace rank{rank}')
+        coordinates = dict(start_step=start_step, snapshot_step=selected_snapshot, stop_step=stop_step)
+        x, y = _trace(left, rank, **coordinates), _trace(right, rank, **coordinates)
+        require(set(x['forward']) == set(range(start_micro + 1, stop_micro + 1)), f'incomplete continuous trace rank{rank}')
+        require(set(y['forward']) == set(range(snapshot_micro + 1, stop_micro + 1)), f'incomplete resumed trace rank{rank}')
         for rows in (x['forward'], y['forward']):
             require(all(math.isfinite(row['loss']) for row in rows.values()), 'nonfinite trace loss')
-        traces[str(rank)] = {key: [micro for micro in range(5041, 5281)
+        traces[str(rank)] = {key: [micro for micro in range(snapshot_micro + 1, stop_micro + 1)
                                   if x['forward'][micro][key] != y['forward'][micro][key]]
                             for key in ('inputs', 'shapes', 'rng_before', 'rng_after', 'loss', 'context')}
-        require(set(x['accumulation_boundary']) == set(range(4824, 5281, 24)), 'incomplete continuous gradient trace')
-        require(set(y['accumulation_boundary']) == set(range(5064, 5281, 24)), 'incomplete resumed gradient trace')
-        traces[str(rank)]['gradients'] = [micro for micro in range(5064, 5281, 24)
+        require(set(x['accumulation_boundary']) == set(range(start_micro + 24, stop_micro + 1, 24)), 'incomplete continuous gradient trace')
+        require(set(y['accumulation_boundary']) == set(range(snapshot_micro + 24, stop_micro + 1, 24)), 'incomplete resumed gradient trace')
+        traces[str(rank)]['gradients'] = [micro for micro in range(snapshot_micro + 24, stop_micro + 1, 24)
                                         if x['accumulation_boundary'][micro]['gradients'] !=
                                         y['accumulation_boundary'][micro]['gradients']]
-        traces[str(rank)]['boundary_rng'] = [micro for micro in range(5064, 5281, 24)
+        traces[str(rank)]['boundary_rng'] = [micro for micro in range(snapshot_micro + 24, stop_micro + 1, 24)
                                            if x['accumulation_boundary'][micro]['rng'] != y['accumulation_boundary'][micro]['rng']]
         if rank == 0:
             historical = x['forward'][5040]['loss']
-    report = dict(model_equal=not different, different_model_keys=different, states_equal=states,
+    report = dict(profile=profile, checkpoint_history_sha256=dict(zip(('continuous', 'resumed'), histories)),
+                  checkpoint_digests={'continuous': probe.digest(a), 'resumed': probe.digest(b)},
+                  model_equal=not different, different_model_keys=different, states_equal=states,
                   history_equal=histories[0] == histories[1], traces=traces,
                   historical210=dict(expected=HISTORICAL_210_LOSS, actual=historical,
                                      equal=historical == HISTORICAL_210_LOSS))
-    report['passed'] = (not different and all(states.values()) and report['history_equal'] and
+    report['passed'] = (not different and set(states) == STATE_KEYS and all(states.values()) and report['history_equal'] and
                         report['historical210']['equal'] and
                         all(not values for rank in traces.values() for values in rank.values()))
+    if profile == 'validate400':
+        report['validation400'] = dict(checkpoint_step=400, stop_step=410,
+                                       rank3_specialization_slot=6718, rank3_specialization_recorded=True)
     return report
+
+
+def _validate_numerical_proof(report):
+    """Require every successful numerical acceptance field with its exact type."""
+    require(type(report) is dict, 'prior proof must be a mapping')
+    require(all(report.get(key) is True for key in ('passed', 'model_equal', 'history_equal')),
+            'prior proof success fields missing or false')
+    require(type(report.get('different_model_keys')) is list and report['different_model_keys'] == [],
+            'prior proof has model differences')
+    states = report.get('states_equal')
+    require(type(states) is dict and set(states) == STATE_KEYS and all(value is True for value in states.values()),
+            'prior proof state evidence incomplete or false')
+    traces = report.get('traces')
+    require(type(traces) is dict and set(traces) == {'0', '1', '2', '3'}, 'prior proof ranks incomplete')
+    for rank in traces.values():
+        require(type(rank) is dict and set(rank) == TRACE_KEYS and
+                all(type(value) is list and value == [] for value in rank.values()),
+                'prior proof rank mismatches incomplete or nonempty')
+    historical = report.get('historical210')
+    require(type(historical) is dict and set(historical) == {'expected', 'actual', 'equal'} and
+            historical.get('equal') is True and
+            all(type(historical.get(key)) in (int, float) and historical[key] == HISTORICAL_210_LOSS
+                for key in ('expected', 'actual')), 'prior proof historical210 evidence invalid')
+    return report
+
+
+def validate_prior_proof(report):
+    """Validate the complete initial-proof result, including immutable v1 reports."""
+    _validate_numerical_proof(report)
+    require(report.get('profile', 'resume210') == 'resume210', 'wrong prior proof profile')
+    return report
+
+
+def check_prior(root, job_id):
+    """Small receipt/history preflight; never read model or optimizer tensors."""
+    require(type(job_id) is str and job_id.isascii() and job_id.isdecimal(), 'job ID must be digits')
+    root = Path(root)
+    validate_prior_proof(json.loads((root / 'comparison.json').read_text()))
+    record = json.loads((root / 'verified_record.json').read_text())
+    require(record.get('job_id') == job_id, 'prior verification job ID mismatch')
+    _pinned_manifest(root)
+    histories = [_checkpoint_binding(root / name, dict(epoch=0, global_step=220, step=5280, pending_micro=0))
+                 for name in ('continuous', 'resumed')]
+    require(histories[0] == histories[1], 'prior checkpoint histories differ')
+    _checkpoint_binding(root / 'at210', dict(epoch=0, global_step=210, step=5040, pending_micro=0))
+    return dict(passed=True, job_id=job_id, profile='resume210')
+
+
+def write_validation_receipt(root, report, *, source_commit, predecessor_root, predecessor_job_id,
+                             source_commit_file='/work/repo/SOURCE_COMMIT'):
+    """Publish a small promotion receipt only for a complete, bound validation."""
+    root = Path(root)
+    _validate_numerical_proof(report)
+    require(report.get('profile') == 'validate400' and report.get('validation400') ==
+            dict(checkpoint_step=400, stop_step=410, rank3_specialization_slot=6718,
+                 rank3_specialization_recorded=True), 'missing validation400 acceptance fields')
+    digests = report.get('checkpoint_digests')
+    require(type(digests) is dict and set(digests) == {'continuous', 'resumed'} and
+            all(type(value) is str and re.fullmatch('[0-9a-f]{64}', value) for value in digests.values()) and
+            digests['continuous'] == digests['resumed'], 'invalid canonical checkpoint digests')
+    comparison = root / 'comparison.json'
+    require(json.loads(comparison.read_text()) == report, 'comparison report or digest changed')
+    require(type(source_commit) is str and re.fullmatch('[0-9a-f]{40}', source_commit) and
+            Path(source_commit_file).read_text().strip() == source_commit, 'source commit mismatch')
+    job_id = os.environ.get('SLURM_JOB_ID', '')
+    require(job_id.isascii() and job_id.isdecimal(), 'validation job ID must be digits')
+    require(json.loads((root / 'verified_record.json').read_text()).get('job_id') == job_id,
+            'validation verification job ID mismatch')
+    check_prior(predecessor_root, predecessor_job_id)
+    position = dict(epoch=0, step=9840, global_step=410, pending_micro=0)
+    history_sha = _checkpoint_binding(root / 'resumed', position, specialization=True)
+    continuous_history_sha = _checkpoint_binding(root / 'continuous', position, specialization=True)
+    require(report.get('checkpoint_history_sha256') ==
+            {'continuous': continuous_history_sha, 'resumed': history_sha}, 'checkpoint history changed after comparison')
+    _checkpoint_binding(root / 'at400', dict(epoch=0, step=9600, global_step=400, pending_micro=0))
+    receipt = dict(version=1, kind='c2_history_validation_ready', source_commit=source_commit,
+        validation_job_id=job_id, predecessor_job_id=predecessor_job_id,
+        predecessor_comparison_sha256=probe.sha(Path(predecessor_root) / 'comparison.json'),
+        comparison_sha256=probe.sha(comparison),
+        original_checkpoint_receipt_sha256=probe.sha(Path(__file__).with_name('original_checkpoint_receipt.json')),
+        candidate=dict(relative_run='resumed', relative_checkpoint='latest_state', **position,
+            meta_sha256=probe.sha(root / 'resumed/latest_state/meta.json'), history_sha256=history_sha,
+            canonical_checkpoint_sha256=digests['resumed']))
+    with (root / 'validation_receipt.json').open('x') as stream:
+        json.dump(receipt, stream, sort_keys=True, indent=2, allow_nan=False)
+        stream.write('\n')
+    return receipt
 
 
 def main():
@@ -375,10 +498,18 @@ def main():
     manifest.add_argument('--out', required=True)
     compare = commands.add_parser('compare')
     compare.add_argument('--root', required=True)
+    compare.add_argument('--profile', choices=tuple(PROFILES), default='resume210')
+    compare.add_argument('--source-commit')
+    compare.add_argument('--predecessor-root')
+    compare.add_argument('--predecessor-job-id')
+    prior = commands.add_parser('check-prior')
+    prior.add_argument('--root', required=True)
+    prior.add_argument('--job-id', required=True)
     training = commands.add_parser('run')
     for name in ('bindings', 'record', 'run'):
         training.add_argument('--' + name, required=True)
     training.add_argument('--stop', type=int, default=220)
+    training.add_argument('--snapshot-step', type=int, choices=(210, 400), default=210)
     training.add_argument('--bootstrap')
     training.add_argument('--snapshot')
     args = parser.parse_args()
@@ -390,8 +521,17 @@ def main():
     if args.command == 'run':
         run(args)
         return 0
-    result = compare_pair(args.root)
+    if args.command == 'check-prior':
+        print(json.dumps(check_prior(args.root, args.job_id)), flush=True)
+        return 0
+    if args.profile == 'validate400':
+        require(all((args.source_commit, args.predecessor_root, args.predecessor_job_id)),
+                'validation receipt requires source commit and predecessor identity')
+    result = compare_pair(args.root, profile=args.profile)
     probe.write_json(Path(args.root) / 'comparison.json', result)
+    if args.profile == 'validate400' and result['passed']:
+        write_validation_receipt(args.root, result, source_commit=args.source_commit,
+                                 predecessor_root=args.predecessor_root, predecessor_job_id=args.predecessor_job_id)
     print(json.dumps(result, indent=2), flush=True)
     return 0 if result['passed'] else 2
 
