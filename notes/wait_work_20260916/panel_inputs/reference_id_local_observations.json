@@ -1,0 +1,70 @@
+{
+  "builder": {
+    "key": "Ath000001",
+    "original": "ATMG00010.TAIR10",
+    "name": "ATMG00010",
+    "geometry": [
+      "ChrM",
+      272,
+      734,
+      "-"
+    ]
+  },
+  "internal": {
+    "restriction_counts": [
+      0,
+      0,
+      0
+    ],
+    "bytes": 16,
+    "strict_genes": 0
+  },
+  "raw": {
+    "restriction_counts": [
+      1,
+      1,
+      2
+    ],
+    "bytes": 416,
+    "strict_genes": 1
+  },
+  "first_gene_bytes_sha256": "192ae64c5fb3a81067400b4ea8d6600e314e8e4da1747ec7be4b50d4c29b9350",
+  "actual_job": {
+    "parser": {
+      "genes": 0,
+      "ok": true,
+      "transcripts": 0
+    },
+    "compatible_locus_count": 0,
+    "first_locus": {
+      "error": "reference missing panel gene Ath014705",
+      "error_type": "ValueError",
+      "gene_id": "Ath014705",
+      "panel_gene": [
+        "Chr3",
+        11921197,
+        11924574
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        11907526,
+        11938246
+      ]
+    }
+  },
+  "authority_manifest_sha256": "3ca7a3b9a5793f62d25f503c93cfd7167eb17f7c5b90de7830e6a8777117f783",
+  "authority_row": [
+    {
+      "species_id": "Athaliana",
+      "species": "Arabidopsis thaliana",
+      "table_s1_version": "TAIR10",
+      "fasta": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+      "fasta_md5": "513e5ef30845ed754b00816a99abbf8e",
+      "gff": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+      "gff_md5": "0264c349bc61ccceb546648edec46ebb",
+      "note": "strict held-out loci (3,429) forced to test with their orthogroups"
+    }
+  ]
+}

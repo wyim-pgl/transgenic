@@ -1,0 +1,11 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T14:41:24-0700
+             JOBID                 NAME        STATE         TIME NODELIST(REASON)
+           6165875      est-real-sample      RUNNING         0:54 cpu-50
+6165875         RUNNING      0:0   00:00:54            
+6165875.bat+    RUNNING      0:0   00:00:54            
+6165875.ext+    RUNNING      0:0   00:00:54            
+total 1
+-rw------- 1 wyim p-wyim 1025 Sep 17 14:40 start.json

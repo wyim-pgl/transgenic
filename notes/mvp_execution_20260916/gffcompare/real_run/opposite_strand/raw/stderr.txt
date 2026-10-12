@@ -1,0 +1,2 @@
+  1 reference transcripts loaded.
+  1 query transfrags loaded.

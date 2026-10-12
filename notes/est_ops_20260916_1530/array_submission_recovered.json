@@ -1,0 +1,37 @@
+[
+  {
+    "source": "/home/wyim/.pi/agent/sessions/--mnt-f-scratch-develop-Transgenic-transgenic_local--/2026-09-14T23-23-55-946Z_01a0a23b-fea9-77f3-b399-fc4be2426c64.jsonl",
+    "line": 591,
+    "raw_record_sha256": "b7a44396fb56a72efda238447d4f4b708cf3bf447ee39cd3ca4e714e50560f49",
+    "timestamp": "2026-09-15T20:01:24.563Z",
+    "id": "a18df812",
+    "role": "assistant",
+    "toolCallId": null,
+    "content": [
+      {
+        "type": "toolCall",
+        "id": "call_PseU3ilcrWM8SrCZN89j9cWu|fc_028baae287f127d9016aa9a402972c87d28ce1ebca6d0fdd61",
+        "name": "bash",
+        "arguments": {
+          "command": "set -e; bash -n notes/b6_eight_species_blastx_20260915.sbatch; python3 - <<'PY'\nimport json\nfrom pathlib import Path\nrows=json.loads(Path('/tmp/b6-blastx-eight-inputs.json').read_text())\nassert len(rows)==8 and len({r['species'] for r in rows})==8\nassert 'Sitalica' not in [r['species'] for r in rows]\nprint('8 species,',sum(r['records'] for r in rows),'screened EST records')\nPath('notes/b6_blastx_eight_inputs_20260915.json').write_text(json.dumps(rows,indent=2)+'\\n')\nPY\n timeout 20 ssh -o BatchMode=yes -o ConnectTimeout=10 pronghorn 'set -eu; D=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915; mkdir \"$D\"; mkdir \"$D/logs\"'; scp -q -o BatchMode=yes -o ConnectTimeout=10 notes/b6_eight_species_blastx_20260915.sbatch pronghorn:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch; scp -q -o BatchMode=yes -o ConnectTimeout=10 notes/b6_blastx_eight_inputs_20260915.json pronghorn:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/inputs.json; H=$(sha256sum notes/b6_blastx_eight_inputs_20260915.json | cut -d' ' -f1); printf '%s  inputs.json\\n' \"$H\" | timeout 20 ssh -o BatchMode=yes -o ConnectTimeout=10 pronghorn 'set -eu; cd /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915; dd of=inputs.sha256 status=none; sha256sum -c inputs.sha256; bash -n run.sbatch; jobs=$(squeue -u \"$USER\" -h -o \"%j\"); if printf \"%s\\n\" \"$jobs\" | grep -Fxq b6_blastx_remaining8; then echo Duplicate >&2; exit 1; fi; mkdir submission.lock; sbatch --parsable --chdir=\"$PWD\" --output=\"$PWD/logs/%A_%a.out\" --error=\"$PWD/logs/%A_%a.err\" \"$PWD/run.sbatch\" | tee submission.lock/jobid'",
+          "timeout": 90
+        }
+      }
+    ]
+  },
+  {
+    "source": "/home/wyim/.pi/agent/sessions/--mnt-f-scratch-develop-Transgenic-transgenic_local--/2026-09-14T23-23-55-946Z_01a0a23b-fea9-77f3-b399-fc4be2426c64.jsonl",
+    "line": 592,
+    "raw_record_sha256": "25964fbd17659ace93d2c3a9b9bda6e6d335addfaf7fa28a78d25a1a4a76589a",
+    "timestamp": "2026-09-15T20:01:29.328Z",
+    "id": "7c4c85d7",
+    "role": "toolResult",
+    "toolCallId": "call_PseU3ilcrWM8SrCZN89j9cWu|fc_028baae287f127d9016aa9a402972c87d28ce1ebca6d0fdd61",
+    "content": [
+      {
+        "type": "text",
+        "text": "8 species, 5002430 screened EST records\nLoading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\nLoading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\nLoading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\nLoading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\ninputs.json: OK\n6164049\n"
+      }
+    ]
+  }
+]

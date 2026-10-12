@@ -1,0 +1,163 @@
+{"filesystem_available_bytes": 1021543374848, "pool": "ddn_hdd", "project_id": 22169, "quota_remaining_bytes": 1073354076160, "required_bytes": 107374182400, "results_dir": "/work/hdd/bilv/wcyim/transgenic/runs/b6_int4"}
+......F                                                                  [100%]
+=================================== FAILURES ===================================
+_ test_checkpoint_failure_reaches_all_ranks_without_publication[preserve_step] _
+
+tmp_path = PosixPath('/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache6')
+failure = 'preserve_step'
+
+    @pytest.mark.parametrize("failure", ["weights", "state", "grads", "latest_state", "publish", "identity", "preserve_step"])
+    def test_checkpoint_failure_reaches_all_ranks_without_publication(tmp_path, failure):
+>       mp.start_processes(_worker, args=(_free_port(), str(tmp_path), failure), nprocs=2,
+                           join=True, start_method="spawn")
+
+tests/test_b6_checkpoint_io.py:80: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.12/dist-packages/torch/multiprocessing/spawn.py:296: in start_processes
+    while not context.join():
+              ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.multiprocessing.spawn.ProcessContext object at 0xfffe16bbcc80>
+timeout = None, grace_period = None
+
+    def join(self, timeout: float | None = None, grace_period: float | None = None):
+        r"""Join one or more processes within spawn context.
+    
+        Attempt to join one or more processes in this spawn context.
+        If one of them exited with a non-zero exit status, this function
+        kills the remaining processes (optionally with a grace period)
+        and raises an exception with the cause of the first process exiting.
+    
+        Returns ``True`` if all processes have been joined successfully,
+        ``False`` if there are more processes that need to be joined.
+    
+        Args:
+            timeout (float): Wait this long (in seconds) before giving up on waiting.
+            grace_period (float): When any processes fail, wait this long (in seconds)
+                for others to shutdown gracefully before terminating them. If they
+                still don't exit, wait another grace period before killing them.
+        """
+        # Ensure this function can be called even when we're done.
+        if len(self.sentinels) == 0:
+            return True
+    
+        # Wait for any process to fail or all of them to succeed.
+        ready = multiprocessing.connection.wait(
+            self.sentinels.keys(),
+            timeout=timeout,
+        )
+    
+        error_index = None
+        for sentinel in ready:
+            index = self.sentinels.pop(sentinel)
+            process = self.processes[index]
+            process.join()
+            if process.exitcode != 0:
+                error_index = index
+                break
+    
+        # Return if there was no error.
+        if error_index is None:
+            # Return whether or not all processes have been joined.
+            return len(self.sentinels) == 0
+        # An error occurred. Clean-up all processes before returning.
+        # First, allow a grace period for processes to shutdown themselves.
+        if grace_period is not None:
+            self._join_procs_with_timeout(grace_period)
+        # Then, terminate processes that are still alive. Try SIGTERM first.
+        for process in self.processes:
+            if process.is_alive():
+                log.warning("Terminating process %s via signal SIGTERM", process.pid)
+                process.terminate()
+    
+        # Try SIGKILL if the process isn't going down after another grace_period.
+        # The reason is related to python signal handling is limited
+        # to main thread and if that is in c/c++ land and stuck it won't
+        # to handle it. We have seen processes getting stuck not handling
+        # SIGTERM for the above reason.
+        self._join_procs_with_timeout(30 if grace_period is None else grace_period)
+        for process in self.processes:
+            if process.is_alive():
+                log.warning(
+                    "Unable to shutdown process %s via SIGTERM , forcefully exiting via SIGKILL",
+                    process.pid,
+                )
+                process.kill()
+            process.join()
+    
+        # The file will only be created if the process crashed.
+        failed_process = self.processes[error_index]
+        if not os.access(self.error_files[error_index], os.R_OK):
+            exitcode = self.processes[error_index].exitcode
+            if exitcode < 0:
+                try:
+                    name = signal.Signals(-exitcode).name
+                except ValueError:
+                    name = f"<Unknown signal {-exitcode}>"
+                raise ProcessExitedException(
+                    f"process {error_index:d} terminated with signal {name}",
+                    error_index=error_index,
+                    error_pid=failed_process.pid,
+                    exit_code=exitcode,
+                    signal_name=name,
+                )
+            else:
+                raise ProcessExitedException(
+                    f"process {error_index:d} terminated with exit code {exitcode:d}",
+                    error_index=error_index,
+                    error_pid=failed_process.pid,
+                    exit_code=exitcode,
+                )
+    
+        with open(self.error_files[error_index], "rb") as fh:
+            original_trace = pickle.load(fh)
+        msg = f"\n\n-- Process {error_index:d} terminated with the following error:\n"
+        msg += original_trace
+>       raise ProcessRaisedException(msg, error_index, failed_process.pid)
+E       torch.multiprocessing.spawn.ProcessRaisedException: 
+E       
+E       -- Process 0 terminated with the following error:
+E       Traceback (most recent call last):
+E         File "/usr/local/lib/python3.12/dist-packages/torch/multiprocessing/spawn.py", line 87, in _wrap
+E           fn(i, *args)
+E         File "/work/repo/tests/test_b6_checkpoint_io.py", line 27, in _worker
+E           acc = Accelerator(cpu=device == "cpu", mixed_precision="no", kwargs_handlers=[
+E                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "/usr/local/lib/python3.12/dist-packages/accelerate/accelerator.py", line 463, in __init__
+E           self.state = AcceleratorState(
+E                        ^^^^^^^^^^^^^^^^^
+E         File "/usr/local/lib/python3.12/dist-packages/accelerate/state.py", line 918, in __init__
+E           PartialState(cpu, **kwargs)
+E         File "/usr/local/lib/python3.12/dist-packages/accelerate/state.py", line 244, in __init__
+E           torch.distributed.init_process_group(backend=self.backend, **kwargs)
+E         File "/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+E           return func(*args, **kwargs)
+E                  ^^^^^^^^^^^^^^^^^^^^^
+E         File "/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py", line 97, in wrapper
+E           func_return = func(*args, **kwargs)
+E                         ^^^^^^^^^^^^^^^^^^^^^
+E         File "/usr/local/lib/python3.12/dist-packages/torch/distributed/distributed_c10d.py", line 2280, in init_process_group
+E           store, rank, world_size = next(rendezvous_iterator)
+E                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+E         File "/usr/local/lib/python3.12/dist-packages/torch/distributed/rendezvous.py", line 280, in _env_rendezvous_handler
+E           store = _create_c10d_store(
+E                   ^^^^^^^^^^^^^^^^^^^
+E         File "/usr/local/lib/python3.12/dist-packages/torch/distributed/rendezvous.py", line 199, in _create_c10d_store
+E           return TCPStore(
+E                  ^^^^^^^^^
+E       torch.distributed.DistNetworkError: The server socket has failed to listen on any local network address. port: 49717, useIpv6: false, code: -98, name: EADDRINUSE, message: address already in use
+
+/usr/local/lib/python3.12/dist-packages/torch/multiprocessing/spawn.py:211: ProcessRaisedException
+----------------------------- Captured stderr call -----------------------------
+W0925 01:11:25.488000 2756270 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 01:11:25.488000 2756269 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 01:11:25.516000 2756270 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 01:11:25.516000 2756269 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 01:11:26.222000 2753947 torch/multiprocessing/spawn.py:165] Terminating process 2756270 via signal SIGTERM
+------------------------------ Captured log call -------------------------------
+WARNING  torch.multiprocessing.spawn:spawn.py:165 Terminating process 2756270 via signal SIGTERM
+=========================== short test summary info ============================
+FAILED tests/test_b6_checkpoint_io.py::test_checkpoint_failure_reaches_all_ranks_without_publication[preserve_step]
+1 failed, 6 passed in 70.11s (0:01:10)
+

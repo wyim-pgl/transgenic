@@ -1,0 +1,21 @@
+test_build_inventory_and_no_overwrite (__main__.Deployment) ... ok
+test_builder_rejects_bad_source_pin (__main__.Deployment) ... ok
+test_complete_receipt_and_output_collision (__main__.Deployment) ... ok
+test_environment_context_does_not_capture_secrets (__main__.Deployment) ... ok
+test_exception_still_postchecks (__main__.Deployment) ... ok
+test_missing_marker_refuses_receipt (__main__.Deployment) ... ok
+test_nonzero_preserves_worker_output (__main__.Deployment) ... ok
+test_postcheck_blocks_publication (__main__.Deployment) ... ok
+test_runtime_failure_prevents_worker (__main__.Deployment) ... ok
+test_runtime_postcheck_blocks_receipt (__main__.Deployment) ... ok
+test_shadow_preloaded_package_rejected (__main__.Deployment) ... ok
+test_source_pin_wrong_and_source_link_refused (__main__.Deployment) ... ok
+test_tamper_extra_missing_and_symlink (__main__.Deployment) ... ok
+test_tampered_diagnostics_refuse_receipt (__main__.Deployment) ... ok
+test_working_directory_shadow_does_not_load (__main__.Deployment) ... ok
+test_wrong_ledger (__main__.Deployment) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 32.205s
+
+OK

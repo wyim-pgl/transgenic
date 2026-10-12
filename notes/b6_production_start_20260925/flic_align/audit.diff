@@ -1,0 +1,103 @@
+--- /tmp/b6-integration/revision/scripts/evidence/orientation_audit.sbatch	2026-09-24 09:13:43.521181941 -0700
++++ flic_orientation_audit.sbatch	2026-09-25 23:23:06.834089000 -0700
+@@ -1,12 +1,20 @@
+ #!/usr/bin/env bash
+-#SBATCH --job-name=orient_audit
++#SBATCH --job-name=flic_orient_audit
+ #SBATCH --account=cpu-s1-pgl-0
+ #SBATCH --partition=cpu-s1-pgl-0
+ #SBATCH --cpus-per-task=8
+ #SBATCH --mem=16G
+ #SBATCH --time=04:00:00
+ #SBATCH --output=/data/gpfs/assoc/pgl/data/Transgenic/evidence/orientation_audit_v1/logs/%x_%A_%a.out
+-#SBATCH --array=0-128%12
++#SBATCH --array=0-2
++#
++# FLIC SEPARATE DRIVER (author decision 2026-09-25). A copy of revision/scripts/evidence/
++# orientation_audit.sbatch (md5 a8be9a948f8b70eec113a3008dff7d74) that differs ONLY in which runs it
++# accepts: exactly SRR28341943/44/45 of ont/Athaliana_FLIC_PRJNA1087576, each of which must carry
++# exactly one DATASET_ROLES row and that row must be b1_validation_only. Everything else - sampling,
++# command, scorer, key, DONE and PROVENANCE layout - is the production script's. The production
++# scripts are NOT modified. These runs are not in longread_runs_v1.tsv, so the run table is fixed here.
++# It never writes into an output directory it did not create (.driver sentinel, exit 7).
+ #
+ # §3.3 item 2 — library orientation audit, ONE TASK PER RUN. This decides `-uf` for that run and
+ # nothing else; §3.3 item 4 requires every run to be scored separately, so a dataset-level verdict
+@@ -29,15 +37,24 @@
+ SCRIPTS=$ROOT/transgenic/revision/scripts
+ MANIFEST=$ROOT/transgenic/data/manifests/b5_species_v1.tsv
+ ROLES=$ROOT/evidence/DATASET_ROLES.longread_v1.tsv
+-RUNS=$ROOT/evidence/longread_runs_v1.tsv
++DRIVER="driver=flic_separate (author decision 2026-09-25)"
++FLIC_DS=ont/Athaliana_FLIC_PRJNA1087576
++FLIC_RUNS=(SRR28341943 SRR28341944 SRR28341945)
+ OUTROOT=$ROOT/evidence/orientation_audit_v1
+ THREADS=${SLURM_CPUS_PER_TASK:-8}
+ 
+-read -r SP DS RUN FA < <(awk -F'\t' -v i="$((SLURM_ARRAY_TASK_ID + 1))" 'NR==i' "$RUNS")
+-[ -n "${RUN:-}" ] || { echo "REFUSED: no run at index $SLURM_ARRAY_TASK_ID in $RUNS" >&2; exit 2; }
++case "${SLURM_ARRAY_TASK_ID:-}" in
++  0|1|2) ;;
++  *) echo "REFUSED: array index '${SLURM_ARRAY_TASK_ID:-}' is not 0-2 (the 3 FLIC runs)" >&2; exit 2;;
++esac
++SP=Athaliana; DS=$FLIC_DS; RUN=${FLIC_RUNS[$SLURM_ARRAY_TASK_ID]}; FA=evidence/$DS/$RUN.fa.gz
+ FA=$ROOT/$FA
+ OUT=$OUTROOT/$SP/$(basename "$DS")/$RUN
++if [ -e "$OUT" ] && [ "$(cat "$OUT/.driver" 2>/dev/null)" != "$DRIVER" ]; then
++  echo "REFUSED: $OUT exists and was not created by this driver; will not overwrite" >&2; exit 7
++fi
+ mkdir -p "$OUT" "$OUTROOT/logs"
++[ -e "$OUT/.driver" ] || printf '%s\n' "$DRIVER" > "$OUT/.driver"
+ DONE=$OUT/DONE
+ 
+ # --- Gate 1: A18.3 role, resolved by RUN IDENTITY ---
+@@ -47,9 +64,12 @@
+ # to `excluded`. Looking the role up by the path we are walking returns `excluded` and would drop
+ # exactly the runs the protocol calls training evidence. Identity is the key; the manifest
+ # guarantees one canonical eligible row per run.
+-n_eli=$(awk -F'\t' -v r="$RUN" '$2==r && $12=="c2_training_eligible"' "$ROLES" | wc -l)
+-if [ "$n_eli" -ne 1 ]; then
+-  echo "REFUSED: $RUN has $n_eli c2_training_eligible rows in $(basename "$ROLES"), expected exactly 1" >&2
++# FLIC: the run must have exactly one row in total, and that row must be b1_validation_only for
++# this dataset and species. Any other role (or a second row of any role) fails closed.
++n_val=$(awk -F'\t' -v d="$DS" -v r="$RUN" -v s="$SP" '$1==d && $2==r && $3==s && $12=="b1_validation_only"' "$ROLES" | wc -l)
++n_all=$(awk -F'\t' -v r="$RUN" '$2==r' "$ROLES" | wc -l)
++if [ "$n_val" -ne 1 ] || [ "$n_all" -ne 1 ]; then
++  echo "REFUSED: $RUN has $n_val b1_validation_only rows and $n_all rows in total in $(basename "$ROLES"), expected exactly 1 and 1" >&2
+   exit 2
+ fi
+ 
+@@ -154,7 +174,7 @@
+   echo "run            $RUN"
+   echo "species        $SP"
+   echo "dataset        $DS"
+-  echo "role           c2_training_eligible   (resolved by run identity in $(basename "$ROLES"), md5 $(md5sum "$ROLES" | cut -d' ' -f1))"
++  echo "role           b1_validation_only   (resolved by run identity in $(basename "$ROLES"), md5 $(md5sum "$ROLES" | cut -d' ' -f1))"
+   echo "reads          $FA"
+   echo "reads_md5      $FA_MD5"
+   echo "reference      $REF"
+@@ -165,6 +185,7 @@
+   echo "sam_reused     $REUSED"
+   echo "scorer_md5     $SCORER_MD5   (A39: the marker is bound to it; the superseded scorer gated a different statistic)"
+   echo "command        $CMD"
++  echo "$DRIVER"
+   echo "status         $STATUS"
+   echo "use_uf         $USEUF"
+   echo "sense_read     $FRAC   (A39: P(read strand == annotated strand); THIS is the gate)"
+@@ -185,7 +206,7 @@
+   printf "%s\tlongread_orientation_audit\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+     "$(date -Is)" "$SP" "$FA" "$FA_MD5" "$REF" "$REF_MD5" "$("$BIN"/minimap2 --version)" "$CMD" \
+     "$OUT/audit.json" "$(md5sum "$OUT/audit.json" | cut -d' ' -f1)" \
+-    "§3.3 item 2 as corrected by A39, run $RUN: $STATUS, sense_read_fraction $FRAC (motif_annotation_agreement $MOTIF, diagnostic), use_uf=$USEUF; scorer md5 $SCORER_MD5; GFF md5 $GFF_MD5 verified against b5_species_v1.tsv" \
++    "§3.3 item 2 as corrected by A39, run $RUN: $STATUS, sense_read_fraction $FRAC (motif_annotation_agreement $MOTIF, diagnostic), use_uf=$USEUF; scorer md5 $SCORER_MD5; GFF md5 $GFF_MD5 verified against b5_species_v1.tsv; role b1_validation_only; $DRIVER" \
+     >> "$PROVTSV"
+ } 9>"$PROVTSV.lock"
+ 
+@@ -194,6 +215,7 @@
+   printf 'run=%s\n' "$RUN"
+   printf 'status=%s\n' "$STATUS"
+   printf 'use_uf=%s\n' "$USEUF"
++  printf '%s\n' "$DRIVER"
+   printf 'audit_md5=%s\n' "$(md5sum "$OUT/audit.json" | cut -d' ' -f1)"
+   printf 'completed=%s\n' "$(date -Is)"
+ } > "$DONE.tmp"

@@ -1,0 +1,22 @@
+c2_replay_rank03_v2.tsv: OK
+notes/c2_compile_recovery_20261011.md: OK
+revision/scripts/b6/diag_gpu_memory.py: OK
+revision/scripts/b6/wp5_pilot.sbatch: OK
+src/transgenic/training/b6_runtime.py: OK
+tests/test_b6_compile_recovery.py: OK
+tests/test_b6_compile_static.py: OK
+tests/test_b6_finalization.py: OK
+tests/test_b6_trainer.py: OK
+train/train_HyenaTransgenic_B6.py: OK
+validate_candidate.py: OK
+validate_candidate.sbatch: OK
+{"filesystem_available_bytes": 390106537984, "pool": "ddn_ssd", "project_id": 22169, "quota_remaining_bytes": 206736355328, "required_bytes": 107374182400, "results_dir": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2_recovery_20261011"}
+RECOVERY_PRECHECK_PASS update200 four-rank state and committed draw prefixes
+RECOVERY_START 2026-10-11T14:52:36-05:00 job 3361386 node gh106.hsn.cm.delta.internal.ncsa.edu
+RECOVERY_USR1 ranks: 3159259
+3159260
+3159261
+3159262
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+AssertionError: {'epoch': 0, 'step': 6144, 'global_step': 256, 'pending_micro': 0, 'stopper': {'best': None, 'best_epoch': None, 'bad_epochs': 0, 'patience': 3}, 'arm': 'C2', 'seed': 123, 'stop_after_updates': 4099, 'identity_sha256': 'aaf6dcfc6133ad82057b582bfc9a834f0ce5b9ed76d6556e0633db381358d89f'}

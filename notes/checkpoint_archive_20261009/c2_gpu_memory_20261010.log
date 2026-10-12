@@ -1,0 +1,12 @@
+2026-10-10T21:26:07-05:00
+0, NVIDIA GH200 120GB, 39533 MiB, 97871 MiB, 100 %
+1, NVIDIA GH200 120GB, 39549 MiB, 97871 MiB, 100 %
+2, NVIDIA GH200 120GB, 39295 MiB, 97871 MiB, 100 %
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

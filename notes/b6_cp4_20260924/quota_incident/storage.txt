@@ -1,0 +1,12 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+ls: cannot access '/work/hdd/bilv/wcyim/transgenic': No such file or directory
+drwxrws---+ 3 root  delta_bilv 4096 Sep  3 18:17 /work/hdd/bilv
+drwxrws---+ 2 wcyim delta_bilv 4096 Sep  3 18:17 /work/hdd/bilv/wcyim
+66G	/work/nvme/bilv/wcyim/transgenic/runs/b6_int4
+81G	/work/nvme/bilv/wcyim/transgenic/runs/b6_resume_diagnostic
+24K	/work/nvme/bilv/wcyim/transgenic/runs/b6_bench
+Filesystem                                                                                 Size  Used Avail Use% Mounted on
+172.28.87.150@tcp10:172.28.87.151@tcp10:172.28.87.152@tcp10:172.28.87.153@tcp10:/dltawork  1.5T  549G  952G  37% /work
+QUOTA_SCRIPT /sw/user/scripts/quota

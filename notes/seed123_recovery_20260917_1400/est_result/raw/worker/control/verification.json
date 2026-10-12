@@ -1,0 +1,9 @@
+{
+  "biological_acceptance": false,
+  "diagnostics_sha256": "8d8c8be00102a6ba7e7b5cdd875dbeca5a99b18290c024f3690cd849e670fb1d",
+  "ledger_sha256": "46563a19f5699c55df12df7241af7f807e6d98bed0d7c0666138ce78804c40d6",
+  "report_sha256": "2e97691107440fd6d9e09341d3feb2588823cc28f9c9da5bf4f064a6d95728d8",
+  "result_sha256": "675edd5e368505a06c92df2e80e411642354a7132e66bbb2c2a2e71b338e9446",
+  "status": "VERIFIED_DIAGNOSTIC_COMPLETE",
+  "worker_status": "COMPLETE"
+}

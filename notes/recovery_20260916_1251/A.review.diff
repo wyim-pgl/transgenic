@@ -1,0 +1,1633 @@
+diff --git a/notes/TRACK_A_RECOVERY_REPORT.md b/notes/TRACK_A_RECOVERY_REPORT.md
+new file mode 100644
+index 0000000..15bdb9d
+--- /dev/null
++++ b/notes/TRACK_A_RECOVERY_REPORT.md
+@@ -0,0 +1,151 @@
++# Track A recovery report — 2026-09-16 PDT
++
++## Scope and commits
++
++Worktree: `/tmp/b6-p2-readiness-1535112`
++Branch: `b6-p2-readiness-trackA-20260916`
++Base: `f847cb80c7750326f0781f81481891ab0c9ea309`
++Implementation commit: **`4c2214becd0113a33c03f40332b3859ce0908afc`**.
++This report is committed separately after that implementation commit.
++
++Preserved and finished the existing untracked readiness/staging scripts rather
++than discarding them. Added bounded preflight and training launch wrappers,
++35 CPU tooling tests, and the staging/deployment runbook.
++
++Files:
++- `revision/scripts/mvp/make_launch_readiness.py`
++- `revision/scripts/mvp/stage_checkpoint.py`
++- `revision/scripts/mvp/run_bounded.py`
++- `revision/scripts/mvp/run_training.py`
++- `revision/scripts/mvp/README.readiness.md`
++- `tests/test_mvp_readiness_tools.py`
++
++No existing training source or semantics changed. No main edit, new worktree,
++reset/clean, SSH, remote write, Slurm submission, subagent, merge or push.
++No GPU receipts generated outside explicitly synthetic temporary CPU fixtures.
++`.testdeps`, `.ignore`, graph cache and `.gitignore` changes are **not committed**.
++
++## Implemented boundaries
++
++- Exact existing schema-1 exploratory readiness consumer contract retained
++  (`src/transgenic/training/mvp_cli_runtime.py:175-236`). `prepare` binds the full
++  CLI input set, source weights/sidecars, fixed recipe/seed, exact consumed-code
++  manifest and these tools. `generate` requires all six measured receipts,
++  digest-bound DONE markers, identical input binding identity and successful
++  measurements. It directly calls the existing validator before publication.
++- `check` directly calls the consumer (not `--validate-only`) and additionally
++  checks live receipt bytes, marker hashes, sidecars and tooling identity.
++  Generated-record mutation tests call `validate_launch_readiness` directly.
++- Explicit checkpoint pins; concrete nonsymlink paths; no current-best selection.
++  Staging requires fresh quota evidence plus filesystem capacity, byte ceiling
++  and reserve; hashes source and copied bytes, fsyncs files/directories, publishes
++  a fresh run root atomically with loader-compatible parent sidecars.
++- Compute/data-mover guard precedes CLI large hashes/copies. It is an operational
++  guard, not an authentication/security boundary. Full staging inventory,
++  transfer-route decisions, pinned canonical companion hashes and quota planning
++  are documented in `README.readiness.md`.
++- P2 fail-closed deterministic bit-identity measurement gate for all three tiers,
++  explicit `:4096:8` workspace and deterministic/eval settings. No tolerance
++  guessed or relaxed, no changes to actual trainer determinism settings.
++- Preflight process timeouts, 1 MiB log caps, process-group termination, bounded
++  optional warmup retries only on exit 75. No real probe retry. Failure cannot
++  leave a usable DONE marker. Training wrapper directly checks readiness and
++  author budget, warms CUDA (at most three startup attempts), launches exactly
++  one fixed four-rank bf16 Accelerate attempt, rejects validate-only/resume.
++  SIGTERM/timeout records failure; process exit zero is explicitly **not** an
++  artifact completion certificate.
++
++## Verification commands and observed results
++
++All commands below ran from `/tmp/b6-p2-readiness-1535112` using the existing
++isolated `.testdeps` and `/home/wyim/miniconda3/envs/pdb/bin/python`. No shared
++Python environment was modified.
++
++### Baseline
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_cli.py
++```
++
++**45 passed in 152.77 s**, before implementation changes.
++
++### Test-first / focused iterations
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_readiness_tools.py
++```
++
++Initial run: **5 failed** exposing the absent receipt-binding API, optional
++checkpoint pins, missing allocation guard and absent bounded runner/gate.
++After the initial implementation: 5 passed; later fixture development briefly
++failed because the synthetic inventory omitted required comparison metadata
++(fixed the fixture, not the consumer). Subsequent focused runs: 16, 24 and
++33 passed as coverage grew.
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_readiness_tools.py -k 'candidate_input or training_wrapper'
++```
++
++**2 failed** before adding accepted-candidate input matching and the training
++wrapper. Those cases pass in the final regression.
++
++### Scoped regression
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_cli.py tests/test_mvp_finalize.py tests/test_mvp_runtime.py tests/test_weights_init.py tests/test_mvp_metrics.py tests/test_mvp_model.py tests/test_mvp_dataset.py tests/test_mvp_readiness_tools.py
++```
++
++First broad run (24 new tooling tests at that point): **176 passed, 1 failed in
++581.82 s**. The unchanged legacy two-rank `hardware-failure` probe exceeded its
++120-second subprocess deadline. No trainer/test timeout was modified.
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_cli.py::test_actual_two_rank_single_rank_hardware_probe_failure_rejects_before_model
++```
++
++**1 passed in 17.14 s**. Process inspection found one orphan from that timed-out
++owned test (`python -u tests/mvp_cli_probe.py hardware-failure`, PID 10816); it
++was terminated with `kill -TERM 10816`. Root cause of the intermittent deadline
++was not established; do not call it a fixed runtime bug.
++
++Final full rerun of the scoped regression command above, after all source/test
++changes: **188 passed in 475.22 s** (153 existing + 35 new). This is not a
++whole-repository green claim.
++
++### Static / entrypoint checks
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m py_compile revision/scripts/mvp/make_launch_readiness.py revision/scripts/mvp/stage_checkpoint.py revision/scripts/mvp/run_bounded.py revision/scripts/mvp/run_training.py tests/test_mvp_readiness_tools.py
++for tool in make_launch_readiness stage_checkpoint run_bounded run_training; do
++  PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python revision/scripts/mvp/$tool.py --help >/dev/null || exit
++done
++git diff --check
++git diff --cached --check
++```
++
++All exited 0. Graft was built/queried before source inspection and rebuilt at
++the end (258 indexed Python files). Context included exact readiness validator,
++source-path resolution, initialization sidecar expectations and existing tests.
++
++## Remaining gates / limitations — not completion claims
++
++1. **Actual real-Hyena/tokenizer/GPU P1–P4 probe implementations and executions
++   remain required.** This change supplies bounded execution and strict measured
++   result schemas, not the real Hyena probe programs. No actual GPU, bf16,
++   Inductor, cache parity, production SIF or filesystem certification occurred.
++2. Checkpoint selection and all three expected digests remain author inputs;
++   no epoch was selected. Budget authorization, staging route, live quota,
++   allocation and job submission authorization remain unresolved.
++3. Probe argv SHA256 does not certify imported code, cache contents or the
++   executing container. Independent review must pin those probe sources and
++   offline assets, deploy the immutable snapshot in the intended SIF, and verify
++   real identity before accepting receipts. JSON measurements are trusted
++   operator evidence, not cryptographic proof that a GPU ran.
++4. The unchanged base runtime readiness validator trusts receipt digests. The
++   stronger tooling check is additional workflow protection, not a new mandatory
++   schema or protection against a deliberately handcrafted trusted record.
++5. SIGKILL/node loss may prevent FAILED publication; missing success is never
++   completion. No graceful save/public resume exists. Partially staged copies
++   remain for inspection; no automatic cleanup or retry is implemented.
++6. Independent review is pending with the controller. No launch authorization
++   follows from this CPU test report.
+diff --git a/revision/scripts/mvp/README.readiness.md b/revision/scripts/mvp/README.readiness.md
+new file mode 100644
+index 0000000..a4103e6
+--- /dev/null
++++ b/revision/scripts/mvp/README.readiness.md
+@@ -0,0 +1,159 @@
++# Track A: fail-closed launch tooling
++
++CPU implementation only. No GPU/SIF/Hyena readiness is certified here. The
++existing trainer and `mvp_cli_runtime.py:175-236` contract are unchanged.
++`--validate-only` bypasses readiness; use this tool's **check** command instead.
++The base consumer trusts operator receipt digests; this tooling additionally
++checks the receipt files, DONE digests, measurements, sidecars and tool identity.
++Do not bypass it with a handcrafted readiness record.
++
++## Required decisions before deployment
++
++* Author-selected **concrete checkpoint**, its weights/run_config/runtime_identity
++  SHA256 pins. No implicit epoch05 choice and no `best`, `latest`, or symlink.
++* Staging route, quota headroom, copy byte ceiling and reserve.
++* Reviewed real-runtime P1–P4 probe programs and their executable/import/source
++  identities. The bounded runner is infrastructure, **not a real Hyena probe**.
++* Per-seed walltime authorization after measured P4 timings; submission approval.
++* An immutable snapshot including these scripts plus the f847cb8 training code;
++  an f847cb8-only archive does not include these tools.
++
++No script submits jobs or transfers between hosts. Run inside the intended,
++independently pinned SIF and compute allocation. `SLURM_JOB_ID` is an operational
++safeguard, not authentication. Approved data movers can set
++`MVP_DATA_MOVER_ALLOCATION_ID` to their real allocation identifier. Never set a
++fictional identifier to run large hashing on a login node. Unit tests use tiny
++synthetic files and explicitly labelled CPU fixture identifiers.
++
++## Full staging inventory
++
++Use a disjoint root `/work/nvme/bilv/wcyim/transgenic/mvp/` with
++`inputs/`, `checkpoints/`, `preflight/`, `readiness/`, and `runs/`. Keep seed123
++source runs and existing B5 jobs read-only.
++
++| Input | Route requiring operator confirmation | Post-copy check |
++|---|---|---|
++| `--db`: B5 corpus (~23.5 GB) | pronghorn approved data mover to `inputs/` | acceptance `inputs.corpus.sha256` |
++| `--evidence-db`: fullc0lite.db (~1.07 GB) | pronghorn approved data mover to `inputs/` | `ed2d0eef2b205626db0983ab9f029f84c30514babc77c330bdb250b2fdfe3d0d` |
++| panel TSV | immutable snapshot to `inputs/` | `79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243` |
++| config JSON | selected immutable snapshot to `inputs/` | operator-approved config SHA256 |
++| `--init-from` weights (~2.09 GB), run_config, runtime_identity | compute-local copy with `stage_checkpoint.py` | all three author-selected pins, destination rehash |
++| SIF (~11.12 GB) | existing DeltaAI container read-only; no redundant copy | `1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6` |
++| technical acceptance JSON | controller-approved bytes to `inputs/` | `faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e` |
++| inventory JSON | controller-approved bytes to `inputs/` | `9f79019679bfdd25b0a2bdac7cae63d01fa6d874be03fa3ef3f81cfd0a880a98` |
++| receipts JSON | controller-approved bytes to `inputs/` | `73204a4ed98624b1567a5eb26fd6b2bbafbb597e0bd4b807685e8c703c807bac` |
++| Hyena/tokenizer offline cache, probe source/imports | confirm existing cache or approved transfer | operator-reviewed cache/source manifest; no network fallback |
++| code, probe argv, budget authorization, quota record | reviewed snapshot/operator records | fresh SHA256 on compute; retain provenance |
++
++Before any copy, measure **user/project quota**, not merely `df` capacity.
++Account for all missing inputs, checkpoint temporary copy, caches, compile
++artifacts, preflights, three output checkpoints, logs and reserve. SIF already
++present should not be double-counted. Do not invent a fixed headroom value.
++`stage_checkpoint.py` checks only its own copy budget, not the whole inventory.
++
++## Checkpoint staging
++
++Required flags (all values supplied by operator):
++
++```
++python revision/scripts/mvp/stage_checkpoint.py \
++  --source-epoch "$CONCRETE_EPOCH" --dest "$FRESH_STAGED_ROOT" \
++  --expected-weights-sha256 "$WEIGHTS_SHA" \
++  --expected-run-config-sha256 "$RUN_CONFIG_SHA" \
++  --expected-runtime-identity-sha256 "$RUNTIME_SHA" \
++  --quota-record "$QUOTA_JSON" --quota-sha256 "$QUOTA_SHA" \
++  --max-copy-bytes "$COPY_CEILING" --reserve-bytes "$RESERVE"
++```
++
++Quota JSON: `path` is the resolved destination parent, `available_bytes` is the
++measured quota headroom, `measured_at_unix` is its actual timestamp. It must be
++at most one hour old. Keep the original quota command/output alongside it.
++Filesystem free space is checked separately. Failures leave a `.partial.PID`
++directory for inspection, never a published destination. Do not auto-delete it.
++Success publishes parent sidecars plus `checkpoint/model.safetensors`, optional
++`eval.json`/`meta.json`, a staging receipt and digest-bound `STAGING_DONE`.
++Use `--init-from "$FRESH_STAGED_ROOT/checkpoint"`.
++
++## Prepare → probe → generate → direct check
++
++`make_launch_readiness.py prepare` and `generate` take the full input flags:
++`--db --evidence-db --panel --sif --config --init-from --acceptance-record
++--acceptance-sha256 --inventory-record --receipts-record --seed`, plus the three
++`--expected-*-sha256` checkpoint pins, `--manifest-output`, and `--output`.
++Seeds are exactly 1/2/3; prepare separate bindings/receipts per seed.
++
++1. **prepare** writes a non-authorizing bindings JSON and exact consumed-code
++   manifest. Save its SHA256. It hashes all inputs on compute and compares the
++   corpus/evidence/panel identities with the accepted candidate.
++2. Run each real, reviewed probe with `run_bounded.py`:
++
++   ```
++   python revision/scripts/mvp/run_bounded.py \
++     --name "$EVIDENCE_NAME" --bindings "$BINDINGS_JSON" \
++     --bindings-file-sha256 "$BINDINGS_FILE_SHA" \
++     --command-file "$ARGV_JSON" --command-sha256 "$ARGV_SHA" \
++     --output-dir "$PREFLIGHT_ROOT/$EVIDENCE_NAME" --timeout-seconds "$BOUND"
++   ```
++
++   `ARGV_JSON` is an argv array, executable path absolute, never a shell string.
++   Run only source-reviewed programs in the pinned SIF/cache. The argv hash
++   does **not** certify mutable imported code or the executing SIF; those remain
++   operator-enforced deployment gates. Six evidence names/stage mapping are in
++   `EVIDENCE_RECEIPTS`. P4 can produce separate measured outputs for its three
++   evidence names. The probe writes JSON to `MVP_MEASUREMENT_OUTPUT`, echoes
++   `MVP_BINDINGS_SHA256` into `bindings_sha256`, and measures `device="cuda"`,
++   `real_runtime=true` plus the fields checked by `validate_measurement`.
++   Do not copy these flags from the CPU tests into a purported GPU receipt.
++
++   Optional warmup: `--warmup-command-file --warmup-sha256 --warmup-attempts`
++   (1–3), `--warmup-timeout-seconds`. Only exit 75 retries. The real probe is
++   never retried. Logs cap at 1 MiB per attempt; timeouts terminate then kill
++   the process group. All argv bounds must fit the authorized allocation.
++3. **generate** uses the same input flags/manifest and adds `--preflight-dir`.
++   It rehashes inputs and requires all six measured, bound receipts and
++   hash-bearing DONE markers. It calls the existing consumer validator before
++   atomically publishing the ready JSON. Outputs must be fresh; no overwrite.
++4. **check** uses the full input flags (no checkpoint-pin flags), plus
++   `--readiness` and `--readiness-sha256`. It directly exercises
++   `validate_launch_readiness` and revalidates receipt/sidecar identities.
++
++### Deterministic P2 policy
++
++Predeclare **bitwise equality**, no post-hoc tolerance. Probe must call
++`torch.use_deterministic_algorithms(True)`, set models to eval, fix Python,
++NumPy and torch/CUDA RNG seeds to the bound seed, disable stochastic transforms,
++and use the same measured batch. Runner exports
++`CUBLAS_WORKSPACE_CONFIG=:4096:8` before Python/CUDA startup. No training
++semantics are changed by this preflight-only policy.
++
++Measurement requires all tiers `30720`, `61440`, `129024`, each with
++`input_sha256`, `finite=true`, and identical canonical tensor-byte digests for
++`b5_logits_sha256`, `mvp_off_logits_sha256`,
++`mvp_zero_projection_logits_sha256`, `repeat_logits_sha256`. Report
++`deterministic_algorithms=true`, `eval_mode=true`, `comparison="bitwise"`, and
++`cublas_workspace_config=":4096:8"` only after observing those settings.
++Unsupported deterministic operations or any mismatch fail; changing to a
++numerical tolerance requires a separately reviewed prospective policy.
++
++## Bounded training wrapper
++
++Run `run_training.py` inside the pinned SIF on the authorized single-node,
++four-GPU allocation. Required: `--arguments` (JSON array of exact trainer CLI
++flags), `--arguments-sha256`, `--budget-authorization`, `--budget-sha256`,
++`--timeout-seconds`, `--status-dir` (fresh).
++
++Budget JSON requires `authorized_scope="exploratory_mvp"`, explicitly approved
++`seeds`, integer `max_wall_seconds`; retain the author's actual authorization.
++Its SHA256 must match P4 resource measurement `authorization_sha256`; measured
++projected runtime must fit the requested bound. Allow additional allocation
++time for input rehashing and up to three 60-second CUDA-startup attempts.
++The wrapper rejects `--validate-only`, missing readiness, existing output or
++unauthorized seed/budget. It directly checks readiness, warms CUDA, then launches
++exactly one fixed four-process bf16 Accelerate training attempt.
++
++SIGTERM/timeout writes atomic FAILED, never completion or resumable state.
++The trainer has no public resume or graceful-save handler. Zero child exit is
++recorded as `PROCESS_EXIT.json`, **not** a training completion certificate;
++inspect the trainer's own finalized artifacts. SIGKILL/node loss may leave no
++failure record: absence of a success artifact is not success. Never auto-resume,
++resubmit, or fabricate a checkpoint after interruption.
+diff --git a/revision/scripts/mvp/make_launch_readiness.py b/revision/scripts/mvp/make_launch_readiness.py
+new file mode 100644
+index 0000000..1a93038
+--- /dev/null
++++ b/revision/scripts/mvp/make_launch_readiness.py
+@@ -0,0 +1,368 @@
++#!/usr/bin/env python3
++"""Generate or check an exploratory-MVP launch-readiness record.
++
++Track A (B6 phase 2). The record schema is defined by the consumer:
++``transgenic.training.mvp_cli_runtime.validate_launch_readiness`` (f847cb8,
++mvp_cli_runtime.py:175-236). This tool never synthesizes evidence: every
++``evidence`` row binds a measured preflight receipt file (JSON with
++``"pass": true``) plus its sibling ``<name>.DONE`` marker, and generation
++fails closed if any receipt is missing, unreadable, or not passing.
++
++Subcommands:
++  generate  Build the readiness JSON (+ consumed-code manifest) from measured
++            inputs. Output paths must be fresh; writes are atomic
++            (tmp + renameat2(RENAME_NOREPLACE)). Prints the record SHA256.
++  check     Directly call validate_candidate_records() and
++            validate_launch_readiness() against a generated record.
++            This exists because ``--validate-only`` on the MVP CLI skips the
++            readiness requirement entirely (synthesis must-fix 3): the only
++            way to exercise the readiness path without launching training is
++            this direct call.
++
++Scope: EXPLORATORY_MVP_NOT_FOR_PRODUCTION. ``production_authorized`` is
++always false; this tool cannot grant production authorization.
++"""
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import os
++import sys
++from dataclasses import asdict
++from pathlib import Path
++
++_REPO_ROOT = Path(__file__).resolve().parents[3]
++for _entry in (str(_REPO_ROOT / "src"), str(_REPO_ROOT)):
++    if _entry not in sys.path:
++        sys.path.insert(0, _entry)
++
++# The six evidence names required by mvp_cli_runtime._REQUIRED_EVIDENCE and
++# the preflight stage that produces each receipt file (<name>.json + <name>.DONE).
++EVIDENCE_RECEIPTS = {
++    "real_tokenizer": "p1_identity",
++    "real_hyena_step0_three_tiers": "p2_step0_determinism",
++    "generation_cache_parity": "p3_generation_parity",
++    "bf16_compile": "p4_compile_topology",
++    "four_rank_smoke": "p4_compile_topology",
++    "resource_budget": "p4_compile_topology",
++}
++_EXTERNAL_PACKAGES = ("accelerate", "duckdb", "safetensors", "torch", "transformers")
++
++
++def require_allocation() -> str:
++    """Operational guard, not authentication; never hash large inputs on login nodes."""
++    allocation = os.environ.get("SLURM_JOB_ID") or os.environ.get("MVP_DATA_MOVER_ALLOCATION_ID")
++    if not allocation:
++        raise ValueError("compute/data-mover allocation required before copying or hashing")
++    return allocation
++
++
++def _sha256(path: Path) -> str:
++    before = path.stat()
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for block in iter(lambda: handle.read(8 * 1024 * 1024), b""):
++            digest.update(block)
++    after = path.stat()
++    if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns):
++        raise ValueError(f'file changed during hashing: {path}')
++    return digest.hexdigest()
++
++
++def json_snapshot(path, expected):
++    payload = Path(path).read_bytes()
++    if hashlib.sha256(payload).hexdigest() != expected:
++        raise ValueError(f'JSON input/marker digest mismatch: {path}')
++    return json.loads(payload)
++
++
++def tooling_identity():
++    directory = Path(__file__).resolve().parent
++    return {str(directory / name): _sha256(directory / name) for name in
++            ('make_launch_readiness.py', 'stage_checkpoint.py', 'run_bounded.py', 'run_training.py')}
++
++
++def _canonical_bytes(value: dict) -> bytes:
++    return (json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
++
++
++def _atomic_write(destination: Path, payload: bytes) -> None:
++    """Write payload to a fresh path atomically; refuse to replace anything."""
++    from transgenic.training.mvp_finalize import _rename_noreplace
++
++    destination = destination.absolute()
++    if os.path.lexists(destination):
++        raise SystemExit(f"FAIL: output path must be fresh: {destination}")
++    staging = destination.parent / (destination.name + ".tmp." + str(os.getpid()))
++    if os.path.lexists(staging):
++        raise SystemExit(f"FAIL: staging path already exists: {staging}")
++    descriptor = os.open(staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
++    try:
++        with os.fdopen(descriptor, "wb") as handle:
++            handle.write(payload)
++            handle.flush()
++            os.fsync(handle.fileno())
++        _rename_noreplace(staging, destination)
++    except BaseException:
++        if os.path.lexists(staging):
++            os.unlink(staging)
++        raise
++    parent = os.open(destination.parent, os.O_RDONLY | os.O_DIRECTORY)
++    try:
++        os.fsync(parent)
++    finally:
++        os.close(parent)
++
++
++def _regular(path_value: str, label: str) -> Path:
++    path = Path(path_value)
++    if not path.is_file():
++        raise SystemExit(f"FAIL: {label} is not a readable regular file: {path}")
++    return path.resolve()
++
++
++def _load_receipt(preflight_dir: Path, name: str, bindings_sha256: str) -> dict:
++    """Fail-closed load of one measured preflight receipt + DONE marker."""
++    directory = preflight_dir / name if (preflight_dir / name).is_dir() else preflight_dir
++    receipt = directory / f"{name}.json"
++    marker = directory / f"{name}.DONE"
++    if (directory / f"{name}.FAILED.json").exists():
++        raise ValueError(f"failed preflight cannot authorize readiness: {name}")
++    if not receipt.is_file():
++        raise SystemExit(f"FAIL: missing measured receipt: {receipt}")
++    if not marker.is_file():
++        raise SystemExit(f"FAIL: receipt {receipt.name} has no DONE marker: {marker}")
++    try:
++        receipt_sha = marker.read_text().strip()
++        value = json_snapshot(receipt, receipt_sha)
++    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
++        raise SystemExit(f"FAIL: receipt {receipt} is not valid JSON: {error}")
++    if not isinstance(value, dict) or value.get("pass") is not True:
++        raise SystemExit(f"FAIL: receipt {receipt} does not record a measured pass")
++    expected_stage = EVIDENCE_RECEIPTS[name]
++    if value.get("preflight") != expected_stage:
++        raise SystemExit(f"FAIL: receipt {receipt} preflight stage "
++                         f"{value.get('preflight')!r} != expected {expected_stage!r}")
++    if marker.read_text().strip() != _sha256(receipt):
++        raise ValueError(f"receipt marker digest mismatch: {name}")
++    if (value.get("bindings_sha256") != bindings_sha256 or
++            value.get("exit_code") != 0 or value.get("timed_out") is not False or
++            value.get("signal") is not None):
++        raise ValueError(f"receipt binding/execution failure: {name}")
++    from run_bounded import validate_measurement
++    validate_measurement(name, value.get("measurement"))
++    return {
++        "pass": True,
++        "receipt_path": str(receipt.resolve()),
++        "receipt_sha256": receipt_sha,
++        "receipt_bytes": receipt.stat().st_size,
++    }
++
++
++def _consumed_code_manifest() -> dict:
++    from importlib.metadata import version
++    from transgenic.training.mvp_cli_runtime import _expected_code_files
++
++    return {
++        "files": {str(path): _sha256(path) for path in _expected_code_files()},
++        "external_packages": {name: version(name) for name in _EXTERNAL_PACKAGES},
++    }
++
++
++def _source_checkpoint_binding(init_from: str) -> dict:
++    """Bind the staged checkpoint identity exactly as mvp_cli_runtime._source_paths resolves it."""
++    from transgenic.training.mvp_cli_runtime import _source_paths
++
++    requested = Path(init_from).absolute()
++    if any(part in {"best", "latest", "latest_state"} for part in requested.parts) or requested.resolve() != requested:
++        raise ValueError("source checkpoint must be concrete, not a symlink or mutable alias")
++    checkpoint = requested if requested.is_dir() else requested.parent
++    for source_path in (checkpoint / 'model.safetensors', checkpoint.parent / 'run_config.json',
++                        checkpoint.parent / 'runtime_identity.txt'):
++        if source_path.resolve() != source_path.absolute():
++            raise ValueError('checkpoint files and sidecars must not be symlinked')
++    weights, run_config = _source_paths(init_from)
++    try:
++        config_value = json.loads(run_config.read_text(encoding="utf-8"))
++    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
++        raise SystemExit(f"FAIL: source run_config.json is not valid JSON: {error}")
++    if not isinstance(config_value, dict) or config_value.get("seed") != 123:
++        raise SystemExit("FAIL: source checkpoint run_config.json must bind seed 123 "
++                         "(B5 seed123 identity); refusing to fabricate the binding")
++    binding = {
++        "weights_path": str(weights),
++        "weights_sha256": _sha256(weights),
++        "weights_bytes": weights.stat().st_size,
++        "run_config_path": str(run_config),
++        "run_config_sha256": _sha256(run_config),
++        "seed": 123,
++    }
++    runtime_identity = run_config.parent / "runtime_identity.txt"
++    if runtime_identity.is_file():
++        binding["runtime_identity_path"] = str(runtime_identity.resolve())
++        binding["runtime_identity_sha256"] = _sha256(runtime_identity)
++    else:
++        raise SystemExit(f"FAIL: staged run root lacks runtime_identity.txt: {runtime_identity} "
++                         "(stage_checkpoint.py copies it; refusing an unattributed checkpoint)")
++    return binding
++
++
++def generate(args: argparse.Namespace) -> int:
++    from transgenic.training.mvp_runtime import MVPRecipe
++
++    acceptance_sha = args.acceptance_sha256
++    inventory = _regular(args.inventory_record, "inventory record")
++    receipts = _regular(args.receipts_record, "receipts record")
++    acceptance = _regular(args.acceptance_record, "acceptance record")
++    measured_acceptance = _sha256(acceptance)
++    if measured_acceptance != acceptance_sha:
++        raise SystemExit(f"FAIL: acceptance record SHA256 mismatch: expected {acceptance_sha}, "
++                         f"measured {measured_acceptance}")
++
++    from transgenic.training.mvp_cli import validate_candidate_records
++    candidate = validate_candidate_records(acceptance, acceptance_sha, inventory, receipts)
++    manifest = _consumed_code_manifest()
++    manifest_path = Path(args.manifest_output)
++    if manifest_path.exists():
++        if manifest_path.read_bytes() != _canonical_bytes(manifest):
++            raise ValueError("consumed code manifest changed since prepare")
++    else:
++        _atomic_write(manifest_path, _canonical_bytes(manifest))
++    manifest_path = manifest_path.resolve()
++
++    record = {
++        "schema_version": 1,
++        "authorized_scope": "exploratory_mvp",
++        "production_authorized": False,
++        "ready_for_finetuning": True,
++        "output_use": "EXPLORATORY_MVP_NOT_FOR_PRODUCTION",
++        "bindings": {
++            "technical_acceptance_sha256": acceptance_sha,
++            "inventory_sha256": _sha256(inventory),
++            "receipts_sha256": _sha256(receipts),
++            "corpus_sha256": _sha256(_regular(args.db, "corpus db")),
++            "evidence_sha256": _sha256(_regular(args.evidence_db, "evidence db")),
++            "panel_sha256": _sha256(_regular(args.panel, "panel")),
++            "sif_sha256": _sha256(_regular(args.sif, "SIF")),
++            "config_sha256": _sha256(_regular(args.config, "config")),
++            "source_checkpoint": _source_checkpoint_binding(args.init_from),
++            "consumed_code_manifest": {"path": str(manifest_path),
++                                       "sha256": _sha256(manifest_path)},
++            "tooling": tooling_identity(),
++            "recipe": asdict(MVPRecipe()),
++            "seed": args.seed,
++        },
++    }
++    bindings = record["bindings"]
++    for key, expected in (("corpus_sha256", candidate.acceptance['inputs']['corpus']['sha256']),
++                          ("panel_sha256", candidate.acceptance['inputs']['panel']['sha256']),
++                          ("evidence_sha256", candidate.acceptance['artifact']['sha256'])):
++        if bindings[key] != expected:
++            raise ValueError(f"accepted candidate input mismatch: {key}")
++    # Operator-selected pins are mandatory; never follow a mutable 'best'.
++    for prefix in ("weights", "run_config", "runtime_identity"):
++        if bindings["source_checkpoint"][prefix + "_sha256"] != getattr(args, "expected_" + prefix + "_sha256"):
++            raise ValueError(f"source checkpoint {prefix} pin mismatch")
++    bindings_sha = hashlib.sha256(_canonical_bytes(bindings)).hexdigest()
++    if args.command == "prepare":
++        _atomic_write(Path(args.output), _canonical_bytes({"bindings": bindings, "bindings_sha256": bindings_sha}))
++        return 0
++    preflight_dir = Path(args.preflight_dir)
++    record["evidence"] = {name: _load_receipt(preflight_dir, name, bindings_sha)
++                          for name in sorted(EVIDENCE_RECEIPTS)}
++    payload = _canonical_bytes(record)
++    # Direct consumer validation BEFORE publishing a ready record.
++    import tempfile
++    from transgenic.training.mvp_cli_runtime import _source_paths, validate_launch_readiness
++    paths = tuple(_regular(getattr(args, name), name) for name in
++                  ("db", "evidence_db", "panel", "sif", "config")) + _source_paths(args.init_from)
++    with tempfile.TemporaryDirectory(dir=Path(args.output).parent) as temporary:
++        trial = Path(temporary) / "readiness.json"
++        trial.write_bytes(payload)
++        validate_launch_readiness(trial, hashlib.sha256(payload).hexdigest(), candidate,
++                                  paths, seed=args.seed, recipe=MVPRecipe())
++    _atomic_write(Path(args.output), payload)
++    print(json.dumps({
++        "status": "generated",
++        "output_use": "EXPLORATORY_MVP_NOT_FOR_PRODUCTION",
++        "readiness_path": str(Path(args.output).resolve()),
++        "readiness_sha256": hashlib.sha256(payload).hexdigest(),
++        "consumed_code_manifest": str(manifest_path),
++    }, sort_keys=True))
++    return 0
++
++
++def check(args: argparse.Namespace) -> int:
++    """Directly exercise the consumer's readiness validation path (must-fix 3)."""
++    from transgenic.training.mvp_cli import validate_candidate_records
++    from transgenic.training.mvp_cli_runtime import _source_paths, validate_launch_readiness
++    from transgenic.training.mvp_runtime import MVPRecipe
++
++    candidate = validate_candidate_records(args.acceptance_record, args.acceptance_sha256,
++                                           args.inventory_record, args.receipts_record)
++    weights, run_config = _source_paths(args.init_from)
++    paths = tuple(_regular(value, name) for name, value in (
++        ("corpus db", args.db), ("evidence db", args.evidence_db), ("panel", args.panel),
++        ("SIF", args.sif), ("config", args.config))) + (weights, run_config)
++    record = validate_launch_readiness(args.readiness, args.readiness_sha256, candidate, paths,
++                                       seed=args.seed, recipe=MVPRecipe())
++    bindings = record['bindings']
++    if bindings.get('tooling') != tooling_identity():
++        raise ValueError('readiness tooling identity changed')
++    if _source_checkpoint_binding(args.init_from) != bindings['source_checkpoint']:
++        raise ValueError('checkpoint sidecar identity changed')
++    binding_sha = hashlib.sha256(_canonical_bytes(bindings)).hexdigest()
++    for name, row in record['evidence'].items():
++        current = _load_receipt(Path(row['receipt_path']).parent, name, binding_sha)
++        if current != row:
++            raise ValueError(f'measured receipt changed: {name}')
++    print(json.dumps({
++        "status": "readiness_valid",
++        "output_use": "EXPLORATORY_MVP_NOT_FOR_PRODUCTION",
++        "note": ("validate_launch_readiness() accepted this record for the given inputs; "
++                 "this is NOT production authorization and NOT GPU certification"),
++    }, sort_keys=True))
++    return 0
++
++
++def _add_input_arguments(parser: argparse.ArgumentParser) -> None:
++    for name in ("db", "evidence-db", "panel", "sif", "config", "init-from",
++                 "acceptance-record", "acceptance-sha256", "inventory-record",
++                 "receipts-record"):
++        parser.add_argument("--" + name, required=True)
++    parser.add_argument("--seed", type=int, choices=(1, 2, 3), required=True)
++
++
++def build_parser() -> argparse.ArgumentParser:
++    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
++    subcommands = parser.add_subparsers(dest="command", required=True)
++    for command in ("prepare", "generate"):
++        generate_parser = subcommands.add_parser(command)
++        _add_input_arguments(generate_parser)
++        generate_parser.add_argument("--preflight-dir", required=command == "generate")
++        generate_parser.add_argument("--output", required=True)
++        generate_parser.add_argument("--manifest-output", required=True)
++        for prefix in ("weights", "run-config", "runtime-identity"):
++            generate_parser.add_argument("--expected-" + prefix + "-sha256", required=True)
++    check_parser = subcommands.add_parser("check", help="validate a readiness record directly")
++    _add_input_arguments(check_parser)
++    check_parser.add_argument("--readiness", required=True)
++    check_parser.add_argument("--readiness-sha256", required=True)
++    return parser
++
++
++def main(argv: list[str] | None = None) -> int:
++    args = build_parser().parse_args(argv)
++    try:
++        require_allocation()
++        if args.command in {"prepare", "generate"}:
++            return generate(args)
++        return check(args)
++    except (ValueError, OSError, KeyError, TypeError) as error:
++        print(f"FAIL: {error}", file=sys.stderr)
++        return 2
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/revision/scripts/mvp/run_bounded.py b/revision/scripts/mvp/run_bounded.py
+new file mode 100644
+index 0000000..5efc540
+--- /dev/null
++++ b/revision/scripts/mvp/run_bounded.py
+@@ -0,0 +1,210 @@
++#!/usr/bin/env python3
++"""Bound operator-reviewed probe argv; never substitute CPU fixtures for GPU receipts.
++
++A probe writes measured JSON to MVP_MEASUREMENT_OUTPUT. This runner supplies
++binding identity in MVP_BINDINGS_SHA256, requires successful measured checks,
++and publishes a digest-bound DONE last. SIGTERM/timeout never means resume.
++"""
++from __future__ import annotations
++import argparse
++import hashlib
++import json
++import math
++import os
++from pathlib import Path
++import selectors
++import signal
++import subprocess
++import sys
++import time
++
++from make_launch_readiness import (EVIDENCE_RECEIPTS, _atomic_write, _canonical_bytes,
++                                   _sha256, json_snapshot, tooling_identity, require_allocation)
++
++
++def digest(value):
++    return isinstance(value, str) and len(value) == 64 and all(c in '0123456789abcdef' for c in value)
++
++
++def validate_step0(value):
++    if (not isinstance(value, dict) or value.get('deterministic_algorithms') is not True or
++            value.get('cublas_workspace_config') != ':4096:8' or
++            value.get('comparison') != 'bitwise' or value.get('eval_mode') is not True or
++            set(value.get('tiers', {})) != {'30720', '61440', '129024'}):
++        raise ValueError('step0 requires deterministic eval bit-identity at all three tiers')
++    for row in value['tiers'].values():
++        if (not isinstance(row, dict) or not digest(row.get('input_sha256')) or
++                row.get('finite') is not True or
++                not digest(row.get('b5_logits_sha256')) or
++                row.get('b5_logits_sha256') != row.get('mvp_off_logits_sha256') or
++                row.get('b5_logits_sha256') != row.get('mvp_zero_projection_logits_sha256') or
++                row.get('b5_logits_sha256') != row.get('repeat_logits_sha256')):
++            raise ValueError('step0 missing, nonfinite or unequal logits')
++
++
++def validate_measurement(name, value):
++    if not isinstance(value, dict) or value.get('device') != 'cuda' or value.get('real_runtime') is not True:
++        raise ValueError('measured real CUDA runtime required')
++    if name == 'real_hyena_step0_three_tiers':
++        validate_step0(value)
++    elif name == 'four_rank_smoke':
++        from transgenic.training.mvp_cli_runtime import _validate_public_hardware
++        _validate_public_hardware(value.get('hardware', []))
++        if type(value.get('optimizer_steps')) is not int or value['optimizer_steps'] != 1 or value.get('finite') is not True:
++            raise ValueError('four-rank smoke must complete one finite optimizer step')
++    elif name == 'resource_budget':
++        for key in ('measured_step_seconds', 'peak_memory_bytes', 'memory_limit_bytes',
++                    'authorized_wall_seconds', 'projected_run_seconds'):
++            if type(value.get(key)) not in (int, float) or not math.isfinite(value[key]) or value[key] <= 0:
++                raise ValueError('explicit measured resource budget required')
++        if (value['peak_memory_bytes'] >= value['memory_limit_bytes'] or
++                value['projected_run_seconds'] >= value['authorized_wall_seconds'] or
++                value['projected_run_seconds'] < 250 * value['measured_step_seconds'] or
++                not digest(value.get('authorization_sha256'))):
++            raise ValueError('resource budget exceeded or not authorized')
++    else:
++        checks = {
++            'real_tokenizer': ('tokenizer_roundtrip', 'hyena_loaded'),
++            'generation_cache_parity': ('cached_uncached_equal', 'evidence_off_equal'),
++            'bf16_compile': ('native_bf16', 'inductor', 'finite', 'no_eager_fallback'),
++        }[name]
++        if any(value.get(key) is not True for key in checks):
++            raise ValueError(f'measured checks failed: {name}')
++
++
++def run_command(argv, log_path, timeout, *, env=None):
++    """Single attempt, bounded log, process-group teardown even after leader exits."""
++    if not math.isfinite(timeout) or timeout <= 0:
++        raise ValueError('positive bounded timeout required')
++    if not isinstance(argv, list) or not argv or any(not isinstance(a, str) or not a for a in argv) or not Path(argv[0]).is_absolute():
++        raise ValueError('nonempty argv list required')
++    received = []
++    old = {sig: signal.signal(sig, lambda number, frame: received.append(number))
++           for sig in (signal.SIGTERM, signal.SIGINT)}
++    child = None
++    timed_out = False
++    started = time.monotonic()
++    try:
++        with Path(log_path).open('xb') as log:
++            child = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
++                                     start_new_session=True, env=env)
++            with selectors.DefaultSelector() as selector:
++                selector.register(child.stdout, selectors.EVENT_READ)
++                written = 0
++                while child.poll() is None:
++                    timed_out = time.monotonic() - started >= timeout
++                    if received or timed_out:
++                        break
++                    for key, _ in selector.select(0.05):
++                        chunk = os.read(key.fd, 65536)
++                        if not chunk:
++                            selector.unregister(key.fileobj)
++                        if written < 1024 * 1024:
++                            chunk = chunk[:1024 * 1024 - written]
++                            log.write(chunk)
++                            written += len(chunk)
++            # A command cannot leave grandchildren running after any outcome.
++            try:
++                os.killpg(child.pid, signal.SIGTERM)
++            except ProcessLookupError:
++                pass
++            try:
++                child.wait(timeout=2)
++            except subprocess.TimeoutExpired:
++                pass
++            try:
++                os.killpg(child.pid, signal.SIGKILL)
++            except ProcessLookupError:
++                pass
++            child.wait()
++        return {'exit_code': child.returncode if not received and not timed_out else
++                -(received[0] if received else signal.SIGTERM),
++                'signal': received[0] if received else (-child.returncode if child.returncode < 0 else None),
++                'timed_out': timed_out, 'elapsed_seconds': time.monotonic() - started}
++    finally:
++        if child is not None and child.poll() is None:
++            os.killpg(child.pid, signal.SIGKILL)
++            child.wait()
++        for sig, handler in old.items():
++            signal.signal(sig, handler)
++
++
++def main(argv=None):
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--name', choices=tuple(EVIDENCE_RECEIPTS), required=True)
++    parser.add_argument('--bindings', required=True)
++    parser.add_argument('--bindings-file-sha256', required=True)
++    parser.add_argument('--command-file', required=True, help='reviewed JSON argv array')
++    parser.add_argument('--command-sha256', required=True)
++    parser.add_argument('--output-dir', required=True, help='fresh, per-probe directory')
++    parser.add_argument('--timeout-seconds', type=float, required=True)
++    parser.add_argument('--warmup-command-file')
++    parser.add_argument('--warmup-sha256')
++    parser.add_argument('--warmup-attempts', type=int, choices=(1, 2, 3), default=1)
++    parser.add_argument('--warmup-timeout-seconds', type=float, default=60)
++    args = parser.parse_args(argv)
++    allocation = require_allocation()
++    bindings = json_snapshot(args.bindings, args.bindings_file_sha256)
++    command = json_snapshot(args.command_file, args.command_sha256)
++    if bindings['bindings'].get('tooling') != tooling_identity():
++        raise ValueError('preflight tooling changed since prepare')
++    binding_sha = hashlib.sha256(_canonical_bytes(bindings['bindings'])).hexdigest()
++    if bindings['bindings_sha256'] != binding_sha:
++        raise ValueError('binding identity mismatch')
++    output = Path(args.output_dir).absolute()
++    output.mkdir()  # Collision fails; no automatic resume or overwritten receipts.
++    measurement = output / 'measurement.json'
++    env = dict(os.environ, CUBLAS_WORKSPACE_CONFIG=':4096:8',
++               MVP_BINDINGS_SHA256=binding_sha, MVP_MEASUREMENT_OUTPUT=str(measurement))
++    receipt = {'schema_version': 1, 'preflight': EVIDENCE_RECEIPTS[args.name],
++               'bindings_sha256': binding_sha, 'command_sha256': args.command_sha256,
++               'allocation': allocation, 'pass': False, 'resume_supported': False}
++    def interrupted(number, frame):
++        receipt['signal'] = number
++        raise RuntimeError('preflight interrupted before publication')
++
++    old = {sig: signal.signal(sig, interrupted) for sig in (signal.SIGTERM, signal.SIGINT)}
++    try:
++        if args.warmup_command_file:
++            warmup = json_snapshot(args.warmup_command_file, args.warmup_sha256)
++            receipt['warmup_attempts'] = []
++            for attempt in range(args.warmup_attempts):
++                status = run_command(warmup, output / f'warmup-{attempt}.log',
++                                     args.warmup_timeout_seconds, env=dict(env, MVP_MEASUREMENT_OUTPUT=str(output / 'warmup.json')))
++                receipt['warmup_attempts'].append(status)
++                if status['exit_code'] == 0:
++                    break
++                # Only reviewed warmup's EX_TEMPFAIL (75) is retryable.
++                if status['exit_code'] != 75:
++                    raise ValueError('warmup failed without retryable status')
++            else:
++                raise ValueError('warmup retries exhausted')
++        receipt.update(run_command(command,
++                                   output / 'probe.log', args.timeout_seconds, env=env))
++        if receipt['exit_code'] != 0 or receipt['timed_out'] or receipt['signal'] is not None:
++            raise ValueError('probe interrupted/failed; no completion or resume')
++        value = json.loads(measurement.read_text())
++        if value.get('bindings_sha256') != binding_sha:
++            raise ValueError('measurement binding mismatch')
++        validate_measurement(args.name, value)
++        receipt['measurement'] = value
++        receipt['pass'] = True
++        path = output / (args.name + '.json')
++        _atomic_write(path, _canonical_bytes(receipt))
++        _atomic_write(output / (args.name + '.DONE'), (_sha256(path) + '\n').encode())
++        return 0
++    except (Exception, KeyboardInterrupt) as error:
++        for sig in old:
++            signal.signal(sig, signal.SIG_IGN)
++        (output / (args.name + '.DONE')).unlink(missing_ok=True)
++        receipt['pass'] = False
++        receipt['error'] = str(error)
++        _atomic_write(output / (args.name + '.FAILED.json'), _canonical_bytes(receipt))
++        return 2
++    finally:
++        for sig, handler in old.items():
++            signal.signal(sig, handler)
++
++
++if __name__ == '__main__':
++    sys.exit(main())
+diff --git a/revision/scripts/mvp/run_training.py b/revision/scripts/mvp/run_training.py
+new file mode 100644
+index 0000000..69d25d5
+--- /dev/null
++++ b/revision/scripts/mvp/run_training.py
+@@ -0,0 +1,115 @@
++#!/usr/bin/env python3
++"""Compute-only bounded launcher. No resume, checkpoint choice, or budget defaults.
++
++Run inside the pinned SIF on one allocated four-GPU node. This does not submit
++jobs. The trainer alone publishes training artifacts; PROCESS_EXIT.json is not
++a completion certificate. A timeout/SIGTERM records FAILED.json, never DONE.
++"""
++import argparse
++import json
++import os
++from pathlib import Path
++import signal
++import sys
++
++from make_launch_readiness import (_REPO_ROOT, _atomic_write, _canonical_bytes,
++                                   _sha256, json_snapshot, check, require_allocation)
++from run_bounded import run_command
++
++
++def training_arguments(path, expected_sha):
++    from transgenic.training.mvp_cli import build_parser, _required
++    argv = json_snapshot(path, expected_sha)
++    if not isinstance(argv, list) or any(not isinstance(value, str) for value in argv):
++        raise ValueError('training arguments must be an argv list')
++    args = build_parser().parse_args(argv)
++    if args.validate_only:
++        raise ValueError('validate-only bypasses readiness and is forbidden in this launcher')
++    _required(args, ('db', 'evidence_db', 'panel', 'acceptance_record', 'acceptance_sha256',
++                     'inventory_record', 'receipts_record', 'config', 'init_from', 'output_dir',
++                     'sif', 'seed', 'launch_readiness', 'launch_readiness_sha256'))
++    args.readiness = args.launch_readiness
++    args.readiness_sha256 = args.launch_readiness_sha256
++    return argv, args
++
++
++def main(argv=None):
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--arguments', required=True)
++    parser.add_argument('--arguments-sha256', required=True)
++    parser.add_argument('--budget-authorization', required=True)
++    parser.add_argument('--budget-sha256', required=True)
++    parser.add_argument('--timeout-seconds', required=True, type=int)
++    parser.add_argument('--status-dir', required=True)
++    args = parser.parse_args(argv)
++    allocation = require_allocation()
++    status_dir = Path(args.status_dir)
++    status_dir.mkdir()
++    status = {'allocation': allocation, 'resume_supported': False, 'pass': False,
++              'output_use': 'EXPLORATORY_MVP_NOT_FOR_PRODUCTION'}
++
++    def interrupted(number, frame):
++        status['signal'] = number
++        raise RuntimeError('launcher interrupted; no graceful save or resume')
++
++    old = {sig: signal.signal(sig, interrupted) for sig in (signal.SIGTERM, signal.SIGINT)}
++    try:
++        training_argv, training = training_arguments(args.arguments, args.arguments_sha256)
++        budget = json_snapshot(args.budget_authorization, args.budget_sha256)
++        if (budget.get('authorized_scope') != 'exploratory_mvp' or
++                training.seed not in budget.get('seeds', []) or
++                type(budget.get('max_wall_seconds')) is not int or
++                not 0 < args.timeout_seconds <= budget['max_wall_seconds']):
++            raise ValueError('explicit seed/walltime authorization required')
++        check(training)  # Direct readiness path; not --validate-only.
++        ready = json_snapshot(training.readiness, training.readiness_sha256)
++        resource = ready['evidence']['resource_budget']
++        measured = json_snapshot(resource['receipt_path'], resource['receipt_sha256'])['measurement']
++        if (measured['authorization_sha256'] != args.budget_sha256 or
++                measured['projected_run_seconds'] >= args.timeout_seconds):
++            raise ValueError('measured budget does not fit this authorization/deadline')
++        if os.path.lexists(training.output_dir):
++            raise ValueError('training output exists; public resume is unsupported')
++        # Retry CUDA startup only, never a training attempt. The probe touches all
++        # visible devices and synchronizes; full topology is still the trainer gate.
++        warmup = [sys.executable, '-c',
++                  'import torch,sys\n'
++                  'try:\n'
++                  ' torch.cuda.init()\n'
++                  'except RuntimeError as error:\n'
++                  ' print(error, file=sys.stderr); sys.exit(75)\n'
++                  'if torch.cuda.device_count()!=4: sys.exit(1)\n'
++                  '[(torch.ones(1,device=f"cuda:{i}").sum().item(),torch.cuda.synchronize(i)) for i in range(4)]']
++        for attempt in range(3):
++            result = run_command(warmup, status_dir / f'warmup-{attempt}.log', 60)
++            if result['exit_code'] == 0:
++                break
++            if result['exit_code'] != 75 or result['signal'] is not None or result['timed_out']:
++                raise ValueError('CUDA warmup failed without retryable startup status')
++        else:
++            raise ValueError('CUDA warmup failed after three bounded attempts')
++        command = [sys.executable, '-m', 'accelerate.commands.launch', '--multi_gpu',
++                   '--num_machines', '1', '--num_processes', '4', '--mixed_precision', 'bf16',
++                   str(_REPO_ROOT / 'train/train_HyenaTransgenic_MVP.py'), *training_argv]
++        status.update(run_command(command, status_dir / 'training.log', args.timeout_seconds))
++        if status['exit_code'] != 0 or status['timed_out'] or status['signal'] is not None:
++            raise ValueError('training failed/interrupted; do not resume or claim completion')
++        status['pass'] = True
++        status['meaning'] = 'process exited zero; inspect trainer artifact separately'
++        _atomic_write(status_dir / 'PROCESS_EXIT.json', _canonical_bytes(status))
++        return 0
++    except (Exception, KeyboardInterrupt) as error:
++        for sig in old:
++            signal.signal(sig, signal.SIG_IGN)
++        (status_dir / 'PROCESS_EXIT.json').unlink(missing_ok=True)
++        status['pass'] = False
++        status['error'] = str(error)
++        _atomic_write(status_dir / 'FAILED.json', _canonical_bytes(status))
++        return 2
++    finally:
++        for sig, handler in old.items():
++            signal.signal(sig, handler)
++
++
++if __name__ == '__main__':
++    sys.exit(main())
+diff --git a/revision/scripts/mvp/stage_checkpoint.py b/revision/scripts/mvp/stage_checkpoint.py
+new file mode 100644
+index 0000000..b8d2ae3
+--- /dev/null
++++ b/revision/scripts/mvp/stage_checkpoint.py
+@@ -0,0 +1,178 @@
++#!/usr/bin/env python3
++"""Stage a pinned B5 checkpoint into the immutable layout MVP init consumes.
++
++Track A must-fix 2 (B6 phase 2). ``weights_init.load_weights_only`` and
++``mvp_cli_runtime._source_paths`` resolve ``--init-from <dir>`` as:
++
++  <dir>/model.safetensors           weights (regular file, exact name)
++  <dir>/../run_config.json          recipe authority (embedded normalized recipe)
++  <dir>/../runtime_identity.txt     optional but staged here as required provenance
++
++This script therefore produces a self-contained staged run root:
++
++  <dest>/
++    run_config.json          copied from the source run root, re-hashed
++    runtime_identity.txt     copied from the source run root, re-hashed
++    checkpoint/
++      model.safetensors      copied from the pinned epoch dir, re-hashed
++      eval.json, meta.json   copied when present (provenance; meta.json is
++                             snapshotted by the loader when it exists)
++    staging_receipt.json     measured source/staged hashes (atomic)
++    STAGING_DONE             marker, written last (renameat2 NOREPLACE)
++
++Pass ``--init-from <dest>/checkpoint`` to the MVP CLI. Because the staged
++copy is disjoint from ``runs/seed123/``, later B5 epochs or ``best`` symlink
++flips cannot mutate the MVP initialization.
++
++The 2.09 GB copy and hashing MUST run inside a compute or data-mover
++allocation (must-fix 6), never on a login node. This script only reads the
++source; it never writes into the source run root.
++"""
++from __future__ import annotations
++
++import argparse
++import json
++import os
++import shutil
++import sys
++from datetime import datetime, timezone
++from pathlib import Path
++
++_REPO_ROOT = Path(__file__).resolve().parents[3]
++for _entry in (str(_REPO_ROOT / "src"), str(_REPO_ROOT)):
++    if _entry not in sys.path:
++        sys.path.insert(0, _entry)
++
++
++def _sha256(path: Path) -> str:
++    from make_launch_readiness import _sha256 as stable_hash
++    return stable_hash(path)
++
++
++def _copy_verified(source: Path, destination: Path, expected: str | None, label: str) -> dict:
++    if source.is_symlink() or not source.is_file():
++        raise SystemExit(f"FAIL: {label} source is not a regular file: {source}")
++    source_sha = _sha256(source)
++    if expected is not None and source_sha != expected:
++        raise SystemExit(f"FAIL: {label} source SHA256 {source_sha} != expected {expected}")
++    shutil.copyfile(source, destination)
++    with destination.open('rb') as handle:
++        os.fsync(handle.fileno())
++    staged_sha = _sha256(destination)
++    if staged_sha != source_sha:
++        raise SystemExit(f"FAIL: {label} staged copy SHA256 {staged_sha} != source {source_sha}")
++    return {
++        "source_path": str(source.resolve()), "staged_path": str(destination.resolve()),
++        "sha256": staged_sha, "bytes": destination.stat().st_size,
++        "expected_sha256": expected,
++    }
++
++
++def _atomic_json(destination: Path, value: dict) -> None:
++    from make_launch_readiness import _atomic_write, _canonical_bytes
++    _atomic_write(destination, _canonical_bytes(value))
++
++
++def main(argv: list[str] | None = None) -> int:
++    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
++    parser.add_argument("--source-epoch", required=True,
++                        help="pinned concrete epoch dir, e.g. .../runs/seed123/epoch_05 "
++                             "(never the mutable 'best' symlink)")
++    parser.add_argument("--dest", required=True, help="fresh staged run root")
++    parser.add_argument("--expected-weights-sha256", required=True)
++    parser.add_argument("--expected-run-config-sha256", required=True)
++    parser.add_argument("--expected-runtime-identity-sha256", required=True)
++    parser.add_argument("--quota-record", required=True)
++    parser.add_argument("--quota-sha256", required=True)
++    parser.add_argument("--max-copy-bytes", type=int, required=True)
++    parser.add_argument("--reserve-bytes", type=int, required=True)
++    args = parser.parse_args(argv)
++
++    from make_launch_readiness import require_allocation, _atomic_write, _canonical_bytes
++    require_allocation()
++    requested = Path(args.source_epoch).absolute()
++    source_epoch = requested.resolve(strict=True)
++    if requested != source_epoch or any(part in {'best', 'latest', 'latest_state'} for part in requested.parts):
++        raise SystemExit("FAIL: refusing to stage via the mutable 'best' symlink; "
++                         "pin a concrete epoch directory")
++    source_root = source_epoch.parent
++    destination = Path(args.dest).absolute()
++    if os.path.lexists(destination):
++        raise SystemExit(f"FAIL: staging destination must be fresh: {destination}")
++
++    import time
++    quota_path = Path(args.quota_record)
++    from make_launch_readiness import json_snapshot
++    quota = json_snapshot(quota_path, args.quota_sha256)
++    size = sum(p.stat().st_size for p in [source_epoch / 'model.safetensors',
++               source_root / 'run_config.json', source_root / 'runtime_identity.txt'] +
++               [source_epoch / name for name in ('eval.json', 'meta.json') if (source_epoch / name).exists()])
++    if (quota.get('path') != str(destination.parent.resolve()) or
++            type(quota.get('available_bytes')) is not int or
++            type(quota.get('measured_at_unix')) not in (int, float) or
++            not 0 <= time.time() - quota['measured_at_unix'] <= 3600 or
++            args.reserve_bytes < 0 or not 0 < size <= args.max_copy_bytes or
++            min(quota['available_bytes'], shutil.disk_usage(destination.parent).free) < size + args.reserve_bytes):
++        raise ValueError('quota/headroom/copy budget gate failed')
++    # Fresh incomplete directory is never a consumable destination.
++    final_destination = destination
++    destination = destination.with_name(destination.name + '.partial.' + str(os.getpid()))
++    destination.mkdir()
++    checkpoint = destination / "checkpoint"
++    checkpoint.mkdir()
++    receipts = {
++        "model.safetensors": _copy_verified(
++            source_epoch / "model.safetensors", checkpoint / "model.safetensors",
++            args.expected_weights_sha256, "weights"),
++        "run_config.json": _copy_verified(
++            source_root / "run_config.json", destination / "run_config.json",
++            args.expected_run_config_sha256, "run_config.json"),
++        "runtime_identity.txt": _copy_verified(
++            source_root / "runtime_identity.txt", destination / "runtime_identity.txt",
++            args.expected_runtime_identity_sha256, "runtime_identity.txt"),
++    }
++    for optional in ("eval.json", "meta.json"):
++        candidate = source_epoch / optional
++        if candidate.is_file():
++            receipts[optional] = _copy_verified(candidate, checkpoint / optional, None, optional)
++
++    run_config = json.loads((destination / "run_config.json").read_text(encoding="utf-8"))
++    if not isinstance(run_config, dict) or run_config.get("seed") != 123:
++        raise SystemExit("FAIL: staged run_config.json does not bind seed 123")
++
++    receipt = {
++        "schema_version": 1,
++        "purpose": "mvp_init_checkpoint_staging",
++        "output_use": "EXPLORATORY_MVP_NOT_FOR_PRODUCTION",
++        "source_epoch": str(source_epoch),
++        "staged_init_from": str(checkpoint),
++        "files": receipts,
++        "staged_at_utc": datetime.now(timezone.utc).isoformat(),
++    }
++    receipt['staged_init_from'] = str(final_destination / 'checkpoint')
++    for row in receipts.values():
++        row['staged_path'] = str(final_destination / Path(row['staged_path']).relative_to(destination))
++    receipt['quota_sha256'] = args.quota_sha256
++    descriptor = os.open(checkpoint, os.O_RDONLY | os.O_DIRECTORY)
++    try:
++        os.fsync(descriptor)
++    finally:
++        os.close(descriptor)
++    _atomic_json(destination / "staging_receipt.json", receipt)
++    _atomic_write(destination / 'STAGING_DONE', (_sha256(destination / 'staging_receipt.json') + '\n').encode())
++    from transgenic.training.mvp_finalize import _rename_noreplace
++    _rename_noreplace(destination, final_destination)
++    parent = os.open(final_destination.parent, os.O_RDONLY | os.O_DIRECTORY)
++    try:
++        os.fsync(parent)
++    finally:
++        os.close(parent)
++    checkpoint = final_destination / 'checkpoint'
++    print(json.dumps({"status": "staged", "init_from": str(checkpoint),
++                      "weights_sha256": receipts["model.safetensors"]["sha256"]},
++                     sort_keys=True))
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/tests/test_mvp_readiness_tools.py b/tests/test_mvp_readiness_tools.py
+new file mode 100644
+index 0000000..ccbca03
+--- /dev/null
++++ b/tests/test_mvp_readiness_tools.py
+@@ -0,0 +1,410 @@
++"""CPU-only fixtures; none of these receipts certify a real runtime."""
++import hashlib
++import importlib.util
++import json
++from pathlib import Path
++import os
++import signal
++import subprocess
++import sys
++import time
++
++import pytest
++
++ROOT = Path(__file__).resolve().parents[1]
++TOOLS = ROOT / 'revision/scripts/mvp'
++sys.path.insert(0, str(TOOLS))
++import make_launch_readiness as readiness
++import stage_checkpoint as staging
++
++
++def put(path, value):
++    path.write_text(json.dumps(value))
++    return hashlib.sha256(path.read_bytes()).hexdigest()
++
++
++def test_receipt_rejects_unbound_pass(tmp_path):
++    put(tmp_path / 'real_tokenizer.json', {'pass': True, 'preflight': 'p1_identity'})
++    (tmp_path / 'real_tokenizer.DONE').write_text('complete\n')
++    with pytest.raises((ValueError, SystemExit), match='binding|marker'):
++        readiness._load_receipt(tmp_path, 'real_tokenizer', 'a' * 64)
++
++
++def test_staging_requires_all_pins_before_copy(tmp_path):
++    source = tmp_path / 'epoch_05'
++    source.mkdir()
++    (source / 'model.safetensors').write_bytes(b'weights')
++    put(tmp_path / 'run_config.json', {'seed': 123})
++    (tmp_path / 'runtime_identity.txt').write_text('runtime')
++    with pytest.raises(SystemExit):
++        staging.main(['--source-epoch', str(source), '--dest', str(tmp_path / 'out')])
++    assert not (tmp_path / 'out').exists()
++
++
++def test_compute_guard_before_hashing(monkeypatch):
++    monkeypatch.delenv('SLURM_JOB_ID', raising=False)
++    monkeypatch.delenv('MVP_DATA_MOVER_ALLOCATION_ID', raising=False)
++    assert hasattr(readiness, 'require_allocation'), 'large hashing lacks allocation guard'
++    with pytest.raises(ValueError, match='allocation'):
++        readiness.require_allocation()
++
++
++def test_candidate_input_identity_rejected_during_prepare(tmp_path, monkeypatch):
++    monkeypatch.setenv('SLURM_JOB_ID', 'CPU_UNIT_FIXTURE')
++    args, pins = input_args(tmp_path)
++    (tmp_path / 'db').write_text('not the accepted corpus')
++    assert readiness.main(['prepare', *args, *pins, '--manifest-output', str(tmp_path / 'code'),
++                           '--output', str(tmp_path / 'bindings')]) == 2
++    assert not (tmp_path / 'bindings').exists()
++
++
++def test_training_wrapper_rejects_validate_only(tmp_path):
++    assert (TOOLS / 'run_training.py').exists(), 'bounded training wrapper missing'
++    import run_training
++    argv = tmp_path / 'train.json'
++    sha = put(argv, ['--validate-only'])
++    with pytest.raises(ValueError, match='validate-only'):
++        run_training.training_arguments(argv, sha)
++
++
++def test_step0_gate_rejects_tolerance_and_missing_tiers():
++    assert (TOOLS / 'run_bounded.py').exists(), 'bounded preflight runner missing'
++    import run_bounded
++    with pytest.raises(ValueError):
++        run_bounded.validate_step0({'pass': True})
++
++
++def test_bounded_timeout_and_sigterm(tmp_path):
++    assert (TOOLS / 'run_bounded.py').exists(), 'bounded runner missing'
++    import run_bounded
++    result = run_bounded.run_command([sys.executable, '-c', 'import time; time.sleep(60)'],
++                                     tmp_path / 'timeout.log', 0.1)
++    assert result['exit_code'] != 0 and result['timed_out']
++
++
++def measurement(name):
++    value = {'device': 'cuda', 'real_runtime': True}
++    if name == 'real_hyena_step0_three_tiers':
++        value.update(deterministic_algorithms=True, cublas_workspace_config=':4096:8',
++                     comparison='bitwise', eval_mode=True,
++                     tiers={tier: dict(input_sha256='b'*64, finite=True,
++                         b5_logits_sha256='a'*64, mvp_off_logits_sha256='a'*64,
++                         mvp_zero_projection_logits_sha256='a'*64, repeat_logits_sha256='a'*64)
++                         for tier in ('30720', '61440', '129024')})
++    elif name == 'four_rank_smoke':
++        from test_mvp_cli import _gpu_fact
++        value.update(hardware=[_gpu_fact(i) for i in range(4)], optimizer_steps=1, finite=True)
++    elif name == 'resource_budget':
++        value.update(measured_step_seconds=1, peak_memory_bytes=10, memory_limit_bytes=20,
++                     authorized_wall_seconds=1000, projected_run_seconds=500,
++                     authorization_sha256='c'*64)
++    else:
++        value.update({key: True for key in {
++            'real_tokenizer': ('tokenizer_roundtrip', 'hyena_loaded'),
++            'generation_cache_parity': ('cached_uncached_equal', 'evidence_off_equal'),
++            'bf16_compile': ('native_bf16', 'inductor', 'finite', 'no_eager_fallback')}[name]})
++    return value
++
++
++def input_args(tmp_path):
++    # Standalone synthetic acceptance fixture: never a production receipt.
++    from transgenic.training.mvp_cli import _ACCEPTANCE_CHECKS
++    files = {}
++    for name in ('db', 'evidence-db', 'panel', 'sif', 'config'):
++        files[name] = tmp_path / name
++        files[name].write_text(name)
++    checkpoint = tmp_path / 'checkpoint'
++    checkpoint.mkdir()
++    (checkpoint / 'model.safetensors').write_bytes(b'weights')
++    put(tmp_path / 'run_config.json', {'seed': 123})
++    (tmp_path / 'runtime_identity.txt').write_text('runtime')
++    inventory = {'schema_version': 1, 'scope': 'exploratory_mvp_candidate',
++                 'records': [{'rn': 1, 'chromosome': 'Chr1', 'start0': 0, 'end0': 2,
++                              'split': 'valid', 'is_rc': False}],
++                 'comparison': {'exact_ordered_identity_match': True, 'expected_count': 1, 'source_count': 1},
++                 'counts': {'total': 1, 'train': 0, 'valid': 1,
++                            'evidence_corpus_tile_all_splits': {'train': 0, 'valid': 1, 'test': 0}}}
++    inv = tmp_path / 'inventory.json'
++    rec = tmp_path / 'receipts.json'
++    inv_sha = put(inv, inventory)
++    rec_sha = put(rec, {'schema_version': 1, 'scope': 'exploratory_mvp_candidate',
++                         'receipt_count': 0, 'receipts': []})
++    acceptance = {'schema_version': 1, 'scope': 'exploratory_mvp_candidate',
++        'decision': dict(technical_acceptance=True, production_training_accepted=False,
++                        production_authorized=False, author_protocol_freeze=False, scientific_approval=False),
++        'checks': dict.fromkeys(_ACCEPTANCE_CHECKS, True),
++        'qc': dict(valid_tiles_total=1, valid_tiles_with_evidence=1,
++                   retained_overlapping_panel=0, retained_overlapping_test=0),
++        'source_counts': dict(members=1, collapsed_rule_a=0, collapsed_rule_b=0,
++            molecules_after_dedup=1, retained=1, excluded_heldout_locus=0,
++            excluded_test_block=0, excluded_unmapped=0),
++        'companions': {'inventory': {'sha256': inv_sha}, 'receipts': {'sha256': rec_sha}},
++        'inventory_summary': dict(companion_sha256=inv_sha, exact_match_to_evidence_corpus_tile=True,
++                                 total=1, train=0, valid=1),
++        'artifact': {'sha256': readiness._sha256(files['evidence-db'])},
++        'inputs': {name: {'sha256': readiness._sha256(files[key])}
++                   for name, key in [('corpus', 'db'), ('panel', 'panel')]}}
++    acc = tmp_path / 'acceptance.json'
++    acc_sha = put(acc, acceptance)
++    args = [item for key, path in files.items() for item in ('--' + key, str(path))]
++    args += ['--init-from', str(checkpoint), '--acceptance-record', str(acc),
++             '--acceptance-sha256', acc_sha, '--inventory-record', str(inv),
++             '--receipts-record', str(rec), '--seed', '1']
++    pins = []
++    for name, path in [('weights', checkpoint / 'model.safetensors'),
++                       ('run-config', tmp_path / 'run_config.json'),
++                       ('runtime-identity', tmp_path / 'runtime_identity.txt')]:
++        pins += ['--expected-' + name + '-sha256', readiness._sha256(path)]
++    return args, pins
++
++
++def prepared(tmp_path, monkeypatch):
++    monkeypatch.setenv('SLURM_JOB_ID', 'CPU_UNIT_FIXTURE')
++    args, pins = input_args(tmp_path)
++    manifest = tmp_path / 'code.json'
++    bindings = tmp_path / 'bindings.json'
++    assert readiness.main(['prepare', *args, *pins, '--manifest-output', str(manifest),
++                           '--output', str(bindings)]) == 0
++    return args, pins, manifest, bindings
++
++
++def test_generate_then_direct_consumer_and_changed_inputs(tmp_path, monkeypatch):
++    args, pins, manifest, bindings = prepared(tmp_path, monkeypatch)
++    binding_sha = json.loads(bindings.read_text())['bindings_sha256']
++    receipts = tmp_path / 'preflight'
++    receipts.mkdir()
++    for name, stage in readiness.EVIDENCE_RECEIPTS.items():
++        sha = put(
++            receipts / (name + '.json'), {'pass': True, 'preflight': stage,
++            'bindings_sha256': binding_sha, 'exit_code': 0, 'signal': None,
++            'timed_out': False, 'measurement': measurement(name)})
++        (receipts / (name + '.DONE')).write_text(sha + '\n')
++    out = tmp_path / 'ready.json'
++    command = ['generate', *args, *pins, '--manifest-output', str(manifest),
++               '--preflight-dir', str(receipts), '--output', str(out)]
++    assert readiness.main(command) == 0
++    assert readiness.main(['check', *args, '--readiness', str(out),
++                           '--readiness-sha256', readiness._sha256(out)]) == 0
++    (tmp_path / 'sif').write_text('CHANGED')
++    assert readiness.main(['check', *args, '--readiness', str(out),
++                           '--readiness-sha256', readiness._sha256(out)]) == 2
++    out.unlink()
++    assert readiness.main(command) == 2
++    assert not out.exists()
++
++
++@pytest.mark.parametrize('mutation', ['missing', 'unequal', 'nonfinite', 'nondeterministic'])
++def test_step0_measurements_fail_closed(mutation):
++    import run_bounded
++    value = measurement('real_hyena_step0_three_tiers')
++    run_bounded.validate_step0(value)
++    if mutation == 'missing':
++        del value['tiers']['129024']
++    elif mutation == 'unequal':
++        value['tiers']['30720']['repeat_logits_sha256'] = 'd'*64
++    elif mutation == 'nonfinite':
++        value['tiers']['61440']['finite'] = False
++    else:
++        value['deterministic_algorithms'] = False
++    with pytest.raises(ValueError):
++        run_bounded.validate_step0(value)
++
++
++def stage_args(tmp_path, monkeypatch):
++    monkeypatch.setenv('SLURM_JOB_ID', 'CPU_UNIT_FIXTURE')
++    source = tmp_path / 'epoch_05'
++    source.mkdir()
++    (source / 'model.safetensors').write_bytes(b'weights')
++    put(tmp_path / 'run_config.json', {'seed': 123})
++    (tmp_path / 'runtime_identity.txt').write_text('runtime')
++    quota = tmp_path / 'quota.json'
++    sha = put(quota, {'path': str(tmp_path), 'available_bytes': 100000,
++                      'measured_at_unix': time.time()})
++    args = ['--source-epoch', str(source), '--dest', str(tmp_path / 'staged'),
++            '--quota-record', str(quota), '--quota-sha256', sha,
++            '--max-copy-bytes', '1000', '--reserve-bytes', '1000']
++    for prefix, path in [('weights', source / 'model.safetensors'),
++                         ('run-config', tmp_path / 'run_config.json'),
++                         ('runtime-identity', tmp_path / 'runtime_identity.txt')]:
++        args += ['--expected-' + prefix + '-sha256', readiness._sha256(path)]
++    return args
++
++
++def test_staged_checkpoint_layout_and_collision(tmp_path, monkeypatch):
++    from transgenic.training.mvp_cli_runtime import _source_paths
++    args = stage_args(tmp_path, monkeypatch)
++    assert staging.main(args) == 0
++    root = tmp_path / 'staged'
++    weights, config = _source_paths(root / 'checkpoint')
++    assert weights.read_bytes() == b'weights'
++    assert json.loads(config.read_text())['seed'] == 123
++    assert (root / 'runtime_identity.txt').read_text() == 'runtime'
++    assert (root / 'STAGING_DONE').read_text().strip() == readiness._sha256(root / 'staging_receipt.json')
++    with pytest.raises(SystemExit):
++        staging.main(args)
++
++
++@pytest.mark.parametrize('mutation', ['quota', 'pin', 'alias', 'budget'])
++def test_staging_rejects_unapproved_copy(tmp_path, monkeypatch, mutation):
++    args = stage_args(tmp_path, monkeypatch)
++    if mutation == 'quota':
++        args[args.index('--reserve-bytes') + 1] = '100000000'
++    elif mutation == 'budget':
++        args[args.index('--max-copy-bytes') + 1] = '1'
++    elif mutation == 'pin':
++        args[args.index('--expected-weights-sha256') + 1] = '0'*64
++    else:
++        (tmp_path / 'alias').symlink_to(tmp_path / 'epoch_05')
++        args[args.index('--source-epoch') + 1] = str(tmp_path / 'alias')
++    with pytest.raises((ValueError, SystemExit)):
++        staging.main(args)
++    assert not (tmp_path / 'staged').exists()
++
++
++@pytest.mark.parametrize('mutation', ['wrong_binding', 'bad_marker', 'failed', 'nonzero', 'timeout'])
++def test_receipt_execution_and_identity_rejected(tmp_path, mutation):
++    name = 'real_tokenizer'
++    value = {'pass': True, 'preflight': 'p1_identity', 'bindings_sha256': 'a'*64,
++             'exit_code': 0, 'signal': None, 'timed_out': False, 'measurement': measurement(name)}
++    if mutation == 'wrong_binding':
++        value['bindings_sha256'] = 'b'*64
++    elif mutation == 'nonzero':
++        value['exit_code'] = 1
++    elif mutation == 'timeout':
++        value['timed_out'] = True
++    sha = put(tmp_path / (name + '.json'), value)
++    (tmp_path / (name + '.DONE')).write_text('0'*64 if mutation == 'bad_marker' else sha)
++    if mutation == 'failed':
++        put(tmp_path / (name + '.FAILED.json'), {'pass': False})
++    with pytest.raises(ValueError):
++        readiness._load_receipt(tmp_path, name, 'a'*64)
++
++
++def test_probe_retries_only_warmup_then_publishes_hash_marker(tmp_path, monkeypatch):
++    import run_bounded
++    _, _, _, bindings = prepared(tmp_path, monkeypatch)
++    counter = tmp_path / 'counter'
++    warmup = tmp_path / 'warmup.json'
++    warm_sha = put(warmup, [sys.executable, '-c',
++        f'from pathlib import Path; p=Path({str(counter)!r}); n=int(p.read_text()) if p.exists() else 0; p.write_text(str(n+1)); raise SystemExit(75 if n==0 else 0)'])
++    command = tmp_path / 'probe.json'
++    value = measurement('real_tokenizer')
++    sha = put(command, [sys.executable, '-c',
++        'import json,os; from pathlib import Path; '
++        f'v={value!r}; v["bindings_sha256"]=os.environ["MVP_BINDINGS_SHA256"]; '
++        'Path(os.environ["MVP_MEASUREMENT_OUTPUT"]).write_text(json.dumps(v))'])
++    out = tmp_path / 'run'
++    assert run_bounded.main(['--name', 'real_tokenizer', '--bindings', str(bindings),
++        '--bindings-file-sha256', readiness._sha256(bindings), '--command-file', str(command),
++        '--command-sha256', sha, '--output-dir', str(out), '--timeout-seconds', '5',
++        '--warmup-command-file', str(warmup), '--warmup-sha256', warm_sha, '--warmup-attempts', '2']) == 0
++    assert counter.read_text() == '2'
++    assert (out / 'real_tokenizer.DONE').read_text().strip() == readiness._sha256(out / 'real_tokenizer.json')
++
++
++def launch_fixture(tmp_path, monkeypatch):
++    args, pins, manifest, bindings = prepared(tmp_path, monkeypatch)
++    budget = tmp_path / 'budget.json'
++    budget_sha = put(budget, {'authorized_scope': 'exploratory_mvp', 'seeds': [1], 'max_wall_seconds': 1000})
++    for name, stage in readiness.EVIDENCE_RECEIPTS.items():
++        value = measurement(name)
++        if name == 'resource_budget':
++            value['authorization_sha256'] = budget_sha
++        sha = put(tmp_path / (name + '.json'), {'pass': True, 'preflight': stage,
++            'bindings_sha256': json.loads(bindings.read_text())['bindings_sha256'],
++            'exit_code': 0, 'signal': None, 'timed_out': False, 'measurement': value})
++        (tmp_path / (name + '.DONE')).write_text(sha)
++    ready = tmp_path / 'ready.json'
++    assert readiness.main(['generate', *args, *pins, '--manifest-output', str(manifest),
++                           '--preflight-dir', str(tmp_path), '--output', str(ready)]) == 0
++    return args, ready, budget, budget_sha
++
++
++@pytest.mark.parametrize('mutation', ['seed', 'recipe', 'evidence', 'source', 'corpus', 'sif'])
++def test_direct_validator_rejects_modified_generated_record(tmp_path, monkeypatch, mutation):
++    from transgenic.training.mvp_cli import validate_candidate_records
++    from transgenic.training.mvp_cli_runtime import _source_paths, validate_launch_readiness
++    from transgenic.training.mvp_runtime import MVPRecipe
++    args, ready, _, _ = launch_fixture(tmp_path, monkeypatch)
++    parsed = readiness.build_parser().parse_args(['check', *args, '--readiness', str(ready),
++                                                 '--readiness-sha256', readiness._sha256(ready)])
++    candidate = validate_candidate_records(parsed.acceptance_record, parsed.acceptance_sha256,
++                                           parsed.inventory_record, parsed.receipts_record)
++    paths = tuple(Path(getattr(parsed, key)) for key in ('db', 'evidence_db', 'panel', 'sif', 'config')) + _source_paths(parsed.init_from)
++    record = json.loads(ready.read_text())
++    if mutation == 'seed':
++        record['bindings']['seed'] = 2
++    elif mutation == 'recipe':
++        record['bindings']['recipe'] = {}
++    elif mutation == 'evidence':
++        del record['evidence']['bf16_compile']
++    elif mutation == 'source':
++        record['bindings']['source_checkpoint']['weights_sha256'] = '0'*64
++    else:
++        record['bindings'][mutation + '_sha256'] = '0'*64
++    sha = put(ready, record)
++    with pytest.raises(ValueError):
++        validate_launch_readiness(ready, sha, candidate, paths, seed=1, recipe=MVPRecipe())
++
++
++@pytest.mark.parametrize('outcome', ['success', 'sigterm', 'warmup-failure', 'transient', 'exhausted'])
++def test_training_wrapper_single_attempt_and_failure_semantics(tmp_path, monkeypatch, outcome):
++    import run_training
++    args, ready, budget, budget_sha = launch_fixture(tmp_path, monkeypatch)
++    argv_path = tmp_path / 'training-argv.json'
++    sha = put(argv_path, [*args, '--output-dir', str(tmp_path / 'model'),
++                         '--launch-readiness', str(ready), '--launch-readiness-sha256', readiness._sha256(ready)])
++    commands = []
++    # Substitute only process execution (would otherwise require real GPUs).
++    def child(argv, log, timeout):
++        commands.append(argv)
++        if outcome == 'warmup-failure':
++            return dict(exit_code=1, signal=None, timed_out=False)
++        if outcome == 'exhausted' or (outcome == 'transient' and len(commands) <= 2):
++            return dict(exit_code=75, signal=None, timed_out=False)
++        if outcome == 'sigterm' and len(commands) == 2:
++            return dict(exit_code=-15, signal=15, timed_out=False)
++        return dict(exit_code=0, signal=None, timed_out=False)
++    monkeypatch.setattr(run_training, 'run_command', child)
++    status = tmp_path / 'status'
++    result = run_training.main(['--arguments', str(argv_path), '--arguments-sha256', sha,
++        '--budget-authorization', str(budget), '--budget-sha256', budget_sha,
++        '--timeout-seconds', '600', '--status-dir', str(status)])
++    assert len(commands) == {'warmup-failure': 1, 'exhausted': 3, 'transient': 4}.get(outcome, 2)
++    if outcome not in {'warmup-failure', 'exhausted'}:
++        command = commands[-1]
++        assert command[:10] == [sys.executable, '-m', 'accelerate.commands.launch', '--multi_gpu',
++                               '--num_machines', '1', '--num_processes', '4', '--mixed_precision', 'bf16']
++    if outcome in {'success', 'transient'}:
++        assert result == 0 and (status / 'PROCESS_EXIT.json').exists()
++    else:
++        assert result == 2 and not (status / 'PROCESS_EXIT.json').exists()
++        assert json.loads((status / 'FAILED.json').read_text())['resume_supported'] is False
++    assert not (status / 'DONE').exists()
++
++
++def test_probe_sigterm_publishes_only_failure(tmp_path, monkeypatch):
++    _, _, _, bindings = prepared(tmp_path, monkeypatch)
++    command = tmp_path / 'command.json'
++    sha = put(command, [sys.executable, '-c', 'import time; print("started", flush=True); time.sleep(60)'])
++    out = tmp_path / 'probe'
++    child = subprocess.Popen([sys.executable, str(TOOLS / 'run_bounded.py'), '--name', 'real_tokenizer',
++        '--bindings', str(bindings), '--bindings-file-sha256', readiness._sha256(bindings),
++        '--command-file', str(command), '--command-sha256', sha, '--output-dir', str(out),
++        '--timeout-seconds', '20'], env=dict(os.environ, PYTHONPATH=str(ROOT / '.testdeps') + ':' + str(ROOT / 'src')))
++    try:
++        deadline = time.monotonic() + 10
++        while not (out / 'probe.log').exists() and time.monotonic() < deadline:
++            time.sleep(0.02)
++        assert (out / 'probe.log').exists()
++        time.sleep(0.15)
++        child.send_signal(signal.SIGTERM)
++        assert child.wait(timeout=15) == 2
++        failure = json.loads((out / 'real_tokenizer.FAILED.json').read_text())
++        assert failure['pass'] is False and failure['resume_supported'] is False
++        assert failure['signal'] == signal.SIGTERM
++        assert not (out / 'real_tokenizer.DONE').exists()
++    finally:
++        if child.poll() is None:
++            child.kill()
++            child.wait()

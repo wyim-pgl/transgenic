@@ -1,0 +1,1293 @@
+diff --git a/notes/TRACK_C_RECOVERY_REPORT.md b/notes/TRACK_C_RECOVERY_REPORT.md
+new file mode 100644
+index 0000000..a9eb89d
+--- /dev/null
++++ b/notes/TRACK_C_RECOVERY_REPORT.md
+@@ -0,0 +1,68 @@
++# Track C recovery report
++
++## Scope and commits
++
++- Worktree only: `/tmp/b6-p2-phase-1535433`, branch `b6-p2-phase-20260916a`.
++- Base: `950cf4cd9ef55db276ffa1b713d8925ed6dd6dd2`.
++- Source/tests commit: **`91e10efa61bc6ddfd9cbb850ac52727dd33e7531`**. This report is a separate documentation commit; obtain its identity with `git log -1 -- notes/TRACK_C_RECOVERY_REPORT.md`.
++- Inspected and revised all five interrupted files rather than replacing them blindly. Added `est_phase_project.py` (established primitives and explicit blocker only) and `test_track_c_recovery.py`.
++- No SSH, remote writes, jobs, subagents, main edits, merge, push, reset, clean, new worktree, or blastx resubmission. No dependency installation. Existing `.gitignore`, `.ignore`, `.testdeps/` and graft cache remain outside commits.
++- Independent review remains the controller's responsibility. Advisor consultation was planning guidance, not independent review or approval.
++
++## Authority
++
++Read Track C in `notes/b6_three_track_discovery_synthesis_20260916.md`, recovery records, and main `.atl/quarantine.md` §1m (specifically the read-relative `ts:A`/FLAG16 composition row). The supplied workplan and main workplan are byte-identical: SHA256 `5ff2eb9d8775c1ecf2434f10786416d6a4a63741e0b862dfc36ca4143dfd3e0b`.
++
++Built/queried graft in this worktree before source inspection, then refreshed it after changes. Relevant base spans: `est_blastx.py:117-143` (pre-search exclusion), `:168-196` (screened-query provenance), `:293-315` (recorded inputs); `est_blastx_fixture.py:51-107` (replay); `67_orientation_audit.py:216-268` (strand composition). Graft's cumulative estimated savings across calls: approximately 1,038,369 tokens (tool estimate, not a measured cost).
++
++## C1 implementation
++
++`revision/scripts/evidence/est_blastx_audit.py` now performs fail-closed local inventory/reconciliation:
++
++- 18 expected species/source units, required unit artifacts, complete unit-file SHA256 inventory, raw13 schema/count/hash and DB/filtered-FASTA hash reconciliation.
++- Revalidates original screened query/source/lineage/roles with the existing launcher; reconstructs the **pre-search** taxonomic filter in scratch and compares provenance. Raw subjects must occur in that filtered FASTA. No top-25 post-search exclusion replacement.
++- Binds frozen command arguments to query/filtered FASTA/DB/raw output paths and the recorded executable hash.
++- Pilot `query.sha256` and remaining8 batch `inputs.json` + `inputs.sha256` layouts; resolvable query/hash and raw query-ID membership required. Missing input or malformed provenance returns FAIL.
++- Species exit code, nonempty timing-file inventory and finite nonnegative provenance elapsed time. Batch scripts/logs hashed. Timing is inventoried, not interpreted as a performance benchmark.
++- Recursive preflight/unknown-directory and unit tmp inventory. DONE/FAILED/neither, contradictory markers and symlinks are explicit; **all unreconciled tmp directories fail, including empty tmp**. Nothing is automatically deleted or waived.
++- Captured accounting must be pipe-delimited with `JobID|State|ExitCode` header, including allocation/batch/extern for `6163851` and `6164049_0-7`. Missing/duplicate/changed rows fail, but inventory continues for all available units. `.extern OUT_OF_MEMORY 0:125` stays explicitly unresolved; `clean_accounting=false` even when payload inventory passes.
++- Output and reconstruction scratch must be outside the source tree. Exclusive output and failure markers prevent reuse/overwrite.
++
++The `.sbatch` is an unsubmitted template. C1 has **not** scanned the real ~16.4-GB raw13 payload. Synthetic success is not nine-species audit acceptance. Original absolute input and executable paths must remain resolvable; no relocation-map guessing. Historical preflight/tmp failures can intentionally make the first real rollup FAIL and require separately reviewed reconciliation, not blastx reruns.
++
++## C2 recovered safely, semantic gate unresolved
++
++The interrupted code could emit `accepted_hsp_frame_spans.tsv` using an unverified col9 >=30 interpretation. Removed that writer. Both `run()` and `accept_stream()` now refuse **before any I/O/output**; there is no bypass switch.
++
++Preserved explicitly named `candidate_decompose_hsp()` only as a fixture hypothesis. Its slash/backslash cursor updates are **not certified semantics**. The RICH17 extension cross-checks input codons, gapped sequence/CIGAR/translated fields and candidate decompositions; records candidate length readings and raw17/provenance/code hashes; ambiguous readings are INCONCLUSIVE, unique readings still REQUIRE REVIEW. Its outer DONE is written only after diagnostic reporting, never interpreted as acceptance/A46 approval.
++
++Real RICH17 DIAMOND execution was not performed. Selecting the operational >=30-aa definition (alignment columns vs ungapped residues vs constant-frame sub-span), verifying both shift directions/strands and boundary/discriminating cases, then reviewing/freezing the semantic contract are still required. CPU hand-built fixtures test plumbing only. Production C2 remains blocked by **both semantic review and A46**.
++
++## C3 deliberately limited
++
++Implemented and CPU-tested only:
++
++- FLAG16 × read-relative `ts:A` composition (four cases), directly grounded in quarantine §1m;
++- same-base/strand/protein-pair comparison of already-labelled route-A/B phases, returning neutral support for both on disagreement. `None` means zero support, not phase label 0;
++- unconditional production projection refusal.
++
++No genomic projector, multi-exon phase fixture, six-channel raster, BAM ingestion or molecule aggregation is claimed complete. Workplan §2.6 requires frameshift-aware **intron-length mod3**, six phase{0,1,2} × strand{+,-} channels, inconsistent-HSP rejection and route-A disagreement→0. It does not fully specify phase-0 anchoring, conflict scope/overlap handling, or the unresolved BTOP/HSP interpretation. Inventing these would violate this task. These requirements are preserved in the module and remain blocking decisions before C3 implementation/production. No raw HSP count is labelled accepted phase evidence.
++
++## Actual verification
++
++Baseline targeted suites: **22 passed** before implementation changes, using Python 3.12 and existing worktree dependencies. Earlier attempts were environment failures, not test failures: default Python 3.8 cannot import the installed pytest/pluggy; system Python 3.10 lacks `exceptiongroup`. Neither environment was modified.
++
++TDD regression runs observed failures for unguarded acceptance, contradictory markers, hidden nested tmp/symlinks, missing timing, source-tree output, ambiguous diagnostic verdicts, command/input/provenance tampering, raw subjects outside the filtered source, absent C3 primitives, incomplete accounting inventory and source-tree scratch. Each was followed by a passing run. Existing partial behavior also received characterization coverage.
++
++Final command (from the worktree):
++
++```sh
++PYTHONPATH=.testdeps /home/wyim/micromamba/envs/kimicli/bin/python3.12 -m pytest -q \
++  revision/scripts/tests/test_est_blastx.py \
++  revision/scripts/tests/test_est_blastx_fixture.py \
++  revision/scripts/tests/test_track_c_recovery.py
++```
++
++**65 passed** (22 baseline + 43 recovery cases). Includes a complete synthetic 18-unit audit, both provenance layouts, failed accounting/preflight rollups preserving inventory, both-strand hand-built RICH17 diagnostic cases, 29/30/31 raw-boundary nonacceptance, and production gates creating no output.
++
++`bash -n` passed for both recovered sbatch templates; `py_compile` passed for all four Track C Python modules. Staged `git diff --check` initially caught one trailing whitespace line; corrected before the successful source commit. No full-repository, real-DIAMOND, Slurm or production-data test claim.
+diff --git a/revision/scripts/evidence/est_blastx_audit.py b/revision/scripts/evidence/est_blastx_audit.py
+new file mode 100644
+index 0000000..e08599e
+--- /dev/null
++++ b/revision/scripts/evidence/est_blastx_audit.py
+@@ -0,0 +1,461 @@
++#!/usr/bin/env python3
++"""Fail-closed audit of completed EST blastx output trees (stage C1). stdlib only.
++
++Audits the 9-species x 2-source raw13 units produced by est_blastx.py under
++  <blastx-root>/sitalica_pilot_20260914/          (pilot layout)
++  <blastx-root>/remaining8_20260915/<species>/    (batch layout)
++per unit checks (a)-(f):
++  (a) sha256 every unit file; recomputed raw13/dmnd/filtered hashes must equal
++      the values recorded inside provenance.json;
++  (b) re-run the exact validate_raw() row contract over raw13 and reconcile
++      raw_hsps / hsps_lt_30aa with provenance;
++  (c) commands.json argv must equal the frozen makedb/search command tokens;
++  (d) resolve the query FASTA for BOTH provenance layouts (pilot: query.sha256
++      at the species root; remaining8: inputs.json + inputs.sha256 at the batch
++      root), re-hash it, and require qseqid set <= query record IDs.  An
++      unresolvable query file is a HARD FAIL, never a skip;
++  (e) species batch.exitcode must be 0; timing files are hashed and recorded;
++  (f) DONE-presence gate: absence of DONE always means incomplete.
++Additionally EVERY directory entry under the scanned roots -- including
++preflight_20260914/ siblings and tmp/ dirs -- receives an explicit fail-closed
++disposition (DONE / FAILED.json / NEITHER); contradictions, NEITHER and any
++tmp/ directory require reconciliation and fail, never silently skipped.  run.sbatch and slurm .out logs are hashed into
++the manifest.  sacct evidence is embedded VERBATIM from a login-node capture;
++the persisting `.extern OUT_OF_MEMORY 0:125` anomaly is recorded as UNRESOLVED
++-- this audit never claims clean accounting.
++
++This script performs no Slurm submission and never writes inside the audited
++tree.  Production execution requires the separate reviewed sbatch template and
++author authorization.
++"""
++from __future__ import annotations
++
++import argparse
++import csv
++import io
++import hashlib
++import importlib.util
++import json
++import math
++import tempfile
++from pathlib import Path
++import re
++import signal
++import sys
++
++spec = importlib.util.spec_from_file_location('est_blastx', Path(__file__).with_name('est_blastx.py'))
++launcher = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(launcher)
++
++PILOT_DIR = 'sitalica_pilot_20260914'
++REMAINING8_DIR = 'remaining8_20260915'
++PILOT_SPECIES = ('Sitalica',)
++REMAINING8_SPECIES = ('Athaliana', 'Bdistachyon', 'Gmax', 'Osativa',
++                      'Ppatens', 'Ptrichocarpa', 'Sbicolor', 'Vvinifera')
++SOURCES = ('swissprot', 'orthodb')
++UNIT_FILES = ('blastx.log', 'commands.json', 'DONE', 'makedb.log', 'provenance.json')
++DONE_TEXT = 'Outputs and QC complete; see provenance.json\n'
++SACCT_NOTE = ('.extern OUT_OF_MEMORY 0:125 across all 9 jobs is a recorded, '
++              'UNRESOLVED anomaly; allocation/.batch COMPLETED 0:0 is the only '
++              'accounting claim made.  No clean-accounting claim.')
++
++
++def md5(path):
++    h = hashlib.md5()
++    with open(path, 'rb') as f:
++        for block in iter(lambda: f.read(1024 * 1024), b''):
++            h.update(block)
++    return h.hexdigest()
++
++
++class Check:
++    """Accumulates named PASS/FAIL results; fail-closed rollup."""
++
++    def __init__(self):
++        self.results = {}
++
++    def add(self, name, ok, detail):
++        if name in self.results:
++            raise ValueError(f'duplicate check name: {name}')
++        self.results[name] = {'status': 'PASS' if ok else 'FAIL', 'detail': detail}
++
++    def failed(self):
++        return [k for k, v in self.results.items() if v['status'] != 'PASS']
++
++
++def parse_sha256_file(path):
++    """First token of the first non-empty line must be 64 hex chars."""
++    for line in Path(path).read_text().splitlines():
++        parts = line.split()
++        if parts:
++            if not re.fullmatch('[0-9a-f]{64}', parts[0]):
++                raise ValueError(f'malformed sha256 record: {path}')
++            return parts[0], (parts[1] if len(parts) > 1 else None)
++    raise ValueError(f'empty sha256 record: {path}')
++
++
++def resolve_query(layout, species, species_root, batch_root, provenance, check):
++    """Must-fix 4: handle BOTH provenance layouts; unresolvable = HARD FAIL."""
++    recorded = provenance.get('inputs', {})
++    query = recorded.get('query')
++    query_sha = recorded.get('query_sha256')
++    if not query or not query_sha:
++        check.add('query_resolution', False, 'provenance.json lacks inputs.query/query_sha256')
++        return None
++    if layout == 'pilot':
++        record = species_root / 'query.sha256'
++        if not record.is_file():
++            check.add('query_resolution', False, f'missing {record}')
++            return None
++        digest, recorded_path = parse_sha256_file(record)
++        ok = digest == query_sha and (recorded_path is None or recorded_path == query)
++        check.add('query_resolution', ok,
++                  {'layout': 'pilot', 'query.sha256': digest, 'provenance_query_sha256': query_sha,
++                   'recorded_path': recorded_path, 'provenance_query': query})
++        return Path(query) if ok else None
++    # remaining8 layout: inputs.json + inputs.sha256 at the batch root.
++    inputs_json = batch_root / 'inputs.json'
++    inputs_sha = batch_root / 'inputs.sha256'
++    if not inputs_json.is_file() or not inputs_sha.is_file():
++        check.add('query_resolution', False, f'missing {inputs_json} or {inputs_sha}')
++        return None
++    digest, _ = parse_sha256_file(inputs_sha)
++    if launcher.sha256(inputs_json) != digest:
++        check.add('query_resolution', False, 'inputs.json does not match inputs.sha256')
++        return None
++    entries = [e for e in json.loads(inputs_json.read_text())
++               if isinstance(e, dict) and e.get('species') == species]
++    if len(entries) != 1:
++        check.add('query_resolution', False, f'{len(entries)} inputs.json entries for {species}')
++        return None
++    entry = entries[0]
++    ok = entry.get('query') == query
++    detail = {'layout': 'remaining8', 'inputs_query': entry.get('query'),
++              'provenance_query': query, 'inputs_query_md5': entry.get('query_md5')}
++    check.add('query_resolution', ok, detail)
++    return Path(query) if ok else None
++
++
++def audit_query_file(query_path, provenance, expected_md5, raw13, check):
++    """Re-hash the query and require qseqid set <= query record IDs."""
++    if query_path is None or not query_path.is_file():
++        check.add('query_file', False, f'query FASTA unresolvable or absent: {query_path}')
++        return
++    fresh = launcher.sha256(query_path)
++    ok = fresh == provenance['inputs']['query_sha256']
++    detail = {'fresh_sha256': fresh, 'recorded_sha256': provenance['inputs']['query_sha256']}
++    if expected_md5 is not None:
++        fresh_md5 = md5(query_path)
++        ok = ok and fresh_md5 == expected_md5
++        detail.update(fresh_md5=fresh_md5, recorded_md5=expected_md5)
++    check.add('query_file', ok, detail)
++    if not ok:
++        return
++    qseqids = set()
++    with open(raw13) as f:
++        for line in f:
++            qseqids.add(line.split('\t', 1)[0])
++    query_ids = {header.split()[0] for header, _ in launcher.records(query_path)}
++    orphans = sorted(qseqids - query_ids)
++    check.add('qseqid_subset', not orphans,
++              {'distinct_qseqids': len(qseqids), 'query_records': len(query_ids),
++               'orphan_qseqids': orphans[:10]})
++
++
++def expected_commands(recorded):
++    """Rebuild the frozen argv from the variable slots of the recorded argv."""
++    if not (isinstance(recorded, list) and len(recorded) == 2
++            and all(isinstance(c, list) and all(isinstance(t, str) for t in c) for c in recorded)):
++        raise ValueError('commands.json must be [makedb_argv, search_argv]')
++    makedb, search = recorded
++
++    def slot(argv, flag):
++        return argv[argv.index(flag) + 1]
++
++    exp_makedb = [makedb[0], 'makedb', '--in', slot(makedb, '--in'), '--db', slot(makedb, '--db'),
++                  '--threads', slot(makedb, '--threads'), '--no-parse-seqids']
++    exp_search = launcher.search_command(
++        search[0], slot(search, '--query'), slot(search, '--db'), slot(search, '--out'),
++        int(slot(search, '--threads')), slot(search, '--tmpdir'))
++    return exp_makedb, exp_search
++
++
++def audit_unit(layout, species, kind, species_root, batch_root):
++    try:
++        return _audit_unit(layout, species, kind, species_root, batch_root)
++    except (OSError, ValueError, TypeError, KeyError, IndexError) as exc:
++        return {'unit': f'{species}/{kind}', 'layout': layout, 'status': 'FAIL',
++                'checks': {'malformed_or_unreadable': {'status': 'FAIL', 'detail': str(exc)}},
++                'files': {}}
++
++
++def _audit_unit(layout, species, kind, species_root, batch_root):
++    unit = species_root / kind if layout == 'remaining8' else species_root / kind
++    check = Check()
++    files = {}
++    # (f) DONE gate first: absence of DONE always means incomplete.
++    done = unit / 'DONE'
++    if not unit.is_dir():
++        check.add('unit_dir', False, f'missing unit directory: {unit}')
++        return {'unit': f'{species}/{kind}', 'checks': check.results, 'files': files,
++                'status': 'FAIL'}
++    scan_dispositions(unit, set(), check)
++    check.add('done_gate', disposition(unit)['ok'],
++              {'present': done.is_file()})
++    if (unit / 'FAILED.json').exists():
++        check.add('failed_marker', False, 'FAILED.json present in unit')
++    provenance = None
++    prov_path = unit / 'provenance.json'
++    expected = set(UNIT_FILES) | {f'{kind}.dmnd', f'{kind}.filtered.fa', f'{kind}.raw13.tsv'}
++    present = {p.name for p in unit.iterdir() if p.is_file()}
++    check.add('required_files', expected <= present, {'missing': sorted(expected - present)})
++    # (a) hash every file present; compare recorded hashes afterwards.
++    for name in sorted(present):
++        files[name] = launcher.sha256(unit / name)
++    if prov_path.is_file():
++        provenance = json.loads(prov_path.read_text())
++    if provenance is None or expected - present:
++        check.add('provenance_hashes', False, 'provenance.json or required files absent')
++        return {'unit': f'{species}/{kind}', 'checks': check.results, 'files': files,
++                'status': 'FAIL'}
++    hash_pairs = {f'{kind}.raw13.tsv': 'raw_sha256', f'{kind}.dmnd': 'db_sha256',
++                  f'{kind}.filtered.fa': 'filtered_fasta_sha256'}
++    mismatched = {n: {'fresh': files[n], 'recorded': provenance.get(key)}
++                  for n, key in hash_pairs.items() if files[n] != provenance.get(key)}
++    check.add('provenance_hashes', not mismatched, mismatched or 'all recorded hashes reproduced')
++    # Reproduce screening and PRE-search taxonomic exclusion, never post-top25 filtering.
++    inputs = provenance['inputs']
++    check.add('input_identity', inputs['species'] == species and inputs['source_kind'] == kind,
++              {'species': inputs['species'], 'source_kind': inputs['source_kind']})
++    input_qc = launcher.production_inputs(**inputs)
++    check.add('screening', all(provenance.get(k) == v for k, v in input_qc.items()), input_qc)
++    with tempfile.TemporaryDirectory(prefix='blastx-audit-filter-') as scratch:
++        filter_qc = launcher.filter_source(inputs['source'], kind, inputs['lineage'],
++                                          launcher.SPECIES[species], Path(scratch) / 'filtered.fa')
++    check.add('presearch_exclusion', all(provenance.get(k) == v for k, v in filter_qc.items()),
++              filter_qc)
++    elapsed = provenance.get('elapsed_seconds')
++    check.add('elapsed_seconds', type(elapsed) in (int, float) and math.isfinite(elapsed)
++              and elapsed >= 0, elapsed)
++    check.add('raw_fields', provenance.get('fields') == launcher.RAW13, provenance.get('fields'))
++    # (b) validate_raw contract + count reconciliation.
++    try:
++        qc = launcher.validate_raw(unit / f'{kind}.raw13.tsv')
++        ok = (qc['raw_hsps'] == provenance.get('raw_hsps')
++              and qc['hsps_lt_30aa'] == provenance.get('hsps_lt_30aa'))
++        check.add('raw13_contract', ok, {'recomputed': qc,
++                  'recorded': {k: provenance.get(k) for k in ('raw_hsps', 'hsps_lt_30aa')}})
++    except ValueError as exc:
++        check.add('raw13_contract', False, str(exc))
++    subjects = {h.split()[0] for h, _ in launcher.records(unit / f'{kind}.filtered.fa')}
++    unknown_subjects = set()
++    with open(unit / f'{kind}.raw13.tsv') as raw:
++        for line in raw:
++            subject = line.rstrip('\n').split('\t')[2]
++            if subject not in subjects:
++                unknown_subjects.add(subject)
++    check.add('subjects_presearch_filtered', not unknown_subjects, sorted(unknown_subjects)[:10])
++    # (c) frozen command tokens.
++    try:
++        recorded = json.loads((unit / 'commands.json').read_text())
++        expected = list(expected_commands(recorded))
++        makedb, search = recorded
++        bindings = [(makedb, '--in', unit / f'{kind}.filtered.fa'),
++                    (makedb, '--db', unit / f'{kind}.dmnd'),
++                    (search, '--db', unit / f'{kind}.dmnd'),
++                    (search, '--out', unit / f'{kind}.raw13.tsv'),
++                    (search, '--query', Path(inputs['query']))]
++        bound = all(Path(argv[argv.index(flag) + 1]).is_absolute() and
++                    Path(argv[argv.index(flag) + 1]).resolve() == path.resolve()
++                    for argv, flag, path in bindings)
++        engine_ok = (makedb[0] == search[0] and Path(search[0]).is_absolute()
++                     and launcher.sha256(search[0]) == provenance.get('diamond_sha256'))
++        check.add('frozen_commands', recorded == expected and bound and engine_ok,
++                  {'recorded': recorded, 'paths_bound': bound, 'engine_bound': engine_ok})
++    except (ValueError, IndexError) as exc:
++        check.add('frozen_commands', False, str(exc))
++    # (d) query resolution across both layouts + qseqid subset.
++    expected_md5 = None
++    if layout == 'remaining8':
++        try:
++            for e in json.loads((batch_root / 'inputs.json').read_text()):
++                if isinstance(e, dict) and e.get('species') == species:
++                    expected_md5 = e.get('query_md5')
++        except (OSError, ValueError):
++            pass
++    query_path = resolve_query(layout, species, species_root, batch_root, provenance, check)
++    audit_query_file(query_path, provenance, expected_md5, unit / f'{kind}.raw13.tsv', check)
++    status = 'FAIL' if check.failed() else 'PASS'
++    return {'unit': f'{species}/{kind}', 'layout': layout, 'checks': check.results,
++            'files': files, 'status': status}
++
++
++def audit_species_root(species, species_root, check_prefix, check):
++    # (e) batch.exitcode + timing files.
++    exitcode = species_root / 'batch.exitcode'
++    ok = exitcode.is_file() and exitcode.read_text().strip() == '0'
++    check.add(f'{check_prefix}:batch_exitcode', ok,
++              exitcode.read_text().strip() if exitcode.is_file() else 'missing batch.exitcode')
++    timing = {p.name: launcher.sha256(p) for p in sorted(species_root.glob('*.time.txt'))}
++    check.add(f'{check_prefix}:timing_files', bool(timing) and all(
++        (species_root / name).stat().st_size > 0 for name in timing),
++              timing or 'missing timing evidence')
++    return timing
++
++
++def disposition(path):
++    """Fail-closed DONE / FAILED.json / NEITHER disposition for a directory."""
++    if path.is_symlink():
++        return {'disposition': 'SYMLINK', 'ok': False}
++    if (path / 'DONE').exists() and (path / 'FAILED.json').exists():
++        return {'disposition': 'CONTRADICTORY', 'ok': False}
++    if (path / 'DONE').is_file():
++        return {'disposition': 'DONE', 'ok': (path / 'DONE').read_text() == DONE_TEXT}
++    if (path / 'FAILED.json').is_file():
++        return {'disposition': 'FAILED', 'ok': False}
++    return {'disposition': 'NEITHER', 'ok': False}
++
++
++def scan_dispositions(root, known, check):
++    """Must-fix 3: EVERY sibling dir (preflight_20260914/, tmp/, ...) gets an
++    explicit disposition; NEITHER and unreconciled tmp/ are failures."""
++    entries = {}
++
++    def visit(parent):
++        for entry in sorted(parent.iterdir()):
++            key = str(entry.relative_to(root))
++            if entry.is_symlink():
++                entries[key] = {'disposition': 'SYMLINK', 'ok': False}
++                continue
++            if not entry.is_dir():
++                continue
++            if parent == root and entry.name in known:
++                continue  # explicitly audited separately
++            state = disposition(entry)
++            if entry.name == 'tmp':
++                contents = sorted(p.name for p in entry.iterdir())
++                state.update(ok=False, entries=contents,
++                             note='tmp requires explicit reconciliation; never silently skipped')
++            entries[key] = state
++            visit(entry)
++    visit(root)
++    bad = {k: v for k, v in entries.items() if not v['ok']}
++    check.add(f'dispositions:{root}', not bad, entries or 'no unexpected sibling dirs')
++    return entries
++
++
++def hash_batch_artifacts(root, check_name, check):
++    """Reviewer suggestion: run.sbatch + slurm .out logs join the manifest."""
++    hashed = {}
++    for pattern in ('run.sbatch', 'slurm-*.out', 'slurm-*.err', 'logs/*.out', 'logs/*.err'):
++        for p in sorted(root.glob(pattern)):
++            hashed[str(p.relative_to(root))] = launcher.sha256(p)
++    check.add(check_name, bool(hashed), hashed or 'no batch artifacts found')
++    return hashed
++
++
++def audit_accounting(text, check):
++    """Require sacct -P --format=JobID,State,ExitCode (header, no truncation).
++
++    Payload completion and extern OOM are deliberately separate claims.
++    Unexpected extern state still fails; this is not an OOM waiver.
++    """
++    reader = csv.DictReader(io.StringIO(text), delimiter='|')
++    if not reader.fieldnames or not {'JobID', 'State', 'ExitCode'} <= set(reader.fieldnames):
++        check.add('accounting_format', False, 'need JobID|State|ExitCode header')
++        return
++    rows = {}
++    for row in reader:
++        rows.setdefault(row['JobID'], []).append(row)
++    for job in ['6163851'] + [f'6164049_{i}' for i in range(8)]:
++        for suffix in ('', '.batch', '.extern'):
++            key = job + suffix
++            matches = rows.get(key, [])
++            expected = ('OUT_OF_MEMORY', '0:125') if suffix == '.extern' else ('COMPLETED', '0:0')
++            ok = len(matches) == 1 and (matches[0]['State'], matches[0]['ExitCode']) == expected
++            check.add('accounting:' + key, ok, matches)
++
++
++def audit(blastx_root, out_dir, sacct_file):
++    blastx_root = Path(blastx_root).resolve()
++    output = Path(out_dir).resolve()
++    if output == blastx_root or blastx_root in output.parents:
++        raise ValueError('audit output must be outside the input tree')
++    scratch = Path(tempfile.gettempdir()).resolve()
++    if scratch == blastx_root or blastx_root in scratch.parents:
++        raise ValueError('audit scratch must be outside the input tree')
++    sacct_text = Path(sacct_file).read_text()
++    with launcher.work_directory(out_dir) as out:
++        (out / 'units').mkdir()
++        check = Check()
++        audit_accounting(sacct_text, check)
++        units = []
++        pilot_root = blastx_root / PILOT_DIR
++        batch_root = blastx_root / REMAINING8_DIR
++        for root, name in ((pilot_root, PILOT_DIR), (batch_root, REMAINING8_DIR)):
++            check.add(f'root_present:{name}', root.is_dir(), str(root))
++        if not pilot_root.is_dir() or not batch_root.is_dir():
++            launcher.write_json(out / 'rollup.json',
++                                {'status': 'FAIL', 'checks': check.results})
++            raise ValueError(f'audit FAILED: {check.failed()}')
++        # Pilot layout: unit dirs + query.sha256 at species root.
++        audit_species_root('Sitalica', pilot_root, 'Sitalica', check)
++        hash_batch_artifacts(pilot_root, 'batch_artifacts:pilot', check)
++        scan_dispositions(pilot_root, set(SOURCES), check)
++        for kind in SOURCES:
++            units.append(audit_unit('pilot', 'Sitalica', kind, pilot_root, pilot_root))
++        # remaining8 layout: <batch>/<species>/<kind>; inputs at the batch root.
++        hash_batch_artifacts(batch_root, 'batch_artifacts:remaining8', check)
++        scan_dispositions(batch_root, set(REMAINING8_SPECIES) | {'logs'}, check)
++        if (batch_root / 'logs').is_dir():
++            scan_dispositions(batch_root / 'logs', set(), check)
++        for species in REMAINING8_SPECIES:
++            species_root = batch_root / species
++            if not species_root.is_dir():
++                check.add(f'{species}:species_root', False, f'missing {species_root}')
++                continue
++            audit_species_root(species, species_root, species, check)
++            scan_dispositions(species_root, set(SOURCES), check)
++            for kind in SOURCES:
++                units.append(audit_unit('remaining8', species, kind, species_root, batch_root))
++        # Sibling dirs of the two batch roots (e.g. preflight_20260914/) --
++        # enumerated with explicit dispositions, never silently skipped.
++        scan_dispositions(blastx_root, {PILOT_DIR, REMAINING8_DIR}, check)
++        for unit in units:
++            launcher.write_json(out / 'units' / (unit['unit'].replace('/', '_') + '.json'), unit)
++        failed_units = [u['unit'] for u in units if u['status'] != 'PASS']
++        status = 'FAIL' if (failed_units or check.failed() or len(units) != 18) else 'PASS'
++        rollup = {'status': status, 'units_audited': len(units), 'units_expected': 18,
++                  'failed_units': failed_units, 'tree_checks': check.results,
++                  'sacct_evidence_verbatim': sacct_text,
++                  'sacct_sha256': launcher.sha256(sacct_file),
++                  'sacct_note': SACCT_NOTE, 'clean_accounting': False,
++                  'accepted_phase_evidence': False, 'production_authorized': False,
++                  'audit_script_sha256': launcher.sha256(__file__),
++                  'launcher_sha256': launcher.sha256(launcher.__file__)}
++        launcher.write_json(out / 'rollup.json', rollup)
++        if status != 'PASS':
++            raise ValueError(f'audit FAILED: units={failed_units} '
++                             f'tree_checks={check.failed()} n_units={len(units)}')
++        return rollup
++
++
++def main(argv=None):
++    p = argparse.ArgumentParser(description=__doc__)
++    p.add_argument('--blastx-root', type=Path, required=True,
++                   help='directory containing sitalica_pilot_20260914/ and remaining8_20260915/')
++    p.add_argument('--out-dir', type=Path, required=True)
++    p.add_argument('--sacct-file', type=Path, required=True,
++                   help='sacct -P --format=JobID,State,ExitCode, with header; all allocation/batch/extern rows')
++    args = p.parse_args(argv)
++
++    def interrupted(signum, _frame):
++        raise SystemExit(128 + signum)
++    signal.signal(signal.SIGTERM, interrupted)
++    signal.signal(signal.SIGINT, interrupted)
++    audit(args.blastx_root, args.out_dir, args.sacct_file)
++    return 0
++
++
++if __name__ == '__main__':
++    sys.exit(main())
+diff --git a/revision/scripts/evidence/est_blastx_audit.sbatch b/revision/scripts/evidence/est_blastx_audit.sbatch
+new file mode 100644
+index 0000000..0ce19fd
+--- /dev/null
++++ b/revision/scripts/evidence/est_blastx_audit.sbatch
+@@ -0,0 +1,37 @@
++#!/bin/bash
++#SBATCH --job-name=b6_blastx_audit
++#SBATCH --partition=cpu-s1-pgl-0
++#SBATCH --nodes=1
++#SBATCH --ntasks=1
++#SBATCH --cpus-per-task=8
++#SBATCH --mem=16G
++#SBATCH --time=12:00:00
++#SBATCH --output=slurm-%j.out
++#
++# Stage C1 blastx artifact audit -- TEMPLATE ONLY.  NOT submitted by the
++# implementing agent; submission requires explicit author authorization
++# (exits the read-only discovery constraint).  12 h wall per reviewer note
++# (~150 GB of GPFS reads at 8 CPUs leaves slack for slow GPFS).
++#
++# Required environment (set by the submitting controller, all absolute):
++#   AUDIT_SCRIPT     path to est_blastx_audit.py in the reviewed snapshot
++#   AUDIT_SCRIPT_SHA reviewed sha256 of that script (self-verified below)
++#   BLASTX_ROOT      e.g. $R/evidence/est_blastx
++#   OUT_DIR          e.g. $R/evidence/est_phase_routeB_20260916/audit/c1_<date>
++#   SACCT_FILE       sacct -P --format=JobID,State,ExitCode capture WITH header
++#                    and allocation/.batch/.extern for 6163851 + 6164049_0-7
++# Audit requires original absolute input/engine paths to remain resolvable.
++# Source-tree tmp/preflight failures are inventoried, not automatically waived.
++# TMPDIR must be outside BLASTX_ROOT (filter reconstruction uses local scratch).
++set -euo pipefail
++for v in AUDIT_SCRIPT AUDIT_SCRIPT_SHA BLASTX_ROOT OUT_DIR SACCT_FILE; do
++  [[ -n "${!v:-}" ]] || { echo "REFUSED: $v is unset" >&2; exit 2; }
++done
++actual=$(sha256sum "$AUDIT_SCRIPT" | cut -d' ' -f1)
++[[ "$actual" == "$AUDIT_SCRIPT_SHA" ]] || {
++  echo "REFUSED: audit script sha256 $actual != reviewed $AUDIT_SCRIPT_SHA" >&2; exit 2; }
++[[ -d "$BLASTX_ROOT" && -f "$SACCT_FILE" ]] || {
++  echo "REFUSED: BLASTX_ROOT/SACCT_FILE missing" >&2; exit 2; }
++[[ ! -e "$OUT_DIR" ]] || { echo "REFUSED: OUT_DIR exists (no overwrite)" >&2; exit 2; }
++exec python3 "$AUDIT_SCRIPT" --blastx-root "$BLASTX_ROOT" \
++  --out-dir "$OUT_DIR" --sacct-file "$SACCT_FILE"
+diff --git a/revision/scripts/evidence/est_phase_accept.py b/revision/scripts/evidence/est_phase_accept.py
+new file mode 100644
+index 0000000..177ccbb
+--- /dev/null
++++ b/revision/scripts/evidence/est_phase_accept.py
+@@ -0,0 +1,156 @@
++#!/usr/bin/env python3
++"""C2 acceptance gate and fixture-only candidate BTOP decomposition.
++
++No accepted HSPs or phase evidence can be emitted. HSP >=30 aa may mean
++reported alignment length, ungapped query residues or per-frame sub-span;
++these readings MUST NOT be silently equated. Slash/backslash cursor shifts
++below are inherited HYPOTHESES to challenge with real DIAMOND RICH17, not
++verified semantics. CPU fixtures cannot approve them.
++
++Both public acceptance entrypoints remain unconditionally blocked until a
++reviewed real-RICH17 contract AND separate A46 production approval exist.
++There is intentionally no CLI bypass switch or guessed approval schema.
++"""
++from __future__ import annotations
++
++import argparse
++import math
++from pathlib import Path
++import re
++import signal
++import sys
++
++MIN_AA = 30  # frozen; no CLI override
++ACCEPTANCE_DEFINITION = {
++    'chosen': None,
++    'status': 'UNRESOLVED-until-reviewed-RICH17-fixture',
++    'candidates': {
++        'A_col9_alignment_length': 'raw13 column 9 as reported by DIAMOND (alignment columns, aa units, gaps included)',
++        'B_ungapped_query_aa': 'BTOP columns consuming a query codon (match+mismatch), gaps excluded',
++        'C_per_frame_subspan_aa': 'aa length of each constant-frame sub-span between frameshift ops'},
++    'rule': 'UNRESOLVED: no accepted HSP output permitted',
++    'terminology': 'candidate diagnostics only; no accepted HSP or phase evidence'}
++
++
++def btop_tokens(btop):
++    tokens = re.findall(r'\d+|[^\d][^\d]', btop)
++    if ''.join(tokens) != btop:
++        raise ValueError(f'invalid BTOP token stream: {btop!r}')
++    return tokens
++
++
++def candidate_decompose_hsp(qlen, qs, qe, frame, btop):
++    """Fixture-only hypothesis; NOT a verified frameshift interpretation.
++
++    Returns (subspans, ungapped_aa, n_frameshift_ops, subject_cols).  Each sub-span is a dict
++    with ORIGINAL query coordinates (1-based inclusive), strand, and the signed
++    frame recomputed at the sub-span start (sign = HSP strand; magnitude =
++    oriented_start % 3 + 1, candidate convention checked for internal
++    consistency with column 12, not independently verified).
++    """
++    reverse = frame < 0
++    if (qe >= qs) == reverse:
++        raise ValueError('qstart/qend orientation disagrees with frame sign')
++    pos = qlen - qs if reverse else qs - 1        # 0-based, oriented query
++    end = qlen - qe + 1 if reverse else qe        # exclusive, oriented query
++    if abs(frame) != pos % 3 + 1:
++        raise ValueError(f'frame {frame} disagrees with oriented start {pos}')
++    subspans, shifts, ungapped_aa = [], 0, 0
++    span_start, span_aa = pos, 0
++
++    def close():
++        nonlocal span_start, span_aa
++        if pos > span_start and span_aa > 0:
++            if reverse:  # oriented [span_start, pos) -> original 1-based inclusive
++                q_start, q_end = qlen - pos + 1, qlen - span_start
++            else:
++                q_start, q_end = span_start + 1, pos
++            subspans.append(dict(q_start=q_start, q_end=q_end, subspan_aa=span_aa,
++                                 strand='-' if reverse else '+',
++                                 signed_frame=(-1 if reverse else 1) * (span_start % 3 + 1)))
++        span_start, span_aa = pos, 0
++
++    subject_cols = 0
++    for token in btop_tokens(btop):
++        if token.isdigit():
++            n = int(token)
++            if n <= 0:
++                raise ValueError('BTOP match run must be positive')
++            pos += 3 * n
++            ungapped_aa += n
++            span_aa += n
++            subject_cols += n
++            continue
++        q, s = token
++        if q in ('/', '\\'):
++            if s != '-':
++                raise ValueError(f'frameshift op must not consume subject: {token!r}')
++            close()
++            shift = 1 if q == '\\' else -1  # '\\' = +1 nt, '/' = -1 nt (oriented)
++            pos += shift
++            shifts += 1
++            if not 0 <= pos <= qlen:
++                raise ValueError('frameshift outside query')
++            span_start = pos
++        else:
++            if q == '-' and s == '-':
++                raise ValueError('double gap in BTOP')
++            if q != '-':
++                pos += 3
++                ungapped_aa += 1
++                span_aa += 1
++            if s != '-':
++                subject_cols += 1
++    close()
++    if pos != end:
++        raise ValueError(f'BTOP does not consume reported query span: {pos} != {end}')
++    return subspans, ungapped_aa, shifts, subject_cols
++
++
++def parse_row(number, line):
++    c = line.rstrip('\n').split('\t')
++    if len(c) != 13 or any(not x for x in c):
++        raise ValueError(f'malformed raw13 row {number}')
++    qlen, slen = int(c[1]), int(c[3])
++    qs, qe, ss, se, length = map(int, c[4:9])
++    evalue, bitscore, frame = float(c[9]), float(c[10]), int(c[11])
++    # Mirrors est_blastx.validate_raw row contract (C1 already enforced it on
++    # the whole file; re-checked here so acceptance is safe standalone too).
++    if not (1 <= qs <= qlen and 1 <= qe <= qlen and 1 <= ss <= se <= slen
++            and length > 0 and frame in (-3, -2, -1, 1, 2, 3)
++            and (qe >= qs) == (frame > 0) and math.isfinite(evalue)
++            and 0 <= evalue <= 1e-5 and math.isfinite(bitscore) and bitscore > 0):
++        raise ValueError(f'invalid raw coordinates/score at row {number}')
++    return dict(qseqid=c[0], qlen=qlen, sseqid=c[2], slen=slen, qs=qs, qe=qe,
++                ss=ss, se=se, length=length, evalue=evalue, bitscore=bitscore,
++                frame=frame, btop=c[12])
++
++
++def accept_stream(raw13, source_kind, out_tsv):
++    raise ValueError('UNRESOLVED HSP/BTOP semantics; production blocked by A46')
++
++
++def run(args):
++    raise ValueError('UNRESOLVED HSP/BTOP semantics; production blocked by A46')
++
++
++def main(argv=None):
++    p = argparse.ArgumentParser(description=__doc__)
++    p.add_argument('--raw13', type=Path, required=True)
++    p.add_argument('--raw13-sha256', required=True,
++                   help='must match the C1 audit manifest hash for this unit')
++    p.add_argument('--source-kind', choices=('orthodb', 'swissprot'), required=True)
++    p.add_argument('--species', required=True)
++    p.add_argument('--out-dir', type=Path, required=True)
++    args = p.parse_args(argv)
++
++    def interrupted(signum, _frame):
++        raise SystemExit(128 + signum)
++    signal.signal(signal.SIGTERM, interrupted)
++    signal.signal(signal.SIGINT, interrupted)
++    run(args)
++    return 0
++
++
++if __name__ == '__main__':
++    sys.exit(main())
+diff --git a/revision/scripts/evidence/est_phase_accept_fixture.py b/revision/scripts/evidence/est_phase_accept_fixture.py
+new file mode 100644
+index 0000000..d12ae33
+--- /dev/null
++++ b/revision/scripts/evidence/est_phase_accept_fixture.py
+@@ -0,0 +1,132 @@
++#!/usr/bin/env python3
++"""RICH17 real-DIAMOND diagnostic extension for unresolved C2 semantics.
++
++Written but NOT submitted: this runs real DIAMOND 2.1.24 on a compute job
++(see est_phase_accept_fixture.sbatch); submission requires author
++authorization.  It extends est_blastx_fixture.py (unchanged, reviewed at
++950cf4c) rather than editing it, so the reviewed fixture's sha256 is
++preserved.
++
++Purpose (must-fix 2): empirically pin what raw column 9 ('length') counts
++under `--frameshift 15` to inform the UNRESOLVED acceptance definition.
++No reading is selected and no production gate is opened by this script.  For every RICH17 hit of
++the synthetic frameshift fixture it:
++  1. replays BTOP via est_blastx_fixture.replay() (ground truth against input
++     codons, CIGAR and all three rich sequence fields);
++  2. challenges candidate_decompose_hsp() with the raw13 subset of the row;
++  3. requires exact agreement on frameshift count/net and ungapped aa; and
++  4. reports, per row, which candidate reading (A col9-as-alignment-columns,
++     B ungapped query aa, C per-frame sub-span) reproduces column 9.
++Diagnostics are written to btop_pin_report.json; even a unique reading only
++means CANDIDATE_REQUIRES_REVIEW. Ambiguous readings are INCONCLUSIVE. Both
++C2 and C3 remain blocked until real-engine semantic review and A46 approval.
++Outer DONE means diagnostic execution completed, never acceptance approval.
++"""
++from __future__ import annotations
++
++import argparse
++import importlib.util
++from pathlib import Path
++import signal
++import sys
++
++
++def _load(name):
++    s = importlib.util.spec_from_file_location(name, Path(__file__).with_name(name + '.py'))
++    module = importlib.util.module_from_spec(s)
++    s.loader.exec_module(module)
++    return module
++
++
++fixture = _load('est_blastx_fixture')
++accept = _load('est_phase_accept')
++launcher = fixture.launcher
++
++
++def pin_rows(raw17_path, queries, protein):
++    """Cross-check decompose_hsp against replay() and tally col-9 readings."""
++    rows = []
++    with open(raw17_path) as f:
++        for line in f:
++            row = line.rstrip('\n').split('\t')
++            truth = fixture.replay(row, queries[row[0]], protein)
++            qlen, qs, qe, frame = int(row[1]), int(row[4]), int(row[5]), int(row[11])
++            subspans, ungapped_aa, shifts, subject_cols = accept.candidate_decompose_hsp(
++                qlen, qs, qe, frame, row[12])
++            fixture.require(shifts == len(truth['frameshifts']),
++                            f'{row[0]}: frameshift count disagrees with replay')
++            net = sum(s['delta_nt'] for s in truth['frameshifts'])
++            our_net = sum((1 if row[12][i] == '\\' else -1)
++                          for i in range(len(row[12])) if row[12][i] in '\\/')
++            fixture.require(our_net == net, f'{row[0]}: net frameshift disagrees')
++            fixture.require(ungapped_aa == truth['translated_residues'],
++                            f'{row[0]}: ungapped aa disagrees with translated field')
++            fixture.require(len(subspans) == shifts + 1,
++                            f'{row[0]}: sub-span count != frameshifts + 1')
++            col9 = int(row[8])
++            gapped_cols = len(row[14])           # includes gap AND frameshift columns
++            readings = {
++                'A_alignment_columns_incl_shift': gapped_cols,
++                'A_alignment_columns_excl_shift': gapped_cols - shifts,
++                'B_ungapped_query_aa': ungapped_aa,
++                'C_max_subspan_aa': max(s['subspan_aa'] for s in subspans),
++                'C_sum_subspan_aa': sum(s['subspan_aa'] for s in subspans)}
++            rows.append(dict(qseqid=row[0], col9=col9, frameshift_ops=shifts,
++                             readings=readings,
++                             col9_matches=sorted(k for k, v in readings.items() if v == col9)))
++    fixture.require(rows, 'no RICH17 rows to pin')
++    fixture.require(any(r['frameshift_ops'] for r in rows),
++                    'fixture elicited no frameshift; BTOP semantics remain unpinned')
++    return dict(rows=rows, **summarize_readings(rows))
++
++
++def summarize_readings(rows):
++    """Agreement of readings is diagnostic, never semantic or author approval."""
++    common = set(rows[0]['col9_matches']) if rows else set()
++    for r in rows[1:]:
++        common &= set(r['col9_matches'])
++    return dict(consistent_readings=sorted(common),
++                verdict='CANDIDATE_REQUIRES_REVIEW' if len(common) == 1 else 'INCONCLUSIVE',
++                production_authorized=False)
++
++
++def run(diamond, out_dir, tmpdir, threads):
++    out_dir = Path(out_dir)
++    with launcher.work_directory(out_dir) as out:
++        base = out / 'engine_fixture'
++        fixture.run_fixture(diamond, base, tmpdir, threads)
++        data = fixture.fixture_data()
++        reports = {}
++        for kind in ('orthodb', 'swissprot'):
++            raw = base / kind / f'{kind}.raw17.tsv'
++            reports[kind] = pin_rows(raw, data['queries'], data['protein'])
++            reports[kind]['raw17_sha256'] = launcher.sha256(raw)
++        launcher.write_json(out / 'btop_pin_report.json', dict(
++            purpose='diagnose raw13 col 9 semantics; NOT approval',
++            status='UNRESOLVED_PENDING_REVIEW', production_authorized=False,
++            acceptance_definition_under_test=accept.ACCEPTANCE_DEFINITION,
++            extension_sha256=launcher.sha256(__file__),
++            engine_provenance_sha256=launcher.sha256(base / 'provenance.json'),
++            base_fixture_sha256=launcher.sha256(fixture.__file__),
++            accept_module_sha256=launcher.sha256(accept.__file__),
++            reports=reports))
++
++
++def main(argv=None):
++    p = argparse.ArgumentParser(description=__doc__)
++    p.add_argument('--diamond', required=True, type=Path)
++    p.add_argument('--out-dir', required=True, type=Path)
++    p.add_argument('--tmpdir', required=True, type=Path)
++    p.add_argument('--threads', type=int, default=4)
++    args = p.parse_args(argv)
++
++    def interrupted(signum, _frame):
++        raise SystemExit(128 + signum)
++    signal.signal(signal.SIGTERM, interrupted)
++    signal.signal(signal.SIGINT, interrupted)
++    run(args.diamond, args.out_dir, args.tmpdir, args.threads)
++    return 0
++
++
++if __name__ == '__main__':
++    sys.exit(main())
+diff --git a/revision/scripts/evidence/est_phase_accept_fixture.sbatch b/revision/scripts/evidence/est_phase_accept_fixture.sbatch
+new file mode 100644
+index 0000000..faed99b
+--- /dev/null
++++ b/revision/scripts/evidence/est_phase_accept_fixture.sbatch
+@@ -0,0 +1,29 @@
++#!/bin/bash
++#SBATCH --job-name=b6_phase_btop_pin
++#SBATCH --partition=cpu-s1-pgl-0
++#SBATCH --nodes=1
++#SBATCH --ntasks=1
++#SBATCH --cpus-per-task=4
++#SBATCH --mem=8G
++#SBATCH --time=01:00:00
++#SBATCH --output=slurm-%j.out
++#
++# RICH17 real-DIAMOND BTOP-pinning fixture -- TEMPLATE ONLY, NOT submitted by
++# the implementing agent.  Same partition/limits as est_blastx_fixture.sbatch.
++# Required environment (absolute paths, set by the submitting controller):
++#   FIXTURE_SCRIPT     est_phase_accept_fixture.py in the reviewed snapshot
++#   FIXTURE_SCRIPT_SHA reviewed sha256 (self-verified below)
++#   DIAMOND            real DIAMOND 2.1.24 executable
++#   OUT_DIR            new dir under $R/evidence/est_phase_routeB_20260916/acceptance/
++#   TMPDIR_ABS         existing absolute scratch dir
++set -euo pipefail
++for v in FIXTURE_SCRIPT FIXTURE_SCRIPT_SHA DIAMOND OUT_DIR TMPDIR_ABS; do
++  [[ -n "${!v:-}" ]] || { echo "REFUSED: $v is unset" >&2; exit 2; }
++done
++actual=$(sha256sum "$FIXTURE_SCRIPT" | cut -d' ' -f1)
++[[ "$actual" == "$FIXTURE_SCRIPT_SHA" ]] || {
++  echo "REFUSED: fixture sha256 $actual != reviewed $FIXTURE_SCRIPT_SHA" >&2; exit 2; }
++[[ -x "$DIAMOND" && -d "$TMPDIR_ABS" ]] || { echo "REFUSED: DIAMOND/TMPDIR_ABS invalid" >&2; exit 2; }
++[[ ! -e "$OUT_DIR" ]] || { echo "REFUSED: OUT_DIR exists (no overwrite)" >&2; exit 2; }
++exec python3 "$FIXTURE_SCRIPT" --diamond "$DIAMOND" --out-dir "$OUT_DIR" \
++  --tmpdir "$TMPDIR_ABS" --threads "${SLURM_CPUS_PER_TASK:-4}"
+diff --git a/revision/scripts/evidence/est_phase_project.py b/revision/scripts/evidence/est_phase_project.py
+new file mode 100644
+index 0000000..3024c49
+--- /dev/null
++++ b/revision/scripts/evidence/est_phase_project.py
+@@ -0,0 +1,41 @@
++"""C3 established primitives only; genomic phase projection is BLOCKED.
++
++Workplan §2.6 requires frameshift-aware projection across introns mod 3,
++six phase{0,1,2} x strand{+,-} channels and route-A disagreement -> zero
++support. It does not pin the phase-0 anchor, overlapping/inconsistent-HSP
++resolution or the RICH17 HSP/BTOP semantics. Do not substitute a guessed
++projector. No BAM ingestion, molecule aggregation or raster is implemented.
++"""
++
++
++def genomic_strand(flag, ts):
++    """Pure FLAG16 x read-relative ts:A composition; not an alignment filter.
++
++    Authority: .atl/quarantine.md §1m, ts:A/FLAG16 row and
++    revision/scripts/67_orientation_audit.py:238-240 at base 950cf4c.
++    """
++    if type(flag) is not int or flag < 0 or ts not in ('+', '-'):
++        raise ValueError('nonnegative SAM flag and explicit ts +/- required')
++    return ('-' if ts == '+' else '+') if flag & 16 else ts
++
++
++def reconcile_phases(route_a, route_b):
++    """Compare already-labelled phases for the SAME base/strand/protein pair.
++
++    None means no support (all phase-channel values zero), NOT phase label 0.
++    Returns (A, B, disagreement). Does not resolve multilabel observations.
++    """
++    for phase in (route_a, route_b):
++        if phase is not None and (type(phase) is not int or phase not in (0, 1, 2)):
++            raise ValueError('phase must be 0, 1, 2 or absent')
++    if route_a is not None and route_b is not None and route_a != route_b:
++        return None, None, True
++    return route_a, route_b, False
++
++
++def project():
++    raise ValueError('UNRESOLVED phase anchor/HSP/BTOP semantics; production blocked by A46')
++
++
++if __name__ == '__main__':
++    project()
+diff --git a/revision/scripts/tests/test_track_c_recovery.py b/revision/scripts/tests/test_track_c_recovery.py
+new file mode 100644
+index 0000000..d85b44a
+--- /dev/null
++++ b/revision/scripts/tests/test_track_c_recovery.py
+@@ -0,0 +1,321 @@
++"""CPU-only recovery regressions. No DIAMOND or remote jobs are invoked."""
++import importlib.util
++import json
++import gzip
++from pathlib import Path
++from types import SimpleNamespace
++
++import pytest
++
++HERE = Path(__file__).resolve().parents[1] / 'evidence'
++
++
++def load(name):
++    spec = importlib.util.spec_from_file_location(name, HERE / (name + '.py'))
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module
++
++
++audit = load('est_blastx_audit')
++accept = load('est_phase_accept')
++pin = load('est_phase_accept_fixture')
++
++
++@pytest.mark.parametrize('entrypoint', ['stream', 'run'])
++def test_acceptance_blocked_before_io(tmp_path, entrypoint):
++    raw = tmp_path / 'raw.tsv'
++    raw.write_text('q\t90\tp\t30\t1\t90\t1\t30\t30\t1e-20\t100\t1\t30\n')
++    out = tmp_path / 'out'
++    with pytest.raises(ValueError, match='UNRESOLVED.*A46'):
++        if entrypoint == 'stream':
++            accept.accept_stream(raw, 'orthodb', out)
++        else:
++            accept.run(SimpleNamespace(raw13=raw, raw13_sha256=audit.launcher.sha256(raw),
++                                      source_kind='orthodb', species='Athaliana', out_dir=out))
++    assert not out.exists()
++
++
++@pytest.mark.parametrize('done,failed,ok', [(False, False, False), (True, False, True),
++                                         (False, True, False), (True, True, False)])
++def test_marker_truth_table(tmp_path, done, failed, ok):
++    if done:
++        (tmp_path / 'DONE').write_text(audit.DONE_TEXT)
++    if failed:
++        (tmp_path / 'FAILED.json').write_text('{}')
++    assert audit.disposition(tmp_path)['ok'] == ok
++
++
++def test_recursive_preflight_tmp_not_hidden_by_done(tmp_path):
++    pre = tmp_path / 'preflight_20260914'
++    (pre / 'tmp').mkdir(parents=True)
++    (pre / 'DONE').write_text(audit.DONE_TEXT)
++    (pre / 'tmp' / 'orphan').write_text('unfinished')
++    check = audit.Check()
++    entries = audit.scan_dispositions(tmp_path, set(), check)
++    assert check.failed()
++    assert 'preflight_20260914/tmp' in entries
++
++
++def test_symlink_is_not_a_completed_directory(tmp_path):
++    real = tmp_path / 'real'
++    real.mkdir()
++    (real / 'DONE').write_text(audit.DONE_TEXT)
++    (tmp_path / 'alias').symlink_to(real, target_is_directory=True)
++    check = audit.Check()
++    audit.scan_dispositions(tmp_path, {'real'}, check)
++    assert check.failed()
++
++
++def test_accounting_requires_all_jobs_and_steps():
++    lines = ['JobID|State|ExitCode']
++    for job in ['6163851'] + [f'6164049_{i}' for i in range(8)]:
++        lines.extend([f'{job}|COMPLETED|0:0', f'{job}.batch|COMPLETED|0:0',
++                      f'{job}.extern|OUT_OF_MEMORY|0:125'])
++    capture = '\n'.join(lines)
++    good = audit.Check()
++    audit.audit_accounting(capture, good)
++    assert not good.failed()
++    for bad_capture in [capture.replace('6163851.batch|COMPLETED', '6163851.batch|FAILED'),
++                        '\n'.join(lines[:-1]), '', capture + '\n' + lines[1]]:
++        bad = audit.Check()
++        audit.audit_accounting(bad_capture, bad)
++        assert bad.failed()
++
++
++def test_missing_timing_is_failure(tmp_path):
++    (tmp_path / 'batch.exitcode').write_text('0')
++    check = audit.Check()
++    audit.audit_species_root('Sitalica', tmp_path, 'Sitalica', check)
++    assert check.failed()
++
++
++@pytest.mark.parametrize('layout', ['pilot', 'remaining8'])
++def test_query_layouts_and_unresolvable_query(tmp_path, layout):
++    query = tmp_path / 'query.fa'
++    query.write_text('>q\n' + 'A' * 100 + '\n')
++    digest = audit.launcher.sha256(query)
++    provenance = {'inputs': {'query': str(query), 'query_sha256': digest}}
++    (tmp_path / 'query.sha256').write_text(digest + '  ' + str(query) + '\n')
++    inputs = tmp_path / 'inputs.json'
++    inputs.write_text(json.dumps([{'species': 'Sitalica', 'query': str(query),
++                                  'query_md5': audit.md5(query)}]))
++    (tmp_path / 'inputs.sha256').write_text(audit.launcher.sha256(inputs) + '  inputs.json\n')
++    check = audit.Check()
++    resolved = audit.resolve_query(layout, 'Sitalica', tmp_path, tmp_path, provenance, check)
++    assert resolved == query and not check.failed()
++    raw = tmp_path / 'raw'
++    raw.write_text('q\tignored\n')
++    audit.audit_query_file(resolved, provenance, None, raw, check)
++    assert not check.failed()
++    query.unlink()
++    missing = audit.Check()
++    audit.audit_query_file(resolved, provenance, None, raw, missing)
++    assert missing.failed()
++
++
++def test_audit_rejects_output_inside_input_without_mutation(tmp_path):
++    sacct = tmp_path / 'sacct'
++    sacct.write_text('capture')
++    out = tmp_path / 'audit'
++    with pytest.raises(ValueError, match='outside'):
++        audit.audit(tmp_path, out, sacct)
++    assert not out.exists()
++
++
++def test_audit_rejects_scratch_inside_input(tmp_path, monkeypatch):
++    tree = tmp_path / 'blastx'
++    tree.mkdir()
++    monkeypatch.setattr(audit.tempfile, 'tempdir', str(tree))
++    with pytest.raises(ValueError, match='scratch'):
++        audit.audit(tree, tmp_path / 'out', tmp_path / 'unused-sacct')
++    assert not (tmp_path / 'out').exists()
++    assert list(tree.iterdir()) == []
++
++
++def test_fixture_failure_does_not_leave_outer_done(tmp_path):
++    out = tmp_path / 'fixture'
++    with pytest.raises((ValueError, OSError)):
++        pin.run(tmp_path / 'missing-diamond', out, tmp_path, 1)
++    assert (out / 'FAILED.json').exists()
++    assert not (out / 'DONE').exists()
++
++
++def make_unit(root, species='Sitalica', kind='orthodb', inputs_root=None):
++    inputs_root = inputs_root or root
++    inputs_root.mkdir(parents=True, exist_ok=True)
++    taxid = 3702 if species == 'Osativa' else 4530
++    subject = f'{taxid}_0:cross' if kind == 'orthodb' else 'sp|CROSS.1|CROSS'
++    unit = root / kind
++    unit.mkdir(parents=True)
++    query = inputs_root / 'est' / species / 'univec' / 'est.univec.fa.gz'
++    query.parent.mkdir(parents=True, exist_ok=True)
++    if not query.exists():
++        with gzip.open(query, 'wt') as f:
++            f.write('>q\n' + 'A' * 120 + '\n')
++    (query.parent / 'DONE').write_text('screened')
++    (query.parent / 'summary.json').write_text('{}')
++    source = inputs_root / audit.launcher.SOURCE_NAMES[kind]
++    with gzip.open(source, 'wt') if source.suffix == '.gz' else open(source, 'w') as f:
++        f.write(f'>{subject} OX={taxid}\n' + 'M' * 40 + '\n')
++    lineage = inputs_root / 'lineage.tsv'
++    lineage.write_text(f'taxid\tlineage\n{taxid}\t{taxid};1\n')
++    roles = inputs_root / 'roles.tsv'
++    roles.write_text('dataset\tspecies\trole\nest/' + species + '\t' + species + '\tc2_training_eligible\n')
++    inputs = dict(species=species, source_kind=kind)
++    for name, path in [('source', source), ('query', query), ('lineage', lineage), ('roles', roles)]:
++        inputs[name] = str(path)
++        inputs[name + '_sha256'] = audit.launcher.sha256(path)
++    qc = audit.launcher.production_inputs(**inputs)
++    filtered = unit / (kind + '.filtered.fa')
++    qc.update(audit.launcher.filter_source(source, kind, lineage, audit.launcher.SPECIES[species], filtered))
++    raw = unit / (kind + '.raw13.tsv')
++    raw.write_text(f'q\t120\t{subject}\t40\t1\t90\t1\t30\t30\t1e-20\t100\t1\t30\n')
++    db = unit / (kind + '.dmnd')
++    db.write_bytes(b'fixture-db-not-a-real-engine')
++    diamond = inputs_root / 'diamond'
++    diamond.write_bytes(b'fixture-engine-not-executed')
++    commands = [[str(diamond), 'makedb', '--in', str(filtered), '--db', str(db), '--threads', '1', '--no-parse-seqids'],
++                audit.launcher.search_command(diamond, query, db, raw, 1, root / 'scratch')]
++    (unit / 'commands.json').write_text(json.dumps(commands))
++    for name in ['blastx.log', 'makedb.log']:
++        (unit / name).write_text('fixture log')
++    (unit / 'DONE').write_text(audit.DONE_TEXT)
++    qc.update(audit.launcher.validate_raw(raw), inputs=inputs, elapsed_seconds=1.0,
++              fields=audit.launcher.RAW13, raw_sha256=audit.launcher.sha256(raw),
++              db_sha256=audit.launcher.sha256(db), diamond_sha256=audit.launcher.sha256(diamond))
++    (unit / 'provenance.json').write_text(json.dumps(qc))
++    (root / 'query.sha256').write_text(inputs['query_sha256'] + '  ' + str(query) + '\n')
++    return unit
++
++
++@pytest.mark.parametrize('mutation', ['none', 'command_query', 'raw_hash', 'raw_count',
++    'elapsed', 'input_hash', 'species', 'filter_count', 'malformed_provenance', 'unit_tmp',
++    'subject_not_in_filtered'])
++def test_unit_reconciliation(tmp_path, mutation):
++    unit = make_unit(tmp_path)
++    prov = unit / 'provenance.json'
++    data = json.loads(prov.read_text())
++    if mutation == 'command_query':
++        path = unit / 'commands.json'
++        commands = json.loads(path.read_text())
++        i = commands[1].index('--query')
++        commands[1][i + 1] = '/another/query.fa'
++        path.write_text(json.dumps(commands))
++    elif mutation == 'raw_hash':
++        data['raw_sha256'] = '0' * 64
++    elif mutation == 'raw_count':
++        data['raw_hsps'] = 999
++    elif mutation == 'elapsed':
++        data['elapsed_seconds'] = -1
++    elif mutation == 'input_hash':
++        data['inputs']['lineage_sha256'] = '0' * 64
++    elif mutation == 'species':
++        data['inputs']['species'] = 'Athaliana'
++    elif mutation == 'filter_count':
++        data['sequences_excluded'] = 999
++    elif mutation == 'unit_tmp':
++        (unit / 'tmp').mkdir()
++    elif mutation == 'subject_not_in_filtered':
++        raw = unit / 'orthodb.raw13.tsv'
++        raw.write_text(raw.read_text().replace('4530_0:cross', '3702_0:self'))
++        data['raw_sha256'] = audit.launcher.sha256(raw)
++    prov.write_text('{' if mutation == 'malformed_provenance' else json.dumps(data))
++    result = audit.audit_unit('pilot', 'Sitalica', 'orthodb', tmp_path, tmp_path)
++    assert result['status'] == ('PASS' if mutation == 'none' else 'FAIL')
++
++
++@pytest.mark.parametrize('flag,ts,want', [(0, '+', '+'), (0, '-', '-'),
++                                        (16, '+', '-'), (16, '-', '+')])
++def test_flag_ts_composition(flag, ts, want):
++    assert load('est_phase_project').genomic_strand(flag, ts) == want
++
++
++@pytest.mark.parametrize('phase_a,phase_b,want', [(0, 0, (0, 0, False)),
++    (1, 2, (None, None, True)), (None, 0, (None, 0, False))])
++def test_route_disagreement_is_neutral_not_phase_zero(phase_a, phase_b, want):
++    assert load('est_phase_project').reconcile_phases(phase_a, phase_b) == want
++
++
++def test_projector_refuses_unresolved_semantics():
++    with pytest.raises(ValueError, match='UNRESOLVED.*A46'):
++        load('est_phase_project').project()
++
++
++@pytest.mark.parametrize('reverse', [False, True])
++@pytest.mark.parametrize('dna,btop,cigar,qg', [
++    ('ATGAAACGCT', '2\\-1', '2M1\\1M', 'MK\\A'),
++    ('ATGAAGCT', '2/-1', '2M1/1M', 'MK/A')])
++def test_rich17_candidate_diagnostics_are_not_approval(tmp_path, reverse, dna, btop, cigar, qg):
++    # Hand-built candidate fixtures exercise plumbing, NOT real DIAMOND semantics.
++    row = ['q', str(len(dna)), 'p', '3', '1', str(len(dna)), '1', '3',
++           '4', '1e-20', '100', '1', btop, cigar, qg, 'MK-A', 'MKA']
++    if reverse:
++        dna = pin.fixture.reverse_complement(dna)
++        row[4], row[5], row[11] = str(len(dna)), '1', '-1'
++    raw = tmp_path / 'raw17'
++    raw.write_text('\t'.join(row) + '\n')
++    report = pin.pin_rows(raw, {'q': dna}, 'MKA')
++    assert report['rows'][0]['readings']['B_ungapped_query_aa'] == 3
++    assert report['production_authorized'] is False
++    assert report['verdict'] != 'PINNED'
++
++
++@pytest.mark.parametrize('length', [29, 30, 31])
++def test_boundary_lengths_remain_raw_not_accepted(tmp_path, length):
++    raw = tmp_path / 'raw'
++    line = f'q\t93\tp\t31\t1\t{length * 3}\t1\t{length}\t{length}\t1e-20\t100\t1\t{length}\n'
++    raw.write_text(line)
++    assert accept.parse_row(1, line)['length'] == length
++    with pytest.raises(ValueError, match='UNRESOLVED'):
++        accept.accept_stream(raw, 'orthodb', tmp_path / 'out')
++    assert not (tmp_path / 'out').exists()
++
++
++def test_full_18_unit_audit_and_preflight_failure(tmp_path):
++    tree = tmp_path / 'blastx'
++    entries = []
++    for species in ('Sitalica',) + audit.REMAINING8_SPECIES:
++        root = tree / audit.PILOT_DIR if species == 'Sitalica' else tree / audit.REMAINING8_DIR / species
++        for kind in audit.SOURCES:
++            unit = make_unit(root, species, kind, tmp_path / 'inputs' / species)
++        query = json.loads((unit / 'provenance.json').read_text())['inputs']['query']
++        entries.append({'species': species, 'query': query, 'query_md5': audit.md5(query)})
++        (root / 'batch.exitcode').write_text('0')
++        (root / 'batch.time.txt').write_text('elapsed=1')
++    batch = tree / audit.REMAINING8_DIR
++    (batch / 'inputs.json').write_text(json.dumps(entries[1:]))
++    (batch / 'inputs.sha256').write_text(audit.launcher.sha256(batch / 'inputs.json') + '  inputs.json\n')
++    for root in (tree / audit.PILOT_DIR, batch):
++        (root / 'run.sbatch').write_text('# fixture; never submitted\n')
++    sacct = tmp_path / 'sacct'
++    lines = ['JobID|State|ExitCode']
++    for job in ['6163851'] + [f'6164049_{i}' for i in range(8)]:
++        lines.extend([f'{job}|COMPLETED|0:0', f'{job}.batch|COMPLETED|0:0',
++                      f'{job}.extern|OUT_OF_MEMORY|0:125'])
++    sacct.write_text('\n'.join(lines))
++    result = audit.audit(tree, tmp_path / 'out', sacct)
++    assert result['status'] == 'PASS' and result['units_audited'] == 18
++    assert result['clean_accounting'] is False
++    assert result['accepted_phase_evidence'] is False
++    sacct.write_text('\n'.join(lines[:-1]))
++    with pytest.raises(ValueError, match='audit FAILED'):
++        audit.audit(tree, tmp_path / 'bad_accounting', sacct)
++    bad = json.loads((tmp_path / 'bad_accounting' / 'rollup.json').read_text())
++    assert bad.get('units_audited') == 18
++    sacct.write_text('\n'.join(lines))
++    (tree / 'preflight_20260914').mkdir()
++    with pytest.raises(ValueError, match='audit FAILED'):
++        audit.audit(tree, tmp_path / 'failed', sacct)
++    failed = json.loads((tmp_path / 'failed' / 'rollup.json').read_text())
++    assert failed['units_audited'] == 18
++    assert (tmp_path / 'failed' / 'FAILED.json').exists()
++    assert not (tmp_path / 'failed' / 'DONE').exists()
++
++
++def test_inconclusive_readings_cannot_pin():
++    result = pin.summarize_readings([
++        {'col9_matches': ['A', 'B'], 'frameshift_ops': 1},
++        {'col9_matches': ['A', 'B'], 'frameshift_ops': 1}])
++    assert result['verdict'] == 'INCONCLUSIVE'
++    assert result['production_authorized'] is False

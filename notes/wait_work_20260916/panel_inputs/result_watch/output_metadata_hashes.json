@@ -1,0 +1,75 @@
+{
+  "files": [
+    {
+      "path": "metadata/outputs/job-6165559/OBSERVATIONS_COMPLETE.json",
+      "bytes": 218,
+      "sha256": "96ed41166060ef4fd9edaca2220a2dfc609a574683aab0c0d21be3162e2dede6"
+    },
+    {
+      "path": "metadata/outputs/job-6165559/cpu_runtime.json",
+      "bytes": 1401,
+      "sha256": "2f9c28f1eb717e3323a708d1a65446f8127b1e9b68ddc3f313fad4d4bf39bc6c"
+    },
+    {
+      "path": "metadata/outputs/job-6165559/git_authority.json",
+      "bytes": 840,
+      "sha256": "0d913d71994c3146db6922e1a5e80125329fa3e4c624945a089921cc60e38e28"
+    },
+    {
+      "path": "metadata/outputs/job-6165559/panel/COMPLETE",
+      "bytes": 65,
+      "sha256": "064be35cd51d81c223d620d2457f689c2cbdf45830587bd12cc8533f07812033"
+    },
+    {
+      "path": "metadata/outputs/job-6165559/panel/manifest.json",
+      "bytes": 38938,
+      "sha256": "3c31b90522dc8a1393480218f878b6c4e44e4339e211e69173f25005286c63ca"
+    },
+    {
+      "path": "metadata/outputs/job-6165559/panel_counts.json",
+      "bytes": 18738,
+      "sha256": "a6a8ce7089e24ac2e9ffbd213545870c406be3283dc311f768182844796f84ba"
+    },
+    {
+      "path": "metadata/outputs/job-6165559/reference.panel.gff3",
+      "bytes": 16,
+      "sha256": "897007ceaf55680e4fa9d1d9e6ebac641ede633c0a9f2426db36ecbc66177df9"
+    },
+    {
+      "path": "metadata/outputs/job-6165559/reference_compatibility.json",
+      "bytes": 20259,
+      "sha256": "ebd6a22a7eb9b7d6c33a29ace3bfe05963635c96e8531b02a075de8a4c1f03e2"
+    },
+    {
+      "path": "metadata/outputs/job-6165559/reference_identity.json",
+      "bytes": 657,
+      "sha256": "70aab612069cd6c646606cbf685ad53cf3b09532878ee46f459dad3495db4f81"
+    },
+    {
+      "path": "metadata/outputs/job-6165559/request.json",
+      "bytes": 1096,
+      "sha256": "f22a0455e38653c2c0c7e509ade60c18cbc3fab243dda2e06421721cc1e15a1a"
+    },
+    {
+      "path": "metadata/outputs/job-6165559/source_identity.json",
+      "bytes": 11986,
+      "sha256": "c58504ca0d30a222d8baa4e7d9ba83f5c6f04d894469c5cf92eaa132165a0d9c"
+    },
+    {
+      "path": "metadata/slurm-6165559.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "metadata/slurm-6165559.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "metadata/transport.json",
+      "bytes": 1653,
+      "sha256": "1883df3c32c5b560030dbcb89543b3d2730d7c08518d47e4f932b62f88b18c0a"
+    }
+  ],
+  "total_bytes": 95867
+}

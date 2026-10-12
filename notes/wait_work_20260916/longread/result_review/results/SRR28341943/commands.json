@@ -1,0 +1,92 @@
+[
+  {
+    "stage": "version_minimap2",
+    "argv": [
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2",
+      "--version"
+    ],
+    "exit_code": 0,
+    "stdout": "version_minimap2.stdout",
+    "stderr": "version_minimap2.stderr"
+  },
+  {
+    "stage": "version_samtools",
+    "argv": [
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/samtools",
+      "--version"
+    ],
+    "exit_code": 0,
+    "stdout": "version_samtools.stdout",
+    "stderr": "version_samtools.stderr"
+  },
+  {
+    "stage": "version_seqkit",
+    "argv": [
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/seqkit",
+      "version"
+    ],
+    "exit_code": 0,
+    "stdout": "version_seqkit.stdout",
+    "stderr": "version_seqkit.stderr"
+  },
+  {
+    "stage": "sample",
+    "argv": [
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python",
+      "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/scripts/68_sample_fasta.py",
+      "--fasta",
+      "/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz",
+      "--out",
+      "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/sample.fa",
+      "--n",
+      "10000",
+      "--md5",
+      "d802a86ae1673909ee21a0cd663c99ac"
+    ],
+    "exit_code": 0,
+    "stdout": "sample.stdout",
+    "stderr": "sample.stderr"
+  },
+  {
+    "stage": "sample_alignment",
+    "argv": [
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2",
+      "-t",
+      "4",
+      "-ax",
+      "splice",
+      "-k14",
+      "-G",
+      "200000",
+      "--secondary=no",
+      "--cs=long",
+      "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+      "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/sample.fa"
+    ],
+    "exit_code": 0,
+    "stdout": "sample_alignment.stdout",
+    "stderr": "sample_alignment.stderr"
+  },
+  {
+    "stage": "orientation_audit",
+    "argv": [
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python",
+      "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/scripts/67_orientation_audit.py",
+      "--sam",
+      "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/sample_alignment.stdout",
+      "--gff",
+      "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+      "--out",
+      "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/orientation/audit.json",
+      "--run",
+      "SRR28341943",
+      "--species",
+      "Athaliana",
+      "--dataset",
+      "ont/Athaliana_FLIC_PRJNA1087576"
+    ],
+    "exit_code": 0,
+    "stdout": "orientation_audit.stdout",
+    "stderr": "orientation_audit.stderr"
+  }
+]

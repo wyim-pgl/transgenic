@@ -1,0 +1,20 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+WARNING: Cache entry deserialization failed, entry ignored
+Collecting pyarrow==25.0.1
+  Downloading pyarrow-25.0.1-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+Downloading pyarrow-25.0.1-cp311-cp311-manylinux_2_28_x86_64.whl (50.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.1/50.1 MB 52.5 MB/s  0:00:00
+Installing collected packages: pyarrow
+Successfully installed pyarrow-25.0.1
+VERSIONS 1.5.5 25.0.1
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/source/revision/scripts/evidence/b6_build_c0.py", line 545, in add
+    buf.append(tuple(row[c] for c in self.cols[name]))     # KeyError = a missing column (fail closed)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/source/revision/scripts/evidence/b6_build_c0.py", line 545, in <genexpr>
+    buf.append(tuple(row[c] for c in self.cols[name]))     # KeyError = a missing column (fail closed)
+                     ~~~^^^
+KeyError: 'accession'

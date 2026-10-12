@@ -1,0 +1,301 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T15:41:30-0700
+JobID|State|ExitCode|Elapsed|MaxRSS
+6165460|COMPLETED|0:0|00:00:02|
+6165460.batch|COMPLETED|0:0|00:00:02|1548K
+6165460.extern|OUT_OF_MEMORY|0:125|00:00:02|1480K
+DONE 45
+btop_pin_report.json 8295
+engine_fixture/DONE 45
+engine_fixture/orthodb/DONE 45
+engine_fixture/orthodb/getseq.command.json 375
+engine_fixture/orthodb/orthodb.dmnd 343
+engine_fixture/orthodb/getseq.log 126
+engine_fixture/orthodb/blastx.log 3959
+engine_fixture/orthodb/makedb.log 1043
+engine_fixture/orthodb/orthodb.filtered.fa 215
+engine_fixture/orthodb/orthodb.raw17.tsv 3752
+engine_fixture/orthodb/provenance.json 3178
+engine_fixture/orthodb/commands.json 1569
+engine_fixture/orthodb/source.fa 860
+engine_fixture/orthodb/database.getseq.fa 217
+engine_fixture/queries.fa 3301
+engine_fixture/lineage.tsv 87
+engine_fixture/swissprot/swissprot.raw17.tsv 3746
+engine_fixture/swissprot/DONE 45
+engine_fixture/swissprot/getseq.command.json 381
+engine_fixture/swissprot/swissprot.filtered.fa 214
+engine_fixture/swissprot/getseq.log 126
+engine_fixture/swissprot/blastx.log 3963
+engine_fixture/swissprot/makedb.log 1047
+engine_fixture/swissprot/swissprot.dmnd 342
+engine_fixture/swissprot/provenance.json 3182
+engine_fixture/swissprot/commands.json 1585
+engine_fixture/swissprot/source.fa 851
+engine_fixture/swissprot/database.getseq.fa 216
+engine_fixture/provenance.json 7838
+0
+revision/scripts/evidence/est_phase_accept_fixture.py: OK
+revision/scripts/evidence/est_phase_accept.py: OK
+revision/scripts/evidence/est_blastx_fixture.py: OK
+revision/scripts/evidence/est_blastx.py: OK
+revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+{
+  "accept_module_sha256": "0c6490c76d63463d945ee270f46a4ab8b96e929b57f4ac38dc52229f24c11ae3",
+  "acceptance_definition_under_test": {
+    "candidates": {
+      "A_col9_alignment_length": "raw13 column 9 as reported by DIAMOND (alignment columns, aa units, gaps included)",
+      "B_ungapped_query_aa": "BTOP columns consuming a query codon (match+mismatch), gaps excluded",
+      "C_per_frame_subspan_aa": "aa length of each constant-frame sub-span between frameshift ops"
+    },
+    "chosen": null,
+    "rule": "UNRESOLVED: no accepted HSP output permitted",
+    "status": "UNRESOLVED-until-reviewed-RICH17-fixture",
+    "terminology": "candidate diagnostics only; no accepted HSP or phase evidence"
+  },
+  "base_fixture_sha256": "18da9abd2a51a870e327226c8a1f9d225711a7c4551de40fd620c59470dbbad2",
+  "engine_provenance_sha256": "986cc181e4c3cc3115d20620ddaedd632e20fd4bffad93fb06e618100adf1ccc",
+  "extension_sha256": "8da86ae1bc4323da4efb24dffd177d060479f958e431b7e79722a88b57d80f36",
+  "production_authorized": false,
+  "purpose": "diagnose raw13 col 9 semantics; NOT approval",
+  "reports": {
+    "orthodb": {
+      "consistent_readings": [
+        "A_alignment_columns_excl_shift"
+      ],
+      "production_authorized": false,
+      "raw17_sha256": "70dbe2c48ef41d5e984b45e91e0fc324f3f7adb15a2b7bf86e5f6f69e90fb901",
+      "rows": [
+        {
+          "col9": 180,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "A_alignment_columns_incl_shift",
+            "B_ungapped_query_aa",
+            "C_max_subspan_aa",
+            "C_sum_subspan_aa"
+          ],
+          "frameshift_ops": 0,
+          "qseqid": "ordinary",
+          "readings": {
+            "A_alignment_columns_excl_shift": 180,
+            "A_alignment_columns_incl_shift": 180,
+            "B_ungapped_query_aa": 180,
+            "C_max_subspan_aa": 180,
+            "C_sum_subspan_aa": 180
+          }
+        },
+        {
+          "col9": 180,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "A_alignment_columns_incl_shift",
+            "B_ungapped_query_aa",
+            "C_max_subspan_aa",
+            "C_sum_subspan_aa"
+          ],
+          "frameshift_ops": 0,
+          "qseqid": "reverse",
+          "readings": {
+            "A_alignment_columns_excl_shift": 180,
+            "A_alignment_columns_incl_shift": 180,
+            "B_ungapped_query_aa": 180,
+            "C_max_subspan_aa": 180,
+            "C_sum_subspan_aa": 180
+          }
+        },
+        {
+          "col9": 180,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "B_ungapped_query_aa",
+            "C_sum_subspan_aa"
+          ],
+          "frameshift_ops": 1,
+          "qseqid": "plus1",
+          "readings": {
+            "A_alignment_columns_excl_shift": 180,
+            "A_alignment_columns_incl_shift": 181,
+            "B_ungapped_query_aa": 180,
+            "C_max_subspan_aa": 90,
+            "C_sum_subspan_aa": 180
+          }
+        },
+        {
+          "col9": 180,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "B_ungapped_query_aa",
+            "C_sum_subspan_aa"
+          ],
+          "frameshift_ops": 1,
+          "qseqid": "minus1",
+          "readings": {
+            "A_alignment_columns_excl_shift": 180,
+            "A_alignment_columns_incl_shift": 181,
+            "B_ungapped_query_aa": 180,
+            "C_max_subspan_aa": 90,
+            "C_sum_subspan_aa": 180
+          }
+        },
+        {
+          "col9": 183,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "A_alignment_columns_incl_shift",
+            "B_ungapped_query_aa",
+            "C_max_subspan_aa",
+            "C_sum_subspan_aa"
+          ],
+          "frameshift_ops": 0,
+          "qseqid": "insertion",
+          "readings": {
+            "A_alignment_columns_excl_shift": 183,
+            "A_alignment_columns_incl_shift": 183,
+            "B_ungapped_query_aa": 183,
+            "C_max_subspan_aa": 183,
+            "C_sum_subspan_aa": 183
+          }
+        },
+        {
+          "col9": 180,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "A_alignment_columns_incl_shift"
+          ],
+          "frameshift_ops": 0,
+          "qseqid": "deletion",
+          "readings": {
+            "A_alignment_columns_excl_shift": 180,
+            "A_alignment_columns_incl_shift": 180,
+            "B_ungapped_query_aa": 177,
+            "C_max_subspan_aa": 177,
+            "C_sum_subspan_aa": 177
+          }
+        }
+      ],
+      "verdict": "CANDIDATE_REQUIRES_REVIEW"
+    },
+    "swissprot": {
+      "consistent_readings": [
+        "A_alignment_columns_excl_shift"
+      ],
+      "production_authorized": false,
+      "raw17_sha256": "3b43cbb2618adc69e532775c269b7a1e24f5494c49ef8c6dc8a7e3b64036f3dc",
+      "rows": [
+        {
+          "col9": 180,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "A_alignment_columns_incl_shift",
+            "B_ungapped_query_aa",
+            "C_max_subspan_aa",
+            "C_sum_subspan_aa"
+          ],
+          "frameshift_ops": 0,
+          "qseqid": "ordinary",
+          "readings": {
+            "A_alignment_columns_excl_shift": 180,
+            "A_alignment_columns_incl_shift": 180,
+            "B_ungapped_query_aa": 180,
+            "C_max_subspan_aa": 180,
+            "C_sum_subspan_aa": 180
+          }
+        },
+        {
+          "col9": 180,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "A_alignment_columns_incl_shift",
+            "B_ungapped_query_aa",
+            "C_max_subspan_aa",
+            "C_sum_subspan_aa"
+          ],
+          "frameshift_ops": 0,
+          "qseqid": "reverse",
+          "readings": {
+            "A_alignment_columns_excl_shift": 180,
+            "A_alignment_columns_incl_shift": 180,
+            "B_ungapped_query_aa": 180,
+            "C_max_subspan_aa": 180,
+            "C_sum_subspan_aa": 180
+          }
+        },
+        {
+          "col9": 180,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "B_ungapped_query_aa",
+            "C_sum_subspan_aa"
+          ],
+          "frameshift_ops": 1,
+          "qseqid": "plus1",
+          "readings": {
+            "A_alignment_columns_excl_shift": 180,
+            "A_alignment_columns_incl_shift": 181,
+            "B_ungapped_query_aa": 180,
+            "C_max_subspan_aa": 90,
+            "C_sum_subspan_aa": 180
+          }
+        },
+        {
+          "col9": 180,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "B_ungapped_query_aa",
+            "C_sum_subspan_aa"
+          ],
+          "frameshift_ops": 1,
+          "qseqid": "minus1",
+          "readings": {
+            "A_alignment_columns_excl_shift": 180,
+            "A_alignment_columns_incl_shift": 181,
+            "B_ungapped_query_aa": 180,
+            "C_max_subspan_aa": 90,
+            "C_sum_subspan_aa": 180
+          }
+        },
+        {
+          "col9": 183,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "A_alignment_columns_incl_shift",
+            "B_ungapped_query_aa",
+            "C_max_subspan_aa",
+            "C_sum_subspan_aa"
+          ],
+          "frameshift_ops": 0,
+          "qseqid": "insertion",
+          "readings": {
+            "A_alignment_columns_excl_shift": 183,
+            "A_alignment_columns_incl_shift": 183,
+            "B_ungapped_query_aa": 183,
+            "C_max_subspan_aa": 183,
+            "C_sum_subspan_aa": 183
+          }
+        },
+        {
+          "col9": 180,
+          "col9_matches": [
+            "A_alignment_columns_excl_shift",
+            "A_alignment_columns_incl_shift"
+          ],
+          "frameshift_ops": 0,
+          "qseqid": "deletion",
+          "readings": {
+            "A_alignment_columns_excl_shift": 180,
+            "A_alignment_columns_incl_shift": 180,
+            "B_ungapped_query_aa": 177,
+            "C_max_subspan_aa": 177,
+            "C_sum_subspan_aa": 177
+          }
+        }
+      ],
+      "verdict": "CANDIDATE_REQUIRES_REVIEW"
+    }
+  },
+  "status": "UNRESOLVED_PENDING_REVIEW"
+}

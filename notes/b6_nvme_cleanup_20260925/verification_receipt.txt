@@ -1,0 +1,16 @@
+{
+ "entries": 528,
+ "files": 414,
+ "logical_bytes": 157045051743,
+ "roots": [
+  "b6_int4/run_3207149",
+  "b6_int4/run_3207331",
+  "b6_int4/run_3208442",
+  "b6_resume_diagnostic/job_3207863"
+ ]
+}
+source_manifest.json 56238a8f9546e549bd8db4a63c2ce0dc8c745882ee86a4e05406e6551f76b18f
+archive_manifest.json 56238a8f9546e549bd8db4a63c2ce0dc8c745882ee86a4e05406e6551f76b18f
+source_stamps.json 17437b5863259dc06c9c07eb22afcde7c46d30238a23ada2c993f1c9aa65fcac
+archive_stamps.json 773a782f6a0e2de55c3e7855968963c97f23bc99b5b0b245b05b270a21232650
+SYMLINKS [('b6_int4/run_3207331/resumed/best', 'epoch_02'), ('b6_int4/run_3207331/straight/best', 'epoch_02'), ('b6_int4/run_3208442/straight/best', 'epoch_02'), ('b6_resume_diagnostic/job_3207863/eager/resumed/best', 'epoch_02'), ('b6_resume_diagnostic/job_3207863/eager/straight/best', 'epoch_02'), ('b6_resume_diagnostic/job_3207863/hf_cache/hub/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446/config.json', '../../blobs/2af74132e05e7279faf7fe94ef96fffe26d8d59f'), ('b6_resume_diagnostic/job_3207863/hf_cache/hub/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446/configuration_hyena.py', '../../blobs/d8ca5c2f084d69e729672a845d3d6469ed12f18a'), ('b6_resume_diagnostic/job_3207863/hf_cache/hub/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446/model.safetensors', '../../blobs/deafb53209bfafb314d14bd81108546a34d473c07ed7ab7a355674376b56ad12'), ('b6_resume_diagnostic/job_3207863/hf_cache/hub/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446/modeling_hyena.py', '../../blobs/24f0890027c2d360c72e01f6bdbcf0e6109b15e7'), ('b6_resume_diagnostic/job_3207863/hf_cache/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446/special_tokens_map.json', '../../blobs/b7a451170f6fb07dc5d71f2e0241f262502eaf13'), ('b6_resume_diagnostic/job_3207863/hf_cache/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446/tokenization_hyena.py', '../../blobs/d45662fcdc5cc05be3f2c952ebb82c512d42f5ec'), ('b6_resume_diagnostic/job_3207863/hf_cache/models--LongSafari--hyenadna-large-1m-seqlen-hf/snapshots/0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446/tokenizer_config.json', '../../blobs/d9e558726fb6998ac254aa3e04aa6d81672c8783'), ('b6_resume_diagnostic/job_3207863/unsplit/resumed/best', 'epoch_02'), ('b6_resume_diagnostic/job_3207863/unsplit/straight/best', 'epoch_02')]

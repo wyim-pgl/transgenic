@@ -1,0 +1,17 @@
+{
+  "commit": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16",
+  "files": {
+    "fasta": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+      "sha256": "63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973",
+      "size": 121183059
+    },
+    "gff": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+      "sha256": "529510b60756c9a1ae5a590ec4097fd4b9773649c29e6a5543553118bb042c38",
+      "size": 60503119
+    }
+  },
+  "manifest": "data/manifests/b5_species_v1.tsv",
+  "manifest_sha256": "3ca7a3b9a5793f62d25f503c93cfd7167eb17f7c5b90de7830e6a8777117f783"
+}

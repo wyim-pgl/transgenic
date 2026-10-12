@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/actual-source-release/run_compute.py", line 246, in <module>
+    raise SystemExit(main())
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/actual-source-release/run_compute.py", line 238, in main
+    require(args.out is not None and os.environ.get('SLURM_JOB_ID'), 'fresh output and Slurm allocation required')
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/actual-source-release/run_compute.py", line 28, in require
+    raise ValueError(message)
+ValueError: fresh output and Slurm allocation required

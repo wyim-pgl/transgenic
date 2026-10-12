@@ -1,0 +1,23 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+source-b4dd15e.sha256: OK
+SOURCE_OK=220
+/work/hdd/bilv/wcyim/transgenic/run_hdd_cp4.sh: OK
+[master 860bbfc] snapshot fix from b6-integration b4dd15e14541fc7ff765a8fa138980af862dd8a2
+ 6 files changed, 317 insertions(+), 70 deletions(-)
+ create mode 100644 revision/scripts/b6/storage_preflight.py
+ create mode 100644 tests/test_b6_checkpoint_io.py
+ create mode 100644 tests/test_b6_storage_preflight.py
+860bbfc2ba97e2bc659a1eee08321233d1f03e6d snapshot fix from b6-integration b4dd15e14541fc7ff765a8fa138980af862dd8a2
+3208442          FAILED      1:0   00:05:12 
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1023              1499  leakage-controlled ...
+{"filesystem_available_bytes": 1021543395328, "pool": "ddn_hdd", "project_id": 22169, "quota_remaining_bytes": 1073354096640, "required_bytes": 107374182400, "results_dir": "/work/hdd/bilv/wcyim/transgenic/runs/b6_int4"}
+SBATCH_RC=0
+CP4_HDD_WP3_SUBMISSION_RESULT 3209815
+
+CP4_HDD_WP3_SUBMISSION_ERROR 

@@ -1,0 +1,738 @@
+diff --git a/notes/TRACK_A_RECOVERY_REPORT.md b/notes/TRACK_A_RECOVERY_REPORT.md
+index 15bdb9d..f2276b7 100644
+--- a/notes/TRACK_A_RECOVERY_REPORT.md
++++ b/notes/TRACK_A_RECOVERY_REPORT.md
+@@ -144,8 +144,110 @@ source-path resolution, initialization sidecar expectations and existing tests.
+ 4. The unchanged base runtime readiness validator trusts receipt digests. The
+    stronger tooling check is additional workflow protection, not a new mandatory
+    schema or protection against a deliberately handcrafted trusted record.
+ 5. SIGKILL/node loss may prevent FAILED publication; missing success is never
+    completion. No graceful save/public resume exists. Partially staged copies
+    remain for inspection; no automatic cleanup or retry is implemented.
+ 6. Independent review is pending with the controller. No launch authorization
+    follows from this CPU test report.
++
++## Independent-review fix round 1 — 2026-09-16 PDT
++
++Fix base: `709ff26ff7f69be42f028a45b6c28ccbb5d68b60`.
++Fix implementation commit: **`f6b171ffc3f2216504fb385031ad588cb1f797dd`**.
++Read the complete controller review at
++`notes/recovery_20260916_1251/A.independent_review.md` in main, read-only.
++Only findings **A1 and A2** were changed. Controller re-review remains pending.
++
++### A1: complete loader sidecar identity
++
++- Additive `source_checkpoint.optional_sidecars` binds `config.json`, `meta.json`
++  and `runtime.json`, each as digest/size or explicit `null` absence. Canonical
++  nonsymlink regular files are required; dangling links/directories fail.
++- Prepare records this inventory. Generate cannot reuse preflights after any
++  sidecar addition/removal/modification; check remeasures the same inventory.
++  The review's invalid-JSON `config.json` addition now fails check.
++- Staging snapshots the chosen inventory, copies every present loader sidecar
++  against that digest, verifies the source and staged inventories before
++  publication, and records all three presence/absence states in its receipt.
++  It no longer silently drops `config.json` or `runtime.json`.
++- New tests cover add/remove/change for every loader sidecar, invalid JSON config
++  addition, symlinks/dangling links/directories, present/absent staging inventory,
++  and source inventory drift during copying.
++
++### A2: explicit bound Accelerate configuration
++
++- Added `revision/scripts/mvp/accelerate_mvp.json`, derived from installed
++  **Accelerate 0.34.2** `ClusterConfig` and launch parser, not a new general
++  configuration framework. Config bytes are included in tooling identity and
++  additive `bindings.accelerate_config` records the exact canonical path/digest.
++- Config is mandatory at prepare; later changed/removed/recreated bytes fail
++  generate/check. The wrapper rechecks after warmup and supplies that exact
++  bound path using `--config_file`, preserving every trainer argument.
++- Pins: LOCAL_MACHINE/MULTI_GPU, one machine, machine rank 0, four processes,
++  GPU IDs `0,1,2,3`, bf16, static loopback rendezvous `127.0.0.1:29500`,
++  same-network true, Accelerate Dynamo `NO`. Port availability remains an
++  operator prerequisite. Explicit CLI `--max_restarts 0` is used because it is
++  not a ClusterConfig field; the old parser already defaulted to zero, so this
++  is policy pinning, **not a demonstrated old restart bug**.
++- Dynamo `NO` prevents Accelerate from adding another compilation layer. The
++  trainer's bound-forward compilation/no-eager-fallback and local-device /
++  distinct-non-MIG-GPU gates are unchanged.
++- CPU test calls the actual installed launch parser and config loader with a
++  conflicting real default-config file (GPU IDs `2,3`, Dynamo EAGER, two
++  machines, other IP/port/backend). The exact wrapper argv retains all pinned
++  settings and the full trainer argv. Only bf16 hardware availability and
++  subprocess execution are substituted; no GPU is launched or certified.
++
++### Exact round-1 verification
++
++All commands ran in `/tmp/b6-p2-readiness-1535112` using existing `.testdeps`.
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_readiness_review.py
++```
++
++Before production edits: **24 failed in 15.99 s**, including reproduction of
++both review findings. The first green tooling run (before further edge tests):
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_readiness_review.py tests/test_mvp_readiness_tools.py
++```
++
++**59 passed in 37.60 s**.
++
++Final focused tooling plus unchanged CLI/weights verification:
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_readiness_review.py tests/test_mvp_readiness_tools.py tests/test_mvp_cli.py tests/test_weights_init.py
++```
++
++**123 passed in 155.26 s**.
++
++Final full scoped regression (previous 188 + 31 review regressions):
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_cli.py tests/test_mvp_finalize.py tests/test_mvp_runtime.py tests/test_weights_init.py tests/test_mvp_metrics.py tests/test_mvp_model.py tests/test_mvp_dataset.py tests/test_mvp_readiness_tools.py tests/test_mvp_readiness_review.py
++```
++
++**219 passed in 480.62 s**. No timeout occurred this round. The earlier unchanged
++two-rank timeout remains an unexplained historical observation; no timeout or
++trainer behavior was weakened or described as fixed.
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m py_compile revision/scripts/mvp/make_launch_readiness.py revision/scripts/mvp/stage_checkpoint.py revision/scripts/mvp/run_training.py tests/test_mvp_readiness_tools.py tests/test_mvp_readiness_review.py
++git diff --check
++git diff --cached --check
++git diff 709ff26ff7f69be42f028a45b6c28ccbb5d68b60 -- src/transgenic train
++```
++
++Compile/whitespace checks exited 0; trainer/source diff was empty. Graft was
++queried before source inspection and refreshed after the fix. No remote/job,
++subagent, main modification, merge or push. Existing ignore/dependency/cache
++state remains excluded from commits.
++
++All operational gates above remain: genuine real-runtime probes/receipts,
++author checkpoint and budgets, transfer/quota approval, immutable deployment
++and actual SIF dependency validation. This CPU parser result is **not** a
++production SIF or GPU certification. Earlier readiness records must be
++regenerated with fresh input-bound preflights because tooling identities and
++required additive bindings changed.
+diff --git a/revision/scripts/mvp/README.readiness.md b/revision/scripts/mvp/README.readiness.md
+index a4103e6..846630f 100644
+--- a/revision/scripts/mvp/README.readiness.md
++++ b/revision/scripts/mvp/README.readiness.md
+@@ -65,30 +65,36 @@ python revision/scripts/mvp/stage_checkpoint.py \
+   --max-copy-bytes "$COPY_CEILING" --reserve-bytes "$RESERVE"
+ ```
+ 
+ Quota JSON: `path` is the resolved destination parent, `available_bytes` is the
+ measured quota headroom, `measured_at_unix` is its actual timestamp. It must be
+ at most one hour old. Keep the original quota command/output alongside it.
+ Filesystem free space is checked separately. Failures leave a `.partial.PID`
+ directory for inspection, never a published destination. Do not auto-delete it.
+-Success publishes parent sidecars plus `checkpoint/model.safetensors`, optional
+-`eval.json`/`meta.json`, a staging receipt and digest-bound `STAGING_DONE`.
++Success publishes parent sidecars plus `checkpoint/model.safetensors`, the exact
++chosen loader inventory (`config.json`, `meta.json`, `runtime.json`, each present
++with its digest/size or explicitly absent), optional `eval.json`, a staging
++receipt and digest-bound `STAGING_DONE`. Sidecars must be canonical nonsymlink
++regular files. Staging checks the chosen source and copied inventories before
++publication; readiness prepare/generate/check bind presence as well as bytes.
+ Use `--init-from "$FRESH_STAGED_ROOT/checkpoint"`.
+ 
+ ## Prepare → probe → generate → direct check
+ 
+ `make_launch_readiness.py prepare` and `generate` take the full input flags:
+ `--db --evidence-db --panel --sif --config --init-from --acceptance-record
+ --acceptance-sha256 --inventory-record --receipts-record --seed`, plus the three
+ `--expected-*-sha256` checkpoint pins, `--manifest-output`, and `--output`.
+ Seeds are exactly 1/2/3; prepare separate bindings/receipts per seed.
+ 
+ 1. **prepare** writes a non-authorizing bindings JSON and exact consumed-code
+-   manifest. Save its SHA256. It hashes all inputs on compute and compares the
++   manifest, including the shipped `accelerate_mvp.json` config path and bytes.
++   Config absence fails prepare; later addition/removal/modification cannot reuse
++   prepared evidence. Save the bindings SHA256. It hashes all inputs on compute and compares the
+    corpus/evidence/panel identities with the accepted candidate.
+ 2. Run each real, reviewed probe with `run_bounded.py`:
+ 
+    ```
+    python revision/scripts/mvp/run_bounded.py \
+      --name "$EVIDENCE_NAME" --bindings "$BINDINGS_JSON" \
+      --bindings-file-sha256 "$BINDINGS_FILE_SHA" \
+      --command-file "$ARGV_JSON" --command-sha256 "$ARGV_SHA" \
+@@ -144,16 +150,27 @@ flags), `--arguments-sha256`, `--budget-authorization`, `--budget-sha256`,
+ 
+ Budget JSON requires `authorized_scope="exploratory_mvp"`, explicitly approved
+ `seeds`, integer `max_wall_seconds`; retain the author's actual authorization.
+ Its SHA256 must match P4 resource measurement `authorization_sha256`; measured
+ projected runtime must fit the requested bound. Allow additional allocation
+ time for input rehashing and up to three 60-second CUDA-startup attempts.
+ The wrapper rejects `--validate-only`, missing readiness, existing output or
+ unauthorized seed/budget. It directly checks readiness, warms CUDA, then launches
+-exactly one fixed four-process bf16 Accelerate training attempt.
++exactly one fixed four-process bf16 Accelerate training attempt. It passes the exact
++bound `accelerate_mvp.json` path through `--config_file` and rechecks its bytes
++after warmup; home/default Accelerate config is not consulted. The config pins
++single-machine rank 0, GPU IDs `0,1,2,3`, bf16, static loopback rendezvous
++`127.0.0.1:29500`, and Accelerate Dynamo `NO`. `--max_restarts 0` is explicit on
++the command line (it is not a supported ClusterConfig key in Accelerate 0.34.2).
++Dynamo `NO` prevents a second Accelerate compiler; the trainer still compiles its
++bound forward, with no eager fallback. Its four-distinct-non-MIG-GPU gate stays
++unchanged. Port 29500 must be free in the isolated single-node allocation.
++The schema/parser was CPU-tested with installed Accelerate 0.34.2 against a
++conflicting default config. Verify the actual SIF dependency separately; this
++is not production SIF certification. All original trainer argv are preserved.
+ 
+ SIGTERM/timeout writes atomic FAILED, never completion or resumable state.
+ The trainer has no public resume or graceful-save handler. Zero child exit is
+ recorded as `PROCESS_EXIT.json`, **not** a training completion certificate;
+ inspect the trainer's own finalized artifacts. SIGKILL/node loss may leave no
+ failure record: absence of a success artifact is not success. Never auto-resume,
+ resubmit, or fabricate a checkpoint after interruption.
+diff --git a/revision/scripts/mvp/accelerate_mvp.json b/revision/scripts/mvp/accelerate_mvp.json
+new file mode 100644
+index 0000000..95107bf
+--- /dev/null
++++ b/revision/scripts/mvp/accelerate_mvp.json
+@@ -0,0 +1,18 @@
++{
++  "compute_environment": "LOCAL_MACHINE",
++  "distributed_type": "MULTI_GPU",
++  "mixed_precision": "bf16",
++  "use_cpu": false,
++  "debug": false,
++  "num_processes": 4,
++  "num_machines": 1,
++  "machine_rank": 0,
++  "gpu_ids": "0,1,2,3",
++  "main_process_ip": "127.0.0.1",
++  "main_process_port": 29500,
++  "rdzv_backend": "static",
++  "same_network": true,
++  "dynamo_config": {
++    "dynamo_backend": "NO"
++  }
++}
+diff --git a/revision/scripts/mvp/make_launch_readiness.py b/revision/scripts/mvp/make_launch_readiness.py
+index 1a93038..cfbffe4 100644
+--- a/revision/scripts/mvp/make_launch_readiness.py
++++ b/revision/scripts/mvp/make_launch_readiness.py
+@@ -43,16 +43,38 @@ EVIDENCE_RECEIPTS = {
+     "real_tokenizer": "p1_identity",
+     "real_hyena_step0_three_tiers": "p2_step0_determinism",
+     "generation_cache_parity": "p3_generation_parity",
+     "bf16_compile": "p4_compile_topology",
+     "four_rank_smoke": "p4_compile_topology",
+     "resource_budget": "p4_compile_topology",
+ }
+ _EXTERNAL_PACKAGES = ("accelerate", "duckdb", "safetensors", "torch", "transformers")
++ACCELERATE_CONFIG = Path(__file__).resolve().with_name('accelerate_mvp.json')
++
++
++def accelerate_config_binding() -> dict:
++    path = ACCELERATE_CONFIG.absolute()
++    if path.resolve() != path or not path.is_file():
++        raise ValueError('explicit Accelerate config must be a canonical nonsymlink regular file')
++    return {'path': str(path), 'sha256': _sha256(path)}
++
++
++def optional_sidecars(checkpoint: Path) -> dict:
++    """Exact loader-consumed inventory; absence is identity, not a skipped check."""
++    inventory = {}
++    for name in ('config.json', 'meta.json', 'runtime.json'):
++        path = checkpoint / name
++        if not os.path.lexists(path):
++            inventory[name] = None
++        else:
++            if path.resolve() != path.absolute() or not path.is_file():
++                raise ValueError(f'optional sidecar must be a canonical nonsymlink regular file: {path}')
++            inventory[name] = {'sha256': _sha256(path), 'bytes': path.stat().st_size}
++    return inventory
+ 
+ 
+ def require_allocation() -> str:
+     """Operational guard, not authentication; never hash large inputs on login nodes."""
+     allocation = os.environ.get("SLURM_JOB_ID") or os.environ.get("MVP_DATA_MOVER_ALLOCATION_ID")
+     if not allocation:
+         raise ValueError("compute/data-mover allocation required before copying or hashing")
+     return allocation
+@@ -75,17 +97,18 @@ def json_snapshot(path, expected):
+     if hashlib.sha256(payload).hexdigest() != expected:
+         raise ValueError(f'JSON input/marker digest mismatch: {path}')
+     return json.loads(payload)
+ 
+ 
+ def tooling_identity():
+     directory = Path(__file__).resolve().parent
+     return {str(directory / name): _sha256(directory / name) for name in
+-            ('make_launch_readiness.py', 'stage_checkpoint.py', 'run_bounded.py', 'run_training.py')}
++            ('make_launch_readiness.py', 'stage_checkpoint.py', 'run_bounded.py', 'run_training.py',
++             'accelerate_mvp.json')}
+ 
+ 
+ def _canonical_bytes(value: dict) -> bytes:
+     return (json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
+ 
+ 
+ def _atomic_write(destination: Path, payload: bytes) -> None:
+     """Write payload to a fresh path atomically; refuse to replace anything."""
+@@ -186,16 +209,17 @@ def _source_checkpoint_binding(init_from: str) -> dict:
+     try:
+         config_value = json.loads(run_config.read_text(encoding="utf-8"))
+     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+         raise SystemExit(f"FAIL: source run_config.json is not valid JSON: {error}")
+     if not isinstance(config_value, dict) or config_value.get("seed") != 123:
+         raise SystemExit("FAIL: source checkpoint run_config.json must bind seed 123 "
+                          "(B5 seed123 identity); refusing to fabricate the binding")
+     binding = {
++        "optional_sidecars": optional_sidecars(checkpoint),
+         "weights_path": str(weights),
+         "weights_sha256": _sha256(weights),
+         "weights_bytes": weights.stat().st_size,
+         "run_config_path": str(run_config),
+         "run_config_sha256": _sha256(run_config),
+         "seed": 123,
+     }
+     runtime_identity = run_config.parent / "runtime_identity.txt"
+@@ -245,16 +269,17 @@ def generate(args: argparse.Namespace) -> int:
+             "evidence_sha256": _sha256(_regular(args.evidence_db, "evidence db")),
+             "panel_sha256": _sha256(_regular(args.panel, "panel")),
+             "sif_sha256": _sha256(_regular(args.sif, "SIF")),
+             "config_sha256": _sha256(_regular(args.config, "config")),
+             "source_checkpoint": _source_checkpoint_binding(args.init_from),
+             "consumed_code_manifest": {"path": str(manifest_path),
+                                        "sha256": _sha256(manifest_path)},
+             "tooling": tooling_identity(),
++            "accelerate_config": accelerate_config_binding(),
+             "recipe": asdict(MVPRecipe()),
+             "seed": args.seed,
+         },
+     }
+     bindings = record["bindings"]
+     for key, expected in (("corpus_sha256", candidate.acceptance['inputs']['corpus']['sha256']),
+                           ("panel_sha256", candidate.acceptance['inputs']['panel']['sha256']),
+                           ("evidence_sha256", candidate.acceptance['artifact']['sha256'])):
+@@ -303,16 +328,18 @@ def check(args: argparse.Namespace) -> int:
+                                            args.inventory_record, args.receipts_record)
+     weights, run_config = _source_paths(args.init_from)
+     paths = tuple(_regular(value, name) for name, value in (
+         ("corpus db", args.db), ("evidence db", args.evidence_db), ("panel", args.panel),
+         ("SIF", args.sif), ("config", args.config))) + (weights, run_config)
+     record = validate_launch_readiness(args.readiness, args.readiness_sha256, candidate, paths,
+                                        seed=args.seed, recipe=MVPRecipe())
+     bindings = record['bindings']
++    if bindings.get('accelerate_config') != accelerate_config_binding():
++        raise ValueError('Accelerate config identity changed')
+     if bindings.get('tooling') != tooling_identity():
+         raise ValueError('readiness tooling identity changed')
+     if _source_checkpoint_binding(args.init_from) != bindings['source_checkpoint']:
+         raise ValueError('checkpoint sidecar identity changed')
+     binding_sha = hashlib.sha256(_canonical_bytes(bindings)).hexdigest()
+     for name, row in record['evidence'].items():
+         current = _load_receipt(Path(row['receipt_path']).parent, name, binding_sha)
+         if current != row:
+diff --git a/revision/scripts/mvp/run_training.py b/revision/scripts/mvp/run_training.py
+index 69d25d5..37a1ef6 100644
+--- a/revision/scripts/mvp/run_training.py
++++ b/revision/scripts/mvp/run_training.py
+@@ -83,18 +83,24 @@ def main(argv=None):
+         for attempt in range(3):
+             result = run_command(warmup, status_dir / f'warmup-{attempt}.log', 60)
+             if result['exit_code'] == 0:
+                 break
+             if result['exit_code'] != 75 or result['signal'] is not None or result['timed_out']:
+                 raise ValueError('CUDA warmup failed without retryable startup status')
+         else:
+             raise ValueError('CUDA warmup failed after three bounded attempts')
++        # Recheck after warmup: launch only the exact prepared config bytes/path.
++        from make_launch_readiness import accelerate_config_binding
++        accelerate_config = ready['bindings']['accelerate_config']
++        if accelerate_config_binding() != accelerate_config:
++            raise ValueError('Accelerate config changed before launch')
+         command = [sys.executable, '-m', 'accelerate.commands.launch', '--multi_gpu',
+                    '--num_machines', '1', '--num_processes', '4', '--mixed_precision', 'bf16',
++                   '--config_file', accelerate_config['path'], '--max_restarts', '0',
+                    str(_REPO_ROOT / 'train/train_HyenaTransgenic_MVP.py'), *training_argv]
+         status.update(run_command(command, status_dir / 'training.log', args.timeout_seconds))
+         if status['exit_code'] != 0 or status['timed_out'] or status['signal'] is not None:
+             raise ValueError('training failed/interrupted; do not resume or claim completion')
+         status['pass'] = True
+         status['meaning'] = 'process exited zero; inspect trainer artifact separately'
+         _atomic_write(status_dir / 'PROCESS_EXIT.json', _canonical_bytes(status))
+         return 0
+diff --git a/revision/scripts/mvp/stage_checkpoint.py b/revision/scripts/mvp/stage_checkpoint.py
+index b8d2ae3..437c14f 100644
+--- a/revision/scripts/mvp/stage_checkpoint.py
++++ b/revision/scripts/mvp/stage_checkpoint.py
+@@ -10,18 +10,18 @@ Track A must-fix 2 (B6 phase 2). ``weights_init.load_weights_only`` and
+ 
+ This script therefore produces a self-contained staged run root:
+ 
+   <dest>/
+     run_config.json          copied from the source run root, re-hashed
+     runtime_identity.txt     copied from the source run root, re-hashed
+     checkpoint/
+       model.safetensors      copied from the pinned epoch dir, re-hashed
+-      eval.json, meta.json   copied when present (provenance; meta.json is
+-                             snapshotted by the loader when it exists)
++      config.json, meta.json, runtime.json  exact loader inventory, if present
++      eval.json             copied when present (additional provenance)
+     staging_receipt.json     measured source/staged hashes (atomic)
+     STAGING_DONE             marker, written last (renameat2 NOREPLACE)
+ 
+ Pass ``--init-from <dest>/checkpoint`` to the MVP CLI. Because the staged
+ copy is disjoint from ``runs/seed123/``, later B5 epochs or ``best`` symlink
+ flips cannot mutate the MVP initialization.
+ 
+ The 2.09 GB copy and hashing MUST run inside a compute or data-mover
+@@ -97,21 +97,22 @@ def main(argv: list[str] | None = None) -> int:
+                          "pin a concrete epoch directory")
+     source_root = source_epoch.parent
+     destination = Path(args.dest).absolute()
+     if os.path.lexists(destination):
+         raise SystemExit(f"FAIL: staging destination must be fresh: {destination}")
+ 
+     import time
+     quota_path = Path(args.quota_record)
+-    from make_launch_readiness import json_snapshot
++    from make_launch_readiness import json_snapshot, optional_sidecars
+     quota = json_snapshot(quota_path, args.quota_sha256)
++    chosen_sidecars = optional_sidecars(source_epoch)
+     size = sum(p.stat().st_size for p in [source_epoch / 'model.safetensors',
+                source_root / 'run_config.json', source_root / 'runtime_identity.txt'] +
+-               [source_epoch / name for name in ('eval.json', 'meta.json') if (source_epoch / name).exists()])
++               [source_epoch / name for name in (*chosen_sidecars, 'eval.json') if (source_epoch / name).exists()])
+     if (quota.get('path') != str(destination.parent.resolve()) or
+             type(quota.get('available_bytes')) is not int or
+             type(quota.get('measured_at_unix')) not in (int, float) or
+             not 0 <= time.time() - quota['measured_at_unix'] <= 3600 or
+             args.reserve_bytes < 0 or not 0 < size <= args.max_copy_bytes or
+             min(quota['available_bytes'], shutil.disk_usage(destination.parent).free) < size + args.reserve_bytes):
+         raise ValueError('quota/headroom/copy budget gate failed')
+     # Fresh incomplete directory is never a consumable destination.
+@@ -126,30 +127,37 @@ def main(argv: list[str] | None = None) -> int:
+             args.expected_weights_sha256, "weights"),
+         "run_config.json": _copy_verified(
+             source_root / "run_config.json", destination / "run_config.json",
+             args.expected_run_config_sha256, "run_config.json"),
+         "runtime_identity.txt": _copy_verified(
+             source_root / "runtime_identity.txt", destination / "runtime_identity.txt",
+             args.expected_runtime_identity_sha256, "runtime_identity.txt"),
+     }
+-    for optional in ("eval.json", "meta.json"):
+-        candidate = source_epoch / optional
+-        if candidate.is_file():
+-            receipts[optional] = _copy_verified(candidate, checkpoint / optional, None, optional)
++    for name, identity in chosen_sidecars.items():
++        if identity is not None:
++            receipts[name] = _copy_verified(source_epoch / name, checkpoint / name,
++                                            identity['sha256'], name)
++    candidate = source_epoch / 'eval.json'
++    if candidate.is_file():
++        receipts['eval.json'] = _copy_verified(candidate, checkpoint / 'eval.json', None, 'eval.json')
++    if (optional_sidecars(source_epoch) != chosen_sidecars or
++            optional_sidecars(checkpoint) != chosen_sidecars):
++        raise ValueError('loader sidecar inventory changed during staging')
+ 
+     run_config = json.loads((destination / "run_config.json").read_text(encoding="utf-8"))
+     if not isinstance(run_config, dict) or run_config.get("seed") != 123:
+         raise SystemExit("FAIL: staged run_config.json does not bind seed 123")
+ 
+     receipt = {
+         "schema_version": 1,
+         "purpose": "mvp_init_checkpoint_staging",
+         "output_use": "EXPLORATORY_MVP_NOT_FOR_PRODUCTION",
+         "source_epoch": str(source_epoch),
++        "optional_sidecars": chosen_sidecars,
+         "staged_init_from": str(checkpoint),
+         "files": receipts,
+         "staged_at_utc": datetime.now(timezone.utc).isoformat(),
+     }
+     receipt['staged_init_from'] = str(final_destination / 'checkpoint')
+     for row in receipts.values():
+         row['staged_path'] = str(final_destination / Path(row['staged_path']).relative_to(destination))
+     receipt['quota_sha256'] = args.quota_sha256
+diff --git a/tests/test_mvp_readiness_review.py b/tests/test_mvp_readiness_review.py
+new file mode 100644
+index 0000000..a3a2a25
+--- /dev/null
++++ b/tests/test_mvp_readiness_review.py
+@@ -0,0 +1,205 @@
++"""CPU regressions for independent review A1/A2; no GPU certification."""
++import json
++from pathlib import Path
++import sys
++
++import pytest
++
++from test_mvp_readiness_tools import (TOOLS, input_args, launch_fixture, put,
++                                     readiness, stage_args, staging)
++
++
++@pytest.mark.parametrize('name', ['config.json', 'meta.json', 'runtime.json'])
++@pytest.mark.parametrize('mutation', ['add', 'remove', 'change'])
++def test_sidecar_change_invalidates_check_and_preflight_bindings(tmp_path, monkeypatch, name, mutation):
++    args, ready, _, _ = launch_fixture(tmp_path, monkeypatch,
++                                       sidecars={name: {'version': 1}} if mutation != 'add' else None)
++    before = json.loads((tmp_path / 'bindings.json').read_text())
++    target = tmp_path / 'checkpoint' / name
++    if mutation == 'remove':
++        target.unlink()
++    else:
++        # Includes the reviewer's invalid-JSON config addition reproduction.
++        target.write_text('not JSON' if name == 'config.json' else '{"version":2}')
++    assert readiness.main(['check', *args, '--readiness', str(ready),
++                           '--readiness-sha256', readiness._sha256(ready)]) == 2
++    current = readiness._source_checkpoint_binding(tmp_path / 'checkpoint')
++    assert current != before['bindings']['source_checkpoint']
++    # Reusing the old six preflight receipts must fail during generation too.
++    pins = [item for name, file in [('weights', tmp_path / 'checkpoint/model.safetensors'),
++                                   ('run-config', tmp_path / 'run_config.json'),
++                                   ('runtime-identity', tmp_path / 'runtime_identity.txt')]
++            for item in ('--expected-' + name + '-sha256', readiness._sha256(file))]
++    assert readiness.main(['generate', *args, *pins, '--manifest-output', str(tmp_path / 'code.json'),
++                           '--preflight-dir', str(tmp_path), '--output', str(tmp_path / 'other.json')]) == 2
++    assert not (tmp_path / 'other.json').exists()
++
++
++@pytest.mark.parametrize('name', ['config.json', 'meta.json', 'runtime.json'])
++@pytest.mark.parametrize('kind', ['symlink', 'dangling', 'directory'])
++def test_optional_sidecars_must_be_canonical_regular_files(tmp_path, monkeypatch, name, kind):
++    args = stage_args(tmp_path, monkeypatch)
++    target = tmp_path / 'epoch_05' / name
++    if kind == 'directory':
++        target.mkdir()
++    else:
++        other = tmp_path / 'other.json'
++        if kind == 'symlink':
++            put(other, {})
++        target.symlink_to(other)
++    with pytest.raises((ValueError, SystemExit)):
++        readiness._source_checkpoint_binding(tmp_path / 'epoch_05')
++    with pytest.raises((ValueError, SystemExit)):
++        staging.main(args)
++    assert not (tmp_path / 'staged').exists()
++
++
++@pytest.mark.parametrize('present', [False, True])
++def test_staging_preserves_complete_loader_inventory(tmp_path, monkeypatch, present):
++    args = stage_args(tmp_path, monkeypatch)
++    names = ('config.json', 'meta.json', 'runtime.json')
++    if present:
++        for name in names:
++            put(tmp_path / 'epoch_05' / name, {'name': name})
++    assert staging.main(args) == 0
++    root = tmp_path / 'staged'
++    receipt = json.loads((root / 'staging_receipt.json').read_text())
++    assert set(receipt.get('optional_sidecars', {})) == set(names)
++    for name in names:
++        target = root / 'checkpoint' / name
++        if present:
++            assert target.read_bytes() == (tmp_path / 'epoch_05' / name).read_bytes()
++            assert receipt['optional_sidecars'][name]['sha256'] == readiness._sha256(target)
++        else:
++            assert receipt['optional_sidecars'][name] is None and not target.exists()
++
++
++@pytest.mark.parametrize('mutation', ['add', 'remove', 'change'])
++def test_staging_refuses_loader_inventory_drift_during_copy(tmp_path, monkeypatch, mutation):
++    args = stage_args(tmp_path, monkeypatch)
++    sidecar = tmp_path / 'epoch_05/runtime.json'
++    if mutation != 'add':
++        put(sidecar, {'version': 1})
++    original_copy = staging._copy_verified
++    def copy_then_mutate(source, destination, expected, label):
++        result = original_copy(source, destination, expected, label)
++        if label == 'weights':
++            if mutation == 'remove':
++                sidecar.unlink()
++            else:
++                put(sidecar, {'version': 2})
++        return result
++    monkeypatch.setattr(staging, '_copy_verified', copy_then_mutate)
++    with pytest.raises((ValueError, SystemExit)):
++        staging.main(args)
++    assert not (tmp_path / 'staged').exists()
++
++
++def test_explicit_accelerate_config_survives_conflicting_default(tmp_path, monkeypatch):
++    from accelerate.commands import launch
++    from accelerate.commands.config import config_args
++    import run_training
++    args, ready, budget, budget_sha = launch_fixture(tmp_path, monkeypatch)
++    training_args = [*args, '--output-dir', str(tmp_path / 'model'), '--launch-readiness', str(ready),
++                     '--launch-readiness-sha256', readiness._sha256(ready)]
++    argv_file = tmp_path / 'argv.json'
++    argv_sha = put(argv_file, training_args)
++    commands = []
++    def execute(command, log, timeout):
++        commands.append(command)
++        return {'exit_code': 0, 'signal': None, 'timed_out': False}
++    monkeypatch.setattr(run_training, 'run_command', execute)
++    assert run_training.main(['--arguments', str(argv_file), '--arguments-sha256', argv_sha,
++        '--budget-authorization', str(budget), '--budget-sha256', budget_sha,
++        '--timeout-seconds', '600', '--status-dir', str(tmp_path / 'status')]) == 0
++    command = commands[-1]
++    # Actual installed parser + actual config loader; only CPU bf16 capability
++    # is substituted, not configuration merging or argv handling.
++    ambient = tmp_path / 'ambient.json'
++    put(ambient, dict(compute_environment='LOCAL_MACHINE', distributed_type='MULTI_GPU',
++                     mixed_precision='no', use_cpu=False, debug=False, num_processes=2,
++                     num_machines=2, gpu_ids='2,3', main_process_ip='192.0.2.1',
++                     main_process_port=29999, rdzv_backend='c10d',
++                     dynamo_config={'dynamo_backend': 'EAGER'}))
++    monkeypatch.setattr(launch, 'default_config_file', str(ambient))
++    monkeypatch.setattr(config_args, 'default_config_file', str(ambient))
++    monkeypatch.setattr(launch, 'is_bf16_available', lambda *args: True)
++    parsed, _, _ = launch._validate_launch_command(launch.launch_command_parser().parse_args(command[3:]))
++    assert parsed.gpu_ids == '0,1,2,3'
++    assert parsed.dynamo_backend.upper() == 'NO'
++    assert (parsed.num_processes, parsed.num_machines, parsed.machine_rank) == (4, 1, 0)
++    assert parsed.mixed_precision == 'bf16'
++    assert (parsed.main_process_ip, parsed.main_process_port, parsed.rdzv_backend) == ('127.0.0.1', 29500, 'static')
++    assert parsed.max_restarts == 0
++    binding = json.loads(ready.read_text())['bindings']['accelerate_config']
++    assert parsed.config_file == binding['path']
++    assert readiness._sha256(Path(parsed.config_file)) == binding['sha256']
++    assert parsed.training_script_args == training_args
++
++
++@pytest.mark.parametrize('mutation', ['change', 'remove', 'recreate'])
++def test_accelerate_config_identity_checked(tmp_path, monkeypatch, mutation):
++    assert hasattr(readiness, 'ACCELERATE_CONFIG'), 'explicit reviewed config missing'
++    copied = tmp_path / 'accelerate.json'
++    copied.write_bytes(readiness.ACCELERATE_CONFIG.read_bytes())
++    monkeypatch.setattr(readiness, 'ACCELERATE_CONFIG', copied)
++    args, ready, _, _ = launch_fixture(tmp_path, monkeypatch)
++    if mutation == 'change':
++        copied.write_text(copied.read_text() + '\n')
++    elif mutation == 'remove':
++        copied.unlink()
++    else:
++        copied.unlink()
++        copied.write_text('{}')
++    assert readiness.main(['check', *args, '--readiness', str(ready),
++                           '--readiness-sha256', readiness._sha256(ready)]) == 2
++    pins = [item for name, file in [('weights', tmp_path / 'checkpoint/model.safetensors'),
++                                   ('run-config', tmp_path / 'run_config.json'),
++                                   ('runtime-identity', tmp_path / 'runtime_identity.txt')]
++            for item in ('--expected-' + name + '-sha256', readiness._sha256(file))]
++    assert readiness.main(['generate', *args, *pins, '--manifest-output', str(tmp_path / 'code.json'),
++                           '--preflight-dir', str(tmp_path), '--output', str(tmp_path / 'other.json')]) == 2
++    assert not (tmp_path / 'other.json').exists()
++
++
++def test_prepare_cannot_leave_accelerate_config_unbound_for_later_addition(tmp_path, monkeypatch):
++    monkeypatch.setenv('SLURM_JOB_ID', 'CPU_UNIT_FIXTURE')
++    monkeypatch.setattr(readiness, 'ACCELERATE_CONFIG', tmp_path / 'absent.json')
++    args, pins = input_args(tmp_path)
++    assert readiness.main(['prepare', *args, *pins, '--manifest-output', str(tmp_path / 'code.json'),
++                           '--output', str(tmp_path / 'bindings.json')]) == 2
++    assert not (tmp_path / 'bindings.json').exists()
++
++
++@pytest.mark.parametrize('kind', ['symlink', 'directory'])
++def test_accelerate_config_must_be_regular_and_nonsymlink(tmp_path, monkeypatch, kind):
++    config = tmp_path / 'config'
++    if kind == 'symlink':
++        config.symlink_to(readiness.ACCELERATE_CONFIG)
++    else:
++        config.mkdir()
++    monkeypatch.setattr(readiness, 'ACCELERATE_CONFIG', config)
++    with pytest.raises(ValueError):
++        readiness.accelerate_config_binding()
++
++
++def test_changed_accelerate_config_stops_before_training_after_warmup(tmp_path, monkeypatch):
++    import run_training
++    copied = tmp_path / 'accelerate.json'
++    copied.write_bytes(readiness.ACCELERATE_CONFIG.read_bytes())
++    monkeypatch.setattr(readiness, 'ACCELERATE_CONFIG', copied)
++    args, ready, budget, budget_sha = launch_fixture(tmp_path, monkeypatch)
++    argv_file = tmp_path / 'argv.json'
++    sha = put(argv_file, [*args, '--output-dir', str(tmp_path / 'model'),
++                         '--launch-readiness', str(ready), '--launch-readiness-sha256', readiness._sha256(ready)])
++    calls = []
++    def warmup(command, log, timeout):
++        calls.append(command)
++        copied.write_text(copied.read_text() + '\n')
++        return {'exit_code': 0, 'signal': None, 'timed_out': False}
++    monkeypatch.setattr(run_training, 'run_command', warmup)
++    assert run_training.main(['--arguments', str(argv_file), '--arguments-sha256', sha,
++        '--budget-authorization', str(budget), '--budget-sha256', budget_sha,
++        '--timeout-seconds', '600', '--status-dir', str(tmp_path / 'status')]) == 2
++    assert len(calls) == 1  # Warmup only; no Accelerate attempt.
++    assert 'Accelerate config changed' in json.loads((tmp_path / 'status/FAILED.json').read_text())['error']
+diff --git a/tests/test_mvp_readiness_tools.py b/tests/test_mvp_readiness_tools.py
+index ccbca03..d3a299a 100644
+--- a/tests/test_mvp_readiness_tools.py
++++ b/tests/test_mvp_readiness_tools.py
+@@ -101,25 +101,27 @@ def measurement(name):
+     else:
+         value.update({key: True for key in {
+             'real_tokenizer': ('tokenizer_roundtrip', 'hyena_loaded'),
+             'generation_cache_parity': ('cached_uncached_equal', 'evidence_off_equal'),
+             'bf16_compile': ('native_bf16', 'inductor', 'finite', 'no_eager_fallback')}[name]})
+     return value
+ 
+ 
+-def input_args(tmp_path):
++def input_args(tmp_path, sidecars=None):
+     # Standalone synthetic acceptance fixture: never a production receipt.
+     from transgenic.training.mvp_cli import _ACCEPTANCE_CHECKS
+     files = {}
+     for name in ('db', 'evidence-db', 'panel', 'sif', 'config'):
+         files[name] = tmp_path / name
+         files[name].write_text(name)
+     checkpoint = tmp_path / 'checkpoint'
+     checkpoint.mkdir()
++    for name, value in (sidecars or {}).items():
++        put(checkpoint / name, value)
+     (checkpoint / 'model.safetensors').write_bytes(b'weights')
+     put(tmp_path / 'run_config.json', {'seed': 123})
+     (tmp_path / 'runtime_identity.txt').write_text('runtime')
+     inventory = {'schema_version': 1, 'scope': 'exploratory_mvp_candidate',
+                  'records': [{'rn': 1, 'chromosome': 'Chr1', 'start0': 0, 'end0': 2,
+                               'split': 'valid', 'is_rc': False}],
+                  'comparison': {'exact_ordered_identity_match': True, 'expected_count': 1, 'source_count': 1},
+                  'counts': {'total': 1, 'train': 0, 'valid': 1,
+@@ -153,19 +155,19 @@ def input_args(tmp_path):
+     pins = []
+     for name, path in [('weights', checkpoint / 'model.safetensors'),
+                        ('run-config', tmp_path / 'run_config.json'),
+                        ('runtime-identity', tmp_path / 'runtime_identity.txt')]:
+         pins += ['--expected-' + name + '-sha256', readiness._sha256(path)]
+     return args, pins
+ 
+ 
+-def prepared(tmp_path, monkeypatch):
++def prepared(tmp_path, monkeypatch, sidecars=None):
+     monkeypatch.setenv('SLURM_JOB_ID', 'CPU_UNIT_FIXTURE')
+-    args, pins = input_args(tmp_path)
++    args, pins = input_args(tmp_path, sidecars)
+     manifest = tmp_path / 'code.json'
+     bindings = tmp_path / 'bindings.json'
+     assert readiness.main(['prepare', *args, *pins, '--manifest-output', str(manifest),
+                            '--output', str(bindings)]) == 0
+     return args, pins, manifest, bindings
+ 
+ 
+ def test_generate_then_direct_consumer_and_changed_inputs(tmp_path, monkeypatch):
+@@ -297,18 +299,18 @@ def test_probe_retries_only_warmup_then_publishes_hash_marker(tmp_path, monkeypa
+     assert run_bounded.main(['--name', 'real_tokenizer', '--bindings', str(bindings),
+         '--bindings-file-sha256', readiness._sha256(bindings), '--command-file', str(command),
+         '--command-sha256', sha, '--output-dir', str(out), '--timeout-seconds', '5',
+         '--warmup-command-file', str(warmup), '--warmup-sha256', warm_sha, '--warmup-attempts', '2']) == 0
+     assert counter.read_text() == '2'
+     assert (out / 'real_tokenizer.DONE').read_text().strip() == readiness._sha256(out / 'real_tokenizer.json')
+ 
+ 
+-def launch_fixture(tmp_path, monkeypatch):
+-    args, pins, manifest, bindings = prepared(tmp_path, monkeypatch)
++def launch_fixture(tmp_path, monkeypatch, sidecars=None):
++    args, pins, manifest, bindings = prepared(tmp_path, monkeypatch, sidecars)
+     budget = tmp_path / 'budget.json'
+     budget_sha = put(budget, {'authorized_scope': 'exploratory_mvp', 'seeds': [1], 'max_wall_seconds': 1000})
+     for name, stage in readiness.EVIDENCE_RECEIPTS.items():
+         value = measurement(name)
+         if name == 'resource_budget':
+             value['authorization_sha256'] = budget_sha
+         sha = put(tmp_path / (name + '.json'), {'pass': True, 'preflight': stage,
+             'bindings_sha256': json.loads(bindings.read_text())['bindings_sha256'],

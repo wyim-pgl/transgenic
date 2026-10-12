@@ -1,0 +1,176 @@
+--- v2/deploy.py
++++ v5/deploy.py
+@@ -7,6 +7,7 @@
+ from pathlib import Path
+ import re
+ import shutil
++import stat
+ import subprocess
+ import sys
+ import tarfile
+@@ -25,6 +26,11 @@
+ REV = '0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446'
+ MODEL = 'models--LongSafari--hyenadna-large-1m-seqlen-hf'
+ RESERVE = 40 * 2**30
++EVIDENCE_SOURCE = ROOT / 'final-p1-job-3163986/inputs/evidence/fullc0lite.db'
++EVIDENCE_BYTES = 1068773376
++HF_COPY_MAX = 2000000000
++CHECKPOINT_COPY_MAX = 2200000000
++STAGING_MAX = 5 * 2**30
+ PINS = {
+     'weights': '6e5e408681dd5356548a8f4b93d28e561c22d885668a4e0015d3e314e28f8d22',
+     'run_config': 'c3ca0b4dfc1c9fbedb0cfba4b42887b22d4a62bc5b0c84be6b711ec630a1ef18',
+@@ -74,6 +80,51 @@
+     require(sha(p) == digest, f'SHA256 mismatch: {p}')
+ 
+ 
++def source_identity(path):
++    require(path.absolute() == path.resolve(strict=True), 'source path is not canonical')
++    s = path.lstat()
++    require(stat.S_ISREG(s.st_mode) and s.st_uid == admission.UID and
++            not s.st_mode & 0o222, 'source must be owner-matched read-only regular file')
++    require(not any(os.path.lexists(str(path)+suffix) for suffix in ('-wal', '-shm', '-journal')),
++            'source database has adjacent WAL/SHM/journal')
++    return tuple(getattr(s, k) for k in ('st_dev', 'st_ino', 'st_uid', 'st_mode', 'st_size', 'st_mtime_ns', 'st_ctime_ns'))
++
++
++def recover_evidence(destination):
++    """Only the explicitly authorized old read-only file; no alternate origin."""
++    source = EVIDENCE_SOURCE
++    before = source_identity(source)
++    pinned(source, PINS['evidence'], EVIDENCE_BYTES)
++    require(source_identity(source) == before, 'recovery source changed before copy')
++    fd = os.open(str(destination), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
++    with os.fdopen(fd, 'wb') as out, source.open('rb') as stream:
++        require(tuple(getattr(os.fstat(stream.fileno()), k) for k in
++                ('st_dev', 'st_ino', 'st_uid', 'st_mode', 'st_size', 'st_mtime_ns', 'st_ctime_ns')) == before,
++                'recovery source changed on open')
++        shutil.copyfileobj(stream, out, 8 * 1024 * 1024)
++        out.flush(); os.fsync(out.fileno())
++    pinned(destination, PINS['evidence'], EVIDENCE_BYTES)
++    pinned(source, PINS['evidence'], EVIDENCE_BYTES)
++    require(source_identity(source) == before, 'recovery source changed during copy')
++    destination.chmod(0o444)
++    return dict(source=str(source), destination=str(destination), bytes=EVIDENCE_BYTES,
++                sha256=PINS['evidence'], source_before=list(before), source_after=list(source_identity(source)),
++                source_preserved=True)
++
++
++def checkpoint_inventory(source):
++    required = {'model.safetensors', 'meta.json', 'eval.json'}
++    optional = {'accelerate_state', 'pending_grads'}
++    require(source.absolute() == source.resolve(strict=True), 'epoch05 path must be canonical')
++    entries = {p.name: p for p in source.iterdir()}
++    require(required <= set(entries) <= required | optional, 'epoch05 exact inventory changed')
++    for name, path in entries.items():
++        mode = path.lstat().st_mode
++        require(stat.S_ISREG(mode) if name in required else stat.S_ISDIR(mode),
++                'epoch05 entry type/symlink changed: '+name)
++    return sorted(set(entries) - required)
++
++
+ def run(argv):
+     print(json.dumps([str(a) for a in argv]), flush=True)
+     subprocess.run([str(a) for a in argv], check=True)
+@@ -112,7 +163,7 @@
+          exit_code=proc.returncode, stdout=proc.stdout, stderr=proc.stderr))
+     require(proc.returncode == 0 and not proc.stderr.strip(), 'quota command failed/warned; inspect raw record')
+     available = min(parse_quota(proc.stdout), shutil.disk_usage(parent).free)
+-    require(available >= RESERVE + 5 * 2**30, '40GiB reserve plus 5GiB staging envelope unavailable')
++    require(available >= RESERVE + STAGING_MAX, '40GiB reserve plus 5GiB staging envelope unavailable')
+     save(destination, dict(path='/mvp/inputs', available_bytes=available, measured_at_unix=now,
+          command=proc.args, method='conservative rounded SI-limit/IEC-usage bound; min filesystem free',
+          raw_sha256=sha(destination.with_suffix('.raw.json')), reserve_bytes=RESERVE))
+@@ -124,6 +175,7 @@
+ 
+ def copy_cache(source, destination):
+     source = source.resolve(strict=True)
++    copied = 0
+     for layout in ('', 'hub'):
+         origin = source / layout / MODEL
+         ref = origin / 'refs/main'
+@@ -143,6 +195,8 @@
+         for p in files:
+             require(within(p.resolve(strict=True), origin.resolve()), f'HF link escapes model cache: {p}')
+             require(p.is_file(), f'HF entry is not regular: {p}')
++            copied += p.stat().st_size
++            require(copied <= HF_COPY_MAX, 'HF cache exceeds reviewed staging allowance')
+             before = sha(p)
+             shutil.copyfile(p, out / p.name)  # dereference only the checked, pinned snapshot
+             require(before == sha(p) == sha(out / p.name), f'HF changed during copy: {p}')
+@@ -207,7 +261,7 @@
+ 
+ 
+ def controller_gate(release):
+-    path = ROOT / 'staging/dev123_p1_controller_authorization_v3.json'
++    path = ROOT / 'staging/dev123_p1_controller_authorization_v5.json'
+     digest = os.environ.get('DEPLOY_CONTROLLER_GATE_SHA256', '')
+     require(re.fullmatch('[0-9a-f]{64}', digest) is not None, 'independently pinned controller gate required')
+     pinned(path, digest)
+@@ -226,8 +280,6 @@
+     require(ROOT.resolve(strict=True) == ROOT and ROOT.stat().st_uid == os.getuid(), 'namespace ownership/path mismatch')
+     require(SOURCE.resolve(strict=True) == SOURCE, 'source run root must not be an alias')
+     release = Path(admission.NAMESPACE)
+-    require((ROOT / 'staging/evidence/fullc0lite.db').is_file(),
+-            'staging evidence absent: STOP; never recover from an old partial job')
+     manifest = json.loads((release / 'release.json').read_text())
+     gate = controller_gate(release)
+     # Only a fresh control directory and durable permission are touched before admission.
+@@ -235,7 +287,7 @@
+     # Keep the existing namespace intact; each allocation owns one fresh subtree.
+     job_id = os.environ['SLURM_JOB_ID']
+     require(re.fullmatch(r'[0-9]+', job_id) is not None, 'invalid Slurm job ID')
+-    job = ROOT / ('dev123-p1-v3-job-' + job_id)
++    job = ROOT / ('dev123-p1-v5-job-' + job_id)
+     job.mkdir()  # collision is a blocker, never resume or overwrite
+     control = job / 'probe/p1_control'
+     control.mkdir(parents=True)
+@@ -270,13 +322,14 @@
+     freeze(job / 'code/source')
+     measured = {}
+     for path, key, size in ((SIF, 'sif', 11120398336), (CORPUS, 'corpus', 23534252032),
+-                           (ROOT / 'staging/evidence/fullc0lite.db', 'evidence', 1068773376)):
++                           (EVIDENCE_SOURCE, 'evidence', EVIDENCE_BYTES)):
+         pinned(path, PINS[key], size)
+         measured[key] = dict(path=str(path), sha256=PINS[key], bytes=size, measured_at_unix=time.time())
+     save(control / 'large-identities.json', measured)
+-    # Rename already transferred file within controller namespace, never recopy corpus/SIF.
+-    (job / 'inputs/evidence').mkdir()
+-    os.rename(ROOT / 'staging/evidence/fullc0lite.db', job / 'inputs/evidence/fullc0lite.db')
++    # Fixed failure-recovery source is preserved; destination is private and exclusive.
++    require(EVIDENCE_BYTES + CHECKPOINT_COPY_MAX + HF_COPY_MAX <= STAGING_MAX, 'staging budget exceeded')
++    (job / 'inputs/evidence').mkdir(mode=0o700)
++    save(control / 'evidence-recovery.json', recover_evidence(job / 'inputs/evidence/fullc0lite.db'))
+     copy_cache(WORK / 'repo_seeds/HFmodels', job / 'inputs/hf')
+     freeze(job / 'inputs/hf')
+     freeze(job / 'inputs/evidence')
+@@ -311,7 +364,9 @@
+     base = Path('/work/repo')
+     control = Path('/mvp/probe/p1_control')
+     source = Path('/source/seed123/epoch_05')
+-    require({p.name for p in source.iterdir()} == {'model.safetensors', 'eval.json', 'meta.json'}, 'epoch05 exact inventory changed')
++    excluded = checkpoint_inventory(source)
++    before = {p.name: (p.stat().st_ino, p.stat().st_size, p.stat().st_mtime_ns, p.stat().st_ctime_ns)
++              for p in source.iterdir() if p.name not in excluded}
+     for p in (source / 'config.json', source / 'runtime.json', source / 'runtime_identity.txt', source.parent / 'config.json'):
+         require(not os.path.lexists(p), f'expected absent sidecar: {p}')
+     pinned(source / 'meta.json', PINS['meta'])
+@@ -322,8 +377,17 @@
+         pins += ['--expected-' + prefix.replace('_', '-') + '-sha256', PINS[prefix]]
+     run([sys.executable, base / 'revision/scripts/mvp/stage_checkpoint.py', '--source-epoch', source,
+          '--dest', checkpoint.parent, *pins, '--quota-record', control / 'quota-checkpoint.json',
+-         '--quota-sha256', sha(control / 'quota-checkpoint.json'), '--max-copy-bytes', 2200000000,
++         '--quota-sha256', sha(control / 'quota-checkpoint.json'), '--max-copy-bytes', CHECKPOINT_COPY_MAX,
+          '--reserve-bytes', RESERVE])
++    require(checkpoint_inventory(source) == excluded, 'epoch05 inventory changed during staging')
++    after = {p.name: (p.stat().st_ino, p.stat().st_size, p.stat().st_mtime_ns, p.stat().st_ctime_ns)
++             for p in source.iterdir() if p.name not in excluded}
++    require(before == after, 'epoch05 files changed during staging')
++    pinned(source / 'meta.json', PINS['meta'])
++    pinned(source / 'eval.json', PINS['eval'])
++    require(checkpoint_inventory(checkpoint) == [], 'resume state must never be staged')
++    save(control / 'checkpoint-weights-only.json', dict(excluded_resume_directories=excluded,
++         policy='weights-only initialization; no resume state read, copied, or deleted'))
+     pinned(checkpoint / 'meta.json', PINS['meta'])
+     pinned(checkpoint / 'eval.json', PINS['eval'])
+     require(ready.optional_sidecars(checkpoint) == {'config.json': None, 'runtime.json': None,

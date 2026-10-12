@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "pronghorn",
+    "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3 -B -"
+  ],
+  "captured_at": "2026-09-17T01:57:56.819658+00:00",
+  "returncode": 0,
+  "started_at": "2026-09-17T01:57:55.240826+00:00",
+  "stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+}

@@ -1,0 +1,130 @@
+{
+  "reference_identity_status": "UNVERIFIED",
+  "scientific_input_validation": false,
+  "external_frozen_reference_gate_required": true,
+  "training_eligible": false,
+  "label": "exploratory / MVP",
+  "role": {
+    "dataset": "ont/Athaliana_FLIC_PRJNA1087576",
+    "run": "SRR28341943",
+    "species": "Athaliana",
+    "genotype_stratum": "reference",
+    "instrument": "SYNTHETIC_TEST_ONLY",
+    "data_type": "SYNTHETIC_TEST_ONLY",
+    "expected_files": "SYNTHETIC_TEST_ONLY",
+    "expected_reads": "7",
+    "source_checksum": "SYNTHETIC_TEST_ONLY",
+    "source_checksum_authority": "SYNTHETIC_TEST_ONLY",
+    "local_fa_md5": "6940138581af7a659347c0b4137e3f9d",
+    "role": "b1_validation_only",
+    "basis": "SYNTHETIC_TEST_ONLY",
+    "note": "SYNTHETIC_TEST_ONLY"
+  },
+  "inputs_md5": {
+    "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz": "6940138581af7a659347c0b4137e3f9d",
+    "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/genomes/fixture.fa": "6b8730aae9024b519d7f968728693f7a",
+    "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/genomes/fixture.gff3": "13c7a7c5f4609d0211bb02bd87fba1d8",
+    "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/DATASET_ROLES.longread_v1.tsv": "7be3f5b32a67b94ec148f700f65baefa",
+    "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/panel.tsv": "41fdc42af5aefc70b8d4a58539a65b0a"
+  },
+  "commands": [
+    [
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python3.11",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/release/package/frozen/revision/scripts/68_sample_fasta.py",
+      "--fasta",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz",
+      "--out",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation/sample.fa",
+      "--n",
+      "10000",
+      "--md5",
+      "6940138581af7a659347c0b4137e3f9d"
+    ],
+    [
+      "minimap2",
+      "-t",
+      "4",
+      "-ax",
+      "splice",
+      "-k14",
+      "-G",
+      "200000",
+      "--secondary=no",
+      "--cs=long",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/genomes/fixture.fa",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation/sample.fa"
+    ],
+    [
+      "minimap2",
+      "-t",
+      "4",
+      "-x",
+      "splice",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/genomes/fixture.fa",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz"
+    ],
+    [
+      "seqkit",
+      "grep",
+      "-f",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel_reads.txt",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz"
+    ],
+    [
+      "minimap2",
+      "-t",
+      "4",
+      "-ax",
+      "splice",
+      "-k14",
+      "-G",
+      "200000",
+      "--secondary=no",
+      "--cs=long",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/genomes/fixture.fa",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel_reads.fa"
+    ],
+    [
+      "samtools",
+      "sort",
+      "-o",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel.bam",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel.sam"
+    ],
+    [
+      "samtools",
+      "index",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel.bam"
+    ],
+    [
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python3.11",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/release/package/frozen/revision/scripts/mvp/mvp_junction_table.py",
+      "--alignment",
+      "ONT:uf=false:/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel.bam",
+      "--panels",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/panel.tsv",
+      "--out",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/junctions.tsv",
+      "--qc-out",
+      "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/junctions.qc.json"
+    ]
+  ],
+  "source": "ONT",
+  "use_uf": false,
+  "run": "SRR28341943",
+  "panel_sha256": "8e45fc1818473b9dad1dd7a496d6918ff72eb63857057cd3873853123d9e97a8",
+  "coverage_policy": "PENDING",
+  "outputs_md5": {
+    "pass1.paf": "3831516808a0cdc93f498c0367178c57",
+    "panel.sam": "243a712e56ab1778d16de6341d2ae56e",
+    "panel.bam.bai": "26d630dd9d0bbebed5073113bedc4e33",
+    "panel_reads.txt": "564eb3fef79f4f7483194530767b648a",
+    "panel_reads.fa": "f6825ddc4ca52d53b4d08ac28cf4c0df",
+    "junctions.tsv": "168b3f4d5e2d6cb8663ef71370c77061",
+    "junctions.qc.json": "67ace27cee7485b869448fb64b2ec01a",
+    "panel.bam": "31e9bef5c6e44b2fe8c21059c2def233",
+    "commands.stderr": "9675ea873fabcd38a87ab9fb7bad424b",
+    "commands.json": "3f6e2651adcea3da80e20a5988695c5e"
+  },
+  "status": "PREPARATORY_COMMANDS_COMPLETED"
+}

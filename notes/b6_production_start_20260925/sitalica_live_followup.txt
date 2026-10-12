@@ -1,0 +1,28 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+LOG b6_gmax_meta_6172217.out
+{"output": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/metadata_est_clone_display_fix/Gmax/c0_metadata.tsv", "reads": 1374461, "sha256": "4cd56f6a730db0dc9c2361f1f24b3d4a01ae9b9df3c5aa83283794ca1057f29f"}
+
+LOG b6_si_est_c0_6172220.out
+Traceback (most recent call last):
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/source/revision/scripts/evidence/b6_build_c0.py", line 1916, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/source/revision/scripts/evidence/b6_build_c0.py", line 1907, in main
+    record = build(args, argv)
+             ^^^^^^^^^^^^^^^^^
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/source/revision/scripts/evidence/b6_build_c0.py", line 1760, in build
+    load_read_run(ctx, st, run_idx, row, args, versions)
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/source/revision/scripts/evidence/b6_build_c0.py", line 679, in load_read_run
+    meta_sha, n_meta = load_metadata(st, run_idx, directory)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/source/revision/scripts/evidence/b6_build_c0.py", line 613, in load_metadata
+    st.add("meta", run_idx=run_idx, read=vals[0], **{f: merged.get(f) for f in META_FIELDS})
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/source/revision/scripts/evidence/b6_build_c0.py", line 547, in add
+    self.flush(name)
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/source/revision/scripts/evidence/b6_build_c0.py", line 550, in flush
+    import pyarrow as pa
+ModuleNotFoundError: No module named 'pyarrow'
+
+6172220|FAILED|1:0|00:02:26

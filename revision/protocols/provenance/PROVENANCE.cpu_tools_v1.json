@@ -1,0 +1,106 @@
+{
+  "provenance_id": "cpu_tools_v1",
+  "purpose": "A46 rule 9 tool-version record for the B6 CPU toolchain; A46 states no version in its own text and defers to this file's sha256.",
+  "measured_on": "2026-09-21",
+  "measured_host": "pronghorn login-0",
+  "measured_by": "read-only ssh BatchMode; sha256sum on the binary, then the tool's own version flag",
+  "conda_env_root": "/data/gpfs/assoc/pgl/bin/conda/conda_envs",
+  "tools": {
+    "minimap2_RNASEQ_bch709": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2",
+      "sha256": "8a561f2c29f5a250eeecb6915100d23194dd38a41bb230d0b6afe69f78d5adf4",
+      "version": "2.28-r1209",
+      "role": "B1 §4 long-read alignment; the build used by job 6165965 and by the MVP panel alignment"
+    },
+    "samtools_RNASEQ_bch709": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/samtools",
+      "sha256": "c1d24b1c06254c9817cb62398d066b428af7bb5fba3917ed6e026a82c193f187",
+      "version": "1.3.1",
+      "role": "CANONICAL for A46 rule 12: 72a_est_molecules_per_locus.sh pins samtools 1.3.1"
+    },
+    "seqkit_RNASEQ_bch709": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/seqkit",
+      "sha256": "fe5cbb4495559819220e7e64ded7e7ef26388fbccd17e83377571d75d58f308a",
+      "version": "v2.13.0",
+      "role": "read subsetting in the panel pre-filter (MVP §2 pass 1)"
+    },
+    "blastn_RNASEQ_bch709": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/blastn",
+      "sha256": "f103f27d48b128a4652a130afc5be97b3349cfb1e4232d86c8471fca994bfdf5",
+      "version": "2.5.0+",
+      "role": "named in A46 rule 9",
+      "caveat": "RESOLVED 2026-09-21: the screening's own receipts (all 11 EST sets) record 'blastn: 2.5.0+', which matches this binary's version. See PROVENANCE.univec_screen_v1.json. The receipt records a version string, not a sha256, so the identification is by version only."
+    },
+    "python3_RNASEQ_bch709": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/python3",
+      "sha256": "14ac9366740fb0ba44d91be049a7f7674b3cbdedd7cacabbb9067c08ebeb3689",
+      "version": "3.11.0"
+    },
+    "gffcompare_transgenic_revision": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare",
+      "sha256": "a440e1533611a40a51cf2b5b35a2e15ec6b885660dd35f6b531e0d65601a963a",
+      "version": "v0.12.6",
+      "role": "CANONICAL for A46 rule 13; the measured version equals the version A46 requires"
+    },
+    "python3_transgenic_revision": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3",
+      "sha256": "74d2337199fe0880e01a38cd136c03f28de4383b833393657ce8420ce3c57415",
+      "version": "3.11.14",
+      "role": "this is the 3.11.14 recorded for job 6165965's approved runtime"
+    },
+    "minimap2_transgenic_revision": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/minimap2",
+      "sha256": "731e16c5b62ba6d82d136fdc96fdabc3ea9e61d0382ccbd0a28612f52a066247",
+      "version": "2.28-r1209",
+      "caveat": "SAME version string as the RNASEQ_bch709 build, DIFFERENT sha256 -- two distinct builds. Declare which one a run used by sha256, never by version."
+    },
+    "samtools_transgenic_revision": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/samtools",
+      "sha256": "a579aed31a13841cc0950a487b59729355d0b9fbcc39293e0b90b960133217bc",
+      "version": "1.21",
+      "caveat": "NOT the version A46 rule 12 pins (1.3.1). Do not substitute."
+    },
+    "diamond_evidencemodeler": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond",
+      "sha256": "0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d",
+      "version": "2.1.24",
+      "role": "CANONICAL for A46 route-B blastx",
+      "corroboration": "sha256 matches diamond_sha256 recorded independently in notes/est_execution_20260916_1530/fixture_result/engine_fixture/provenance.json"
+    },
+    "miniprot_evidencemodeler": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/miniprot",
+      "sha256": "f8822f41eceb53a6ca611bd6606faf035aeb913030d1dede7fd7889ab37d4f52",
+      "version": "0.18-r281",
+      "role": "A46 route-A CDS phase cross-check",
+      "note": "identical sha256 also present under busco5/ and pgre/ -- same binary, three paths"
+    }
+  },
+  "python_libraries": {
+    "transgenic-revision": {
+      "numpy": "1.26.4",
+      "pysam": "0.23.3",
+      "duckdb": "IMPORT_ERROR",
+      "torch": "ABSENT",
+      "transformers": "ABSENT",
+      "accelerate": "ABSENT"
+    },
+    "RNASEQ_bch709": {
+      "numpy": "1.26.4",
+      "pysam": "ABSENT",
+      "duckdb": "IMPORT_ERROR",
+      "torch": "ABSENT",
+      "transformers": "ABSENT",
+      "accelerate": "ABSENT"
+    }
+  },
+  "blockers": {
+    "duckdb": "UNUSABLE on the pronghorn login node in every env tried (transgenic-revision, RNASEQ_bch709, clean_env): the user-site wheel /data/gpfs/home/wyim/.local/lib/python3.11/site-packages/_duckdb.cpython-311-x86_64-linux-gnu.so requires GLIBC_2.23, which /lib64/libm.so.6 on this node does not provide. A46 rule 5 stores the repaired DNA masks in one DuckDB file, so this must be resolved before the C0/corpus work. Not yet tested on a compute node."
+  },
+  "not_measured": {
+    "torch": "lives in the DeltaAI SIF container, not on pronghorn",
+    "transformers": "same",
+    "accelerate": "same",
+    "container": "transgenic-ngc-26.08.sif sha256 1a5dee27... is recorded in A44/A45 but its INTERNAL library versions have not been read out",
+    "reason": "requires DeltaAI access (2-hop via pronghorn, Duo); not attempted in this pass"
+  }
+}

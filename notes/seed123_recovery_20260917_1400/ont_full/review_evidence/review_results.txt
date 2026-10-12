@@ -1,0 +1,14 @@
+test_actual_isolated_driver_cli (__main__.Review) ... ok
+test_escaped_session_descendant_survives_group_cleanup (__main__.Review) ... ok
+test_execute_failures_do_not_publish (__main__.Review) ... ok
+test_execute_stderr_mutation_still_publishes (__main__.Review) ... ok
+test_execute_synthetic_success (__main__.Review) ... ok
+test_isolation_not_inherited_by_nested_sample (__main__.Review) ... ok
+test_same_group_descendant_is_stopped_after_driver_exit (__main__.Review) ... ok
+test_scheduler_valid_and_fail_closed (__main__.Review) ... ok
+test_unlisted_source_module_executes_before_gate_rejects (__main__.Review) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 18.012s
+
+OK

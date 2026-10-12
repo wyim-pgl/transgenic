@@ -1,0 +1,25 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T12:51:38-0700
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+           6147940 cpu-s1-pg syl_an_A     wyim PD       0:00      1 (JobHeldUser)
+           6147612 cpu-s1-pg syl_an_A     wyim PD       0:00      1 (JobHeldUser)
+           6147349 cpu-s1-pg syl_an_A     wyim PD       0:00      1 (JobHeldUser)
+           6146937 cpu-s1-pg syl_an_A     wyim PD       0:00      1 (JobHeldUser)
+           6146936 cpu-s1-pg syl_an_A     wyim  R 12-21:37:54      1 cpu-50
+           6156540 cpu-s1-pg syl_watc     wyim  R 6-01:00:36      1 cpu-50
+           6156395 cpu-s1-pg pasaPost     wyim  R 6-11:00:41      1 cpu-50
+2026-09-16T14:51:39-05:00
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+           3149363      ghx4  b5-seed    wcyim PD       0:00      1 (Dependency)
+           3149362      ghx4  b5-seed    wcyim PD       0:00      1 (Dependency)
+           3149361      ghx4  b5-seed    wcyim PD       0:00      1 (Dependency)
+           3149360      ghx4  b5-seed    wcyim PD       0:00      1 (Dependency)
+           3149359      ghx4  b5-seed    wcyim PD       0:00      1 (Dependency)
+           3149358      ghx4  b5-seed    wcyim PD       0:00      1 (Dependency)
+           3149357      ghx4  b5-seed    wcyim PD       0:00      1 (Dependency)
+           3149356      ghx4  b5-seed    wcyim PD       0:00      1 (Dependency)
+           3131538      ghx4  b5-seed    wcyim PD       0:00      1 (Dependency)
+           3131537      ghx4  b5-seed    wcyim  R    6:49:49      1 gh086
+/work/nvme/bilv/wcyim/transgenic/runs/seed123/epoch_05

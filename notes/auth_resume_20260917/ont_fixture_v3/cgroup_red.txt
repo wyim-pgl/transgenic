@@ -1,0 +1,25 @@
+test_clean_launch_environment_preserves_slurm_and_ignores_bash_env (test_amendments.Amendments) ... ok
+test_policy_rejects_hard_quota_and_wrong_budget (test_amendments.Amendments) ... ok
+test_publication_threshold_counts_own_files (test_amendments.Amendments) ... ok
+test_python39_refused_before_allocation (test_amendments.Amendments) ... ok
+test_run_guard_and_failure_after_publication_keep_driver_outputs (test_amendments.Amendments) ... ok
+test_runtime_inventory_and_cgroup_fail_closed (test_amendments.Amendments) ... ok
+test_signal_bridge_executes_real_wrapper_child_cleanup (test_amendments.Amendments) ... ok
+test_start_filesystem_metadata (test_amendments.Amendments) ... ok
+test_startup_limit_exact (test_amendments.Amendments) ... ok
+test_term_and_int_raise_and_restore (test_amendments.Amendments) ... ok
+test_unreviewed_v2_hierarchy_rejected_before_workload (test_amendments.Amendments) ... FAIL
+test_v1_cgroup_requires_job_hierarchy_memory_and_swap (test_amendments.Amendments) ... ok
+
+======================================================================
+FAIL: test_unreviewed_v2_hierarchy_rejected_before_workload (test_amendments.Amendments)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture_v3/test_amendments.py", line 135, in test_unreviewed_v2_hierarchy_rejected_before_workload
+    with self.assertRaisesRegex(ValueError, 'site-v1'):
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 12 tests in 9.742s
+
+FAILED (failures=1)

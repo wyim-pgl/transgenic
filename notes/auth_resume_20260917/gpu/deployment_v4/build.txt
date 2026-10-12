@@ -1,0 +1,4 @@
+Release: /mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/release_v6
+release.json 64a547b8ba5f54e87c1985f278564a9ea9fc7c8f3af07f6b6afe3bdf17f4f7d4
+release.sha256 74a740ea154532aa3c0b807d052fb9c05bdf02fcfb6fd86845d348be72f70d9b
+operator-pins.json 45bd57640d7c55ee7ce7b1f20ab48b58729f5e58b880c4608813b99356d28c72

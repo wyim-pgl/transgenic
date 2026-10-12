@@ -1,0 +1,127 @@
+{
+  "checks": {
+    "result_hash": true,
+    "report_hash_and_marker": true,
+    "diagnostic_hash": true,
+    "ledger_pin": true,
+    "release_inventory": true,
+    "manifest_pin": true,
+    "terminal_controller": true,
+    "job_identity": true,
+    "runtime_pins": true,
+    "loaded_closure": true,
+    "scientific_gates": true,
+    "source_manifest_pins": true,
+    "source_stat_and_compute_hash_flags": true,
+    "embedded_hashes_bound_ids": true,
+    "search_source_binding": true,
+    "selected_members": true
+  },
+  "all_checks_pass": true,
+  "files": {
+    "preparation.json": {
+      "bytes": 1826,
+      "sha256": "ae687e879447ddbac869963049d9c7249ec81912b0de7993eb00668e539adde5"
+    },
+    "stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "submission_attempt.json": {
+      "bytes": 1255,
+      "sha256": "b133073a4814fb8f1603835a1c0baf8ddbc5bfb7e5cafb64fc696639d70c34f1"
+    },
+    "submission_result.json": {
+      "bytes": 1315,
+      "sha256": "1b21799c158900279a1fc545c59d9de29a5b59a333a8d07e6bfdb717b4bf14f5"
+    },
+    "worker/control/result.json": {
+      "bytes": 11409,
+      "sha256": "675edd5e368505a06c92df2e80e411642354a7132e66bbb2c2a2e71b338e9446"
+    },
+    "worker/control/start.json": {
+      "bytes": 1025,
+      "sha256": "8c0f5fcb0d51b68e517f1a3411853bcd465b75d2b2fd941f6a6ef453ef21d050"
+    },
+    "worker/control/verification.json": {
+      "bytes": 465,
+      "sha256": "558f059c08725c3936c7e9c507298d369b382e878083453a63e4fa332e896a18"
+    },
+    "worker/sample/COMPLETE": {
+      "bytes": 65,
+      "sha256": "b675a37b8082d726bc1b652e675f100427ceb65c504e553d2bd715ce8b67dfaa"
+    },
+    "worker/sample/diagnostics.jsonl": {
+      "bytes": 12557738,
+      "sha256": "8d8c8be00102a6ba7e7b5cdd875dbeca5a99b18290c024f3690cd849e670fb1d"
+    },
+    "worker/sample/report.json": {
+      "bytes": 12190,
+      "sha256": "2e97691107440fd6d9e09341d3feb2588823cc28f9c9da5bf4f064a6d95728d8"
+    }
+  },
+  "diagnostic_summary": {
+    "types": {
+      "search": 2,
+      "raw_search_row": 462,
+      "member": 16,
+      "protein": 324,
+      "sam_header": 339,
+      "placement": 16,
+      "hsp": 462
+    },
+    "hash_checks": {
+      "bound_ids": 496,
+      "embedded_byte_hashes": 1667,
+      "sequence_hashes": 356
+    },
+    "hsp_dispositions": {
+      "HSP_RULE_ACCEPTED": 385,
+      "source_bound_replay_failure: query codon truth": 30,
+      "source_bound_replay_failure: subject truth": 18,
+      "source_bound_replay_failure: reported length must equal M+I+D (frameshifts excluded)": 29
+    },
+    "placement_dispositions": {
+      "primary_geometry_candidate": 16
+    },
+    "raw_rows_by_source": {
+      "orthodb": 400,
+      "swissprot": 62
+    },
+    "geometry_success": {
+      "True": 380,
+      "False": 5
+    },
+    "hsp_keys": [
+      "biological_negative",
+      "disposition",
+      "domain",
+      "geometry",
+      "id",
+      "length_accepted",
+      "member_id",
+      "preimage",
+      "qname",
+      "raw",
+      "replay",
+      "reported_length_at_least_30",
+      "rich17",
+      "search_id",
+      "sseqid",
+      "type"
+    ],
+    "hsp_preimage_example": {
+      "arm": "primary",
+      "ordinal": 1,
+      "raw_sha256": "2625b18507d6d51342d22ba1d087134513f961983d49eaf7391cb34bd8f5883a",
+      "reference_sha256": "e95c37173f26fbf8aa51723a2bf18f1bf6e1ce44129f42a57ebb904595f31ac1",
+      "search_id": "c4b24b3d263c406227717398f11f5ca9e437235456836caf191bdb67b4ce9436",
+      "source": "orthodb",
+      "species": "Sitalica"
+    }
+  }
+}

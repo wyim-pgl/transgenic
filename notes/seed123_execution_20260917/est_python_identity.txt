@@ -1,0 +1,6 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+25553408 /data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3.11
+74d2337199fe0880e01a38cd136c03f28de4383b833393657ce8420ce3c57415  /data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3.11
+PROPOSED_NAMESPACE_ABSENT

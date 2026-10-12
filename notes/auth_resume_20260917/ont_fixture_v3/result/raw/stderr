@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/data/gpfs/home/wyim/ont_f4_20260917_1653/release/fixture.py", line 404, in <module>
+srun: error: cpu-50: task 0: Exited with exit code 1
+    sys.exit(main())
+             ^^^^^^
+  File "/data/gpfs/home/wyim/ont_f4_20260917_1653/release/fixture.py", line 400, in main
+    run(args.release, args.out)
+  File "/data/gpfs/home/wyim/ont_f4_20260917_1653/release/fixture.py", line 290, in run
+    require(resource.getrlimit(resource.RLIMIT_FSIZE) == (4194304, 4194304), 'startup file soft/hard limit must be 4194304 bytes')
+  File "/data/gpfs/home/wyim/ont_f4_20260917_1653/release/fixture.py", line 37, in require
+    raise ValueError(message)
+ValueError: startup file soft/hard limit must be 4194304 bytes

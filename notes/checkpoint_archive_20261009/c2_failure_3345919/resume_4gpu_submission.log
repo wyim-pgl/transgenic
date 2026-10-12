@@ -1,0 +1,14 @@
+VALIDATION_JOB 3361110|COMPLETED|0:0
+DRIVER_SHA256 940b1b441aabcb920fd55d781c29e7ecec7c51601f50ac00e1fe2117966aed92
+SUBMITTED 3361386
+JobId=3361386 JobName=c2-recovery-4gpu UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=1941 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=None Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=02:00:00 TimeMin=N/A SubmitTime=2026-10-11T14:48:04 EligibleTime=2026-10-11T14:48:04 AccrueTime=Unknown StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-11T14:48:04 Scheduler=Main Partition=ghx4-interactive AllocNode:Sid=gh-login03:2427657 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1-1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=8000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/ops/c2_recovery_20261011/resume_c2_4gpu.sbatch SubmitLine=sbatch --parsable /work/nvme/bilv/wcyim/transgenic/ops/c2_recovery_20261011/resume_c2_4gpu.sbatch WorkDir=/u/wcyim StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/b6_prep_20260925/logs/c2-recovery-4gpu-3361386.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64
+
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

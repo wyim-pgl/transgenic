@@ -1,0 +1,33 @@
+{
+  "commit": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16",
+  "manifest_sha256": "3ca7a3b9a5793f62d25f503c93cfd7167eb17f7c5b90de7830e6a8777117f783",
+  "objects": [
+    {
+      "bytes": 257,
+      "oid": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16",
+      "type": "commit"
+    },
+    {
+      "bytes": 852,
+      "oid": "ffff3bcb4c0a54e1893e637747f432ccb0d5369e",
+      "type": "tree"
+    },
+    {
+      "bytes": 69,
+      "oid": "4b71774b05a533bb68fe37183f96ef3ab98efbc1",
+      "type": "tree"
+    },
+    {
+      "bytes": 99,
+      "oid": "25dd0a4520ad2d37e43af36562c660b96fbbd466",
+      "type": "tree"
+    },
+    {
+      "bytes": 2533,
+      "oid": "d41b313a230ecde4b51f045a91e5ea39b00c40d9",
+      "type": "blob"
+    }
+  ],
+  "path": "data/manifests/b5_species_v1.tsv",
+  "scope": "sparse_original_git_objects_only_not_checkout_or_history"
+}

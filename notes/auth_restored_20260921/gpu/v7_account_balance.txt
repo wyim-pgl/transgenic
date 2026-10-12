@@ -1,0 +1,34 @@
+Raw capture 7 -- live account balance query, gate 3 (read-only).
+Executed 2026-09-21 08:58:53 PDT (remote 2026-09-21T10:58:53-05:00).
+
+===TOOLS=== (availability probe, no installation)
+accounts=/sw/user/scripts/accounts
+sbank=NOT_FOUND
+sreport=/usr/bin/sreport
+sacctmgr=/usr/bin/sacctmgr
+quota=/sw/user/scripts/quota
+
+===ACCOUNTS===
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1068              1499  leakage-controlled ...
+
+===SREPORT===
+Cluster/Account/User Utilization 2026-09-01T00:00:00 - 2026-09-21T00:59:59
+Usage reported in CPU Hours/Percentage of Total
+ delta-gh    bilv-dtai-gh                                 6875(0.03%)
+ delta-gh    bilv-dtai-gh     wcyim   Won Cheol Yim       6875(0.03%)
+
+===ASSESSMENT===
+Requirement recomputed in EXECUTION_DECISION_V7_DRAFT.md: 264 + 20 + 20 = 304.
+Measured balance: 1068 hours. 1068 >= 304 -> GATE 3 PASS.
+
+Cross-check of the consumption arithmetic:
+  2026-09-17 recorded balance          1154 hours
+  2026-09-21 measured balance          1068 hours
+  delta                                  86 hours
+  independently computed B5 consumption  86.3833333 GPU-hours
+Two unrelated measurements agree, so the draft's consumption figures hold.
+This figure was measured, not extrapolated from the 09-17 value.

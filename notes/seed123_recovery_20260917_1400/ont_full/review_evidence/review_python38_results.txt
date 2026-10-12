@@ -1,0 +1,101 @@
+test_actual_isolated_driver_cli (__main__.Review) ... ok
+test_escaped_session_descendant_survives_group_cleanup (__main__.Review) ... ok
+test_execute_failures_do_not_publish (__main__.Review) ... test_execute_stderr_mutation_still_publishes (__main__.Review) ... ERROR
+test_execute_synthetic_success (__main__.Review) ... ERROR
+test_isolation_not_inherited_by_nested_sample (__main__.Review) ... ok
+test_same_group_descendant_is_stopped_after_driver_exit (__main__.Review) ... ok
+test_scheduler_valid_and_fail_closed (__main__.Review) ... ok
+test_unlisted_source_module_executes_before_gate_rejects (__main__.Review) ... ok
+
+======================================================================
+ERROR: test_execute_failures_do_not_publish (__main__.Review) (mode='nonzero')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "review_harness.py", line 130, in test_execute_failures_do_not_publish
+    with self.assertRaises((ValueError,TimeoutError,InterruptedError)): case.invoke(mode)
+  File "review_harness.py", line 113, in invoke
+    return self.w.execute(str(self.reqpath),sha(self.reqpath),sha(self.wrapper_copy))
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/review_evidence/fixture_bh_ar617/code/wrapper.py", line 166, in execute
+AttributeError: 'PosixPath' object has no attribute 'is_relative_to'
+
+======================================================================
+ERROR: test_execute_failures_do_not_publish (__main__.Review) (mode='timeout')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "review_harness.py", line 130, in test_execute_failures_do_not_publish
+    with self.assertRaises((ValueError,TimeoutError,InterruptedError)): case.invoke(mode)
+  File "review_harness.py", line 113, in invoke
+    return self.w.execute(str(self.reqpath),sha(self.reqpath),sha(self.wrapper_copy))
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/review_evidence/fixture_szrjf46g/code/wrapper.py", line 166, in execute
+AttributeError: 'PosixPath' object has no attribute 'is_relative_to'
+
+======================================================================
+ERROR: test_execute_failures_do_not_publish (__main__.Review) (mode='term')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "review_harness.py", line 130, in test_execute_failures_do_not_publish
+    with self.assertRaises((ValueError,TimeoutError,InterruptedError)): case.invoke(mode)
+  File "review_harness.py", line 113, in invoke
+    return self.w.execute(str(self.reqpath),sha(self.reqpath),sha(self.wrapper_copy))
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/review_evidence/fixture_j4hna8un/code/wrapper.py", line 166, in execute
+AttributeError: 'PosixPath' object has no attribute 'is_relative_to'
+
+======================================================================
+ERROR: test_execute_failures_do_not_publish (__main__.Review) (mode='input_mutation')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "review_harness.py", line 130, in test_execute_failures_do_not_publish
+    with self.assertRaises((ValueError,TimeoutError,InterruptedError)): case.invoke(mode)
+  File "review_harness.py", line 113, in invoke
+    return self.w.execute(str(self.reqpath),sha(self.reqpath),sha(self.wrapper_copy))
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/review_evidence/fixture_17ibt8s_/code/wrapper.py", line 166, in execute
+AttributeError: 'PosixPath' object has no attribute 'is_relative_to'
+
+======================================================================
+ERROR: test_execute_failures_do_not_publish (__main__.Review) (mode='stdout_mutation')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "review_harness.py", line 130, in test_execute_failures_do_not_publish
+    with self.assertRaises((ValueError,TimeoutError,InterruptedError)): case.invoke(mode)
+  File "review_harness.py", line 113, in invoke
+    return self.w.execute(str(self.reqpath),sha(self.reqpath),sha(self.wrapper_copy))
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/review_evidence/fixture_f3blfvao/code/wrapper.py", line 166, in execute
+AttributeError: 'PosixPath' object has no attribute 'is_relative_to'
+
+======================================================================
+ERROR: test_execute_failures_do_not_publish (__main__.Review) (mode='output_mutation')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "review_harness.py", line 130, in test_execute_failures_do_not_publish
+    with self.assertRaises((ValueError,TimeoutError,InterruptedError)): case.invoke(mode)
+  File "review_harness.py", line 113, in invoke
+    return self.w.execute(str(self.reqpath),sha(self.reqpath),sha(self.wrapper_copy))
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/review_evidence/fixture_v2wdvsqz/code/wrapper.py", line 166, in execute
+AttributeError: 'PosixPath' object has no attribute 'is_relative_to'
+
+======================================================================
+ERROR: test_execute_stderr_mutation_still_publishes (__main__.Review)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "review_harness.py", line 138, in test_execute_stderr_mutation_still_publishes
+    r = self.invoke('stderr_mutation')
+  File "review_harness.py", line 113, in invoke
+    return self.w.execute(str(self.reqpath),sha(self.reqpath),sha(self.wrapper_copy))
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/review_evidence/fixture_hzyenbg1/code/wrapper.py", line 166, in execute
+AttributeError: 'PosixPath' object has no attribute 'is_relative_to'
+
+======================================================================
+ERROR: test_execute_synthetic_success (__main__.Review)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "review_harness.py", line 116, in test_execute_synthetic_success
+    r = self.invoke()
+  File "review_harness.py", line 113, in invoke
+    return self.w.execute(str(self.reqpath),sha(self.reqpath),sha(self.wrapper_copy))
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/review_evidence/fixture_tf25dqi_/code/wrapper.py", line 166, in execute
+AttributeError: 'PosixPath' object has no attribute 'is_relative_to'
+
+----------------------------------------------------------------------
+Ran 9 tests in 9.936s
+
+FAILED (errors=8)

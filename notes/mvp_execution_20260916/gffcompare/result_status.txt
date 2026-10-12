@@ -1,0 +1,27 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T18:58:07-0700
+JobID|State|ExitCode|Elapsed|MaxRSS
+6165521|FAILED|1:0|00:00:02|
+6165521.batch|FAILED|1:0|00:00:02|1496K
+6165521.extern|OUT_OF_MEMORY|0:125|00:00:02|1480K
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/slurm-6165521.out ===
+smoke.py: OK
+smoke.sbatch: OK
+mvp_produce_counts.py: OK
+LOCAL_ONLY: generator/mono/empty/duplicate checks passed; real-tool semantics NOT RUN
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/slurm-6165521.err ===
+Traceback (most recent call last):
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/smoke.py", line 237, in <module>
+    main()
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/smoke.py", line 229, in main
+    print(json.dumps(analyze(args.root.resolve()), indent=2, sort_keys=True))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/smoke.py", line 167, in analyze
+    assert rc == 0 and len(maps) == 1, name
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ordinary
+335bee5e27b65cfdd7eea1a32b3ef349ed9f31ee9853074245b2b64eb8f724af  /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/hashes.json

@@ -1,0 +1,46 @@
+{
+  "target_sha256": {
+    "admission.py": "eb69104081366837af39e8fad8047a1c0d27149c5df549417b10d56dc314f13a",
+    "deploy.py": "0315aa4a5da5017211fbb9517dba6f541b79d5857cd8e7fc0ce62c82daf36f66",
+    "p1.sbatch": "33e58a9186a4eea9dcbc80b5d8fa3f2c0e22ef7eec623729769a431e57758f99",
+    "test_admission_cases.py": "9fb9cdd756efb8b2c3b8ae5ea31d6d83be7fa9ee110a876c77a818bb67934709",
+    "test_queued_gate.py": "eecbf375a5c08d732b5216d3c1d18b7be5be5065daa8b07252a0661248a4406e"
+  },
+  "communication_error": {
+    "admission_rejected": "failed/incomplete observation",
+    "killpg_calls": 0,
+    "wait_calls": 0,
+    "communicate_calls": 1,
+    "record": {
+      "command": [
+        "/fixture-only"
+      ],
+      "end_monotonic": 12123.187470551,
+      "end_unix": 1789690068.4221296,
+      "error": "OSError('synthetic pipe I/O failure')",
+      "exit_code": null,
+      "start_monotonic": 12123.187396351,
+      "start_unix": 1789690068.4220567,
+      "stderr": "",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "timed_out": false
+    }
+  },
+  "output_limit": {
+    "rejection": "query output exceeds reviewed bound",
+    "persisted_bytes_before_rejection": 16777616,
+    "full_stdout_chars": 16777217
+  },
+  "finance_grounding": {
+    "recorded_source_hash_matches_pin": true,
+    "recorded_script_bytes": 8705,
+    "qos_record": "QOS=bilv-dtai-gh(1527) UsageRaw=1240046055.220800 GrpJobs=N(0) GrpJobsAccrue=N(2) GrpSubmitJobs=N(9) GrpWall=N(7741.63) GrpTRES=cpu=N(0),mem=N(0),energy=N(0),node=N(0),billing=N(0),fs/disk=N(0),vmem=N(0),pages=N(0),gres/gpu=N(0),gres/gpumem=N(0),gres/gpuutil=N(0) GrpTRESMins=cpu=N(329330),mem=N(2346993729),energy=N(0),node=N(7741),billing=89940000(20667433),fs/disk=N(0),vmem=N(0),pages=N(0),gres/gpu=N(20667),gres/gpumem=N(0),gres/gpuutil=N(0) GrpTRESRunMins=cpu=N(0),mem=N(0),energy=N(0),node=N(0),billing=N(0),fs/disk=N(0),vmem=N(0),pages=N(0),gres/gpu=N(0),gres/gpumem=N(0),gres/gpuutil=N(0) MaxWallPJ= MaxTRESPJ= MaxTRESPN= MaxTRESMinsPJ= MinPrioThresh=  MinTRESPJ= PreemptMode=OFF Priority=0 Account Limits= bilv-dtai-gh={MaxJobsPA=N(0) MaxJobsAccruePA=N(2) MaxSubmitJobsPA=N(9) MaxTRESPA=cpu=N(0),mem=N(0),energy=N(0),node=N(0),billing=N(0),fs/disk=N(0),vmem=N(0),pages=N(0),gres/gpu=N(0),gres/gpumem=N(0),gres/gpuutil=N(0) MaxTRESRunMinsPA=cpu=N(0),mem=N(0),energy=N(0),node=N(0),billing=N(0),fs/disk=N(0),vmem=N(0),pages=N(0),gres/gpu=N(0),gres/gpumem=N(0),gres/gpuutil=N(0)} User Limits= wcyim(97434)={MaxJobsPU=N(0) MaxJobsAccruePU=N(2) MaxSubmitJobsPU=N(9) MaxTRESPU=cpu=N(0),mem=N(0),energy=N(0),node=N(0),billing=N(0),fs/disk=N(0),vmem=N(0),pages=N(0),gres/gpu=N(0),gres/gpumem=N(0),gres/gpuutil=N(0) MaxTRESRunMinsPU=cpu=N(0),mem=N(0),energy=N(0),node=N(0),billing=N(0),fs/disk=N(0),vmem=N(0),pages=N(0),gres/gpu=N(0),gres/gpumem=N(0),gres/gpuutil=N(0)}",
+    "conversion_lines": [
+      "our $SLURM_XPF        = 1000; # Expansion factor applied to allocated amount",
+      "$dep = floor $account_list->{$account}{allocated} / $SLURM_XPF / MIN_PER_HOUR;   # Convert back to allocation units",
+      "$bal = floor $dep - $account_list->{$account}{used} / $SLURM_XPF / MIN_PER_HOUR; # Convert back to allocation units"
+    ]
+  }
+}

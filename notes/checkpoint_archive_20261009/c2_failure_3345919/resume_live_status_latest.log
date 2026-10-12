@@ -1,0 +1,25 @@
+3309786|b5-seed|PENDING|0:00|(Priority)
+3309790|b5-seed|PENDING|0:00|(Dependency)
+3309789|b5-seed|PENDING|0:00|(Dependency)
+3309788|b5-seed|PENDING|0:00|(Dependency)
+3309787|b5-seed|PENDING|0:00|(Dependency)
+3345920|b6-wp5-pilot|PENDING|0:00|(JobHeldUser)
+3345918|b6-wp5-pilot|PENDING|0:00|(JobHeldUser)
+3345917|b6-wp5-pilot|PENDING|0:00|(JobHeldUser)
+3361386|c2-recovery-4gpu|RUNNING|29:12|gh106
+
+resumed from /work/runs/b6_wp5_pilot_C2_recovery_20261011/latest_state: epoch 0 step 4800 global_step 200
+resumed from /work/runs/b6_wp5_pilot_C2_recovery_20261011/latest_state: epoch 0 step 4800 global_step 200resumed from /work/runs/b6_wp5_pilot_C2_recovery_20261011/latest_state: epoch 0 step 4800 global_step 200
+resumed from /work/runs/b6_wp5_pilot_C2_recovery_20261011/latest_state: epoch 0 step 4800 global_step 200
+{"global_step": 210, "epoch": 0, "loss": 3.255345344543457, "lr": 4.657351962741185e-06, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+META {"epoch": 0, "step": 4800, "global_step": 200, "pending_micro": 0, "stopper": {"best": null, "best_epoch": null, "bad_epochs": 0, "patience": 3}, "arm": "C2", "seed": 123, "stop_after_updates": 4099, "identity_sha256": "60c3357d70e0d5316a2562e09bc47c2ef1a2c23f5ae6356bea034b8eb40aadd9"}
+MARKERS []
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

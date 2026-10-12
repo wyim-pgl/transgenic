@@ -1,0 +1,66 @@
+test_actual_quota_format_conservative (test_deploy.DeploymentTests) ... ok
+test_archive_rejects_link_and_escape (test_deploy.DeploymentTests) ... ok
+test_cache_materializes_both_layouts_without_source_write (test_deploy.DeploymentTests) ... ok
+test_cache_rejects_escape (test_deploy.DeploymentTests) ... ok
+test_final_candidate_closure_and_operator_pins (test_deploy.DeploymentTests) ... ok
+test_host_per_job_mounts_and_collision (test_deploy.DeploymentTests) ... ok
+test_old_p1_unchanged (test_deploy.DeploymentTests) ... ERROR
+test_pair_identity_not_adjacent_rn_guess (test_deploy.DeploymentTests) ... ok
+test_quota_reserve_and_warning_fail_closed (test_deploy.DeploymentTests) ... ok
+test_release_exact_candidate_bytes_and_no_generated_trees (test_deploy.DeploymentTests) ... ok
+test_unknown_or_ambiguous_quota_fails (test_deploy.DeploymentTests) ... ok
+test_candidate_manifest_exact_closure (test_candidate.CandidateTests) ... ok
+test_controller_gate_rejects_unreviewed_stale_overbudget_old_receipts (test_candidate.CandidateTests) ... ok
+test_new_namespace_and_preserved_exclusions (test_candidate.CandidateTests) ... ok
+test_no_overwrite (test_candidate.CandidateTests) ... ok
+test_old_prepared_receipt_rejected (test_candidate.CandidateTests) ... ok
+test_prepare_profile_seed (test_candidate.CandidateTests) ... ok
+test_wrong_archive_pin_rejected (test_candidate.CandidateTests) ... ok
+test_wrong_manifest_pin_rejected (test_candidate.CandidateTests) ... ok
+test_caps_independent_and_self_once (test_queued_gate.QueuedGateTests) ... ok
+test_finance_requires_clear_units_and_full_b5_reserve (test_queued_gate.QueuedGateTests) ... ok
+test_launcher_failure_retains_exclusive_claim_and_refuses_second_run (test_queued_gate.QueuedGateTests) ... ok
+test_live_observation_freshness (test_queued_gate.QueuedGateTests) ... ok
+test_queued_authority_has_no_observation_age (test_queued_gate.QueuedGateTests) ... ok
+test_timeout_is_once_and_persistent_evidence (test_queued_gate.QueuedGateTests) ... ok
+test_b5_unbounded_or_same_node_fails (test_admission_cases.AdmissionCases) ... ok
+test_bad_actual_allocation_and_old_active_fail (test_admission_cases.AdmissionCases) ... ok
+test_failed_admission_has_no_stage_hash_copy_rename_or_probe (test_admission_cases.AdmissionCases) ... ok
+test_fresh_full_reconciliation_self_once_and_b5_maximum (test_admission_cases.AdmissionCases) ... ok
+test_reconciliation_enforces_node_and_gpu_caps_independently (test_admission_cases.AdmissionCases) ... ok
+test_step_dedup_and_duplicate_allocation_fail (test_admission_cases.AdmissionCases) ... ok
+test_unknown_diagnostic_or_pending_reservation_fails (test_admission_cases.AdmissionCases) ... ok
+test_24_hour_queued_authority_with_real_runner_fixture_observations (test_admission_cases.LivePathTests) ... ok
+test_missing_account_failed_query_and_admission_race_stop_without_retry (test_admission_cases.LivePathTests) ... ok
+test_host_python36_api (test_recovery.RecoveryTests) ... ok
+test_known_resume_directories_only (test_recovery.RecoveryTests) ... ok
+test_recovery_authority_is_explicit_and_quota_fits (test_recovery.RecoveryTests) ... ok
+test_recovery_copy_preserves_source_and_refuses_overwrite (test_recovery.RecoveryTests) ... ok
+test_recovery_rejects_symlink_owner_and_copy_time_tampering (test_recovery.RecoveryTests) ... ok
+test_true_failed_history_and_exclusive_cpu_capacity (test_recovery.RecoveryTests) ... ok
+test_aggregate_stdout_stderr_overflow_bounded_and_never_admitted (test_capture.CaptureTests) ... ok
+test_non_timeout_read_failure_kills_and_reaps (test_capture.CaptureTests) ... ok
+test_aliases_are_ambiguous_even_when_equal (test_field_alias.FieldAliasTests) ... ok
+test_changed_normalized_value_rejected_in_final_snapshot (test_field_alias.FieldAliasTests) ... ok
+test_exact_retained_line_normalizes (test_field_alias.FieldAliasTests) ... ok
+test_only_observed_alias_and_no_default (test_field_alias.FieldAliasTests) ... ok
+test_raw_format_full_admission (test_field_alias.FieldAliasTests) ... ok
+
+======================================================================
+ERROR: test_old_p1_unchanged (test_deploy.DeploymentTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/test_deploy.py", line 187, in test_old_p1_unchanged
+    before = json.loads((here / 'originals-preservation.json').read_text())
+  File "/home/wyim/miniconda3/lib/python3.8/pathlib.py", line 1236, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+  File "/home/wyim/miniconda3/lib/python3.8/pathlib.py", line 1222, in open
+    return io.open(self, mode, buffering, encoding, errors, newline,
+  File "/home/wyim/miniconda3/lib/python3.8/pathlib.py", line 1078, in _opener
+    return self._accessor.open(self, flags, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/originals-preservation.json'
+
+----------------------------------------------------------------------
+Ran 47 tests in 10.372s
+
+FAILED (errors=1)

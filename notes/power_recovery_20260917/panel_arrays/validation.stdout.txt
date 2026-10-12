@@ -1,0 +1,78 @@
+{
+  "status": "PASS_LOCAL_ACTUAL50_PUBLICATION_NUMERICAL_SCOPE",
+  "scientific_approval": false,
+  "externOOM": "unresolved; unrelated scheduler-step finding",
+  "python": "3.8.20",
+  "numpy": "1.24.3",
+  "transferred_files": 152,
+  "transferred_bytes": 29309109,
+  "artifact_hashes_verified": 150,
+  "marker_manifest_linkage": true,
+  "whole_reference_sequence_equality_verified": false,
+  "source_DB_selection_completeness_verified": false,
+  "source_inputs_freshness_verified": false,
+  "seed_independence": "manifest assertion; one shared array per locus, not three independently sampled runs",
+  "provenance_numerical_equality_loci": 50,
+  "selected_molecule_sum_over_windows": 3443,
+  "distinct_molecule_ids_across_copied_windows": 3354,
+  "biological_nonzero_sums": [
+    34789,
+    52639,
+    71107,
+    138,
+    140,
+    193,
+    204
+  ],
+  "availability_nonzero_sum": 1536000,
+  "negative_checks": [
+    {
+      "case": "byte_hash",
+      "rejected_by": "artifact bytes/hash"
+    },
+    {
+      "case": "dtype",
+      "rejected_by": "track dtype/shape"
+    },
+    {
+      "case": "shape",
+      "rejected_by": "track dtype/shape"
+    },
+    {
+      "case": "nan",
+      "rejected_by": "finite nonnegative"
+    },
+    {
+      "case": "availability",
+      "rejected_by": "N mask/availability"
+    },
+    {
+      "case": "orientation",
+      "rejected_by": "FASTA header/orientation"
+    },
+    {
+      "case": "sequence",
+      "rejected_by": "sequence digest"
+    },
+    {
+      "case": "duplicate",
+      "rejected_by": "molecule count/uniqueness/order"
+    },
+    {
+      "case": "boundary",
+      "rejected_by": "block boundary/identity"
+    },
+    {
+      "case": "policy",
+      "rejected_by": "heldout selection policy"
+    },
+    {
+      "case": "value",
+      "rejected_by": "provenance numerical reconstruction"
+    },
+    {
+      "case": "count",
+      "rejected_by": "support counts"
+    }
+  ]
+}

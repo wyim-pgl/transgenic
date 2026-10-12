@@ -1,0 +1,5 @@
+ M .gitignore
+?? .ignore
+?? revision/scripts/mvp/mvp_junction_table.py
+?? src/transgenic/evidence/mvp_bootstrap.py
+?? src/transgenic/evidence/mvp_windows.py

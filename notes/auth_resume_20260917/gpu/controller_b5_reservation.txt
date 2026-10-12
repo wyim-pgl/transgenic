@@ -1,0 +1,11 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+3149356|b5-seed|11:00:00|64|gres/gpu:4
+3149363|b5-seed|11:00:00|64|gres/gpu:4
+3149362|b5-seed|11:00:00|64|gres/gpu:4
+3149361|b5-seed|11:00:00|64|gres/gpu:4
+3149360|b5-seed|11:00:00|64|gres/gpu:4
+3149359|b5-seed|11:00:00|64|gres/gpu:4
+3149358|b5-seed|11:00:00|64|gres/gpu:4
+3149357|b5-seed|11:00:00|64|gres/gpu:4

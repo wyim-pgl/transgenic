@@ -1,0 +1,49 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T18:59:33-05:00
+3163986|FAILED|1:0|00:00:51|288|billing=4000,cpu=288,gres/gpu=4,mem=454240M,node=1|gh077
+3163986.batch|FAILED|1:0|00:00:51|288|cpu=288,gres/gpu=4,mem=454240M,node=1|gh077
+3163986.extern|COMPLETED|0:0|00:00:51|288|billing=4000,cpu=288,gres/gpu=4,mem=454240M,node=1|gh077
+             JOBID        STATE         TIME NODELIST(REASON)
+           3149356      PENDING         0:00 (Priority)
+           3149363      PENDING         0:00 (Dependency)
+           3149362      PENDING         0:00 (Dependency)
+           3149361      PENDING         0:00 (Dependency)
+           3149360      PENDING         0:00 (Dependency)
+           3149359      PENDING         0:00 (Dependency)
+           3149358      PENDING         0:00 (Dependency)
+           3149357      PENDING         0:00 (Dependency)
+/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-3163986.out|2213
+code.tar: OK
+deploy.py: OK
+p1.sbatch: OK
+notes/b6_mvp_technical_candidate_20260915.json: OK
+notes/b6_mvp_candidate_inventories_20260915.json: OK
+notes/b6_mvp_candidate_receipts_20260915.json: OK
+release.json: OK
+2026-09-17T18:47:50-05:00
+gh077.hsn.cm.delta.internal.ncsa.edu
+["/usr/bin/apptainer", "exec", "--nv", "--writable-tmpfs", "--cleanenv", "--containall", "--no-mount", "hostfs", "--pwd", "/work/repo", "--bind", "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/code/source:/work/repo:ro", "--bind", "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/inputs/hf:/work/repo/HFmodels:ro", "--bind", "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe:/mvp/probe:rw", "--bind", "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/cache/p1:/scratch:rw", "--bind", "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/release:/deployment:ro", "--bind", "/work/nvme/bilv/wcyim/transgenic/db/b5_full_a40_v1.db:/corpus.db:ro", "--bind", "/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif:/image.sif:ro", "--env", "PYTHONPATH=/work/repo/src:/work/repo/revision/scripts/mvp", "--env", "PYTHONDONTWRITEBYTECODE=1", "--env", "PYTHONNOUSERSITE=1", "--env", "HF_HOME=/work/repo/HFmodels", "--env", "HF_HUB_CACHE=/work/repo/HFmodels/hub", "--env", "HF_MODULES_CACHE=/scratch/modules", "--env", "HF_HUB_OFFLINE=1", "--env", "TRANSFORMERS_OFFLINE=1", "--env", "HF_DATASETS_OFFLINE=1", "--env", "TORCHINDUCTOR_CACHE_DIR=/scratch/inductor", "--env", "TRITON_CACHE_DIR=/scratch/triton", "--env", "TMPDIR=/scratch/tmp", "--env", "HOME=/scratch/home", "--env", "XDG_CACHE_HOME=/scratch", "--env", "OMP_NUM_THREADS=8", "--env", "TRITON_LIBCUDA_PATH=/.singularity.d/libs", "--env", "NCCL_DEBUG=WARN", "--env", "SLURM_JOB_ID=3163986", "--env", "CUBLAS_WORKSPACE_CONFIG=:4096:8", "--bind", "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/inputs:/mvp/inputs:rw", "--bind", "/work/nvme/bilv/wcyim/transgenic/runs/seed123:/source/seed123:ro", "/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif", "python", "/deployment/deploy.py", "container-stage"]
+/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-3163986.err|3074
+WARNING: Overriding HOME environment variable with APPTAINERENV_HOME is not permitted
+Traceback (most recent call last):
+  File "/deployment/deploy.py", line 408, in <module>
+    {'host': host, 'container-stage': container_stage, 'container-p1': container_p1}[sys.argv[1]]()
+  File "/deployment/deploy.py", line 260, in container_stage
+    require({p.name for p in source.iterdir()} == {'model.safetensors', 'eval.json', 'meta.json'}, 'epoch05 exact inventory changed')
+  File "/deployment/deploy.py", line 43, in require
+    raise ValueError(message)
+ValueError: epoch05 exact inventory changed
+Traceback (most recent call last):
+  File "deploy.py", line 408, in <module>
+    {'host': host, 'container-stage': container_stage, 'container-p1': container_p1}[sys.argv[1]]()
+  File "deploy.py", line 249, in host
+    SIF, 'python', '/deployment/deploy.py', 'container-stage'])
+  File "deploy.py", line 74, in run
+    subprocess.run([str(a) for a in argv], check=True)
+  File "/usr/lib64/python3.6/subprocess.py", line 438, in run
+    output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/usr/bin/apptainer', 'exec', '--nv', '--writable-tmpfs', '--cleanenv', '--containall', '--no-mount', 'hostfs', '--pwd', '/work/repo', '--bind', '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/code/source:/work/repo:ro', '--bind', '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/inputs/hf:/work/repo/HFmodels:ro', '--bind', '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe:/mvp/probe:rw', '--bind', '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/cache/p1:/scratch:rw', '--bind', '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/release:/deployment:ro', '--bind', '/work/nvme/bilv/wcyim/transgenic/db/b5_full_a40_v1.db:/corpus.db:ro', '--bind', '/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif:/image.sif:ro', '--env', 'PYTHONPATH=/work/repo/src:/work/repo/revision/scripts/mvp', '--env', 'PYTHONDONTWRITEBYTECODE=1', '--env', 'PYTHONNOUSERSITE=1', '--env', 'HF_HOME=/work/repo/HFmodels', '--env', 'HF_HUB_CACHE=/work/repo/HFmodels/hub', '--env', 'HF_MODULES_CACHE=/scratch/modules', '--env', 'HF_HUB_OFFLINE=1', '--env', 'TRANSFORMERS_OFFLINE=1', '--env', 'HF_DATASETS_OFFLINE=1', '--env', 'TORCHINDUCTOR_CACHE_DIR=/scratch/inductor', '--env', 'TRITON_CACHE_DIR=/scratch/triton', '--env', 'TMPDIR=/scratch/tmp', '--env', 'HOME=/scratch/home', '--env', 'XDG_CACHE_HOME=/scratch', '--env', 'OMP_NUM_THREADS=8', '--env', 'TRITON_LIBCUDA_PATH=/.singularity.d/libs', '--env', 'NCCL_DEBUG=WARN', '--env', 'SLURM_JOB_ID=3163986', '--env', 'CUBLAS_WORKSPACE_CONFIG=:4096:8', '--bind', '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/inputs:/mvp/inputs:rw', '--bind', '/work/nvme/bilv/wcyim/transgenic/runs/seed123:/source/seed123:ro', '/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif', 'python', '/deployment/deploy.py', 'container-stage']' returned non-zero exit status 1.
+ls: cannot access '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/evidence/fullc0lite.db': No such file or directory
+drwxrwx---+ 7 wcyim grp_202 4096 Sep 17 18:47 /work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986

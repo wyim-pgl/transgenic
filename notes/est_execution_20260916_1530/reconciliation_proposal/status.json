@@ -1,0 +1,14 @@
+{
+  "blocking_queue_rows": [
+    "6165461|RUNNING|est_c1_20260916_1530"
+  ],
+  "manifest_sha256": "90ce4404d3d0d0547c21a1ccf7db96344b97413e10d4bdd167e03976025a9ca9",
+  "missing_or_mismatched_historical_paths": [],
+  "queue_captured_at": "2026-09-16T23:09:58.284713+00:00",
+  "staging": "NOT STAGED; planned remote paths only; existence not probed",
+  "static_entries": 19,
+  "status": "DRAFT/BLOCKED",
+  "unique_small_file_bytes": 489199,
+  "unique_small_files": 32,
+  "verification": "offline schema, 19 bindings, 30 accounting rows, receipt bytes/hashes, preflight_evidence on reconstructed small-file copy, committed source pins; not an operational load_reconciliation PASS"
+}

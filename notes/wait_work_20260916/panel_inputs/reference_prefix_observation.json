@@ -1,0 +1,17 @@
+{
+  "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+  "mtime": 1765586389.1804478,
+  "prefix_bytes": 131072,
+  "size": 60503119,
+  "command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=20",
+    "pronghorn",
+    "/usr/bin/python -c 'import os,json,base64,stat\np='\"'\"'/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3'\"'\"'\ns=os.stat(p)\nassert stat.S_ISREG(s.st_mode)\nwith open(p,'\"'\"'rb'\"'\"') as f: data=f.read(131072)\nprint(json.dumps({'\"'\"'path'\"'\"':p,'\"'\"'size'\"'\"':s.st_size,'\"'\"'mtime'\"'\"':s.st_mtime,'\"'\"'prefix_bytes'\"'\"':len(data),'\"'\"'base64'\"'\"':base64.b64encode(data).decode()}))\n'"
+  ],
+  "stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+  "prefix_sha256": "ee62582867993bb5a31a5f665027fbd93f1331e51729ebe4f0faa5ac967cf19c"
+}

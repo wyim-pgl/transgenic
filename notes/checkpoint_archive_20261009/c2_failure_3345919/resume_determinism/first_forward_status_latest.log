@@ -1,0 +1,149 @@
+NOW 2026-10-12T16:01:10.676222
+3309786 b5-seed PENDING 0:00 (Priority)
+3309790 b5-seed PENDING 0:00 (Dependency)
+3309789 b5-seed PENDING 0:00 (Dependency)
+3309788 b5-seed PENDING 0:00 (Dependency)
+3309787 b5-seed PENDING 0:00 (Dependency)
+3345920 b6-wp5-pilot PENDING 0:00 (JobHeldUser)
+3345918 b6-wp5-pilot PENDING 0:00 (JobHeldUser)
+3345917 b6-wp5-pilot PENDING 0:00 (JobHeldUser)
+
+
+JobID|State|ExitCode|Elapsed|Start|End|NodeList
+3364480|COMPLETED|0:0|00:39:17|2026-10-12T01:26:48|2026-10-12T02:06:05|gh150
+3364480.batch|COMPLETED|0:0|00:39:17|2026-10-12T01:26:48|2026-10-12T02:06:05|gh150
+3364480.extern|COMPLETED|0:0|00:39:17|2026-10-12T01:26:48|2026-10-12T02:06:05|gh150
+
+
+BATCH {"filesystem_available_bytes": 363102531584, "pool": "ddn_ssd", "project_id": 22169, "quota_remaining_bytes": 179732348928, "required_bytes": 107374182400, "results_dir": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2"}
+VERIFY_START 2026-10-12T01:26:53-05:00
+PHASE_START cold 2026-10-12T01:39:46-05:00
+PHASE_FINISHED cold 2026-10-12T01:42:31-05:00
+PHASE_START primed 2026-10-12T01:42:42-05:00
+PHASE_FINISHED primed 2026-10-12T01:53:16-05:00
+PHASE_START primed_reset 2026-10-12T01:53:27-05:00
+PHASE_FINISHED primed_reset 2026-10-12T02:06:00-05:00
+FIRST_FORWARD_OBSERVATIONS_COMPLETE 2026-10-12T02:06:05-05:00
+
+verify.log W1012 01:27:07.678000 3034257 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 01:27:07.724000 3034257 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+VERIFIED_INPUT_AND_ORDER 56d4849e7118616ea50420f07c07557280aa6758d651e3ad68ef381433a1982b
+
+cold.log arm C2: evidence_channel=off budget=stop rule stop_after_updates=4099 schedule t_total=180378 warmup=9018 per-rank accumulation 24 world 4 GATED: memory bench passedarm C2: evidence_channel=off budget=stop rule stop_after_updates=4099 schedule t_total=180378 warmup=9018 per-rank accumulation 24 world 4 GATED: memory bench passedarm C2: evidence_channel=off budget=stop rule stop_after_updates=4099 schedule t_total=180378 warmup=9018 per-rank accumulation 24 world 4 GATED: memory bench passed
+
+
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+FIRST_FORWARD_COMPLETE cold 0
+FIRST_FORWARD_COMPLETE cold 2
+FIRST_FORWARD_COMPLETE cold 3
+FIRST_FORWARD_COMPLETE cold 1
+
+primed.log [rank1]:V1012 01:49:13.123000 3055302 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank1]:V1012 01:49:13.123000 3055302 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 129024
+[rank1]:V1012 01:49:13.123000 3055302 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 129024
+[rank3]:V1012 01:49:13.174000 3055304 torch/_dynamo/guards.py:5481] [0/2] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank3]:V1012 01:49:13.174000 3055304 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank3]:V1012 01:49:13.174000 3055304 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 129024
+[rank3]:V1012 01:49:13.174000 3055304 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 129024
+[rank0]:V1012 01:51:11.545000 3055301 torch/_dynamo/guards.py:5481] [0/2] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank0]:V1012 01:51:11.545000 3055301 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank0]:V1012 01:51:11.545000 3055301 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 30720
+[rank0]:V1012 01:51:11.545000 3055301 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 129024, actual 30720
+FIRST_FORWARD_COMPLETE primed 2
+FIRST_FORWARD_COMPLETE primed 1
+FIRST_FORWARD_COMPLETE primed 3
+FIRST_FORWARD_COMPLETE primed 0
+
+primed_reset.log [rank1]:V1012 01:59:54.465000 3072540 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank1]:V1012 01:59:54.465000 3072540 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 129024
+[rank1]:V1012 01:59:54.465000 3072540 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 129024
+[rank3]:V1012 01:59:54.472000 3072542 torch/_dynamo/guards.py:5481] [0/2] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank3]:V1012 01:59:54.472000 3072542 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank3]:V1012 01:59:54.472000 3072542 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 129024
+[rank3]:V1012 01:59:54.472000 3072542 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 129024
+[rank0]:V1012 02:01:51.931000 3072539 torch/_dynamo/guards.py:5481] [0/2] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank0]:V1012 02:01:51.931000 3072539 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank0]:V1012 02:01:51.931000 3072539 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 30720
+[rank0]:V1012 02:01:51.931000 3072539 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 129024, actual 30720
+FIRST_FORWARD_COMPLETE primed_reset 3
+FIRST_FORWARD_COMPLETE primed_reset 1
+FIRST_FORWARD_COMPLETE primed_reset 0
+FIRST_FORWARD_COMPLETE primed_reset 2
+
+comparison.log     "reset_matches_cold": true,
+    "logits_equal": false,
+    "loss_equal": false
+  },
+  "3": {
+    "cold_loss": 3.4890518188476562,
+    "primed_loss": 3.48885440826416,
+    "cold_reproduced": true,
+    "warm_reproduced": true,
+    "reset_loss": 3.4890518188476562,
+    "reset_matches_cold": true,
+    "logits_equal": false,
+    "loss_equal": false
+  }
+}
+
+first_forward_comparison.json     "reset_loss": 3.4423773288726807,
+    "reset_matches_cold": true,
+    "warm_reproduced": true
+  },
+  "3": {
+    "cold_loss": 3.4890518188476562,
+    "cold_reproduced": true,
+    "logits_equal": false,
+    "loss_equal": false,
+    "primed_loss": 3.48885440826416,
+    "reset_loss": 3.4890518188476562,
+    "reset_matches_cold": true,
+    "warm_reproduced": true
+  }
+}
+
+REPORT cold 0 {'loss': 3.522496223449707, 'warm_expected_loss': 3.522496223449707, 'cold_expected_loss': 3.522496223449707, 'graphs_before': 0, 'graphs_after': 1, 'optimizer_updates': 0}
+REPORT cold 1 {'loss': 3.366504669189453, 'warm_expected_loss': 3.366504669189453, 'cold_expected_loss': 3.366504669189453, 'graphs_before': 0, 'graphs_after': 1, 'optimizer_updates': 0}
+REPORT cold 2 {'loss': 3.4423773288726807, 'warm_expected_loss': 3.4435665607452393, 'cold_expected_loss': 3.4423773288726807, 'graphs_before': 0, 'graphs_after': 1, 'optimizer_updates': 0}
+REPORT cold 3 {'loss': 3.4890518188476562, 'warm_expected_loss': 3.48885440826416, 'cold_expected_loss': 3.4890518188476562, 'graphs_before': 0, 'graphs_after': 1, 'optimizer_updates': 0}
+REPORT primed 0 {'loss': 3.522496223449707, 'warm_expected_loss': 3.522496223449707, 'cold_expected_loss': 3.522496223449707, 'graphs_before': 3, 'graphs_after': 3, 'optimizer_updates': 0}
+REPORT primed 1 {'loss': 3.366504669189453, 'warm_expected_loss': 3.366504669189453, 'cold_expected_loss': 3.366504669189453, 'graphs_before': 3, 'graphs_after': 3, 'optimizer_updates': 0}
+REPORT primed 2 {'loss': 3.4435665607452393, 'warm_expected_loss': 3.4435665607452393, 'cold_expected_loss': 3.4423773288726807, 'graphs_before': 3, 'graphs_after': 3, 'optimizer_updates': 0}
+REPORT primed 3 {'loss': 3.48885440826416, 'warm_expected_loss': 3.48885440826416, 'cold_expected_loss': 3.4890518188476562, 'graphs_before': 3, 'graphs_after': 3, 'optimizer_updates': 0}
+REPORT primed_reset 0 {'loss': 3.522496223449707, 'warm_expected_loss': 3.522496223449707, 'cold_expected_loss': 3.522496223449707, 'graphs_before': 3, 'graphs_after': 4, 'optimizer_updates': 0}
+REPORT primed_reset 1 {'loss': 3.366504669189453, 'warm_expected_loss': 3.366504669189453, 'cold_expected_loss': 3.366504669189453, 'graphs_before': 3, 'graphs_after': 4, 'optimizer_updates': 0}
+REPORT primed_reset 2 {'loss': 3.4423773288726807, 'warm_expected_loss': 3.4435665607452393, 'cold_expected_loss': 3.4423773288726807, 'graphs_before': 3, 'graphs_after': 4, 'optimizer_updates': 0}
+REPORT primed_reset 3 {'loss': 3.4890518188476562, 'warm_expected_loss': 3.48885440826416, 'cold_expected_loss': 3.4890518188476562, 'graphs_before': 3, 'graphs_after': 4, 'optimizer_updates': 0}
+CONTINUATION {
+  "jobs": [],
+  "observed_job_state": "FAILED",
+  "phase": "blocked_determinism",
+  "pid": 3276938,
+  "recovery_job": 3361386,
+  "source_commit": "d7b1a37",
+  "started_unix": 1791750201.5162792,
+  "updated_unix": 1791786455.2596507,
+  "controller_stopped": true,
+  "error": "Unresolved real four-rank resume loss mismatch at update210; frozen protocol determinism gate must be cleared before promotion/submission",
+  "diagnostic_job": 3364480,
+  "recovery_stopped_at_update": 256,
+  "recovery_trainer_exit": "normal_preempted",
+  "recovery_batch_failure": "intentional minimum400 postcondition",
+  "previous_diagnostic_job": 3361666,
+  "previous_diagnostic_result": "all three training phases normal; comparison failed:609model tensors differ"
+}
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

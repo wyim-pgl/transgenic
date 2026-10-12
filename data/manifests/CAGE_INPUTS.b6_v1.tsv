@@ -1,0 +1,16 @@
+species	taxid	bioproject	runs	strategy	tissue	genotype_as_stated	libraries	role	basis
+Athaliana	3702	PRJNA1087576	SRR28341940,SRR28341941,SRR28341942	CAGE	mature leaf	Col-0 (as stated)	3	primary	tissue- and BioProject-matched partner of the A-ONT1 scoring set; NextSeq 500, 2024
+Athaliana	3702	PRJNA562289	SRR10045003,SRR10045004,SRR10045005	CAGE	seedling	as stated in ENA	3	secondary	wild-type replicates only (rrp4-2 / hen2-4 RNA-decay mutants of the same study excluded: they accumulate unstable transcripts that would add spurious TSS peaks); training-side second set so design §2(b) clustering has >= 2 CAGE libraries; 2020
+Gmax	3847	PRJNA757465	SRR15601584-SRR15601591	STRIPE-seq	8 tissues (leaf, stem tip, seed, pod, nodule, root, flower, stem)	as stated in ENA	8	primary	tissue breadth; Purdue 2022
+Gmax	3847	PRJDB7219	DRR146878-DRR146883	nAnT-iCAGE	leaf, stem, root	as stated in ENA	6	secondary	independent library set; 2020
+Osativa	4530	PRJDB6857	DRR127211-DRR127218	CAGE	Japonica (polysome / 5'UTR study)	Japonica (as stated)	8	primary	Japonica; genotype/cultivar verification waived by the author 2026-09-23 (stratum recorded as stated); 2018
+Osativa	4530	PRJNA695000	SRR13552962-SRR13552966	RAMPAGE	leaves	Indica IRBB7 (as stated)	5	secondary	Indica; genotype verification waived by the author; 2021
+Sbicolor	4558	PRJEB42222	ERR5021711-ERR5021714	RAMPAGE	root, shoot	Tx2783 / RTx436 (as stated; not BTx623)	4	primary	only BioProject found; two genotypes, ≥ 2 libraries so §2(b) is satisfiable; genotype verification waived by the author; CSHL 2021
+Zmays	4577	PRJNA288042	SRR2078285-SRR2078292	CAGE	root, shoot	B73 and A632 (as stated)	8	primary	B73 matches the scoring manifest; Mejía-Guerra 2015
+Zmays	4577	PRJNA438108	SRR6849450,SRR6849451,SRR6849452,SRR6849453,SRR6849454,SRR6849455,SRR6849457,SRR6849464,SRR6849466,SRR6849469	RAMPAGE	root tips etc.	B73 (as stated)	10	secondary	RAMPAGE runs only (10 of the BioProject's 30; the other 20 are long/short RNA-seq); second B73 library set; CSHL 2018
+Slycopersicum	4081	PRJDB14685	DRR415368-DRR415373	TSS-seq	seedling	cultivar not stated in ENA (verification waived by the author)	6	primary	6 libraries; Kyushu 2023. PRJDB13239 (var. cerasiforme) NOT designated
+Bdistachyon	15368	-	-	-	-	-	0	none	no cap/CAGE-class dataset found → 5C unreachable, every read 5I (A16)
+Ppatens	3218	-	-	-	-	-	0	none	no cap/CAGE-class dataset found → 5C unreachable, every read 5I (A16)
+Ptrichocarpa	3694	-	-	-	-	-	0	none	no cap/CAGE-class dataset found → 5C unreachable, every read 5I (A16)
+Sitalica	4555	-	-	-	-	-	0	none	none for S. italica (S. viridis PRJNA354250 is another species; no lift-over route in the design) → 5I
+Vvinifera	29760	-	-	-	-	-	0	none	none (PRJNA1164469 is mislabelled mRNA-seq) → 5I

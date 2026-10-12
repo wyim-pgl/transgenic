@@ -1,0 +1,3 @@
+cwd: /mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v1/release_v2
+argv: ["bash", "-n", "p1.sbatch"]
+exit_code: 0

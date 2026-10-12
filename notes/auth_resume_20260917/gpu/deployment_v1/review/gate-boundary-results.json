@@ -1,0 +1,32 @@
+{
+  "fixture_only_not_authority": true,
+  "outcomes": [
+    {
+      "age_seconds": -1,
+      "outcome": "fresh controller gate required (<=300 seconds); never reuse reconnaissance"
+    },
+    {
+      "age_seconds": 0,
+      "outcome": "ACCEPTED"
+    },
+    {
+      "age_seconds": 300,
+      "outcome": "ACCEPTED"
+    },
+    {
+      "age_seconds": 301,
+      "outcome": "fresh controller gate required (<=300 seconds); never reuse reconnaissance"
+    },
+    {
+      "age_seconds": 3600,
+      "outcome": "fresh controller gate required (<=300 seconds); never reuse reconnaissance"
+    },
+    {
+      "age_seconds": 86400,
+      "outcome": "fresh controller gate required (<=300 seconds); never reuse reconnaissance"
+    }
+  ],
+  "changed_measurement_changes_external_pin": true,
+  "shell_claim_precedes_host_gate": true,
+  "pure_validator_uses_no_live_scheduler_or_accounting_query": true
+}

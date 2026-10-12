@@ -1,0 +1,31 @@
+[M::mm_idx_gen::0.029*0.23] collected minimizers
+[M::mm_idx_gen::0.032*0.61] sorted minimizers
+[M::main::0.032*0.61] loaded/built the index for 2 target sequence(s)
+[M::mm_mapopt_update::0.033*0.62] mid_occ = 10
+[M::mm_idx_stat] kmer size: 14; skip: 5; is_hpc: 0; #seq: 2
+[M::mm_idx_stat::0.034*0.63] distinct minimizers: 21685 (99.97% are singletons); average occurrences: 1.000; average spacing: 2.951; total length: 64000
+[M::worker_pipeline::0.038*0.82] mapped 7 sequences
+[M::main] Version: 2.28-r1209
+[M::main] CMD: minimap2 -t 4 -ax splice -k14 -G 200000 --secondary=no --cs=long /data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/genomes/fixture.fa /data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation/sample.fa
+[M::main] Real time: 0.040 sec; CPU: 0.034 sec; Peak RSS: 0.017 GB
+[M::mm_idx_gen::0.004*1.29] collected minimizers
+[M::mm_idx_gen::0.008*2.40] sorted minimizers
+[M::main::0.008*2.39] loaded/built the index for 2 target sequence(s)
+[M::mm_mapopt_update::0.008*2.28] mid_occ = 10
+[M::mm_idx_stat] kmer size: 15; skip: 5; is_hpc: 0; #seq: 2
+[M::mm_idx_stat::0.009*2.20] distinct minimizers: 21733 (99.99% are singletons); average occurrences: 1.000; average spacing: 2.945; total length: 64000
+[M::worker_pipeline::0.011*2.21] mapped 7 sequences
+[M::main] Version: 2.28-r1209
+[M::main] CMD: minimap2 -t 4 -x splice /data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/genomes/fixture.fa /data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz
+[M::main] Real time: 0.013 sec; CPU: 0.026 sec; Peak RSS: 0.017 GB
+[INFO][0m 6 patterns loaded from file
+[M::mm_idx_gen::0.015*0.43] collected minimizers
+[M::mm_idx_gen::0.018*1.07] sorted minimizers
+[M::main::0.018*1.07] loaded/built the index for 2 target sequence(s)
+[M::mm_mapopt_update::0.019*1.07] mid_occ = 10
+[M::mm_idx_stat] kmer size: 14; skip: 5; is_hpc: 0; #seq: 2
+[M::mm_idx_stat::0.019*1.07] distinct minimizers: 21685 (99.97% are singletons); average occurrences: 1.000; average spacing: 2.951; total length: 64000
+[M::worker_pipeline::0.024*1.23] mapped 6 sequences
+[M::main] Version: 2.28-r1209
+[M::main] CMD: minimap2 -t 4 -ax splice -k14 -G 200000 --secondary=no --cs=long /data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/genomes/fixture.fa /data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel_reads.fa
+[M::main] Real time: 0.026 sec; CPU: 0.031 sec; Peak RSS: 0.018 GB

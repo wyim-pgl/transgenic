@@ -1,0 +1,30 @@
+{
+  "files": {
+    "code/evidence/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "code/evidence/est_hsp_contract.py": "fcb8a4b2413f12dc5c5b0c4d55676cedeac21b3fcb26cf849c089657650a3954",
+    "code/evidence/est_hsp_expanded.py": "aaa8348b4e5d47d43c065857e3bb06509f63086a6d2c79f35f93e88bc211b3e4",
+    "code/evidence/est_phase_accept.py": "0c6490c76d63463d945ee270f46a4ab8b96e929b57f4ac38dc52229f24c11ae3",
+    "code/evidence/est_phase_project.py": "6b977fabf3b3401e162e8d8b800d215d34dbe978f54b364429cb2056a60fec4b",
+    "code/evidence/est_real_sample.py": "93ea442d0dc60c1d8df2ee0b479361d89a188f9b43bba4327740f896efec27b2",
+    "manifest.json": "7d1af21faf7cf99c46120c07781d0af0ad1318a2c2aa12875fcfdd74b4e5f88c",
+    "run_compute.py": "c254230d103887c8317325408b1ac0a8b8c0572e389f33f4d5afb5d01d02b2a3",
+    "sample.sbatch": "a9ee5613952f45994298b6bfc434a6b818b437764bab5ff8ee730879d0456308"
+  },
+  "runtime": {
+    "python": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3.11",
+    "python_sha256": "74d2337199fe0880e01a38cd136c03f28de4383b833393657ce8420ce3c57415",
+    "python_version": "3.11.14",
+    "reader_htslib": "1.23",
+    "reader_samtools": "1.21",
+    "reader_sha256": "a579aed31a13841cc0950a487b59729355d0b9fbcc39293e0b90b960133217bc"
+  },
+  "schema": 1,
+  "scope": "one bounded Sitalica diagnostic; not biological acceptance",
+  "source_hashes": {
+    "revision/scripts/evidence/est_hsp_contract.py": "fcb8a4b2413f12dc5c5b0c4d55676cedeac21b3fcb26cf849c089657650a3954",
+    "revision/scripts/evidence/est_hsp_expanded.py": "aaa8348b4e5d47d43c065857e3bb06509f63086a6d2c79f35f93e88bc211b3e4",
+    "revision/scripts/evidence/est_phase_accept.py": "0c6490c76d63463d945ee270f46a4ab8b96e929b57f4ac38dc52229f24c11ae3",
+    "revision/scripts/evidence/est_phase_project.py": "6b977fabf3b3401e162e8d8b800d215d34dbe978f54b364429cb2056a60fec4b",
+    "revision/scripts/evidence/est_real_sample.py": "93ea442d0dc60c1d8df2ee0b479361d89a188f9b43bba4327740f896efec27b2"
+  }
+}

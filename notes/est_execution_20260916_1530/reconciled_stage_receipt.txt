@@ -1,0 +1,6 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T19:06:56-0700
+Filesystem      Size  Used Avail Use% Mounted on
+pronghorn-0      60T   34T   27T  56% /data/gpfs

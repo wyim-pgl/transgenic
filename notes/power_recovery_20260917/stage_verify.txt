@@ -1,0 +1,13 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+authority.py SHA256 OK
+cpu_dependency.json SHA256 OK
+cpu_site.tar SHA256 OK
+panel_cpu.sbatch SHA256 OK
+reference_authority.tar SHA256 OK
+run_panel_cpu.py SHA256 OK
+source.tar SHA256 OK
+source.tar safely extracted
+cpu_site.tar safely extracted
+STAGING VERIFIED; no job submitted

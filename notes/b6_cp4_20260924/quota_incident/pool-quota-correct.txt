@@ -1,0 +1,9 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+Disk quotas for prj 22169 (pid 22169):
+      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace
+ /work/nvme/bilv 574895272* 524288000 576716800 6d21h29m58s   14239*       0       0       -
+Disk quotas for prj 22169 (pid 22169):
+      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace
+  /work/hdd/bilv   10884  1048576000 1153433600       -   14239        0       0       -

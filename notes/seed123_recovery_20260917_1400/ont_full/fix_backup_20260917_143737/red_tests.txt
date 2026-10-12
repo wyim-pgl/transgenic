@@ -1,0 +1,84 @@
+test_bad_pin (test_wrapper.Boundary) ... ok
+test_mutated_recursive_output_rejected_by_existing_gate (test_wrapper.Boundary) ... ok
+test_no_reuse (test_wrapper.Boundary) ... ok
+test_nonzero_child_not_complete (test_wrapper.Boundary) ... ok
+test_receipt_scope_and_mutation (test_wrapper.Boundary) ... ok
+test_slurm_environment_alone_insufficient (test_wrapper.Boundary) ... ok
+test_success_real_child (test_wrapper.Boundary) ... ok
+test_timeout_retains_logs_and_status (test_wrapper.Boundary) ... ok
+test_actual_nested_helper_import_layout_clean_environment (test_wrapper.SyntheticExecute) ... ok
+test_closure_rejects_extras_missing_files_and_redirects (test_wrapper.SyntheticExecute) ... test_execute_failure_and_postflight_mutations (test_wrapper.SyntheticExecute) ... test_execute_synthetic_happy_path (test_wrapper.SyntheticExecute) ... ok
+test_unlisted_imports_rejected_before_gate_import_or_marker (test_wrapper.SyntheticExecute) ... test_unsupported_interpreter_rejected_before_any_path_access (test_wrapper.SyntheticExecute) ... FAIL
+
+======================================================================
+FAIL: test_closure_rejects_extras_missing_files_and_redirects (test_wrapper.SyntheticExecute) (kind='directory')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/test_wrapper.py", line 245, in test_closure_rejects_extras_missing_files_and_redirects
+    with self.assertRaises((ValueError, FileNotFoundError)): case.invoke()
+AssertionError: (<class 'ValueError'>, <class 'FileNotFoundError'>) not raised
+
+======================================================================
+FAIL: test_closure_rejects_extras_missing_files_and_redirects (test_wrapper.SyntheticExecute) (kind='symlink')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/test_wrapper.py", line 245, in test_closure_rejects_extras_missing_files_and_redirects
+    with self.assertRaises((ValueError, FileNotFoundError)): case.invoke()
+AssertionError: (<class 'ValueError'>, <class 'FileNotFoundError'>) not raised
+
+======================================================================
+FAIL: test_closure_rejects_extras_missing_files_and_redirects (test_wrapper.SyntheticExecute) (kind='fifo')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/test_wrapper.py", line 245, in test_closure_rejects_extras_missing_files_and_redirects
+    with self.assertRaises((ValueError, FileNotFoundError)): case.invoke()
+AssertionError: (<class 'ValueError'>, <class 'FileNotFoundError'>) not raised
+
+======================================================================
+FAIL: test_execute_failure_and_postflight_mutations (test_wrapper.SyntheticExecute) (mode='stderr_mutation')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/test_wrapper.py", line 208, in test_execute_failure_and_postflight_mutations
+    with self.assertRaises((ValueError, TimeoutError)): case.invoke(mode)
+AssertionError: (<class 'ValueError'>, <class 'TimeoutError'>) not raised
+
+======================================================================
+FAIL: test_execute_failure_and_postflight_mutations (test_wrapper.SyntheticExecute) (mode='closure_mutation')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/test_wrapper.py", line 208, in test_execute_failure_and_postflight_mutations
+    with self.assertRaises((ValueError, TimeoutError)): case.invoke(mode)
+AssertionError: (<class 'ValueError'>, <class 'TimeoutError'>) not raised
+
+======================================================================
+FAIL: test_unlisted_imports_rejected_before_gate_import_or_marker (test_wrapper.SyntheticExecute) (name='src/transgenic.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/test_wrapper.py", line 223, in test_unlisted_imports_rejected_before_gate_import_or_marker
+    self.assertFalse(marker.exists(), 'unlisted code executed before rejection')
+AssertionError: True is not false : unlisted code executed before rejection
+
+======================================================================
+FAIL: test_unlisted_imports_rejected_before_gate_import_or_marker (test_wrapper.SyntheticExecute) (name='revision/scripts/json.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/test_wrapper.py", line 223, in test_unlisted_imports_rejected_before_gate_import_or_marker
+    self.assertFalse(marker.exists(), 'unlisted code executed before rejection')
+AssertionError: True is not false : unlisted code executed before rejection
+
+======================================================================
+FAIL: test_unsupported_interpreter_rejected_before_any_path_access (test_wrapper.SyntheticExecute)
+----------------------------------------------------------------------
+ValueError: pin mismatch: /tmp/ont_fixes_jbvisrm8/code/wrapper.py
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/ont_full/test_wrapper.py", line 252, in test_unsupported_interpreter_rejected_before_any_path_access
+    with self.assertRaisesRegex(ValueError, r'Python >=3\.9 required'):
+AssertionError: "Python >=3\.9 required" does not match "pin mismatch: /tmp/ont_fixes_jbvisrm8/code/wrapper.py"
+
+----------------------------------------------------------------------
+Ran 14 tests in 12.005s
+
+FAILED (failures=8)

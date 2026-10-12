@@ -1,0 +1,34 @@
+{
+  "validated_utc": "2026-09-17T23:20:40.159681+00:00",
+  "parent_path": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_result/raw/worker/sample/diagnostics.jsonl",
+  "parent_sha256": "8d8c8be00102a6ba7e7b5cdd875dbeca5a99b18290c024f3690cd849e670fb1d",
+  "batch_sha256": "85af56da812d225e1c46e7c969b1de67ce76a01b1da51c5409f3d56a9b4249d0",
+  "requested_and_returned_exact_accessions": [
+    "JK596275.1",
+    "JK578847.1",
+    "JK570678.1",
+    "JK559843.1",
+    "JK552962.1",
+    "GW787538.1",
+    "JK608601.1",
+    "JK608600.1",
+    "JK608599.1",
+    "JK608598.1",
+    "JK608597.1",
+    "JK608596.1",
+    "JK608595.1",
+    "JK608594.1",
+    "JK608593.1",
+    "JK608592.1"
+  ],
+  "exact_sequence_matches": 16,
+  "no_extra_or_duplicate_records": true,
+  "parser_sha256": "93916133721cccc438336bc4f7c64df22b7fb65ee415b83f37a0696f2301aff0",
+  "outputs": {
+    "metadata.json": "4c9435109bedbacf40c295c8d870e74723973ebf4f124cb6c77a5ce4bd77a91e",
+    "metadata.tsv": "1d03091bc9de0f0b231960d8bff6dfac2c5371fc2ac72ddb8582a9ade8c89739"
+  },
+  "source_acceptance_changed": false,
+  "actual_a11_audit_complete": false,
+  "training_eligible": false
+}

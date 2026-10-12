@@ -1,0 +1,37 @@
+2026-09-17T17:16:53-0700
+JobId=6165965 JobName=ont_f4_fixture
+   UserId=wyim(3092957) GroupId=p-wyim(3092957) MCS_label=N/A
+   Priority=95699 Nice=0 Account=cpu-s1-pgl-0 QOS=normal
+   JobState=COMPLETED Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:04 TimeLimit=00:06:00 TimeMin=N/A
+   SubmitTime=2026-09-17T17:14:54 EligibleTime=2026-09-17T17:14:54
+   AccrueTime=2026-09-17T17:14:54
+   StartTime=2026-09-17T17:14:55 EndTime=2026-09-17T17:14:59 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-17T17:14:55
+   Partition=cpu-s1-pgl-0 AllocNode:Sid=login-0:24698
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=cpu-50
+   BatchHost=cpu-50
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,mem=4G,node=1,billing=9
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   JOB_GRES=(null)
+     Nodes=cpu-50 CPU_IDs=10-13 Mem=4096 GRES=
+   MinCPUsNode=4 MinMemoryNode=4G MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/release/fixture.sbatch
+   WorkDir=/data/gpfs/home/wyim/ont_f4_fix_20260917_1714
+   StdErr=/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/stderr
+   StdIn=/dev/null
+   StdOut=/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/stdout
+   Power=
+   NtasksPerTRES:0
+
+JobID|JobName|State|ExitCode|DerivedExitCode|AllocCPUS|ReqMem|Elapsed|Start|End|NodeList|MaxRSS|MaxVMSize
+6165965|ont_f4_fixture|COMPLETED|0:0|0:0|4|4Gn|00:00:04|2026-09-17T17:14:55|2026-09-17T17:14:59|cpu-50||
+6165965.batch|batch|COMPLETED|0:0||4|4Gn|00:00:04|2026-09-17T17:14:55|2026-09-17T17:14:59|cpu-50|1496K|163500K
+6165965.extern|extern|OUT_OF_MEMORY|0:125||4|4Gn|00:00:04|2026-09-17T17:14:55|2026-09-17T17:14:59|cpu-50|1480K|163476K
+6165965.0|timeout|COMPLETED|0:0||4|4Gn|00:00:03|2026-09-17T17:14:56|2026-09-17T17:14:59|cpu-50|1340K|298568K

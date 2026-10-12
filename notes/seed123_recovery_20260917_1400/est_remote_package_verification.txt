@@ -1,0 +1,21 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+{
+  "status": "TRANSFERRED_PACKAGE_HASHES_VERIFIED",
+  "ledger_sha256": "46563a19f5699c55df12df7241af7f807e6d98bed0d7c0666138ce78804c40d6",
+  "files": [
+    "code/evidence/__init__.py",
+    "code/evidence/est_hsp_contract.py",
+    "code/evidence/est_hsp_expanded.py",
+    "code/evidence/est_phase_accept.py",
+    "code/evidence/est_phase_project.py",
+    "code/evidence/est_real_sample.py",
+    "ledger.json",
+    "manifest.json",
+    "run_compute.py",
+    "sample.sbatch"
+  ],
+  "source_readonly": true,
+  "submitted": false
+}

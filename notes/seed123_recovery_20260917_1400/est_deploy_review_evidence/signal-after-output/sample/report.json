@@ -1,0 +1,1 @@
+{"status": "COMPLETE", "diagnostics_sha256": "b885fe49dbce4a89fc20cfef68b7925fb87cb0ee88b2d33b645d9f180733f08a", "manifest_file": {"sha256": "62a4be58051be2a3702ef4192022fa707084aa0dcc6669fb38ce30ac65cc58ad"}, "training_eligible": false, "full_c0": false, "a11_status": "unassessable", "route_a_complete": false, "molecule_counts_complete": false, "raster": false}

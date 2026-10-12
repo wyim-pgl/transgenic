@@ -1,0 +1,54 @@
+{"iteration": 1, "result": "PASS", "bytes": 163935, "pool": "ddn_hdd", "protected_epochs": [1, 3, 4], "manifest_id": "ae1201d3043ea21d45a0ca4473200fec97bfcc318f6f0fd69b750d1d831e247f"}
+{"iteration": 2, "result": "PASS", "bytes": 163935, "pool": "ddn_hdd", "protected_epochs": [1, 3, 4], "manifest_id": "0eb460ef7e9b1445d473419ffb876a87948f6aa0162dbc8b2995eeb14da946d0"}
+{"iteration": 3, "result": "PASS", "bytes": 163935, "pool": "ddn_hdd", "protected_epochs": [1, 3, 4], "manifest_id": "5528c668f32514d712b586bc0f5126d8e735731a7590d76faea2a3675add4592"}
+ALL_GENERATED_FIXTURES_REMOVED
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+test_actual_file_pool_mismatch_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_age_and_total_bytes_limits (test_checkpoint_archive.ArchiveTests) ... ok
+test_b6_pending_grad_and_zero_pending_both_complete (test_checkpoint_archive.ArchiveTests) ... ok
+test_bad_metadata_and_incomplete_optimizer_are_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_checkpoint_symlink_and_destination_symlink_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_cleanup_preserves_best_and_live_state_and_is_idempotent (test_checkpoint_archive.ArchiveTests) ... ok
+test_copy_failure_keeps_source_and_restart_finishes (test_checkpoint_archive.ArchiveTests) ... ok
+test_corrupt_destination_prevents_cleanup_and_retry (test_checkpoint_archive.ArchiveTests) ... ok
+test_duplicate_numeric_epoch_alias_cannot_weaken_cleanup_protection (test_checkpoint_archive.ArchiveTests) ... ok
+test_empty_or_missing_rank_rng_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_existing_conflicting_receipt_never_overwritten (test_checkpoint_archive.ArchiveTests) ... ok
+test_incomplete_newer_epoch_cannot_weaken_tombstone_protection (test_checkpoint_archive.ArchiveTests) ... ok
+test_incomplete_newer_epoch_preserves_latest_two_completed (test_checkpoint_archive.ArchiveTests) ... ok
+test_interrupted_receipt_write_restarts_successfully (test_checkpoint_archive.ArchiveTests) ... ok
+test_latest_two_change_before_cleanup_keeps_source (test_checkpoint_archive.ArchiveTests) ... ok
+test_lock_excludes_separate_process (test_checkpoint_archive.ArchiveTests) ... ok
+test_locking_unsupported_preserves_source (test_checkpoint_archive.ArchiveTests) ... ok
+test_manifest_traversal_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_metadata_only_plan_never_hashes_weights (test_checkpoint_archive.ArchiveTests) ... ok
+test_missing_pending_grad_is_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_new_best_after_preparation_prevents_cleanup (test_checkpoint_archive.ArchiveTests) ... ok
+test_new_incomplete_epoch_cannot_weaken_cleanup_protection (test_checkpoint_archive.ArchiveTests) ... ok
+test_plan_protects_best_latest_two_and_ignores_non_epochs (test_checkpoint_archive.ArchiveTests) ... ok
+test_pool_and_quota_failures_preserve_source (test_checkpoint_archive.ArchiveTests) ... ok
+test_prepare_hashes_all_files_and_copy_is_idempotent (test_checkpoint_archive.ArchiveTests) ... ok
+test_previously_verified_archive_can_be_archived_again (test_checkpoint_archive.ArchiveTests) ... ok
+test_publish_failure_keeps_source_and_restart_finishes (test_checkpoint_archive.ArchiveTests) ... ok
+test_sigkill_after_publication_keeps_source_then_reuses_archive (test_checkpoint_archive.ArchiveTests) ... ok
+test_sigkill_mid_cleanup_recovers (test_checkpoint_archive.ArchiveTests) ... ok
+test_sigkill_mid_copy_source_intact_restart (test_checkpoint_archive.ArchiveTests) ... ok
+test_source_changed_after_publication_cannot_be_removed (test_checkpoint_archive.ArchiveTests) ... ok
+test_source_mutation_prevents_transfer (test_checkpoint_archive.ArchiveTests) ... ok
+test_symlink_and_overlapping_roots_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_unrecognized_or_symlink_receipt_temp_is_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_unverified_pool_or_wrong_project_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_verification_requires_successful_durability_barriers (test_checkpoint_archive.ArchiveTests) ... ok
+test_wrong_remote_acknowledgment_keeps_source (test_checkpoint_archive.ArchiveTests) ... ok
+
+----------------------------------------------------------------------
+Ran 37 tests in 0.685s
+
+OK

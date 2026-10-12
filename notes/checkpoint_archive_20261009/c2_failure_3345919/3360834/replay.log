@@ -1,0 +1,592 @@
+W1011 13:40:35.533000 4138912 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 13:40:35.597000 4138912 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+NCCL version 2.30.7+cuda13.3
+
+[2026-10-11 13:40:47] gh048:4138912:4138912 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+
+[2026-10-11 13:40:47] gh048:4138912:4138912 [0] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+
+[2026-10-11 13:40:47] gh048:4138912:4138912 [0] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-10-11 13:40:47] gh048:4138912:4138912 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+
+[2026-10-11 13:40:47] gh048:4138912:4138912 [0] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+real   1 row 1 pos  0 rn 91492 ep 0    ok L 30720 attn 30720 T 33 nonpad 33 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  12.25 peak_resv  13.54 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 33):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real   2 row 2 pos  1 rn 104126 ep 0    ok L 30720 attn 30720 T 560 nonpad 560 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  15.31 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 560):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+[rank0]:V1011 13:43:04.279000 4138912 torch/_dynamo/guards.py:5481] [0/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank0]:V1011 13:43:04.279000 4138912 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     triggered by the following guard failure(s):
+[rank0]:V1011 13:43:04.279000 4138912 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 129024
+real   3 row 3 pos  2 rn 146698 ep 0    ok L 129024 attn 129024 T 80 nonpad 80 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  31.07 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 80):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real   4 row 4 pos  3 rn 243815 ep 0    ok L 129024 attn 129024 T 267 nonpad 267 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  31.34 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 267):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real   5 row 5 pos  4 rn 221086 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  31.34 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real   6 row 6 pos  5 rn 10405 ep 0    ok L 129024 attn 129024 T 1352 nonpad 1352 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.01 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 1352):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+[rank0]:V1011 13:45:19.219000 4138912 torch/_dynamo/guards.py:5481] [0/2] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank0]:V1011 13:45:19.219000 4138912 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank0]:V1011 13:45:19.219000 4138912 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 129024, actual 61440
+[rank0]:V1011 13:45:19.219000 4138912 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 61440
+real   7 row 7 pos  6 rn 117991 ep 0    ok L 61440 attn 61440 T 1011 nonpad 1011 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.01 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 1011):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real   8 row 8 pos  7 rn 64780 ep 0    ok L 30720 attn 30720 T 18 nonpad 18 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.01 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 18):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real   9 row 9 pos  8 rn 220614 ep 0    ok L 30720 attn 30720 T 550 nonpad 550 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.01 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 550):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  10 row 10 pos  9 rn 212829 ep 0    ok L 61440 attn 61440 T 285 nonpad 285 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.01 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 285):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  11 row 11 pos 10 rn 9687 ep 0    ok L 61440 attn 61440 T 294 nonpad 294 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.02 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 294):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  12 row 12 pos 11 rn 267321 ep 0    ok L 129024 attn 129024 T 205 nonpad 205 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.02 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 205):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  13 row 13 pos 12 rn 66648 ep 0    ok L 61440 attn 61440 T 587 nonpad 587 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.02 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 587):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  14 row 14 pos 13 rn 32656 ep 0    ok L 30720 attn 30720 T 215 nonpad 215 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.02 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 215):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  15 row 15 pos 14 rn 91222 ep 0    ok L 30720 attn 30720 T 200 nonpad 200 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.02 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 200):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  16 row 16 pos 15 rn 260854 ep 0    ok L 30720 attn 30720 T 108 nonpad 108 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.02 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 108):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  17 row 17 pos 16 rn 77012 ep 0    ok L 61440 attn 61440 T 108 nonpad 108 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.02 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 108):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  18 row 18 pos 17 rn 6864 ep 0    ok L 30720 attn 30720 T 503 nonpad 503 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.02 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 503):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  19 row 19 pos 18 rn 167462 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.02 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  20 row 20 pos 19 rn 163670 ep 0    ok L 61440 attn 61440 T 750 nonpad 750 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.02 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 750):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  21 row 21 pos 20 rn 136390 ep 0    ok L 30720 attn 30720 T 342 nonpad 342 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.02 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 342):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  22 row 22 pos 21 rn 29657 ep 0    ok L 129024 attn 129024 T 312 nonpad 312 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.03 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 312):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  23 row 23 pos 22 rn 183968 ep 0    ok L 30720 attn 30720 T 33 nonpad 33 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 33):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  24 row 24 pos 23 rn 146508 ep 0    ok L 129024 attn 129024 T 310 nonpad 310 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.03 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 310):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  25 row 25 pos  0 rn 30489 ep 0    ok L 30720 attn 30720 T 138 nonpad 138 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  12.25 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 138):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  26 row 26 pos  1 rn 17021 ep 0    ok L 30720 attn 30720 T 578 nonpad 578 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 578):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  27 row 27 pos  2 rn 88092 ep 0    ok L 61440 attn 61440 T 959 nonpad 959 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 959):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  28 row 28 pos  3 rn 194355 ep 0    ok L 61440 attn 61440 T 768 nonpad 768 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 768):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  29 row 29 pos  4 rn 199021 ep 0    ok L 30720 attn 30720 T 119 nonpad 119 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 119):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  30 row 30 pos  5 rn 115618 ep 0    ok L 61440 attn 61440 T 373 nonpad 373 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 373):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  31 row 31 pos  6 rn 188519 ep 0    ok L 30720 attn 30720 T 190 nonpad 190 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 190):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  32 row 32 pos  7 rn 23262 ep 0    ok L 30720 attn 30720 T 256 nonpad 256 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 256):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  33 row 33 pos  8 rn 87283 ep 0    ok L 30720 attn 30720 T 269 nonpad 269 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 269):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  34 row 34 pos  9 rn 240583 ep 0    ok L 61440 attn 61440 T 116 nonpad 116 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 116):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  35 row 35 pos 10 rn 23510 ep 0    ok L 30720 attn 30720 T 394 nonpad 394 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 394):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  36 row 36 pos 11 rn 7872 ep 0    ok L 129024 attn 129024 T 1270 nonpad 1270 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.03 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 1270):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  37 row 37 pos 12 rn 133845 ep 0    ok L 30720 attn 30720 T 272 nonpad 272 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 272):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  38 row 38 pos 13 rn 270474 ep 0    ok L 61440 attn 61440 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  39 row 39 pos 14 rn 182940 ep 0    ok L 30720 attn 30720 T 96 nonpad 96 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 96):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  40 row 40 pos 15 rn 16375 ep 0    ok L 129024 attn 129024 T 1860 nonpad 1860 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.03 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 1860):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  41 row 41 pos 16 rn 248355 ep 0    ok L 61440 attn 61440 T 511 nonpad 511 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 511):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  42 row 42 pos 17 rn 46288 ep 0    ok L 30720 attn 30720 T 114 nonpad 114 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 114):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  43 row 43 pos 18 rn 268928 ep 0    ok L 30720 attn 30720 T 403 nonpad 403 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 403):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  44 row 44 pos 19 rn 24449 ep 0    ok L 61440 attn 61440 T 746 nonpad 746 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 746):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  45 row 45 pos 20 rn 114653 ep 0    ok L 30720 attn 30720 T 95 nonpad 95 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 95):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  46 row 46 pos 21 rn 89778 ep 0    ok L 30720 attn 30720 T 48 nonpad 48 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 48):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  47 row 47 pos 22 rn 128038 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  48 row 48 pos 23 rn 59228 ep 0    ok L 61440 attn 61440 T 343 nonpad 343 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 343):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  49 row 49 pos  0 rn 100853 ep 0    ok L 30720 attn 30720 T 78 nonpad 78 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  12.25 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 78):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  50 row 50 pos  1 rn 41307 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  51 row 51 pos  2 rn 230559 ep 0    ok L 61440 attn 61440 T 97 nonpad 97 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 97):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  52 row 52 pos  3 rn 242519 ep 0    ok L 30720 attn 30720 T 178 nonpad 178 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 178):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  53 row 53 pos  4 rn 226724 ep 0    ok L 30720 attn 30720 T 142 nonpad 142 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 142):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  54 row 54 pos  5 rn 95947 ep 0    ok L 30720 attn 30720 T 189 nonpad 189 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 189):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  55 row 55 pos  6 rn 135271 ep 0    ok L 30720 attn 30720 T 914 nonpad 914 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 914):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  56 row 56 pos  7 rn 203320 ep 0    ok L 61440 attn 61440 T 670 nonpad 670 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 670):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  57 row 57 pos  8 rn 251632 ep 0    ok L 61440 attn 61440 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  58 row 58 pos  9 rn 180320 ep 0    ok L 129024 attn 129024 T 529 nonpad 529 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.03 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 529):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  59 row 59 pos 10 rn 252441 ep 0    ok L 129024 attn 129024 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.03 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  60 row 60 pos 11 rn 163060 ep 0    ok L 61440 attn 61440 T 277 nonpad 277 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 277):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  61 row 61 pos 12 rn 3649 ep 0    ok L 30720 attn 30720 T 284 nonpad 284 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 284):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  62 row 62 pos 13 rn 255972 ep 0    ok L 30720 attn 30720 T 249 nonpad 249 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 249):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  63 row 63 pos 14 rn 204227 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  64 row 64 pos 15 rn 181926 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  65 row 65 pos 16 rn 217725 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  66 row 66 pos 17 rn 106140 ep 0    ok L 30720 attn 30720 T 106 nonpad 106 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 106):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  67 row 67 pos 18 rn 3113 ep 0    ok L 30720 attn 30720 T 747 nonpad 747 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 747):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  68 row 68 pos 19 rn 214357 ep 0    ok L 30720 attn 30720 T 42 nonpad 42 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 42):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  69 row 69 pos 20 rn 95099 ep 0    ok L 30720 attn 30720 T 128 nonpad 128 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 128):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  70 row 70 pos 21 rn 172276 ep 0    ok L 30720 attn 30720 T 328 nonpad 328 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.03 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 328):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  71 row 71 pos 22 rn 158076 ep 0    ok L 61440 attn 61440 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.03 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  72 row 72 pos 23 rn 246636 ep 0    ok L 129024 attn 129024 T 1595 nonpad 1595 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 1595):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  73 row 73 pos  0 rn 167079 ep 0    ok L 61440 attn 61440 T 560 nonpad 560 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  15.97 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 560):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  74 row 74 pos  1 rn 187652 ep 0    ok L 30720 attn 30720 T 59 nonpad 59 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 59):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  75 row 75 pos  2 rn 248145 ep 0    ok L 61440 attn 61440 T 63 nonpad 63 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 63):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  76 row 76 pos  3 rn 29773 ep 0    ok L 129024 attn 129024 T 259 nonpad 259 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 259):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  77 row 77 pos  4 rn 219080 ep 0    ok L 61440 attn 61440 T 158 nonpad 158 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 158):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  78 row 78 pos  5 rn 129294 ep 0    ok L 30720 attn 30720 T 361 nonpad 361 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 361):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  79 row 79 pos  6 rn 207368 ep 0    ok L 30720 attn 30720 T 96 nonpad 96 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 96):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  80 row 80 pos  7 rn 224737 ep 0    ok L 61440 attn 61440 T 809 nonpad 809 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 809):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  81 row 81 pos  8 rn 251260 ep 0    ok L 30720 attn 30720 T 278 nonpad 278 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 278):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  82 row 82 pos  9 rn 220882 ep 0    ok L 30720 attn 30720 T 184 nonpad 184 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 184):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  83 row 83 pos 10 rn 96477 ep 0    ok L 61440 attn 61440 T 95 nonpad 95 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 95):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  84 row 84 pos 11 rn 243827 ep 0    ok L 129024 attn 129024 T 183 nonpad 183 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 183):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  85 row 85 pos 12 rn 214246 ep 0    ok L 30720 attn 30720 T 344 nonpad 344 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 344):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  86 row 86 pos 13 rn 216163 ep 0    ok L 61440 attn 61440 T 305 nonpad 305 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 305):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  87 row 87 pos 14 rn 34912 ep 0    ok L 129024 attn 129024 T 95 nonpad 95 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 95):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  88 row 88 pos 15 rn 188439 ep 0    ok L 30720 attn 30720 T 108 nonpad 108 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 108):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  89 row 89 pos 16 rn 69188 ep 0    ok L 61440 attn 61440 T 272 nonpad 272 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 272):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  90 row 90 pos 17 rn 199182 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  91 row 91 pos 18 rn 31715 ep 0    ok L 61440 attn 61440 T 351 nonpad 351 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 351):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  92 row 92 pos 19 rn 166977 ep 0    ok L 61440 attn 61440 T 33 nonpad 33 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 33):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  93 row 93 pos 20 rn 222650 ep 0    ok L 61440 attn 61440 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  94 row 94 pos 21 rn 175198 ep 0    ok L 61440 attn 61440 T 597 nonpad 597 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 597):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  95 row 95 pos 22 rn 196090 ep 0    ok L 30720 attn 30720 T 207 nonpad 207 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 207):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  96 row 96 pos 23 rn 181068 ep 0    ok L 61440 attn 61440 T 408 nonpad 408 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 408):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  97 row 97 pos  0 rn 2858 ep 0    ok L 30720 attn 30720 T 33 nonpad 33 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  12.25 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 33):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  98 row 98 pos  1 rn 264403 ep 0    ok L 129024 attn 129024 T 1356 nonpad 1356 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 1356):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real  99 row 99 pos  2 rn 109351 ep 0    ok L 61440 attn 61440 T 425 nonpad 425 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 425):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 100 row 100 pos  3 rn 175880 ep 0    ok L 30720 attn 30720 T 125 nonpad 125 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 125):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 101 row 101 pos  4 rn 167008 ep 0    ok L 61440 attn 61440 T 157 nonpad 157 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 157):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 102 row 102 pos  5 rn 202534 ep 0    ok L 30720 attn 30720 T 85 nonpad 85 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 85):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 103 row 103 pos  6 rn 215023 ep 0    ok L 30720 attn 30720 T 442 nonpad 442 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 442):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 104 row 104 pos  7 rn 95147 ep 0    ok L 30720 attn 30720 T 112 nonpad 112 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 112):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 105 row 105 pos  8 rn 155399 ep 0    ok L 61440 attn 61440 T 238 nonpad 238 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 238):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 106 row 106 pos  9 rn 32692 ep 0    ok L 30720 attn 30720 T 191 nonpad 191 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 191):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 107 row 107 pos 10 rn 216326 ep 0    ok L 129024 attn 129024 T 1490 nonpad 1490 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 1490):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 108 row 108 pos 11 rn 238967 ep 0    ok L 61440 attn 61440 T 421 nonpad 421 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 421):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 109 row 109 pos 12 rn 141380 ep 0    ok L 61440 attn 61440 T 202 nonpad 202 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 202):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 110 row 110 pos 13 rn 49703 ep 0    ok L 30720 attn 30720 T 310 nonpad 310 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 310):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 111 row 111 pos 14 rn 237665 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 112 row 112 pos 15 rn 39269 ep 0    ok L 30720 attn 30720 T 458 nonpad 458 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 458):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 113 row 113 pos 16 rn 233022 ep 0    ok L 61440 attn 61440 T 303 nonpad 303 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 303):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 114 row 114 pos 17 rn 75857 ep 0    ok L 30720 attn 30720 T 42 nonpad 42 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 42):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 115 row 115 pos 18 rn 245773 ep 0    ok L 30720 attn 30720 T 68 nonpad 68 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 68):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 116 row 116 pos 19 rn 196087 ep 0    ok L 30720 attn 30720 T 110 nonpad 110 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 110):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 117 row 117 pos 20 rn 167181 ep 0    ok L 129024 attn 129024 T 1096 nonpad 1096 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 1096):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 118 row 118 pos 21 rn 147585 ep 0    ok L 61440 attn 61440 T 289 nonpad 289 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 289):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 119 row 119 pos 22 rn 261652 ep 0    ok L 61440 attn 61440 T 355 nonpad 355 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 355):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 120 row 120 pos 23 rn 79665 ep 0    ok L 61440 attn 61440 T 230 nonpad 230 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 230):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 121 row 121 pos  0 rn 178054 ep 0    ok L 129024 attn 129024 T 1515 nonpad 1515 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  24.15 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 1515):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 122 row 122 pos  1 rn 263920 ep 0    ok L 61440 attn 61440 T 575 nonpad 575 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 575):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 123 row 123 pos  2 rn 184604 ep 0    ok L 30720 attn 30720 T 55 nonpad 55 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 55):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 124 row 124 pos  3 rn 127737 ep 0    ok L 30720 attn 30720 T 1292 nonpad 1292 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 1292):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 125 row 125 pos  4 rn 232571 ep 0    ok L 30720 attn 30720 T 446 nonpad 446 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 446):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 126 row 126 pos  5 rn 243554 ep 0    ok L 61440 attn 61440 T 292 nonpad 292 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 292):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 127 row 127 pos  6 rn 11400 ep 0    ok L 30720 attn 30720 T 183 nonpad 183 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 183):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 128 row 128 pos  7 rn 95728 ep 0    ok L 30720 attn 30720 T 317 nonpad 317 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 317):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 129 row 129 pos  8 rn 116461 ep 0    ok L 30720 attn 30720 T 261 nonpad 261 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 261):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 130 row 130 pos  9 rn 146981 ep 0    ok L 30720 attn 30720 T 95 nonpad 95 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 95):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 131 row 131 pos 10 rn 230055 ep 0    ok L 30720 attn 30720 T 68 nonpad 68 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 68):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 132 row 132 pos 11 rn 161919 ep 0    ok L 129024 attn 129024 T 515 nonpad 515 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 515):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 133 row 133 pos 12 rn 143628 ep 0    ok L 61440 attn 61440 T 377 nonpad 377 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 377):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 134 row 134 pos 13 rn 63225 ep 0    ok L 30720 attn 30720 T 500 nonpad 500 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 500):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 135 row 135 pos 14 rn 173004 ep 0    ok L 129024 attn 129024 T 105 nonpad 105 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 105):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 136 row 136 pos 15 rn 49930 ep 0    ok L 61440 attn 61440 T 227 nonpad 227 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 227):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 137 row 137 pos 16 rn 80329 ep 0    ok L 129024 attn 129024 T 200 nonpad 200 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 200):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 138 row 138 pos 17 rn 142019 ep 0    ok L 30720 attn 30720 T 195 nonpad 195 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 195):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 139 row 139 pos 18 rn 28282 ep 0    ok L 30720 attn 30720 T 55 nonpad 55 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 55):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 140 row 140 pos 19 rn 199333 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 141 row 141 pos 20 rn 264732 ep 0    ok L 30720 attn 30720 T 33 nonpad 33 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 33):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 142 row 142 pos 21 rn 135649 ep 0    ok L 61440 attn 61440 T 467 nonpad 467 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 467):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 143 row 143 pos 22 rn 112980 ep 0    ok L 61440 attn 61440 T 451 nonpad 451 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 451):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 144 row 144 pos 23 rn 9709 ep 0    ok L 61440 attn 61440 T 202 nonpad 202 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 202):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 145 row 145 pos  0 rn 98653 ep 0    ok L 30720 attn 30720 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  12.25 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 146 row 146 pos  1 rn 238950 ep 0    ok L 61440 attn 61440 T 33 nonpad 33 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 33):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 147 row 147 pos  2 rn 88721 ep 0    ok L 129024 attn 129024 T 1499 nonpad 1499 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 1499):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 148 row 148 pos  3 rn 218122 ep 0    ok L 30720 attn 30720 T 337 nonpad 337 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 337):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 149 row 149 pos  4 rn 257903 ep 0    ok L 30720 attn 30720 T 159 nonpad 159 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 159):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 150 row 150 pos  5 rn 124516 ep 0    ok L 30720 attn 30720 T 240 nonpad 240 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 240):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 151 row 151 pos  6 rn 249968 ep 0    ok L 61440 attn 61440 T 377 nonpad 377 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 377):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 152 row 152 pos  7 rn 80775 ep 0    ok L 30720 attn 30720 T 371 nonpad 371 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 371):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 153 row 153 pos  8 rn 76744 ep 0    ok L 61440 attn 61440 T 3 nonpad 3 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 3):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 154 row 154 pos  9 rn 170605 ep 0    ok L 30720 attn 30720 T 273 nonpad 273 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 273):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 155 row 155 pos 10 rn 34913 ep 0    ok L 129024 attn 129024 T 95 nonpad 95 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 95):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 156 row 156 pos 11 rn 131513 ep 0    ok L 61440 attn 61440 T 354 nonpad 354 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 354):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 157 row 157 pos 12 rn 137307 ep 0    ok L 61440 attn 61440 T 374 nonpad 374 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 374):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 158 row 158 pos 13 rn 10950 ep 0    ok L 30720 attn 30720 T 142 nonpad 142 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 142):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 159 row 159 pos 14 rn 17102 ep 0    ok L 30720 attn 30720 T 426 nonpad 426 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 426):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 160 row 160 pos 15 rn 48760 ep 0    ok L 30720 attn 30720 T 525 nonpad 525 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 525):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 161 row 161 pos 16 rn 64661 ep 0    ok L 129024 attn 129024 T 1281 nonpad 1281 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 1281):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 162 row 162 pos 17 rn 202511 ep 0    ok L 30720 attn 30720 T 283 nonpad 283 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 283):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 163 row 163 pos 18 rn 186397 ep 0    ok L 61440 attn 61440 T 346 nonpad 346 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  17.61 peak_resv  35.68 GiB sha True keys {input_ids:(1, 61440):torch.int64, attention_mask:(1, 61440):torch.bool, evidence_tracks:(1, 61440, 31):torch.float16, labels:(1, 346):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 164 row 164 pos 19 rn 151192 ep 0    ok L 129024 attn 129024 T 839 nonpad 839 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  25.79 peak_resv  35.68 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 839):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+real 165 row 165 pos 20 rn 144599 ep 0    ok L 30720 attn 30720 T 70 nonpad 70 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  13.89 peak_resv  35.68 GiB sha True keys {input_ids:(1, 30720):torch.int64, attention_mask:(1, 30720):torch.bool, evidence_tracks:(1, 30720, 31):torch.float16, labels:(1, 70):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+[rank0]:V1011 13:49:10.626000 4138912 torch/_dynamo/guards.py:5481] [0/3] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank0]:V1011 13:49:10.626000 4138912 torch/_dynamo/guards.py:5481] [0/3] [__recompiles]     triggered by the following guard failure(s):
+[rank0]:V1011 13:49:10.626000 4138912 torch/_dynamo/guards.py:5481] [0/3] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 129024
+[rank0]:V1011 13:49:10.626000 4138912 torch/_dynamo/guards.py:5481] [0/3] [__recompiles]     - 0/1: 1536*labels.size()[1] < 5242880  # (_inductor/scheduler.py:395 in can_fuse)
+[rank0]:V1011 13:49:10.626000 4138912 torch/_dynamo/guards.py:5481] [0/3] [__recompiles]     - 0/2: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 129024
+real 166 row 166 pos 21 rn 6195 ep 0    ok L 129024 attn 129024 T 3924 nonpad 3924 chains 0 tracks_nz {'mask': 0.0, 'phase': 0.0, 'count': 0.0, 'all': 0.0} peak_alloc  36.41 peak_resv  37.61 GiB sha True keys {input_ids:(1, 129024):torch.int64, attention_mask:(1, 129024):torch.bool, evidence_tracks:(1, 129024, 31):torch.float16, labels:(1, 3924):torch.int64, chain_idx:(1, 512, 2):torch.int64, chain_feat:(1, 512, 6):torch.int16, chain_mask:(1, 512):torch.bool}
+== C2_3345919_replay: status=completed (finished) ddp=ddp-world1-wrapped-as-accelerate world=1 deterministic=True PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True micro_batches=166 updates=6 compiled_graphs=4 alloc_retries=0
+   peak allocated 36.41 GiB, reserved 37.61 GiB (incl. optimizer updates 35.68 GiB and the OOM point); OOM: none
+            shape    n  alloc_GiB   resv_GiB  inact_GiB
+          30720:3   11      13.89      35.68       0.00
+         30720:18    1      13.89      35.01       0.00
+         30720:33    4      13.89      35.68       0.00
+         30720:42    2      13.89      35.68       0.00
+         30720:48    1      13.89      35.03       0.00
+         30720:55    2      13.89      35.68       0.00
+         30720:59    1      13.89      35.68       0.00
+         30720:68    2      13.89      35.68       0.00
+         30720:70    1      13.89      35.68       0.00
+         30720:78    1      12.25      35.03       0.00
+         30720:85    1      13.89      35.68       0.00
+         30720:95    2      13.89      35.68       0.00
+         30720:96    2      13.89      35.68       0.00
+        30720:106    1      13.89      35.03       0.00
+        30720:108    2      13.89      35.68       0.00
+        30720:110    1      13.89      35.68       0.00
+        30720:112    1      13.89      35.68       0.00
+        30720:114    1      13.89      35.03       0.00
+        30720:119    1      13.89      35.03       0.00
+        30720:125    1      13.89      35.68       0.00
+        30720:128    1      13.89      35.03       0.00
+        30720:138    1      12.25      35.03       0.00
+        30720:142    2      13.89      35.68       0.00
+        30720:159    1      13.89      35.68       0.00
+        30720:178    1      13.89      35.03       0.00
+        30720:183    1      13.89      35.68       0.00
+        30720:184    1      13.89      35.68       0.00
+        30720:189    1      13.89      35.03       0.00
+        30720:190    1      13.89      35.03       0.00
+        30720:191    1      13.89      35.68       0.00
+        30720:195    1      13.89      35.68       0.00
+        30720:200    1      13.89      35.02       0.00
+        30720:207    1      13.89      35.68       0.00
+        30720:215    1      13.89      35.02       0.00
+        30720:240    1      13.89      35.68       0.00
+        30720:249    1      13.89      35.03       0.00
+        30720:256    1      13.89      35.03       0.00
+        30720:261    1      13.89      35.68       0.00
+        30720:269    1      13.89      35.03       0.00
+        30720:272    1      13.89      35.03       0.00
+        30720:273    1      13.89      35.68       0.00
+        30720:278    1      13.89      35.68       0.00
+        30720:283    1      13.89      35.68       0.00
+        30720:284    1      13.89      35.03       0.00
+        30720:310    1      13.89      35.68       0.00
+        30720:317    1      13.89      35.68       0.00
+        30720:328    1      13.89      35.03       0.00
+        30720:337    1      13.89      35.68       0.00
+        30720:342    1      13.89      35.02       0.00
+        30720:344    1      13.89      35.68       0.00
+        30720:361    1      13.89      35.68       0.00
+        30720:371    1      13.89      35.68       0.00
+        30720:394    1      13.89      35.03       0.00
+        30720:403    1      13.89      35.03       0.00
+        30720:426    1      13.89      35.68       0.00
+        30720:442    1      13.89      35.68       0.00
+        30720:446    1      13.89      35.68       0.00
+        30720:458    1      13.89      35.68       0.00
+        30720:500    1      13.89      35.68       0.00
+        30720:503    1      13.89      35.02       0.00
+        30720:525    1      13.89      35.68       0.00
+        30720:550    1      13.89      35.01       0.00
+        30720:560    1      13.89      15.31       0.00
+        30720:578    1      13.89      35.03       0.00
+        30720:747    1      13.89      35.03       0.00
+        30720:914    1      13.89      35.03       0.00
+       30720:1292    1      13.89      35.68       0.00
+          61440:3    5      17.61      35.68       0.00
+         61440:33    2      17.61      35.68       0.00
+         61440:63    1      17.61      35.68       0.00
+         61440:95    1      17.61      35.68       0.00
+         61440:97    1      17.61      35.03       0.00
+        61440:108    1      17.61      35.02       0.00
+        61440:116    1      17.61      35.03       0.00
+        61440:157    1      17.61      35.68       0.00
+        61440:158    1      17.61      35.68       0.00
+        61440:202    2      17.61      35.68       0.00
+        61440:227    1      17.61      35.68       0.00
+        61440:230    1      17.61      35.68       0.00
+        61440:238    1      17.61      35.68       0.00
+        61440:272    1      17.61      35.68       0.00
+        61440:277    1      17.61      35.03       0.00
+        61440:285    1      17.61      35.01       0.00
+        61440:289    1      17.61      35.68       0.00
+        61440:292    1      17.61      35.68       0.00
+        61440:294    1      17.61      35.02       0.00
+        61440:303    1      17.61      35.68       0.00
+        61440:305    1      17.61      35.68       0.00
+        61440:343    1      17.61      35.03       0.00
+        61440:346    1      17.61      35.68       0.00
+        61440:351    1      17.61      35.68       0.00
+        61440:354    1      17.61      35.68       0.00
+        61440:355    1      17.61      35.68       0.00
+        61440:373    1      17.61      35.03       0.00
+        61440:374    1      17.61      35.68       0.00
+        61440:377    2      17.61      35.68       0.00
+        61440:408    1      17.61      35.68       0.00
+        61440:421    1      17.61      35.68       0.00
+        61440:425    1      17.61      35.68       0.00
+        61440:451    1      17.61      35.68       0.00
+        61440:467    1      17.61      35.68       0.00
+        61440:511    1      17.61      35.03       0.00
+        61440:560    1      15.97      35.68       0.00
+        61440:575    1      17.61      35.68       0.00
+        61440:587    1      17.61      35.02       0.00
+        61440:597    1      17.61      35.68       0.00
+        61440:670    1      17.61      35.03       0.00
+        61440:746    1      17.61      35.03       0.00
+        61440:750    1      17.61      35.02       0.00
+        61440:768    1      17.61      35.03       0.00
+        61440:809    1      17.61      35.68       0.00
+        61440:959    1      17.61      35.03       0.00
+       61440:1011    1      17.61      35.01       0.00
+         129024:3    1      25.79      35.03       0.00
+        129024:80    1      25.79      31.07       0.00
+        129024:95    2      25.79      35.68       0.00
+       129024:105    1      25.79      35.68       0.00
+       129024:183    1      25.79      35.68       0.00
+       129024:200    1      25.79      35.68       0.00
+       129024:205    1      25.79      35.02       0.00
+       129024:259    1      25.79      35.68       0.00
+       129024:267    1      25.79      31.34       0.00
+       129024:310    1      25.79      35.03       0.00
+       129024:312    1      25.79      35.03       0.00
+       129024:515    1      25.79      35.68       0.00
+       129024:529    1      25.79      35.03       0.00
+       129024:839    1      25.79      35.68       0.00
+      129024:1096    1      25.79      35.68       0.00
+      129024:1270    1      25.79      35.03       0.00
+      129024:1281    1      25.79      35.68       0.00
+      129024:1352    1      25.79      35.01       0.00
+      129024:1356    1      25.79      35.68       0.00
+      129024:1490    1      25.79      35.68       0.00
+      129024:1499    1      25.79      35.68       0.00
+      129024:1515    1      24.15      35.68       0.00
+      129024:1595    1      25.79      35.68       0.00
+      129024:1860    1      25.79      35.03       0.00
+      129024:3924    1      36.41      37.61       0.00
+   growth after warm-up, GiB per 100 micro-batches:
+                 series    n      alloc       resv      inact
+        update_first_mb    4     +0.008     +0.000     +0.000
+           after_update    3     -0.000     +0.000     +0.000
+          shape:30720:3    4     +0.000     +0.000     +0.000
+         shape:30720:33    2     +0.000     +0.000     +0.000
+         shape:30720:42    1          -          -          -
+         shape:30720:55    2     +0.000     +0.000     +0.000
+         shape:30720:59    1          -          -          -
+         shape:30720:68    2     +0.000     +0.000     +0.000
+         shape:30720:70    1          -          -          -
+         shape:30720:85    1          -          -          -
+         shape:30720:95    1          -          -          -
+         shape:30720:96    1          -          -          -
+        shape:30720:108    1          -          -          -
+        shape:30720:110    1          -          -          -
+        shape:30720:112    1          -          -          -
+        shape:30720:125    1          -          -          -
+        shape:30720:142    1          -          -          -
+        shape:30720:159    1          -          -          -
+        shape:30720:183    1          -          -          -
+        shape:30720:184    1          -          -          -
+        shape:30720:191    1          -          -          -
+        shape:30720:195    1          -          -          -
+        shape:30720:207    1          -          -          -
+        shape:30720:240    1          -          -          -
+        shape:30720:261    1          -          -          -
+        shape:30720:273    1          -          -          -
+        shape:30720:278    1          -          -          -
+        shape:30720:283    1          -          -          -
+        shape:30720:310    1          -          -          -
+        shape:30720:317    1          -          -          -
+        shape:30720:337    1          -          -          -
+        shape:30720:344    1          -          -          -
+        shape:30720:361    1          -          -          -
+        shape:30720:371    1          -          -          -
+        shape:30720:426    1          -          -          -
+        shape:30720:442    1          -          -          -
+        shape:30720:446    1          -          -          -
+        shape:30720:458    1          -          -          -
+        shape:30720:500    1          -          -          -
+        shape:30720:525    1          -          -          -
+       shape:30720:1292    1          -          -          -
+          shape:61440:3    2     +0.000     +0.003     +0.000
+         shape:61440:33    2     +0.000     +0.000     +0.000
+         shape:61440:63    1          -          -          -
+         shape:61440:95    1          -          -          -
+        shape:61440:157    1          -          -          -
+        shape:61440:158    1          -          -          -
+        shape:61440:202    2     +0.000     +0.000     +0.000
+        shape:61440:227    1          -          -          -
+        shape:61440:230    1          -          -          -
+        shape:61440:238    1          -          -          -
+        shape:61440:272    1          -          -          -
+        shape:61440:289    1          -          -          -
+        shape:61440:292    1          -          -          -
+        shape:61440:303    1          -          -          -
+        shape:61440:305    1          -          -          -
+        shape:61440:346    1          -          -          -
+        shape:61440:351    1          -          -          -
+        shape:61440:354    1          -          -          -
+        shape:61440:355    1          -          -          -
+        shape:61440:374    1          -          -          -
+        shape:61440:377    2     +0.000     +0.011     +0.000
+        shape:61440:408    1          -          -          -
+        shape:61440:421    1          -          -          -
+        shape:61440:425    1          -          -          -
+        shape:61440:451    1          -          -          -
+        shape:61440:467    1          -          -          -
+        shape:61440:560    1          -          -          -
+        shape:61440:575    1          -          -          -
+        shape:61440:597    1          -          -          -
+        shape:61440:809    1          -          -          -
+        shape:129024:95    2     +0.000     +0.003     +0.000
+       shape:129024:105    1          -          -          -
+       shape:129024:183    1          -          -          -
+       shape:129024:200    1          -          -          -
+       shape:129024:259    1          -          -          -
+       shape:129024:515    1          -          -          -
+       shape:129024:839    1          -          -          -
+      shape:129024:1096    1          -          -          -
+      shape:129024:1281    1          -          -          -
+      shape:129024:1356    1          -          -          -
+      shape:129024:1490    1          -          -          -
+      shape:129024:1499    1          -          -          -
+      shape:129024:1515    1          -          -          -
+      shape:129024:3924    1          -          -          -
+   real-data replay (166 samples, sorted by peak allocated):
+   order    row pos         rn  ep       L    attn     T nonpad chains alloc_GiB  resv_GiB   sha status
+     166    166  21       6195   0  129024  129024  3924   3924      0     36.41     37.61    ok ok
+      40     40  15      16375   0  129024  129024  1860   1860      0     25.79     35.03    ok ok
+      72     72  23     246636   0  129024  129024  1595   1595      0     25.79     35.68    ok ok
+     147    147   2      88721   0  129024  129024  1499   1499      0     25.79     35.68    ok ok
+     107    107  10     216326   0  129024  129024  1490   1490      0     25.79     35.68    ok ok
+      98     98   1     264403   0  129024  129024  1356   1356      0     25.79     35.68    ok ok
+       6      6   5      10405   0  129024  129024  1352   1352      0     25.79     35.01    ok ok
+     161    161  16      64661   0  129024  129024  1281   1281      0     25.79     35.68    ok ok
+      36     36  11       7872   0  129024  129024  1270   1270      0     25.79     35.03    ok ok
+     117    117  20     167181   0  129024  129024  1096   1096      0     25.79     35.68    ok ok
+     164    164  19     151192   0  129024  129024   839    839      0     25.79     35.68    ok ok
+      58     58   9     180320   0  129024  129024   529    529      0     25.79     35.03    ok ok
+     132    132  11     161919   0  129024  129024   515    515      0     25.79     35.68    ok ok
+      22     22  21      29657   0  129024  129024   312    312      0     25.79     35.03    ok ok
+      24     24  23     146508   0  129024  129024   310    310      0     25.79     35.03    ok ok
+       4      4   3     243815   0  129024  129024   267    267      0     25.79     31.34    ok ok
+      76     76   3      29773   0  129024  129024   259    259      0     25.79     35.68    ok ok
+      12     12  11     267321   0  129024  129024   205    205      0     25.79     35.02    ok ok
+     137    137  16      80329   0  129024  129024   200    200      0     25.79     35.68    ok ok
+      84     84  11     243827   0  129024  129024   183    183      0     25.79     35.68    ok ok
+     135    135  14     173004   0  129024  129024   105    105      0     25.79     35.68    ok ok
+      87     87  14      34912   0  129024  129024    95     95      0     25.79     35.68    ok ok
+     155    155  10      34913   0  129024  129024    95     95      0     25.79     35.68    ok ok
+       3      3   2     146698   0  129024  129024    80     80      0     25.79     31.07    ok ok
+      59     59  10     252441   0  129024  129024     3      3      0     25.79     35.03    ok ok
+     121    121   0     178054   0  129024  129024  1515   1515      0     24.15     35.68    ok ok
+       7      7   6     117991   0   61440   61440  1011   1011      0     17.61     35.01    ok ok
+      27     27   2      88092   0   61440   61440   959    959      0     17.61     35.03    ok ok
+      80     80   7     224737   0   61440   61440   809    809      0     17.61     35.68    ok ok
+      28     28   3     194355   0   61440   61440   768    768      0     17.61     35.03    ok ok
+      20     20  19     163670   0   61440   61440   750    750      0     17.61     35.02    ok ok
+      44     44  19      24449   0   61440   61440   746    746      0     17.61     35.03    ok ok
+      56     56   7     203320   0   61440   61440   670    670      0     17.61     35.03    ok ok
+      94     94  21     175198   0   61440   61440   597    597      0     17.61     35.68    ok ok
+      13     13  12      66648   0   61440   61440   587    587      0     17.61     35.02    ok ok
+     122    122   1     263920   0   61440   61440   575    575      0     17.61     35.68    ok ok
+      41     41  16     248355   0   61440   61440   511    511      0     17.61     35.03    ok ok
+     142    142  21     135649   0   61440   61440   467    467      0     17.61     35.68    ok ok
+     143    143  22     112980   0   61440   61440   451    451      0     17.61     35.68    ok ok
+      99     99   2     109351   0   61440   61440   425    425      0     17.61     35.68    ok ok
+     108    108  11     238967   0   61440   61440   421    421      0     17.61     35.68    ok ok
+      96     96  23     181068   0   61440   61440   408    408      0     17.61     35.68    ok ok
+     133    133  12     143628   0   61440   61440   377    377      0     17.61     35.68    ok ok
+     151    151   6     249968   0   61440   61440   377    377      0     17.61     35.68    ok ok
+     157    157  12     137307   0   61440   61440   374    374      0     17.61     35.68    ok ok
+      30     30   5     115618   0   61440   61440   373    373      0     17.61     35.03    ok ok
+     119    119  22     261652   0   61440   61440   355    355      0     17.61     35.68    ok ok
+     156    156  11     131513   0   61440   61440   354    354      0     17.61     35.68    ok ok
+      91     91  18      31715   0   61440   61440   351    351      0     17.61     35.68    ok ok
+     163    163  18     186397   0   61440   61440   346    346      0     17.61     35.68    ok ok
+      48     48  23      59228   0   61440   61440   343    343      0     17.61     35.03    ok ok
+      86     86  13     216163   0   61440   61440   305    305      0     17.61     35.68    ok ok
+     113    113  16     233022   0   61440   61440   303    303      0     17.61     35.68    ok ok
+      11     11  10       9687   0   61440   61440   294    294      0     17.61     35.02    ok ok
+     126    126   5     243554   0   61440   61440   292    292      0     17.61     35.68    ok ok
+     118    118  21     147585   0   61440   61440   289    289      0     17.61     35.68    ok ok
+      10     10   9     212829   0   61440   61440   285    285      0     17.61     35.01    ok ok
+      60     60  11     163060   0   61440   61440   277    277      0     17.61     35.03    ok ok
+      89     89  16      69188   0   61440   61440   272    272      0     17.61     35.68    ok ok
+     105    105   8     155399   0   61440   61440   238    238      0     17.61     35.68    ok ok
+     120    120  23      79665   0   61440   61440   230    230      0     17.61     35.68    ok ok
+     136    136  15      49930   0   61440   61440   227    227      0     17.61     35.68    ok ok
+     109    109  12     141380   0   61440   61440   202    202      0     17.61     35.68    ok ok
+     144    144  23       9709   0   61440   61440   202    202      0     17.61     35.68    ok ok
+      77     77   4     219080   0   61440   61440   158    158      0     17.61     35.68    ok ok
+     101    101   4     167008   0   61440   61440   157    157      0     17.61     35.68    ok ok
+      34     34   9     240583   0   61440   61440   116    116      0     17.61     35.03    ok ok
+      17     17  16      77012   0   61440   61440   108    108      0     17.61     35.02    ok ok
+      51     51   2     230559   0   61440   61440    97     97      0     17.61     35.03    ok ok
+      83     83  10      96477   0   61440   61440    95     95      0     17.61     35.68    ok ok
+      75     75   2     248145   0   61440   61440    63     63      0     17.61     35.68    ok ok
+      92     92  19     166977   0   61440   61440    33     33      0     17.61     35.68    ok ok
+     146    146   1     238950   0   61440   61440    33     33      0     17.61     35.68    ok ok
+      38     38  13     270474   0   61440   61440     3      3      0     17.61     35.03    ok ok
+      57     57   8     251632   0   61440   61440     3      3      0     17.61     35.03    ok ok
+      71     71  22     158076   0   61440   61440     3      3      0     17.61     35.03    ok ok
+      93     93  20     222650   0   61440   61440     3      3      0     17.61     35.68    ok ok
+     153    153   8      76744   0   61440   61440     3      3      0     17.61     35.68    ok ok
+      73     73   0     167079   0   61440   61440   560    560      0     15.97     35.68    ok ok
+     124    124   3     127737   0   30720   30720  1292   1292      0     13.89     35.68    ok ok
+      55     55   6     135271   0   30720   30720   914    914      0     13.89     35.03    ok ok
+      67     67  18       3113   0   30720   30720   747    747      0     13.89     35.03    ok ok
+      26     26   1      17021   0   30720   30720   578    578      0     13.89     35.03    ok ok
+       2      2   1     104126   0   30720   30720   560    560      0     13.89     15.31    ok ok
+       9      9   8     220614   0   30720   30720   550    550      0     13.89     35.01    ok ok
+     160    160  15      48760   0   30720   30720   525    525      0     13.89     35.68    ok ok
+      18     18  17       6864   0   30720   30720   503    503      0     13.89     35.02    ok ok
+     134    134  13      63225   0   30720   30720   500    500      0     13.89     35.68    ok ok
+     112    112  15      39269   0   30720   30720   458    458      0     13.89     35.68    ok ok
+     125    125   4     232571   0   30720   30720   446    446      0     13.89     35.68    ok ok
+     103    103   6     215023   0   30720   30720   442    442      0     13.89     35.68    ok ok
+     159    159  14      17102   0   30720   30720   426    426      0     13.89     35.68    ok ok
+      43     43  18     268928   0   30720   30720   403    403      0     13.89     35.03    ok ok
+      35     35  10      23510   0   30720   30720   394    394      0     13.89     35.03    ok ok
+     152    152   7      80775   0   30720   30720   371    371      0     13.89     35.68    ok ok
+      78     78   5     129294   0   30720   30720   361    361      0     13.89     35.68    ok ok
+      85     85  12     214246   0   30720   30720   344    344      0     13.89     35.68    ok ok
+      21     21  20     136390   0   30720   30720   342    342      0     13.89     35.02    ok ok
+     148    148   3     218122   0   30720   30720   337    337      0     13.89     35.68    ok ok
+      70     70  21     172276   0   30720   30720   328    328      0     13.89     35.03    ok ok
+     128    128   7      95728   0   30720   30720   317    317      0     13.89     35.68    ok ok
+     110    110  13      49703   0   30720   30720   310    310      0     13.89     35.68    ok ok
+      61     61  12       3649   0   30720   30720   284    284      0     13.89     35.03    ok ok
+     162    162  17     202511   0   30720   30720   283    283      0     13.89     35.68    ok ok
+      81     81   8     251260   0   30720   30720   278    278      0     13.89     35.68    ok ok
+     154    154   9     170605   0   30720   30720   273    273      0     13.89     35.68    ok ok
+      37     37  12     133845   0   30720   30720   272    272      0     13.89     35.03    ok ok
+      33     33   8      87283   0   30720   30720   269    269      0     13.89     35.03    ok ok
+     129    129   8     116461   0   30720   30720   261    261      0     13.89     35.68    ok ok
+      32     32   7      23262   0   30720   30720   256    256      0     13.89     35.03    ok ok
+      62     62  13     255972   0   30720   30720   249    249      0     13.89     35.03    ok ok
+     150    150   5     124516   0   30720   30720   240    240      0     13.89     35.68    ok ok
+      14     14  13      32656   0   30720   30720   215    215      0     13.89     35.02    ok ok
+      95     95  22     196090   0   30720   30720   207    207      0     13.89     35.68    ok ok
+      15     15  14      91222   0   30720   30720   200    200      0     13.89     35.02    ok ok
+     138    138  17     142019   0   30720   30720   195    195      0     13.89     35.68    ok ok
+     106    106   9      32692   0   30720   30720   191    191      0     13.89     35.68    ok ok
+      31     31   6     188519   0   30720   30720   190    190      0     13.89     35.03    ok ok
+      54     54   5      95947   0   30720   30720   189    189      0     13.89     35.03    ok ok
+      82     82   9     220882   0   30720   30720   184    184      0     13.89     35.68    ok ok
+     127    127   6      11400   0   30720   30720   183    183      0     13.89     35.68    ok ok
+      52     52   3     242519   0   30720   30720   178    178      0     13.89     35.03    ok ok
+     149    149   4     257903   0   30720   30720   159    159      0     13.89     35.68    ok ok
+      53     53   4     226724   0   30720   30720   142    142      0     13.89     35.03    ok ok
+     158    158  13      10950   0   30720   30720   142    142      0     13.89     35.68    ok ok
+      69     69  20      95099   0   30720   30720   128    128      0     13.89     35.03    ok ok
+     100    100   3     175880   0   30720   30720   125    125      0     13.89     35.68    ok ok
+      29     29   4     199021   0   30720   30720   119    119      0     13.89     35.03    ok ok
+      42     42  17      46288   0   30720   30720   114    114      0     13.89     35.03    ok ok
+     104    104   7      95147   0   30720   30720   112    112      0     13.89     35.68    ok ok
+     116    116  19     196087   0   30720   30720   110    110      0     13.89     35.68    ok ok
+      16     16  15     260854   0   30720   30720   108    108      0     13.89     35.02    ok ok
+      88     88  15     188439   0   30720   30720   108    108      0     13.89     35.68    ok ok
+      66     66  17     106140   0   30720   30720   106    106      0     13.89     35.03    ok ok
+      39     39  14     182940   0   30720   30720    96     96      0     13.89     35.03    ok ok
+      79     79   6     207368   0   30720   30720    96     96      0     13.89     35.68    ok ok
+      45     45  20     114653   0   30720   30720    95     95      0     13.89     35.03    ok ok
+     130    130   9     146981   0   30720   30720    95     95      0     13.89     35.68    ok ok
+     102    102   5     202534   0   30720   30720    85     85      0     13.89     35.68    ok ok
+     165    165  20     144599   0   30720   30720    70     70      0     13.89     35.68    ok ok
+     115    115  18     245773   0   30720   30720    68     68      0     13.89     35.68    ok ok
+     131    131  10     230055   0   30720   30720    68     68      0     13.89     35.68    ok ok
+      74     74   1     187652   0   30720   30720    59     59      0     13.89     35.68    ok ok
+     123    123   2     184604   0   30720   30720    55     55      0     13.89     35.68    ok ok
+     139    139  18      28282   0   30720   30720    55     55      0     13.89     35.68    ok ok
+      46     46  21      89778   0   30720   30720    48     48      0     13.89     35.03    ok ok
+      68     68  19     214357   0   30720   30720    42     42      0     13.89     35.03    ok ok
+     114    114  17      75857   0   30720   30720    42     42      0     13.89     35.68    ok ok
+      23     23  22     183968   0   30720   30720    33     33      0     13.89     35.03    ok ok
+     141    141  20     264732   0   30720   30720    33     33      0     13.89     35.68    ok ok
+       8      8   7      64780   0   30720   30720    18     18      0     13.89     35.01    ok ok
+       5      5   4     221086   0   30720   30720     3      3      0     13.89     31.34    ok ok
+      19     19  18     167462   0   30720   30720     3      3      0     13.89     35.02    ok ok
+      47     47  22     128038   0   30720   30720     3      3      0     13.89     35.03    ok ok
+      50     50   1      41307   0   30720   30720     3      3      0     13.89     35.03    ok ok
+      63     63  14     204227   0   30720   30720     3      3      0     13.89     35.03    ok ok
+      64     64  15     181926   0   30720   30720     3      3      0     13.89     35.03    ok ok
+      65     65  16     217725   0   30720   30720     3      3      0     13.89     35.03    ok ok
+      90     90  17     199182   0   30720   30720     3      3      0     13.89     35.68    ok ok
+     111    111  14     237665   0   30720   30720     3      3      0     13.89     35.68    ok ok
+     140    140  19     199333   0   30720   30720     3      3      0     13.89     35.68    ok ok
+      25     25   0      30489   0   30720   30720   138    138      0     12.25     35.03    ok ok
+      49     49   0     100853   0   30720   30720    78     78      0     12.25     35.03    ok ok
+       1      1   0      91492   0   30720   30720    33     33      0     12.25     13.54    ok ok
+      97     97   0       2858   0   30720   30720    33     33      0     12.25     35.68    ok ok
+     145    145   0      98653   0   30720   30720     3      3      0     12.25     35.68    ok ok
+   real vs synthetic batch keys/shapes: no difference beyond L and T
+[rank0]:[W1011 13:51:21.784723825 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())

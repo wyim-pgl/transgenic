@@ -1,0 +1,21 @@
+{
+  "checks": [
+    "original reproducer now rejects with expected ValueError",
+    "source delta exactly seven additions; remainder original SHA256 matches",
+    "tests delta one added block; all original tests byte-identical",
+    "conflict rejected: dataset=est/sp, old_excluded=False",
+    "conflict rejected: dataset=est/sp, old_excluded=True",
+    "conflict rejected: dataset=other-download, old_excluded=False",
+    "conflict rejected: dataset=other-download, old_excluded=True",
+    "canonical alias remains valid: old_excluded=False",
+    "canonical alias remains valid: old_excluded=True",
+    "distinct accession libraries remain independent",
+    "unknown version library blocks whole input"
+  ],
+  "sha256": {
+    "revision/scripts/evidence/est_molecule_closure.py": "fd05c3ca0ef674b10962efac88861131aa3f54fbb1fa5f7e196c335740dc67b5",
+    "revision/scripts/tests/test_est_molecule_closure.py": "cc750e8fc6b54714235492fce6d34f0adb845fdba5e141f7e67533897f78febd",
+    "tasknotes/a11_molecule_closure_20260917.md": "13b99d7435430cbc67c54e40f5de2990dc0c81f05edd03e2cf3340c28616961e",
+    "tests/test_est_approved_contract_integration.py": "3eb1f36ffaa3928ba4d30fd82553696e2b06356f9bae09d9f93cc9cdc8ef8c6f"
+  }
+}

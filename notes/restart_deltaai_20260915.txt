@@ -1,0 +1,11 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+
+NCSA DeltaAI System
+
+Login with NCSA Kerberos + NCSA Duo multi-factor.
+
+DUO Documentation:  https://go.ncsa.illinois.edu/2fa
+
+Permission denied (gssapi-with-mic,password).

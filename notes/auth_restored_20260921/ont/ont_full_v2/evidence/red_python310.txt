@@ -1,0 +1,329 @@
+test_bad_pin (__main__.Boundary) ... ok
+test_mutated_recursive_output_rejected_by_existing_gate (__main__.Boundary) ... ok
+test_no_reuse (__main__.Boundary) ... ok
+test_nonzero_child_not_complete (__main__.Boundary) ... ok
+test_receipt_scope_and_mutation (__main__.Boundary) ... ok
+test_slurm_environment_alone_insufficient (__main__.Boundary) ... ok
+test_success_real_child (__main__.Boundary) ... ok
+test_timeout_retains_logs_and_status (__main__.Boundary) ... ok
+test_budget_requires_explicit_output_and_scratch_ceilings (__main__.RuntimeBoundary) ... test_cgroup_observation_reads_declared_controller (__main__.RuntimeBoundary) ... ERROR
+test_enforce_output_limit_sets_both_soft_and_hard (__main__.RuntimeBoundary) ... FAIL
+test_output_limit_actually_stops_an_oversized_write (__main__.RuntimeBoundary) ... ERROR
+test_required_cgroup_absent_is_rejected_not_silently_skipped (__main__.RuntimeBoundary) ... ERROR
+test_scratch_usage_rejects_an_over_budget_namespace (__main__.RuntimeBoundary) ... ERROR
+test_slurm_records_the_exact_allocated_affinity_list (__main__.RuntimeBoundary) ... ERROR
+test_actual_nested_helper_import_layout_clean_environment (__main__.SyntheticExecute) ... ok
+test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute) ... test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute) ... test_execute_synthetic_happy_path (__main__.SyntheticExecute) ... ERROR
+test_unlisted_imports_rejected_before_gate_import_or_marker (__main__.SyntheticExecute) ... test_unsupported_interpreter_rejected_before_any_path_access (__main__.SyntheticExecute) ... ok
+
+======================================================================
+ERROR: test_budget_requires_explicit_output_and_scratch_ceilings (__main__.RuntimeBoundary) (missing='scratch_mib')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 347, in test_budget_requires_explicit_output_and_scratch_ceilings
+    self.w.slurm(req, self.control)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/wrapper.py", line 156, in slurm
+    with (control/'slurm.stdout').open('x') as f: f.write(result.stdout)
+  File "/usr/lib/python3.10/pathlib.py", line 1119, in open
+    return self._accessor.open(self, mode, buffering, encoding, errors,
+FileExistsError: [Errno 17] File exists: '/tmp/ont_runtime_yn8yo0js/control/slurm.stdout'
+
+======================================================================
+ERROR: test_cgroup_observation_reads_declared_controller (__main__.RuntimeBoundary)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 384, in test_cgroup_observation_reads_declared_controller
+    with patch.object(self.w, 'PROC_CGROUP', proc):
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'runtime_wrapper' from '/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_output_limit_actually_stops_an_oversized_write (__main__.RuntimeBoundary)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 372, in test_output_limit_actually_stops_an_oversized_write
+    self.assertLessEqual(target.stat().st_size, 1024*1024)
+  File "/usr/lib/python3.10/pathlib.py", line 1097, in stat
+    return self._accessor.stat(self, follow_symlinks=follow_symlinks)
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/ont_runtime__8y0e1by/oversized.bin'
+
+======================================================================
+ERROR: test_required_cgroup_absent_is_rejected_not_silently_skipped (__main__.RuntimeBoundary)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 395, in test_required_cgroup_absent_is_rejected_not_silently_skipped
+    with patch.object(self.w, 'PROC_CGROUP', proc):
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'runtime_wrapper' from '/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_scratch_usage_rejects_an_over_budget_namespace (__main__.RuntimeBoundary)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 401, in test_scratch_usage_rejects_an_over_budget_namespace
+    self.w.check_scratch([self.control], 1)
+AttributeError: module 'runtime_wrapper' has no attribute 'check_scratch'
+
+======================================================================
+ERROR: test_slurm_records_the_exact_allocated_affinity_list (__main__.RuntimeBoundary)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 335, in test_slurm_records_the_exact_allocated_affinity_list
+    self.assertEqual(record['affinity'], sorted(os.sched_getaffinity(0)))
+KeyError: 'affinity'
+
+======================================================================
+ERROR: test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute) (kind='pyc')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 272, in test_closure_rejects_extras_missing_files_and_redirects
+    with self.assertRaises((ValueError, FileNotFoundError)): case.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_fqw0abwx/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute) (kind='init')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 272, in test_closure_rejects_extras_missing_files_and_redirects
+    with self.assertRaises((ValueError, FileNotFoundError)): case.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_ugxrbwbs/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute) (kind='directory')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 272, in test_closure_rejects_extras_missing_files_and_redirects
+    with self.assertRaises((ValueError, FileNotFoundError)): case.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_lus41ihl/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute) (kind='symlink')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 272, in test_closure_rejects_extras_missing_files_and_redirects
+    with self.assertRaises((ValueError, FileNotFoundError)): case.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_p0r3pyzy/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute) (kind='directory_symlink')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 272, in test_closure_rejects_extras_missing_files_and_redirects
+    with self.assertRaises((ValueError, FileNotFoundError)): case.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_ud5z579d/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute) (kind='fifo')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 272, in test_closure_rejects_extras_missing_files_and_redirects
+    with self.assertRaises((ValueError, FileNotFoundError)): case.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_4kpmd8hy/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute) (kind='missing')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 272, in test_closure_rejects_extras_missing_files_and_redirects
+    with self.assertRaises((ValueError, FileNotFoundError)): case.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_y33l7s7y/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute) (mode='nonzero')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 235, in test_execute_failure_and_postflight_mutations
+    with self.assertRaises((ValueError, TimeoutError)): case.invoke(mode)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_aqf_qse2/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute) (mode='timeout')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 235, in test_execute_failure_and_postflight_mutations
+    with self.assertRaises((ValueError, TimeoutError)): case.invoke(mode)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_kd9h2ss6/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute) (mode='input_mutation')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 235, in test_execute_failure_and_postflight_mutations
+    with self.assertRaises((ValueError, TimeoutError)): case.invoke(mode)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_va_at4x0/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute) (mode='output_mutation')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 235, in test_execute_failure_and_postflight_mutations
+    with self.assertRaises((ValueError, TimeoutError)): case.invoke(mode)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_472mr_pf/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute) (mode='stdout_mutation')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 235, in test_execute_failure_and_postflight_mutations
+    with self.assertRaises((ValueError, TimeoutError)): case.invoke(mode)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_dww37nbx/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute) (mode='stderr_mutation')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 235, in test_execute_failure_and_postflight_mutations
+    with self.assertRaises((ValueError, TimeoutError)): case.invoke(mode)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_ij9a816x/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute) (mode='closure_mutation')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 235, in test_execute_failure_and_postflight_mutations
+    with self.assertRaises((ValueError, TimeoutError)): case.invoke(mode)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_3nm61cst/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+ERROR: test_execute_synthetic_happy_path (__main__.SyntheticExecute)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 219, in test_execute_synthetic_happy_path
+    r = self.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 207, in invoke
+    with patch.object(self.w, 'slurm', return_value={'synthetic_scheduler_substitution': True}), \
+  File "/usr/lib/python3.10/unittest/mock.py", line 1447, in __enter__
+    original, local = self.get_original()
+  File "/usr/lib/python3.10/unittest/mock.py", line 1420, in get_original
+    raise AttributeError(
+AttributeError: <module 'synthetic_wrapper' from '/tmp/ont_fixes_9n8q6963/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'
+
+======================================================================
+FAIL: test_budget_requires_explicit_output_and_scratch_ceilings (__main__.RuntimeBoundary) (missing='output_mib')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 346, in test_budget_requires_explicit_output_and_scratch_ceilings
+    with self.assertRaises((ValueError, KeyError)):
+AssertionError: (<class 'ValueError'>, <class 'KeyError'>) not raised
+
+======================================================================
+FAIL: test_enforce_output_limit_sets_both_soft_and_hard (__main__.RuntimeBoundary)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 356, in test_enforce_output_limit_sets_both_soft_and_hard
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+AttributeError: module 'w' has no attribute 'enforce_output_limit'
+
+
+======================================================================
+FAIL: test_unlisted_imports_rejected_before_gate_import_or_marker (__main__.SyntheticExecute) (name='src/transgenic.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 252, in test_unlisted_imports_rejected_before_gate_import_or_marker
+    self.assertIsInstance(error, ValueError)
+AssertionError: AttributeError("<module 'synthetic_wrapper' from '/tmp/ont_fixes_2itcd5w2/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'") is not an instance of <class 'ValueError'>
+
+======================================================================
+FAIL: test_unlisted_imports_rejected_before_gate_import_or_marker (__main__.SyntheticExecute) (name='revision/scripts/json.py')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red/test_wrapper.py", line 252, in test_unlisted_imports_rejected_before_gate_import_or_marker
+    self.assertIsInstance(error, ValueError)
+AssertionError: AttributeError("<module 'synthetic_wrapper' from '/tmp/ont_fixes_mnt6gyep/code/wrapper.py'> does not have the attribute 'PROC_CGROUP'") is not an instance of <class 'ValueError'>
+
+----------------------------------------------------------------------
+Ran 21 tests in 6.702s
+
+FAILED (failures=4, errors=21)

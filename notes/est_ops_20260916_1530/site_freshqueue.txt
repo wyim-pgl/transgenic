@@ -1,0 +1,38 @@
+$ ssh -o BatchMode=yes pronghorn '/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python -B -c \'import pathlib,subprocess,hashlib,os,datetime\nprint(\'"\'"\'TIME\'"\'"\',datetime.datetime.now().isoformat())\nx=subprocess.run([\'"\'"\'scontrol\'"\'"\',\'"\'"\'show\'"\'"\',\'"\'"\'config\'"\'"\'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)\nfor l in x.stdout.splitlines():\n if any(s in l.lower() for s in (\'"\'"\'constrain\'"\'"\',\'"\'"\'allowedram\'"\'"\',\'"\'"\'allowedswap\'"\'"\',\'"\'"\'minram\'"\'"\',\'"\'"\'maxram\'"\'"\',\'"\'"\'maxswap\'"\'"\',\'"\'"\'memoryswappiness\'"\'"\',\'"\'"\'pam\'"\'"\',\'"\'"\'selecttype\'"\'"\')):print(l)\nfor name in [\'"\'"\'/cm/local/apps/cmd/scripts/prolog\'"\'"\',\'"\'"\'/cm/local/apps/cmd/scripts/epilog\'"\'"\',\'"\'"\'/cm/local/apps/cmd/scripts/prolog-prejob\'"\'"\']:\n p=pathlib.Path(name)\n try:\n  data=p.read_bytes(); print(\'"\'"\'SITE_SCRIPT\'"\'"\',name,\'"\'"\'bytes\'"\'"\',len(data),\'"\'"\'sha256\'"\'"\',hashlib.sha256(data).hexdigest()); lines=data.decode(errors=\'"\'"\'replace\'"\'"\').splitlines(); selected=[(i+1,l) for i,l in enumerate(lines) if any(s in l.lower() for s in (\'"\'"\'cgroup\'"\'"\',\'"\'"\'memory\'"\'"\',\'"\'"\'oom\'"\'"\',\'"\'"\'extern\'"\'"\',\'"\'"\'slurm\'"\'"\',\'"\'"\'source \'"\'"\',\'"\'"\'/epilog\'"\'"\',\'"\'"\'/prolog\'"\'"\'))]; print(\'"\'"\'RELEVANT_LINES\'"\'"\',selected[:100])\n except OSError as e:print(\'"\'"\'UNAVAILABLE\'"\'"\',name,str(e))\nfor p in [pathlib.Path(\'"\'"\'/var/log/slurmd\'"\'"\'),pathlib.Path(\'"\'"\'/var/log/slurmctld\'"\'"\')]: print(\'"\'"\'LOGIN_LOG_ACCESS_ONLY\'"\'"\',str(p),\'"\'"\'exists\'"\'"\',p.exists(),\'"\'"\'readable\'"\'"\',os.access(str(p),os.R_OK))\nx=subprocess.run([\'"\'"\'squeue\'"\'"\',\'"\'"\'-u\'"\'"\',os.environ[\'"\'"\'USER\'"\'"\'],\'"\'"\'-o\'"\'"\',\'"\'"\'%.22i %.14P %.30j %.10T %.12M %.6D %R\'"\'"\'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True); print(x.stdout)\n\''
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+TIME 2026-09-16T15:36:26.776257
+SelectType              = select/cons_tres
+SelectTypeParameters    = CR_CORE_MEMORY
+UsePam                  = No
+AllowedRAMSpace         = 100.0%
+AllowedSwapSpace        = 0.0%
+ConstrainCores          = yes
+ConstrainDevices        = yes
+ConstrainKmemSpace      = no
+ConstrainRAMSpace       = yes
+ConstrainSwapSpace      = yes
+MaxRAMPercent           = 100.0%
+MaxSwapPercent          = 100.0%
+MemorySwappiness        = 0
+MinRAMSpace             = 30 MB
+SITE_SCRIPT /cm/local/apps/cmd/scripts/prolog bytes 2116 sha256 351ea25179bb652ace8e0ca18cc19c00a8a87328544c2b95098cb6ad39d3f9e3
+RELEVANT_LINES [(15, 'LOG=/tmp/prolog.log'), (22, 'if [ ! -z $SLURM_JOB_ID ]  || [ ! -z $SLURM_JOBID ]; then'), (23, '  WLM="slurm"'), (52, 'PROLOGS_DIR=/cm/local/apps/$WLM/var/prologs')]
+SITE_SCRIPT /cm/local/apps/cmd/scripts/epilog bytes 2129 sha256 346f9cc8016e31b601bc3b033e29d643a808ee6248c63cec3840ecf287efb104
+RELEVANT_LINES [(15, 'LOG=/tmp/epilog.log'), (22, 'if [ ! -z $SLURM_JOB_ID ]  || [ ! -z $SLURM_JOBID ]; then'), (23, '  WLM="slurm"'), (57, 'EPILOGS_DIR=/cm/local/apps/$WLM/var/epilogs')]
+SITE_SCRIPT /cm/local/apps/cmd/scripts/prolog-prejob bytes 7665 sha256 803e239815ff78f89a026206259a16f5dce4d2cbfce71150f3474bc5a9b8cfa4
+RELEVANT_LINES [(20, "if($scheduler eq 'slurm') { # because of permissions"), (21, '  $pemfile = "/cm/shared/licenses/cm/slurm/cmsh/cmhealth.pem";'), (22, '  $keyfile = "/cm/shared/licenses/cm/slurm/cmsh/cmhealth.key";'), (102, '  if($ENV{"SLURM_JOBID"} ne "") {'), (103, '    $jobid = $ENV{"SLURM_JOBID"};'), (104, '    return "slurm";'), (105, '  } elsif($ENV{"SLURM_JOB_ID"} ne "") {'), (106, '    $jobid = $ENV{"SLURM_JOB_ID"};'), (107, '    return "slurm";'), (137, '  } elsif($scheduler eq "slurm") {'), (138, '    $nodes = $ENV{"SLURM_JOB_NODELIST"};'), (140, '      $nodes = $ENV{"SLURM_NODELIST"};'), (226, '####### FOR SLURM ######')]
+LOGIN_LOG_ACCESS_ONLY /var/log/slurmd exists False readable False
+LOGIN_LOG_ACCESS_ONLY /var/log/slurmctld exists False readable False
+                 JOBID      PARTITION                           NAME      STATE         TIME  NODES NODELIST(REASON)
+               6147940   cpu-s1-pgl-0               syl_an_Ahy_A_ODB    PENDING         0:00      1 (JobHeldUser)
+               6147612   cpu-s1-pgl-0                   syl_an_Ahy_A    PENDING         0:00      1 (JobHeldUser)
+               6147349   cpu-s1-pgl-0                   syl_an_Ahy_B    PENDING         0:00      1 (JobHeldUser)
+               6146937   cpu-s1-pgl-0                   syl_an_Ahy_B    PENDING         0:00      1 (JobHeldUser)
+               6146936   cpu-s1-pgl-0               syl_an_Ahy_A_ODB    RUNNING  13-00:22:42      1 cpu-50
+               6156540   cpu-s1-pgl-0            syl_watch_other_20m    RUNNING   6-03:45:24      1 cpu-50
+               6156395   cpu-s1-pgl-0             pasaPost.Ahy_A_ODB    RUNNING   6-13:45:29      1 cpu-50
+
+
+LOCAL_SSH_EXIT=0

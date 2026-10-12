@@ -1,0 +1,364 @@
+FFFFFFFFFFFFFFFFF                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_proof_missing_f0_fails_before_selection _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_missing_f0_fails_be0')
+
+    def test_proof_missing_f0_fails_before_selection(tmp_path):
+        r = run(fixture(tmp_path), tmp_path)
+>       assert r['status'] == 'FAILED'
+E       AssertionError: assert 'COMPLETE' == 'FAILED'
+E         
+E         - FAILED
+E         + COMPLETE
+
+tests/test_est_real_sample.py:82: AssertionError
+_________________ test_proof_exact_full_preimage[query_sha256] _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_exact_full_preimage0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c8679f820>
+change = 'query_sha256'
+
+    @pytest.mark.parametrize('change', ['query_sha256', 'protein_sha256', 'raw_sha256',
+                                       'c1_provenance_sha256', 'c1_commands_sha256', 'source', 'arm', 'species', 'reference_sha256'])
+    def test_proof_exact_full_preimage(tmp_path, monkeypatch, change):
+        m = fixture(tmp_path)
+        data = proof(m)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        pre = json.loads(data)['producers'][0]['search_preimage']
+>       assert api().resolve_producer_path(data, pre)['length_contract'].endswith('_D_GE30')
+E       AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:95: AttributeError
+________________ test_proof_exact_full_preimage[protein_sha256] ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_exact_full_preimage1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c868563d0>
+change = 'protein_sha256'
+
+    @pytest.mark.parametrize('change', ['query_sha256', 'protein_sha256', 'raw_sha256',
+                                       'c1_provenance_sha256', 'c1_commands_sha256', 'source', 'arm', 'species', 'reference_sha256'])
+    def test_proof_exact_full_preimage(tmp_path, monkeypatch, change):
+        m = fixture(tmp_path)
+        data = proof(m)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        pre = json.loads(data)['producers'][0]['search_preimage']
+>       assert api().resolve_producer_path(data, pre)['length_contract'].endswith('_D_GE30')
+E       AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:95: AttributeError
+__________________ test_proof_exact_full_preimage[raw_sha256] __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_exact_full_preimage2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c8679f9d0>
+change = 'raw_sha256'
+
+    @pytest.mark.parametrize('change', ['query_sha256', 'protein_sha256', 'raw_sha256',
+                                       'c1_provenance_sha256', 'c1_commands_sha256', 'source', 'arm', 'species', 'reference_sha256'])
+    def test_proof_exact_full_preimage(tmp_path, monkeypatch, change):
+        m = fixture(tmp_path)
+        data = proof(m)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        pre = json.loads(data)['producers'][0]['search_preimage']
+>       assert api().resolve_producer_path(data, pre)['length_contract'].endswith('_D_GE30')
+E       AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:95: AttributeError
+_____________ test_proof_exact_full_preimage[c1_provenance_sha256] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_exact_full_preimage3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c86856ee0>
+change = 'c1_provenance_sha256'
+
+    @pytest.mark.parametrize('change', ['query_sha256', 'protein_sha256', 'raw_sha256',
+                                       'c1_provenance_sha256', 'c1_commands_sha256', 'source', 'arm', 'species', 'reference_sha256'])
+    def test_proof_exact_full_preimage(tmp_path, monkeypatch, change):
+        m = fixture(tmp_path)
+        data = proof(m)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        pre = json.loads(data)['producers'][0]['search_preimage']
+>       assert api().resolve_producer_path(data, pre)['length_contract'].endswith('_D_GE30')
+E       AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:95: AttributeError
+______________ test_proof_exact_full_preimage[c1_commands_sha256] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_exact_full_preimage4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c867a0b50>
+change = 'c1_commands_sha256'
+
+    @pytest.mark.parametrize('change', ['query_sha256', 'protein_sha256', 'raw_sha256',
+                                       'c1_provenance_sha256', 'c1_commands_sha256', 'source', 'arm', 'species', 'reference_sha256'])
+    def test_proof_exact_full_preimage(tmp_path, monkeypatch, change):
+        m = fixture(tmp_path)
+        data = proof(m)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        pre = json.loads(data)['producers'][0]['search_preimage']
+>       assert api().resolve_producer_path(data, pre)['length_contract'].endswith('_D_GE30')
+E       AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:95: AttributeError
+____________________ test_proof_exact_full_preimage[source] ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_exact_full_preimage5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c868e3580>
+change = 'source'
+
+    @pytest.mark.parametrize('change', ['query_sha256', 'protein_sha256', 'raw_sha256',
+                                       'c1_provenance_sha256', 'c1_commands_sha256', 'source', 'arm', 'species', 'reference_sha256'])
+    def test_proof_exact_full_preimage(tmp_path, monkeypatch, change):
+        m = fixture(tmp_path)
+        data = proof(m)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        pre = json.loads(data)['producers'][0]['search_preimage']
+>       assert api().resolve_producer_path(data, pre)['length_contract'].endswith('_D_GE30')
+E       AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:95: AttributeError
+_____________________ test_proof_exact_full_preimage[arm] ______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_exact_full_preimage6')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c868abee0>
+change = 'arm'
+
+    @pytest.mark.parametrize('change', ['query_sha256', 'protein_sha256', 'raw_sha256',
+                                       'c1_provenance_sha256', 'c1_commands_sha256', 'source', 'arm', 'species', 'reference_sha256'])
+    def test_proof_exact_full_preimage(tmp_path, monkeypatch, change):
+        m = fixture(tmp_path)
+        data = proof(m)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        pre = json.loads(data)['producers'][0]['search_preimage']
+>       assert api().resolve_producer_path(data, pre)['length_contract'].endswith('_D_GE30')
+E       AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:95: AttributeError
+___________________ test_proof_exact_full_preimage[species] ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_exact_full_preimage7')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c86aa18e0>
+change = 'species'
+
+    @pytest.mark.parametrize('change', ['query_sha256', 'protein_sha256', 'raw_sha256',
+                                       'c1_provenance_sha256', 'c1_commands_sha256', 'source', 'arm', 'species', 'reference_sha256'])
+    def test_proof_exact_full_preimage(tmp_path, monkeypatch, change):
+        m = fixture(tmp_path)
+        data = proof(m)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        pre = json.loads(data)['producers'][0]['search_preimage']
+>       assert api().resolve_producer_path(data, pre)['length_contract'].endswith('_D_GE30')
+E       AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:95: AttributeError
+_______________ test_proof_exact_full_preimage[reference_sha256] _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_exact_full_preimage8')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c86a754c0>
+change = 'reference_sha256'
+
+    @pytest.mark.parametrize('change', ['query_sha256', 'protein_sha256', 'raw_sha256',
+                                       'c1_provenance_sha256', 'c1_commands_sha256', 'source', 'arm', 'species', 'reference_sha256'])
+    def test_proof_exact_full_preimage(tmp_path, monkeypatch, change):
+        m = fixture(tmp_path)
+        data = proof(m)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        pre = json.loads(data)['producers'][0]['search_preimage']
+>       assert api().resolve_producer_path(data, pre)['length_contract'].endswith('_D_GE30')
+E       AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:95: AttributeError
+___________ test_proof_compiled_pin_cannot_be_overridden[truncated] ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_compiled_pin_cannot0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c86aa1d00>
+change = 'truncated'
+
+    @pytest.mark.parametrize('change', ['truncated', 'altered', 'swapped', 'self_repinned_record'])
+    def test_proof_compiled_pin_cannot_be_overridden(tmp_path, monkeypatch, change):
+        data = proof(fixture(tmp_path))
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        value = json.loads(data)
+        pre = value['producers'][0]['search_preimage']
+        if change == 'truncated':
+            bad = data[:-1]
+        else:
+            if change == 'swapped':
+                value['producers'].reverse()
+            else:
+                value['producers'][0]['length_contract'] = 'diamond-2.1.24.178/legacy-blocked-transcript-join'
+                if change == 'self_repinned_record':
+                    value['producers'][0]['sha256'] = hashlib.sha256(api().canonical(value['producers'][0])).hexdigest()
+            bad = api().canonical(value)
+        with pytest.raises(ValueError, match='producer path proof'):
+>           api().resolve_producer_path(bad, pre)
+E           AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:118: AttributeError
+____________ test_proof_compiled_pin_cannot_be_overridden[altered] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_compiled_pin_cannot1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c86a51640>
+change = 'altered'
+
+    @pytest.mark.parametrize('change', ['truncated', 'altered', 'swapped', 'self_repinned_record'])
+    def test_proof_compiled_pin_cannot_be_overridden(tmp_path, monkeypatch, change):
+        data = proof(fixture(tmp_path))
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        value = json.loads(data)
+        pre = value['producers'][0]['search_preimage']
+        if change == 'truncated':
+            bad = data[:-1]
+        else:
+            if change == 'swapped':
+                value['producers'].reverse()
+            else:
+                value['producers'][0]['length_contract'] = 'diamond-2.1.24.178/legacy-blocked-transcript-join'
+                if change == 'self_repinned_record':
+                    value['producers'][0]['sha256'] = hashlib.sha256(api().canonical(value['producers'][0])).hexdigest()
+            bad = api().canonical(value)
+        with pytest.raises(ValueError, match='producer path proof'):
+>           api().resolve_producer_path(bad, pre)
+E           AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:118: AttributeError
+____________ test_proof_compiled_pin_cannot_be_overridden[swapped] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_compiled_pin_cannot2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c86974430>
+change = 'swapped'
+
+    @pytest.mark.parametrize('change', ['truncated', 'altered', 'swapped', 'self_repinned_record'])
+    def test_proof_compiled_pin_cannot_be_overridden(tmp_path, monkeypatch, change):
+        data = proof(fixture(tmp_path))
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        value = json.loads(data)
+        pre = value['producers'][0]['search_preimage']
+        if change == 'truncated':
+            bad = data[:-1]
+        else:
+            if change == 'swapped':
+                value['producers'].reverse()
+            else:
+                value['producers'][0]['length_contract'] = 'diamond-2.1.24.178/legacy-blocked-transcript-join'
+                if change == 'self_repinned_record':
+                    value['producers'][0]['sha256'] = hashlib.sha256(api().canonical(value['producers'][0])).hexdigest()
+            bad = api().canonical(value)
+        with pytest.raises(ValueError, match='producer path proof'):
+>           api().resolve_producer_path(bad, pre)
+E           AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:118: AttributeError
+______ test_proof_compiled_pin_cannot_be_overridden[self_repinned_record] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_compiled_pin_cannot3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c86a75f40>
+change = 'self_repinned_record'
+
+    @pytest.mark.parametrize('change', ['truncated', 'altered', 'swapped', 'self_repinned_record'])
+    def test_proof_compiled_pin_cannot_be_overridden(tmp_path, monkeypatch, change):
+        data = proof(fixture(tmp_path))
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        value = json.loads(data)
+        pre = value['producers'][0]['search_preimage']
+        if change == 'truncated':
+            bad = data[:-1]
+        else:
+            if change == 'swapped':
+                value['producers'].reverse()
+            else:
+                value['producers'][0]['length_contract'] = 'diamond-2.1.24.178/legacy-blocked-transcript-join'
+                if change == 'self_repinned_record':
+                    value['producers'][0]['sha256'] = hashlib.sha256(api().canonical(value['producers'][0])).hexdigest()
+            bad = api().canonical(value)
+        with pytest.raises(ValueError, match='producer path proof'):
+>           api().resolve_producer_path(bad, pre)
+E           AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:118: AttributeError
+____________________ test_proof_schema_consistency[unknown] ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_schema_consistency_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c86a1ca00>
+kind = 'unknown'
+
+    @pytest.mark.parametrize('kind', ['unknown', 'conflict', 'evidence'])
+    def test_proof_schema_consistency(tmp_path, monkeypatch, kind):
+        value = json.loads(proof(fixture(tmp_path)))
+        pre = value['producers'][0]['search_preimage']
+        if kind == 'unknown':
+            value['producers'][0]['length_contract'] = 'DAA/view'
+        elif kind == 'conflict':
+            value['producers'][1] = value['producers'][0]
+        else:
+            value['producers'][0]['commands']['text'] += 'changed'
+        data = api().canonical(value)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        with pytest.raises(ValueError, match='producer'):
+>           api().resolve_producer_path(data, pre)
+E           AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:134: AttributeError
+___________________ test_proof_schema_consistency[conflict] ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_schema_consistency_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c868cc340>
+kind = 'conflict'
+
+    @pytest.mark.parametrize('kind', ['unknown', 'conflict', 'evidence'])
+    def test_proof_schema_consistency(tmp_path, monkeypatch, kind):
+        value = json.loads(proof(fixture(tmp_path)))
+        pre = value['producers'][0]['search_preimage']
+        if kind == 'unknown':
+            value['producers'][0]['length_contract'] = 'DAA/view'
+        elif kind == 'conflict':
+            value['producers'][1] = value['producers'][0]
+        else:
+            value['producers'][0]['commands']['text'] += 'changed'
+        data = api().canonical(value)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        with pytest.raises(ValueError, match='producer'):
+>           api().resolve_producer_path(data, pre)
+E           AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:134: AttributeError
+___________________ test_proof_schema_consistency[evidence] ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1298/test_proof_schema_consistency_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d2c86a75580>
+kind = 'evidence'
+
+    @pytest.mark.parametrize('kind', ['unknown', 'conflict', 'evidence'])
+    def test_proof_schema_consistency(tmp_path, monkeypatch, kind):
+        value = json.loads(proof(fixture(tmp_path)))
+        pre = value['producers'][0]['search_preimage']
+        if kind == 'unknown':
+            value['producers'][0]['length_contract'] = 'DAA/view'
+        elif kind == 'conflict':
+            value['producers'][1] = value['producers'][0]
+        else:
+            value['producers'][0]['commands']['text'] += 'changed'
+        data = api().canonical(value)
+        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
+        with pytest.raises(ValueError, match='producer'):
+>           api().resolve_producer_path(data, pre)
+E           AttributeError: module 'evidence.est_real_sample' has no attribute 'resolve_producer_path'
+
+tests/test_est_real_sample.py:134: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_est_real_sample.py::test_proof_missing_f0_fails_before_selection
+FAILED tests/test_est_real_sample.py::test_proof_exact_full_preimage[query_sha256]
+FAILED tests/test_est_real_sample.py::test_proof_exact_full_preimage[protein_sha256]
+FAILED tests/test_est_real_sample.py::test_proof_exact_full_preimage[raw_sha256]
+FAILED tests/test_est_real_sample.py::test_proof_exact_full_preimage[c1_provenance_sha256]
+FAILED tests/test_est_real_sample.py::test_proof_exact_full_preimage[c1_commands_sha256]
+FAILED tests/test_est_real_sample.py::test_proof_exact_full_preimage[source]
+FAILED tests/test_est_real_sample.py::test_proof_exact_full_preimage[arm] - A...
+FAILED tests/test_est_real_sample.py::test_proof_exact_full_preimage[species]
+FAILED tests/test_est_real_sample.py::test_proof_exact_full_preimage[reference_sha256]
+FAILED tests/test_est_real_sample.py::test_proof_compiled_pin_cannot_be_overridden[truncated]
+FAILED tests/test_est_real_sample.py::test_proof_compiled_pin_cannot_be_overridden[altered]
+FAILED tests/test_est_real_sample.py::test_proof_compiled_pin_cannot_be_overridden[swapped]
+FAILED tests/test_est_real_sample.py::test_proof_compiled_pin_cannot_be_overridden[self_repinned_record]
+FAILED tests/test_est_real_sample.py::test_proof_schema_consistency[unknown]
+FAILED tests/test_est_real_sample.py::test_proof_schema_consistency[conflict]
+FAILED tests/test_est_real_sample.py::test_proof_schema_consistency[evidence]
+17 failed, 43 deselected in 0.84s

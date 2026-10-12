@@ -1,0 +1,13 @@
+...F...
+======================================================================
+FAIL: test_runtime_inventory_and_cgroup_fail_closed (test_amendments.Amendments)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture_v2/test_amendments.py", line 60, in test_runtime_inventory_and_cgroup_fail_closed
+    self.assertTrue((HERE/'runtime_closure.py').exists(), 'missing bounded runtime collector')
+AssertionError: False is not true : missing bounded runtime collector
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.097s
+
+FAILED (failures=1)

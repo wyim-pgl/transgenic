@@ -1,0 +1,25 @@
+c2_replay_rank03_v2.tsv: OK
+notes/c2_compile_recovery_20261011.md: OK
+revision/scripts/b6/diag_gpu_memory.py: OK
+revision/scripts/b6/wp5_pilot.sbatch: OK
+src/transgenic/training/b6_runtime.py: OK
+tests/test_b6_compile_recovery.py: OK
+tests/test_b6_compile_static.py: OK
+tests/test_b6_finalization.py: OK
+tests/test_b6_trainer.py: OK
+train/train_HyenaTransgenic_B6.py: OK
+validate_candidate.py: OK
+validate_candidate.sbatch: OK
+SNAPSHOT b254ff4b4b1e640f5b570c00c58578bff16ba9a3
+SUBMITTED 3361110
+JobId=3361110 JobName=c2-compile-validate UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=1952 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Priority Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=01:00:00 TimeMin=N/A SubmitTime=2026-10-11T14:18:17 EligibleTime=2026-10-11T14:18:17 AccrueTime=Unknown StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-11T14:18:17 Scheduler=Main Partition=ghx4-interactive AllocNode:Sid=gh-login03:2005906 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1-1 NumCPUs=16 NumTasks=1 CPUs/Task=16 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=16,mem=113560M,node=1,billing=2000,gres/gpu=1 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=16 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/repo_b6_d7b1a37/validate_candidate.sbatch SubmitLine=sbatch --parsable /work/nvme/bilv/wcyim/transgenic/repo_b6_d7b1a37/validate_candidate.sbatch WorkDir=/u/wcyim StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/b6_prep_20260925/logs/c2-recompile-3361110.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:1 TresPerTask=cpu=16
+
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

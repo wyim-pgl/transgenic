@@ -1,0 +1,629 @@
+diff --git a/notes/MVP_SCORE_PROVENANCE_REPORT.md b/notes/MVP_SCORE_PROVENANCE_REPORT.md
+index 767927d..78fc64a 100644
+--- a/notes/MVP_SCORE_PROVENANCE_REPORT.md
++++ b/notes/MVP_SCORE_PROVENANCE_REPORT.md
+@@ -1,10 +1,13 @@
+ # MVP score provenance implementation report
+ 
++**Latest: round-1 review fixes are documented below. That section supersedes
++initial provenance-check and synthetic-loader-fixture descriptions.**
++
+ ## Identity / status
+ 
+ - Worktree `/tmp/b6-p2-scoring-1535144`, branch `b6-p2-scoring-1535144`.
+ - Verified requested base: `2276fcb1efdeb124a97a11dced8d73e4d48560e0`.
+ - Implementation: **`1a9253d02b0202106e29587ff689bb1e2e1f3e72`**.
+ - **Partial evaluation implementation; controller review required before use.**
+   No empirical efficacy, real-tool certification, training authorization, or
+   complete connected biological evaluation is claimed.
+@@ -133,8 +136,143 @@ CPU verification, not the complete repository test suite.
+   of identity or denominator checks.
+ - No resume/overwrite: failures may leave partial comparison directories, but
+   no final receipt is published until verification and statistics finish.
+ - Author HiFi/ONT-only coverage and withholding policy remain unresolved. No
+   new authority booleans or final-decision bypass were introduced.
+ 
+ Controller should review these gaps before operational promotion. The unchanged
+ training path can proceed through its own approved gates independently.
++
++## Round 1: five independent-review corrections
++
++- Fix base verified: `8803afb44189e7510e67e39976676dcad664c164`.
++- Implementation commit: **`64b6d5bf2494bb5b23e061c6c0917b4bbafcdbb9`**.
++- Read the complete controller review at
++  `notes/recovery_20260916_1251/B.producer.independent_review.md` in main,
++  read-only. No main changes, other-worker files, trainer/finalizer changes,
++  metric math/policy changes, SSH, jobs, subagents, merges or pushes.
++- **350 transport schema unchanged**. Controller independent re-review is
++  required; no operational promotion is claimed.
++
++### R1: exact bound training source/package inventories
++
++`verify_training_code` locates the training checkout through the audited
++`src/transgenic/training/b5_runtime.py` implementation path. It enforces the
++existing training rule: all Python files beneath that checkout's
++`src/transgenic`, plus `train/train_HyenaTransgenic_MVP.py`, exactly, with
++canonical paths and matching bytes. This is **not** the current scoring
++checkout's potentially expanded source set. It requires exactly the five
++recorded external packages (accelerate, duckdb, safetensors, torch,
++transformers), each a nonempty version string. All four shared package fields
++must equal finalizer metadata. Duckdb is mandatory but cannot be cross-compared
++because the unchanged finalizer runtime-package schema omits it. Historical
++version strings are not compared with the installed scoring runtime.
++
++The two initialization implementation paths/hashes must identify their exact
++locations in that consumed code inventory. Semantic reconstruction uses the
++existing weights_init implementation only when its own code, b5_runtime, and
++configuration_transgenic bytes equal the bound training copies. A different
++historical semantic implementation fails closed for a reviewed verifier adapter;
++no arbitrary source from a supplied checkout is imported or executed.
++
++Tests reject one-file and omitted-loader manifests and incomplete/extra/blank
++package schemas. The positive relocated-checkout test includes an extra
++training module absent from the scorer checkout and historical package strings;
++it succeeds. Adding an unlisted module or deleting a listed module fails.
++
++### R2: source bytes versus actual initialization claims
++
++The verifier now requires canonical source checkpoint/run-config/optional-file
++paths, a real embedded source recipe with the loader's required fields and
++zero evidence channels, and the canonical digest of **run_config['recipe']**
++using `weights_init._canonical`/`_sha256_bytes`. It reconstructs source semantic
++fields and origins through the actual `model_kwargs`, HyenaTransgenicConfig,
++`_manifest`, and `_manifest_record`; source recipe contradictions and present
++optional source-config semantic fields are checked. Source safetensors must
++open as a nonempty zero-channel file without an evidence projection, and their
++metadata must equal the audit. Source/target semantic equality is rechecked.
++This does not instantiate or reload a full-size model.
++
++The positive fixture is no longer a shape-only hand-built initialization audit:
++it creates actual tiny Transgenic/LED models, saves the zero-channel source,
++and runs the **real `load_weights_only`**, then the real finalizer publisher.
++Only the remote Hyena factory uses the existing local embedding test double;
++there is no download, training, GPU, or forward pass. Production-labelled
++hardware/update metadata remain explicit synthetic test declarations, not
++measurements. The full350 test still stubs biological/candidate/tool authority.
++
++Seed-123 remains a byte-consistent **declared initialization source**, not proof
++of the intended historical **best** selection. A trusted concrete source pin
++for that historical choice remains an operational prerequisite; the result's
++provenance caveat now says this explicitly. No new self-attestation switch or
++checkpoint-authority schema was added.
++
++### R3/R4: no silent ID collapse or missing-decode-as-zero
++
++Preflight rejects noncanonical attribute keys and ID/Parent tokens. The supported
++canonical identifier alphabet is `[A-Za-z0-9_.:-]+`; Parent may be a comma-separated
++list of unique such IDs. Literal whitespace (including nonbreaking spaces),
++empty identifiers, and silent percent/other normalization are not repaired.
++Parsed gene and per-gene transcript identity sets must exactly conserve the
++preflight inventories. Tests include the reviewer's two-transcript whitespace
++collision, additional whitespace forms, and simulated parser inventory loss.
++
++A zero-byte, whitespace-only, or comment-only empty file now fails. A completed
++zero-transcript output must include the exact `##gff-version 3` header; genuine
++header-only GFF3 remains valid. Decoder owners must still publish transport only
++after successful completion, not convert failed generation into header-only
++biological zero. Transport field names/counts and existing nonempty GFF inputs
++have not been changed.
++
++### R5: final config JSON and audited target semantics
++
++`config.json` is read through the duplicate-key-rejecting JSON reader, must be
++an object containing audited semantic fields, and must reconstruct the target
++semantic manifest exactly. Raw versus reconstructed values are checked to
++prevent silent configuration normalization. The source/target relation is
++checked with the existing loader helper, including the allowed 0-to-8 channel
++transition. Tests reject invalid JSON, non-object JSON, duplicate keys, and
++valid JSON with inconsistent target dimensions.
++
++### Actual round-1 validation
++
++Before implementation, the new review suite had **22 substantive missing-guard
++failures** (invalid artifacts were accepted) and one additional expected-exception
++type mismatch in the bound-checkout deletion test. The strengthened real-loader
++positive fixture first passed the unchanged 20 producer/integration tests.
++
++Final fresh commands, from the B worktree:
++
++```sh
++PYTHONPATH=/tmp/b6-trackb-testdeps:src \
++  /home/wyim/miniconda3/envs/pdb/bin/python -m pytest \
++  tests/test_mvp_score_producer_review.py -q
++# 27 passed, 42.05 s
++
++PYTHONPATH=/tmp/b6-trackb-testdeps:src \
++  /home/wyim/miniconda3/envs/pdb/bin/python -m pytest \
++  tests/test_mvp_score_producer.py tests/test_mvp_score_producer_integration.py \
++  tests/test_mvp_scoring.py tests/test_mvp_scoring_driver.py \
++  tests/test_mvp_metrics.py revision/scripts/tests/test_evidence_support.py -q
++# 115 passed, 21 subtests passed, 29.19 s
++
++PYTHONPATH=/tmp/b6-p2-readiness-1535112/.testdeps:/tmp/b6-trackb-testdeps:src \
++  /home/wyim/miniconda3/envs/pdb/bin/python -m pytest \
++  tests/test_mvp_cli.py -k candidate -q
++# 16 passed, 29 deselected, 24.11 s
++```
++
++One intermediate full350 regression exposed nondeterministic safetensors
++alias-metadata key ordering when independently saving equal source tensors.
++Tensor payloads matched but file bytes did not. The fixture was corrected to
++make all three runs consume **one serialized baseline**, as the real contract
++requires; no production identity check was weakened. The complete regression
++command then passed. Compileall for the producer and three task test modules
++and `git diff --check` also passed. Graft queried before edits and refreshed.
++Advisor was attempted but unavailable due to client/model-version mismatch;
++no advisor review is claimed.
++
++**Unchanged blockers:** real GFFCompare behavior and frozen-reference smoke,
++duplicate-isoform multiplicity policy, independent read-splice provenance,
++coverage/HiFi author policy, withholding, historical seed-123 best pin, and
++operational decoder execution remain unverified/unresolved. All previous
++non-authority and non-empirical limitations remain in force.
+diff --git a/revision/scripts/mvp/mvp_produce_counts.py b/revision/scripts/mvp/mvp_produce_counts.py
+index 7f402a1..570c76e 100644
+--- a/revision/scripts/mvp/mvp_produce_counts.py
++++ b/revision/scripts/mvp/mvp_produce_counts.py
+@@ -65,16 +65,103 @@ def frozen_reference(fasta, reference):
+             for block in iter(lambda: f.read(1 << 20), b''):
+                 digest.update(block)
+         require(digest.hexdigest() == rows[0][name + '_md5'], f'frozen {name} identity mismatch')
+         bound[name] = file_identity(path)
+     return {'commit': AUTHORITY_COMMIT, 'manifest': AUTHORITY_PATH,
+             'manifest_sha256': hashlib.sha256(proc.stdout).hexdigest(), 'files': bound}
+ 
+ 
++def verify_training_code(source, metadata):
++    """Apply the existing training closure schema at its bound checkout, not ours."""
++    require(isinstance(source, dict) and set(source) == {'files', 'external_packages'}, 'invalid consumed code manifest')
++    files, packages = source['files'], source['external_packages']
++    require(isinstance(files, dict) and files, 'consumed code files must be a nonempty object')
++    required_packages = {'accelerate', 'duckdb', 'safetensors', 'torch', 'transformers'}
++    require(isinstance(packages, dict) and set(packages) == required_packages and
++            all(isinstance(v, str) and v.strip() for v in packages.values()), 'complete five-package code schema required')
++    # duckdb is mandatory in the training code manifest but absent from the
++    # existing finalizer runtime_packages schema. No scoring-runtime comparison.
++    for name in required_packages - {'duckdb'}:
++        require(packages[name] == metadata['runtime_packages'][name], 'code/runtime package mismatch')
++    implementation = metadata['initialization_audit']['audit']['implementation']
++    runtime_path = Path(implementation['b5_runtime.py']['path'])
++    require(runtime_path.is_absolute() and runtime_path.parts[-4:] ==
++            ('src', 'transgenic', 'training', 'b5_runtime.py'), 'invalid bound training checkout path')
++    root = runtime_path.parents[3].resolve(strict=True)
++    # Same closure as mvp_cli_runtime._expected_code_files, evaluated in the
++    # historical training checkout. Additional scoring-checkout files are irrelevant.
++    expected = {str(path) for path in (root/'src/transgenic').rglob('*.py')}
++    expected.add(str(root/'train/train_HyenaTransgenic_MVP.py'))
++    require(set(files) == expected, 'consumed code manifest must match exact bound training source closure')
++    require(all(str(Path(path).resolve(strict=True)) == path for path in files), 'noncanonical consumed code path')
++    identities = [check_file(path, {'sha256': digest}) for path, digest in files.items()]
++    for name, relative in [('b5_runtime.py', 'src/transgenic/training/b5_runtime.py'),
++                           ('configuration_transgenic.py', 'src/transgenic/model/configuration_transgenic.py')]:
++        path = str(root/relative)
++        require(implementation[name] == {'path': path, 'sha256': files.get(path)}, 'initialization implementation/code binding mismatch')
++    # Reconstruct semantics only with the same project-owned implementation.
++    # Do not import/execute arbitrary files from a supplied historical checkout.
++    from transgenic.training import weights_init as wi
++    for module, relative in [(wi, 'src/transgenic/training/weights_init.py'),
++                             (wi.b5_runtime, 'src/transgenic/training/b5_runtime.py'),
++                             (wi.configuration_transgenic, 'src/transgenic/model/configuration_transgenic.py')]:
++        require(files.get(str(root/relative)) == w.sha256_file(module.__file__),
++                'unsupported historical semantic implementation; reviewed verifier adapter required')
++    return identities
++
++
++def verify_initialization(audit, initialization, final_config):
++    """Reconstruct directly checkable loader claims without loading a full model."""
++    from transgenic.training import weights_init as wi
++    from safetensors import safe_open, SafetensorError
++    checkpoint = Path(audit['resolved_checkpoint_dir'])
++    require(initialization['model.safetensors']['path'] == str(checkpoint/'model.safetensors') and
++            initialization['run_config.json']['path'] == str(checkpoint.parent/'run_config.json'),
++            'source checkpoint/run config canonical paths mismatch')
++    for name in ('config.json', 'meta.json', 'runtime.json', 'runtime_identity.txt'):
++        if name in initialization:
++            parent = checkpoint.parent if name == 'runtime_identity.txt' else checkpoint
++            require(initialization[name]['path'] == str(parent/name), 'source optional file canonical path mismatch')
++    run_config = read_json(initialization['run_config.json']['path'])
++    require(isinstance(run_config, dict) and type(run_config.get('seed')) is int and
++            run_config['seed'] == 123, 'baseline source is not seed 123')
++    recipe = run_config.get('recipe')
++    require(isinstance(recipe, dict) and wi._REQUIRED_RECIPE_KEYS <= set(recipe), 'embedded source recipe missing required keys')
++    require(audit['recipe'] == {'canonical_sha256': wi._sha256_bytes(wi._canonical(recipe))}, 'source recipe canonical digest mismatch')
++    require(type(recipe.get('evidence_channels', 0)) is int and recipe.get('evidence_channels', 0) == 0,
++            'source recipe must have zero evidence channels')
++    source_config = wi.HyenaTransgenicConfig(**wi.model_kwargs(recipe))
++    source_fields = wi._manifest(source_config, recipe)
++    for name in wi._SEMANTIC_FIELDS:
++        if name in recipe and name != 'evidence_channels' and hasattr(source_config, name):
++            require(wi._canonical(wi._value(recipe[name])) == wi._canonical(wi._value(getattr(source_config, name))),
++                    f'source recipe semantic contradiction: {name}')
++    require(wi._manifest_record(source_fields) == audit['source_semantics'], 'source semantic manifest mismatch')
++    if 'config.json' in initialization:
++        recorded = read_json(initialization['config.json']['path'])
++        require(isinstance(recorded, dict), 'source config must be a JSON object')
++        for name, entry in source_fields.items():
++            if name in recorded:
++                require(wi._canonical(recorded[name]) == wi._canonical(entry['value']), f'source config semantic mismatch: {name}')
++    require(isinstance(final_config, dict), 'final config must be a JSON object')
++    require(set(audit['target_semantics']['fields']) <= set(final_config), 'final config missing audited semantic fields')
++    target_fields = wi._manifest(wi.HyenaTransgenicConfig(**final_config), None)
++    require(wi._manifest_record(target_fields) == audit['target_semantics'], 'final config target semantic manifest mismatch')
++    for name, entry in target_fields.items():
++        require(wi._canonical(final_config[name]) == wi._canonical(entry['value']), f'final config semantic normalization: {name}')
++    wi._check_equal(source_fields, target_fields)
++    try:
++        with safe_open(initialization['model.safetensors']['path'], framework='pt', device='cpu') as model:
++            require(bool(list(model.keys())) and wi._PROJECTION_KEY not in model.keys(), 'invalid zero-channel source weights inventory')
++            require(model.metadata() == audit['load']['safetensors_metadata'], 'source safetensors metadata mismatch')
++    except SafetensorError as error:
++        raise ValueError('source weights are not readable safetensors') from error
++
++
+ def verify_final(final, seed, expected_rns, data_hashes, code_manifest):
+     """Consume exactly mvp_finalize's existing publication format."""
+     from transgenic.training.mvp_finalize import _validate_metadata
+     from transgenic.training.mvp_metrics import aggregate_paired_records
+     final = Path(final).resolve(strict=True)
+     require((final / 'TRAINING_DONE').read_bytes() == b'complete\n', 'final is not complete')
+     manifest = read_json(final / 'manifest.json')
+     names = {'metadata.json', 'paired_records.jsonl', 'paired_summary.json', 'model.safetensors', 'config.json'}
+@@ -83,26 +170,21 @@ def verify_final(final, seed, expected_rns, data_hashes, code_manifest):
+     metadata = read_json(final / 'metadata.json')
+     _validate_metadata(metadata, metadata.get('training_summary'))
+     require(metadata['identity_scope'] == 'production', 'test final cannot establish MVP run identity')
+     require(metadata['seed_augmentation'] == {'seed': seed, 'aug_seed': 20260914 + seed}, 'cross-seed final mismatch')
+     for name, digest in data_hashes.items():
+         require(metadata['data_identities'][name]['sha256'] == digest, f'final {name} identity mismatch')
+     code = check_file(code_manifest, metadata['sif_code_identity']['code'])
+     source = read_json(code_manifest)
+-    require(set(source) == {'files', 'external_packages'} and source['files'], 'invalid consumed code manifest')
+-    code_files = [check_file(p, {'sha256': h}) for p, h in source['files'].items()]
+-    # Finalizer metadata omits duckdb, while the consumed-code manifest includes it.
+-    for package in set(source['external_packages']) & set(metadata['runtime_packages']):
+-        require(metadata['runtime_packages'][package] == source['external_packages'][package], 'code/runtime package mismatch')
++    code_files = verify_training_code(source, metadata)
+     audit_files = metadata['initialization_audit']['audit']['files']
+     initialization = {name: check_file(record['path'], record['before'])
+                       for name, record in audit_files.items() if record is not None}
+-    source_config = read_json(initialization['run_config.json']['path'])
+-    require(type(source_config.get('seed')) is int and source_config['seed'] == 123, 'baseline source is not seed 123')
++    verify_initialization(metadata['initialization_audit']['audit'], initialization, read_json(final/'config.json'))
+     records = [json.loads(line) for line in (final / 'paired_records.jsonl').read_text().splitlines()]
+     for record in records:
+         validate_paired_record(record)
+     require(len(records) == len({r['rn'] for r in records}), 'final contains duplicate RN records')
+     summary = aggregate_paired_records(records, expected_rns)
+     require(read_json(final / 'paired_summary.json') == {k: v for k, v in summary.items() if k != 'records'},
+             'paired summary mismatch')
+     from safetensors import safe_open
+@@ -135,50 +217,64 @@ def fasta_lengths(path):
+                 require(chrom is not None, 'FASTA sequence before header')
+                 lengths[chrom] += len(line.strip())
+     return lengths
+ 
+ 
+ def read_gff(path):
+     """Strict preflight around the existing half-open GFF parser; never repair data."""
+     genes, transcripts, features = {}, {}, []
++    gff3_header = False
+     with Path(path).open() as f:
+         for line in f:
++            if line.rstrip('\r\n') == '##gff-version 3':
++                gff3_header = True
+             if not line.strip() or line.startswith('#'):
+                 continue
+             cols = line.rstrip('\n').split('\t')
+             require(len(cols) == 9, 'malformed GFF: expected nine columns')
+             chrom, _, kind, start, end, _, strand, phase, attrs = cols
+             require(int(start) >= 1 and int(end) >= int(start) and strand in ('+', '-'), 'invalid GFF coordinates/strand')
+             fields = [a.split('=', 1) for a in attrs.split(';') if a]
+             require(all(len(a) == 2 for a in fields) and len(dict(fields)) == len(fields), 'malformed GFF attributes')
+             attrs = dict(fields)
++            require(all(key == key.strip() and not any(c.isspace() for c in key) for key in attrs), 'noncanonical GFF attribute key')
++            for key in ('ID', 'Parent'):
++                if key in attrs:
++                    identifiers = attrs[key].split(',') if key == 'Parent' else [attrs[key]]
++                    require(all(re.fullmatch(r'[A-Za-z0-9_.:-]+', value) for value in identifiers) and
++                            len(identifiers) == len(set(identifiers)), 'noncanonical GFF ID/Parent')
+             span = (chrom, int(start) - 1, int(end), strand)
+             if kind == 'gene':
+                 gid = attrs.get('ID')
+                 require(gid and gid not in genes, 'missing/duplicate GFF gene ID')
+                 genes[gid] = span
+             elif kind in ('mRNA', 'transcript'):
+                 tid, parent = attrs.get('ID'), attrs.get('Parent')
+                 require(tid and tid not in transcripts and parent in genes, 'missing/duplicate transcript or unordered/orphan gene')
+                 transcripts[tid] = (parent, span)
+             elif kind in ('exon', 'CDS', 'five_prime_UTR', 'three_prime_UTR'):
+                 require(kind != 'CDS' or phase in ('0', '1', '2'), 'invalid CDS phase')
+                 for parent in attrs.get('Parent', '').split(','):
+                     require(parent in transcripts, 'orphan/unordered GFF feature')
+                     features.append((parent, span))
+             else:
+                 raise ValueError(f'unsupported GFF feature {kind}; no silent omission')
++    require(genes or gff3_header, 'completed empty prediction requires explicit ##gff-version 3 header')
+     def contained(child, parent):
+         return child[0] == parent[0] and child[3] == parent[3] and parent[1] <= child[1] < child[2] <= parent[2]
+     for parent, span in transcripts.values():
+         require(contained(span, genes[parent]), 'transcript outside parent gene')
+     for parent, span in features:
+         require(contained(span, transcripts[parent][1]), 'feature outside transcript')
+     parsed = legacy_module('07_selfconsistency_stats.py').load_gff(str(path))
++    require(set(parsed) == set(genes), 'GFF parser gene inventory changed')
++    for gid, gene in parsed.items():
++        require(set(gene['transcripts']) == {tid for tid, (parent, _) in transcripts.items() if parent == gid},
++                'GFF parser transcript inventory changed')
+     for gene in parsed.values():
+         require(gene['transcripts'], 'GFF gene has no transcripts; only a header-only file represents zero predictions')
+         for tx in gene['transcripts'].values():
+             require(tx['exons'], 'explicit exon geometry required; CDS is not an exon substitute')
+             for key in ('exons', 'cdss'):
+                 tx[key].sort()
+                 require(all(a[1] < b[0] for a, b in zip(tx[key], tx[key][1:])), 'duplicate/overlapping/adjacent GFF segments')
+             require(all(any(a <= c < d <= b for a, b in tx['exons']) for c, d in tx['cdss']), 'CDS outside exons')
+@@ -348,17 +444,17 @@ def produce(input_path, out):
+         loci.append(row)
+     counts = {'pairs': {s: r['files']['paired_records.jsonl']['path'] for s,r in runs.items()}, 'loci': loci}
+     result = mvp_score.score(counts, panel)
+     result.update(pair_run_provenance_status='FINALIZER_BYTES_METADATA_INVENTORY_CONSISTENT',
+                   three_seed_identity_verified=True, three_seed_policy_verified=True,
+                   count_provenance_status='DERIVED_FROM_RAW_GFF_IN_THIS_INVOCATION',
+                   reference_identity_status='COMMIT_BOUND_SPECIES_MANIFEST',
+                   baseline_reference_counts=baseline,
+-                  provenance_caveat='Receipts establish local consistency, not cryptographic proof of historical execution or scientific approval.')
++                  provenance_caveat='Receipts establish local consistency, not historical execution or scientific approval. Seed-123 source bytes agree with initialization declarations; an external concrete pin for the intended historical best checkpoint remains required.')
+     baseline_rows = [{'gene_id': c['gene_id'], 'seeds': {'123': {'off': {k:v for k,v in c.items() if k != 'gene_id'}}}} for c in baseline]
+     core_ids = {l.gene_id for l in panel if l.panel == 'mvp_core'}
+     result['baseline_reference_F1_percent'] = {
+         'all50': mvp_score.metric(baseline_rows, 'off', 'F1', (123,)),
+         'core20': mvp_score.metric([r for r in baseline_rows if r['gene_id'] in core_ids], 'off', 'F1', (123,))}
+     for identity in inputs:
+         check_file(identity['path'], identity)
+     for name, obj in [('counts.json', counts), ('statistics.json', result)]:
+diff --git a/tests/test_mvp_score_producer.py b/tests/test_mvp_score_producer.py
+index e498a9b..453c8bf 100644
+--- a/tests/test_mvp_score_producer.py
++++ b/tests/test_mvp_score_producer.py
+@@ -149,37 +149,52 @@ def test_full_frozen_panel_inventory_350_and_cross_seed(tmp_path):
+ def test_actual_commit_anchor_wrong_reference_and_missing_anchor(tmp_path,monkeypatch):
+     fasta = tmp_path/'fake.fa'; fasta.write_text('>Chr1\nA\n')
+     with pytest.raises(ValueError,match='frozen fasta'):
+         p.frozen_reference(fasta,fasta)
+     monkeypatch.setattr(p,'AUTHORITY_COMMIT','0'*40)
+     with pytest.raises(subprocess.CalledProcessError): p.frozen_reference(fasta,fasta)
+ 
+ 
+-def finalized_fixture(tmp_path, seed=1, hashes=None):
++def finalized_fixture(tmp_path, seed=1, hashes=None, source_weights=None):
+     import test_mvp_finalize as f
+     md = f.metadata('production')
+     md['seed_augmentation'] = {'seed':seed, 'aug_seed':20260914+seed}
+     if hashes is not None:
+         md['data_identities'] = {k:{'sha256':v,'verification':'recorded'} for k,v in hashes.items()}
++    import shutil
++    import torch
++    from test_weights_init import WeightsInitTests
++    from test_mvp_scoring import record
++    from transgenic.training import weights_init as wi
++    from transgenic.training.mvp_cli_runtime import _expected_code_files
++    from transgenic.training.mvp_metrics import aggregate_paired_records
+     source = tmp_path/'source'; source.mkdir()
+-    (source/'model.safetensors').write_bytes(b'explicit synthetic source')
+-    dump(source/'run_config.json',{'seed':123})
+-    audit = md['initialization_audit']['audit']
+-    audit['resolved_checkpoint_dir'] = str(source)
+-    audit['resolved_weights_path'] = str(source/'model.safetensors')
+-    for name in ('model.safetensors','run_config.json'):
+-        identity = p.file_identity(source/name)
+-        snap = {'sha256':identity['sha256'],'size':identity['size'],'device':1,'inode':1,'mtime_ns':1}
+-        audit['files'][name] = {'path':identity['path'],'before':snap,'after':dict(snap)}
+-    md['initialization_audit']['audit_sha256'] = hashlib.sha256(f.finalize._canonical_json(audit)).hexdigest()
+-    code = dump(tmp_path/'code.json',{'files':{str(Path(__file__)):w.sha256_file(__file__)},
+-                                    'external_packages':{'torch':'test-version','duckdb':'test-version'}})
+-    md['sif_code_identity']['code']['sha256'] = w.sha256_file(code)
+-    f.publish(tmp_path,md=md,train=f.summary('production'))
++    # Real tiny Transgenic model/LED decoder, only the remote Hyena factory is
++    # replaced by the existing local embedding fixture. No download/forward/GPU.
++    case = WeightsInitTests()
++    with torch.random.fork_rng(devices=[]):
++        torch.manual_seed(123)
++        try:
++            case.setUp()
++            shutil.copyfile(source_weights or case.epoch/'model.safetensors', source/'model.safetensors')
++            dump(tmp_path/'run_config.json',case.run_config)
++            dump(source/'config.json',case.source.config.to_dict())
++            model = case._model(8)
++            audit = wi.load_weights_only(model, source)
++            md['initialization_audit'] = {'audit':audit, 'verification':'recorded',
++                'audit_sha256':hashlib.sha256(f.finalize._canonical_json(audit)).hexdigest()}
++            code = dump(tmp_path/'code.json',{'files':{str(path):w.sha256_file(path) for path in _expected_code_files()},
++                'external_packages':{name:'test-version' for name in ('accelerate','duckdb','safetensors','torch','transformers')}})
++            md['sif_code_identity']['code']['sha256'] = w.sha256_file(code)
++            f.finalize._publish_final(f.LocalAccelerator(), model,
++                aggregate_paired_records([record(1,1)], [1]), tmp_path/'final',
++                metadata=md, training_summary=f.summary('production'))
++        finally:
++            case.doCleanups()
+     hashes = {k:v['sha256'] for k,v in md['data_identities'].items()}
+     return tmp_path/'final',hashes,code
+ 
+ 
+ def test_reuses_actual_finalizer_publication_and_complete_inventory(tmp_path):
+     final, hashes, code = finalized_fixture(tmp_path)
+     receipt = p.verify_final(final,1,[1],hashes,code)
+     assert receipt['seed'] == 1 and receipt['valid_rns'] == [1]
+diff --git a/tests/test_mvp_score_producer_integration.py b/tests/test_mvp_score_producer_integration.py
+index d875ac9..8629185 100644
+--- a/tests/test_mvp_score_producer_integration.py
++++ b/tests/test_mvp_score_producer_integration.py
+@@ -31,17 +31,20 @@ def test_full_producer_actual_finalizer_frozen_panel_synthetic_biology(tmp_path,
+     reference.write_text('\n'.join(lines)+'\n')
+     fasta = tmp_path/'ref.fa'; fasta.write_text('>synthetic\nA\n')
+     monkeypatch.setattr(p,'frozen_reference',lambda a,b: {'test_fixture_only':True,'files':{'fasta':p.file_identity(a),'gff':p.file_identity(b)}})
+     monkeypatch.setattr(p,'fasta_lengths',lambda _: {l.chromosome:100000000 for l in panel})
+     rows, _ = prediction_rows(tmp_path,panel)
+     runs, checkpoints = {}, {}
+     for seed in (1,2,3):
+         run = tmp_path/f'seed{seed}'; run.mkdir()
+-        final, _, code = finalized_fixture(run,seed,hashes)
++        # Three runs consume ONE serialized baseline. Re-saving equal tensors
++        # can reorder safetensors alias metadata and change its byte identity.
++        shared_source = tmp_path/'seed1/source/model.safetensors' if seed > 1 else None
++        final, _, code = finalized_fixture(run,seed,hashes,source_weights=shared_source)
+         runs[str(seed)] = {'final':str(final),'code_manifest':str(code)}
+         checkpoints[seed] = w.sha256_file(final/'model.safetensors')
+     checkpoints[123] = w.sha256_file(tmp_path/'seed1/source/model.safetensors')
+     for row in rows: row['checkpoint_sha256'] = checkpoints[row['seed']]
+     executable = fake_gffcompare(tmp_path)
+     monkeypatch.setattr(p.shutil,'which',lambda _: executable)
+     payload = {'panels':str(panel_path),'fasta':str(fasta),'reference':str(reference),
+                'candidate':candidate,'runs':runs,'predictions':rows,
+diff --git a/tests/test_mvp_score_producer_review.py b/tests/test_mvp_score_producer_review.py
+new file mode 100644
+index 0000000..b8c18f1
+--- /dev/null
++++ b/tests/test_mvp_score_producer_review.py
+@@ -0,0 +1,142 @@
++"""Round-1 review regressions: contradictory self-rehashed artifacts must fail."""
++import hashlib
++import json
++import shutil
++from pathlib import Path
++
++import pytest
++from test_mvp_score_producer import p, w, ROOT, dump, finalized_fixture
++
++
++def reseal(final, metadata):
++    from transgenic.training.mvp_finalize import _canonical_json
++    metadata['initialization_audit']['audit_sha256'] = hashlib.sha256(
++        _canonical_json(metadata['initialization_audit']['audit'])).hexdigest()
++    dump(final/'metadata.json',metadata)
++    manifest=p.read_json(final/'manifest.json')
++    for name in manifest['files']:
++        identity=p.file_identity(final/name)
++        manifest['files'][name]={k:identity[k] for k in ('sha256','size')}
++    dump(final/'manifest.json',manifest)
++
++
++@pytest.mark.parametrize('mutation', ['one_file','omit_loader','packages_empty','packages_missing','packages_extra','package_blank'])
++def test_r1_rehashed_incomplete_code_manifest_rejected(tmp_path, mutation):
++    final, hashes, code=finalized_fixture(tmp_path)
++    value=p.read_json(code)
++    if mutation == 'one_file': value['files']={str(Path(__file__)):w.sha256_file(__file__)}
++    elif mutation == 'omit_loader': value['files'].pop(str(ROOT/'src/transgenic/training/weights_init.py'))
++    elif mutation == 'packages_empty': value['external_packages']={}
++    elif mutation == 'packages_missing': value['external_packages'].pop('duckdb')
++    elif mutation == 'packages_extra': value['external_packages']['extra']='1'
++    else: value['external_packages']['duckdb']=' '
++    dump(code,value)
++    metadata=p.read_json(final/'metadata.json')
++    metadata['sif_code_identity']['code']['sha256']=w.sha256_file(code)
++    reseal(final,metadata)
++    with pytest.raises(ValueError): p.verify_final(final,1,[1],hashes,code)
++
++
++@pytest.mark.parametrize('mutation', ['weights','recipe_missing','recipe_digest','implementation_path','implementation_hash','source_config','semantics','safetensors_metadata'])
++def test_r2_rehashed_source_contradictions_rejected(tmp_path, mutation):
++    from transgenic.training import weights_init as wi
++    final, hashes, code=finalized_fixture(tmp_path)
++    metadata=p.read_json(final/'metadata.json')
++    audit=metadata['initialization_audit']['audit']
++    changed=None
++    if mutation == 'weights':
++        changed='model.safetensors'; Path(audit['files'][changed]['path']).write_bytes(b'not safetensors')
++    elif mutation in ('recipe_missing','recipe_digest'):
++        changed='run_config.json'; path=Path(audit['files'][changed]['path']); value=p.read_json(path)
++        if mutation == 'recipe_missing': value.pop('recipe')
++        else: value['recipe']['name']='changed recipe, same architecture'
++        dump(path,value)
++    elif mutation == 'implementation_path': audit['implementation']['b5_runtime.py']['path']=str(tmp_path/'nonexistent/b5_runtime.py')
++    elif mutation == 'implementation_hash': audit['implementation']['b5_runtime.py']['sha256']='0'*64
++    elif mutation == 'source_config':
++        changed='config.json'; path=Path(audit['files'][changed]['path']); value=p.read_json(path)
++        value['decoder_d_model']+=1; dump(path,value)
++    elif mutation == 'semantics':
++        for side in ('source_semantics','target_semantics'):
++            fields=audit[side]['fields']; fields['vocab_size']['value']+=1
++            audit[side]=wi._manifest_record(fields)
++    else: audit['load']['safetensors_metadata']={'invented':'metadata'}
++    if changed:
++        entry=audit['files'][changed]
++        entry['before']=wi._snapshot(Path(entry['path'])); entry['after']=dict(entry['before'])
++    reseal(final,metadata)
++    with pytest.raises((ValueError,FileNotFoundError)):
++        p.verify_final(final,1,[1],hashes,code)
++
++
++@pytest.mark.parametrize('text', ['not JSON','[]','{"evidence_channels":8,"evidence_channels":8}','inconsistent'])
++def test_r5_rehashed_final_config_rejected(tmp_path,text):
++    final, hashes, code=finalized_fixture(tmp_path)
++    if text == 'inconsistent':
++        value=p.read_json(final/'config.json'); value['decoder_d_model']+=1; text=json.dumps(value)
++    (final/'config.json').write_text(text)
++    reseal(final,p.read_json(final/'metadata.json'))
++    with pytest.raises(ValueError): p.verify_final(final,1,[1],hashes,code)
++
++
++def test_real_loader_positive_and_bound_checkout_not_current_closure(tmp_path):
++    final, hashes, code=finalized_fixture(tmp_path)
++    assert p.verify_final(final,1,[1],hashes,code)['seed'] == 1
++    # Independent training checkout, including a package module not in scorer's
++    # checkout. Schema closure is computed there; no historical package version
++    # is compared with currently installed scoring packages.
++    checkout=tmp_path/'training-checkout'
++    shutil.copytree(ROOT/'src/transgenic',checkout/'src/transgenic',ignore=shutil.ignore_patterns('__pycache__'))
++    (checkout/'train').mkdir()
++    shutil.copyfile(ROOT/'train/train_HyenaTransgenic_MVP.py',checkout/'train/train_HyenaTransgenic_MVP.py')
++    extra=checkout/'src/transgenic/training/extra_training_source.py'; extra.write_text('# training checkout fixture\n')
++    value=p.read_json(code)
++    value['files']={str(checkout/Path(path).relative_to(ROOT)):digest for path,digest in value['files'].items()}
++    value['files'][str(extra)]=w.sha256_file(extra)
++    value['external_packages']['duckdb']='historical-duckdb-not-in-finalizer'
++    dump(code,value)
++    metadata=p.read_json(final/'metadata.json')
++    for identity in metadata['initialization_audit']['audit']['implementation'].values():
++        identity['path']=str(checkout/Path(identity['path']).relative_to(ROOT))
++    metadata['sif_code_identity']['code']['sha256']=w.sha256_file(code)
++    reseal(final,metadata)
++    assert p.verify_final(final,1,[1],hashes,code)['seed'] == 1
++    # Even a newly added unlisted module invalidates the exact training closure.
++    unlisted=checkout/'src/transgenic/training/unlisted.py'; unlisted.write_text('# not in manifest\n')
++    with pytest.raises(ValueError, match='exact bound training source closure'):
++        p.verify_final(final,1,[1],hashes,code)
++    unlisted.unlink()
++    extra.unlink()
++    with pytest.raises(ValueError, match='exact bound training source closure'):
++        p.verify_final(final,1,[1],hashes,code)
++
++
++@pytest.mark.parametrize('ambiguous',['t ', ' t', 't\u00a0'])
++def test_r3_whitespace_transcript_collision_rejected(tmp_path, ambiguous):
++    path=tmp_path/'p.gff3'
++    path.write_text('##gff-version 3\nChr1\tx\tgene\t1\t100\t.\t+\t.\tID=g\n'
++                    'Chr1\tx\tmRNA\t10\t20\t.\t+\t.\tID=t;Parent=g\n'
++                    'Chr1\tx\texon\t10\t20\t.\t+\t.\tParent=t\n'
++                    f'Chr1\tx\tmRNA\t30\t40\t.\t+\t.\tParent=g;ID={ambiguous}\n'
++                    f'Chr1\tx\texon\t30\t40\t.\t+\t.\tParent={ambiguous}\n')
++    with pytest.raises(ValueError): p.read_gff(path)
++
++
++@pytest.mark.parametrize('loss',['gene','transcript'])
++def test_r3_parser_inventory_conservation(tmp_path, monkeypatch, loss):
++    from types import SimpleNamespace
++    from test_mvp_score_producer import gff
++    path=gff(tmp_path/'p.gff', [('t','+',[(30001,30100)],[(30001,30100)])])
++    parsed=p.read_gff(path)
++    if loss == 'gene': parsed.clear()
++    else: parsed['g']['transcripts'].clear()
++    monkeypatch.setattr(p,'legacy_module',lambda _: SimpleNamespace(load_gff=lambda _: parsed))
++    with pytest.raises(ValueError,match='inventory changed'): p.read_gff(path)
++
++
++@pytest.mark.parametrize('text',['',' \n\t\n','# unfinished\n'])
++def test_r4_uncompleted_empty_gff_rejected(tmp_path,text):
++    path=tmp_path/'p.gff3'; path.write_text(text)
++    with pytest.raises(ValueError): p.read_gff(path)
++    path.write_text('##gff-version 3\n')
++    assert p.read_gff(path) == {}

@@ -1,0 +1,33 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T16:01:24-0700
+JobID|State|ExitCode|Elapsed|MaxRSS
+6165461|RUNNING|0:0|00:14:19|
+6165461.batch|RUNNING|0:0|00:14:19|
+6165461.extern|RUNNING|0:0|00:14:19|
+6165462|COMPLETED|0:0|00:00:01|
+6165462.batch|COMPLETED|0:0|00:00:01|1548K
+6165462.extern|OUT_OF_MEMORY|0:125|00:00:01|1480K
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1541/expanded/batch.exitcode ===
+0
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1541/expanded/hash-check.txt ===
+revision/scripts/evidence/est_hsp_expanded.py: OK
+revision/scripts/evidence/est_blastx.py: OK
+revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+DONE 31
+expanded.raw17.tsv 40338
+raw-first.json 3577
+proteins.fa 1834
+blastx.log 3970
+queries.fa 48084
+raw-first.tsv 40338
+makedb.log 1015
+diagnostic.json 1285078
+provenance.json 1111
+commands.json 1446
+expanded.dmnd 2330
+manifest.json 235624

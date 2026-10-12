@@ -1,0 +1,100 @@
+2026-09-15T15:12:59-0700
+6164049_[5-7%2] b6_blastx_remaining8 PENDING 0:00 12:00:00 (JobArrayTaskLimit)
+6164049_4 b6_blastx_remaining8 RUNNING 17:08 12:00:00 cpu-50
+6164049_3 b6_blastx_remaining8 RUNNING 1:07:37 12:00:00 cpu-50
+6164118 b6-mvp-full-candidate RUNNING 47:27 12:00:00 cpu-51
+               6163851        COMPLETED      0:0   00:21:54            
+         6163851.batch        COMPLETED      0:0   00:21:54   7608576K 
+        6163851.extern    OUT_OF_MEMORY    0:125   00:21:54      1480K 
+             6164049_0        COMPLETED      0:0   01:03:56            
+       6164049_0.batch        COMPLETED      0:0   01:03:56   9914480K 
+      6164049_0.extern    OUT_OF_MEMORY    0:125   01:03:56      1480K 
+             6164049_1        COMPLETED      0:0   00:33:41            
+       6164049_1.batch        COMPLETED      0:0   00:33:41   8125840K 
+      6164049_1.extern    OUT_OF_MEMORY    0:125   00:33:41      1288K 
+             6164049_2        COMPLETED      0:0   01:20:44            
+       6164049_2.batch        COMPLETED      0:0   01:20:44  10509728K 
+      6164049_2.extern    OUT_OF_MEMORY    0:125   01:20:44      1480K 
+             6164049_3          RUNNING      0:0   01:07:38            
+       6164049_3.batch          RUNNING      0:0   01:07:38            
+      6164049_3.extern          RUNNING      0:0   01:07:38            
+             6164049_4          RUNNING      0:0   00:17:09            
+       6164049_4.batch          RUNNING      0:0   00:17:09            
+      6164049_4.extern          RUNNING      0:0   00:17:09            
+       6164049_[5-7%2]          PENDING      0:0   00:00:00            
+               6164118          RUNNING      0:0   00:47:28            
+         6164118.batch          RUNNING      0:0   00:47:28            
+        6164118.extern          RUNNING      0:0   00:47:28            
+{"species": "Sitalica", "exists": true, "batch_exit": "0", "swissprot": {"done": true, "failed": false, "queries": 66040, "raw_hsps": 290009, "hsps_lt_30aa": 1290, "sequences_excluded": 3, "elapsed_seconds": 13.83997989166528, "log_tail": "locating memory...  [0s]\nDeallocating buffers...  [0s]\nClearing query masking...  [0.011s]\nComputing alignments...  [5.081s]\nDeallocating reference...  [0s]\nLoading reference sequences...  [0s]\nDeallocating buffers...  [0s]\nDeallocating queries...  [0s]\nLoading query sequences...  [0s]\nClosing the input file...  [0s]\nClosing the output file...  [0.025s]\nClosing the database...  [0s]\nCleaning up...  [0s]\nTotal time = 9.283s\nReported 290009 pairwise alignments, 290009 HSPs.\n38018 queries aligned.\n"}, "orthodb": {"done": true, "failed": false, "queries": 66040, "raw_hsps": 1371252, "hsps_lt_30aa": 3868, "sequences_excluded": 22163, "elapsed_seconds": 1284.173086403869, "log_tail": "...  [0s]\nComputing alignments...  [44.72s]\nDeallocating reference...  [0.007s]\nLoading reference sequences...  [0s]\nDeallocating buffers...  [0s]\nJoining output blocks... Joining output blocks...  [2.46s]\n [2.589s]\nDeallocating queries...  [0.001s]\nLoading query sequences...  [0s]\nClosing the input file...  [0s]\nClosing the output file...  [0.013s]\nClosing the database...  [0s]\nCleaning up...  [0s]\nTotal time = 442.512s\nReported 1371252 pairwise alignments, 1371252 HSPs.\n56557 queries aligned.\n"}}
+{"species": "Athaliana", "exists": true, "batch_exit": "0", "swissprot": {"done": true, "failed": false, "queries": 1046825, "raw_hsps": 4672257, "hsps_lt_30aa": 206829, "sequences_excluded": 16421, "elapsed_seconds": 101.49368445388973, "log_tail": ".  [0s]\nDeallocating buffers...  [0.001s]\nClearing query masking...  [0.124s]\nComputing alignments...  [44.938s]\nDeallocating reference...  [0s]\nLoading reference sequences...  [0s]\nDeallocating buffers...  [0s]\nDeallocating queries...  [0.003s]\nLoading query sequences...  [0s]\nClosing the input file...  [0.001s]\nClosing the output file...  [0.023s]\nClosing the database...  [0s]\nCleaning up...  [0s]\nTotal time = 79.047s\nReported 4672257 pairwise alignments, 4672257 HSPs.\n431407 queries aligned.\n"}, "orthodb": {"done": true, "failed": false, "queries": 1046825, "raw_hsps": 20071843, "hsps_lt_30aa": 536066, "sequences_excluded": 0, "elapsed_seconds": 3680.7323827147484, "log_tail": "]\nComputing alignments...  [475.199s]\nDeallocating reference...  [0.004s]\nLoading reference sequences...  [0s]\nDeallocating buffers...  [0s]\nJoining output blocks... Joining output blocks...  [22.579s]\n [23.716s]\nDeallocating queries...  [0.005s]\nLoading query sequences...  [0s]\nClosing the input file...  [0s]\nClosing the output file...  [0.021s]\nClosing the database...  [0s]\nCleaning up...  [0s]\nTotal time = 2738.06s\nReported 20071843 pairwise alignments, 20071843 HSPs.\n842502 queries aligned.\n"}}
+{"species": "Bdistachyon", "exists": true, "batch_exit": "0", "swissprot": {"done": true, "failed": false, "queries": 206123, "raw_hsps": 1363835, "hsps_lt_30aa": 4860, "sequences_excluded": 46, "elapsed_seconds": 45.00114693492651, "log_tail": ".  [0s]\nDeallocating buffers...  [0.001s]\nClearing query masking...  [0.033s]\nComputing alignments...  [21.907s]\nDeallocating reference...  [0s]\nLoading reference sequences...  [0s]\nDeallocating buffers...  [0s]\nDeallocating queries...  [0.003s]\nLoading query sequences...  [0s]\nClosing the input file...  [0.001s]\nClosing the output file...  [0.001s]\nClosing the database...  [0s]\nCleaning up...  [0s]\nTotal time = 35.574s\nReported 1363835 pairwise alignments, 1363835 HSPs.\n137448 queries aligned.\n"}, "orthodb": {"done": true, "failed": false, "queries": 206123, "raw_hsps": 4518360, "hsps_lt_30aa": 8228, "sequences_excluded": 20113, "elapsed_seconds": 1951.1678344430402, "log_tail": ".001s]\nComputing alignments...  [160.54s]\nDeallocating reference...  [0.004s]\nLoading reference sequences...  [0s]\nDeallocating buffers...  [0s]\nJoining output blocks... Joining output blocks...  [7.846s]\n [8.039s]\nDeallocating queries...  [0.004s]\nLoading query sequences...  [0s]\nClosing the input file...  [0s]\nClosing the output file...  [0.021s]\nClosing the database...  [0s]\nCleaning up...  [0s]\nTotal time = 1120.56s\nReported 4518360 pairwise alignments, 4518360 HSPs.\n183946 queries aligned.\n"}}
+{"species": "Gmax", "exists": true, "batch_exit": "0", "swissprot": {"done": true, "failed": false, "queries": 1374461, "raw_hsps": 6825751, "hsps_lt_30aa": 130494, "sequences_excluded": 439, "elapsed_seconds": 163.36030390299857, "log_tail": "  [0s]\nDeallocating buffers...  [0.002s]\nClearing query masking...  [0.161s]\nComputing alignments...  [81.943s]\nDeallocating reference...  [0s]\nLoading reference sequences...  [0s]\nDeallocating buffers...  [0s]\nDeallocating queries...  [0.007s]\nLoading query sequences...  [0s]\nClosing the input file...  [0.001s]\nClosing the output file...  [0.022s]\nClosing the database...  [0s]\nCleaning up...  [0s]\nTotal time = 129.877s\nReported 6825751 pairwise alignments, 6825751 HSPs.\n690330 queries aligned.\n"}, "orthodb": {"done": true, "failed": false, "queries": 1374461, "raw_hsps": 22401265, "hsps_lt_30aa": 370000, "sequences_excluded": 34998, "elapsed_seconds": 4614.160332768224, "log_tail": "]\nComputing alignments...  [590.806s]\nDeallocating reference...  [0.009s]\nLoading reference sequences...  [0s]\nDeallocating buffers...  [0s]\nJoining output blocks... Joining output blocks...  [25.327s]\n [26.484s]\nDeallocating queries...  [0.008s]\nLoading query sequences...  [0s]\nClosing the input file...  [0s]\nClosing the output file...  [0.014s]\nClosing the database...  [0s]\nCleaning up...  [0s]\nTotal time = 3710.21s\nReported 22401265 pairwise alignments, 22401265 HSPs.\n939797 queries aligned.\n"}}
+{"species": "Osativa", "exists": true, "swissprot": {"done": true, "failed": false, "queries": 1244141, "raw_hsps": 5964282, "hsps_lt_30aa": 49963, "sequences_excluded": 5161, "elapsed_seconds": 160.9908179556951, "log_tail": ".  [0s]\nDeallocating buffers...  [0.003s]\nClearing query masking...  [0.178s]\nComputing alignments...  [75.21s]\nDeallocating reference...  [0s]\nLoading reference sequences...  [0s]\nDeallocating buffers...  [0s]\nDeallocating queries...  [0.007s]\nLoading query sequences...  [0s]\nClosing the input file...  [0.001s]\nClosing the output file...  [0.001s]\nClosing the database...  [0s]\nCleaning up...  [0s]\nTotal time = 130.877s\nReported 5964282 pairwise alignments, 5964282 HSPs.\n625636 queries aligned.\n"}, "orthodb": {"done": false, "failed": false, "log_tail": "ng alignments...  [28.406s]\nDeallocating memory...  [0s]\nProcessing query block 1, reference block 3/3, shape 1/2, index chunk 4/4.\nBuilding reference seed array...  [2.449s]\nBuilding query seed array...  [1.551s]\nComputing hash join...  [0.973s]\nMasking low complexity seeds...  [0.087s]\nSearching alignments...  [25.841s]\nDeallocating memory...  [0s]\nProcessing query block 1, reference block 3/3, shape 2/2, index chunk 1/4.\nBuilding reference seed array...  [2.397s]\nBuilding query seed array... "}}
+{"species": "Ppatens", "exists": true, "swissprot": {"done": true, "failed": false, "queries": 381809, "raw_hsps": 2533444, "hsps_lt_30aa": 6635, "sequences_excluded": 156, "elapsed_seconds": 83.66215285658836, "log_tail": ".  [0s]\nDeallocating buffers...  [0.001s]\nClearing query masking...  [0.066s]\nComputing alignments...  [43.695s]\nDeallocating reference...  [0.001s]\nLoading reference sequences...  [0s]\nDeallocating buffers...  [0s]\nDeallocating queries...  [0.002s]\nLoading query sequences...  [0s]\nClosing the input file...  [0.001s]\nClosing the output file...  [0s]\nClosing the database...  [0s]\nCleaning up...  [0s]\nTotal time = 68.974s\nReported 2533444 pairwise alignments, 2533444 HSPs.\n225102 queries aligned.\n"}, "orthodb": {"done": false, "failed": false, "log_tail": "e 1/2, index chunk 1/4.\nBuilding reference seed array...  [4.062s]\nBuilding query seed array...  [0.692s]\nComputing hash join...  [1.026s]\nMasking low complexity seeds...  [0.039s]\nSearching alignments...  [38.412s]\nDeallocating memory...  [0s]\nProcessing query block 1, reference block 1/3, shape 1/2, index chunk 2/4.\nBuilding reference seed array...  [4.67s]\nBuilding query seed array...  [0.909s]\nComputing hash join...  [1.029s]\nMasking low complexity seeds...  [0.041s]\nSearching alignments... "}}
+{"species": "Ptrichocarpa", "exists": false, "swissprot": {"done": false, "failed": false}, "orthodb": {"done": false, "failed": false}}
+{"species": "Sbicolor", "exists": false, "swissprot": {"done": false, "failed": false}, "orthodb": {"done": false, "failed": false}}
+{"species": "Vvinifera", "exists": false, "swissprot": {"done": false, "failed": false}, "orthodb": {"done": false, "failed": false}}
+MVP environment.json {
+  "python": "/data/gpfs/home/wyim/micromamba/bin/python",
+  "python_version": "3.11.14 | packaged by conda-forge | (main, Oct 13 2025, 14:09:32) [GCC 14.3.0]",
+  "versions": {
+    "duckdb": "1.5.5",
+    "numpy": "2.3.1",
+    "pysam": "0.23.3"
+  },
+  "slurm": {
+    "SLURM_CLUSTER_NAME": "pronghorn",
+    "SLURM_CONF": "/etc/slurm/slurm.conf",
+    "SLURM_CPUS_ON_NODE": "2",
+    "SLURM_CPUS_PER_TASK": "2",
+    "SLURM_GTIDS": "0",
+    "SLURM_JOBID": "6164118",
+    "SLURM_JOB_ACCOUNT": "cpu-s1-pgl-0",
+    "SLURM_JOB_CPUS_PER_NODE": "2",
+    "SLURM_JOB_GID": "3092957",
+    "SLURM_JOB_ID": "6164118",
+    "SLURM_JOB_NAME": "b6-mvp-full-candidate",
+    "SLURM_JOB_NODELIST": "cpu-51",
+    "SLURM_JOB_NUM_NODES": "1",
+    "SLURM_JOB_PARTITION": "cpu-s1-pgl-0",
+    "SLURM_JOB_QOS": "normal",
+    "SLURM_JOB_UID": "3092957",
+    "SLURM_JOB_USER": "wyim",
+    "SLURM_LOCALID": "0",
+    "SLURM_MEM_PER_NODE": "65536",
+    "SLURM_NNODES": "1",
+    "SLURM_NODEID": "0",
+    "SLURM_NODELIST": "cpu-51",
+    "SLURM_NODE_ALIASES": "(null)",
+    "SLURM_PRIO_PROCESS": "0",
+    "SLURM_PROCID": "0",
+    "SLURM_SUBMIT_DIR": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_full_20260915",
+    "SLURM_SUBMIT_HOST": "login-0",
+    "SLURM_TASKS_PER_NODE": "1",
+    "SLURM_TASK_PID": "50626",
+    "SLURM_TOPOLOGY_ADDR": "cpu-51",
+    "SLURM_TOPOLOGY_ADDR_PATTERN": "node",
+    "SLURM_WORKING_CLUSTER": "pronghorn:ph-head-0:6817:9216:109"
+  },
+  "PYTHONPATH": "/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-mvp-cpu-abca40f/approved/src:/data/gpfs/assoc/pgl/data/Transgenic/worktrees/mvp-cpu-deps-20260914/site",
+  "PYTHONNOUSERSITE": null,
+  "disk_before": {
+    "total": 65970697666560,
+    "used": 36303726968832,
+    "free": 29666970697728
+  },
+  "artifact_label": "FULL SOURCE candidate MVP; NOT_FOR_PRODUCTION_TRAINING; CPU data project only."
+}
+MVP builder_result.json ABSENT
+MVP qc.json ABSENT
+MVP raster_results.json ABSENT
+MVP SUCCESS.json ABSENT
+MVP payload.exitcode ABSENT
+MVP_TAIL builder.stdout 
+MVP_TAIL builder.stderr 
+MVP_TAIL slurm-6164118.out {"host": "cpu-51", "jobid": "6164118", "label": "FULL SOURCE candidate MVP; NOT_FOR_PRODUCTION_TRAINING; CPU data project only.", "raster_module": "/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-mvp-cpu-abca40f/approved/src/transgenic/evidence/mvp_tracks.py", "versions": {"duckdb": "1.5.5", "numpy": "2.3.1", "pysam": "0.23.3"}}
+{"identity": {"bytes": 23534252032, "hash_seconds": 68.27722219657153, "sha256": "6840c93fd0b999e09b8dc2897adca1f4dbae36f2ef0f8fcc10ee66371295e222"}, "path": "/data/gpfs/assoc/pgl/data/Transgenic/training_input/db/b5_full_a40_v1.db"}
+{"identity": {"bytes": 126988517, "hash_seconds": 0.40426178835332394, "sha256": "f4598638a377d2ed6a89a9a01242f9872207ab6e55c98da5fe3e104764f0760e"}, "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Athaliana/Athaliana.est.bam"}
+{"identity": {"bytes": 121183059, "hash_seconds": 0.38445578794926405, "sha256": "63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973"}, "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa"}
+
+MVP_TAIL slurm-6164118.err 

@@ -1,0 +1,15 @@
+[
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb/provenance.json"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb/commands.json"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb/blastx.log"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb/makedb.log"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot/provenance.json"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot/commands.json"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot/blastx.log"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot/makedb.log"],
+["read","/data/gpfs/assoc/pgl/bin/conda/conda_envs/busco5/conda-meta/miniprot-0.18-h577a1d6_0.json"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/pilot/split_equiv/REPORT.txt"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Ptrichocarpa/PROVENANCE.txt"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot"]
+]

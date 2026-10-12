@@ -1,0 +1,24 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+Python 3.6.15
+/usr/bin/python3
+/work/nvme/bilv/wcyim/transgenic/runs/seed123/epoch_05/accelerate_state|4096|wcyim|2770
+/work/nvme/bilv/wcyim/transgenic/runs/seed123/epoch_05/eval.json|266|wcyim|660
+/work/nvme/bilv/wcyim/transgenic/runs/seed123/epoch_05/meta.json|132|wcyim|660
+/work/nvme/bilv/wcyim/transgenic/runs/seed123/epoch_05/model.safetensors|2091010540|wcyim|600
+/work/nvme/bilv/wcyim/transgenic/runs/seed123/epoch_05/pending_grads|4096|wcyim|2770
+probe/p1_control/large-identities.json|661
+probe/p1_control/quota-before.json|320
+probe/p1_control/quota-checkpoint.raw.json|2118
+probe/p1_control/quota-checkpoint.json|320
+probe/p1_control/quota-before.raw.json|2118
+inputs/evidence/fullc0lite.db|1068773376
+release/release.sha256|646
+release/deploy.py|22528
+release/notes/b6_mvp_technical_candidate_20260915.json|9832
+release/notes/b6_mvp_candidate_receipts_20260915.json|11786
+release/notes/b6_mvp_candidate_inventories_20260915.json|859299
+release/code.tar|1832960
+release/release.json|12524
+release/p1.sbatch|1704

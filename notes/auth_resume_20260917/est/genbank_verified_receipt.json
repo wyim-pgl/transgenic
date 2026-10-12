@@ -1,0 +1,17 @@
+{
+  "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=JK596275.1&rettype=gbwithparts&retmode=text",
+  "accession": "JK596275.1",
+  "record_sha256": "40644d70f7dc1f81ec69f4c51a1dade27aaf239cd7a9d99ea44944885063a375",
+  "record_bytes": 3800,
+  "retrieved_at": "2026-09-17T16:14:03.738644-07:00",
+  "original_sequence_sha256": "f9292dc5afe031653a67d1ff7d1afe99a3e7434d43fa9c83b0dc9963e14fc9ae",
+  "sequence_matches_retained_original": true,
+  "member_id": "93e7f878d4428de707c194eafd51bb92e3aa82f5cfc97c968d3ed9b94b95ffc4",
+  "biosample": "SAMN00736318",
+  "clone": "CFGZ9178",
+  "clone_lib": "SAMN00736318 CFGZ Setaria italica Yugu1 floral spike",
+  "genotype": "Yugu1",
+  "tissue": "floral spike",
+  "scope": "one accession record only; not complete A11/mates/audit/exclusions",
+  "training_eligible": false
+}

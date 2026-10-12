@@ -1,0 +1,29 @@
+# MVP fixed-update runtime increment
+
+## Scope/global constraints
+Base3a633143d48418f22bd084f8d9f41b5065b29c25. Isolated native worktree, no main/remote/GPU changes, no merge/push, no shared environment installs. Add minimal mvp_runtime.py plus tests/probe/report only. CLI/model/data/provenance/publication wiring is next increment. Graph first: build/query in worktree (graph generation permitted, do not commit graph clutter). Existing B5/metrics/weights_init unchanged. Local test interpreter /home/wyim/miniconda3/envs/pdb/bin/python with existing DuckDB target /tmp/b6-dataset-verify.D2Is9a/.testdeps; install accelerate==0.34.2 only into worktree-local target with --no-deps if compatible dependencies exist; missing deps likewise isolated, no shared upgrades. Production recorded Torch2.14NGC26.08, NOT planner's stale2.5.1 assumption. CPU test runtime is not production certification.
+
+## Task 1: fixed-update runtime only
+Create src/transgenic/training/mvp_runtime.py, tests/test_mvp_runtime.py, minimal subprocess probe under tests if needed. Suggested MVPRecipe frozen dataclass defaults max_updates250,warmup_updates12,batch1,acc24,required_world_size4,backbone_lr2e-5,projection_lr2e-4,wd.02,clip1. Production defaults immutable via later CLI; explicit small recipes permitted for tests only. Validate numeric types/ranges.
+
+build_optimizer(model,recipe): AdamW uniform wd on all trainable parameters; exactly transgenic.encoder.evidence_proj.weight is projection, reject absent/duplicate/unassigned groups, stable group names. No bias/norm exceptions invented.
+
+lr_scale(completed_updates,recipe): canonical LambdaLR equivalence using k successful updates already completed: k/12 if k<12, (250-k)/(250-12) if12<=k<250,0 whenk>=250. Thus LR USED by updates1/12/13/250 =0,11/12*peak,peak,1/238*peak. After update250 LR0. Counter scheduler not prepared by Accelerate; regression compare actual LambdaLR stepped AFTER optimizer including optimizer state/final parameters. This resolves planner's alternative shifted table; do not implement update1=peak/12 or final update zero.
+
+run_fixed_updates(accelerator,model,optimizer,train_loader,recipe)->small JSON summary. Explicit ownership contract: caller creates Accelerator with GradientAccumulationPlugin(num_steps=acc,sync_with_dataloader=False,adjust_scheduler=False), step_scheduler_with_optimizer=False, prepares model/optimizer ONLY, not dataloader; rank-sharded sampler (DistributedSampler once, no double sharding), equal nonempty rank loader lengths. Validate relevant accelerator settings or supply tiny factory to construct it correctly. Caller places batch tensors on accelerator.device or helper moves required DNA/mask/labels/tracks only, document chosen contract. Always forward evidence_tracks=batch[8], same existing first fields, no transcript_counts. Validate batch1/track contract. Train mode, outputs.loss retained composite; accelerator.backward(loss), no manual loss division. No bootstrap or paired evaluator integration here.
+
+Call sampler.set_epoch(epoch) when available, NEVER reset pending gradients or accumulation counter at epoch boundaries. zero_grad once at start then only after attempted sync updates. In accelerator.accumulate(model), check loss finite collectively before backward, then backward; on sync only check gradients finite, clip1, step, collectively inspect skipped flag, zero, abort on any skipped (do not silently shorten budget). Increment k only success; install next LR. Stop immediately after250 successes (no251st/no extra input batches). Empty or unequal per-rank loader lengths fail collectively. Counter agreement startup/update boundaries or provably identical control path plus end assertion; no uncoordinated rank-local NaN throw causing hang. Report successful updates, per-rank microbatch count, epochs crossed, two-group LR trace and effective batch clearly. Test-only lower ranks not labelled96 unless arithmetic actually96. No checkpoint saves or resume.
+
+## Tests first
+- Baseline46 suites pass. New tests red before helper.
+- Schedule k0,1,11,12,13,249,250 exact peak ratio; all250 updates compare plain real LambdaLR reference pre-step LRs, final params, AdamW state.
+- Optimizer disjoint/exhaustive uniform decay, exact projection name.
+- Real accelerate0.34.2 torchrun CPU Gloo1/2/4 ranks (assert actual world/distributed type) with small accumulation4, loaderlen5 per rank,3updates: update2 crosses epochs; compare analytic averaged gradients, parameter synchronization, clipping order and counts; no epoch flush. Explicit sampler epochs separate worker RNG source; do not claim full dataset RNG integration here.
+- One literal4rank250x24 toy run=6000 microbatches per rank,250 successful optimizer calls, no251st, identical params/counters. Bound subprocess timeout and capture all failures; no background orphan processes.
+- NaN on single rank aborts all without hang, nonfinite gradients fail pre-step, skipped-step behavior via narrow injected test seam, empty/unequal loaders reject, settings invalid fail.
+- Re-run46 baseline plus new runtime tests; report exact counts, dependency versions, commands/durations and limitations. No fake Accelerator substitutes as sole distributed certification.
+
+## Rulings
+Canonical post-step LambdaLR convention rather than novel shifted LR table is the least-change interpretation of12warmup/250update spec. Cost: first optimizer call LR0 (standard schedule semantics), records/tests must state this explicitly. prepare model/optimizer only + distributed sampler avoids accidental double sharding; caller CLI must honor ownership. Uniform weight decay matches fixed recipe rather than speculative no-decay groups.
+
+Write report notes/b6_mvp_fixed_runtime_report_20260915.md, commit only intended files under Won <wyim@unr.edu> no AI trailers. No subagents. If test environment missing package, isolated install permitted; no GPU/remote tests.

@@ -1,0 +1,25 @@
+{
+  "argv": [
+    "sbatch",
+    "--export=NIL",
+    "--no-requeue",
+    "--open-mode=append",
+    "--output=/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation/stdout",
+    "--error=/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation/stderr",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/release/sample.sbatch",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/release",
+    "96760e4d2f9c1357b64ee9eb93b116ce879f9e20997d5eb724d148c3dc42aa83",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation/worker"
+  ],
+  "batch_sha256": "7fe7c107e5796043393ee6eea52d8db96cf327877577cf1679c658425ef31f1e",
+  "contract": "Never modify release or reuse namespace/argv, including on submission failure. Controller must authorize one submission and record its result externally. No automatic submission, retry, cleanup or biological acceptance.",
+  "launcher_sha256": "2d40d5076958bfcb048ef3c2d30c21ea8be63a452bb76245cbd71e53d458a161",
+  "ledger_sha256": "96760e4d2f9c1357b64ee9eb93b116ce879f9e20997d5eb724d148c3dc42aa83",
+  "namespace": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation",
+  "release": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/release",
+  "single_use": true,
+  "status": "PREPARED_NOT_SUBMITTED",
+  "stderr": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation/stderr",
+  "stdout": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation/stdout",
+  "worker_output": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation/worker"
+}

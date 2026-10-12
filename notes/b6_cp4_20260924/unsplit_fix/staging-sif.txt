@@ -1,0 +1,6 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+/work/nvme/bilv/wcyim/b6-unsplit-fix-20260924.tar.gz: OK
+..                                                                       [100%]
+2 passed, 26 deselected in 16.41s

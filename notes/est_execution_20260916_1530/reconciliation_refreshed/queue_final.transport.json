@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "pronghorn",
+    "squeue --noheader --format=\"%i|%T|%j\""
+  ],
+  "captured_at": "2026-09-17T01:57:58.008206+00:00",
+  "returncode": 0,
+  "started_at": "2026-09-17T01:57:57.578933+00:00",
+  "stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+}

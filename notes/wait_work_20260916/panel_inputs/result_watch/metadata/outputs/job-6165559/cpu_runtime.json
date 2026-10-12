@@ -1,0 +1,31 @@
+{
+  "container": {
+    "path": "/data/gpfs/assoc/pgl/singularity/micromamba.sif",
+    "sha256": "9e2be34cec8cdfe642c58f4108833fd3e97635ce29becd5de8e48b3ae28332e1"
+  },
+  "cpu_dependency_receipt_sha256": "cf4d509e8914d6bcf44e6a96a79fe127e4521f7592e4a768a7e2659760ec3435",
+  "cuda_visible_devices": "",
+  "executable": "/data/gpfs/home/wyim/micromamba/envs/signalp6/bin/python",
+  "executable_sha256": "f67231ed7857616938a29cf3a71998c0659730a5de867f6677a6f52573ec0739",
+  "module_files": {
+    "duckdb": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/cpu_site/duckdb/__init__.py",
+      "sha256": "c5b4efa32761b6ff6eed37cda365fd371743c062ffabd9125aa24b5f13b662e7"
+    },
+    "numpy": {
+      "path": "/data/gpfs/home/wyim/micromamba/envs/signalp6/lib/python3.10/site-packages/numpy/__init__.py",
+      "sha256": "22cd1535fa14d74ef6f457cca149ffdc80875f460be313b8f895273f78bc402e"
+    },
+    "torch": {
+      "path": "/data/gpfs/home/wyim/micromamba/envs/signalp6/lib/python3.10/site-packages/torch/__init__.py",
+      "sha256": "54bb8bbcb339d76fa47f3d002de80656a1399c7a07324f8b95b106a5ad65f0cf"
+    }
+  },
+  "packages": {
+    "duckdb": "1.5.5",
+    "numpy": "1.26.4",
+    "torch": "1.13.1+cpu"
+  },
+  "python": "3.10.20 | packaged by conda-forge | (main, Jun 11 2026, 03:31:56) [GCC 14.3.0]",
+  "scope": "CPU_utilities_not_decoder_SIF_certification"
+}

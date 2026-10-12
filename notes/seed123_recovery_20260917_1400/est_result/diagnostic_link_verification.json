@@ -1,0 +1,641 @@
+{
+  "all_links_pass": true,
+  "link_checks": 847,
+  "geometry_failures": [
+    {
+      "qname": "JK608593.1",
+      "hsp_id": "34eb4bea38aa69501b69e5f1a5fc8dae89a0f41d3520cbc86841e650cf0eb8d1",
+      "detail": {
+        "geometry_success": false,
+        "placement_id": "b6c9273b9500baa5eda9e44d2884a530c90b87c0e35c618a736c360a2357cf22",
+        "result": {
+          "geometry": {
+            "gaps": [
+              {
+                "g0": 14200530,
+                "g1": 14200531,
+                "op": "D",
+                "u0": 31,
+                "u1": 31
+              },
+              {
+                "g0": 14200600,
+                "g1": 14200693,
+                "op": "N",
+                "u0": 100,
+                "u1": 100
+              },
+              {
+                "g0": 14200810,
+                "g1": 14200927,
+                "op": "N",
+                "u0": 217,
+                "u1": 217
+              },
+              {
+                "g0": 14201086,
+                "g1": 14202097,
+                "op": "N",
+                "u0": 376,
+                "u1": 376
+              },
+              {
+                "g0": 14202436,
+                "g1": 14202436,
+                "op": "S",
+                "u0": 715,
+                "u1": 716
+              }
+            ],
+            "query_length": 716,
+            "runs": [
+              {
+                "g0": 14200499,
+                "g1": 14200530,
+                "op": "M",
+                "u0": 0,
+                "u1": 31
+              },
+              {
+                "g0": 14200531,
+                "g1": 14200600,
+                "op": "M",
+                "u0": 31,
+                "u1": 100
+              },
+              {
+                "g0": 14200693,
+                "g1": 14200810,
+                "op": "M",
+                "u0": 100,
+                "u1": 217
+              },
+              {
+                "g0": 14200927,
+                "g1": 14201086,
+                "op": "M",
+                "u0": 217,
+                "u1": 376
+              },
+              {
+                "g0": 14202097,
+                "g1": 14202436,
+                "op": "M",
+                "u0": 376,
+                "u1": 715
+              }
+            ]
+          },
+          "hsp_coordinates": {
+            "frame": -3,
+            "qend": 284,
+            "qstart": 714
+          },
+          "hsp_id": "34eb4bea38aa69501b69e5f1a5fc8dae89a0f41d3520cbc86841e650cf0eb8d1",
+          "identity": {
+            "member": "8240cbce858e543e4d6972a8ad6625d310ac76e5abae32cc7e62697400cbf284",
+            "sequence_sha256": "b6113b9e801d990f8dd07696a7fa1b773bb65d693cbae3709142b64669805be3",
+            "source_end0": 716,
+            "source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+            "source_start0": 0
+          },
+          "manifest": {
+            "channels": [
+              "+0",
+              "+1",
+              "+2",
+              "-0",
+              "-1",
+              "-2"
+            ],
+            "input_label_convention": "c0_first_codon_base",
+            "schema": "est_phase_geometry_v1",
+            "training_eligible": false
+          },
+          "placement_coordinates": {
+            "cigar": "31M1D69M93N117M117N159M1011N339M1S",
+            "contig": "scaffold_3",
+            "contig_length": 50652576,
+            "flag": 16,
+            "pos1": 14200500,
+            "ts": "-"
+          },
+          "producer_contract_sha256": "fcb8a4b2413f12dc5c5b0c4d55676cedeac21b3fcb26cf849c089657650a3954",
+          "reasons": [
+            "motif_strand_available",
+            "self_overlap_policy_unresolved"
+          ],
+          "segments": []
+        }
+      }
+    },
+    {
+      "qname": "JK608593.1",
+      "hsp_id": "58b314c684d77655fca9bcd6c7c8bfd2da2c037cdbb72334da2c86ea5489335c",
+      "detail": {
+        "geometry_success": false,
+        "placement_id": "b6c9273b9500baa5eda9e44d2884a530c90b87c0e35c618a736c360a2357cf22",
+        "result": {
+          "geometry": {
+            "gaps": [
+              {
+                "g0": 14200530,
+                "g1": 14200531,
+                "op": "D",
+                "u0": 31,
+                "u1": 31
+              },
+              {
+                "g0": 14200600,
+                "g1": 14200693,
+                "op": "N",
+                "u0": 100,
+                "u1": 100
+              },
+              {
+                "g0": 14200810,
+                "g1": 14200927,
+                "op": "N",
+                "u0": 217,
+                "u1": 217
+              },
+              {
+                "g0": 14201086,
+                "g1": 14202097,
+                "op": "N",
+                "u0": 376,
+                "u1": 376
+              },
+              {
+                "g0": 14202436,
+                "g1": 14202436,
+                "op": "S",
+                "u0": 715,
+                "u1": 716
+              }
+            ],
+            "query_length": 716,
+            "runs": [
+              {
+                "g0": 14200499,
+                "g1": 14200530,
+                "op": "M",
+                "u0": 0,
+                "u1": 31
+              },
+              {
+                "g0": 14200531,
+                "g1": 14200600,
+                "op": "M",
+                "u0": 31,
+                "u1": 100
+              },
+              {
+                "g0": 14200693,
+                "g1": 14200810,
+                "op": "M",
+                "u0": 100,
+                "u1": 217
+              },
+              {
+                "g0": 14200927,
+                "g1": 14201086,
+                "op": "M",
+                "u0": 217,
+                "u1": 376
+              },
+              {
+                "g0": 14202097,
+                "g1": 14202436,
+                "op": "M",
+                "u0": 376,
+                "u1": 715
+              }
+            ]
+          },
+          "hsp_coordinates": {
+            "frame": -3,
+            "qend": 284,
+            "qstart": 714
+          },
+          "hsp_id": "58b314c684d77655fca9bcd6c7c8bfd2da2c037cdbb72334da2c86ea5489335c",
+          "identity": {
+            "member": "8240cbce858e543e4d6972a8ad6625d310ac76e5abae32cc7e62697400cbf284",
+            "sequence_sha256": "b6113b9e801d990f8dd07696a7fa1b773bb65d693cbae3709142b64669805be3",
+            "source_end0": 716,
+            "source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+            "source_start0": 0
+          },
+          "manifest": {
+            "channels": [
+              "+0",
+              "+1",
+              "+2",
+              "-0",
+              "-1",
+              "-2"
+            ],
+            "input_label_convention": "c0_first_codon_base",
+            "schema": "est_phase_geometry_v1",
+            "training_eligible": false
+          },
+          "placement_coordinates": {
+            "cigar": "31M1D69M93N117M117N159M1011N339M1S",
+            "contig": "scaffold_3",
+            "contig_length": 50652576,
+            "flag": 16,
+            "pos1": 14200500,
+            "ts": "-"
+          },
+          "producer_contract_sha256": "fcb8a4b2413f12dc5c5b0c4d55676cedeac21b3fcb26cf849c089657650a3954",
+          "reasons": [
+            "motif_strand_available",
+            "self_overlap_policy_unresolved"
+          ],
+          "segments": []
+        }
+      }
+    },
+    {
+      "qname": "JK608593.1",
+      "hsp_id": "67453932cb8762dafe443d0a07c0dc4003ed7cfa643cadcb1ab9225788e0403d",
+      "detail": {
+        "geometry_success": false,
+        "placement_id": "b6c9273b9500baa5eda9e44d2884a530c90b87c0e35c618a736c360a2357cf22",
+        "result": {
+          "geometry": {
+            "gaps": [
+              {
+                "g0": 14200530,
+                "g1": 14200531,
+                "op": "D",
+                "u0": 31,
+                "u1": 31
+              },
+              {
+                "g0": 14200600,
+                "g1": 14200693,
+                "op": "N",
+                "u0": 100,
+                "u1": 100
+              },
+              {
+                "g0": 14200810,
+                "g1": 14200927,
+                "op": "N",
+                "u0": 217,
+                "u1": 217
+              },
+              {
+                "g0": 14201086,
+                "g1": 14202097,
+                "op": "N",
+                "u0": 376,
+                "u1": 376
+              },
+              {
+                "g0": 14202436,
+                "g1": 14202436,
+                "op": "S",
+                "u0": 715,
+                "u1": 716
+              }
+            ],
+            "query_length": 716,
+            "runs": [
+              {
+                "g0": 14200499,
+                "g1": 14200530,
+                "op": "M",
+                "u0": 0,
+                "u1": 31
+              },
+              {
+                "g0": 14200531,
+                "g1": 14200600,
+                "op": "M",
+                "u0": 31,
+                "u1": 100
+              },
+              {
+                "g0": 14200693,
+                "g1": 14200810,
+                "op": "M",
+                "u0": 100,
+                "u1": 217
+              },
+              {
+                "g0": 14200927,
+                "g1": 14201086,
+                "op": "M",
+                "u0": 217,
+                "u1": 376
+              },
+              {
+                "g0": 14202097,
+                "g1": 14202436,
+                "op": "M",
+                "u0": 376,
+                "u1": 715
+              }
+            ]
+          },
+          "hsp_coordinates": {
+            "frame": -3,
+            "qend": 290,
+            "qstart": 714
+          },
+          "hsp_id": "67453932cb8762dafe443d0a07c0dc4003ed7cfa643cadcb1ab9225788e0403d",
+          "identity": {
+            "member": "8240cbce858e543e4d6972a8ad6625d310ac76e5abae32cc7e62697400cbf284",
+            "sequence_sha256": "b6113b9e801d990f8dd07696a7fa1b773bb65d693cbae3709142b64669805be3",
+            "source_end0": 716,
+            "source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+            "source_start0": 0
+          },
+          "manifest": {
+            "channels": [
+              "+0",
+              "+1",
+              "+2",
+              "-0",
+              "-1",
+              "-2"
+            ],
+            "input_label_convention": "c0_first_codon_base",
+            "schema": "est_phase_geometry_v1",
+            "training_eligible": false
+          },
+          "placement_coordinates": {
+            "cigar": "31M1D69M93N117M117N159M1011N339M1S",
+            "contig": "scaffold_3",
+            "contig_length": 50652576,
+            "flag": 16,
+            "pos1": 14200500,
+            "ts": "-"
+          },
+          "producer_contract_sha256": "fcb8a4b2413f12dc5c5b0c4d55676cedeac21b3fcb26cf849c089657650a3954",
+          "reasons": [
+            "motif_strand_available",
+            "self_overlap_policy_unresolved"
+          ],
+          "segments": []
+        }
+      }
+    },
+    {
+      "qname": "JK608593.1",
+      "hsp_id": "704ce44ee3470f3fd908c74918417bbf05b20887371b491447d84667bd150c01",
+      "detail": {
+        "geometry_success": false,
+        "placement_id": "b6c9273b9500baa5eda9e44d2884a530c90b87c0e35c618a736c360a2357cf22",
+        "result": {
+          "geometry": {
+            "gaps": [
+              {
+                "g0": 14200530,
+                "g1": 14200531,
+                "op": "D",
+                "u0": 31,
+                "u1": 31
+              },
+              {
+                "g0": 14200600,
+                "g1": 14200693,
+                "op": "N",
+                "u0": 100,
+                "u1": 100
+              },
+              {
+                "g0": 14200810,
+                "g1": 14200927,
+                "op": "N",
+                "u0": 217,
+                "u1": 217
+              },
+              {
+                "g0": 14201086,
+                "g1": 14202097,
+                "op": "N",
+                "u0": 376,
+                "u1": 376
+              },
+              {
+                "g0": 14202436,
+                "g1": 14202436,
+                "op": "S",
+                "u0": 715,
+                "u1": 716
+              }
+            ],
+            "query_length": 716,
+            "runs": [
+              {
+                "g0": 14200499,
+                "g1": 14200530,
+                "op": "M",
+                "u0": 0,
+                "u1": 31
+              },
+              {
+                "g0": 14200531,
+                "g1": 14200600,
+                "op": "M",
+                "u0": 31,
+                "u1": 100
+              },
+              {
+                "g0": 14200693,
+                "g1": 14200810,
+                "op": "M",
+                "u0": 100,
+                "u1": 217
+              },
+              {
+                "g0": 14200927,
+                "g1": 14201086,
+                "op": "M",
+                "u0": 217,
+                "u1": 376
+              },
+              {
+                "g0": 14202097,
+                "g1": 14202436,
+                "op": "M",
+                "u0": 376,
+                "u1": 715
+              }
+            ]
+          },
+          "hsp_coordinates": {
+            "frame": -3,
+            "qend": 305,
+            "qstart": 714
+          },
+          "hsp_id": "704ce44ee3470f3fd908c74918417bbf05b20887371b491447d84667bd150c01",
+          "identity": {
+            "member": "8240cbce858e543e4d6972a8ad6625d310ac76e5abae32cc7e62697400cbf284",
+            "sequence_sha256": "b6113b9e801d990f8dd07696a7fa1b773bb65d693cbae3709142b64669805be3",
+            "source_end0": 716,
+            "source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+            "source_start0": 0
+          },
+          "manifest": {
+            "channels": [
+              "+0",
+              "+1",
+              "+2",
+              "-0",
+              "-1",
+              "-2"
+            ],
+            "input_label_convention": "c0_first_codon_base",
+            "schema": "est_phase_geometry_v1",
+            "training_eligible": false
+          },
+          "placement_coordinates": {
+            "cigar": "31M1D69M93N117M117N159M1011N339M1S",
+            "contig": "scaffold_3",
+            "contig_length": 50652576,
+            "flag": 16,
+            "pos1": 14200500,
+            "ts": "-"
+          },
+          "producer_contract_sha256": "fcb8a4b2413f12dc5c5b0c4d55676cedeac21b3fcb26cf849c089657650a3954",
+          "reasons": [
+            "motif_strand_available",
+            "self_overlap_policy_unresolved"
+          ],
+          "segments": []
+        }
+      }
+    },
+    {
+      "qname": "JK608593.1",
+      "hsp_id": "cb28a36b05198ee871ad0162464b166d719105a9367c70db149f3fd6a6757e92",
+      "detail": {
+        "geometry_success": false,
+        "placement_id": "b6c9273b9500baa5eda9e44d2884a530c90b87c0e35c618a736c360a2357cf22",
+        "result": {
+          "geometry": {
+            "gaps": [
+              {
+                "g0": 14200530,
+                "g1": 14200531,
+                "op": "D",
+                "u0": 31,
+                "u1": 31
+              },
+              {
+                "g0": 14200600,
+                "g1": 14200693,
+                "op": "N",
+                "u0": 100,
+                "u1": 100
+              },
+              {
+                "g0": 14200810,
+                "g1": 14200927,
+                "op": "N",
+                "u0": 217,
+                "u1": 217
+              },
+              {
+                "g0": 14201086,
+                "g1": 14202097,
+                "op": "N",
+                "u0": 376,
+                "u1": 376
+              },
+              {
+                "g0": 14202436,
+                "g1": 14202436,
+                "op": "S",
+                "u0": 715,
+                "u1": 716
+              }
+            ],
+            "query_length": 716,
+            "runs": [
+              {
+                "g0": 14200499,
+                "g1": 14200530,
+                "op": "M",
+                "u0": 0,
+                "u1": 31
+              },
+              {
+                "g0": 14200531,
+                "g1": 14200600,
+                "op": "M",
+                "u0": 31,
+                "u1": 100
+              },
+              {
+                "g0": 14200693,
+                "g1": 14200810,
+                "op": "M",
+                "u0": 100,
+                "u1": 217
+              },
+              {
+                "g0": 14200927,
+                "g1": 14201086,
+                "op": "M",
+                "u0": 217,
+                "u1": 376
+              },
+              {
+                "g0": 14202097,
+                "g1": 14202436,
+                "op": "M",
+                "u0": 376,
+                "u1": 715
+              }
+            ]
+          },
+          "hsp_coordinates": {
+            "frame": -3,
+            "qend": 479,
+            "qstart": 714
+          },
+          "hsp_id": "cb28a36b05198ee871ad0162464b166d719105a9367c70db149f3fd6a6757e92",
+          "identity": {
+            "member": "8240cbce858e543e4d6972a8ad6625d310ac76e5abae32cc7e62697400cbf284",
+            "sequence_sha256": "b6113b9e801d990f8dd07696a7fa1b773bb65d693cbae3709142b64669805be3",
+            "source_end0": 716,
+            "source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+            "source_start0": 0
+          },
+          "manifest": {
+            "channels": [
+              "+0",
+              "+1",
+              "+2",
+              "-0",
+              "-1",
+              "-2"
+            ],
+            "input_label_convention": "c0_first_codon_base",
+            "schema": "est_phase_geometry_v1",
+            "training_eligible": false
+          },
+          "placement_coordinates": {
+            "cigar": "31M1D69M93N117M117N159M1011N339M1S",
+            "contig": "scaffold_3",
+            "contig_length": 50652576,
+            "flag": 16,
+            "pos1": 14200500,
+            "ts": "-"
+          },
+          "producer_contract_sha256": "fcb8a4b2413f12dc5c5b0c4d55676cedeac21b3fcb26cf849c089657650a3954",
+          "reasons": [
+            "motif_strand_available",
+            "self_overlap_policy_unresolved"
+          ],
+          "segments": []
+        }
+      }
+    }
+  ]
+}

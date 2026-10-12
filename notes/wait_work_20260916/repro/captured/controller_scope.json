@@ -1,0 +1,21 @@
+{
+  "scope": "one_final_source_exploratory_EST8_S0_P1_diagnostic",
+  "basis": "User delegated continuous TODO execution and actual EST GPU validation; source and deployment independently reviewed.",
+  "source_commit": "b660bf1e7dc48287ca34a0d6e3aeb53d45f599b6",
+  "release_ledger_sha256": "5b36bdf09a8b8eb548147654e23d6ad59fe18542642a05eb720f22be102fdfb8",
+  "nodes": 1,
+  "gpus": 4,
+  "cpus": 64,
+  "walltime_seconds": 1800,
+  "maximum_node_hours": 0.5,
+  "maximum_gpu_hours": 2,
+  "campaign_diagnostic_cap_node_hours": 5,
+  "prior_old_source_job": 3163545,
+  "prior_job_disposition": "Confirmed owned PENDING, cancelled with controller/state/name/user filters; final CANCELLED, elapsed zero, no allocated TRES, no S0 marker.",
+  "prior_measured_mvp_allocation_node_hours": 0,
+  "automatic_retry": false,
+  "training_authorized_by_this_record": false,
+  "production_authorized": false,
+  "decision_cost": "Replace obsolete queued d99 diagnostic with reviewed final source; this can reset queue age but avoids obsolete GPU work and duplicate preflight allocation.",
+  "failure_policy": "Preserve job subtree and start marker. No automatic recovery if the staged evidence was moved; independently review any subsequent attempt."
+}

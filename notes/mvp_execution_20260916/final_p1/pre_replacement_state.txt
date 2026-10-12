@@ -1,0 +1,50 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T22:19:20-05:00
+wcyim
+3163545|wcyim|PENDING|0:00|
+JobId=3163545 JobName=mvp8-p1-0916 UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=783 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Priority Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=00:30:00 TimeMin=N/A SubmitTime=2026-09-16T20:15:28 EligibleTime=2026-09-16T20:15:28 AccrueTime=2026-09-16T20:15:28 StartTime=2026-09-17T09:36:00 EndTime=2026-09-17T10:06:00 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-16T22:18:58 Scheduler=Main Partition=ghx4 AllocNode:Sid=gh-login01:3567417 ReqNodeList=(null) ExcNodeList=gh[062,086,093] NodeList= SchedNodeList=gh122 NumNodes=1-1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=NO Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/p1_release/p1.sbatch SubmitLine=sbatch --parsable --exclude=gh062,gh086,gh093 p1.sbatch WorkDir=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/p1_release StdErr=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/p1-3163545.err StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/p1-3163545.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64
+JobID|User|State|ExitCode|Start|End|Elapsed|AllocTRES
+3163545|wcyim|PENDING|0:0|Unknown|Unknown|00:00:00|
+             JOBID                           NAME     STATE       TIME NODELIST(REASON)
+           3131538                        b5-seed   PENDING       0:00 (Priority)
+           3163545                   mvp8-p1-0916   PENDING       0:00 (Priority)
+           3149363                        b5-seed   PENDING       0:00 (Dependency)
+           3149362                        b5-seed   PENDING       0:00 (Dependency)
+           3149361                        b5-seed   PENDING       0:00 (Dependency)
+           3149360                        b5-seed   PENDING       0:00 (Dependency)
+           3149359                        b5-seed   PENDING       0:00 (Dependency)
+           3149358                        b5-seed   PENDING       0:00 (Dependency)
+           3149357                        b5-seed   PENDING       0:00 (Dependency)
+           3149356                        b5-seed   PENDING       0:00 (Dependency)
+/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/evidence/fullc0lite.db 1068773376
+Quota usage for user wcyim:
+-----------------------------------------------------------------------------------------------
+|        Directory Path        |  User   |  User   |  User   |   User   |   User   |   User   |
+|                              |  Block  |  Soft   |  Hard   |   File   |   Soft   |   Hard   |
+|                              |  Used   |  Quota  |  Limit  |   Used   |   Quota  |   Limit  |
+-----------------------------------------------------------------------------------------------
+| /u/wcyim                     | 12168K  | 102400M | 103G    | 332      | 750k     | 760k     |
+-----------------------------------------------------------------------------------------------
+
+Quota usage for allocations user wcyim is a member of:
+--------------------------------------------------------------------------------------------------------------
+|        Directory Path        | Allocation | Allocation | Allocation | Allocation | Allocation | Allocation |
+|                              |   Block    |    Soft    |    Hard    |    File    |    Soft    |    Hard    |
+|                              |   Used     |    Quota   |    Limit   |    Used    |    Quota   |    Limit   |
+--------------------------------------------------------------------------------------------------------------
+| /projects/bilv               | 8k         | 500G       | 550G       | 2          | 850000     | 935000     |
+--------------------------------------------------------------------------------------------------------------
+| /work/nvme/bilv              | 350G       | 500G       | 550G       | 4494       | 2550000    | 2805000    |
+--------------------------------------------------------------------------------------------------------------
+| /work/hdd/bilv               | 3.746M     | 1000G      | 1.074T     | 4494       | 2550000    | 2805000    |
+--------------------------------------------------------------------------------------------------------------
+      --ctld                      send request directly to slurmctld
+  -i, --interactive               require response from user for each job
+  -n, --name=job_name             act only on jobs with this name
+      --sibling=cluster_name      remove an active sibling job from a federated job
+  -s, --signal=name | integer     signal to send to job, default is SIGKILL
+  -t, --state=states              act only on jobs in this state.  Valid job
+                                  states are PENDING, RUNNING and SUSPENDED
+  -u, --user=user_name            act only on jobs of this user

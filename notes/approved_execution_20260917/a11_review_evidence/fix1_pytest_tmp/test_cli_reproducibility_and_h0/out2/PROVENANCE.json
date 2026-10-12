@@ -1,0 +1,70 @@
+{
+  "chain_reading_decision": {
+    "date": "2026-09-05",
+    "primary_declared_before_real_addition_scoring": true,
+    "who": "author"
+  },
+  "chain_readings": {
+    "chain_support_single_read": "primary",
+    "chain_support_threshold": "sensitivity"
+  },
+  "incomplete_work": [
+    "disk-backed read indexing for production scale",
+    "manifest-wide expected-run reconciliation and frozen-reference identity binding",
+    "per-species A4 attestation, P4 seed/sample verification, P5 +9-nt decoy correspondence",
+    "A37 per-length-bin callability/junction/intron-count/gene-length tables",
+    "S12 P2 alternative recall and retained-match counts; A7 MAPQ10/placement sensitivities",
+    "C0 accession aliases, clone/library conflicts, source-molecule provenance, S12d completeness"
+  ],
+  "inputs_sha256": {
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_cli_reproducibility_and_h0/additions.json": "f6923c583b808b15232e30c22e9e85f0329a09c1e025517b12c3c40f031a5070",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_cli_reproducibility_and_h0/config.json": "e3dc997c1d700748bafdb19ff71dad98190c0363dc8df7ad47b283a67062fa02",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_cli_reproducibility_and_h0/meta.json": "fa9e0be7bb75fad9cb6a8bf8b77393c06f7701ec02b7765fd0a30ca97cbc37e9",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_cli_reproducibility_and_h0/ref.fa": "370d073b77d489def2de0a60b99624b4455f2490f30d2d1bcb9af7d9e639b1eb",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_cli_reproducibility_and_h0/roles.tsv": "c19ca9958ea4fc9093e545c155b6eb01ad688724c5156dc66d75fd9af8b6e079",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_cli_reproducibility_and_h0/run.sam": "3b2602109a5d4757b0b5cb2a87b378114e0514cd2d96ff49e5bd18a3750bbf3b",
+    "/tmp/est-approved-contract-20260917/revision/scripts/59_evidence_support.py": "06f1bdc9a3af511e6de7434430f191d6b272d244ce7a44303d1c87dd29be25f4"
+  },
+  "missing_outputs": [
+    "P2 reference-alternative recall requires frozen reference alternative IDs/denominator",
+    "A3 TES/TSS, A6 rarefaction and S12d terminal completeness are separate C0 analyses",
+    "A7 MAPQ10/placement sensitivities are not primary outcomes"
+  ],
+  "outputs_sha256": {
+    "C0_observations.jsonl": "8ddf5712105784fcabfbcfd7e7205ceaeaa610f6b50ae7d562c8b6c4ed8d52d6",
+    "PCR_diagnostic_additions.csv": "1f18ed964235af54f1c6060429f020d803524cd5cf87247a0437c79d2bb4b729",
+    "PCR_diagnostic_runs.csv": "6b89bf4ff61bccde4dd01946b4272a566802d23567db68b3e6e19a87eefb4d38",
+    "S12_inputs.csv": "1a57c44145ae221f53928066ffca8e8e7cdbc5e8187ad8890f72d77cbc965518",
+    "S12c_runs.csv": "3280d647923ab61e4e617ce894ea7baa5ef43bfa2aa64f6860a1db32b5adf86c",
+    "per_addition.csv": "7b4feb61430096e64ec33c3211ba9dde78486cd0a82d3dcabe58d69e98c220d0"
+  },
+  "pcr_diagnostic": {
+    "candidate_equivalence_groups": 0,
+    "counting_rule": "Global same-library candidates; counted once per run containing a member and once per same-strand overlapping addition. Counts across runs/additions are not additive.",
+    "non_clique_groups": 0,
+    "per_addition": [
+      {
+        "addition_id": "add1",
+        "candidate_equivalence_groups": 0,
+        "non_clique_groups": 0
+      }
+    ],
+    "per_run": [
+      {
+        "arm": "primary",
+        "candidate_equivalence_groups": 0,
+        "dataset": "dataset",
+        "non_clique_groups": 0,
+        "run": "run1"
+      }
+    ]
+  },
+  "purpose": "synthetic",
+  "schema": "b1-evidence-v1",
+  "source_thresholds": {
+    "EST": 2,
+    "FL-cDNA": 2,
+    "ONT": 3,
+    "PacBio": 2
+  }
+}

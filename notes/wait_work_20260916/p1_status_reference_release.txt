@@ -1,0 +1,10 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T02:09:09-05:00
+             JOBID                           NAME     STATE       TIME NODELIST(REASON)
+           3163986             mvp8-final-p1-0916   PENDING       0:00 (Priority)
+             JOBID     STATE             START_TIME           NODELIST NODELIST(REASON)
+           3163986   PENDING                    N/A                    (Priority)
+JobID|State|ExitCode|Start|Elapsed|MaxRSS
+3163986|PENDING|0:0|Unknown|00:00:00|

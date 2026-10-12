@@ -1,0 +1,145 @@
+{
+  "a11_status": "unassessable",
+  "arm": "primary",
+  "files": {
+    "align_provenance": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Sitalica/PROVENANCE.txt",
+      "sha256": "976c0989b88a428b739e410a3dd543fe292c8385dbc444f0f5133ba68038bc5a"
+    },
+    "bam": {
+      "md5": "01b75b0ddd6ccbb7759bf781e7c1b4b6",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Sitalica/Sitalica.est.bam",
+      "receipt": {
+        "algorithm": "md5",
+        "file": "align_provenance",
+        "text_key": "bam_md5"
+      }
+    },
+    "original": {
+      "md5": "4b0f262bc3a0a72f9e290035ac3c67ff",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/est.fa.gz",
+      "receipt": {
+        "algorithm": "md5",
+        "file": "align_provenance",
+        "text_key": "est_raw_md5"
+      }
+    },
+    "orthodb_commands": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb/commands.json",
+      "sha256": "d71733c306cce7c7e7d73d8979023583a0c298cad1244b47afc4ccef39ec8ce1"
+    },
+    "orthodb_protein": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb/orthodb.filtered.fa",
+      "receipt": {
+        "field": [
+          "filtered_fasta_sha256"
+        ],
+        "file": "orthodb_provenance"
+      },
+      "sha256": "895e123cb0a7ee523d6cb4695a30ca268f730dbafb354e20a7c3153280aca0cd"
+    },
+    "orthodb_provenance": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb/provenance.json",
+      "sha256": "368d9bffdc8e176216d2b3bbe1ba48651651fc6a919bbe3d04a97d381a47c5c2"
+    },
+    "orthodb_raw": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb/orthodb.raw13.tsv",
+      "receipt": {
+        "field": [
+          "raw_sha256"
+        ],
+        "file": "orthodb_provenance"
+      },
+      "sha256": "b43d99c02b09e6fcd3348deb2f47ab906a1fb79caabfec0ca8831e192adb7504"
+    },
+    "reference": {
+      "md5": "d8f77d532d8c87f314f6175146fa6728",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Sitalica_312_v2.fa",
+      "receipt": {
+        "algorithm": "md5",
+        "file": "align_provenance",
+        "text_key": "reference_md5"
+      }
+    },
+    "report": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/univec/report.tsv"
+    },
+    "samtools": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/samtools",
+      "sha256": "a579aed31a13841cc0950a487b59729355d0b9fbcc39293e0b90b960133217bc"
+    },
+    "screened": {
+      "md5": "0b33e9eb0719df2c35a468fd623c5d4d",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/univec/est.univec.fa.gz",
+      "receipt": {
+        "field": [
+          "inputs",
+          "query_sha256"
+        ],
+        "file": "orthodb_provenance"
+      },
+      "sha256": "1a2941f1210210eabfcb37f374c9ec166f0f9afb9d57b88c7e600520446e9e63"
+    },
+    "swissprot_commands": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot/commands.json",
+      "sha256": "ff7d594d08f8bd58d387cfd7b04f82e6f215f50b371fb8b2c561a0009ed3f8de"
+    },
+    "swissprot_protein": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot/swissprot.filtered.fa",
+      "receipt": {
+        "field": [
+          "filtered_fasta_sha256"
+        ],
+        "file": "swissprot_provenance"
+      },
+      "sha256": "958abfc2a97fc09939c8daf8b7f2b973d727ba5086d26b9ad899d48ba3708ccf"
+    },
+    "swissprot_provenance": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot/provenance.json",
+      "sha256": "669c4b2ea93e079a907ddf6dc3591f9ca3c49ab88e277884a577187358d9de72"
+    },
+    "swissprot_raw": {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot/swissprot.raw13.tsv",
+      "receipt": {
+        "field": [
+          "raw_sha256"
+        ],
+        "file": "swissprot_provenance"
+      },
+      "sha256": "103b9a820354c8f001d34a49442c17d67ce684b53cdcc74e729bdd43c9d27147"
+    }
+  },
+  "full_c0": false,
+  "metadata_capture_sha256": "f814b5665f60421826eec838bd259f3728ec793d58e1c6ea4a3aa4870769b998",
+  "report_pin_state": "no historical report hash captured; fresh whole-file SHA256 and before/after stat at compute; report relations cross-checked against pinned FASTAs",
+  "runtime": {
+    "original_producer_samtools": "1.3.1",
+    "python": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3.11",
+    "python_version": "3.11.14",
+    "reader_htslib": "1.23",
+    "reader_samtools": "1.21"
+  },
+  "searches": [
+    {
+      "c1_commands": "orthodb_commands",
+      "c1_provenance": "orthodb_provenance",
+      "protein": "orthodb_protein",
+      "raw": "orthodb_raw",
+      "source": "orthodb"
+    },
+    {
+      "c1_commands": "swissprot_commands",
+      "c1_provenance": "swissprot_provenance",
+      "protein": "swissprot_protein",
+      "raw": "swissprot_raw",
+      "source": "swissprot"
+    }
+  ],
+  "selection": {
+    "count": 16,
+    "prefix_lines": 10000,
+    "source": "orthodb"
+  },
+  "species": "Sitalica",
+  "training_eligible": false
+}

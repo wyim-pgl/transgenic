@@ -1,0 +1,4 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+EXPECTED 187 DONE 184 MISSING [["108", "ont", "Ptrichocarpa", "sdx_dRNA_PRJNA517295", "SRR12822922", "evidence/training/ont/Ptrichocarpa/sdx_dRNA_PRJNA517295/SRR12822922.fa.gz", "-uf", "evidence/longread_align_v1/Ptrichocarpa/sdx_dRNA_PRJNA517295/SRR12822922"], ["109", "ont", "Ptrichocarpa", "sdx_dRNA_PRJNA517295", "SRR12822923", "evidence/training/ont/Ptrichocarpa/sdx_dRNA_PRJNA517295/SRR12822923.fa.gz", "-uf", "evidence/longread_align_v1/Ptrichocarpa/sdx_dRNA_PRJNA517295/SRR12822923"], ["110", "ont", "Ptrichocarpa", "sdx_dRNA_PRJNA517295", "SRR12881185", "evidence/training/ont/Ptrichocarpa/sdx_dRNA_PRJNA517295/SRR12881185.fa.gz", "-uf", "evidence/longread_align_v1/Ptrichocarpa/sdx_dRNA_PRJNA517295/SRR12881185"]]

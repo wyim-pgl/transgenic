@@ -1,0 +1,123 @@
+{
+  "model_comparisons": {
+    "epoch_01": {
+      "equal": 770,
+      "different": 0,
+      "worst": 0,
+      "examples": []
+    },
+    "step_00003": {
+      "equal": 148,
+      "different": 622,
+      "worst": 8.833850733935833e-05,
+      "examples": [
+        {
+          "key": "lm_head.weight",
+          "count": 445412,
+          "numel": 445440,
+          "max_abs": 8.380413055419922e-05
+        },
+        {
+          "key": "transgenic.decoder.embed_positions.weight",
+          "count": 72188,
+          "numel": 12582912,
+          "max_abs": 8.168444037437439e-05
+        },
+        {
+          "key": "transgenic.decoder.layernorm_embedding.bias",
+          "count": 1536,
+          "numel": 1536,
+          "max_abs": 8.048312156461179e-05
+        },
+        {
+          "key": "transgenic.decoder.layernorm_embedding.weight",
+          "count": 1528,
+          "numel": 1536,
+          "max_abs": 7.557868957519531e-05
+        },
+        {
+          "key": "transgenic.decoder.layers.0.chain_attn.alpha",
+          "count": 1,
+          "numel": 1,
+          "max_abs": 9.053110261447728e-09
+        },
+        {
+          "key": "transgenic.decoder.layers.0.encoder_attn.k_proj.bias",
+          "count": 1536,
+          "numel": 1536,
+          "max_abs": 6.962452971492894e-06
+        },
+        {
+          "key": "transgenic.decoder.layers.0.encoder_attn.k_proj.weight",
+          "count": 2359104,
+          "numel": 2359296,
+          "max_abs": 7.954612374305725e-05
+        },
+        {
+          "key": "transgenic.decoder.layers.0.encoder_attn.out_proj.bias",
+          "count": 1536,
+          "numel": 1536,
+          "max_abs": 7.86551390774548e-05
+        },
+        {
+          "key": "transgenic.decoder.layers.0.encoder_attn.out_proj.weight",
+          "count": 2359109,
+          "numel": 2359296,
+          "max_abs": 8.423812687397003e-05
+        },
+        {
+          "key": "transgenic.decoder.layers.0.encoder_attn.q_proj.bias",
+          "count": 1536,
+          "numel": 1536,
+          "max_abs": 7.557850767625496e-05
+        },
+        {
+          "key": "transgenic.decoder.layers.0.encoder_attn.q_proj.weight",
+          "count": 2359148,
+          "numel": 2359296,
+          "max_abs": 8.063018321990967e-05
+        },
+        {
+          "key": "transgenic.decoder.layers.0.encoder_attn.v_proj.bias",
+          "count": 1536,
+          "numel": 1536,
+          "max_abs": 8.07901524240151e-05
+        }
+      ]
+    }
+  },
+  "rng_digests": {
+    "straight:0": {
+      "step": "8e13268b2f0a0ada4b8e4008bf082d26a291c011535d5b459fd4cb0b9a6bb16c",
+      "random_state": "ebeceddf75e35f3b00e88a42aa649e9da6f4ef114cac0aeb1ad4e3200b7445b0",
+      "numpy_random_seed": "7fade583c90d18fd90dce23a55e4f57b2b00226a8bf5b28a750f445739a78f77",
+      "torch_manual_seed": "3ce16c0bbdd16e1943371dad31a94210a209132e219e24effa1af1a511de1042",
+      "torch_cuda_manual_seed": "5056ccc417204035065f884d1ec4ac07b7f77a5293ffa6ad63a339a13ccfbd45"
+    },
+    "resumed:0": {
+      "step": "8e13268b2f0a0ada4b8e4008bf082d26a291c011535d5b459fd4cb0b9a6bb16c",
+      "random_state": "ebeceddf75e35f3b00e88a42aa649e9da6f4ef114cac0aeb1ad4e3200b7445b0",
+      "numpy_random_seed": "7fade583c90d18fd90dce23a55e4f57b2b00226a8bf5b28a750f445739a78f77",
+      "torch_manual_seed": "3ce16c0bbdd16e1943371dad31a94210a209132e219e24effa1af1a511de1042",
+      "torch_cuda_manual_seed": "5056ccc417204035065f884d1ec4ac07b7f77a5293ffa6ad63a339a13ccfbd45"
+    },
+    "straight:1": {
+      "step": "8e13268b2f0a0ada4b8e4008bf082d26a291c011535d5b459fd4cb0b9a6bb16c",
+      "random_state": "79de845bac2137acc53be2107b01d8b4b1880581e17a0091c20c17c7053044d5",
+      "numpy_random_seed": "18f551bafb8df77f5d9da3212c49eea8599ecc2ea2170bd05536f5b2632472c9",
+      "torch_manual_seed": "3ce16c0bbdd16e1943371dad31a94210a209132e219e24effa1af1a511de1042",
+      "torch_cuda_manual_seed": "180564dec0921aae311d39da52d49275fc00641cd41bbcfc91fbf5fb26e85184"
+    },
+    "resumed:1": {
+      "step": "8e13268b2f0a0ada4b8e4008bf082d26a291c011535d5b459fd4cb0b9a6bb16c",
+      "random_state": "79de845bac2137acc53be2107b01d8b4b1880581e17a0091c20c17c7053044d5",
+      "numpy_random_seed": "18f551bafb8df77f5d9da3212c49eea8599ecc2ea2170bd05536f5b2632472c9",
+      "torch_manual_seed": "3ce16c0bbdd16e1943371dad31a94210a209132e219e24effa1af1a511de1042",
+      "torch_cuda_manual_seed": "180564dec0921aae311d39da52d49275fc00641cd41bbcfc91fbf5fb26e85184"
+    }
+  },
+  "gradient_differences": {
+    "0": 610,
+    "1": 610
+  }
+}

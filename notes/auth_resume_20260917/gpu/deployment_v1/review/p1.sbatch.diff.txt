@@ -1,0 +1,33 @@
+--- original-final_p1/p1.sbatch
++++ release_v2/p1.sbatch
+@@ -1,5 +1,5 @@
+ #!/bin/bash
+-#SBATCH --job-name=mvp8-final-p1-0916
++#SBATCH --job-name=dev123-p1-0917
+ #SBATCH --account=bilv-dtai-gh
+ #SBATCH --partition=ghx4
+ #SBATCH --nodes=1
+@@ -9,10 +9,10 @@
+ #SBATCH --exclusive
+ #SBATCH --no-requeue
+ #SBATCH --time=00:30:00
+-#SBATCH --exclude=gh062,gh093,gh086
+-#SBATCH --chdir=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final_p1_release
+-#SBATCH --output=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-%j.out
+-#SBATCH --error=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-%j.err
++#SBATCH --exclude=gh062,gh093
++#SBATCH --chdir=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_20260917
++#SBATCH --output=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-%j.out
++#SBATCH --error=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-%j.err
+ set -euo pipefail
+ umask 077
+ # Controller refreshes B5 node exclusion immediately before submission; no worker submission.
+@@ -29,6 +29,8 @@
+ export OMP_NUM_THREADS=8
+ [[ ${SLURM_JOB_NUM_NODES:?} == 1 ]]
+ [[ ${SLURM_GPUS_ON_NODE:?} == 4 ]]
++# Independent controller receipt is mandatory; this package does not create one.
++[[ ${DEPLOY_CONTROLLER_GATE_SHA256:-} =~ ^[0-9a-f]{64}$ ]]
+ [[ ! -e S0_P1_STARTED ]]
+ # Exclusive claim survives failures; never rerun this release automatically.
+ (set -o noclobber; printf '%s\n' "${SLURM_JOB_ID:?}" > S0_P1_STARTED)

@@ -1,0 +1,26 @@
+2026-10-09T14:47:08-05:00
+    JOBID               NAME    STATE           START_TIME NODELIST(REASON)
+  3309786            b5-seed  PENDING  2026-10-10T15:20:23 (Priority)
+  3345919       b6-wp5-pilot  PENDING                  N/A (Priority)
+  3345917       b6-wp5-pilot  PENDING                  N/A (Priority)
+  3345920       b6-wp5-pilot  PENDING                  N/A (Dependency)
+  3345918       b6-wp5-pilot  PENDING                  N/A (Dependency)
+  3309790            b5-seed  PENDING                  N/A (Dependency)
+  3309789            b5-seed  PENDING                  N/A (Dependency)
+  3309788            b5-seed  PENDING                  N/A (Dependency)
+  3309787            b5-seed  PENDING                  N/A (Dependency)
+Disk quotas for prj 22169 (pid 22169):
+      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace
+ /work/nvme/bilv 414093764  524288000 576716800       -   98705        0       0       -
+Disk quotas for prj 22169 (pid 22169):
+      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace
+  /work/hdd/bilv 869569584  1048576000 1153433600       -   98705        0       0       -
+bilv-dtai-gh                               771              1499  leakage-controlled ...
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

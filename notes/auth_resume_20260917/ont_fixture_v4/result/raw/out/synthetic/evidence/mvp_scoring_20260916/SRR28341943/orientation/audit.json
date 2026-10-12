@@ -1,0 +1,35 @@
+{
+ "agree": 5,
+ "counters": {
+  "agree": 5,
+  "eligible": 5,
+  "read_sense": 5,
+  "records": 7,
+  "unspliced": 2,
+  "valid_for_orientation": 5
+ },
+ "dataset": "ont/Athaliana_FLIC_PRJNA1087576",
+ "eligible": 5,
+ "fraction": 1.0,
+ "genes_dropped_opposite_strand": 0,
+ "min_eligible": 1000,
+ "min_mapq": 20,
+ "motif_annotation_agreement": 1.0,
+ "motif_annotation_note": "P(motif-inferred genomic transcript strand == annotated strand). A consistency check on the alignment and the annotation, NOT the -uf gate: it is ~0.995 for stranded and unstranded libraries alike (A39).",
+ "protocol": "B1 \u00a73.3 item 2 as corrected by A39 (v1.29): -uf is gated on sense_read_fraction, the read's orientation relative to the transcript. The literal reading, motif_annotation_agreement, is retained as a diagnostic.",
+ "qualifying_genes": 2,
+ "read_sense": 5,
+ "reason": "only 5 alignments valid for an orientation call, below the floor of 1000; the frozen >= 95% rule is not applied to a sample this small",
+ "run": "SRR28341943",
+ "sense_read_fraction": 1.0,
+ "sense_read_note": "P(read genomic strand == annotated strand), over alignments whose motif call agrees with the annotation. This is the proposition -uf asserts. ~0.5 unstranded; ~1.0 stranded sense; ~0.0 stranded antisense. THIS is the gate (A39).",
+ "species": "Athaliana",
+ "status": "UNRESOLVED",
+ "threshold": 0.95,
+ "use_uf": false,
+ "valid_for_orientation": 5,
+ "wilson95": [
+  0.565509,
+  1.0
+ ]
+}

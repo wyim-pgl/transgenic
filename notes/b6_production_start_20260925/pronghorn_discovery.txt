@@ -1,0 +1,10 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-25T13:48:26-0700
+CANCELLED by 3092957|/data/gpfs/assoc/pgl/data/Transgenic/transgenic
+COMPLETED|/data/gpfs/assoc/pgl/data/Transgenic/evidence/cage_v1
+COMPLETED|/data/gpfs/assoc/pgl/data/Transgenic/transgenic
+FAILED|/data/gpfs/assoc/pgl/data/Transgenic/evidence/cage_v1
+6171102 syl_watch_other_20m_v2 RUNNING cpu-48
+ROOT= HOME=/data/gpfs/home/wyim

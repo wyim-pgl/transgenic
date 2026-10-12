@@ -1,0 +1,10 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T17:07:01-0700
+ProctrackType           = proctrack/cgroup
+PropagateResourceLimits = ALL
+PropagateResourceLimitsExcept = (null)
+SlurmdParameters        = (null)
+TaskPlugin              = task/affinity,task/cgroup
+TaskPluginParam         = (null type)

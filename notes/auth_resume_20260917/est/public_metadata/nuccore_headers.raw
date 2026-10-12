@@ -1,0 +1,22 @@
+HTTP/2 200 
+date: Thu, 17 Sep 2026 23:18:39 GMT
+server: Finatra
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+content-security-policy: upgrade-insecure-requests
+referrer-policy: origin-when-cross-origin
+ncbi-sid: C0A9DCEB8B75F0A1_B071SID
+ncbi-phid: 1D332A4424E25E45000058CC5EDFF044.1.1.m_7
+content-type: text/plain
+cache-control: private
+x-ratelimit-limit: 3
+content-disposition: attachment; filename="sequence.gb"
+x-ratelimit-remaining: 2
+access-control-allow-origin: *
+access-control-expose-headers: X-RateLimit-Limit,X-RateLimit-Remaining
+set-cookie: ncbi_sid=C0A9DCEB8B75F0A1_B071SID; domain=.nih.gov; path=/; expires=Fri, 17 Sep 2027 23:18:39 GMT
+vary: Accept-Encoding
+x-ua-compatible: IE=Edge
+x-xss-protection: 1; mode=block
+via: 1.1 google
+alt-svc: clear
+

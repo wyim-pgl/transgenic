@@ -1,0 +1,302 @@
+diff --git a/notes/MVP_FINAL_SOURCE_INTEGRATION_REPORT.md b/notes/MVP_FINAL_SOURCE_INTEGRATION_REPORT.md
+new file mode 100644
+index 0000000..0e8c4c8
+--- /dev/null
++++ b/notes/MVP_FINAL_SOURCE_INTEGRATION_REPORT.md
+@@ -0,0 +1,107 @@
++# Final isolated MVP source integration — 2026-09-16
++
++## Result and immutable source
++
++Branch **`mvp-final-source-20260916`**, isolated worktree `/tmp/pi-agent-cf3f429c-1b79-48f-e598f927`.
++Executable/source integration commit: **`362eb899d8d43164ec1e0fb0f3b174ead9b1ba40`**. The following report-only commit does not change executable source. Obtain that final branch HEAD with `git rev-parse mvp-final-source-20260916`; its exact hash is supplied in the task response.
++
++**Source integration implemented; independent final review and genuine readiness remain HOLD.** No GPU, SSH, scheduler queries/submissions, subagents, main merge or push. User-reported P1 job **3163545**, queued against d99, was not touched; its result cannot certify this source. Recovery `.atl/resume.md` was absent in this isolated checkout. Graft was rebuilt/queried here, not in main. Advisor consultation failed because the configured client does not support its model; no advisor approval is claimed.
++
++Pins computed after the executable changes:
++
++- Operator `runtime_preflight.decoder_code_sha256`: **`b53c31756d4fba10b144afd87e6ff8bc7db0bfbeaf4d346d085243a726512cfb`**.
++- Relative component-source SHA256: **`555c3618e792dbed06bfc2c392b99efe79fd16853e8c92abe252a5b34cbd0c44`** (86 tracked files). Definition: canonical JSON mapping `{relative_path: sha256(file_bytes)}` of `git ls-files src/transgenic train/train_HyenaTransgenic_MVP.py revision/scripts/mvp configs`, sorted keys, compact separators, plus one newline. This relocation-independent comparison pin is **not** the absolute-path consumed-code manifest, a prepared binding, or authorization.
++
++## Exact component ancestry
++
++Base: reviewed **`772c38c3a428acedebb0ba3b1bef37f2777a0f35`**. Its recent ancestry is `d99b1f8 -> 3e15b49 -> 6ed59e2 -> 544bcb0 -> 772c38c`; d99 includes v3/collective fix `981489d`. This preserves resource profiling, paired-input preflight, the shared `validate_paired_batch` extraction and final combined caller integration.
++
++Ordered source cherry-picks (original -> integrated):
++
++| Original | Integrated | Component |
++|---|---|---|
++| eefe5b5 | 47095c8 | scoring/bootstrap/windows/adapters |
++| 2276fcb | 530bb2d | count invariants/provenance |
++| 1a9253d | 1b42b99 | raw-GFF count producer |
++| 64b6d5b | 62c130b | producer implementation/init/config checks |
++| 0f9f777 | e22b660 | COMPLETE panel preparation |
++| 668299a | d2fd5b0 | panel decoder/350 transport |
++| e6950b7 | ec5445b | COMPLETE consumption/atomic publication/runtime gate |
++| 6366d8a | 7d8ff09 | completed wrapper/project applicability/HF scaffolding |
++
++Only conflict: `notes/TRACK_B_RECOVERY_REPORT.md` modify/delete in 2276fcb, because the report did not exist in A. Retained the task commit's report. **No code conflict or semantic conflict resolution.** No separate report-only cherry-picks, a4e8808, old f4f1690 duplicate, environment files, main dirty files or untracked documents were imported.
++
++## Integration correction and trace
++
++`revision/scripts/mvp/mvp_decode_runtime.py:19-41` now explicitly supports the reviewed772 handshake **only**, with these actual `git show 772c38c:<path>` SHA256 values:
++
++| File | SHA256 |
++|---|---|
++| real_probes.py | a40b46b3e2df1f5a80a4357d06c0e77bf1cdedd66c0fd22582df7de0541bbc58 |
++| run_bounded.py | 8b2f4042e03732c16d633fb66444b1b91e87cef54d3c696104775beebf19a932 |
++| make_launch_readiness.py | 73728aee67611575448722cb4180062917ee0c86330749ff1ca648346e75a6d5 |
++
++No receipt-selected code authority or gate-disable option was introduced. All three current integrated files are byte-identical to772. Resource module hash is `4e7e598b2e0df21bef8d47636781b79ce9f8b8a846632039baaa316dd69fc4f6`; it remains in the real seven-file tooling manifest (`make_launch_readiness.py:102-106`). Generation need not claim that it imported resource code: resource is tooling-bound, and any actually declared import is also rehashed.
++
++The deep dependency trace found one additional concrete blocker: `mvp_produce_counts.py:18` imports `mvp_bootstrap.validate_paired_record` before decoder runtime preflight. This newly added project file was neither imported by A's generation probe nor in the closed decoder audit. Added **only** `src/transgenic/evidence/mvp_bootstrap.py` to `DECODER_ONLY`; did not exempt a directory or exempt model implementation. A regression failed on that omission before the fix. This addition changes the operator pin above, not bootstrap math.
++
++Actual producer/consumer interfaces traced:
++
++- `real_probes.py:655-688` inventories executable/import bytes and immutable asset roots, validates the exact consumed-code manifest, emits nested runtime versions and mode/device/real-runtime/generation results, runner binding, initialization/tile/assets digests and wall time. `run_bounded` is imported **after** that inventory, so absence of this import is legitimate. Its reviewed sibling bytes remain mandatory in the decoder.
++- `run_bounded.py:145-199` verifies actual prepared tooling, canonical binding and command digests, bounds a real subprocess, validates measured identity/checks, writes `generation_cache_parity.json`, then `.DONE` with receipt SHA256 plus newline. The decoder's `completed_measurement` checks the official wrapper, integer schema/exit status, p3 name, true pass, false timeout, null signal, matching nested binding, independent receipt digest and DONE; FAILED sibling/raw measurement are rejected. It does not pretend that unused diagnostic fields (e.g. elapsed time/allocation label) are execution attestation.
++- `mvp_decode_runtime.py:70-89,112-225` retains every declared import rehash, exact relative-root applicability for project code, pre-load model/config/tokenizer/encoder-init imports, probe identity precedence over decoder audit, fixed SIF/versions/offline/cache pins, exact-path dynamic-cache closure and narrowly verified empty HF initializer scaffolding. Numerical project code cannot be admitted solely by the decoder pin. Same-path original imports and caches must remain readable. The inherited identity-schema Python equality weakness noted by the GPU reviewer was not changed; no new strict-schema claim is made.
++- `mvp_decode_panel.py:88-185` still verifies runtime before construction, after each model load, and before atomic final publication. CUDA device/allocation is mandatory operationally. COMPLETE panel, serialized final-temp recheck and no-replacement semantics remain unchanged. Post-link cleanup failure can leave a complete final name; no filesystem crash-durability claim.
++
++## One training/probe/evaluation source closure
++
++`mvp_cli_runtime._expected_code_files` (`146-172`) recursively includes **all** `src/transgenic/*.py` plus the MVP training entrypoint. Consequently the integrated manifest adds `mvp_bootstrap.py`, `mvp_windows.py`, and `mvp_decode.py`, even where training does not import them. No static old-A manifest may be reused. `make_launch_readiness._consumed_code_manifest` (`186-193`) uses that exact helper. Probe setup/final recheck and production launch consume it; `mvp_produce_counts.verify_training_code` (`73-109`) independently enforces the identical set at the bound training root. Revision-script decoder orchestration is separately covered by the explicit operator pin and decoder code/audit records, not falsely described as part of the training Python-package set.
++
++New CPU tests exercise the real fresh manifest validator and the real finalizer-to-scorer fixture against this integrated closure, reject omission of new files, and prove future **manifest staging mtimes** do not alter content identity. They do not fabricate future training runs or bypass publication metadata. Existing 350-output integration covers actual finalizer/loaders/rasterizer/panel/transport/scorer with disclosed synthetic remote model/reference/generation/GFFCompare substitutions.
++
++Byte comparison of **every pre-existing772 tracked file** under `src/transgenic`, the MVP entrypoint, `configs`, and `revision/scripts/mvp` passed. In particular model/config/tokenizer, encoder-init, weights-only/B5 initialization, full training/finalizer/runtime, paired metric validator and metric arithmetic are unchanged. The finalizer/scorer's reviewed semantic reconstruction therefore remains on the same implementation bytes. No protocol change: v3, **8192 total tokens**, beam2, no sampling, 50 loci and **350 outputs**, three trained off/on pairs plus seed123 off baseline, approved bootstrap policy. No HiFi or HSP policy selection, structural decision, coverage/withholding decision, or scientific approval.
++
++## Verification and honest failures
++
++CPU Python3.12.2, Torch2.6.0, Transformers4.46.3, Accelerate0.34.2, DuckDB1.5.5; **not the SIF runtime**. External dependencies only. No inner test deadline was modified.
++
++1. Red tests before correction: real772 wrapper fixture rejected old d99 readiness hash; imported bootstrap missing from decoder audit. Both observed failing.
++2. Handshake + combined GPU integration: **43 passed, 1 skipped in32.77s**.
++3. Focused decoder/runtime/panel/scorer/track/source integration: **191 passed, 1 skipped in420.43s**. Log `/tmp/mvp-final-source-focused.log`.
++4. Attempted entire `tests revision/scripts/tests` with outer timeout3600s: **exit139 / segmentation fault**, after several failures, at approximately22% of collected tests; stack in `mvp_decode_panel.py:141` in the350-row CPU fixture. Log `/tmp/mvp-final-source-full-cpu.log`. No complete result count and no claim this full-repository suite passes. Native-crash cause remains undetermined; the same decoder tests passed in focused and scoped reruns.
++5. Complete scoped MVP/runtime/weights/B5/GSF/panel run with timeout3600s initially finished **41 failed, 558 passed, 1 skipped, 64 subtests passed in1039.60s**. Log `/tmp/mvp-final-source-mvp-cpu.log`. Investigated child failures: existing tests hard-code the base Python/torchrun and overwrite PYTHONPATH to `.testdeps`, losing the external Accelerate install; psutil was also missing. A first external-venv-only attempt did not fix those hard-coded children (4 failed/1 passed). No source changes were made for these environment failures.
++6. Created external `/tmp/mvp-final-source-env` with system packages plus matching Accelerate0.34.2/DuckDB1.5.5 and psutil7.2.2. An ignored local `.testdeps` directory links these external packages for the unchanged hard-coded child harnesses. A diagnostic five-test rerun passed in52.37s (`/tmp/mvp-final-env-check.log`).
++7. Same complete scoped suite, unchanged source/deadlines, corrected dependency visibility: **599 passed, 1 skipped, 64 subtests passed in1105.48s**. Log `/tmp/mvp-final-source-mvp-cpu-retry.log`. Includes real CPU Gloo ranks1/2/4, literal four-rank250x24 budget, collective failures, paired finalizer, GPU caller integration and decoder350 transport.
++
++Final scoped command (outer tool timeout3600s):
++
++```sh
++OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
++PYTHONPATH=.testdeps:src:revision/scripts/mvp:/tmp/mvp-decoder-resumed-testdeps:/tmp/b6-trackb-testdeps \
++/home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q -rs --tb=short \
++  tests/test_mvp*.py tests/test_weights_init.py tests/test_b5_runtime.py \
++  tests/test_gsf*.py revision/scripts/tests/test_mvp*.py --durations=20
++```
++
++The skipped test is the real dynamic-loader contract under pinned Transformers4.57.6, unavailable locally. Installed4.46.3 dynamic import/scaffolding tests run successfully; they do not establish4.57.6 behavior. The real bounded-publication fixture extracts actual772 runner/probe/readiness/resource source and all seven tooling files from Git. It runs actual tooling validation, real child execution, measurement validation and publication/DONE. **Only allocation and measurement are synthetic CPU substitutions**, explicitly labeled; no fake operational receipt is committed. Negatives retain old d99 hashes for each handshake component, arbitrary mismatches, mutation of absent-from-inventory late runner, declared-but-unloaded modules, relocated changed model/config/tokenizer/init, unknown project files, operator pin and completion fields.
++
++## Operator export and fresh-binding recipe (not executed)
++
++After independent review, export **one** integrated source to one retained canonical checkout for training, probes and evaluation. Do not overlay it with old branch files or generate manifests before all source files are fixed. Retain Git objects needed by frozen-reference authority; a source archive alone is insufficient for those checks.
++
++```sh
++# In the reviewed isolated branch, for offline transfer only:
++git archive --format=tar --output=/tmp/mvp-final-source-20260916.tar \
++  362eb899d8d43164ec1e0fb0f3b174ead9b1ba40
++# Recompute the operator pin from reviewed code (never from a supplied receipt):
++PYTHONPATH=src:revision/scripts/mvp python -c 'import hashlib,json; import mvp_decode_runtime as r; m={p:hashlib.sha256((r.ROOT/p).read_bytes()).hexdigest() for p in r.DECODER_ONLY}; print(hashlib.sha256((json.dumps(m,sort_keys=True,separators=(",",":"))+"\n").encode()).hexdigest())'
++```
++
++In the intended retained canonical checkout **inside the approved SIF**, regenerate the absolute consumed-code/package manifest through the existing prepare workflow (`make_launch_readiness.py`), seven-file tooling identity, immutable input/source/cache/SIF identities and seed-specific prepared bindings. Do not substitute the relative comparison pin above for these manifests. Existing prepare must still validate accepted candidate artifacts and exact approved recipe. Re-audit original checkpoint sidecars and both pinned offline cache layouts; preserve original declared module-cache/import paths through decode. Do not reuse old receipts, old v2/d99 manifests, or the d99 queued P1 outcome for this source.
++
++Runtime request requires independently reviewed expected receipt digest, actual SIF path/digest, and the new decoder pin above. Receipt must be the **fresh completed** `generation_cache_parity.json` plus retained matching `.DONE`, not `measurement.json`; device must be CUDA. Generate request/export after review, not by copying identities from untrusted receipt content. Same source files must remain byte-stable through all probes, training and decode. New root paths, package versions or source changes require fresh bindings; code changes also require a new decoder pin and review.
++
++Fresh P1 and **all six readiness gates** remain required before finetuning: real tokenizer, real Hyena step0 all tiers, generation-cache parity, native bf16/Inductor, four-rank smoke, and resource budget. Resource execution additionally requires prospective controller authorization and allocation-wide accounting including prior attempts/startup/verification/teardown inside the18000s cap. Partial profiling is not readiness. No new submission is authorized here.
++
++## Remaining actual SIF facts
++
++Deployment pins remain SIF SHA256 `1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6`, Torch `2.14.0a0+4fdf77b940.nv26.08`, CUDA13.4, Transformers4.57.6, Accelerate1.15.0, Hyena revision `0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446`. These are **required pins, not newly observed runtime facts**. Actual SIF CUDA/bf16/Inductor/NCCL, real Hyena gradients and pinned-loader module closure, constrained8192/cache/EST decode, complete real three-seed training, real350 outputs, GFFCompare0.12.6 with frozen reference/evidence and resource feasibility remain unverified by this task. A16-new-token generation probe does not certify8192 constrained generation. Final independent review, six-gate readiness and scientific decisions remain separate HOLD conditions.
+diff --git a/revision/scripts/mvp/mvp_decode_runtime.py b/revision/scripts/mvp/mvp_decode_runtime.py
+index c532c01..88f7dce 100644
+--- a/revision/scripts/mvp/mvp_decode_runtime.py
++++ b/revision/scripts/mvp/mvp_decode_runtime.py
+@@ -10,31 +10,33 @@ from pathlib import Path
+ import sys
+ 
+ from transgenic.evidence import mvp_decode as d
+ 
+ COMMIT = '0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446'
+ SIF = '1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6'
+ VERSIONS = dict(torch='2.14.0a0+4fdf77b940.nv26.08', cuda='13.4', transformers='4.57.6', accelerate='1.15.0')
+ ROOT = Path(__file__).resolve().parents[3]
+-# Reviewed fixed-A d99b1f8 Git bytes, NOT receipt-selected executable hashes.
++# Only reviewed GPU integration 772c38c3a428acedebb0ba3b1bef37f2777a0f35.
++# Explicit Git-byte authority, NOT receipt-selected hashes; old d99 is unsupported.
+ PROBE_CODE = {
+-    'real_probes.py': '2c75dc4b31752fe39d4fa4ad7550b53ac735df1aafac89e6d307e94810ba5f3c',
+-    'run_bounded.py': '307f2ce9df0c7d4fb0c06b1ffe3149da77ae26c987c4b4061e8e63b4bb7ba867',
+-    'make_launch_readiness.py': 'ee303a72a079b02ce1d1b3fe1d24a2cb32f51f214baea129bc19f504c484a9b3',
++    'real_probes.py': 'a40b46b3e2df1f5a80a4357d06c0e77bf1cdedd66c0fd22582df7de0541bbc58',
++    'run_bounded.py': '8b2f4042e03732c16d633fb66444b1b91e87cef54d3c696104775beebf19a932',
++    'make_launch_readiness.py': '73728aee67611575448722cb4180062917ee0c86330749ff1ca648346e75a6d5',
+ }
+ # Decoder orchestration/grammar/transport, not A's numerical model implementation.
+ # Exact closed boundary: no directory exemptions; independently operator-pinned.
+ DECODER_ONLY = (
+     'revision/scripts/mvp/mvp_decode_panel.py',
+     'revision/scripts/mvp/mvp_decode_runtime.py',
+     'revision/scripts/mvp/mvp_verify_panel_inputs.py',
+     'revision/scripts/mvp/mvp_prepare_panel_inputs.py',
+     'revision/scripts/mvp/mvp_produce_counts.py',
+     'src/transgenic/evidence/mvp_decode.py',
++    'src/transgenic/evidence/mvp_bootstrap.py',
+     'src/transgenic/evidence/mvp_windows.py',
+     'src/transgenic/evidence/mvp_tracks.py',
+     'src/transgenic/model/constrained_decoding.py',
+     'src/transgenic/utils/gsf.py',
+     'src/transgenic/utils/gsf_contract.py',
+     'src/transgenic/utils/gsf_grammar.py',
+ )
+ 
+diff --git a/tests/test_mvp_decoder_runtime.py b/tests/test_mvp_decoder_runtime.py
+index 48c5f7a..c26e72e 100644
+--- a/tests/test_mvp_decoder_runtime.py
++++ b/tests/test_mvp_decoder_runtime.py
+@@ -19,35 +19,40 @@ def sha(path):
+ 
+ def dump(path, value):
+     path.write_text(json.dumps(value))
+     return path
+ 
+ 
+ @pytest.fixture
+ def bounded(tmp_path, monkeypatch):
+-    """Execute real d99b1f8 runner publication with openly synthetic measurement."""
++    """Real reviewed772 runner/tooling; only measurement/allocation are synthetic."""
+     modules = {}
+     authority = tmp_path / 'authority/revision/scripts/mvp'
+     authority.mkdir(parents=True)
+-    for name in ('make_launch_readiness', 'real_probes', 'run_bounded'):
++    for filename in ('make_launch_readiness.py', 'real_probes.py', 'run_bounded.py',
++                     'resource_probe.py', 'stage_checkpoint.py', 'run_training.py', 'accelerate_mvp.json'):
++        (authority / filename).write_bytes(subprocess.check_output(['git', 'show',
++            '772c38c:revision/scripts/mvp/' + filename], cwd=r.ROOT))
++    for name in ('make_launch_readiness', 'real_probes', 'resource_probe', 'run_bounded'):
+         path = authority / (name + '.py')
+-        path.write_bytes(subprocess.check_output(['git', 'show',
+-            'd99b1f8:revision/scripts/mvp/' + path.name], cwd=r.ROOT))
+-        assert sha(path) == r.PROBE_CODE[path.name]
++        if path.name in r.PROBE_CODE:
++            assert sha(path) == r.PROBE_CODE[path.name]
+         spec = importlib.util.spec_from_file_location(name, path)
+         module = importlib.util.module_from_spec(spec)
+         monkeypatch.setitem(sys.modules, name, module)
+         spec.loader.exec_module(module)
+         modules[name] = module
+     runner = modules['run_bounded']
+-    # Allocation/tooling are CPU fixture substitutions, not operational evidence.
++    # Allocation and measurement are CPU substitutions, NOT operational evidence.
++    # Tooling validation is genuine, including resource_probe and all seven files.
+     monkeypatch.setattr(runner, 'require_allocation', lambda: 'CPU_FIXTURE_NO_ALLOCATION')
+-    monkeypatch.setattr(runner, 'tooling_identity', lambda: {'fixture': True})
+-    bindings = {'tooling': {'fixture': True}}
++    bindings = {'tooling': runner.tooling_identity()}
++    assert len(bindings['tooling']) == 7
++    assert str(authority / 'resource_probe.py') in bindings['tooling']
+     binding_sha = hashlib.sha256(runner._canonical_bytes(bindings)).hexdigest()
+     bindings_path = dump(tmp_path / 'bindings.json', dict(bindings=bindings, bindings_sha256=binding_sha))
+     assets = tmp_path / 'assets'; assets.mkdir(); (assets / 'fixture.txt').write_text('CPU FIXTURE')
+     measurement = dict(mode='generation_cache_parity', device='cuda', real_runtime=True,
+         fixture='SYNTHETIC_CPU_NOT_GPU_EVIDENCE', cached_uncached_equal=True, evidence_off_equal=True,
+         nonzero_projection=True, reorder_indices_sha256=['fixture'], runtime={'versions': r.VERSIONS},
+         probe_identity=dict(schema_version=1, probe_path=modules['real_probes'].__file__,
+             imports={m.__file__: sha(m.__file__) for n,m in modules.items() if n != 'run_bounded'},
+@@ -179,16 +184,33 @@ def test_installed_transformers_dynamic_import(tmp_path, monkeypatch):
+ 
+ def test_pinned_transformers_4576_loader_contract(tmp_path, monkeypatch):
+     import transformers
+     if transformers.__version__ != '4.57.6':
+         pytest.skip('pinned 4.57.6 not installed; CPU 4.46.3 test is not SIF validation')
+     test_installed_transformers_dynamic_import(tmp_path, monkeypatch)
+ 
+ 
++@pytest.mark.parametrize('name', list(r.PROBE_CODE))
++def test_old_d99_handshake_rejected(tmp_path, name):
++    probe = tmp_path / 'revision/scripts/mvp/real_probes.py'
++    imports = {str(probe.with_name(n)): h for n,h in r.PROBE_CODE.items()}
++    imports[str(probe.with_name(name))] = hashlib.sha256(subprocess.check_output(
++        ['git', 'show', 'd99b1f8:revision/scripts/mvp/' + name], cwd=r.ROOT)).hexdigest()
++    with pytest.raises(ValueError, match='unreviewed probe/handshake'):
++        r.project_closure({'probe_path': str(probe), 'imports': imports}, {})
++
++
++def test_bootstrap_is_explicit_decoder_dependency():
++    # Producer imports this new numerical-count validator before runtime preflight.
++    import mvp_produce_counts as producer
++    module = sys.modules[producer.validate_paired_record.__module__]
++    assert str(Path(module.__file__).resolve().relative_to(r.ROOT)) in r.DECODER_ONLY
++
++
+ def test_cpu_device_refused():
+     with pytest.raises(ValueError, match='operational CUDA'): r.require_cuda_device('cpu')
+ 
+ 
+ def test_unknown_project_file_not_decoder_audited(tmp_path, monkeypatch):
+     file = tmp_path / 'unknown.py'; file.write_text('x=1')
+     monkeypatch.setattr(r, 'ROOT', tmp_path)
+     monkeypatch.setattr(r, 'sys', SimpleNamespace(modules={'unknown': SimpleNamespace(__file__=str(file))}))
+diff --git a/tests/test_mvp_final_source_integration.py b/tests/test_mvp_final_source_integration.py
+new file mode 100644
+index 0000000..2b022c6
+--- /dev/null
++++ b/tests/test_mvp_final_source_integration.py
+@@ -0,0 +1,54 @@
++"""One integrated source, CPU-only closure/semantic regressions, not readiness."""
++import json
++import os
++from pathlib import Path
++import subprocess
++
++import pytest
++
++from test_mvp_score_producer import ROOT, finalized_fixture, p
++
++
++def test_reviewed_a_implementation_bytes_unchanged():
++    # Includes paired metric validator/math, v3 dataset runtime, finalizer, model,
++    # config/tokenizer, B5 initialization, probes/resource/runner and recipes.
++    paths = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', '772c38c',
++        'src/transgenic', 'train/train_HyenaTransgenic_MVP.py', 'configs',
++        'revision/scripts/mvp'], cwd=ROOT, text=True).splitlines()
++    for relative in paths:
++        expected = subprocess.check_output(['git', 'show', '772c38c:' + relative], cwd=ROOT)
++        assert (ROOT / relative).read_bytes() == expected, relative
++
++
++def test_fresh_manifest_includes_decoder_and_training_closure(tmp_path):
++    from make_launch_readiness import _consumed_code_manifest
++    from transgenic.training.mvp_cli_runtime import _expected_code_files, _manifest_files
++    source = _consumed_code_manifest()
++    added = {'src/transgenic/evidence/' + name for name in
++             ('mvp_bootstrap.py', 'mvp_decode.py', 'mvp_windows.py')}
++    assert {str(ROOT / name) for name in added} <= set(source['files'])
++    assert set(source['files']) == {str(path) for path in _expected_code_files()}
++    manifest = tmp_path / 'fresh-code.json'
++    manifest.write_text(json.dumps(source))
++    _manifest_files(manifest)
++    # Identity is content-based; future staging mtimes must not change it.
++    os.utime(manifest, (2000000000, 2000000000))
++    _manifest_files(manifest)
++    del source['files'][str(ROOT / 'src/transgenic/evidence/mvp_decode.py')]
++    manifest.write_text(json.dumps(source))
++    with pytest.raises(ValueError, match='exact executed source set'):
++        _manifest_files(manifest)
++
++
++def test_finalizer_and_scorer_share_integrated_training_closure(tmp_path):
++    final, hashes, code = finalized_fixture(tmp_path)
++    verified = p.verify_final(final, 1, [1], hashes, code)
++    assert str(ROOT / 'src/transgenic/evidence/mvp_decode.py') in {
++        record['path'] for record in verified['code_files']}
++    os.utime(code, (2000000000, 2000000000))
++    assert p.verify_final(final, 1, [1], hashes, code) == verified
++    source = json.loads(code.read_text())
++    metadata = json.loads((final / 'metadata.json').read_text())
++    del source['files'][str(ROOT / 'src/transgenic/evidence/mvp_bootstrap.py')]
++    with pytest.raises(ValueError, match='exact bound training source closure'):
++        p.verify_training_code(source, metadata)

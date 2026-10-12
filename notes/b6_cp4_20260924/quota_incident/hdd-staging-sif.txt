@@ -1,0 +1,251 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+/work/hdd/bilv/wcyim/transgenic/b6-io-fix-20260924.tar.gz: OK
+  lcm_layout_gen:    0
+  lcm_mirror_count:  1
+  lcm_entry_count:   3
+    lcme_id:             N/A
+    lcme_mirror_id:      N/A
+    lcme_flags:          0
+    lcme_extent.e_start: 0
+    lcme_extent.e_end:   16777216
+      stripe_count:  1       stripe_size:   1048576       pattern:       raid0       stripe_offset: -1       pool:          ddn_hdd
+
+    lcme_id:             N/A
+    lcme_mirror_id:      N/A
+    lcme_flags:          0
+    lcme_extent.e_start: 16777216
+    lcme_extent.e_end:   4294967296
+      stripe_count:  4       stripe_size:   1048576       pattern:       raid0       stripe_offset: -1       pool:          ddn_hdd
+
+    lcme_id:             N/A
+    lcme_mirror_id:      N/A
+    lcme_flags:          0
+    lcme_extent.e_start: 4294967296
+    lcme_extent.e_end:   EOF
+      stripe_count:  -1       stripe_size:   1048576       pattern:       raid0       stripe_offset: -1       pool:          ddn_hdd
+
+{"filesystem_available_bytes": 1021544456192, "pool": "ddn_hdd", "project_id": 22169, "quota_remaining_bytes": 1073355157504, "required_bytes": 107374182400, "results_dir": "/work/hdd/bilv/wcyim/transgenic/runs/b6_int4"}
+FFFFFFF.............                                                     [100%]
+=================================== FAILURES ===================================
+____ test_checkpoint_failure_reaches_all_ranks_without_publication[weights] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache0')
+failure = 'weights'
+
+    @pytest.mark.parametrize("failure", ["weights", "state", "grads", "latest_state", "publish", "identity", "preserve_step"])
+    def test_checkpoint_failure_reaches_all_ranks_without_publication(tmp_path, failure):
+        mp.start_processes(_worker, args=(_free_port(), str(tmp_path), failure), nprocs=2,
+                           join=True, start_method="spawn")
+        records = [json.loads((tmp_path / f"rank{rank}.json").read_text()) for rank in (0, 1)]
+        expected = "refusing to replace published step checkpoint" if failure == "preserve_step" else "injected EDQUOT " + failure
+        for record in records:
+            assert expected in (record["error"] or ""), records
+>           assert record["collective_after_failure"], records
+E           AssertionError: [{'error': 'B6 checkpoint I/O failed: [Errno 122] injected EDQUOT weights', 'collective_after_failure': False}, {'error': None, 'collective_after_failure': False}]
+E           assert False
+
+tests/test_b6_checkpoint_io.py:80: AssertionError
+----------------------------- Captured stderr call -----------------------------
+W0925 00:54:07.088000 1562236 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:07.088000 1562237 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:07.133000 1562237 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:07.133000 1562236 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (0) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (1) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+[RANK 0] Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+_____ test_checkpoint_failure_reaches_all_ranks_without_publication[state] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache1')
+failure = 'state'
+
+    @pytest.mark.parametrize("failure", ["weights", "state", "grads", "latest_state", "publish", "identity", "preserve_step"])
+    def test_checkpoint_failure_reaches_all_ranks_without_publication(tmp_path, failure):
+        mp.start_processes(_worker, args=(_free_port(), str(tmp_path), failure), nprocs=2,
+                           join=True, start_method="spawn")
+        records = [json.loads((tmp_path / f"rank{rank}.json").read_text()) for rank in (0, 1)]
+        expected = "refusing to replace published step checkpoint" if failure == "preserve_step" else "injected EDQUOT " + failure
+        for record in records:
+>           assert expected in (record["error"] or ""), records
+E           AssertionError: [{'error': None, 'collective_after_failure': False}, {'error': "B6 checkpoint I/O failed: [Errno 2] No such file or di.../pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache1/run/run_config_b6.json'", 'collective_after_failure': False}]
+E           assert 'injected EDQUOT state' in ((None or ''))
+
+tests/test_b6_checkpoint_io.py:79: AssertionError
+----------------------------- Captured stderr call -----------------------------
+W0925 00:54:13.782000 1564608 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:13.797000 1564609 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:13.818000 1564608 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:13.831000 1564609 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (0) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (1) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+[RANK 0] Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+_____ test_checkpoint_failure_reaches_all_ranks_without_publication[grads] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache2')
+failure = 'grads'
+
+    @pytest.mark.parametrize("failure", ["weights", "state", "grads", "latest_state", "publish", "identity", "preserve_step"])
+    def test_checkpoint_failure_reaches_all_ranks_without_publication(tmp_path, failure):
+        mp.start_processes(_worker, args=(_free_port(), str(tmp_path), failure), nprocs=2,
+                           join=True, start_method="spawn")
+        records = [json.loads((tmp_path / f"rank{rank}.json").read_text()) for rank in (0, 1)]
+        expected = "refusing to replace published step checkpoint" if failure == "preserve_step" else "injected EDQUOT " + failure
+        for record in records:
+>           assert expected in (record["error"] or ""), records
+E           AssertionError: [{'error': 'B6 checkpoint I/O failed: Parent directory /tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache2/r...': False}, {'error': 'B6 checkpoint I/O failed: [Errno 122] injected EDQUOT grads', 'collective_after_failure': False}]
+E           assert 'injected EDQUOT grads' in (('B6 checkpoint I/O failed: Parent directory /tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache2/run/epoch_01.tmp/accelerate_state does not exist.'))
+
+tests/test_b6_checkpoint_io.py:79: AssertionError
+----------------------------- Captured stderr call -----------------------------
+W0925 00:54:19.518000 1566135 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:19.519000 1566134 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:19.553000 1566135 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:19.554000 1566134 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (0) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (1) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+_ test_checkpoint_failure_reaches_all_ranks_without_publication[latest_state] __
+
+tmp_path = PosixPath('/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache3')
+failure = 'latest_state'
+
+    @pytest.mark.parametrize("failure", ["weights", "state", "grads", "latest_state", "publish", "identity", "preserve_step"])
+    def test_checkpoint_failure_reaches_all_ranks_without_publication(tmp_path, failure):
+        mp.start_processes(_worker, args=(_free_port(), str(tmp_path), failure), nprocs=2,
+                           join=True, start_method="spawn")
+        records = [json.loads((tmp_path / f"rank{rank}.json").read_text()) for rank in (0, 1)]
+        expected = "refusing to replace published step checkpoint" if failure == "preserve_step" else "injected EDQUOT " + failure
+        for record in records:
+>           assert expected in (record["error"] or ""), records
+E           AssertionError: [{'error': None, 'collective_after_failure': False}, {'error': 'B6 checkpoint I/O failed: [Errno 122] injected EDQUOT latest_state', 'collective_after_failure': False}]
+E           assert 'injected EDQUOT latest_state' in ((None or ''))
+
+tests/test_b6_checkpoint_io.py:79: AssertionError
+----------------------------- Captured stderr call -----------------------------
+W0925 00:54:24.915000 1567402 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:24.933000 1567401 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:24.949000 1567402 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:24.970000 1567401 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (1) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (0) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+____ test_checkpoint_failure_reaches_all_ranks_without_publication[publish] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache4')
+failure = 'publish'
+
+    @pytest.mark.parametrize("failure", ["weights", "state", "grads", "latest_state", "publish", "identity", "preserve_step"])
+    def test_checkpoint_failure_reaches_all_ranks_without_publication(tmp_path, failure):
+        mp.start_processes(_worker, args=(_free_port(), str(tmp_path), failure), nprocs=2,
+                           join=True, start_method="spawn")
+        records = [json.loads((tmp_path / f"rank{rank}.json").read_text()) for rank in (0, 1)]
+        expected = "refusing to replace published step checkpoint" if failure == "preserve_step" else "injected EDQUOT " + failure
+        for record in records:
+>           assert expected in (record["error"] or ""), records
+E           AssertionError: [{'error': "B6 checkpoint I/O failed: [Errno 2] No such file or directory: '/tmp/pytest-of-wcyim/pytest-0/test_checkpo...ache4/run/run_config_b6.json'", 'collective_after_failure': False}, {'error': None, 'collective_after_failure': False}]
+E           assert 'injected EDQUOT publish' in (("B6 checkpoint I/O failed: [Errno 2] No such file or directory: '/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure.../run/run_config_b6.json.tmp' -> '/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache4/run/run_config_b6.json'"))
+
+tests/test_b6_checkpoint_io.py:79: AssertionError
+----------------------------- Captured stderr call -----------------------------
+W0925 00:54:30.235000 1568846 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:30.238000 1568845 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:30.268000 1568846 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:30.274000 1568845 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (1) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (0) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+[RANK 0] Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+___ test_checkpoint_failure_reaches_all_ranks_without_publication[identity] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache5')
+failure = 'identity'
+
+    @pytest.mark.parametrize("failure", ["weights", "state", "grads", "latest_state", "publish", "identity", "preserve_step"])
+    def test_checkpoint_failure_reaches_all_ranks_without_publication(tmp_path, failure):
+        mp.start_processes(_worker, args=(_free_port(), str(tmp_path), failure), nprocs=2,
+                           join=True, start_method="spawn")
+        records = [json.loads((tmp_path / f"rank{rank}.json").read_text()) for rank in (0, 1)]
+        expected = "refusing to replace published step checkpoint" if failure == "preserve_step" else "injected EDQUOT " + failure
+        for record in records:
+            assert expected in (record["error"] or ""), records
+>           assert record["collective_after_failure"], records
+E           AssertionError: [{'error': 'B6 checkpoint I/O failed: [Errno 122] injected EDQUOT identity', 'collective_after_failure': False}, {'error': None, 'collective_after_failure': False}]
+E           assert False
+
+tests/test_b6_checkpoint_io.py:80: AssertionError
+----------------------------- Captured stderr call -----------------------------
+W0925 00:54:36.633000 1570400 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:36.634000 1570401 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:36.672000 1570400 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:36.672000 1570401 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (0) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (1) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+_ test_checkpoint_failure_reaches_all_ranks_without_publication[preserve_step] _
+
+tmp_path = PosixPath('/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache6')
+failure = 'preserve_step'
+
+    @pytest.mark.parametrize("failure", ["weights", "state", "grads", "latest_state", "publish", "identity", "preserve_step"])
+    def test_checkpoint_failure_reaches_all_ranks_without_publication(tmp_path, failure):
+        mp.start_processes(_worker, args=(_free_port(), str(tmp_path), failure), nprocs=2,
+                           join=True, start_method="spawn")
+        records = [json.loads((tmp_path / f"rank{rank}.json").read_text()) for rank in (0, 1)]
+        expected = "refusing to replace published step checkpoint" if failure == "preserve_step" else "injected EDQUOT " + failure
+        for record in records:
+>           assert expected in (record["error"] or ""), records
+E           AssertionError: [{'error': "B6 checkpoint I/O failed: [Errno 2] No such file or directory: '/tmp/pytest-of-wcyim/pytest-0/test_checkpo...int: /tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache6/run/step_00001', 'collective_after_failure': False}]
+E           assert 'refusing to replace published step checkpoint' in (("B6 checkpoint I/O failed: [Errno 2] No such file or directory: '/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure.../run/run_config_b6.json.tmp' -> '/tmp/pytest-of-wcyim/pytest-0/test_checkpoint_failure_reache6/run/run_config_b6.json'"))
+
+tests/test_b6_checkpoint_io.py:79: AssertionError
+----------------------------- Captured stderr call -----------------------------
+W0925 00:54:42.822000 1571665 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:42.823000 1571666 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:42.862000 1571666 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0925 00:54:42.862000 1571665 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (0) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:97: UserWarning: For MPI backend, world_size (2) and rank (1) are ignored since they are assigned by the MPI runtime.
+  func_return = func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+=========================== short test summary info ============================
+FAILED tests/test_b6_checkpoint_io.py::test_checkpoint_failure_reaches_all_ranks_without_publication[weights]
+FAILED tests/test_b6_checkpoint_io.py::test_checkpoint_failure_reaches_all_ranks_without_publication[state]
+FAILED tests/test_b6_checkpoint_io.py::test_checkpoint_failure_reaches_all_ranks_without_publication[grads]
+FAILED tests/test_b6_checkpoint_io.py::test_checkpoint_failure_reaches_all_ranks_without_publication[latest_state]
+FAILED tests/test_b6_checkpoint_io.py::test_checkpoint_failure_reaches_all_ranks_without_publication[publish]
+FAILED tests/test_b6_checkpoint_io.py::test_checkpoint_failure_reaches_all_ranks_without_publication[identity]
+FAILED tests/test_b6_checkpoint_io.py::test_checkpoint_failure_reaches_all_ranks_without_publication[preserve_step]
+7 failed, 13 passed in 46.86s

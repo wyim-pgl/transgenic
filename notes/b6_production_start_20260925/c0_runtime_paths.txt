@@ -1,0 +1,8 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+3.11.14 | packaged by conda-forge | (main, Oct 13 2025, 14:09:32) [GCC 14.3.0]
+('glibc', '2.41')
+/data/gpfs/home/wyim/.local/lib/python3.11/site-packages
+['', '/data/gpfs/home/wyim/micromamba/lib/python311.zip', '/data/gpfs/home/wyim/micromamba/lib/python3.11', '/data/gpfs/home/wyim/micromamba/lib/python3.11/lib-dynload', '/data/gpfs/home/wyim/.local/lib/python3.11/site-packages', '/data/gpfs/home/wyim/micromamba/lib/python3.11/site-packages']
+/data/gpfs/home/wyim/.local/lib/python3.11/site-packages/adbc_driver_duckdb

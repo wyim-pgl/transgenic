@@ -1,0 +1,95 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+observed 2026-09-16T21:21:22.199439-07:00
+roles_sha256 288390b0e75a07845159f93f6a07c0033e4980b9dfe862dc2d982cac1704e348
+[
+  {
+    "dataset": "ont/Athaliana_FLIC_PRJNA1087576",
+    "run": "SRR28341943",
+    "species": "Athaliana",
+    "genotype_stratum": "reference",
+    "instrument": "PromethION",
+    "data_type": "RNA-Seq",
+    "expected_files": "1",
+    "expected_reads": "6952504",
+    "source_checksum": "f7a2b67708e0f0ef454fe6ddc2156301",
+    "source_checksum_authority": "ENA_fastq_md5",
+    "local_fa_md5": "d802a86ae1673909ee21a0cd663c99ac",
+    "role": "b1_validation_only",
+    "basis": "A14: validation-only long reads",
+    "note": "Col-0"
+  },
+  {
+    "dataset": "ont/Athaliana_FLIC_PRJNA1087576",
+    "run": "SRR28341944",
+    "species": "Athaliana",
+    "genotype_stratum": "reference",
+    "instrument": "PromethION",
+    "data_type": "RNA-Seq",
+    "expected_files": "1",
+    "expected_reads": "10389060",
+    "source_checksum": "be06ca9413edae1f79f52f4db8876c88",
+    "source_checksum_authority": "ENA_fastq_md5",
+    "local_fa_md5": "7a9bca96833a99e0cebba8a1995f575e",
+    "role": "b1_validation_only",
+    "basis": "A14: validation-only long reads",
+    "note": "Col-0"
+  },
+  {
+    "dataset": "ont/Athaliana_FLIC_PRJNA1087576",
+    "run": "SRR28341945",
+    "species": "Athaliana",
+    "genotype_stratum": "reference",
+    "instrument": "PromethION",
+    "data_type": "RNA-Seq",
+    "expected_files": "1",
+    "expected_reads": "9459558",
+    "source_checksum": "641326eb33787079708d96728a8cd30c",
+    "source_checksum_authority": "ENA_fastq_md5",
+    "local_fa_md5": "414412803d96e3e58c9fc22172e0bbd4",
+    "role": "b1_validation_only",
+    "basis": "A14: validation-only long reads",
+    "note": "Col-0"
+  }
+]
+dataset_dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576 exists True
+small_directory_listing ['/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.fa.gz', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.md5', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/log', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.DONE', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.md5', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.fa.gz', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/filereport.tsv', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.md5', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.DONE', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.DONE']
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz 1915883586
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.md5 52
+receipt d802a86ae1673909ee21a0cd663c99ac  SRR28341943.fa.gz
+
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.DONE 0
+receipt 
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.source.md5 None
+dataset_dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576 exists True
+small_directory_listing ['/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.fa.gz', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.md5', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/log', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.DONE', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.md5', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.fa.gz', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/filereport.tsv', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.md5', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.DONE', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.DONE']
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.fa.gz 2980861262
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.md5 52
+receipt 7a9bca96833a99e0cebba8a1995f575e  SRR28341944.fa.gz
+
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.DONE 0
+receipt 
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.source.md5 None
+dataset_dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576 exists True
+small_directory_listing ['/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.fa.gz', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.md5', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/log', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.DONE', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.md5', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.fa.gz', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/filereport.tsv', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.md5', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.DONE', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341944.DONE']
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.fa.gz 2769421478
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.md5 52
+receipt 414412803d96e3e58c9fc22172e0bbd4  SRR28341945.fa.gz
+
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.DONE 0
+receipt 
+actual_file /data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341945.source.md5 None
+hifi_dir_candidates [('/data/gpfs/assoc/pgl/data/Transgenic/evidence/pacbio/Athaliana_PRJEB77203', False), ('/data/gpfs/assoc/pgl/data/Transgenic/evidence/hifi/Athaliana_PRJEB77203', False)]
+hifi_shallow_inventory ['Zmays_wang2020_zenodo2611319', 'Athaliana_zhang2023_PRJNA911826', 'Zmays_kinnex_hybrid_PRJNA1290227', 'Zmays_B73_ccs_PRJNA1470126', 'Zmays_wang2018_PRJEB22122']
+tool /data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2 True
+version 0 2.28-r1209
+
+tool /data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/samtools True
+version 0 samtools 1.3.1
+Using htslib 1.3.1
+Copyright (C) 2016 Genome Research Ltd.
+
+tool /data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/seqkit True
+version 0 seqkit v2.13.0
+

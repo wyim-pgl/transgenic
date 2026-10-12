@@ -1,0 +1,8 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T19:59:19-05:00
+1944304 Is   cl_syn       09:46 python3 -
+State:	I (idle)
+SigPnd:	0000000000000100
+ShdPnd:	0000000000004000

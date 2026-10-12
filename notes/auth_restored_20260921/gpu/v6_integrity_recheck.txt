@@ -1,0 +1,30 @@
+Raw capture 6 -- v6 preserved-evidence integrity re-check AFTER the v7 write.
+Executed 2026-09-21 08:37:14 PDT, same read-only pass as v7_verification.txt.
+Purpose: prove the v6 incident tree was not touched by the v7 staging.
+
+Format: path|sha256|size|mode|inode|mtime_epoch
+
+admission.py|6f75c8113ff37376b3c62d4ae6f9a52d58d9ebbbbef76151a49b92119f467fa4|27611|444|522420016499497495|1789692380
+authorization.example.json|25e75757eca9baed93522d73cb22cae9e0acfa0338ac5ef561b760e4dc4fec1f|2608|444|522420016499497496|1789692380
+build_release.py|06d5cab84d436de615ca681b69760c1b22eaab7f3ae9fd3339d1bc536f154049|5688|444|522420016499497497|1789692380
+code.candidate.tar|da161088fb401dbe87382685c1b5faadc17c7255d4a89f705fe1126ecc5bcec7|1873920|444|522420016499497498|1789692380
+controller_execution_scope.json|5566677068d0b22a9f1db7d0683c650e5bcc26f13d84c421aac1b8b7eb9c68aa|3332|444|522420016499497499|1789692380
+deploy.py|3eba7fa940c31f37f3bc7ea3d9229b8723fde62749d850759b1d062e587e1543|29149|444|522420016499497500|1789692380
+notes/b6_mvp_candidate_inventories_20260915.json|9f79019679bfdd25b0a2bdac7cae63d01fa6d874be03fa3ef3f81cfd0a880a98|859299|444|522420016499497502|1789692380
+notes/b6_mvp_candidate_receipts_20260915.json|73204a4ed98624b1567a5eb26fd6b2bbafbb597e0bd4b807685e8c703c807bac|11786|444|522420016499497503|1789692380
+notes/b6_mvp_technical_candidate_20260915.json|faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e|9832|444|522420016499497504|1789692380
+operator-pins.json|45bd57640d7c55ee7ce7b1f20ab48b58729f5e58b880c4608813b99356d28c72|11828|444|522420016499497505|1789692380
+p1.sbatch|f3b4dd15f3c589b7d329c311e537451a7ba087486c3d89cb74ce10a82288901a|2010|444|522420016499497506|1789692380
+release.json|64a547b8ba5f54e87c1985f278564a9ea9fc7c8f3af07f6b6afe3bdf17f4f7d4|25219|444|522420016499497507|1789692380
+release.sha256|e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855|0|660|522420016499497508|1789692380
+
+Comparison against the pre-write capture in staging_file_hashes.txt:
+- 13 files then, 13 files now -- identical set.
+- Every sha256 identical.
+- Every size identical.
+- Every mode identical, INCLUDING release.sha256 still 0 bytes at 0660.
+- Every inode identical (no file was replaced).
+- Every mtime identical (1789692380 = 2026-09-17 17:46:20 PDT).
+- source-manifest.json still absent, as found.
+=> v6 is byte-for-byte and metadata-for-metadata unchanged. Nothing was written,
+   chmod'd, moved, deleted or "tidied".

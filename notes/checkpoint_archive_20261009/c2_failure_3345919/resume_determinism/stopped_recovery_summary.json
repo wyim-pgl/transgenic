@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "epoch": 0,
+    "step": 6144,
+    "global_step": 256,
+    "pending_micro": 0,
+    "stopper": {
+      "best": null,
+      "best_epoch": null,
+      "bad_epochs": 0,
+      "patience": 3
+    },
+    "arm": "C2",
+    "seed": 123,
+    "stop_after_updates": 4099,
+    "identity_sha256": "aaf6dcfc6133ad82057b582bfc9a834f0ce5b9ed76d6556e0633db381358d89f"
+  },
+  "draws": {
+    "rank00.tsv": {
+      "original_count": 4800,
+      "recovery_count": 6144,
+      "overlap_equal": true,
+      "row5040": "184594\t0\tf63f6d60b8af5a7701de6b0bdb6c02cf2b167bc473a1b900620b1eb45b3d4eaa"
+    },
+    "rank01.tsv": {
+      "original_count": 4800,
+      "recovery_count": 6144,
+      "overlap_equal": true,
+      "row5040": "6686\t0\t17630f3ff73577975f01ebf03bfe2d847495cf3d6be29dd7bfe3577ba41ec6fa"
+    },
+    "rank02.tsv": {
+      "original_count": 4800,
+      "recovery_count": 6144,
+      "overlap_equal": true,
+      "row5040": "125812\t0\ta6225a5bf0e8e7441a3cac00374114dcb8140e48312e4e5b7426025f0a3365cc"
+    },
+    "rank03.tsv": {
+      "original_count": 6718,
+      "recovery_count": 6144,
+      "overlap_equal": true,
+      "row5040": "239768\t0\t8e4465c424df3976d851d3337240ab5b91933543dfd9434ee2c61666f6a63bb0"
+    }
+  },
+  "checkpoint_files": [
+    "meta.json",
+    "identity.json",
+    "accelerate_state/model.safetensors",
+    "accelerate_state/optimizer.bin",
+    "accelerate_state/random_states_3.pkl",
+    "accelerate_state/random_states_1.pkl",
+    "accelerate_state/random_states_2.pkl",
+    "accelerate_state/scheduler.bin",
+    "accelerate_state/random_states_0.pkl"
+  ]
+}

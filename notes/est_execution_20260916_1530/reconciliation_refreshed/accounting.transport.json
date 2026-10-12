@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "pronghorn",
+    "sacct -j 6163851,6164049,6163397 -P --format=JobID,State,ExitCode"
+  ],
+  "captured_at": "2026-09-17T01:57:55.218374+00:00",
+  "returncode": 0,
+  "started_at": "2026-09-17T01:57:54.854731+00:00",
+  "stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+}

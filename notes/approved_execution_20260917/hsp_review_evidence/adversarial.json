@@ -1,0 +1,8 @@
+{
+  "assertions_passed": 63,
+  "historical_case_statuses": {
+    "ELICITED": 132,
+    "NOT_ELICITED": 12
+  },
+  "historical_acceptance_policy": "UNRESOLVED"
+}

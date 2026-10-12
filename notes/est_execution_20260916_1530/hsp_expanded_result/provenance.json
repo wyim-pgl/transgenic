@@ -1,0 +1,13 @@
+{
+  "certified": false,
+  "diamond_sha256": "0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d",
+  "imports": {
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1541/expanded/code/revision/scripts/64_orthodb_filter.py": "32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1541/expanded/code/revision/scripts/evidence/est_blastx.py": "5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1541/expanded/code/revision/scripts/evidence/est_hsp_expanded.py": "aaa8348b4e5d47d43c065857e3bb06509f63086a6d2c79f35f93e88bc211b3e4"
+  },
+  "production_authorized": false,
+  "protein_sha256": "003f0978a1cc163500aa85e3021a49698f7ed460f631e829b4cd8bfc4589e7ad",
+  "query_sha256": "b34bcc4c6a6f60299f7557a74d2d7fd4a22a35d4a2f40d2709c78ea738dd46f6",
+  "version": "diamond version 2.1.24\ndiamond v2.1.24.178 (C) Max Planck Society for the Advancement of Science, Benjamin J. Buchfink, University of Tuebingen"
+}

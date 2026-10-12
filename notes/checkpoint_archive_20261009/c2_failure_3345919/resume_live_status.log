@@ -1,0 +1,50 @@
+3309786|b5-seed|PENDING|0:00|(Priority)|2026-10-12T15:40:00
+3309790|b5-seed|PENDING|0:00|(Dependency)|N/A
+3309789|b5-seed|PENDING|0:00|(Dependency)|N/A
+3309788|b5-seed|PENDING|0:00|(Dependency)|N/A
+3309787|b5-seed|PENDING|0:00|(Dependency)|N/A
+3345920|b6-wp5-pilot|PENDING|0:00|(JobHeldUser)|N/A
+3345918|b6-wp5-pilot|PENDING|0:00|(JobHeldUser)|N/A
+3345917|b6-wp5-pilot|PENDING|0:00|(JobHeldUser)|N/A
+3361386|c2-recovery-4gpu|RUNNING|1:29|gh106|2026-10-11T14:51:55
+
+/work/nvme/bilv/wcyim/transgenic/b6_prep_20260925/logs/c2-recovery-4gpu-3361386.out
+notes/c2_compile_recovery_20261011.md: OK
+revision/scripts/b6/diag_gpu_memory.py: OK
+revision/scripts/b6/wp5_pilot.sbatch: OK
+src/transgenic/training/b6_runtime.py: OK
+tests/test_b6_compile_recovery.py: OK
+tests/test_b6_compile_static.py: OK
+tests/test_b6_finalization.py: OK
+tests/test_b6_trainer.py: OK
+train/train_HyenaTransgenic_B6.py: OK
+validate_candidate.py: OK
+validate_candidate.sbatch: OK
+{"filesystem_available_bytes": 390106537984, "pool": "ddn_ssd", "project_id": 22169, "quota_remaining_bytes": 206736355328, "required_bytes": 107374182400, "results_dir": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2_recovery_20261011"}
+RECOVERY_PRECHECK_PASS update200 four-rank state and committed draw prefixes
+RECOVERY_START 2026-10-11T14:52:36-05:00 job 3361386 node gh106.hsn.cm.delta.internal.ncsa.edu
+/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2_recovery_20261011/recovery_train.log
+The following values were not passed to `accelerate launch` and had defaults used instead:
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+W1011 14:52:56.050000 3159260 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 14:52:56.050000 3159259 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 14:52:56.050000 3159261 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 14:52:56.050000 3159262 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 14:52:56.094000 3159260 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 14:52:56.094000 3159259 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 14:52:56.094000 3159262 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 14:52:56.094000 3159261 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+META {"epoch": 0, "step": 4800, "global_step": 200, "pending_micro": 0, "stopper": {"best": null, "best_epoch": null, "bad_epochs": 0, "patience": 3}, "arm": "C2", "seed": 123, "stop_after_updates": 4099, "identity_sha256": "60c3357d70e0d5316a2562e09bc47c2ef1a2c23f5ae6356bea034b8eb40aadd9"}
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

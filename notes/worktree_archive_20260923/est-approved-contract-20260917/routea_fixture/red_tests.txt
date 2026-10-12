@@ -1,0 +1,180 @@
+FFFFFFFF                                                                 [100%]
+=================================== FAILURES ===================================
+______________ test_fixture_carries_the_exact_retained_raw_trace _______________
+
+    def test_fixture_carries_the_exact_retained_raw_trace():
+>       f = api().load()
+            ^^^^^
+
+revision/scripts/tests/test_est_routea_fixture.py:43: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @lru_cache(None)
+    def api():
+>       assert PATH.exists(), 'route-A retained-trace fixture loader not implemented'
+E       AssertionError: route-A retained-trace fixture loader not implemented
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/est-approved-contract-20260917/revision/scripts/evidence/est_routea_fixture.py').exists
+
+revision/scripts/tests/test_est_routea_fixture.py:33: AssertionError
+______ test_recorded_digests_are_labelled_by_what_they_actually_identify _______
+
+    def test_recorded_digests_are_labelled_by_what_they_actually_identify():
+>       f = api().load()
+            ^^^^^
+
+revision/scripts/tests/test_est_routea_fixture.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @lru_cache(None)
+    def api():
+>       assert PATH.exists(), 'route-A retained-trace fixture loader not implemented'
+E       AssertionError: route-A retained-trace fixture loader not implemented
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/est-approved-contract-20260917/revision/scripts/evidence/est_routea_fixture.py').exists
+
+revision/scripts/tests/test_est_routea_fixture.py:33: AssertionError
+__________ test_fixture_is_not_certified_and_names_every_blocking_gap __________
+
+    def test_fixture_is_not_certified_and_names_every_blocking_gap():
+>       m = api()
+            ^^^^^
+
+revision/scripts/tests/test_est_routea_fixture.py:74: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @lru_cache(None)
+    def api():
+>       assert PATH.exists(), 'route-A retained-trace fixture loader not implemented'
+E       AssertionError: route-A retained-trace fixture loader not implemented
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/est-approved-contract-20260917/revision/scripts/evidence/est_routea_fixture.py').exists
+
+revision/scripts/tests/test_est_routea_fixture.py:33: AssertionError
+___________ test_observation_build_refuses_until_the_gaps_are_closed ___________
+
+    def test_observation_build_refuses_until_the_gaps_are_closed():
+>       m = api()
+            ^^^^^
+
+revision/scripts/tests/test_est_routea_fixture.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @lru_cache(None)
+    def api():
+>       assert PATH.exists(), 'route-A retained-trace fixture loader not implemented'
+E       AssertionError: route-A retained-trace fixture loader not implemented
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/est-approved-contract-20260917/revision/scripts/evidence/est_routea_fixture.py').exists
+
+revision/scripts/tests/test_est_routea_fixture.py:33: AssertionError
+_ test_refuses_md5_source_file_hash_and_raw_gff_phase_substitutions[substitution0] _
+
+substitution = {'reference_sha256': 'd8f77d532d8c87f314f6175146fa6728'}
+
+    @pytest.mark.parametrize('substitution', [
+        {'reference_sha256': 'd8f77d532d8c87f314f6175146fa6728'},
+        {'reference_sha256': 'e' * 64,
+         'protein_sha256': 'fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f'},
+        {'reference_sha256': 'e' * 64, 'protein_sha256': 'f' * 64, 'c0_from_gff_phase': True},
+    ])
+    def test_refuses_md5_source_file_hash_and_raw_gff_phase_substitutions(substitution):
+>       m = api()
+            ^^^^^
+
+revision/scripts/tests/test_est_routea_fixture.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @lru_cache(None)
+    def api():
+>       assert PATH.exists(), 'route-A retained-trace fixture loader not implemented'
+E       AssertionError: route-A retained-trace fixture loader not implemented
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/est-approved-contract-20260917/revision/scripts/evidence/est_routea_fixture.py').exists
+
+revision/scripts/tests/test_est_routea_fixture.py:33: AssertionError
+_ test_refuses_md5_source_file_hash_and_raw_gff_phase_substitutions[substitution1] _
+
+substitution = {'reference_sha256': 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', 'protein_sha256': 'fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f'}
+
+    @pytest.mark.parametrize('substitution', [
+        {'reference_sha256': 'd8f77d532d8c87f314f6175146fa6728'},
+        {'reference_sha256': 'e' * 64,
+         'protein_sha256': 'fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f'},
+        {'reference_sha256': 'e' * 64, 'protein_sha256': 'f' * 64, 'c0_from_gff_phase': True},
+    ])
+    def test_refuses_md5_source_file_hash_and_raw_gff_phase_substitutions(substitution):
+>       m = api()
+            ^^^^^
+
+revision/scripts/tests/test_est_routea_fixture.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @lru_cache(None)
+    def api():
+>       assert PATH.exists(), 'route-A retained-trace fixture loader not implemented'
+E       AssertionError: route-A retained-trace fixture loader not implemented
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/est-approved-contract-20260917/revision/scripts/evidence/est_routea_fixture.py').exists
+
+revision/scripts/tests/test_est_routea_fixture.py:33: AssertionError
+_ test_refuses_md5_source_file_hash_and_raw_gff_phase_substitutions[substitution2] _
+
+substitution = {'reference_sha256': 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', 'protein_sha256': 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', 'c0_from_gff_phase': True}
+
+    @pytest.mark.parametrize('substitution', [
+        {'reference_sha256': 'd8f77d532d8c87f314f6175146fa6728'},
+        {'reference_sha256': 'e' * 64,
+         'protein_sha256': 'fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f'},
+        {'reference_sha256': 'e' * 64, 'protein_sha256': 'f' * 64, 'c0_from_gff_phase': True},
+    ])
+    def test_refuses_md5_source_file_hash_and_raw_gff_phase_substitutions(substitution):
+>       m = api()
+            ^^^^^
+
+revision/scripts/tests/test_est_routea_fixture.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @lru_cache(None)
+    def api():
+>       assert PATH.exists(), 'route-A retained-trace fixture loader not implemented'
+E       AssertionError: route-A retained-trace fixture loader not implemented
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/est-approved-contract-20260917/revision/scripts/evidence/est_routea_fixture.py').exists
+
+revision/scripts/tests/test_est_routea_fixture.py:33: AssertionError
+______ test_closed_fixture_builds_a_valid_route_a_crosscheck_observation _______
+
+    def test_closed_fixture_builds_a_valid_route_a_crosscheck_observation():
+>       m = api()
+            ^^^^^
+
+revision/scripts/tests/test_est_routea_fixture.py:108: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @lru_cache(None)
+    def api():
+>       assert PATH.exists(), 'route-A retained-trace fixture loader not implemented'
+E       AssertionError: route-A retained-trace fixture loader not implemented
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/est-approved-contract-20260917/revision/scripts/evidence/est_routea_fixture.py').exists
+
+revision/scripts/tests/test_est_routea_fixture.py:33: AssertionError
+=========================== short test summary info ============================
+FAILED revision/scripts/tests/test_est_routea_fixture.py::test_fixture_carries_the_exact_retained_raw_trace
+FAILED revision/scripts/tests/test_est_routea_fixture.py::test_recorded_digests_are_labelled_by_what_they_actually_identify
+FAILED revision/scripts/tests/test_est_routea_fixture.py::test_fixture_is_not_certified_and_names_every_blocking_gap
+FAILED revision/scripts/tests/test_est_routea_fixture.py::test_observation_build_refuses_until_the_gaps_are_closed
+FAILED revision/scripts/tests/test_est_routea_fixture.py::test_refuses_md5_source_file_hash_and_raw_gff_phase_substitutions[substitution0]
+FAILED revision/scripts/tests/test_est_routea_fixture.py::test_refuses_md5_source_file_hash_and_raw_gff_phase_substitutions[substitution1]
+FAILED revision/scripts/tests/test_est_routea_fixture.py::test_refuses_md5_source_file_hash_and_raw_gff_phase_substitutions[substitution2]
+FAILED revision/scripts/tests/test_est_routea_fixture.py::test_closed_fixture_builds_a_valid_route_a_crosscheck_observation
+8 failed in 0.09s

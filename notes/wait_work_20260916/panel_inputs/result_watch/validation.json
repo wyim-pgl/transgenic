@@ -1,0 +1,53 @@
+{
+  "validation": "all metadata assertions passed; no array/DB reread",
+  "source_files_compared_to_reviewed_tar": 100,
+  "companion_files_compared": 3,
+  "loci": 50,
+  "selected_molecules_sum_over_windows_not_unique": 3443,
+  "selected_molecules_range": [
+    3,
+    398
+  ],
+  "biological_nonzero_sums_channels_0_to_6": [
+    34789,
+    52639,
+    71107,
+    138,
+    140,
+    193,
+    204
+  ],
+  "zero_biological_support_loci": [],
+  "availability_nonzero_sum_channel_7": 1536000,
+  "availability_range": [
+    30720,
+    30720
+  ],
+  "reference_compatible_loci": 0,
+  "parser": {
+    "genes": 0,
+    "ok": true,
+    "transcripts": 0
+  },
+  "errors": {
+    "ValueError": 50
+  },
+  "all_missing_panel_gene_errors": true,
+  "duplicate_ambiguous_loci": 0,
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "aug_seeds": [
+    20260915,
+    20260916,
+    20260917
+  ],
+  "seed_tracks_identical": true,
+  "packages": {
+    "duckdb": "1.5.5",
+    "numpy": "1.26.4",
+    "torch": "1.13.1+cpu"
+  }
+}

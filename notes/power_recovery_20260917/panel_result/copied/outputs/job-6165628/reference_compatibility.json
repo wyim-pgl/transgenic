@@ -1,0 +1,1565 @@
+{
+  "scope": "raw_reference_compatibility_observations_not_scoring",
+  "reference_identity": {
+    "commit": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16",
+    "manifest": "data/manifests/b5_species_v1.tsv",
+    "manifest_sha256": "3ca7a3b9a5793f62d25f503c93cfd7167eb17f7c5b90de7830e6a8777117f783",
+    "files": {
+      "fasta": {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+        "sha256": "63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973",
+        "size": 121183059
+      },
+      "gff": {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+        "sha256": "529510b60756c9a1ae5a590ec4097fd4b9773649c29e6a5543553118bb042c38",
+        "size": 60503119
+      }
+    }
+  },
+  "panel": {
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/protocols/b6_panels_v1.tsv",
+    "sha256": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243",
+    "size": 166414
+  },
+  "fasta_lengths": {
+    "Chr1": 30427671,
+    "Chr2": 19698289,
+    "Chr3": 23459830,
+    "Chr4": 18585056,
+    "Chr5": 26975502,
+    "ChrM": 366924,
+    "ChrC": 154478
+  },
+  "loci": [
+    {
+      "gene_id": "Ath014705",
+      "gene_id_original": "AT3G30300.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr3",
+        11921197,
+        11924574
+      ],
+      "window": [
+        "Chr3",
+        11907526,
+        11938246
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath022311",
+      "gene_id_original": "AT5G13190.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr5",
+        4204816,
+        4206405
+      ],
+      "window": [
+        "Chr5",
+        4190251,
+        4220971
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath003484",
+      "gene_id_original": "AT1G33060.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr1",
+        11975339,
+        11978521
+      ],
+      "window": [
+        "Chr1",
+        11961570,
+        11992290
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 2,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath012743",
+      "gene_id_original": "AT3G12290.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr3",
+        3919501,
+        3921519
+      ],
+      "window": [
+        "Chr3",
+        3905150,
+        3935870
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath024852",
+      "gene_id_original": "AT5G44000.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr5",
+        17702089,
+        17703963
+      ],
+      "window": [
+        "Chr5",
+        17687666,
+        17718386
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath009257",
+      "gene_id_original": "AT2G26900.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr2",
+        11474951,
+        11477944
+      ],
+      "window": [
+        "Chr2",
+        11461088,
+        11491808
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath009348",
+      "gene_id_original": "AT2G27740.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr2",
+        11822731,
+        11823732
+      ],
+      "window": [
+        "Chr2",
+        11807872,
+        11838592
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath009959",
+      "gene_id_original": "AT2G33450.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr2",
+        14173578,
+        14174533
+      ],
+      "window": [
+        "Chr2",
+        14158696,
+        14189416
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath026375",
+      "gene_id_original": "AT5G57900.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr5",
+        23449710,
+        23450933
+      ],
+      "window": [
+        "Chr5",
+        23434962,
+        23465682
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath025827",
+      "gene_id_original": "AT5G52920.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr5",
+        21463537,
+        21466880
+      ],
+      "window": [
+        "Chr5",
+        21449849,
+        21480569
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath020477",
+      "gene_id_original": "AT4G34270.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr4",
+        16403843,
+        16406240
+      ],
+      "window": [
+        "Chr4",
+        16389682,
+        16420402
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath017922",
+      "gene_id_original": "AT4G11280.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr4",
+        6864096,
+        6866116
+      ],
+      "window": [
+        "Chr4",
+        6849746,
+        6880466
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath007771",
+      "gene_id_original": "AT2G07050.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr2",
+        2924446,
+        2930672
+      ],
+      "window": [
+        "Chr2",
+        2912199,
+        2942919
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath015840",
+      "gene_id_original": "AT3G52800.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr3",
+        19569310,
+        19570682
+      ],
+      "window": [
+        "Chr3",
+        19554636,
+        19585356
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath019860",
+      "gene_id_original": "AT4G28630.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr4",
+        14138358,
+        14140958
+      ],
+      "window": [
+        "Chr4",
+        14124298,
+        14155018
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath022532",
+      "gene_id_original": "AT5G15360.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr5",
+        4987436,
+        4989182
+      ],
+      "window": [
+        "Chr5",
+        4972949,
+        5003669
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath003322",
+      "gene_id_original": "AT1G31410.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr1",
+        11246913,
+        11249359
+      ],
+      "window": [
+        "Chr1",
+        11232776,
+        11263496
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath014393",
+      "gene_id_original": "AT3G27060.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr3",
+        9979865,
+        9981295
+      ],
+      "window": [
+        "Chr3",
+        9965220,
+        9995940
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath012721",
+      "gene_id_original": "AT3G12090.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr3",
+        3852144,
+        3853720
+      ],
+      "window": [
+        "Chr3",
+        3837572,
+        3868292
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath016828",
+      "gene_id_original": "AT3G62170.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr3",
+        23016222,
+        23018509
+      ],
+      "window": [
+        "Chr3",
+        23002006,
+        23032726
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath010464",
+      "gene_id_original": "AT2G38140.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr2",
+        15980882,
+        15981612
+      ],
+      "window": [
+        "Chr2",
+        15965887,
+        15996607
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath007951",
+      "gene_id_original": "AT2G13510.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr2",
+        5630000,
+        5631107
+      ],
+      "window": [
+        "Chr2",
+        5615194,
+        5645914
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath013802",
+      "gene_id_original": "AT3G21770.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr3",
+        7673275,
+        7674839
+      ],
+      "window": [
+        "Chr3",
+        7658697,
+        7689417
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath021609",
+      "gene_id_original": "AT5G05820.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr5",
+        1751687,
+        1754178
+      ],
+      "window": [
+        "Chr5",
+        1737573,
+        1768293
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath022030",
+      "gene_id_original": "AT5G10130.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr5",
+        3171298,
+        3172528
+      ],
+      "window": [
+        "Chr5",
+        3156553,
+        3187273
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath011580",
+      "gene_id_original": "AT3G01330.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr3",
+        124378,
+        126835
+      ],
+      "window": [
+        "Chr3",
+        110247,
+        140967
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath013395",
+      "gene_id_original": "AT3G18050.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr3",
+        6180858,
+        6182854
+      ],
+      "window": [
+        "Chr3",
+        6166496,
+        6197216
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath008415",
+      "gene_id_original": "AT2G18900.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr2",
+        8188256,
+        8192489
+      ],
+      "window": [
+        "Chr2",
+        8175013,
+        8205733
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath013822",
+      "gene_id_original": "AT3G21950.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr3",
+        7734395,
+        7736394
+      ],
+      "window": [
+        "Chr3",
+        7720035,
+        7750755
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath004930",
+      "gene_id_original": "AT1G56553.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr1",
+        21189721,
+        21190175
+      ],
+      "window": [
+        "Chr1",
+        21174588,
+        21205308
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath004546",
+      "gene_id_original": "AT1G53025.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr1",
+        19756823,
+        19759623
+      ],
+      "window": [
+        "Chr1",
+        19742863,
+        19773583
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath022752",
+      "gene_id_original": "AT5G17440.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr5",
+        5749761,
+        5753643
+      ],
+      "window": [
+        "Chr5",
+        5736342,
+        5767062
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath004211",
+      "gene_id_original": "AT1G49750.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr1",
+        18410928,
+        18412801
+      ],
+      "window": [
+        "Chr1",
+        18396505,
+        18427225
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath011917",
+      "gene_id_original": "AT3G04410.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr3",
+        1168836,
+        1169205
+      ],
+      "window": [
+        "Chr3",
+        1153661,
+        1184381
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath011910",
+      "gene_id_original": "AT3G04340.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr3",
+        1146799,
+        1153341
+      ],
+      "window": [
+        "Chr3",
+        1134710,
+        1165430
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath002779",
+      "gene_id_original": "AT1G25580.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr1",
+        8996767,
+        8999860
+      ],
+      "window": [
+        "Chr1",
+        8982954,
+        9013674
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath017267",
+      "gene_id_original": "AT4G02540.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr4",
+        1117153,
+        1119817
+      ],
+      "window": [
+        "Chr4",
+        1103125,
+        1133845
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 2,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath017735",
+      "gene_id_original": "AT4G09550.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr4",
+        6039117,
+        6040215
+      ],
+      "window": [
+        "Chr4",
+        6024306,
+        6055026
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath008157",
+      "gene_id_original": "AT2G16440.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr2",
+        7126356,
+        7130685
+      ],
+      "window": [
+        "Chr2",
+        7113161,
+        7143881
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath003963",
+      "gene_id_original": "AT1G47280.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr1",
+        17332055,
+        17334406
+      ],
+      "window": [
+        "Chr1",
+        17317871,
+        17348591
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath019415",
+      "gene_id_original": "AT4G24560.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr4",
+        12679209,
+        12684939
+      ],
+      "window": [
+        "Chr4",
+        12666714,
+        12697434
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath023888",
+      "gene_id_original": "AT5G33290.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr5",
+        12558255,
+        12562020
+      ],
+      "window": [
+        "Chr5",
+        12544778,
+        12575498
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath018030",
+      "gene_id_original": "AT4G12330.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr4",
+        7317559,
+        7319739
+      ],
+      "window": [
+        "Chr4",
+        7303289,
+        7334009
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath016370",
+      "gene_id_original": "AT3G57830.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr3",
+        21419516,
+        21422546
+      ],
+      "window": [
+        "Chr3",
+        21405671,
+        21436391
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath022253",
+      "gene_id_original": "AT5G12270.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr5",
+        3970130,
+        3971301
+      ],
+      "window": [
+        "Chr5",
+        3955356,
+        3986076
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath009907",
+      "gene_id_original": "AT2G32990.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr2",
+        14003249,
+        14006017
+      ],
+      "window": [
+        "Chr2",
+        13989273,
+        14019993
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath017205",
+      "gene_id_original": "AT4G01995.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr4",
+        873053,
+        874772
+      ],
+      "window": [
+        "Chr4",
+        858553,
+        889273
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath010198",
+      "gene_id_original": "AT2G35690.TAIR10",
+      "panel_strand": "+",
+      "panel_gene": [
+        "Chr2",
+        14999753,
+        15003066
+      ],
+      "window": [
+        "Chr2",
+        14986050,
+        15016770
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath020143",
+      "gene_id_original": "AT4G31250.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr4",
+        15178924,
+        15181751
+      ],
+      "window": [
+        "Chr4",
+        15164978,
+        15195698
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    },
+    {
+      "gene_id": "Ath017916",
+      "gene_id_original": "AT4G11220.TAIR10",
+      "panel_strand": "-",
+      "panel_gene": [
+        "Chr4",
+        6837910,
+        6839795
+      ],
+      "window": [
+        "Chr4",
+        6823493,
+        6854213
+      ],
+      "strict_parser_and_panel_geometry_ok": true,
+      "transcript_count": 1,
+      "duplicate_structures": [],
+      "noncoding_mono_transcripts": []
+    }
+  ],
+  "duplicate_policy": "REPORT_ONLY_NO_DEDUP_NO_CHANGED_F1_POLICY",
+  "scientific_verdict": null,
+  "reference_mapping": {
+    "method": "corpus_gene_key_map",
+    "rows": [
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath014705",
+        "gene_id_original": "AT3G30300.TAIR10",
+        "name_original": "AT3G30300",
+        "chromosome": "Chr3",
+        "start0": 11921197,
+        "end0": 11924574,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath022311",
+        "gene_id_original": "AT5G13190.TAIR10",
+        "name_original": "AT5G13190",
+        "chromosome": "Chr5",
+        "start0": 4204816,
+        "end0": 4206405,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath003484",
+        "gene_id_original": "AT1G33060.TAIR10",
+        "name_original": "AT1G33060",
+        "chromosome": "Chr1",
+        "start0": 11975339,
+        "end0": 11978521,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath012743",
+        "gene_id_original": "AT3G12290.TAIR10",
+        "name_original": "AT3G12290",
+        "chromosome": "Chr3",
+        "start0": 3919501,
+        "end0": 3921519,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath024852",
+        "gene_id_original": "AT5G44000.TAIR10",
+        "name_original": "AT5G44000",
+        "chromosome": "Chr5",
+        "start0": 17702089,
+        "end0": 17703963,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath009257",
+        "gene_id_original": "AT2G26900.TAIR10",
+        "name_original": "AT2G26900",
+        "chromosome": "Chr2",
+        "start0": 11474951,
+        "end0": 11477944,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath009348",
+        "gene_id_original": "AT2G27740.TAIR10",
+        "name_original": "AT2G27740",
+        "chromosome": "Chr2",
+        "start0": 11822731,
+        "end0": 11823732,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath009959",
+        "gene_id_original": "AT2G33450.TAIR10",
+        "name_original": "AT2G33450",
+        "chromosome": "Chr2",
+        "start0": 14173578,
+        "end0": 14174533,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath026375",
+        "gene_id_original": "AT5G57900.TAIR10",
+        "name_original": "AT5G57900",
+        "chromosome": "Chr5",
+        "start0": 23449710,
+        "end0": 23450933,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath025827",
+        "gene_id_original": "AT5G52920.TAIR10",
+        "name_original": "AT5G52920",
+        "chromosome": "Chr5",
+        "start0": 21463537,
+        "end0": 21466880,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath020477",
+        "gene_id_original": "AT4G34270.TAIR10",
+        "name_original": "AT4G34270",
+        "chromosome": "Chr4",
+        "start0": 16403843,
+        "end0": 16406240,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath017922",
+        "gene_id_original": "AT4G11280.TAIR10",
+        "name_original": "AT4G11280",
+        "chromosome": "Chr4",
+        "start0": 6864096,
+        "end0": 6866116,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath007771",
+        "gene_id_original": "AT2G07050.TAIR10",
+        "name_original": "AT2G07050",
+        "chromosome": "Chr2",
+        "start0": 2924446,
+        "end0": 2930672,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath015840",
+        "gene_id_original": "AT3G52800.TAIR10",
+        "name_original": "AT3G52800",
+        "chromosome": "Chr3",
+        "start0": 19569310,
+        "end0": 19570682,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath019860",
+        "gene_id_original": "AT4G28630.TAIR10",
+        "name_original": "AT4G28630",
+        "chromosome": "Chr4",
+        "start0": 14138358,
+        "end0": 14140958,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath022532",
+        "gene_id_original": "AT5G15360.TAIR10",
+        "name_original": "AT5G15360",
+        "chromosome": "Chr5",
+        "start0": 4987436,
+        "end0": 4989182,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath003322",
+        "gene_id_original": "AT1G31410.TAIR10",
+        "name_original": "AT1G31410",
+        "chromosome": "Chr1",
+        "start0": 11246913,
+        "end0": 11249359,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath014393",
+        "gene_id_original": "AT3G27060.TAIR10",
+        "name_original": "AT3G27060",
+        "chromosome": "Chr3",
+        "start0": 9979865,
+        "end0": 9981295,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath012721",
+        "gene_id_original": "AT3G12090.TAIR10",
+        "name_original": "AT3G12090",
+        "chromosome": "Chr3",
+        "start0": 3852144,
+        "end0": 3853720,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath016828",
+        "gene_id_original": "AT3G62170.TAIR10",
+        "name_original": "AT3G62170",
+        "chromosome": "Chr3",
+        "start0": 23016222,
+        "end0": 23018509,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath010464",
+        "gene_id_original": "AT2G38140.TAIR10",
+        "name_original": "AT2G38140",
+        "chromosome": "Chr2",
+        "start0": 15980882,
+        "end0": 15981612,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath007951",
+        "gene_id_original": "AT2G13510.TAIR10",
+        "name_original": "AT2G13510",
+        "chromosome": "Chr2",
+        "start0": 5630000,
+        "end0": 5631107,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath013802",
+        "gene_id_original": "AT3G21770.TAIR10",
+        "name_original": "AT3G21770",
+        "chromosome": "Chr3",
+        "start0": 7673275,
+        "end0": 7674839,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath021609",
+        "gene_id_original": "AT5G05820.TAIR10",
+        "name_original": "AT5G05820",
+        "chromosome": "Chr5",
+        "start0": 1751687,
+        "end0": 1754178,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath022030",
+        "gene_id_original": "AT5G10130.TAIR10",
+        "name_original": "AT5G10130",
+        "chromosome": "Chr5",
+        "start0": 3171298,
+        "end0": 3172528,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath011580",
+        "gene_id_original": "AT3G01330.TAIR10",
+        "name_original": "AT3G01330",
+        "chromosome": "Chr3",
+        "start0": 124378,
+        "end0": 126835,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath013395",
+        "gene_id_original": "AT3G18050.TAIR10",
+        "name_original": "AT3G18050",
+        "chromosome": "Chr3",
+        "start0": 6180858,
+        "end0": 6182854,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath008415",
+        "gene_id_original": "AT2G18900.TAIR10",
+        "name_original": "AT2G18900",
+        "chromosome": "Chr2",
+        "start0": 8188256,
+        "end0": 8192489,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath013822",
+        "gene_id_original": "AT3G21950.TAIR10",
+        "name_original": "AT3G21950",
+        "chromosome": "Chr3",
+        "start0": 7734395,
+        "end0": 7736394,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath004930",
+        "gene_id_original": "AT1G56553.TAIR10",
+        "name_original": "AT1G56553",
+        "chromosome": "Chr1",
+        "start0": 21189721,
+        "end0": 21190175,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath004546",
+        "gene_id_original": "AT1G53025.TAIR10",
+        "name_original": "AT1G53025",
+        "chromosome": "Chr1",
+        "start0": 19756823,
+        "end0": 19759623,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath022752",
+        "gene_id_original": "AT5G17440.TAIR10",
+        "name_original": "AT5G17440",
+        "chromosome": "Chr5",
+        "start0": 5749761,
+        "end0": 5753643,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath004211",
+        "gene_id_original": "AT1G49750.TAIR10",
+        "name_original": "AT1G49750",
+        "chromosome": "Chr1",
+        "start0": 18410928,
+        "end0": 18412801,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath011917",
+        "gene_id_original": "AT3G04410.TAIR10",
+        "name_original": "AT3G04410",
+        "chromosome": "Chr3",
+        "start0": 1168836,
+        "end0": 1169205,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath011910",
+        "gene_id_original": "AT3G04340.TAIR10",
+        "name_original": "AT3G04340",
+        "chromosome": "Chr3",
+        "start0": 1146799,
+        "end0": 1153341,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath002779",
+        "gene_id_original": "AT1G25580.TAIR10",
+        "name_original": "AT1G25580",
+        "chromosome": "Chr1",
+        "start0": 8996767,
+        "end0": 8999860,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath017267",
+        "gene_id_original": "AT4G02540.TAIR10",
+        "name_original": "AT4G02540",
+        "chromosome": "Chr4",
+        "start0": 1117153,
+        "end0": 1119817,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath017735",
+        "gene_id_original": "AT4G09550.TAIR10",
+        "name_original": "AT4G09550",
+        "chromosome": "Chr4",
+        "start0": 6039117,
+        "end0": 6040215,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath008157",
+        "gene_id_original": "AT2G16440.TAIR10",
+        "name_original": "AT2G16440",
+        "chromosome": "Chr2",
+        "start0": 7126356,
+        "end0": 7130685,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath003963",
+        "gene_id_original": "AT1G47280.TAIR10",
+        "name_original": "AT1G47280",
+        "chromosome": "Chr1",
+        "start0": 17332055,
+        "end0": 17334406,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath019415",
+        "gene_id_original": "AT4G24560.TAIR10",
+        "name_original": "AT4G24560",
+        "chromosome": "Chr4",
+        "start0": 12679209,
+        "end0": 12684939,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath023888",
+        "gene_id_original": "AT5G33290.TAIR10",
+        "name_original": "AT5G33290",
+        "chromosome": "Chr5",
+        "start0": 12558255,
+        "end0": 12562020,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath018030",
+        "gene_id_original": "AT4G12330.TAIR10",
+        "name_original": "AT4G12330",
+        "chromosome": "Chr4",
+        "start0": 7317559,
+        "end0": 7319739,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath016370",
+        "gene_id_original": "AT3G57830.TAIR10",
+        "name_original": "AT3G57830",
+        "chromosome": "Chr3",
+        "start0": 21419516,
+        "end0": 21422546,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath022253",
+        "gene_id_original": "AT5G12270.TAIR10",
+        "name_original": "AT5G12270",
+        "chromosome": "Chr5",
+        "start0": 3970130,
+        "end0": 3971301,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath009907",
+        "gene_id_original": "AT2G32990.TAIR10",
+        "name_original": "AT2G32990",
+        "chromosome": "Chr2",
+        "start0": 14003249,
+        "end0": 14006017,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath017205",
+        "gene_id_original": "AT4G01995.TAIR10",
+        "name_original": "AT4G01995",
+        "chromosome": "Chr4",
+        "start0": 873053,
+        "end0": 874772,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath010198",
+        "gene_id_original": "AT2G35690.TAIR10",
+        "name_original": "AT2G35690",
+        "chromosome": "Chr2",
+        "start0": 14999753,
+        "end0": 15003066,
+        "strand": "+"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath020143",
+        "gene_id_original": "AT4G31250.TAIR10",
+        "name_original": "AT4G31250",
+        "chromosome": "Chr4",
+        "start0": 15178924,
+        "end0": 15181751,
+        "strand": "-"
+      },
+      {
+        "species_id": "Athaliana",
+        "gene_id": "Ath017916",
+        "gene_id_original": "AT4G11220.TAIR10",
+        "name_original": "AT4G11220",
+        "chromosome": "Chr4",
+        "start0": 6837910,
+        "end0": 6839795,
+        "strand": "-"
+      }
+    ],
+    "sources": [
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/training_input/db/b5_full_a40_v1.db",
+        "sha256": "6840c93fd0b999e09b8dc2897adca1f4dbae36f2ef0f8fcc10ee66371295e222",
+        "size": 23534252032
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/protocols/b6_panels_v1.tsv",
+        "sha256": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243",
+        "size": 166414
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+        "sha256": "63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973",
+        "size": 121183059
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+        "sha256": "529510b60756c9a1ae5a590ec4097fd4b9773649c29e6a5543553118bb042c38",
+        "size": 60503119
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/scripts/mvp/mvp_produce_counts.py",
+        "sha256": "6069fb5fe0771015d044d820a4cbbff313d9f3d2982991e1c58c17bc8aa726dc",
+        "size": 35157
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/src/transgenic/evidence/mvp_windows.py",
+        "sha256": "7583e0886418c606b0f0fd5d34440553390e1064d233f5e2ad7200603d1a4775",
+        "size": 10149
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/scripts/24_restrict_reference_to_test_genes.py",
+        "sha256": "e46147a5911b56140cd47659da7d96d80fd1c81ea4b94eb5b6db7c0696036f39",
+        "size": 5347
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/scripts/07_selfconsistency_stats.py",
+        "sha256": "54aaf75dda57b0e1e4928cd127d4fb4699af7bd73f769d643121e91f5c953e3d",
+        "size": 10482
+      }
+    ],
+    "authority": {
+      "commit": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16",
+      "manifest": "data/manifests/b5_species_v1.tsv",
+      "manifest_sha256": "3ca7a3b9a5793f62d25f503c93cfd7167eb17f7c5b90de7830e6a8777117f783",
+      "files": {
+        "fasta": {
+          "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+          "sha256": "63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973",
+          "size": 121183059
+        },
+        "gff": {
+          "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+          "sha256": "529510b60756c9a1ae5a590ec4097fd4b9773649c29e6a5543553118bb042c38",
+          "size": 60503119
+        }
+      }
+    }
+  },
+  "panel_strict_parser": {
+    "ok": true,
+    "genes": 50,
+    "transcripts": 52
+  },
+  "restricted_reference": {
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/reference.panel.gff3",
+    "sha256": "33e98f9ed71c18a3905ece1c58c9f7a6591f28e16f5d3a96a0cb0a63634f2d28",
+    "size": 88875
+  },
+  "n_loci": 50,
+  "compatible_locus_count": 50,
+  "duplicate_ambiguous_locus_count": 0
+}

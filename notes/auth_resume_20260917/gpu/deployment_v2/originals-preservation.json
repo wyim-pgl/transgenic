@@ -1,0 +1,23 @@
+{
+  "build_release.py": "3c98184c17bc4e15130c75ebebd69cd0157895b3d015e6a7cb542e2634604405",
+  "controller_execution_scope.json": "d3315a62a9d26b17b802f65b21c156aa430f32f8354efeda28028b8997350f31",
+  "deploy.py": "49922d81bc11eb17d651f0ea4132f0d1a8e6bcc3299dcc026d8bf6182c8b8cc6",
+  "deployment.independent_review.md": "c8b8b1652454b689918a4b6cb4427080dfca8c822330445d30aa7b8aa062ee31",
+  "local-tests.log": "a9b2e06cdfc16dbd81b22d0dde0e7ee09f63a0bf5d5fbaad5b65de598653260c",
+  "old_p1_preservation.json": "d349410e62b0a48a8c480dfd0026639bd97fc8bf55916a4658e702f03aa6f1d1",
+  "old_pending_cancellation.txt": "3b648cd92a45981e74337b038b97f2337604c43bdd848ae401f9ff89bba8d348",
+  "p1.sbatch": "950e2a54e40e8d84471b8f0907b1fb168b967cb283d1a1107f040d7d0b4f035f",
+  "pre_replacement_state.txt": "c450d6a7fd94ce584f59fe613daf62074c0ae4de468b6dcb5064b64c27901128",
+  "release/code.tar": "0fb803cf0612623fa0023bb1f0f28b4b2f6a227a930833f50f74cd31a64e9cd2",
+  "release/deploy.py": "49922d81bc11eb17d651f0ea4132f0d1a8e6bcc3299dcc026d8bf6182c8b8cc6",
+  "release/notes/b6_mvp_candidate_inventories_20260915.json": "9f79019679bfdd25b0a2bdac7cae63d01fa6d874be03fa3ef3f81cfd0a880a98",
+  "release/notes/b6_mvp_candidate_receipts_20260915.json": "73204a4ed98624b1567a5eb26fd6b2bbafbb597e0bd4b807685e8c703c807bac",
+  "release/notes/b6_mvp_technical_candidate_20260915.json": "faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e",
+  "release/p1.sbatch": "950e2a54e40e8d84471b8f0907b1fb168b967cb283d1a1107f040d7d0b4f035f",
+  "release/release.json": "7b6e1ed4bbf635c7b25b47b2564453d9b176f6a21f858c87c95e270f5bee0689",
+  "release/release.sha256": "5b36bdf09a8b8eb548147654e23d6ad59fe18542642a05eb720f22be102fdfb8",
+  "review-files.sha256": "165b097475e8fa839edc5482b603f51d2db1140d9948940769190407d16fd2ab",
+  "review_status.json": "6e02e609dabc0fd6948301c1baa01cff8f07db5bd8c9d9b77150758a80c1e645",
+  "submission_receipt.txt": "787b1c918c760b9d23b1943d9ba29b4854d41771df6a09d8c5bc692affaf3fbf",
+  "test_deploy.py": "4661cdba74bc4c016aaa1d720c36d990af6d51b4328798cda4513a657680a396"
+}

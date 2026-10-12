@@ -1,0 +1,13 @@
+{
+  "expected_verification_request": {
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/request.json",
+    "sha256": "c5cc29ecea746375ebb4d5388d38fa2bb8db0d5c42088ac67bc47b4caa7da9a9",
+    "size": 1264
+  },
+  "local_bytes": {
+    "path": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/panel/candidate_request.json",
+    "sha256": "c5cc29ecea746375ebb4d5388d38fa2bb8db0d5c42088ac67bc47b4caa7da9a9",
+    "size": 1264
+  },
+  "status": "CANDIDATE_REQUIRES_INDEPENDENT_CONTROLLER_ACCEPTANCE"
+}

@@ -1,0 +1,45 @@
+{
+  "aggregate_hard_limit_bytes": null,
+  "observations_not_reservations": true,
+  "scheduler_logs": [
+    {
+      "filesystem": {
+        "available_bytes": 12763267072,
+        "available_inodes": 1874135771,
+        "filesystem_type": "gpfs",
+        "gid": 3092957,
+        "mode": "0o600",
+        "mount": "/data/gpfs",
+        "resolved_path": "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/stdout",
+        "source": "pronghorn-0",
+        "uid": 3092957
+      },
+      "log_path": "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/stdout"
+    },
+    {
+      "filesystem": {
+        "available_bytes": 12763267072,
+        "available_inodes": 1874135771,
+        "filesystem_type": "gpfs",
+        "gid": 3092957,
+        "mode": "0o600",
+        "mount": "/data/gpfs",
+        "resolved_path": "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/stderr",
+        "source": "pronghorn-0",
+        "uid": 3092957
+      },
+      "log_path": "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/stderr"
+    }
+  ],
+  "scratch": {
+    "available_bytes": 12763267072,
+    "available_inodes": 1874135771,
+    "filesystem_type": "gpfs",
+    "gid": 3092957,
+    "mode": "0o700",
+    "mount": "/data/gpfs",
+    "resolved_path": "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out",
+    "source": "pronghorn-0",
+    "uid": 3092957
+  }
+}

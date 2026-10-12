@@ -1,0 +1,37 @@
+F
+======================================================================
+FAIL: test_aggregate_stdout_stderr_overflow_bounded_and_never_admitted (test_capture.CaptureTests) (fd=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/test_capture.py", line 49, in test_aggregate_stdout_stderr_overflow_bounded_and_never_admitted
+    self.assertIn('aggregate output',record.get('error',''))
+AssertionError: 'aggregate output' not found in ''
+
+======================================================================
+FAIL: test_aggregate_stdout_stderr_overflow_bounded_and_never_admitted (test_capture.CaptureTests) (fd=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/test_capture.py", line 49, in test_aggregate_stdout_stderr_overflow_bounded_and_never_admitted
+    self.assertIn('aggregate output',record.get('error',''))
+AssertionError: 'aggregate output' not found in ''
+
+======================================================================
+FAIL: test_aggregate_stdout_stderr_overflow_bounded_and_never_admitted (test_capture.CaptureTests) (fd=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/test_capture.py", line 49, in test_aggregate_stdout_stderr_overflow_bounded_and_never_admitted
+    self.assertIn('aggregate output',record.get('error',''))
+AssertionError: 'aggregate output' not found in ''
+
+======================================================================
+FAIL: test_non_timeout_read_failure_kills_and_reaps (test_capture.CaptureTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/test_capture.py", line 29, in test_non_timeout_read_failure_kills_and_reaps
+    self.assertIsNotNone(children[0].returncode)
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 2 tests in 3.748s
+
+FAILED (failures=4)

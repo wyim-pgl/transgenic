@@ -1,0 +1,22 @@
+--- v2/p1.sbatch
++++ v5/p1.sbatch
+@@ -1,5 +1,5 @@
+ #!/bin/bash
+-#SBATCH --job-name=dev123-p1-v3-0917
++#SBATCH --job-name=dev123-p1-v5-0917
+ #SBATCH --account=bilv-dtai-gh
+ #SBATCH --partition=ghx4
+ #SBATCH --nodes=1
+@@ -10,9 +10,9 @@
+ #SBATCH --no-requeue
+ #SBATCH --time=00:30:00
+ #SBATCH --exclude=gh062,gh093
+-#SBATCH --chdir=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v3_20260917
+-#SBATCH --output=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-v3-%j.out
+-#SBATCH --error=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-v3-%j.err
++#SBATCH --chdir=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v5_20260917
++#SBATCH --output=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-v5-%j.out
++#SBATCH --error=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-v5-%j.err
+ set -euo pipefail
+ umask 077
+ # Fixed reviewed exclusions. Live B5 placement is checked before staging; no worker submission.

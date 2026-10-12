@@ -1,0 +1,17 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T00:39:30-0700
+JobID|User|Account|Partition|State
+6165559|wyim|cpu-s1-pgl-0|cpu-s1-pgl-0|COMPLETED
+6165559.batch||cpu-s1-pgl-0||COMPLETED
+6165559.extern||cpu-s1-pgl-0||OUT_OF_MEMORY
+             JOBID                             NAME      STATE
+           6147940                 syl_an_Ahy_A_ODB    PENDING
+           6147612                     syl_an_Ahy_A    PENDING
+           6147349                     syl_an_Ahy_B    PENDING
+           6146937                     syl_an_Ahy_B    PENDING
+           6146936                 syl_an_Ahy_A_ODB    RUNNING
+           6156540              syl_watch_other_20m    RUNNING
+           6156395               pasaPost.Ahy_A_ODB    RUNNING
+bash: python3: command not found

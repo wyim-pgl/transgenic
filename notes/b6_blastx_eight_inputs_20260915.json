@@ -1,0 +1,74 @@
+[
+  {
+    "species": "Athaliana",
+    "query": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Athaliana/univec/est.univec.fa.gz",
+    "query_md5": "d1aa1abf703b35285c8a3d0317067759",
+    "summary_sha256": "c9e24d5104e7c23400514cad2c0f92af66459b923770e54cb1d8c24aba1986ef",
+    "records": 1046825,
+    "receipt_sha256": "c4ca3ec9364b74b81d1c6ad302aa034939e276ef29bf33354bbf82e0f54cfbe2",
+    "compressed_bytes": 94274908
+  },
+  {
+    "species": "Bdistachyon",
+    "query": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Bdistachyon/univec/est.univec.fa.gz",
+    "query_md5": "919b8603ef29fe987d295f7bed509f11",
+    "summary_sha256": "4e0964466d74a04d06ca307b605bc5973160d27bfd018386a675636add5792fa",
+    "records": 206123,
+    "receipt_sha256": "5f6560ee1f73913ea0a29dc2ca39f9b3af8c6820f115c26108b4cc48b08bcfc5",
+    "compressed_bytes": 38742876
+  },
+  {
+    "species": "Gmax",
+    "query": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Gmax/univec/est.univec.fa.gz",
+    "query_md5": "7fc184d1d5a4d0b43db0326041ef8924",
+    "summary_sha256": "01bba0ff066028869e79b79d716fb1dd5680547afc817d20c56ec25b1ebc02d2",
+    "records": 1374461,
+    "receipt_sha256": "0674c4b45a980f79956fc76ddec9b38f560f86bdf796d39cfa5f52b35d295eb0",
+    "compressed_bytes": 156963917
+  },
+  {
+    "species": "Osativa",
+    "query": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Osativa/univec/est.univec.fa.gz",
+    "query_md5": "3713830283ebfdfabf52419afa73424b",
+    "summary_sha256": "ef6014c18c91ff2974cd273cc0db91288c1f2fda5fb228e293bd20c86729ed6f",
+    "records": 1244141,
+    "receipt_sha256": "b8d12efc6df4e43fc2087d8c0c2ae155e3a143684498b40dca9acc41cf1fbb05",
+    "compressed_bytes": 184186502
+  },
+  {
+    "species": "Ppatens",
+    "query": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Ppatens/univec/est.univec.fa.gz",
+    "query_md5": "736a51d6cea6c3414e335a16cbe79cf9",
+    "summary_sha256": "f936183239dd4c5f8279e071ff6607172be24c12213556e109be229627ac4a64",
+    "records": 381809,
+    "receipt_sha256": "37b1725642f6f4c2044f86fb4d5e49852951780b347d8821955c72ed9e527bbf",
+    "compressed_bytes": 76165096
+  },
+  {
+    "species": "Ptrichocarpa",
+    "query": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Ptrichocarpa/univec/est.univec.fa.gz",
+    "query_md5": "6c566f04b0942d3ed8d79b6288e4a7bb",
+    "summary_sha256": "782801ef39cfbbc118fb2f2dee95e3fb48a54c121229494090f7599ae40aaa41",
+    "records": 89450,
+    "receipt_sha256": "19fd6653e4f0a251d9063e978ab16ff3c6397d23dcd60c30a1bac971e83176d7",
+    "compressed_bytes": 16001996
+  },
+  {
+    "species": "Sbicolor",
+    "query": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sbicolor/univec/est.univec.fa.gz",
+    "query_md5": "981725cca627ab0a63671ec8a5f58c1e",
+    "summary_sha256": "267903fda3e022f41f6771807eadb90eb265f25c76189e89f0c0c7651ee8af5f",
+    "records": 209441,
+    "receipt_sha256": "6a9de8caf07c3538cbb5380b15653f60fa6b3e03da1d0b267144d5f3f112f29d",
+    "compressed_bytes": 35225025
+  },
+  {
+    "species": "Vvinifera",
+    "query": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Vvinifera/univec/est.univec.fa.gz",
+    "query_md5": "bf17046a9de5694fb62df95278c19e22",
+    "summary_sha256": "4873129adee923672eda50576ea6b973b00d3f62cf30051f4b19a9347b2f4239",
+    "records": 450180,
+    "receipt_sha256": "6c56422a245ba459111393444b768baf30a85630abb8492101de5260dfbb443f",
+    "compressed_bytes": 82678033
+  }
+]

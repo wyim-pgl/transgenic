@@ -1,0 +1,15 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T22:02:27-0700
+JobID|State|ExitCode|Elapsed|MaxRSS
+6165525|COMPLETED|0:0|02:49:14|
+6165525.batch|COMPLETED|0:0|02:49:14|1559356K
+6165525.extern|OUT_OF_MEMORY|0:125|02:49:14|1480K
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/c1_reconciled/batch.exitcode ===
+0
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/c1_reconciled/audit/DONE ===
+Outputs and QC complete; see provenance.json
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/c1_reconciled/audit/rollup.json 57210

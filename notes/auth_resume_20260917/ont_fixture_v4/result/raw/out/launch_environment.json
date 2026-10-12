@@ -1,0 +1,42 @@
+{
+  "child": {
+    "GOMAXPROCS": "4",
+    "HOME": "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "OMP_NUM_THREADS": "4",
+    "PATH": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "TMPDIR": "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out"
+  },
+  "file_limit": [
+    4194304,
+    4194304
+  ],
+  "launcher": {
+    "BASH_ENV": null,
+    "GOMAXPROCS": null,
+    "HOME": null,
+    "LANG": null,
+    "LC_ALL": null,
+    "LD_AUDIT": null,
+    "LD_LIBRARY_PATH": null,
+    "LD_PRELOAD": null,
+    "OMP_NUM_THREADS": null,
+    "PATH": null,
+    "PYTHONDONTWRITEBYTECODE": null,
+    "PYTHONHOME": null,
+    "PYTHONNOUSERSITE": null,
+    "PYTHONPATH": null,
+    "PYTHONSTARTUP": null,
+    "TMPDIR": "/tmp"
+  },
+  "launcher_executable": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python3.11",
+  "launcher_sys_path": [
+    "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/lib/python311.zip",
+    "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/lib/python3.11",
+    "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/lib/python3.11/lib-dynload",
+    "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/lib/python3.11/site-packages"
+  ]
+}

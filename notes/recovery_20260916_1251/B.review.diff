@@ -1,0 +1,1657 @@
+diff --git a/notes/TRACK_B_RECOVERY_REPORT.md b/notes/TRACK_B_RECOVERY_REPORT.md
+new file mode 100644
+index 0000000..3f3604c
+--- /dev/null
++++ b/notes/TRACK_B_RECOVERY_REPORT.md
+@@ -0,0 +1,102 @@
++# Track B recovery report
++
++## Identity and scope
++
++- Worktree: `/tmp/b6-p2-scoring-1535144`; branch `b6-p2-scoring-1535144`.
++- Verified starting HEAD: `f847cb80c7750326f0781f81481891ab0c9ea309`.
++- Implementation commit: **`eefe5b505b8c3315dbe432ecf882b6e85296576d`**.
++- Preserved and completed the three supplied partial files; no worktree creation,
++  reset, clean, main edits, merge, push, SSH, remote writes, jobs, or subagents.
++- Graft queried in this worktree before source exploration and rebuilt afterward.
++  Existing `.gitignore` modification and `.ignore` remain uncommitted; graph and
++  temporary dependencies are not committed.
++
++## Implemented boundaries
++
++1. Shared centered 30,720-nt window geometry; pass1 window ± **10,000** nt,
++   explicitly distinguished from 10,240 tile geometry. Separate window support,
++   gene-overlap prediction selection, and gene-contained recall denominator.
++   Public panel paths are checked against
++   `79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243`.
++2. Local scoring-only alignment driver, canonical actual-read MD5 and roles gate
++   (`ROOT/evidence/DATASET_ROLES.longread_v1.tsv`), no training-role bypass.
++   Fresh disjoint output namespace, explicit `--execute`, frozen pass2 commands,
++   full reference, orientation sample/scorer reuse without modifying legacy code.
++   New-namespace audit retains legacy four-MD5 DONE key plus audit MD5.
++   Real unchanged scorer exercised at a non-default root on a tiny SAM/GFF;
++   UNRESOLVED correctly means no `-uf`, not an invented orientation PASS.
++3. Junction-table wrapper reuses frozen SAM/strand/read-rejection logic and
++   thresholds; exact coordinates; ONT3/HiFi2 read thresholds, per-input QC,
++   rejects duplicate canonical alignment inputs and inconsistent table rows.
++4. Pure CE paired-record validation, equal evidence-positive tile off−on primary,
++   composite separately reported, exact three-seed inventory. Deterministic
++   2000-replicate rng20260914 paired tile/locus bootstraps; pooled count ratios,
++   all50/core20 and per-seed readouts. Missing structural scoring is absent,
++   never negative; partially missing structural inputs are rejected.
++5. Pure STOP-first §5.3 decision helper, withholding reversal/unassessable and
++   missing-structural safeguards. Public final-decision publication **fails
++   closed pending author coverage policy**; count statistics output has null
++   decision and pending-policy status. No ONT-only/HiFi approval is inferred.
++
++Usage/schema/limitations: `revision/scripts/mvp/SCORING.md`.
++
++## Actual verification
++
++Baseline attempts before implementation:
++- PDB Python could import Torch 2.6.0+cu124 but had no pytest.
++- Default Python had pytest/NumPy but no Torch; metrics collection failed.
++- Installed pytest only into `/tmp/b6-trackb-testdeps` (not repository/system).
++
++Final targeted CPU command:
++
++```sh
++cd /tmp/b6-p2-scoring-1535144
++PYTHONPATH=/tmp/b6-trackb-testdeps:src \
++  /home/wyim/miniconda3/envs/pdb/bin/python -m pytest \
++  tests/test_mvp_metrics.py tests/test_mvp_scoring.py \
++  tests/test_mvp_scoring_driver.py \
++  revision/scripts/tests/test_evidence_support.py -q
++```
++
++**86 passed, 21 subtests passed** (3.20 s at final behavioral verification).
++`compileall` on the five task modules and `git diff --check` also succeeded.
++This is a targeted regression run, **not the full repository suite**.
++
++Tests exercised real CPU functions, SAM parsing, the unchanged orientation
++scorer subprocess, and the new score CLI on the actual frozen 50-locus panel
++with explicitly synthetic counts. No external aligner behavior was mocked into
++an empirical success claim. Existing partial behavior was characterized;
++new missing-function and validation tests were observed failing before fixes
++(duplicate input, seed override, boolean statistic, forged support, seed alias,
++namespace redirection). The existing metrics and frozen evidence tests stayed
++passing in the final run.
++
++## Remaining work / blockers (not claimed complete)
++
++- **Not an end-to-end biological scoring pipeline yet.** The score CLI consumes
++  externally supplied per-locus GFFCompare/exact-CDS counts. Raw GFF restriction,
++  GFFCompare execution/count production, and independent verification of those
++  counts against raw GFFs remain upstream work. Input hashes are recorded, but
++  hashing caller-supplied counts does not establish their scientific provenance.
++- No GPU/model decoding or 300 predictions were produced. Normalized-transcript
++  junction helpers are not a raw-GFF decoder. Integrate decoder window use via
++  the shared module when the decoder is implemented.
++- The full minimap2/seqkit/samtools `--execute` path has **not** been run with
++  real binaries/data. It needs reviewed compute-allocation smoke testing,
++  including command failure behavior and full provenance inspection, before
++  operational readiness. No production alignment or coverage facts were measured.
++- A-HiFi availability and whether ONT-only satisfies §5.3 require author policy;
++  no approval knob was invented. Missing required canonical rows/read MD5s fail.
++- Precision contradiction uses delta_P **point estimate** >=0, explicitly
++  recorded as an interpretation pending author review. Final decisions remain
++  blocked rather than silently treating that interpretation as approved.
++- Withholding evidence/run or substantiated equivalence argument still needs
++  real provenance. The pure decision helper accepts already-assessed inputs;
++  it is not an evidentiary approval mechanism. Complete-chain support is left
++  to the unchanged frozen evidence scorer, not fabricated in this wrapper.
++- Only fresh per-run alignment directories are supported; interrupted output
++  is retained and refused on reuse, not resumed or overwritten.
++
++No empirical efficacy, biological support rate, STOP/GO outcome, training
++readiness, author approval, or external-tool certification is claimed.
++Controller independent review remains required.
+diff --git a/revision/scripts/mvp/SCORING.md b/revision/scripts/mvp/SCORING.md
+new file mode 100644
+index 0000000..82c04cc
+--- /dev/null
++++ b/revision/scripts/mvp/SCORING.md
+@@ -0,0 +1,94 @@
++# Track B CPU scoring boundary
++
++Exploratory / MVP only. No training authorization, GPU decoder, job submission,
++or empirical results are supplied by these programs.
++
++## Alignment driver
++
++`mvp_align_panel_longreads.py --help` lists required local inputs. Without
++`--execute`, it only validates. The explicit `--execute` mode invokes minimap2,
++seqkit, samtools, the existing orientation sampler/scorer, and the junction
++wrapper locally. It never submits jobs. Run only in an authorized compute
++allocation after independent review and real-tool smoke tests.
++
++Canonical roles are **ROOT/evidence/DATASET_ROLES.longread_v1.tsv**, not the
++repository copy. The one matching run must be reference Athaliana,
++`b1_validation_only`, with `local_fa_md5` matching fresh MD5 of the canonical
++actual read file. Only SRR28341943–45 and ERR13994458 are admitted. Missing HiFi
++manifest/read inputs fail; nothing is fetched or inferred. Supply reference/GFF
++MD5 values from the frozen species manifest. Existing training drivers are not
++modified or bypassed.
++
++Outputs require a fresh `ROOT/evidence/mvp_scoring_20260916/RUN` directory.
++No resume/reuse/overwrite is supported. ONT orientation lives under that run's
++`orientation/`, never `orientation_audit_v1/`. Its DONE key is unchanged:
++`FA_MD5:REF_MD5:GFF_MD5:SCORER_MD5`, plus `audit_md5` and `audit.json`.
++The actual unchanged scorer is run at defaults: MAPQ20, 1000 eligible, 0.95.
++PASS enables `-uf`; FAIL and UNRESOLVED disable it, as explicitly required by
++MVP §2. Missing/stale/malformed artifacts are errors, not UNRESOLVED verdicts.
++
++Every consumer uses `mvp_windows`: 30,720 nt centered on the half-open panel
++gene, odd padding base to genomic right. Pass1 adds **10,000 nt per side**,
++not 10,240: decimal 10 kb from §2, not a tile geometry constant. Boundary
++windows fail rather than shift. Pass1 selects MAPQ >=5 overlapping candidate
++reads; pass2 uses the full reference and frozen source-specific flags.
++`alignment.json` records commands, input/output MD5, run/source, and pending
++coverage status. It is not a scientific DONE. Failures retain FAILED.json;
++partial output is not reused. Orientation completion alone is not alignment
++completion.
++
++## Junctions and denominators
++
++`mvp_junction_table.py` accepts repeated `--alignment SOURCE:uf=BOOL:PATH`
++(SOURCE ONT or HiFi), frozen `--panels`, `--out`, `--qc-out`.
++It reuses the frozen scorer's SAM parser, read-group rejection, strand
++composition, and thresholds (3 ONT or 2 HiFi reads, exact raw coordinates).
++The standalone table command is a low-level adapter, not a role/provenance gate;
++use driver-produced inputs for operational scoring. Per-run tables come from
++the driver; repeat validated run BAMs to produce pooled tables. Counts are
++reads, not molecules. Duplicate canonical alignment paths are rejected.
++
++Read support is restricted to centered **windows**. The separately exposed
++`mvp_score.predicted_junctions` helper selects normalized transcripts overlapping
++the **gene** and retains all their introns; `junction_counts` restricts the
++recall denominator to supported introns inside the gene. Flanking supported
++introns may contribute to precision but not recall. These normalized-transcript
++helpers do not parse raw GFF or perform decoding. Full-chain scoring remains the
++existing `59_evidence_support.py` interface; this wrapper does not invent chain
++support columns.
++
++## Statistics adapter
++
++`mvp_score.py --input counts.json --panels ... --out statistics.json` consumes:
++
++- `pairs`: exactly keys `"1"`, `"2"`, `"3"`, each a final deduplicated eval-pair
++  JSONL path. Rank-shard duplicates must be resolved upstream by the audited
++  finalizer, not silently dropped here.
++- `loci`: exactly all 50 `gene_id` values, each with `seeds` keys `"1"/"2"/"3"`,
++  each seed with `off`/`on` count objects.
++- Each count object has integer `f1_tp`, `f1_predicted`, `f1_reference` from the
++  separately run restricted GFFCompare v0.12.6/exact-monoexonic-CDS producer.
++  Optionally every object also has `precision_tp`, `predicted`, `recall_tp`,
++  `supported`. Partial structural inputs are rejected; unavailable is absence,
++  never zero counts. Zero bootstrap denominators are UNASSESSABLE, not zero.
++
++This is a **count-input adapter**. It does not verify those counts against raw
++prediction/reference GFFs, run GFFCompare, or generate predictions. Input hashes
++and this provenance limitation are recorded. An upstream GFF/count producer
++and end-to-end scientific provenance verification remain required.
++
++Primary is equal-weight evidence-positive tile pure weighted CE off−on,
++not pooled token CE or composite loss. Composite is a separate diagnostic.
++Bootstrap: 2000 draws, NumPy default_rng(20260914), tile carries all three seeds;
++locus bootstrap carries paired fractions/seeds and recomputes pooled ratios.
++5th/95th percentiles; F1 in percentage points, P/R in fractions. Outputs include
++per-seed/pooled and all50/core20 strata.
++
++`mvp_bootstrap.decide` implements the tested STOP-first §5.3 mathematical rule
++with explicit three seed points, withholding assessed/unassessable state,
++reversal upper bound >=0.005, and missing-structural downgrade (never automatic
++GO). It is a pure rule helper, **not an approval gate**. The precision-clause
++interpretation uses delta_P point >=0 and is explicitly pending author review.
++The public statistics CLI always emits `decision=null`; `--final-decision`
++errors pending the author's HiFi versus ONT-only coverage policy. No approval
++switch or default silently chooses that policy.
+diff --git a/revision/scripts/mvp/mvp_align_panel_longreads.py b/revision/scripts/mvp/mvp_align_panel_longreads.py
+new file mode 100644
+index 0000000..75e416d
+--- /dev/null
++++ b/revision/scripts/mvp/mvp_align_panel_longreads.py
+@@ -0,0 +1,218 @@
++#!/usr/bin/env python3
++"""Scoring-only, local two-pass long-read alignment; never training evidence.
++
++Canonical roles: ROOT/evidence/DATASET_ROLES.longread_v1.tsv (not repo copy).
++Outputs only ROOT/evidence/mvp_scoring_20260916/RUN, fresh directory required.
++External commands run only with --execute; this file submits no jobs. Alignment
++completion is not coverage-policy approval or authorization for training.
++"""
++import argparse
++import csv
++import hashlib
++import json
++import re
++import subprocess
++import sys
++from pathlib import Path
++
++SCRIPTS = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(SCRIPTS.parents[1] / 'src'))
++from transgenic.evidence import mvp_windows as w
++
++ROLE_COLUMNS = ('dataset run species genotype_stratum instrument data_type expected_files '
++                'expected_reads source_checksum source_checksum_authority local_fa_md5 role basis note').split()
++ONT_RUNS = {'SRR28341943', 'SRR28341944', 'SRR28341945'}
++HIFI_RUNS = {'ERR13994458'}
++
++
++def digest(path):
++    h = hashlib.md5()
++    with Path(path).open('rb') as f:
++        for block in iter(lambda: f.read(1 << 20), b''):
++            h.update(block)
++    return h.hexdigest()
++
++
++def validate_read(root, run, reads):
++    if run not in ONT_RUNS | HIFI_RUNS:
++        raise ValueError('run is not A-ONT1 / A-HiFi')
++    roles = Path(root).resolve() / 'evidence/DATASET_ROLES.longread_v1.tsv'
++    with roles.open() as f:
++        reader = csv.DictReader(f, delimiter='\t')
++        if reader.fieldnames != ROLE_COLUMNS:
++            raise ValueError('canonical roles schema mismatch')
++        rows = list(reader)
++    if any(None in r or any(v is None for v in r.values()) for r in rows):
++        raise ValueError('malformed canonical roles row')
++    selected = [r for r in rows if r['run'] == run]
++    if len(selected) != 1:
++        raise ValueError('expected exactly one canonical run role')
++    row = selected[0]
++    if (row['role'], row['species'], row['genotype_stratum']) != ('b1_validation_only', 'Athaliana', 'reference'):
++        raise ValueError('scoring requires reference Athaliana b1_validation_only; no training bypass')
++    if not re.fullmatch('[0-9a-f]{32}', row['local_fa_md5']) or digest(Path(reads).resolve()) != row['local_fa_md5']:
++        raise ValueError('actual consumed read file md5 mismatch')
++    return row
++
++
++def audit_key(reads, ref, gff):
++    return ':'.join(digest(p) for p in (reads, ref, gff, SCRIPTS / '67_orientation_audit.py'))
++
++
++def read_audit(out, key, run):
++    marker = dict(line.split('=', 1) for line in (out / 'DONE').read_text().splitlines())
++    if marker.get('key') != key or marker.get('audit_md5') != digest(out / 'audit.json'):
++        raise ValueError('stale orientation DONE key or audit md5')
++    result = json.loads((out / 'audit.json').read_text())
++    if result['run'] != run or result['species'] != 'Athaliana':
++        raise ValueError('orientation identity mismatch')
++    if (result['min_mapq'], result['min_eligible'], result['threshold']) != (20, 1000, .95):
++        raise ValueError('orientation parameters drifted')
++    valid, sense = result['valid_for_orientation'], result['read_sense']
++    if type(valid) is not int or type(sense) is not int or not 0 <= sense <= valid:
++        raise ValueError('invalid orientation counts')
++    status = 'UNRESOLVED' if valid < 1000 else ('PASS' if sense / valid >= .95 else 'FAIL')
++    if result['status'] != status or result['use_uf'] is not (status == 'PASS'):
++        raise ValueError('inconsistent orientation decision')
++    return result
++
++
++def audit_from_sam(sam, gff, out, run, dataset, key):
++    """Legacy scorer accepts arbitrary output root; retain four-field DONE key."""
++    if (out / 'audit.json').exists() or (out / 'DONE').exists():
++        raise ValueError('refuse overwriting orientation artifact')
++    cmd = [sys.executable, str(SCRIPTS / '67_orientation_audit.py'), '--sam', str(sam),
++           '--gff', str(gff), '--out', str(out / 'audit.json'), '--run', run,
++           '--species', 'Athaliana', '--dataset', dataset]
++    with (out / 'audit.stdout').open('x') as stdout, (out / 'audit.stderr').open('x') as stderr:
++        rc = subprocess.run(cmd, stdout=stdout, stderr=stderr).returncode
++    if rc not in (0, 4):
++        raise ValueError(f'orientation scorer failed: {rc}')
++    marker = f'key={key}\nrun={run}\naudit_md5={digest(out / "audit.json")}\n'
++    (out / 'DONE.tmp').write_text(marker)
++    (out / 'DONE.tmp').rename(out / 'DONE')
++    return read_audit(out, key, run)
++
++
++def pass2_command(source, uf, ref, reads, threads):
++    if source not in ('ONT', 'HiFi') or (source == 'HiFi' and uf):
++        raise ValueError('invalid source/orientation combination')
++    command = ['minimap2', '-t', str(threads), '-ax', 'splice' if source == 'ONT' else 'splice:hq']
++    if source == 'ONT':
++        command += (['-uf'] if uf else []) + ['-k14']
++    return command + ['-G', '200000', '--secondary=no', '--cs=long', str(ref), str(reads)]
++
++
++def select_names(paf_lines, loci):
++    windows = w.prefilter_by_chromosome(loci)
++    names = set()
++    for line in paf_lines:
++        f = line.rstrip('\n').split('\t')
++        if len(f) < 12:
++            raise ValueError('malformed pass1 PAF')
++        start, end, quality = int(f[7]), int(f[8]), int(f[11])
++        if not 0 <= start < end <= int(f[6]) or not 0 <= quality <= 255:
++            raise ValueError('invalid pass1 coordinates/mapq')
++        if quality >= 5 and any(start < b and end > a for a, b in windows.get(f[5], ())):
++            names.add(f[0])
++    return sorted(names)
++
++
++def output_directory(root, run):
++    if run not in ONT_RUNS | HIFI_RUNS:
++        raise ValueError('unknown scoring run')
++    out = Path(root).resolve() / 'evidence/mvp_scoring_20260916' / run
++    if out.resolve() != out:
++        raise ValueError('scoring namespace must not be redirected by symlinks')
++    return out
++
++
++def execute(args):
++    root, reads, ref, gff = (Path(p).resolve() for p in (args.root, args.reads, args.ref, args.gff))
++    row = validate_read(root, args.run, reads)
++    for path, expected in [(ref, args.ref_md5), (gff, args.gff_md5)]:
++        if not re.fullmatch('[0-9a-f]{32}', expected) or digest(path) != expected:
++            raise ValueError('reference/GFF md5 mismatch')
++    loci = w.load_panel(args.panels)
++    # No dependence on an unverified .fai: stream actual FASTA lengths.
++    lengths = {}
++    chrom = None
++    with ref.open() as f:
++        for line in f:
++            if line.startswith('>'):
++                chrom = line[1:].split()[0]
++                if chrom in lengths:
++                    raise ValueError('duplicate reference contig')
++                lengths[chrom] = 0
++            elif line.strip():
++                if chrom is None:
++                    raise ValueError('invalid reference FASTA')
++                lengths[chrom] += len(line.strip())
++    w.windows_by_chromosome(loci, lengths)
++    if args.threads < 1:
++        raise ValueError('threads must be positive')
++    if not args.execute:
++        return {'status': 'VALIDATED_ONLY', 'role': row, 'coverage_policy': 'PENDING'}
++    out = output_directory(root, args.run)
++    out.mkdir(parents=True, exist_ok=False)
++    roles = root / 'evidence/DATASET_ROLES.longread_v1.tsv'
++    inputs = {str(p): digest(p) for p in (reads, ref, gff, roles, Path(args.panels).resolve())}
++    commands = []
++
++    def run(command, output=None):
++        commands.append([str(x) for x in command])
++        (out / 'commands.json').write_text(json.dumps(commands, indent=2))
++        with (out / 'commands.stderr').open('a') as err:
++            if output is None:
++                subprocess.run(command, check=True, stderr=err)
++            else:
++                with output.open('x') as f:
++                    subprocess.run(command, check=True, stdout=f, stderr=err)
++    try:
++        source = 'ONT' if args.run in ONT_RUNS else 'HiFi'
++        uf = False
++        if source == 'ONT':
++            audit = out / 'orientation'; audit.mkdir()
++            run([sys.executable, str(SCRIPTS / '68_sample_fasta.py'), '--fasta', str(reads),
++                 '--out', str(audit / 'sample.fa'), '--n', '10000', '--md5', digest(reads)], audit / 'sample.json')
++            run(pass2_command('ONT', False, ref, audit / 'sample.fa', args.threads), audit / 'sample.sam')
++            uf = audit_from_sam(audit / 'sample.sam', gff, audit, args.run, row['dataset'], audit_key(reads, ref, gff))['use_uf']
++        run(['minimap2', '-t', str(args.threads), '-x', 'splice', str(ref), str(reads)], out / 'pass1.paf')
++        with (out / 'pass1.paf').open() as f:
++            names = select_names(f, loci)
++        (out / 'panel_reads.txt').write_text(''.join(n + '\n' for n in names))
++        if not names:
++            raise ValueError('no candidate reads; independent scoring unavailable, not negative')
++        run(['seqkit', 'grep', '-f', str(out / 'panel_reads.txt'), str(reads)], out / 'panel_reads.fa')
++        run(pass2_command(source, uf, ref, out / 'panel_reads.fa', args.threads), out / 'panel.sam')
++        run(['samtools', 'sort', '-o', str(out / 'panel.bam'), str(out / 'panel.sam')])
++        run(['samtools', 'index', str(out / 'panel.bam')])
++        run([sys.executable, str(SCRIPTS / 'mvp/mvp_junction_table.py'), '--alignment',
++             f'{source}:uf={str(uf).lower()}:{out / "panel.bam"}', '--panels', str(Path(args.panels).resolve()),
++             '--out', str(out / 'junctions.tsv'), '--qc-out', str(out / 'junctions.qc.json')])
++        if any(digest(p) != d for p, d in inputs.items()):
++            raise ValueError('input mutated during scoring')
++        report = dict(label='exploratory / MVP', role=row, inputs_md5=inputs,
++                      commands=commands, source=source, use_uf=uf, run=args.run,
++                      panel_sha256=w.PANEL_SHA256, coverage_policy='PENDING',
++                      outputs_md5={p.name: digest(p) for p in out.iterdir() if p.is_file()},
++                      training_eligible=False, status='SCORING_ALIGNMENT_COMPLETE')
++        (out / 'alignment.json.tmp').write_text(json.dumps(report, indent=2))
++        (out / 'alignment.json.tmp').rename(out / 'alignment.json')
++        return report
++    except Exception as error:
++        (out / 'FAILED.json').write_text(json.dumps({'error': str(error), 'training_eligible': False}))
++        raise
++
++
++def main(argv=None):
++    p = argparse.ArgumentParser(description=__doc__)
++    for name in ('root', 'run', 'reads', 'ref', 'ref-md5', 'gff', 'gff-md5', 'panels'):
++        p.add_argument('--' + name, required=True)
++    p.add_argument('--threads', type=int, default=32)
++    p.add_argument('--execute', action='store_true')
++    print(json.dumps(execute(p.parse_args(argv)), indent=2))
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/revision/scripts/mvp/mvp_junction_table.py b/revision/scripts/mvp/mvp_junction_table.py
+new file mode 100644
+index 0000000..9c97393
+--- /dev/null
++++ b/revision/scripts/mvp/mvp_junction_table.py
+@@ -0,0 +1,220 @@
++#!/usr/bin/env python3
++"""Read-supported junction table for the B6 MVP scoring readout (exploratory).
++
++Wraps the frozen B1 evidence scorer `revision/scripts/59_evidence_support.py` —
++its SAM parsing, whole-read-group acceptance (`alignment_rejection`: primary
++only, MAPQ >= 20, supplementary/chimeric and cross-contig/strand discarded) and
++`transcript_strand` (A39 FLAG x ts:A composition) are REUSED, not reimplemented.
++Support thresholds are the scorer's frozen `THRESHOLDS`: ONT 3 / PacBio 2
++(A-HiFi counts under the PacBio threshold). Counts are READS (UMI status
++unknown; never molecules).
++
++Restriction scope (Track B must-fix 2, scope 1): a junction is tabulated only
++when its intron span lies INSIDE a panel evaluation WINDOW (30,720 nt centred
++on the gene, shared derivation `mvp_windows.evaluation_window`). The panel-GENE
++restriction applies to predicted junctions and the recall denominator in
++mvp_score.py, not here.
++
++Output TSV columns:
++    chrom  intron_start0  intron_end0  tx_strand  n_ONT  n_HiFi  supported
++Intron endpoints are 0-based inclusive; `supported` is true iff
++n_HiFi >= 2 or n_ONT >= 3. The complete-chain columns
++(chain_support_single_read / chain_callable) are added when
++59_evidence_support.py itself runs on the same BAMs (spec §2), not fabricated
++here. A QC JSON sidecar records read accept/reject counts per input.
++"""
++
++import argparse
++import hashlib
++import importlib.util
++import json
++import sys
++from collections import Counter, defaultdict
++from pathlib import Path
++
++_SCRIPTS = Path(__file__).resolve().parents[1]
++_REPO = Path(__file__).resolve().parents[3]
++sys.path.insert(0, str(_REPO / "src"))
++
++from transgenic.evidence import mvp_windows  # noqa: E402
++
++
++def load_evidence_support():
++    path = _SCRIPTS / "59_evidence_support.py"
++    spec = importlib.util.spec_from_file_location("evidence_support_59", path)
++    module = importlib.util.module_from_spec(spec)
++    sys.modules[spec.name] = module
++    spec.loader.exec_module(module)
++    return module
++
++
++ES = load_evidence_support()
++
++# Frozen thresholds; a drifted scorer must stop this wrapper.
++assert ES.THRESHOLDS["ONT"] == 3 and ES.THRESHOLDS["PacBio"] == 2, \
++    "frozen 59_evidence_support THRESHOLDS drifted (expected ONT 3 / PacBio 2)"
++SOURCE_THRESHOLDS = {"ONT": ES.THRESHOLDS["ONT"], "HiFi": ES.THRESHOLDS["PacBio"]}
++
++
++class JunctionTableError(ValueError):
++    pass
++
++
++def parse_alignment_spec(text):
++    parts = text.split(":", 2)
++    if len(parts) != 3 or parts[0] not in SOURCE_THRESHOLDS or \
++            parts[1] not in ("uf=true", "uf=false"):
++        raise JunctionTableError(
++            f"--alignment must be SOURCE:uf=BOOL:PATH with SOURCE in "
++            f"{sorted(SOURCE_THRESHOLDS)}; got {text!r}")
++    source, uf_text, path = parts
++    uf = uf_text == "uf=true"
++    if source == "HiFi" and uf:
++        raise JunctionTableError("HiFi (splice:hq) has no -uf mode; uf must be false")
++    return source, uf, Path(path)
++
++
++def collect_junctions(alignment_path, uf, windows, samtools="samtools"):
++    """Yield (junction_key, read_name) for accepted reads; return QC counters.
++
++    junction_key = (chrom, intron_start0, intron_end0, tx_strand) with 0-based
++    INCLUSIVE endpoints (parse_sam introns are 1-based inclusive; converted
++    here once). Junctions with unknown strand or outside every panel window are
++    counted in QC, never tabulated.
++    """
++    groups = defaultdict(list)
++    for line in ES.sam_lines(str(alignment_path), samtools):
++        aln = ES.parse_sam(line)
++        if aln is not None:
++            groups[aln.read].append(aln)
++    qc = Counter()
++    pairs = []
++    for read in sorted(groups):
++        records = groups[read]
++        rejection = ES.alignment_rejection(records)
++        if rejection:
++            qc["rejected:" + rejection] += 1
++            continue
++        aln = next(r for r in records if not r.flag & (4 | 0x900))
++        strand = ES.transcript_strand(aln, uf=uf)
++        qc["accepted_reads"] += 1
++        for start1, end1 in aln.introns:
++            start0, end0 = start1 - 1, end1 - 1
++            if strand is None:
++                qc["junctions_strand_unknown"] += 1
++                continue
++            if not mvp_windows.junction_within_windows(aln.contig, start0, end0,
++                                                       windows):
++                qc["junctions_outside_panel_windows"] += 1
++                continue
++            qc["junctions_in_panel_windows"] += 1
++            pairs.append(((aln.contig, start0, end0, strand), read))
++    qc["raw_reads"] = len(groups)
++    return pairs, qc
++
++
++def build_table(alignments, windows, samtools="samtools"):
++    reads_by_source = {source: defaultdict(set) for source in SOURCE_THRESHOLDS}
++    qc = {}
++    seen = set()
++    for source, uf, path in alignments:
++        identity = Path(path).resolve()
++        if identity in seen:
++            raise JunctionTableError("duplicate alignment input")
++        seen.add(identity)
++        pairs, counters = collect_junctions(path, uf, windows, samtools)
++        for key, read in pairs:
++            reads_by_source[source][key].add((str(path), read))
++        qc[f"{source}:{path}"] = dict(sorted(counters.items()))
++    keys = sorted(set(reads_by_source["ONT"]) | set(reads_by_source["HiFi"]))
++    rows = []
++    for key in keys:
++        n_ont = len(reads_by_source["ONT"].get(key, ()))
++        n_hifi = len(reads_by_source["HiFi"].get(key, ()))
++        supported = (n_hifi >= SOURCE_THRESHOLDS["HiFi"]
++                     or n_ont >= SOURCE_THRESHOLDS["ONT"])
++        chrom, start0, end0, strand = key
++        rows.append({"chrom": chrom, "intron_start0": start0, "intron_end0": end0,
++                     "tx_strand": strand, "n_ONT": n_ont, "n_HiFi": n_hifi,
++                     "supported": supported})
++    return rows, qc
++
++
++HEADER = ("chrom", "intron_start0", "intron_end0", "tx_strand",
++          "n_ONT", "n_HiFi", "supported")
++
++
++def write_table(rows, out_path):
++    with open(out_path, "w") as f:
++        f.write("\t".join(HEADER) + "\n")
++        for row in rows:
++            f.write("\t".join(str(row[c]).lower() if c == "supported"
++                              else str(row[c]) for c in HEADER) + "\n")
++
++
++def read_table(path):
++    """Load a table written by write_table, fail-closed on schema drift."""
++    rows = []
++    with open(path) as f:
++        header = tuple(f.readline().rstrip("\n").split("\t"))
++        if header != HEADER:
++            raise JunctionTableError(f"junction table header mismatch: {header!r}")
++        for line in f:
++            fields = line.rstrip("\n").split("\t")
++            if len(fields) != len(HEADER):
++                raise JunctionTableError("junction table row width mismatch")
++            if fields[6] not in ("true", "false"):
++                raise JunctionTableError("supported must be true/false")
++            rows.append({"chrom": fields[0], "intron_start0": int(fields[1]),
++                         "intron_end0": int(fields[2]), "tx_strand": fields[3],
++                         "n_ONT": int(fields[4]), "n_HiFi": int(fields[5]),
++                         "supported": fields[6] == "true"})
++    keys = set()
++    for row in rows:
++        key = tuple(row[c] for c in HEADER[:4])
++        if (key in keys or row['tx_strand'] not in ('+', '-') or
++                not 0 <= row['intron_start0'] <= row['intron_end0'] or
++                min(row['n_ONT'], row['n_HiFi']) < 0 or
++                row['supported'] != (row['n_ONT'] >= 3 or row['n_HiFi'] >= 2)):
++            raise JunctionTableError('invalid, duplicate, or inconsistent junction row')
++        keys.add(key)
++    return rows
++
++
++def main(argv=None):
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--alignment", action="append", required=True,
++                        metavar="SOURCE:uf=BOOL:PATH",
++                        help="repeatable; SOURCE is ONT or HiFi; uf must state "
++                             "the audited -uf decision explicitly")
++    parser.add_argument("--panels", required=True, type=Path)
++    parser.add_argument("--out", required=True, type=Path)
++    parser.add_argument("--qc-out", required=True, type=Path)
++    parser.add_argument("--samtools", default="samtools")
++    args = parser.parse_args(argv)
++
++    expected = mvp_windows.PANEL_SHA256
++    loci = mvp_windows.load_panel(args.panels, expected_sha256=expected)
++    windows = mvp_windows.windows_by_chromosome(loci)
++    alignments = [parse_alignment_spec(text) for text in args.alignment]
++    rows, qc = build_table(alignments, windows, args.samtools)
++    write_table(rows, args.out)
++    qc_report = {
++        "panel_sha256": expected,
++        "panel_sha256_is_frozen": expected == mvp_windows.PANEL_SHA256,
++        "thresholds": SOURCE_THRESHOLDS,
++        "counts_are": "reads (UMI status unknown; never molecules)",
++        "scorer": "59_evidence_support.py (sha256 "
++                  + hashlib.sha256((_SCRIPTS / "59_evidence_support.py")
++                                   .read_bytes()).hexdigest() + ")",
++        "restriction": "junction contained in a 30,720-nt panel evaluation window",
++        "per_input": qc,
++        "junctions": len(rows),
++        "supported_junctions": sum(r["supported"] for r in rows),
++    }
++    args.qc_out.write_text(json.dumps(qc_report, indent=1, sort_keys=True) + "\n")
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/revision/scripts/mvp/mvp_score.py b/revision/scripts/mvp/mvp_score.py
+new file mode 100644
+index 0000000..aeac02a
+--- /dev/null
++++ b/revision/scripts/mvp/mvp_score.py
+@@ -0,0 +1,155 @@
++#!/usr/bin/env python3
++"""CPU MVP statistics from caller-supplied counts and final eval-pair JSONL.
++
++Input JSON: pairs maps '1','2','3' to final deduplicated JSONL paths; loci is
++50 records {gene_id, seeds: {'1': {'off': counts, 'on': counts}, ...}}.
++counts: f1_tp, f1_predicted, f1_reference (GFFCompare v0.12.6 restricted
++transcript counts; monoexonic exact CDS), and optionally precision_tp,
++predicted, recall_tp, supported (exact junction counts). All are integers.
++Structural counts must be present everywhere or nowhere, never filled as zero
++for missing evidence. F1 is percentage points; P/R are fractions.
++This adapter does not decode models or claim to run GFFCompare.
++"""
++import argparse
++import json
++import math
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'src'))
++from transgenic.evidence import mvp_bootstrap as b, mvp_windows as w
++
++
++def require_coverage_policy(policy):
++    # No policy is approved in this implementation. A future author-approved
++    # policy must specify technology/run coverage before decision publication.
++    raise ValueError('coverage policy pending author approval (HiFi versus ONT-only)')
++
++
++def predicted_junctions(transcripts, locus):
++    """Normalized decoded transcripts: chrom, strand, half-open exon intervals.
++
++    Select by transcript-span overlap with the gene, then retain ALL introns.
++    No strand-based overlap filter: wrong-strand predictions stay penalized.
++    """
++    genes = w.genes_by_chromosome([locus])
++    result = set()
++    for tx in transcripts:
++        exons = sorted(tx['exons'])
++        if (not exons or tx['strand'] not in ('+', '-') or
++                any(type(a) is not int or type(z) is not int or not 0 <= a < z for a, z in exons) or
++                any(a[1] >= z[0] for a, z in zip(exons, exons[1:]))):
++            raise ValueError('invalid transcript exons/strand')
++        if w.transcript_overlaps_gene(tx['chrom'], exons[0][0], exons[-1][1] - 1, genes):
++            result.update((tx['chrom'], a[1], z[0] - 1, tx['strand']) for a, z in zip(exons, exons[1:]))
++    return result
++
++
++def junction_counts(predicted, supported, locus):
++    """Predicted set already selected by transcript-overlaps-gene, not clipped."""
++    if supported is None:
++        return None
++    windows = w.windows_by_chromosome([locus])
++    supported = {j for j in supported if w.junction_within_windows(*j[:3], windows)}
++    genes = w.genes_by_chromosome([locus])
++    recall = {j for j in supported if w.junction_within_genes(*j[:3], genes)}
++    return dict(predicted=len(predicted), precision_tp=len(predicted & supported),
++                supported=len(recall), recall_tp=len(predicted & recall))
++
++
++def metric(rows, fraction, name, seeds=(1, 2, 3)):
++    counts = [r['seeds'][str(s)][fraction] for r in rows for s in seeds]
++    total = lambda key: sum(c[key] for c in counts)
++    if name == 'F1':
++        denominator = total('f1_predicted') + total('f1_reference')
++        return 200 * total('f1_tp') / denominator if denominator else float('nan')
++    numerator, denominator = ('precision_tp', 'predicted') if name == 'P' else ('recall_tp', 'supported')
++    d = total(denominator)
++    return total(numerator) / d if d else float('nan')
++
++
++def score(payload, panel):
++    if set(payload['pairs']) != {'1', '2', '3'}:
++        raise ValueError('exact seeds 1, 2, 3 required')
++    records = {int(s): [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
++               for s, path in payload['pairs'].items()}
++    rns, delta = b.build_tiles(records)
++    primary = b.tile_bootstrap(delta)
++    composite = math.fsum(r['composite_loss_off'] - r['composite_loss_on']
++                         for rows in records.values() for r in rows if r['has_evidence']) / (3 * len(rns))
++    loci = payload['loci']
++    ids = [r['gene_id'] for r in loci]
++    if len(ids) != len(set(ids)) or set(ids) != {l.gene_id for l in panel}:
++        raise ValueError('exact full panel locus inventory required')
++    loci = sorted(loci, key=lambda r: r['gene_id'])
++    structural_flags = []
++    for row in loci:
++        if set(row['seeds']) != {'1', '2', '3'}:
++            raise ValueError('each locus must carry all three seeds')
++        for pair in row['seeds'].values():
++            if set(pair) != {'off', 'on'}:
++                raise ValueError('paired fractions off/on required')
++            for c in pair.values():
++                required = {'f1_tp', 'f1_predicted', 'f1_reference'}
++                structural = {'precision_tp', 'predicted', 'recall_tp', 'supported'}
++                if set(c) not in (required, required | structural):
++                    raise ValueError('count schema mismatch')
++                if any(type(v) is not int or v < 0 for v in c.values()):
++                    raise ValueError('counts must be nonnegative integers')
++                if c['f1_tp'] > min(c['f1_predicted'], c['f1_reference']):
++                    raise ValueError('F1 numerator exceeds denominator')
++                available = structural <= set(c)
++                structural_flags.append(available)
++                if available and (c['precision_tp'] > c['predicted'] or c['recall_tp'] > c['supported']):
++                    raise ValueError('junction numerator exceeds denominator')
++            if pair['off']['f1_reference'] != pair['on']['f1_reference']:
++                raise ValueError('reference denominator differs between fractions')
++            if 'supported' in pair['off'] and 'supported' in pair['on'] and pair['off']['supported'] != pair['on']['supported']:
++                raise ValueError('structural denominator differs between fractions')
++    if any(structural_flags) != all(structural_flags):
++        raise ValueError('partially missing structural scoring; do not encode missing as negative')
++    result = dict(label='exploratory / MVP', panel_sha256=w.PANEL_SHA256,
++                  primary=primary, composite_delta_diagnostic=composite,
++                  structural_available=all(structural_flags), readouts={},
++                  training_eligible=False,
++                  decision=None, decision_status='BLOCKED_PENDING_COVERAGE_POLICY',
++                  precision_rule='point_estimate_ge_0; interpretation pending author review')
++    core = {l.gene_id for l in panel if l.panel == 'mvp_core'}
++    for stratum, rows in [('all50', loci), ('core20', [r for r in loci if r['gene_id'] in core])]:
++        result['readouts'][stratum] = {}
++        for name in ['F1'] + (['P', 'R'] if all(structural_flags) else []):
++            by_seed = {}
++            for label, seeds in [('pooled', (1, 2, 3)), ('1', (1,)), ('2', (2,)), ('3', (3,))]:
++                try:
++                    by_seed[label] = b.locus_bootstrap(rows, lambda sample: metric(sample, 'on', name, seeds) - metric(sample, 'off', name, seeds))
++                except b.BootstrapError as e:
++                    by_seed[label] = {'status': 'UNASSESSABLE', 'reason': str(e)}
++            result['readouts'][stratum][name] = by_seed
++    return result
++
++
++def main(argv=None):
++    p = argparse.ArgumentParser(description=__doc__)
++    p.add_argument('--input', required=True, type=Path)
++    p.add_argument('--panels', required=True, type=Path)
++    p.add_argument('--out', required=True, type=Path)
++    p.add_argument('--final-decision', action='store_true', help='currently fail-closed pending author policy')
++    a = p.parse_args(argv)
++    if a.final_decision:
++        require_coverage_policy(None)
++    input_hash = w.sha256_file(a.input)
++    payload = json.loads(a.input.read_text())
++    hashes = {str(path): w.sha256_file(path) for path in [a.panels, *payload['pairs'].values()]}
++    hashes[str(a.input)] = input_hash
++    result = score(payload, w.load_panel(a.panels))
++    if any(w.sha256_file(path) != expected for path, expected in hashes.items()):
++        raise ValueError('scoring input changed during computation')
++    result['input_sha256'] = hashes
++    result['count_provenance_status'] = 'caller-supplied counts; not independently verified by this adapter'
++    with a.out.open('x') as f:
++        json.dump(result, f, indent=2, allow_nan=False)
++    return 0
++
++
++if __name__ == '__main__':
++    raise SystemExit(main())
+diff --git a/src/transgenic/evidence/mvp_bootstrap.py b/src/transgenic/evidence/mvp_bootstrap.py
+new file mode 100644
+index 0000000..b80125f
+--- /dev/null
++++ b/src/transgenic/evidence/mvp_bootstrap.py
+@@ -0,0 +1,295 @@
++"""Paired bootstrap and the §5.3 futility decision for the B6 MVP (exploratory).
++
++Pinned statistics contract (B6_MVP_PILOT_v1.md §5.2/§5.3):
++* delta_loss = loss_off - loss_on (positive = improvement). NEVER on - off.
++* delta_F1 / delta_P / delta_R = metric_on - metric_off.
++* Paired TILE bootstrap for the primary: resample tiles with replacement,
++  BOOTSTRAP_REPLICATES = 2,000, numpy.random.default_rng(BOOTSTRAP_SEED =
++  20260914); a resampled tile carries its three seeds' pairs; one-sided 95%
++  bounds are the 5th/95th percentiles of the replicate means.
++* Paired LOCUS bootstrap (same replicate count and seed) for delta_F1/P/R.
++* delta_loss threshold DELTA_LOSS = 0.005 nats; delta_F1 threshold DELTA_F1 =
++  2.0 percentage points. These constants are frozen: no function here accepts
++  an override, and mvp_score.py refuses CLI attempts to change them.
++
++The decision function implements §5.3 verbatim: STOP is evaluated FIRST;
++GO only if STOP fails; availability safeguards downgrade a prospective STOP to
++INCONCLUSIVE, never to GO.
++
++Record validation mirrors src/transgenic/training/mvp_metrics.py exactly
++(PAIRED_RECORD fields) without importing torch, so scoring can run on
++CPU-only nodes; a unit test asserts the field list here matches mvp_metrics.
++"""
++
++import math
++from dataclasses import dataclass
++from numbers import Integral, Real
++
++import numpy as np
++
++# --- frozen constants (spec §5.2/§5.3); no override path exists ---
++DELTA_LOSS = 0.005          # nats
++DELTA_F1 = 2.0              # percentage points
++BOOTSTRAP_REPLICATES = 2000
++BOOTSTRAP_SEED = 20260914
++EXPECTED_SEEDS = (1, 2, 3)
++
++# mirror of mvp_metrics._NUMERIC_FIELDS / _RTOL / _ATOL (unit-tested equal)
++PAIRED_NUMERIC_FIELDS = (
++    "loss_off", "loss_on", "composite_loss_off", "composite_loss_on",
++    "ce_numerator_off", "ce_denominator_off", "ce_numerator_on", "ce_denominator_on",
++)
++_RTOL = 1e-6
++_ATOL = 1e-8
++
++
++class BootstrapError(ValueError):
++    """Invalid statistics inputs must stop the decision, not degrade it."""
++
++
++def _require(condition, message):
++    if not condition:
++        raise BootstrapError(message)
++
++
++def validate_paired_record(record):
++    """Fail-closed validation of one eval_pairs record (mvp_metrics schema)."""
++    required = {"rn", "has_evidence", *PAIRED_NUMERIC_FIELDS}
++    _require(isinstance(record, dict) and required.issubset(record),
++             "paired record is missing required fields")
++    _require(not isinstance(record["rn"], bool) and isinstance(record["rn"], Integral),
++             "record rn must be an integer")
++    _require(isinstance(record["has_evidence"], bool),
++             "record has_evidence must be boolean")
++    for field in PAIRED_NUMERIC_FIELDS:
++        value = record[field]
++        _require(not isinstance(value, bool) and isinstance(value, Real)
++                 and math.isfinite(float(value)),
++                 f"record {field} must be finite numeric")
++    for suffix in ("off", "on"):
++        denominator = float(record[f"ce_denominator_{suffix}"])
++        _require(denominator > 0, "CE denominators must be positive")
++        _require(math.isclose(float(record[f"loss_{suffix}"]),
++                              float(record[f"ce_numerator_{suffix}"]) / denominator,
++                              rel_tol=_RTOL, abs_tol=_ATOL),
++                 "CE loss disagrees with its numerator and denominator")
++    _require(math.isclose(float(record["ce_denominator_off"]),
++                          float(record["ce_denominator_on"]),
++                          rel_tol=_RTOL, abs_tol=_ATOL),
++             "off/on CE denominators disagree")
++    return record
++
++
++def build_tiles(records_by_seed, expected_seeds=EXPECTED_SEEDS):
++    """Assemble evidence-positive tiles carrying one pair per seed.
++
++    `records_by_seed`: {seed: iterable of validated eval_pairs records}.
++    Returns (rns, deltas) with `deltas` a float64 array [n_tiles, n_seeds] of
++    loss_off - loss_on, seed order = sorted(expected_seeds). Fail-closed on any
++    seed missing a tile, disagreeing evidence flags, or duplicate rns.
++    """
++    seeds = tuple(sorted(expected_seeds))
++    _require(seeds == EXPECTED_SEEDS, "primary requires exactly seeds 1, 2, 3")
++    _require(tuple(sorted(records_by_seed)) == seeds,
++             f"expected seeds {seeds}, got {tuple(sorted(records_by_seed))}")
++    per_seed = {}
++    evidence_flags = {}
++    for seed in seeds:
++        rows = {}
++        for record in records_by_seed[seed]:
++            validate_paired_record(record)
++            rn = int(record["rn"])
++            _require(rn not in rows, f"seed {seed}: duplicate rn {rn}")
++            rows[rn] = record
++            flag = record["has_evidence"]
++            _require(evidence_flags.setdefault(rn, flag) == flag,
++                     f"rn {rn}: has_evidence disagrees across seeds")
++        per_seed[seed] = rows
++    inventories = {seed: set(rows) for seed, rows in per_seed.items()}
++    first = inventories[seeds[0]]
++    for seed in seeds[1:]:
++        _require(inventories[seed] == first,
++                 f"tile inventory mismatch between seeds {seeds[0]} and {seed}")
++    rns = sorted(rn for rn in first if evidence_flags[rn])
++    _require(rns, "evidence-positive paired subset is empty")
++    deltas = np.array([[float(per_seed[seed][rn]["loss_off"])
++                        - float(per_seed[seed][rn]["loss_on"])
++                        for seed in seeds] for rn in rns], dtype=np.float64)
++    return tuple(rns), deltas
++
++
++def tile_bootstrap(deltas):
++    """Paired tile bootstrap of the primary delta_loss.
++
++    `deltas`: float64 [n_tiles, n_seeds] of loss_off - loss_on. One tile draw
++    per replicate; the drawn tile carries ALL its seeds' pairs (the pooled and
++    per-seed replicate statistics use the same resampled tile identities).
++    Returns a dict with point estimates and one-sided 95% bounds
++    (5th/95th percentiles of replicate means).
++    """
++    deltas = np.asarray(deltas, dtype=np.float64)
++    _require(deltas.ndim == 2 and deltas.shape[0] >= 1 and deltas.shape[1] >= 1,
++             "deltas must be [n_tiles, n_seeds]")
++    _require(np.isfinite(deltas).all(), "deltas must be finite")
++    n_tiles = deltas.shape[0]
++    rng = np.random.default_rng(BOOTSTRAP_SEED)
++    index = rng.integers(0, n_tiles, size=(BOOTSTRAP_REPLICATES, n_tiles))
++    resampled = deltas[index]                      # [reps, n_tiles, n_seeds]
++    pooled_reps = resampled.mean(axis=(1, 2))      # tile carries its seeds
++    per_seed_reps = resampled.mean(axis=1)         # [reps, n_seeds]
++    return {
++        "pooled_point": float(deltas.mean()),
++        "per_seed_point": [float(v) for v in deltas.mean(axis=0)],
++        "pooled_lower95": float(np.percentile(pooled_reps, 5)),
++        "pooled_upper95": float(np.percentile(pooled_reps, 95)),
++        "per_seed_lower95": [float(v) for v in np.percentile(per_seed_reps, 5, axis=0)],
++        "per_seed_upper95": [float(v) for v in np.percentile(per_seed_reps, 95, axis=0)],
++        "n_tiles": int(n_tiles),
++        "replicates": BOOTSTRAP_REPLICATES,
++        "rng_seed": BOOTSTRAP_SEED,
++        "sign_convention": "delta_loss = loss_off - loss_on",
++    }
++
++
++def locus_bootstrap(per_locus, statistic):
++    """Paired locus bootstrap (same replicate count and seed as the tile one).
++
++    `per_locus`: sequence of per-locus paired records (opaque to this
++    function). `statistic(records) -> float` computes the pooled paired delta
++    (on - off) over a multiset of locus records. Fail-closed if any replicate
++    yields a non-finite statistic (e.g. a zero pooled denominator).
++    """
++    per_locus = list(per_locus)
++    _require(per_locus, "locus bootstrap requires at least one locus")
++    point = float(statistic(per_locus))
++    _require(math.isfinite(point), "statistic is not finite on the full panel")
++    n = len(per_locus)
++    rng = np.random.default_rng(BOOTSTRAP_SEED)
++    index = rng.integers(0, n, size=(BOOTSTRAP_REPLICATES, n))
++    reps = np.empty(BOOTSTRAP_REPLICATES, dtype=np.float64)
++    for i in range(BOOTSTRAP_REPLICATES):
++        value = float(statistic([per_locus[j] for j in index[i]]))
++        _require(math.isfinite(value), f"replicate {i}: statistic not finite")
++        reps[i] = value
++    return {
++        "point": point,
++        "lower95": float(np.percentile(reps, 5)),
++        "upper95": float(np.percentile(reps, 95)),
++        "n_loci": n,
++        "replicates": BOOTSTRAP_REPLICATES,
++        "rng_seed": BOOTSTRAP_SEED,
++        "sign_convention": "delta_metric = metric_on - metric_off",
++    }
++
++
++@dataclass(frozen=True)
++class DecisionInputs:
++    """Everything §5.3 needs, gathered fail-closed by the caller.
++
++    primary_lower / primary_upper: one-sided 95% bounds of the pooled tile
++        bootstrap (5th/95th percentiles), delta_loss = off - on.
++    seed_points: the three per-seed delta_loss point estimates.
++    delta_f1_lower: one-sided 95% lower bound on delta_F1 (on - off).
++        The secondary readout is computed from the decodes and must exist;
++        there is no "secondary unavailable" state.
++    structural_available: whether junction P/R against locally aligned
++        A-ONT1/A-HiFi reads exists (spec day-5 availability clause is an
++        availability FACT recorded by the caller, not a wall-clock trigger).
++    delta_r_lower / delta_p_point: junction recall lower bound and precision
++        point estimate; required when structural_available.
++        INTERPRETIVE NOTE (recorded for author review): the spec's
++        contradiction clause "above 0 on delta_R with delta_P not below 0"
++        is implemented as delta_R one-sided 95% lower bound > 0 AND the
++        delta_P POINT ESTIMATE >= 0; the bound reading applies to delta_R
++        (parallel to delta_F1), while "not below 0" on delta_P is read as the
++        point estimate since no bound side is named.
++    withholding_state: "assessed" or "unassessable" (§5.4; assessed only on
++        the provisional-STOP path — pass "unassessable" when no run and no
++        substantiated equivalence argument exists).
++    withholding_primary_upper: when assessed, the sensitivity re-run's primary
++        upper bound; reversal means it is >= DELTA_LOSS.
++    """
++    primary_lower: float
++    primary_upper: float
++    seed_points: tuple
++    delta_f1_lower: float
++    structural_available: bool
++    delta_r_lower: float = None
++    delta_p_point: float = None
++    withholding_state: str = "unassessable"
++    withholding_primary_upper: float = None
++
++
++def decide(inputs):
++    """§5.3 decision, STOP-first; returns (decision, trace list of strings)."""
++    _require(isinstance(inputs, DecisionInputs), "DecisionInputs required")
++    for name in ("primary_lower", "primary_upper", "delta_f1_lower"):
++        value = getattr(inputs, name)
++        _require(not isinstance(value, bool) and isinstance(value, Real) and math.isfinite(float(value)),
++                 f"{name} must be finite numeric")
++    _require(float(inputs.primary_lower) <= float(inputs.primary_upper),
++             "primary bounds are inverted")
++    seeds = tuple(inputs.seed_points)
++    _require(len(seeds) == len(EXPECTED_SEEDS) and all(
++        not isinstance(v, bool) and isinstance(v, Real) and math.isfinite(float(v)) for v in seeds),
++        "exactly three finite seed-level primary point estimates are required")
++    _require(isinstance(inputs.structural_available, bool),
++             "structural_available must be an explicit boolean")
++    if inputs.structural_available:
++        for name in ("delta_r_lower", "delta_p_point"):
++            value = getattr(inputs, name)
++            _require(not isinstance(value, bool) and isinstance(value, Real) and math.isfinite(float(value)),
++                     f"{name} required when the structural readout is available")
++    _require(inputs.withholding_state in ("assessed", "unassessable"),
++             "withholding_state must be 'assessed' or 'unassessable'")
++    if inputs.withholding_state == "assessed":
++        value = inputs.withholding_primary_upper
++        _require(not isinstance(value, bool) and isinstance(value, Real) and math.isfinite(float(value)),
++                 "assessed withholding requires its primary upper bound")
++
++    trace = []
++    prospective_stop = float(inputs.primary_upper) < DELTA_LOSS
++    trace.append(f"primary_upper={float(inputs.primary_upper):.6g} "
++                 f"{'<' if prospective_stop else '>='} delta_loss={DELTA_LOSS}: "
++                 f"prospective STOP {'holds' if prospective_stop else 'fails'}")
++    stop_failed = not prospective_stop
++    if prospective_stop:
++        contradiction = False
++        if float(inputs.delta_f1_lower) > 0:
++            contradiction = True
++            trace.append("contradiction: delta_F1 one-sided 95% lower bound > 0")
++        if (inputs.structural_available and float(inputs.delta_r_lower) > 0
++                and float(inputs.delta_p_point) >= 0):
++            contradiction = True
++            trace.append("contradiction: delta_R lower bound > 0 with delta_P "
++                         "not below 0")
++        reversal = (inputs.withholding_state == "assessed"
++                    and float(inputs.withholding_primary_upper) >= DELTA_LOSS)
++        if reversal:
++            trace.append("withholding reversal: sensitivity primary upper bound "
++                         f">= delta_loss={DELTA_LOSS}; STOP fails")
++        if contradiction or reversal:
++            stop_failed = True
++        else:
++            if not inputs.structural_available:
++                trace.append("availability safeguard: structural readout missing; "
++                             "prospective STOP downgraded to INCONCLUSIVE (never GO)")
++                return "INCONCLUSIVE", trace
++            if inputs.withholding_state == "unassessable":
++                trace.append("availability safeguard: §5.4 withholding unassessable; "
++                             "prospective STOP downgraded to INCONCLUSIVE (never GO)")
++                return "INCONCLUSIVE", trace
++            trace.append("STOP: primary upper bound below delta_loss, no available "
++                         "readout contradicts, withholding assessed without reversal")
++            return "STOP", trace
++
++    if stop_failed:
++        go = (float(inputs.primary_lower) > 0
++              and all(float(v) > 0 for v in seeds))
++        if go:
++            trace.append("GO: STOP failed, primary lower bound > 0 and all three "
++                         "seed-level delta_loss point estimates positive")
++            return "GO", trace
++        trace.append("INCONCLUSIVE: STOP failed and the GO criteria do not hold")
++        return "INCONCLUSIVE", trace
++    raise AssertionError("unreachable")
+diff --git a/src/transgenic/evidence/mvp_windows.py b/src/transgenic/evidence/mvp_windows.py
+new file mode 100644
+index 0000000..1058c7b
+--- /dev/null
++++ b/src/transgenic/evidence/mvp_windows.py
+@@ -0,0 +1,236 @@
++"""Shared MVP panel window derivation and restriction predicates (B6_MVP_PILOT_v1 §1.2/§2).
++
++This module is the single source of the 30,720-nt evaluation-window definition.
++Every consumer — the decoder, the pass-1 long-read prefilter, the junction table,
++and the scoring restriction predicates — must derive windows from here so that the
++window used for scoring is exactly the window that was decoded (Track B review
++must-fix 1).
++
++Coordinate conventions
++----------------------
++* Panel TSV `start`/`fin` are 1-based inclusive (spec §1.2). We convert once to
++  half-open 0-based `[gene_start0, gene_end0)` and never mix conventions.
++* Evaluation window: WINDOW_LENGTH = 30,720 nt CENTRED on the gene. With
++  ``pad_total = WINDOW_LENGTH - gene_length`` the left pad is ``pad_total // 2``
++  and the right pad is ``pad_total - pad_total // 2`` (the odd base goes to the
++  genomic right). This is deterministic and documented here once.
++* Prefilter interval: window +/- PREFILTER_PAD. The spec text says "panel
++  windows ± 10 kb"; "10 kb" is resolved as the decimal 10,000 nt, NOT 10,240
++  (the 10,240 figure appearing elsewhere is a tile-geometry constant, not the
++  spec's prefilter pad). Frozen here as PREFILTER_PAD = 10_000.
++* Junction intron coordinates are 0-based INCLUSIVE endpoints
++  (`intron_start0`, `intron_end0`), matching the C0-lite `est_junction` table.
++
++Two restriction scopes (must-fix 2) — do not conflate them:
++* READ-SUPPORTED junctions are counted inside panel WINDOWS
++  (`junction_within_windows`, containment in the 30,720-nt window).
++* PREDICTED junctions and the recall denominator are restricted against panel
++  GENES (`transcript_overlaps_gene` for selecting decoded transcripts,
++  `junction_within_genes` for the read-supported recall denominator).
++
++Fail-closed: a window that would extend beyond the chromosome (or below 0) is
++an error, never a silent clamp/shift; that case needs an author decision.
++"""
++
++import csv
++import hashlib
++from dataclasses import dataclass
++from pathlib import Path
++
++WINDOW_LENGTH = 30_720
++PREFILTER_PAD = 10_000  # spec "10 kb" == 10,000 nt (decimal); NOT 10,240.
++
++# Commit-bound trust anchor: sha256 of revision/protocols/b6_panels_v1.tsv at
++# f847cb80c7750326f0781f81481891ab0c9ea309 (matches the committed .sha256
++# companion; verified by the Track B adversarial review).
++PANEL_SHA256 = "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243"
++
++PANEL_COLUMNS = (
++    "panel", "shuffle_rank", "species_id", "gene_id", "chromosome", "start",
++    "fin", "strand", "length", "orthogroup_id", "n_transcripts", "exon_count",
++    "intron_count", "est_molecules",
++)
++MVP_LABELS = ("mvp_core", "mvp")
++MVP_EXPECTED_COUNTS = {"mvp_core": 20, "mvp": 30}
++
++
++class WindowError(ValueError):
++    """A panel/window inconsistency must stop scoring, not degrade it."""
++
++
++def _require(condition, message):
++    if not condition:
++        raise WindowError(message)
++
++
++@dataclass(frozen=True)
++class PanelLocus:
++    panel: str
++    gene_id: str
++    chromosome: str
++    start1: int   # 1-based inclusive, as in the TSV
++    fin1: int     # 1-based inclusive
++    strand: str
++    length: int
++
++    @property
++    def gene_start0(self):
++        return self.start1 - 1
++
++    @property
++    def gene_end0(self):
++        """Half-open end: [gene_start0, gene_end0)."""
++        return self.fin1
++
++
++def sha256_file(path):
++    h = hashlib.sha256()
++    with open(path, "rb") as f:
++        for block in iter(lambda: f.read(1 << 20), b""):
++            h.update(block)
++    return h.hexdigest()
++
++
++def load_panel(path, expected_sha256=PANEL_SHA256, labels=MVP_LABELS):
++    """Load the MVP panel loci fail-closed.
++
++    The default `expected_sha256` pins the commit-bound b6_panels_v1.tsv hash;
++    tests may pass the hash of a fixture explicitly, but there is no way to
++    skip the check.
++    """
++    path = Path(path)
++    _require(isinstance(expected_sha256, str) and len(expected_sha256) == 64,
++             "an explicit expected sha256 is required")
++    actual = sha256_file(path)
++    _require(actual == expected_sha256,
++             f"panel TSV hash mismatch: {path} has {actual}, expected {expected_sha256}")
++    loci = []
++    with open(path, newline="") as f:
++        reader = csv.reader(f, delimiter="\t")
++        header = tuple(next(reader))
++        _require(header == PANEL_COLUMNS,
++                 f"panel TSV header mismatch: {header!r}")
++        for row in reader:
++            _require(len(row) == len(PANEL_COLUMNS), f"panel row has {len(row)} fields")
++            record = dict(zip(PANEL_COLUMNS, row))
++            if record["panel"] not in labels:
++                continue
++            start1, fin1, length = (int(record["start"]), int(record["fin"]),
++                                    int(record["length"]))
++            _require(1 <= start1 <= fin1, f"{record['gene_id']}: invalid start/fin")
++            _require(length == fin1 - start1 + 1,
++                     f"{record['gene_id']}: length column disagrees with start/fin")
++            _require(record["strand"] in ("+", "-"),
++                     f"{record['gene_id']}: invalid strand")
++            loci.append(PanelLocus(record["panel"], record["gene_id"],
++                                   record["chromosome"], start1, fin1,
++                                   record["strand"], length))
++    counts = {}
++    for locus in loci:
++        counts[locus.panel] = counts.get(locus.panel, 0) + 1
++    if set(labels) == set(MVP_LABELS):
++        _require(counts == MVP_EXPECTED_COUNTS,
++                 f"MVP panel counts {counts} != {MVP_EXPECTED_COUNTS}")
++    _require(len({(l.chromosome, l.gene_id) for l in loci}) == len(loci),
++             "duplicate panel gene")
++    return tuple(loci)
++
++
++def evaluation_window(locus, chrom_length=None):
++    """30,720-nt half-open window `[w_start0, w_end0)` centred on the gene.
++
++    This is THE window the decoder decodes and the scorer restricts to.
++    Fail-closed at chromosome edges: no silent clamping.
++    """
++    gene_len = locus.gene_end0 - locus.gene_start0
++    _require(gene_len == locus.length, f"{locus.gene_id}: inconsistent gene length")
++    _require(gene_len <= WINDOW_LENGTH,
++             f"{locus.gene_id}: gene length {gene_len} exceeds window {WINDOW_LENGTH}")
++    pad_total = WINDOW_LENGTH - gene_len
++    pad_left = pad_total // 2          # odd base goes to the genomic right
++    w_start0 = locus.gene_start0 - pad_left
++    w_end0 = w_start0 + WINDOW_LENGTH
++    _require(w_start0 >= 0,
++             f"{locus.gene_id}: evaluation window would start before the chromosome "
++             f"({w_start0}); author decision required, no silent clamp")
++    if chrom_length is not None:
++        _require(w_end0 <= chrom_length,
++                 f"{locus.gene_id}: evaluation window would end past the chromosome; "
++                 f"author decision required, no silent clamp")
++    return (w_start0, w_end0)
++
++
++def prefilter_interval(window):
++    """Pass-1 candidate-read interval: evaluation window +/- 10,000 nt.
++
++    The left edge is floored at 0 — the PREFILTER is a superset selector, so
++    flooring can only keep extra reads, never drop evaluation-window evidence
++    (unlike the window itself, which is fail-closed).
++    """
++    w_start0, w_end0 = window
++    _require(w_end0 - w_start0 == WINDOW_LENGTH, "not an evaluation window")
++    return (max(0, w_start0 - PREFILTER_PAD), w_end0 + PREFILTER_PAD)
++
++
++def windows_by_chromosome(loci, chrom_lengths=None):
++    """Map chromosome -> sorted list of evaluation windows (half-open)."""
++    result = {}
++    for locus in loci:
++        length = None if chrom_lengths is None else chrom_lengths[locus.chromosome]
++        result.setdefault(locus.chromosome, []).append(evaluation_window(locus, length))
++    return {chrom: sorted(spans) for chrom, spans in result.items()}
++
++
++def prefilter_by_chromosome(loci):
++    """Map chromosome -> sorted list of pass-1 prefilter intervals (half-open)."""
++    result = {}
++    for locus in loci:
++        result.setdefault(locus.chromosome, []).append(
++            prefilter_interval(evaluation_window(locus)))
++    return {chrom: sorted(spans) for chrom, spans in result.items()}
++
++
++def _contained(span_start0, span_end0_incl, intervals):
++    """0-based-inclusive span fully inside any half-open interval."""
++    _require(span_start0 <= span_end0_incl, "invalid span")
++    return any(start0 <= span_start0 and span_end0_incl < end0
++               for start0, end0 in intervals)
++
++
++def _overlapping(span_start0, span_end0_incl, intervals):
++    """0-based-inclusive span overlapping any half-open interval by >= 1 base."""
++    _require(span_start0 <= span_end0_incl, "invalid span")
++    return any(span_start0 < end0 and span_end0_incl >= start0
++               for start0, end0 in intervals)
++
++
++def junction_within_windows(chrom, intron_start0, intron_end0, windows):
++    """Scope 1 (must-fix 2): READ-SUPPORTED junctions count inside panel WINDOWS.
++
++    `windows` is the mapping from `windows_by_chromosome`. Containment of the
++    0-based inclusive intron span in the 30,720-nt window.
++    """
++    return _contained(intron_start0, intron_end0, windows.get(chrom, ()))
++
++
++def genes_by_chromosome(loci):
++    """Map chromosome -> sorted list of half-open gene spans."""
++    result = {}
++    for locus in loci:
++        result.setdefault(locus.chromosome, []).append(
++            (locus.gene_start0, locus.gene_end0))
++    return {chrom: sorted(spans) for chrom, spans in result.items()}
++
++
++def junction_within_genes(chrom, intron_start0, intron_end0, genes):
++    """Scope 2a (must-fix 2): recall DENOMINATOR — read-supported junctions
++    inside the panel GENES (containment in the gene span, spec §2 'inside the
++    panel genes'). `genes` is the mapping from `genes_by_chromosome`."""
++    return _contained(intron_start0, intron_end0, genes.get(chrom, ()))
++
++
++def transcript_overlaps_gene(chrom, tx_start0, tx_end0_incl, genes):
++    """Scope 2b (must-fix 2): PREDICTED junctions come from decoded transcripts
++    OVERLAPPING the panel gene (spec §2 'introns of the decoded transcripts
++    overlapping the panel gene'): >= 1 base of transcript-span overlap."""
++    return _overlapping(tx_start0, tx_end0_incl, genes.get(chrom, ()))
+diff --git a/tests/test_mvp_scoring.py b/tests/test_mvp_scoring.py
+new file mode 100644
+index 0000000..38d6cdc
+--- /dev/null
++++ b/tests/test_mvp_scoring.py
+@@ -0,0 +1,189 @@
++"""CPU fixtures only: no measured biological outcomes."""
++import importlib.util
++import sys
++import json
++import subprocess
++from pathlib import Path
++
++import numpy as np
++import pytest
++
++from transgenic.evidence import mvp_bootstrap as b, mvp_windows as w
++
++ROOT = Path(__file__).resolve().parents[1]
++
++
++def script(name):
++    spec = importlib.util.spec_from_file_location(name, ROOT / 'revision/scripts/mvp' / (name + '.py'))
++    m = importlib.util.module_from_spec(spec)
++    sys.modules[name] = m
++    spec.loader.exec_module(m)
++    return m
++
++
++def locus():
++    return w.PanelLocus('mvp_core', 'g', 'Chr1', 30001, 31000, '+', 1000)
++
++
++def record(rn, delta, denominator=1, evidence=True):
++    return dict(rn=rn, has_evidence=evidence, loss_off=1 + delta, loss_on=1.,
++                composite_loss_off=100., composite_loss_on=1.,
++                ce_numerator_off=(1 + delta) * denominator, ce_numerator_on=denominator,
++                ce_denominator_off=denominator, ce_denominator_on=denominator)
++
++
++def test_centered_window_prefilter_and_distinct_scopes():
++    x = locus()
++    assert w.evaluation_window(x) == (15140, 45860)
++    assert w.prefilter_interval(w.evaluation_window(x)) == (5140, 55860)
++    assert w.junction_within_windows('Chr1', 16000, 16100, w.windows_by_chromosome([x]))
++    assert not w.junction_within_genes('Chr1', 16000, 16100, w.genes_by_chromosome([x]))
++    assert w.transcript_overlaps_gene('Chr1', 29990, 30000, w.genes_by_chromosome([x]))
++    with pytest.raises(w.WindowError):
++        w.evaluation_window(x, 45859)
++
++
++def test_primary_equal_positive_tiles_not_tokens_or_composite():
++    records = {s: [record(1, .01), record(2, .03, 100), record(3, 9, evidence=False)] for s in (1, 2, 3)}
++    rns, delta = b.build_tiles(records)
++    assert rns == (1, 2)
++    result = b.tile_bootstrap(delta)
++    assert result['pooled_point'] == pytest.approx(.02)
++    assert result['pooled_lower95'] == pytest.approx(.01)
++    assert result['pooled_upper95'] == pytest.approx(.03)
++    assert result == b.tile_bootstrap(delta)
++    assert result['replicates'] == 2000
++    with pytest.raises(b.BootstrapError):
++        b.build_tiles({1: records[1], 2: records[2]})
++
++
++@pytest.mark.parametrize('updates,want', [
++    ({}, 'STOP'),
++    ({'structural_available': False}, 'INCONCLUSIVE'),
++    ({'withholding_state': 'unassessable', 'withholding_primary_upper': None}, 'INCONCLUSIVE'),
++    ({'withholding_primary_upper': .005}, 'GO'),
++    ({'delta_f1_lower': .001}, 'GO'),
++    ({'delta_r_lower': .001, 'delta_p_point': 0}, 'GO'),
++    ({'delta_r_lower': .001, 'delta_p_point': -.001}, 'STOP'),
++    ({'primary_lower': 0, 'delta_f1_lower': 1}, 'INCONCLUSIVE'),
++    ({'seed_points': (.002, .002, 0), 'primary_upper': .006}, 'INCONCLUSIVE'),
++])
++def test_stop_first(updates, want):
++    args = dict(primary_lower=.001, primary_upper=.004, seed_points=(.002,) * 3,
++                delta_f1_lower=0, structural_available=True, delta_r_lower=0,
++                delta_p_point=0, withholding_state='assessed', withholding_primary_upper=.004)
++    args.update(updates)
++    assert b.decide(b.DecisionInputs(**args))[0] == want
++
++
++def test_junction_real_sam_threshold_strand_and_duplicate_inputs(tmp_path):
++    m = script('mvp_junction_table')
++    p = tmp_path / 'reads.sam'
++    p.write_text(''.join(f'r{i}\t16\tChr1\t30001\t60\t50M100N50M\t*\t0\t0\t*\t*\tts:A:+\n' for i in range(3)))
++    rows, qc = m.build_table([('ONT', False, p)], w.windows_by_chromosome([locus()]))
++    assert rows == [dict(chrom='Chr1', intron_start0=30050, intron_end0=30149,
++                         tx_strand='-', n_ONT=3, n_HiFi=0, supported=True)]
++    with pytest.raises(ValueError, match='duplicate'):
++        m.build_table([('ONT', False, p), ('ONT', False, p)], w.windows_by_chromosome([locus()]))
++
++
++def test_junction_table_rejects_forged_support(tmp_path):
++    m = script('mvp_junction_table')
++    p = tmp_path / 'junctions.tsv'
++    p.write_text('\t'.join(m.HEADER) + '\nChr1\t100\t199\t+\t1\t0\ttrue\n')
++    with pytest.raises(ValueError):
++        m.read_table(p)
++
++
++def test_junction_hifi_threshold_and_chimeric_read_rejection(tmp_path):
++    m = script('mvp_junction_table')
++    p = tmp_path / 'reads.sam'
++    lines = [f'r{i}\t0\tChr1\t30001\t60\t50M100N50M\t*\t0\t0\t*\t*\tts:A:+\n' for i in range(3)]
++    lines += ['r2\t2048\tChr1\t40001\t60\t100M\t*\t0\t0\t*\t*\tts:A:+\n']
++    p.write_text(''.join(lines))
++    rows, qc = m.build_table([('HiFi', False, p)], w.windows_by_chromosome([locus()]))
++    assert rows[0]['n_HiFi'] == 2
++    assert rows[0]['supported'] is True
++    rows, qc = m.build_table([('ONT', False, p)], w.windows_by_chromosome([locus()]))
++    assert rows[0]['n_ONT'] == 2
++    assert rows[0]['supported'] is False
++
++
++def test_three_seed_contract_not_overrideable():
++    with pytest.raises(b.BootstrapError):
++        b.build_tiles({1: [record(1, .01)]}, expected_seeds=(1,))
++
++
++def test_scoring_missing_independent_not_negative():
++    m = script('mvp_score')
++    assert m.junction_counts({('Chr1', 30050, 30149, '+')}, None, locus()) is None
++    counts = m.junction_counts({('Chr1', 16000, 16100, '+'), ('Chr1', 30050, 30149, '+')},
++                               {('Chr1', 16000, 16100, '+')}, locus())
++    assert counts == dict(predicted=2, precision_tp=1, supported=0, recall_tp=0)
++    with pytest.raises(ValueError, match='coverage policy'):
++        m.require_coverage_policy(None)
++
++
++def test_bootstrap_carries_seeds_together_and_matches_rng():
++    deltas = np.array([[1., 2., -3.], [4., 5., -9.], [7., 8., -15.]])
++    result = b.tile_bootstrap(deltas)
++    assert result['pooled_lower95'] == result['pooled_upper95'] == 0
++    rng = np.random.default_rng(20260914)
++    reps = [deltas[rng.choice(3, 3, replace=True)].mean(axis=0) for _ in range(2000)]
++    assert result['per_seed_lower95'] == pytest.approx(np.percentile(reps, 5, axis=0))
++    assert result['per_seed_upper95'] == pytest.approx(np.percentile(reps, 95, axis=0))
++
++
++def test_schema_mirrors_real_training_metrics():
++    from transgenic.training import mvp_metrics
++    assert b.PAIRED_NUMERIC_FIELDS == mvp_metrics._NUMERIC_FIELDS
++
++
++@pytest.mark.parametrize('field', ['primary_lower', 'delta_f1_lower'])
++def test_decision_rejects_boolean_statistics(field):
++    args = dict(primary_lower=.001, primary_upper=.004, seed_points=(.002,) * 3,
++                delta_f1_lower=0, structural_available=False)
++    args[field] = True
++    with pytest.raises(b.BootstrapError):
++        b.decide(b.DecisionInputs(**args))
++
++
++def test_prediction_selection_is_gene_overlap_not_junction_clipping():
++    m = script('mvp_score')
++    txs = [dict(chrom='Chr1', strand='+', exons=[(29000, 29100), (30000, 30100)]),
++           dict(chrom='Chr1', strand='+', exons=[(16000, 16100), (16200, 16300)])]
++    assert m.predicted_junctions(txs, locus()) == {('Chr1', 29100, 29999, '+')}
++
++
++def test_real_score_cli_full_frozen_panel_missing_structural(tmp_path):
++    panel = ROOT / 'revision/protocols/b6_panels_v1.tsv'
++    loci = w.load_panel(panel)
++    pairfile = tmp_path / 'pairs.jsonl'
++    pairfile.write_text(json.dumps(record(1, .002)) + '\n')
++    counts = dict(f1_tp=1, f1_predicted=2, f1_reference=2)
++    payload = dict(pairs={str(s): str(pairfile) for s in (1, 2, 3)},
++                   loci=[dict(gene_id=l.gene_id, seeds={str(s): dict(off=counts, on=counts) for s in (1, 2, 3)}) for l in loci])
++    inp = tmp_path / 'input.json'; inp.write_text(json.dumps(payload))
++    out = tmp_path / 'out.json'
++    proc = subprocess.run([sys.executable, str(ROOT / 'revision/scripts/mvp/mvp_score.py'),
++                           '--input', str(inp), '--panels', str(panel), '--out', str(out)], capture_output=True, text=True)
++    assert proc.returncode == 0, proc.stderr
++    result = json.loads(out.read_text())
++    assert result['primary']['pooled_point'] == pytest.approx(.002)
++    assert result['composite_delta_diagnostic'] == 99
++    assert result['decision'] is None
++    assert result['structural_available'] is False
++    assert result['readouts']['all50']['F1']['pooled']['point'] == 0
++    assert result['readouts']['core20']['F1']['pooled']['n_loci'] == 20
++    payload['pairs']['01'] = str(pairfile)
++    with pytest.raises(ValueError, match='seeds'):
++        script('mvp_score').score(payload, loci)
++    del payload['pairs']['01']
++    partial = payload['loci'][0]['seeds']['1']['off'].copy()
++    partial.update(precision_tp=0, predicted=1, recall_tp=0, supported=1)
++    payload['loci'][0]['seeds']['1']['off'] = partial
++    with pytest.raises(ValueError, match='partially missing'):
++        script('mvp_score').score(payload, loci)
++    payload['loci'].pop()
++    with pytest.raises(ValueError, match='inventory'):
++        script('mvp_score').score(payload, loci)
+diff --git a/tests/test_mvp_scoring_driver.py b/tests/test_mvp_scoring_driver.py
+new file mode 100644
+index 0000000..2799c2d
+--- /dev/null
++++ b/tests/test_mvp_scoring_driver.py
+@@ -0,0 +1,94 @@
++import hashlib
++import json
++from pathlib import Path
++
++import pytest
++
++from test_mvp_scoring import script, ROOT
++
++
++def setup_inputs(tmp_path):
++    m = script('mvp_align_panel_longreads')
++    root = tmp_path / 'root'
++    (root / 'evidence').mkdir(parents=True)
++    reads = root / 'actual.fa.gz'
++    reads.write_bytes(b'actual read file bytes')
++    cols = (ROOT / 'data/manifests/DATASET_ROLES.longread_v1.tsv').read_text().splitlines()[0]
++    values = ['ont/Athaliana_FLIC_PRJNA1087576', 'SRR28341943', 'Athaliana', 'reference', 'PromethION', 'RNA-Seq', '1', '3', '', '', hashlib.md5(reads.read_bytes()).hexdigest(), 'b1_validation_only', 'fixture', 'fixture']
++    roles = root / 'evidence/DATASET_ROLES.longread_v1.tsv'
++    roles.write_text(cols + '\n' + '\t'.join(values) + '\n')
++    return m, root, reads, roles
++
++
++def test_actual_read_role_and_md5_gate(tmp_path):
++    m, root, reads, roles = setup_inputs(tmp_path)
++    row = m.validate_read(root, 'SRR28341943', reads)
++    assert row['role'] == 'b1_validation_only'
++    reads.write_bytes(b'changed')
++    with pytest.raises(ValueError, match='md5'):
++        m.validate_read(root, 'SRR28341943', reads)
++
++
++@pytest.mark.parametrize('mutation', ['training', 'duplicate', 'header'])
++def test_no_training_bypass_or_ambiguous_manifest(tmp_path, mutation):
++    m, root, reads, roles = setup_inputs(tmp_path)
++    text = roles.read_text()
++    if mutation == 'training':
++        text = text.replace('b1_validation_only', 'c2_training_eligible')
++    elif mutation == 'duplicate':
++        text += text.splitlines()[1] + '\n'
++    else:
++        text = text.replace('local_fa_md5', 'wrong')
++    roles.write_text(text)
++    with pytest.raises(ValueError):
++        m.validate_read(root, 'SRR28341943', reads)
++
++
++def test_output_namespace_cannot_redirect_to_legacy(tmp_path):
++    m, root, reads, roles = setup_inputs(tmp_path)
++    legacy = root / 'evidence/orientation_audit_v1'; legacy.mkdir()
++    (root / 'evidence/mvp_scoring_20260916').symlink_to(legacy, target_is_directory=True)
++    with pytest.raises(ValueError, match='namespace'):
++        m.output_directory(root, 'SRR28341943')
++    assert list(legacy.iterdir()) == []
++
++
++def test_pass1_uses_mapq5_and_shared_window_not_gene(tmp_path):
++    m = script('mvp_align_panel_longreads')
++    from test_mvp_scoring import locus
++    paf = ['keep\t100\t0\t100\t+\tChr1\t100000\t55000\t55100\t100\t100\t5\n',
++           'drop\t100\t0\t100\t+\tChr1\t100000\t55000\t55100\t100\t100\t4\n',
++           'edge\t100\t0\t100\t+\tChr1\t100000\t55860\t55960\t100\t100\t60\n']
++    assert m.select_names(paf, [locus()]) == ['keep']
++    assert m.pass2_command('ONT', False, 'ref', 'reads', 32)[1:] == ['-t', '32', '-ax', 'splice', '-k14', '-G', '200000', '--secondary=no', '--cs=long', 'ref', 'reads']
++    assert '-uf' in m.pass2_command('ONT', True, 'ref', 'reads', 32)
++    assert 'splice:hq' in m.pass2_command('HiFi', False, 'ref', 'reads', 32)
++
++
++def test_real_orientation_scorer_nondefault_root_done_key_and_stale_rejection(tmp_path):
++    m = script('mvp_align_panel_longreads')
++    out = tmp_path / 'new_namespace'
++    out.mkdir()
++    sam = out / 'sample.sam'
++    sam.write_text('@HD\tVN:1.6\n')
++    gff = tmp_path / 'ref.gff'
++    gff.write_text('##gff-version 3\n')
++    reads = tmp_path / 'reads'; reads.write_text('reads')
++    ref = tmp_path / 'ref'; ref.write_text('ref')
++    legacy = tmp_path / 'orientation_audit_v1'; legacy.mkdir()
++    marker = legacy / 'DONE'; marker.write_text('untouched')
++    key = m.audit_key(reads, ref, gff)
++    result = m.audit_from_sam(sam, gff, out, 'SRR28341943', 'dataset', key)
++    assert result['status'] == 'UNRESOLVED'
++    assert result['use_uf'] is False  # spec explicitly permits no -uf here
++    assert m.read_audit(out, key, 'SRR28341943')['use_uf'] is False
++    assert (out / 'DONE').read_text().splitlines()[0] == 'key=' + key
++    assert marker.read_text() == 'untouched'
++    with pytest.raises(ValueError):
++        m.read_audit(out, 'stale', 'SRR28341943')
++    with pytest.raises(ValueError):
++        m.read_audit(out, key, 'wrongrun')
++    result['use_uf'] = True
++    (out / 'audit.json').write_text(json.dumps(result))
++    with pytest.raises(ValueError):
++        m.read_audit(out, key, 'SRR28341943')

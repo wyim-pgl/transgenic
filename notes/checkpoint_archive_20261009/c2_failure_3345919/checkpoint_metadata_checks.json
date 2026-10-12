@@ -1,0 +1,76 @@
+{
+  "draw_logs": {
+    "rank00.tsv": {
+      "lines": 4800,
+      "sha256": "f6c2eecc10921cf621479e005db1361e61dfc8e81d5aa8c5b6ca676c84650de5",
+      "tail": [
+        "214587\t0\t41c8230f28b2f61d673b5315ef6b4ab05f0774bad59d6d73cf98e5e49370b887",
+        "105159\t0\teaf1e2292631fde8f2a079de0176f4cfd7f17555ca2b9375f25449980ec45fdb",
+        "165636\t0\tafb779ed7bcbfec6970896fcaee7c0f11f7d5aa4e3b094123cd6b8b7807820ba"
+      ]
+    },
+    "rank01.tsv": {
+      "lines": 4800,
+      "sha256": "ff893d0ba22c901d7e4f7e76934d5a041e884584205d2f7224d3abe3c6590ce5",
+      "tail": [
+        "186827\t0\tf7dad80fe9d28e5006a38ce0359b3ab4c9ced536c0dd2e74ddcae5d590b51361",
+        "148368\t0\t62ac5c70a9d34a35cc655eafca4ab3d7667a775692dd00951633012275f30b80",
+        "14668\t0\tbd0651474a06edf0e4fa6b93e817e821db7406328a50bbfafc7f1f70615c6f69"
+      ]
+    },
+    "rank02.tsv": {
+      "lines": 4800,
+      "sha256": "8926cd9db4a34d5fb1d0f825d836e37bf052f3eacb94bcfeef367d99bbf6dfd3",
+      "tail": [
+        "129124\t0\te21bb0442af3780dd047d4b7bd3d3b158c6c7c6941cdc80b5ee0a8031c40d044",
+        "252362\t0\t79f0ee440ea7cfa8b772b151d72840cec410fead9101af3017492ec81c76ab97",
+        "49200\t0\tbe742e3e354d3df27333b66bd9161f96aaaddd40d9e92a82221943d2da1f9f96"
+      ]
+    },
+    "rank03.tsv": {
+      "lines": 6718,
+      "sha256": "3dabf0c18452626277c2b8ad2db6ee5531a8c6c11db18a17e96f661fc2644b00",
+      "tail": [
+        "151192\t0\td596e1b416a06ad20918ea31effe1cbdc873b719aa35a90fa31a25cd77e0e8a0",
+        "144599\t0\t43a9caeca820a9aa26f3fe2ceb6fbf22fd136b6303ee535bd5a48955942a251b",
+        "6195\t0\tc8364895eeac5f8f485456e7e241aa408f366ba939e36240498fcff86b9f7705"
+      ]
+    }
+  },
+  "meta": {
+    "epoch": 0,
+    "step": 4800,
+    "global_step": 200,
+    "pending_micro": 0,
+    "stopper": {
+      "best": null,
+      "best_epoch": null,
+      "bad_epochs": 0,
+      "patience": 3
+    },
+    "arm": "C2",
+    "seed": 123,
+    "stop_after_updates": 4099,
+    "identity_sha256": "60c3357d70e0d5316a2562e09bc47c2ef1a2c23f5ae6356bea034b8eb40aadd9"
+  },
+  "checks": {
+    "safetensors": {
+      "tensor_count": 770,
+      "header_bytes": 108248,
+      "declared_end": 2198495648,
+      "file_bytes": 2198495648,
+      "length_match": true
+    },
+    "optimizer.bin": {
+      "entries": 2190,
+      "sum_uncompressed": 3528666853,
+      "central_directory_readable": true
+    },
+    "scheduler.bin": {
+      "entries": 6,
+      "sum_uncompressed": 257,
+      "central_directory_readable": true
+    }
+  },
+  "recompile_trace_present": false
+}

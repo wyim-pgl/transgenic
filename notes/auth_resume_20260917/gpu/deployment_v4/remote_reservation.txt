@@ -1,0 +1,11 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+{
+  "time": "2026-09-17T19:45:14.732851",
+  "queue": "3149356|b5-seed|PENDING\n3149363|b5-seed|PENDING\n3149362|b5-seed|PENDING\n3149361|b5-seed|PENDING\n3149360|b5-seed|PENDING\n3149359|b5-seed|PENDING\n3149358|b5-seed|PENDING\n3149357|b5-seed|PENDING\n",
+  "release": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v6_20260917",
+  "control": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_v6_control_20260917",
+  "source_readonly_metadata_verified": true,
+  "submitted": false
+}

@@ -1,0 +1,77 @@
+{
+  "counts": {
+    "f1_predicted": 1,
+    "f1_reference": 1,
+    "f1_tp": 0
+  },
+  "receipt": {
+    "FN": 1,
+    "FP": 1,
+    "TP": 0,
+    "command": [
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare",
+      "-r",
+      "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/reference.gtf",
+      "-o",
+      "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/compare",
+      "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/predicted.gtf"
+    ],
+    "counts": {
+      "f1_predicted": 1,
+      "f1_reference": 1,
+      "f1_tp": 0
+    },
+    "outputs": [
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/compare.annotated.gtf",
+        "sha256": "e10505075b9170bcab85de3532641131bfa9b918660e865b8966a8bb1fdaff85",
+        "size": 283
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/compare.loci",
+        "sha256": "9188f5d9d1f73e2361140c1e0577a32d535dc6a2983bea7118709c791693edeb",
+        "size": 35
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/compare.predicted.gtf.refmap",
+        "sha256": "fb05a41b05ffd68c702392d2a58bc129dc2363b3cf01582fa622603c0e5aad45",
+        "size": 39
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/compare.predicted.gtf.tmap",
+        "sha256": "2996021c6d64922195f8de0887ed17d4652e1043986e21f8361ccb6667e401c5",
+        "size": 150
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/compare.stats",
+        "sha256": "74dc1c582fdfd552d2568d11522351822b5998b1632dc4d410865d0a07c17024",
+        "size": 1793
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/compare.tracking",
+        "sha256": "dcad3977f297fef4697305b7e31e30397e60052641e7b7b0cb77ac14a46fa5ce",
+        "size": 71
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/predicted.gtf",
+        "sha256": "48b7e43317ff55bebf5c1f9976e3d7f2e8d793ea98de30f373b479af9f7a03b8",
+        "size": 128
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/reference.gtf",
+        "sha256": "ef768446c02eb128de813570cd52bae5bda7ac089f0f155b25b5a91f51092f56",
+        "size": 186
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/stderr.txt",
+        "sha256": "5c78507593b10077e43f8bb092bb4c778a186a8554432ed63f42085be9b0fd6f",
+        "size": 63
+      },
+      {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/unmatched/producer/stdout.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      }
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "captured_at": "2026-09-17T17:00:33.960706-07:00",
+  "pins_verified": {
+    "release/MANIFEST.sha256": "2cd93e7b93182a51dc9198d4f697af7b9f36b826e0286d1538f26c96af09b904",
+    "controller_approval.json": "84e596d5360b9049f13a2b8fcea34d77484d9494f551532e45b40d8f7cdec91f",
+    "release/runtime_evidence/expected_closure.json": "17028c5096c789ec7d198c489d08eec8cbc0224ec1ebd492115a475d9ee243ce"
+  },
+  "manifest_entries_verified_local_and_remote": 17,
+  "closure_file_records_verified": 417,
+  "unique_runtime_files": 180,
+  "explicit_parent_paths": 43,
+  "output_and_logs_inventory": [
+    {
+      "allocated": 1024,
+      "gid": 3092957,
+      "logical": 4096,
+      "mode": "0o700",
+      "path": "out",
+      "type": "directory",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 746,
+      "mode": "0o600",
+      "path": "stderr",
+      "sha256": "9c21bd55e0c2dc84eb776ded9e7a2fcff64c05060a6615433379c05c3f256efd",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 1941,
+      "mode": "0o600",
+      "path": "stdout",
+      "sha256": "9ebe7e4b7bdbd272aaeacdcc8c2a285f77352d2662fc1b9906616afd3b6658cc",
+      "type": "file",
+      "uid": 3092957
+    }
+  ],
+  "logical_bytes_including_out_directory": 6783,
+  "allocated_bytes_including_out_directory": 2048,
+  "threshold_bytes": 268435456,
+  "all_retrieved_hashes_verified": true
+}

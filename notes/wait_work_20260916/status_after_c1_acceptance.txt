@@ -1,0 +1,17 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T22:12:31-0700
+JobID|State|ExitCode|Elapsed|MaxRSS
+6165559|RUNNING|0:0|00:10:34|
+6165559.batch|RUNNING|0:0|00:10:34|
+6165559.extern|RUNNING|0:0|00:10:34|
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/slurm-6165559.out ===
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/slurm-6165559.err ===
+2026-09-17T00:12:32-05:00
+             JOBID                           NAME     STATE       TIME NODELIST(REASON)
+           3163986             mvp8-final-p1-0916   PENDING       0:00 (Priority)
+JobID|State|ExitCode|Elapsed|MaxRSS
+3163986|PENDING|0:0|00:00:00|

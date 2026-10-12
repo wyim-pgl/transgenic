@@ -1,0 +1,21 @@
+LOCAL_START_UTC=2026-09-17T07:35:14.845593+00:00
+COMMAND=ssh -o BatchMode=yes -o ConnectTimeout=15 pronghorn 'ssh -o BatchMode=yes -o ConnectTimeout=15 dtai '"'"'python3 -c '"'"'"'"'"'"'"'"'import os,datetime,json; print(datetime.datetime.now(datetime.timezone.utc).isoformat()); paths=['"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"', '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe/p1_control/s0-inputs.json'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"', '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe/real_tokenizer/DONE'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"', '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe/real_tokenizer/FAILED'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"', '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-3163986.out'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"', '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-3163986.err'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"', '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/evidence/fullc0lite.db'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"']
+for p in paths:
+ try:
+  s=os.lstat(p); print(json.dumps(dict(path=p,exists=True,size=s.st_size,mtime_ns=s.st_mtime_ns,mode=s.st_mode)))
+ except OSError as e: print(json.dumps(dict(path=p,error=str(e))))'"'"'"'"'"'"'"'"''"'"''
+RETURN_CODE=0
+STDOUT
+2026-09-17T07:35:16.965326+00:00
+{"path": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986", "error": "[Errno 2] No such file or directory: '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986'"}
+{"path": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe/p1_control/s0-inputs.json", "error": "[Errno 2] No such file or directory: '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe/p1_control/s0-inputs.json'"}
+{"path": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe/real_tokenizer/DONE", "error": "[Errno 2] No such file or directory: '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe/real_tokenizer/DONE'"}
+{"path": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe/real_tokenizer/FAILED", "error": "[Errno 2] No such file or directory: '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/probe/real_tokenizer/FAILED'"}
+{"path": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-3163986.out", "error": "[Errno 2] No such file or directory: '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-3163986.out'"}
+{"path": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-3163986.err", "error": "[Errno 2] No such file or directory: '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-3163986.err'"}
+{"path": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/evidence/fullc0lite.db", "exists": true, "size": 1068773376, "mtime_ns": 1789516052000000000, "mode": 33184}
+
+STDERR
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

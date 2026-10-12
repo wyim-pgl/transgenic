@@ -1,0 +1,24 @@
+{
+  "time": "2026-09-17T14:40:27.612815",
+  "argv": [
+    "sbatch",
+    "--parsable",
+    "--account=cpu-s1-pgl-0",
+    "--partition=cpu-s1-pgl-0",
+    "--export=NIL",
+    "--no-requeue",
+    "--open-mode=append",
+    "--output=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/stdout",
+    "--error=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/stderr",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/release/sample.sbatch",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/release",
+    "46563a19f5699c55df12df7241af7f807e6d98bed0d7c0666138ce78804c40d6",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker"
+  ],
+  "queue": "6147940|syl_an_Ahy_A_ODB|PENDING\n6147612|syl_an_Ahy_A|PENDING\n6147349|syl_an_Ahy_B|PENDING\n6146937|syl_an_Ahy_B|PENDING\n6165672|agat_clean_final.Ahy_A_ODB|RUNNING\n6165874|syl_Spe_geta_backup|RUNNING\n6165685|syl_recovery_observer_20260917|RUNNING\n6156540|syl_watch_other_20m|RUNNING\n",
+  "preparation_sha256": "ae687e879447ddbac869963049d9c7249ec81912b0de7993eb00668e539adde5",
+  "automatic_retry": false,
+  "returncode": 0,
+  "stdout": "6165875\n",
+  "stderr": ""
+}

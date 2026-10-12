@@ -1,0 +1,14 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+3207080       COMPLETED      0:0   00:03:15 
+3207149          FAILED      1:0   00:01:07 
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1024              1499  leakage-controlled ...
+SBATCH_RC=0
+CP4_DEVICEFIX_SUBMISSION_RESULT 3207331
+
+CP4_DEVICEFIX_SUBMISSION_ERROR 

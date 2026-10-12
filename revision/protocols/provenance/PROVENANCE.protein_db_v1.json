@@ -1,0 +1,53 @@
+{
+  "provenance_id": "protein_db_v1",
+  "purpose": "A46 rule 15 artefact-hash verification for the cross-species protein resources (A19 OrthoDB, A46/A30 Swiss-Prot) and the exact commands that built the diamond databases.",
+  "measured_on": "2026-09-21",
+  "measured_host": "pronghorn",
+  "measured_by": "read-only ssh; sha256sum recomputed and compared against the build's own DB.sha256 sidecar",
+  "orthodb": {
+    "name": "OrthoDB v12 Viridiplantae, leakage-filtered stage 2 (A19.1)",
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz",
+    "size_bytes": 3178195033,
+    "sha256_measured": "fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f",
+    "sha256_in_build_sidecar": "fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f",
+    "sha256_match": true,
+    "md5_of_source_copy": "453cb32b02e0799950d7d5f4de5f62ac (FINAL.md5, gpu:/home/pgl/scratch1/wyim/transgenic_data/orthodb_filtered_stage2/)",
+    "sequences": 12115085,
+    "letters": 5249205193,
+    "stage2_filter": {
+      "input_md5": "9e5017aaf0c0aba42016eec08ec036df",
+      "sequences_in": 12204762,
+      "sequences_out": 12115085,
+      "taxids_in": 408,
+      "taxids_out": 408,
+      "exclude_taxid": [3702, 4081, 4577],
+      "removed_by_taxid": 0,
+      "removed_by_exact_match": {"Gmax": 21119, "Osativa": 18280, "Vvinifera": 13419, "Sitalica": 10805, "Ptrichocarpa": 9227, "Bdistachyon": 7892, "Sbicolor": 6285, "Ppatens": 2650},
+      "note": "exclude_taxid 3702/4081/4577 = A. thaliana / S. lycopersicum / Z. mays, exactly the evaluated species A19.1 names. removed_by_taxid is 0 because the upstream source was already prefiltered; the real removal is by exact match against each training species' test-orthogroup proteins."
+    }
+  },
+  "swissprot": {
+    "name": "Swiss-Prot reviewed Viridiplantae (A46 extension of A30, route-B phase input only)",
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz",
+    "size_bytes": 10266723,
+    "sha256_measured": "8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9",
+    "sha256_in_sidecar": "8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9",
+    "sha256_match": true,
+    "sequences": 42106,
+    "letters": 16265211,
+    "uniprot_query": "(reviewed:true) AND (taxonomy_id:33090)",
+    "download": "https://rest.uniprot.org/uniprotkb/stream?compressed=true&format=fasta&query=%28reviewed%3Atrue%29+AND+%28taxonomy_id%3A33090%29"
+  },
+  "diamond_databases": {
+    "odb12_viridiplantae_filtered.dmnd": {"size_bytes": 5751160176, "sha256": "3aac3d4456fbcfa7b2c004bf2b9482f3be69a1beffd1b11a8ff8edafc1f82ad1"},
+    "swissprot_viridiplantae_reviewed.dmnd": {"size_bytes": 21590888, "sha256": "b444cb292074e2c9c3a9e59f085b706d053f2cb579e7574c6e9e3982db56ce49"},
+    "built": "2026-09-14T11:28:55-0700",
+    "builder": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/build_dbs.sh",
+    "diamond": "diamond version 2.1.24 at /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond",
+    "makedb_commands": [
+      "diamond makedb --in swissprot_viridiplantae_reviewed.fa.gz -d swissprot_viridiplantae_reviewed --threads 16",
+      "diamond makedb --in odb12_Viridiplantae.filtered.fa.gz -d odb12_viridiplantae_filtered --threads 16"
+    ]
+  },
+  "corroboration": "build_dbs.sh calls diamond by the absolute path evidencemodeler/bin/diamond -- a third independent record naming the same binary already identified by sha256 in PROVENANCE.cpu_tools_v1.json and in the 2026-09-16 fixture provenance."
+}

@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "wrapper.py", line 393, in <module>
+    print(json.dumps(execute(options.request, options.request_sha256, options.wrapper_sha256), indent=2))
+  File "wrapper.py", line 254, in execute
+    require(sys.version_info >= (3, 9), 'Python >=3.9 required; use the independently pinned deployment interpreter')
+  File "wrapper.py", line 30, in require
+    raise ValueError(message)
+ValueError: Python >=3.9 required; use the independently pinned deployment interpreter

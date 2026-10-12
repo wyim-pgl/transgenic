@@ -1,0 +1,13 @@
+moved hsp_v3/Gmax aside
+moved hsp_v3/Vvinifera aside
+00c3e62fb4665dc33f999597087e68db41dceb9877f0d9aa71fa7f529307aef4  /data/gpfs/assoc/pgl/data/Transgenic/evidence/audit_align_n100/b6_audit_align_n100_gv.sbatch
+99cce1e32acc575e80b04e5a89b9d6ff8cabc36cd6779f72909aee66ba863baa  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/c0_view_n100.py
+9a6d2cae881156eb3ed4d6f6570f9f6621ef8be6174305fc63d74bbee599a90a  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/c0_n100.sbatch
+AUDIT_N100_GV 6172723 (49 tasks)
+Gmax est 6172724
+Gmax ont 6172725
+Vvinifera est 6172726
+Vvinifera pacbio 6172727
+Vvinifera ont 6172728
+Gmax HSP 6172729 PROTEIN_C0 6172730
+Vvinifera HSP 6172731 PROTEIN_C0 6172732

@@ -1,0 +1,898 @@
+{
+  "bytes": 95851,
+  "root": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1",
+  "listing": [
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/OBSERVATIONS_COMPLETE.json",
+      "regular": true,
+      "bytes": 218
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/cpu_runtime.json",
+      "regular": true,
+      "bytes": 1401
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/git_authority.json",
+      "regular": true,
+      "bytes": 840
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel",
+      "regular": false,
+      "bytes": 8192
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel_counts.json",
+      "regular": true,
+      "bytes": 18738
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/reference.panel.gff3",
+      "regular": true,
+      "bytes": 16
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/reference_compatibility.json",
+      "regular": true,
+      "bytes": 20259
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/reference_identity.json",
+      "regular": true,
+      "bytes": 657
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/request.json",
+      "regular": true,
+      "bytes": 1096
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/source_identity.json",
+      "regular": true,
+      "bytes": 11986
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/00.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/00.jsonl",
+      "regular": true,
+      "bytes": 24220
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/00.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/01.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/01.jsonl",
+      "regular": true,
+      "bytes": 75513
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/01.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/02.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/02.jsonl",
+      "regular": true,
+      "bytes": 11109
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/02.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/03.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/03.jsonl",
+      "regular": true,
+      "bytes": 185884
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/03.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/04.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/04.jsonl",
+      "regular": true,
+      "bytes": 17009
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/04.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/05.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/05.jsonl",
+      "regular": true,
+      "bytes": 136494
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/05.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/06.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/06.jsonl",
+      "regular": true,
+      "bytes": 7637
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/06.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/07.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/07.jsonl",
+      "regular": true,
+      "bytes": 53148
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/07.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/08.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/08.jsonl",
+      "regular": true,
+      "bytes": 51865
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/08.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/09.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/09.jsonl",
+      "regular": true,
+      "bytes": 269097
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/09.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/10.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/10.jsonl",
+      "regular": true,
+      "bytes": 49805
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/10.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/11.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/11.jsonl",
+      "regular": true,
+      "bytes": 128952
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/11.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/12.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/12.jsonl",
+      "regular": true,
+      "bytes": 81148
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/12.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/13.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/13.jsonl",
+      "regular": true,
+      "bytes": 108780
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/13.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/14.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/14.jsonl",
+      "regular": true,
+      "bytes": 36490
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/14.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/15.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/15.jsonl",
+      "regular": true,
+      "bytes": 15460
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/15.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/16.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/16.jsonl",
+      "regular": true,
+      "bytes": 17355
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/16.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/17.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/17.jsonl",
+      "regular": true,
+      "bytes": 74853
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/17.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/18.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/18.jsonl",
+      "regular": true,
+      "bytes": 86401
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/18.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/19.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/19.jsonl",
+      "regular": true,
+      "bytes": 18557
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/19.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/20.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/20.jsonl",
+      "regular": true,
+      "bytes": 291409
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/20.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/21.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/21.jsonl",
+      "regular": true,
+      "bytes": 11647
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/21.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/22.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/22.jsonl",
+      "regular": true,
+      "bytes": 32134
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/22.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/23.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/23.jsonl",
+      "regular": true,
+      "bytes": 17899
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/23.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/24.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/24.jsonl",
+      "regular": true,
+      "bytes": 17190
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/24.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/25.fa",
+      "regular": true,
+      "bytes": 30767
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/25.jsonl",
+      "regular": true,
+      "bytes": 12315
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/25.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/26.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/26.jsonl",
+      "regular": true,
+      "bytes": 34045
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/26.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/27.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/27.jsonl",
+      "regular": true,
+      "bytes": 20150
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/27.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/28.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/28.jsonl",
+      "regular": true,
+      "bytes": 3391
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/28.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/29.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/29.jsonl",
+      "regular": true,
+      "bytes": 3464
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/29.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/30.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/30.jsonl",
+      "regular": true,
+      "bytes": 16595
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/30.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/31.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/31.jsonl",
+      "regular": true,
+      "bytes": 15229
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/31.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/32.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/32.jsonl",
+      "regular": true,
+      "bytes": 61907
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/32.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/33.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/33.jsonl",
+      "regular": true,
+      "bytes": 13888
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/33.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/34.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/34.jsonl",
+      "regular": true,
+      "bytes": 88537
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/34.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/35.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/35.jsonl",
+      "regular": true,
+      "bytes": 9392
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/35.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/36.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/36.jsonl",
+      "regular": true,
+      "bytes": 6933
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/36.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/37.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/37.jsonl",
+      "regular": true,
+      "bytes": 37215
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/37.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/38.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/38.jsonl",
+      "regular": true,
+      "bytes": 11734
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/38.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/39.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/39.jsonl",
+      "regular": true,
+      "bytes": 2515
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/39.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/40.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/40.jsonl",
+      "regular": true,
+      "bytes": 24771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/40.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/41.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/41.jsonl",
+      "regular": true,
+      "bytes": 13433
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/41.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/42.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/42.jsonl",
+      "regular": true,
+      "bytes": 24063
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/42.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/43.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/43.jsonl",
+      "regular": true,
+      "bytes": 221189
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/43.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/44.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/44.jsonl",
+      "regular": true,
+      "bytes": 48256
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/44.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/45.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/45.jsonl",
+      "regular": true,
+      "bytes": 310302
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/45.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/46.fa",
+      "regular": true,
+      "bytes": 30767
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/46.jsonl",
+      "regular": true,
+      "bytes": 43432
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/46.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/47.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/47.jsonl",
+      "regular": true,
+      "bytes": 11432
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/47.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/48.fa",
+      "regular": true,
+      "bytes": 30771
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/48.jsonl",
+      "regular": true,
+      "bytes": 30503
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/48.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/49.fa",
+      "regular": true,
+      "bytes": 30769
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/49.jsonl",
+      "regular": true,
+      "bytes": 264549
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/49.npy",
+      "regular": true,
+      "bytes": 491648
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/COMPLETE",
+      "regular": true,
+      "bytes": 65
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/manifest.json",
+      "regular": true,
+      "bytes": 38938
+    }
+  ],
+  "collected_at": "2026-09-17T05:16:06.507193+00:00",
+  "files": [
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/transport.json",
+      "local_path": "metadata/transport.json",
+      "bytes": 1653,
+      "sha256": "1883df3c32c5b560030dbcb89543b3d2730d7c08518d47e4f932b62f88b18c0a"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/slurm-6165559.out",
+      "local_path": "metadata/slurm-6165559.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/slurm-6165559.err",
+      "local_path": "metadata/slurm-6165559.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/OBSERVATIONS_COMPLETE.json",
+      "local_path": "metadata/outputs/job-6165559/OBSERVATIONS_COMPLETE.json",
+      "bytes": 218,
+      "sha256": "96ed41166060ef4fd9edaca2220a2dfc609a574683aab0c0d21be3162e2dede6"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/cpu_runtime.json",
+      "local_path": "metadata/outputs/job-6165559/cpu_runtime.json",
+      "bytes": 1401,
+      "sha256": "2f9c28f1eb717e3323a708d1a65446f8127b1e9b68ddc3f313fad4d4bf39bc6c"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/git_authority.json",
+      "local_path": "metadata/outputs/job-6165559/git_authority.json",
+      "bytes": 840,
+      "sha256": "0d913d71994c3146db6922e1a5e80125329fa3e4c624945a089921cc60e38e28"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel_counts.json",
+      "local_path": "metadata/outputs/job-6165559/panel_counts.json",
+      "bytes": 18738,
+      "sha256": "a6a8ce7089e24ac2e9ffbd213545870c406be3283dc311f768182844796f84ba"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/reference_compatibility.json",
+      "local_path": "metadata/outputs/job-6165559/reference_compatibility.json",
+      "bytes": 20259,
+      "sha256": "ebd6a22a7eb9b7d6c33a29ace3bfe05963635c96e8531b02a075de8a4c1f03e2"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/reference_identity.json",
+      "local_path": "metadata/outputs/job-6165559/reference_identity.json",
+      "bytes": 657,
+      "sha256": "70aab612069cd6c646606cbf685ad53cf3b09532878ee46f459dad3495db4f81"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/request.json",
+      "local_path": "metadata/outputs/job-6165559/request.json",
+      "bytes": 1096,
+      "sha256": "f22a0455e38653c2c0c7e509ade60c18cbc3fab243dda2e06421721cc1e15a1a"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/source_identity.json",
+      "local_path": "metadata/outputs/job-6165559/source_identity.json",
+      "bytes": 11986,
+      "sha256": "c58504ca0d30a222d8baa4e7d9ba83f5c6f04d894469c5cf92eaa132165a0d9c"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/COMPLETE",
+      "local_path": "metadata/outputs/job-6165559/panel/COMPLETE",
+      "bytes": 65,
+      "sha256": "064be35cd51d81c223d620d2457f689c2cbdf45830587bd12cc8533f07812033"
+    },
+    {
+      "remote_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/panel/manifest.json",
+      "local_path": "metadata/outputs/job-6165559/panel/manifest.json",
+      "bytes": 38938,
+      "sha256": "3c31b90522dc8a1393480218f878b6c4e44e4339e211e69173f25005286c63ca"
+    }
+  ],
+  "hash_location": "local fetched bytes; no remote hashing"
+}

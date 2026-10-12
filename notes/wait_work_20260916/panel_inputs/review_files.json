@@ -1,0 +1,46 @@
+{
+  "REPORT.md": {
+    "bytes": 11273,
+    "sha256": "133b2ebcf38d40e21d2c251e65d7f815bd3a5f93bd6f8538c63f1b2c4a135b67"
+  },
+  "authority.py": {
+    "bytes": 3433,
+    "sha256": "0b3917b7fa33df0d1818bdbad992f664e8dc6b959639a09aa998f75a97e8b2dc"
+  },
+  "build_release.py": {
+    "bytes": 2945,
+    "sha256": "2fdf67a438255fb007e5b38ae5f8daf74cc4a62810f8efbec7f74480ac779d38"
+  },
+  "cpu_dependency.json": {
+    "bytes": 6463,
+    "sha256": "cf4d509e8914d6bcf44e6a96a79fe127e4521f7592e4a768a7e2659760ec3435"
+  },
+  "final_release/transport.json": {
+    "bytes": 1653,
+    "sha256": "b4bc567d6bdae382318fd0061186bf83c5077b12ac024b5cc36a6dcf9bb54eef"
+  },
+  "input_inventory.json": {
+    "bytes": 6852,
+    "sha256": "e16bd31a533d5bd2e5b52121949a0a6c1c9363e9f3540a89d7862f1dd3f4bc1d"
+  },
+  "panel_cpu.sbatch": {
+    "bytes": 2238,
+    "sha256": "9f236df0ff39ce3b6282e729d577f932b89cd0fac301cb4bff406616ea1abb26"
+  },
+  "run_panel_cpu.py": {
+    "bytes": 11627,
+    "sha256": "3e62ae91e83b874b2c32d453d2e7001a9834930304ca57159eb4194f21acf3bd"
+  },
+  "runtime_signalp_cpu.txt": {
+    "bytes": 670,
+    "sha256": "141096de6281d04c923a5e622f0a7bbf7ade05c4f5c11a9c6e0cf3212e320d23"
+  },
+  "test_tools.py": {
+    "bytes": 5161,
+    "sha256": "369348b94fd0e5c0c87b384bb49de15b9c58cd9c539e5cfff08773a07d542330"
+  },
+  "tests.final_release.txt": {
+    "bytes": 761,
+    "sha256": "cd14087ba9b9da6412cade50379576382c283dbe57842d485be467d1c9094c43"
+  }
+}

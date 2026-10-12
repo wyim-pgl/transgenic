@@ -1,0 +1,21 @@
+{
+  "scope": "single_exploratory_est8_S0_P1_diagnostic",
+  "basis": "User delegated actual GPU validation and MVP training progression; controller selects the independently reviewed bounded first diagnostic.",
+  "source_commit": "d99b1f8a2a42edfe4877788d0f7d1ad7f9d53e50",
+  "release_ledger_sha256": "34a094c321a59ae4e0613c96d6797a2fdca32284682a2ed07074ca5ee52d203b",
+  "review": "notes/mvp_execution_20260916/p1/deployment.independent_review.md",
+  "nodes": 1,
+  "gpus": 4,
+  "cpus": 64,
+  "walltime_seconds": 1800,
+  "maximum_node_hours": 0.5,
+  "maximum_gpu_hours": 2,
+  "prior_mvp_smoke_submissions_recorded": 0,
+  "prospective_campaign_smoke_cap_node_hours": 5,
+  "automatic_retry": false,
+  "training_authorized_by_this_record": false,
+  "production_authorized": false,
+  "source_checkpoint": "seed123/epoch_05",
+  "failure_policy": "Preserve per-job artifacts and started marker. No automatic recovery or resubmission; inspect exact failure and independently review any next attempt.",
+  "binding_limit": "This d99b diagnostic cannot certify a later combined resource or decoder snapshot."
+}

@@ -1,0 +1,13 @@
+2891003fe77f0889eb2f0f56342f9681c4c89fd5b68571e16a9b7ff4919aafed  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/a19_filter_miniprot.py
+ef6016404af691b3ed092bc7c3c5c865943f40c3c468c92373a7d7caabd61f85  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/a19_filter.sbatch
+38946b16c242e9a7e3606345425e7eefe2b5309fd43b53ebadedfe8bda64f9da  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/protein_c0_v4.sbatch
+A19_FILTER 6172756
+PROTEIN_C0_v4 Athaliana 6172757 (afterok 6172756_0 + HSP 6172694)
+PROTEIN_C0_v4 Bdistachyon 6172758 (afterok 6172756_1 + HSP 6172719)
+PROTEIN_C0_v4 Gmax 6172759 (afterok 6172756_2 + HSP 6172729)
+PROTEIN_C0_v4 Osativa 6172760 (afterok 6172756_3 + HSP 6172700)
+PROTEIN_C0_v4 Ppatens 6172761 (afterok 6172756_4 + HSP 6172702)
+PROTEIN_C0_v4 Ptrichocarpa 6172762 (afterok 6172756_5 + HSP 6172704)
+PROTEIN_C0_v4 Sbicolor 6172763 (afterok 6172756_6 + HSP 6172706)
+PROTEIN_C0_v4 Sitalica 6172764 (afterok 6172756_7 + HSP 6172692)
+PROTEIN_C0_v4 Vvinifera 6172765 (afterok 6172756_8 + HSP 6172731)

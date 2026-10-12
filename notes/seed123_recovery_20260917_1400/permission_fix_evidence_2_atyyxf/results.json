@@ -1,0 +1,84 @@
+{
+  "hashes_before": {
+    "prepare_controller.py": "9f30e4c828abe84ce2b2df5e1ad8ea648dc32414207a9f13a37204ff3acb9b8f",
+    "test_deployment.py": "96dd1ebeb9326fa33dbe840f8ca0a3f8145df1221168db796689417cf84e59c3"
+  },
+  "test_returncode": 0,
+  "evidence": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/permission_fix_evidence_2_atyyxf",
+  "positive": {
+    "command": [
+      "/home/wyim/miniconda3/bin/python3",
+      "-I",
+      "-B",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_deployment/prepare_controller.py",
+      "--release",
+      "/tmp/tmpx7kqc1wn/release",
+      "--ledger-sha",
+      "b590ac673e6ddff70ddf80441b6d61c8c6e3ab3cb5638f6896a02fe014157bf8",
+      "--launcher-sha",
+      "0c4321cb199374907dc99680a9ad8fb2c01202e7e17a4c62f6573543dc0697ea",
+      "--batch-sha",
+      "7fe7c107e5796043393ee6eea52d8db96cf327877577cf1679c658425ef31f1e",
+      "--namespace",
+      "/tmp/tmpx7kqc1wn/positive-reservation",
+      "--stdout",
+      "/tmp/tmpx7kqc1wn/positive-reservation/stdout",
+      "--stderr",
+      "/tmp/tmpx7kqc1wn/positive-reservation/stderr"
+    ],
+    "returncode": 0,
+    "observed": {
+      "positive-reservation": {
+        "mode": "0o700",
+        "uid": 1000
+      },
+      "stdout": {
+        "mode": "0o600",
+        "uid": 1000
+      },
+      "stderr": {
+        "mode": "0o600",
+        "uid": 1000
+      },
+      "preparation.json": {
+        "mode": "0o600",
+        "uid": 1000
+      }
+    }
+  },
+  "unsupported": {
+    "command": [
+      "/home/wyim/miniconda3/bin/python3",
+      "-I",
+      "-B",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_deployment/prepare_controller.py",
+      "--release",
+      "/tmp/tmpx7kqc1wn/release",
+      "--ledger-sha",
+      "b590ac673e6ddff70ddf80441b6d61c8c6e3ab3cb5638f6896a02fe014157bf8",
+      "--launcher-sha",
+      "0c4321cb199374907dc99680a9ad8fb2c01202e7e17a4c62f6573543dc0697ea",
+      "--batch-sha",
+      "7fe7c107e5796043393ee6eea52d8db96cf327877577cf1679c658425ef31f1e",
+      "--namespace",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/permission_fix_evidence_2_atyyxf/failed-reservation",
+      "--stdout",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/permission_fix_evidence_2_atyyxf/failed-reservation/stdout",
+      "--stderr",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/permission_fix_evidence_2_atyyxf/failed-reservation/stderr"
+    ],
+    "returncode": 1,
+    "stdout_empty": true,
+    "mode": "0o777",
+    "uid": 1000,
+    "receipt_exists": false,
+    "reservation_retained": true,
+    "entries": [],
+    "reuse_returncode": 1
+  },
+  "hashes_after": {
+    "prepare_controller.py": "9f30e4c828abe84ce2b2df5e1ad8ea648dc32414207a9f13a37204ff3acb9b8f",
+    "test_deployment.py": "96dd1ebeb9326fa33dbe840f8ca0a3f8145df1221168db796689417cf84e59c3"
+  },
+  "verdict": "PASS: scoped D2.1"
+}

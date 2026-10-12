@@ -1,0 +1,20 @@
+             JOBID        STATE               START_TIME   NODELIST(REASON)
+           3361666      PENDING      2026-10-11T16:51:33         (Priority)
+
+JobID|State|ExitCode|Elapsed
+3361386|FAILED|1:0|00:43:01
+3361386.batch|FAILED|1:0|00:43:01
+3361386.extern|COMPLETED|0:0|00:43:01
+3361666|PENDING|0:0|00:00:00
+
+ORIGINAL_META {"epoch": 0, "step": 4800, "global_step": 200, "pending_micro": 0, "stopper": {"best": null, "best_epoch": null, "bad_epochs": 0, "patience": 3}, "arm": "C2", "seed": 123, "stop_after_updates": 4099, "identity_sha256": "60c3357d70e0d5316a2562e09bc47c2ef1a2c23f5ae6356bea034b8eb40aadd9"}
+CONTROLLER_EXISTS False
+PRODUCTION_JOBS []
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

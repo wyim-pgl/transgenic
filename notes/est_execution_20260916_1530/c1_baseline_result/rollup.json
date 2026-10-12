@@ -1,0 +1,695 @@
+{
+  "accepted_phase_evidence": false,
+  "audit_runtime_launcher_sha256": "5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291",
+  "audit_runtime_taxonomy_helper_sha256": "32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302",
+  "audit_script_sha256": "d4955d6277aa540399bd8c32def14e352fa131e761ff79e51c522c7ee353f6f8",
+  "clean_accounting": false,
+  "failed_units": [],
+  "production_authorized": false,
+  "sacct_evidence_verbatim": "JobID|State|ExitCode\n6163851|COMPLETED|0:0\n6163851.batch|COMPLETED|0:0\n6163851.extern|OUT_OF_MEMORY|0:125\n6164049_0|COMPLETED|0:0\n6164049_0.batch|COMPLETED|0:0\n6164049_0.extern|OUT_OF_MEMORY|0:125\n6164049_1|COMPLETED|0:0\n6164049_1.batch|COMPLETED|0:0\n6164049_1.extern|OUT_OF_MEMORY|0:125\n6164049_2|COMPLETED|0:0\n6164049_2.batch|COMPLETED|0:0\n6164049_2.extern|OUT_OF_MEMORY|0:125\n6164049_3|COMPLETED|0:0\n6164049_3.batch|COMPLETED|0:0\n6164049_3.extern|OUT_OF_MEMORY|0:125\n6164049_4|COMPLETED|0:0\n6164049_4.batch|COMPLETED|0:0\n6164049_4.extern|OUT_OF_MEMORY|0:125\n6164049_5|COMPLETED|0:0\n6164049_5.batch|COMPLETED|0:0\n6164049_5.extern|OUT_OF_MEMORY|0:125\n6164049_6|COMPLETED|0:0\n6164049_6.batch|COMPLETED|0:0\n6164049_6.extern|OUT_OF_MEMORY|0:125\n6164049_7|COMPLETED|0:0\n6164049_7.batch|COMPLETED|0:0\n6164049_7.extern|OUT_OF_MEMORY|0:125\n",
+  "sacct_note": ".extern OUT_OF_MEMORY 0:125 across all 9 jobs is a recorded, UNRESOLVED anomaly; allocation/.batch COMPLETED 0:0 is the only accounting claim made.  No clean-accounting claim.",
+  "sacct_sha256": "decb225348454b2df31e4f5715c6fb1eb74b7b08958c67e3e82ca3ad24133284",
+  "status": "FAIL",
+  "tree_checks": {
+    "Athaliana:batch_exitcode": {
+      "detail": "0",
+      "status": "PASS"
+    },
+    "Athaliana:timing_files": {
+      "detail": {
+        "hashes": {
+          "orthodb.time.txt": "a0dadf9d280b077c55d614d0db289b17efe324a6adb0dfc760b4453100298d68",
+          "swissprot.time.txt": "f5eb256258a8de0125b2869d2f31d2ffc867014a5c7cadf36b73a2f0c560a958"
+        },
+        "invalid": [],
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    "Bdistachyon:batch_exitcode": {
+      "detail": "0",
+      "status": "PASS"
+    },
+    "Bdistachyon:timing_files": {
+      "detail": {
+        "hashes": {
+          "orthodb.time.txt": "e32fe1e70aacebb27b8f769ccd91f0bc1ced1c345485124c746e87d093bd8e3a",
+          "swissprot.time.txt": "264447f42c4d78cdc02593e1caad4d43c340959705808a8fbabe9cb51ccb5148"
+        },
+        "invalid": [],
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    "Gmax:batch_exitcode": {
+      "detail": "0",
+      "status": "PASS"
+    },
+    "Gmax:timing_files": {
+      "detail": {
+        "hashes": {
+          "orthodb.time.txt": "91c967f9dc9ffdf04817981a815451210aaa82f7da9f464c8be19578bb0c2502",
+          "swissprot.time.txt": "9e14b0e72f5a435d5df500c99b6409583c6d7c98152b64bbd480ef2e4269c8a6"
+        },
+        "invalid": [],
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    "Osativa:batch_exitcode": {
+      "detail": "0",
+      "status": "PASS"
+    },
+    "Osativa:timing_files": {
+      "detail": {
+        "hashes": {
+          "orthodb.time.txt": "26e16135b6e42c1d566b629c9fcf7b428e7e12ace0cf1853d99afe898135beca",
+          "swissprot.time.txt": "04f200817fbe7c46bdd3d2167adeffd6dda41c98375b4edec4ae04d0efc58d64"
+        },
+        "invalid": [],
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    "Ppatens:batch_exitcode": {
+      "detail": "0",
+      "status": "PASS"
+    },
+    "Ppatens:timing_files": {
+      "detail": {
+        "hashes": {
+          "orthodb.time.txt": "b8ce6b98fb3cdadbd1a9308f4867c5af1d043793255e9ebc85e4daec030eeb0e",
+          "swissprot.time.txt": "90c86659004188e155ae6d7563c08ea83e889b930da3c9e7037016a4b2995872"
+        },
+        "invalid": [],
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    "Ptrichocarpa:batch_exitcode": {
+      "detail": "0",
+      "status": "PASS"
+    },
+    "Ptrichocarpa:timing_files": {
+      "detail": {
+        "hashes": {
+          "orthodb.time.txt": "e3e4138240e256c028291b33411ae3ea93d52817a4ecee101b3f399816d226d4",
+          "swissprot.time.txt": "135b15cd3140a96a8f7258e4e821c6bf4e8342b732ca532dc8540597a3b91d4d"
+        },
+        "invalid": [],
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    "Sbicolor:batch_exitcode": {
+      "detail": "0",
+      "status": "PASS"
+    },
+    "Sbicolor:timing_files": {
+      "detail": {
+        "hashes": {
+          "orthodb.time.txt": "4de95b407606df67f46a4dc15ba8a9c3f74af81d19b97dee33a026ef43da499c",
+          "swissprot.time.txt": "64958a4e7f2284830e204d448fb3afe1b82f8e2a9413cc50ee33c1fe416c0b62"
+        },
+        "invalid": [],
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    "Sitalica:batch_exitcode": {
+      "detail": "0",
+      "status": "PASS"
+    },
+    "Sitalica:timing_files": {
+      "detail": {
+        "hashes": {
+          "orthodb.time.txt": "635921f4c88806cc4a1f67d903688d770c20984cd2c014a69699d7a76d4e357f",
+          "swissprot.time.txt": "a867188471da82d70538203ca96c0e256985b2d641bb1a0ea0816d3099c3bf78"
+        },
+        "invalid": [],
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    "Vvinifera:batch_exitcode": {
+      "detail": "0",
+      "status": "PASS"
+    },
+    "Vvinifera:timing_files": {
+      "detail": {
+        "hashes": {
+          "orthodb.time.txt": "54ef56b41f888951a149a4fe54b7422a4a169544b6c85760a085b25aecd23bb8",
+          "swissprot.time.txt": "7265504b322877890f7c44a9b5b27158bc8dd2e8f8dc706ecdd5fc4e6823317c"
+        },
+        "invalid": [],
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    "accounting:6163851": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6163851",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6163851.batch": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6163851.batch",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6163851.extern": {
+      "detail": [
+        {
+          "ExitCode": "0:125",
+          "JobID": "6163851.extern",
+          "State": "OUT_OF_MEMORY"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_0": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_0",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_0.batch": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_0.batch",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_0.extern": {
+      "detail": [
+        {
+          "ExitCode": "0:125",
+          "JobID": "6164049_0.extern",
+          "State": "OUT_OF_MEMORY"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_1": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_1",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_1.batch": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_1.batch",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_1.extern": {
+      "detail": [
+        {
+          "ExitCode": "0:125",
+          "JobID": "6164049_1.extern",
+          "State": "OUT_OF_MEMORY"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_2": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_2",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_2.batch": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_2.batch",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_2.extern": {
+      "detail": [
+        {
+          "ExitCode": "0:125",
+          "JobID": "6164049_2.extern",
+          "State": "OUT_OF_MEMORY"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_3": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_3",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_3.batch": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_3.batch",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_3.extern": {
+      "detail": [
+        {
+          "ExitCode": "0:125",
+          "JobID": "6164049_3.extern",
+          "State": "OUT_OF_MEMORY"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_4": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_4",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_4.batch": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_4.batch",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_4.extern": {
+      "detail": [
+        {
+          "ExitCode": "0:125",
+          "JobID": "6164049_4.extern",
+          "State": "OUT_OF_MEMORY"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_5": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_5",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_5.batch": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_5.batch",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_5.extern": {
+      "detail": [
+        {
+          "ExitCode": "0:125",
+          "JobID": "6164049_5.extern",
+          "State": "OUT_OF_MEMORY"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_6": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_6",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_6.batch": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_6.batch",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_6.extern": {
+      "detail": [
+        {
+          "ExitCode": "0:125",
+          "JobID": "6164049_6.extern",
+          "State": "OUT_OF_MEMORY"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_7": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_7",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_7.batch": {
+      "detail": [
+        {
+          "ExitCode": "0:0",
+          "JobID": "6164049_7.batch",
+          "State": "COMPLETED"
+        }
+      ],
+      "status": "PASS"
+    },
+    "accounting:6164049_7.extern": {
+      "detail": [
+        {
+          "ExitCode": "0:125",
+          "JobID": "6164049_7.extern",
+          "State": "OUT_OF_MEMORY"
+        }
+      ],
+      "status": "PASS"
+    },
+    "batch_artifacts:pilot:inventory": {
+      "detail": {
+        "run.sbatch": "8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a",
+        "slurm-6163851.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "slurm-6163851.out": "0c53be4dba8cb3a37690885027a1003bb1c3a48ad30ab6ccae7fa175acb5bd76"
+      },
+      "status": "PASS"
+    },
+    "batch_artifacts:pilot:logs": {
+      "detail": "UNRESOLVED pilot log-layout receipt: wrapper has no output/error directives; submission paths unavailable locally. Arbitrary .out/.err files cannot satisfy it.",
+      "status": "FAIL"
+    },
+    "batch_artifacts:pilot:script": {
+      "detail": {
+        "approved_sha256": "8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a",
+        "matched": [
+          "run.sbatch"
+        ]
+      },
+      "status": "PASS"
+    },
+    "batch_artifacts:remaining8:inventory": {
+      "detail": {
+        "logs/6164049_0.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/6164049_0.out": "e0e200ea4b8a1f57488b07573f612d1948a20db7d3825ef8724093f8c2ea2e37",
+        "logs/6164049_1.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/6164049_1.out": "a985c82ac938c1a4c2696d260c5683dd932c40910354a556b3f034b1f7f8125a",
+        "logs/6164049_2.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/6164049_2.out": "54051a91978510a9c1e5ed6a467af0d230f71c2e0e24d0302774da4da70acbe5",
+        "logs/6164049_3.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/6164049_3.out": "25e4232e59e048a32a619198fade5da9f24876f9228b331789eb28a574764242",
+        "logs/6164049_4.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/6164049_4.out": "6ad6b61af9dc25b0fe4b6070b87fc8af8ec9dbb13867c80d6d7c9738368eb1c0",
+        "logs/6164049_5.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/6164049_5.out": "d0cbcfcf443b38b579831312b36cf35d03f29de6d023de399c7854c069da13a6",
+        "logs/6164049_6.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/6164049_6.out": "cdcc77adf4fd044e6222f575d52e805c2675ba3c8b5d197d3c9765a100a195e1",
+        "logs/6164049_7.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/6164049_7.out": "4f3b6c4008c629257d18d9556f9d72c8ed93afed7c3a92ad78a536df0b26002c",
+        "run.sbatch": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c"
+      },
+      "status": "PASS"
+    },
+    "batch_artifacts:remaining8:logs": {
+      "detail": {
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    "batch_artifacts:remaining8:script": {
+      "detail": {
+        "approved_sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c",
+        "matched": [
+          "run.sbatch"
+        ]
+      },
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "container_markers:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914": {
+      "detail": "NO_MARKERS_REQUIRED",
+      "status": "PASS"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx": {
+      "detail": {
+        "preflight_20260914": {
+          "disposition": "NEITHER",
+          "ok": false
+        },
+        "preflight_20260914/logs": {
+          "disposition": "NEITHER",
+          "ok": false
+        },
+        "preflight_20260914/orthodb": {
+          "disposition": "DONE",
+          "ok": true
+        },
+        "preflight_20260914/receipts": {
+          "disposition": "NEITHER",
+          "ok": false
+        },
+        "preflight_20260914/submission.lock": {
+          "disposition": "NEITHER",
+          "ok": false
+        },
+        "preflight_20260914/swissprot": {
+          "disposition": "DONE",
+          "ok": true
+        },
+        "preflight_20260914/tmp": {
+          "disposition": "NEITHER",
+          "entries": [],
+          "note": "tmp requires explicit reconciliation; never silently skipped",
+          "ok": false
+        },
+        "preflight_20260914/xdg-cache": {
+          "disposition": "NEITHER",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915": {
+      "detail": {
+        "submission.lock": {
+          "disposition": "NEITHER",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana": {
+      "detail": {
+        "tmp": {
+          "disposition": "NEITHER",
+          "entries": [],
+          "note": "tmp requires explicit reconciliation; never silently skipped",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon": {
+      "detail": {
+        "tmp": {
+          "disposition": "NEITHER",
+          "entries": [],
+          "note": "tmp requires explicit reconciliation; never silently skipped",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax": {
+      "detail": {
+        "tmp": {
+          "disposition": "NEITHER",
+          "entries": [],
+          "note": "tmp requires explicit reconciliation; never silently skipped",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa": {
+      "detail": {
+        "tmp": {
+          "disposition": "NEITHER",
+          "entries": [],
+          "note": "tmp requires explicit reconciliation; never silently skipped",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens": {
+      "detail": {
+        "tmp": {
+          "disposition": "NEITHER",
+          "entries": [],
+          "note": "tmp requires explicit reconciliation; never silently skipped",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa": {
+      "detail": {
+        "tmp": {
+          "disposition": "NEITHER",
+          "entries": [],
+          "note": "tmp requires explicit reconciliation; never silently skipped",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor": {
+      "detail": {
+        "tmp": {
+          "disposition": "NEITHER",
+          "entries": [],
+          "note": "tmp requires explicit reconciliation; never silently skipped",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera": {
+      "detail": {
+        "tmp": {
+          "disposition": "NEITHER",
+          "entries": [],
+          "note": "tmp requires explicit reconciliation; never silently skipped",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs": {
+      "detail": "no unexpected sibling dirs",
+      "status": "PASS"
+    },
+    "dispositions:/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914": {
+      "detail": {
+        "execution.lock": {
+          "disposition": "NEITHER",
+          "ok": false
+        },
+        "submission.lock": {
+          "disposition": "NEITHER",
+          "ok": false
+        },
+        "tmp": {
+          "disposition": "NEITHER",
+          "entries": [],
+          "note": "tmp requires explicit reconciliation; never silently skipped",
+          "ok": false
+        }
+      },
+      "status": "FAIL"
+    },
+    "root_present:remaining8_20260915": {
+      "detail": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915",
+      "status": "PASS"
+    },
+    "root_present:sitalica_pilot_20260914": {
+      "detail": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914",
+      "status": "PASS"
+    }
+  },
+  "units_audited": 18,
+  "units_expected": 18
+}

@@ -1,0 +1,7 @@
+{"by_species": {"Athaliana": {"cDNA": 34, "direct_RNA": 1}}, "tasks": 35}
+12
+    "reads": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/training/ont/Athaliana/cui2020_PRJNA594286/SRR10611193.fa.gz",
+--
+    "reads": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/training/ont/Athaliana/cui2020_PRJNA594286/SRR10611194.fa.gz",
+5ec6b13f75c7a0c0cd6fcabba04b2ae7ecf5ae0c67d62e4de687289b99cf38fe  ont_metadata_athaliana.sbatch
+6172498

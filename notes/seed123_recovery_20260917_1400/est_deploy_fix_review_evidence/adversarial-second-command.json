@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "/home/wyim/miniconda3/bin/python3",
+    "-B",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_review_evidence/adversarial.py",
+    "-v"
+  ],
+  "timeout": 45,
+  "returncode": 0
+}

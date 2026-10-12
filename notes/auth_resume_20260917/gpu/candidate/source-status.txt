@@ -1,0 +1,31 @@
+ M revision/scripts/mvp/make_launch_readiness.py
+ M revision/scripts/mvp/mvp_decode_panel.py
+ M revision/scripts/mvp/mvp_decode_runtime.py
+ M revision/scripts/mvp/mvp_produce_counts.py
+ M revision/scripts/mvp/mvp_score.py
+ M revision/scripts/mvp/mvp_verify_panel_inputs.py
+ M revision/scripts/mvp/real_probes.py
+ M revision/scripts/mvp/resource_probe.py
+ M revision/scripts/mvp/run_training.py
+ M src/transgenic/evidence/mvp_bootstrap.py
+ M src/transgenic/training/mvp_cli.py
+ M src/transgenic/training/mvp_cli_runtime.py
+ M src/transgenic/training/mvp_finalize.py
+ M tests/test_mvp_cli.py
+ M tests/test_mvp_decoder_integration.py
+ M tests/test_mvp_decoder_runtime.py
+ M tests/test_mvp_readiness_tools.py
+ M tests/test_mvp_score_producer.py
+?? revision/scripts/mvp/mvp_panel_compatibility.py
+?? revision/scripts/mvp/mvp_verify_pinned_panel.py
+?? src/transgenic/training/mvp_profiles.py
+?? tasknotes/controller_seed123/
+?? tasknotes/recovery_panel_caller/
+?? tasknotes/recovery_runtime/
+?? tasknotes/seed123_eval/
+?? tasknotes/seed123_panel/
+?? tasknotes/seed123_train/
+?? tests/test_mvp_panel_compatibility.py
+?? tests/test_mvp_pinned_panel.py
+?? tests/test_mvp_seed123_eval.py
+?? tests/test_mvp_seed123_training.py

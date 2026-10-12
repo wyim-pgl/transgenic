@@ -1,0 +1,139 @@
+--- original-final_p1/deploy.py
++++ release_v2/deploy.py
+@@ -2,6 +2,7 @@
+ """Controller-only S0/P1, fixed paths, single attempt. Never submits a job."""
+ import hashlib
+ import json
++import math
+ import os
+ from pathlib import Path
+ import re
+@@ -11,7 +12,10 @@
+ import tarfile
+ import time
+ 
+-COMMIT = 'b660bf1e7dc48287ca34a0d6e3aeb53d45f599b6'
++BASE_COMMIT = '9603e20fd4870a9f5b3d5f68e2df8ba0f8a49558'
++CANDIDATE_ARCHIVE_SHA = 'da161088fb401dbe87382685c1b5faadc17c7255d4a89f705fe1126ecc5bcec7'
++CANDIDATE_MANIFEST_SHA = '4eb7476aa36e77ed8967bc5d6ea73f005deb078b5a5e9b9491976f3d4c79eb0a'
++CANDIDATE_LEDGER_SHA = 'd1ae4155fdd31fcb30e8d96f046bf40734b4bad3d65535df2766ba55fc9ae48a'
+ ROOT = Path('/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545')
+ WORK = ROOT.parent
+ SIF = Path('/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif')
+@@ -172,21 +176,79 @@
+     Path(root).chmod(0o555)
+ 
+ 
++def binding_digest(bindings):
++    return hashlib.sha256((json.dumps(bindings, sort_keys=True, separators=(',', ':'),
++                                      allow_nan=False) + '\n').encode()).hexdigest()
++
++
++def validate_prepared(prepared):
++    bindings = prepared['bindings']
++    require(bindings.get('profile') == 'development-single' and
++            type(bindings.get('seed')) is int and bindings['seed'] == 123 and
++            bindings.get('run_role') == 'mvp_finetune', 'old/cross-profile prepared receipt rejected')
++    require(prepared.get('bindings_sha256') == binding_digest(bindings), 'prepared digest mismatch')
++
++
++def verify_source_manifest(release, manifest):
++    pinned(release / 'source-manifest.json', CANDIDATE_MANIFEST_SHA)
++    source = json.loads((release / 'source-manifest.json').read_text())
++    require(source['base_commit'] == BASE_COMMIT and manifest.get('source_provenance') == source and
++            manifest['source_files'] == source['source_files'] and len(source['source_files']) == 103,
++            'wrong candidate source provenance/inventory')
++    require('commit' not in manifest, 'dirty snapshot is not a Git commit')
++    pinned(release / 'code.candidate.tar', CANDIDATE_ARCHIVE_SHA)
++
++
++def validate_controller_gate(gate, release_sha, now=None):
++    # Operator attestations, not scheduler observations or a schema2 training budget.
++    now = time.time() if now is None else now
++    require(gate.get('scope') == 'S0_P1_DIAGNOSTIC_ONLY' and
++            gate.get('profile') == 'development-single' and type(gate.get('seed')) is int and
++            gate['seed'] == 123 and gate.get('training_authorized') is False, 'wrong controller scope')
++    require(gate.get('release_json_sha256') == release_sha, 'gate belongs to old/different release')
++    for key in ('full_accounting_reviewed', 'no_overlap', 'new_package_independent_review',
++                'old_owned_pending_zero_confirmed_cancel', 'staging_ownership_mapping_reviewed',
++                'b5_exclusions_reviewed'):
++        require(gate.get(key) is True, 'controller gate missing: ' + key)
++    for key in ('accounting_record_reference', 'review_record_reference'):
++        require(isinstance(gate.get(key), str) and bool(gate[key].strip()), 'controller reference missing: ' + key)
++    measured = gate.get('measured_at_unix')
++    require(type(measured) in (int, float) and math.isfinite(measured) and 0 <= now - measured <= 300,
++            'fresh controller gate required (<=300 seconds); never reuse reconnaissance')
++    spent = gate.get('prior_diagnostic_node_hours')
++    pending = gate.get('other_pending_reserved_node_hours')
++    require(all(type(x) in (int, float) and math.isfinite(x) and x >= 0 for x in (spent, pending)),
++            'complete numeric diagnostic accounting required')
++    require(spent + pending + 0.5 <= 5, 'replacement exceeds cumulative 5 node-hour / 20 GPU-hour cap')
++
++
++def controller_gate(release):
++    path = ROOT / 'staging/dev123_p1_controller_gate.json'
++    digest = os.environ.get('DEPLOY_CONTROLLER_GATE_SHA256', '')
++    require(re.fullmatch('[0-9a-f]{64}', digest) is not None, 'independently pinned controller gate required')
++    pinned(path, digest)
++    require(path.stat().st_uid == os.getuid(), 'controller gate ownership mismatch')
++    gate = json.loads(path.read_text())
++    validate_controller_gate(gate, sha(release / 'release.json'))
++    return gate
++
++
+ def host():
+     require(os.environ.get('SLURM_JOB_ID') and os.environ.get('SLURM_JOB_NUM_NODES') == '1', 'one-node compute allocation required')
+     require(ROOT.resolve(strict=True) == ROOT and ROOT.stat().st_uid == os.getuid(), 'namespace ownership/path mismatch')
+     require(SOURCE.resolve(strict=True) == SOURCE, 'source run root must not be an alias')
+-    release = ROOT / 'staging/final_p1_release'
++    release = ROOT / 'staging/dev123_p1_release_20260917'
+     require((ROOT / 'staging/evidence/fullc0lite.db').is_file(),
+             'staging evidence absent: STOP; never recover from an old partial job')
+     manifest = json.loads((release / 'release.json').read_text())
+-    require(manifest['commit'] == COMMIT, 'wrong release commit')
++    verify_source_manifest(release, manifest)
++    gate = controller_gate(release)
+     for name, digest in manifest['release_files'].items():
+         pinned(release / name, digest)
+     # Keep the existing namespace intact; each allocation owns one fresh subtree.
+     job_id = os.environ['SLURM_JOB_ID']
+     require(re.fullmatch(r'[0-9]+', job_id) is not None, 'invalid Slurm job ID')
+-    job = ROOT / ('final-p1-job-' + job_id)
++    job = ROOT / ('dev123-p1-job-' + job_id)
+     job.mkdir()  # collision is a blocker, never resume or overwrite
+     for name in (*manifest['release_files'], 'release.json', 'release.sha256'):
+         destination = job / 'release' / name
+@@ -200,12 +262,13 @@
+         (job / name).mkdir()
+     control = job / 'probe/p1_control'
+     control.mkdir()
++    save(control / 'controller-gate.snapshot.json', gate)
+     scratch = job / 'cache/p1'
+     scratch.mkdir()
+     for name in ('modules', 'inductor', 'triton', 'tmp', 'home'):
+         (scratch / name).mkdir()
+     quota_record(control / 'quota-before.json', job / 'inputs')
+-    extract_archive(release / 'code.tar', job / 'code/source', manifest['source_files'])
++    extract_archive(release / 'code.candidate.tar', job / 'code/source', manifest['source_files'])
+     (job / 'code/source/notes').mkdir()
+     require(set(manifest['accepted_companions_not_in_source_commit']) == {ACCEPT, INVENTORY, RECEIPTS},
+             'wrong candidate companion inventory')
+@@ -280,8 +343,9 @@
+          '--panel', base / PANEL, '--sif', '/image.sif', '--config', base / CONFIG,
+          '--init-from', checkpoint, '--acceptance-record', base / ACCEPT,
+          '--acceptance-sha256', PINS['acceptance'], '--inventory-record', base / INVENTORY,
+-         '--receipts-record', base / RECEIPTS, '--seed', 1, *pins,
++         '--receipts-record', base / RECEIPTS, '--profile', 'development-single', '--seed', 123, *pins,
+          '--output', control / 'prepared.json', '--manifest-output', control / 'consumed-code.json'])
++    validate_prepared(json.loads((control / 'prepared.json').read_text()))
+     from real_probes import tree_identity
+     save(control / 'assets.json', {'roots': {p: tree_identity(p) for p in
+          ('/work/repo/HFmodels', '/work/repo/HFmodels/hub')}})
+@@ -387,6 +451,7 @@
+         pinned(control / name, digest)
+     require(json.loads((control / 'tile-availability.json').read_text())['status'] ==
+             'available_and_actual_measured_batches_checked', 'tile selection blocked')
++    validate_prepared(json.loads((control / 'prepared.json').read_text()))
+     # Fresh compile scratch remains empty: S0 did CPU data checks, not a GPU warmup.
+     require(not any(Path('/scratch/inductor').iterdir()) and not any(Path('/scratch/triton').iterdir()),
+             'compiler scratch unexpectedly populated before P1')

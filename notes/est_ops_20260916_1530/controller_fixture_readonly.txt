@@ -1,0 +1,51 @@
+$ ssh -o BatchMode=yes pronghorn 'date -Is; squeue -u "$USER" -o "%.22i %.14P %.30j %.10T %.12M %.6D %R"; command -v sbatch; sacct -j 6165460 -P --format=JobID,JobName,State,ExitCode,Start,End,ReqMem,AllocCPUS,MaxRSS,NodeList; scontrol show job -dd 6165460'
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T15:39:54-0700
+                 JOBID      PARTITION                           NAME      STATE         TIME  NODES NODELIST(REASON)
+               6147940   cpu-s1-pgl-0               syl_an_Ahy_A_ODB    PENDING         0:00      1 (JobHeldUser)
+               6147612   cpu-s1-pgl-0                   syl_an_Ahy_A    PENDING         0:00      1 (JobHeldUser)
+               6147349   cpu-s1-pgl-0                   syl_an_Ahy_B    PENDING         0:00      1 (JobHeldUser)
+               6146937   cpu-s1-pgl-0                   syl_an_Ahy_B    PENDING         0:00      1 (JobHeldUser)
+               6146936   cpu-s1-pgl-0               syl_an_Ahy_A_ODB    RUNNING  13-00:26:10      1 cpu-50
+               6156540   cpu-s1-pgl-0            syl_watch_other_20m    RUNNING   6-03:48:52      1 cpu-50
+               6156395   cpu-s1-pgl-0             pasaPost.Ahy_A_ODB    RUNNING   6-13:48:57      1 cpu-50
+/cm/shared/apps/slurm/current/bin/sbatch
+JobID|JobName|State|ExitCode|Start|End|ReqMem|AllocCPUS|MaxRSS|NodeList
+6165460|est_hsp_diag_1530|COMPLETED|0:0|2026-09-16T15:37:35|2026-09-16T15:37:37|4Gn|2||cpu-50
+6165460.batch|batch|COMPLETED|0:0|2026-09-16T15:37:35|2026-09-16T15:37:37|4Gn|2|1548K|cpu-50
+6165460.extern|extern|OUT_OF_MEMORY|0:125|2026-09-16T15:37:35|2026-09-16T15:37:37|4Gn|2|1480K|cpu-50
+JobId=6165460 JobName=est_hsp_diag_1530
+   UserId=wyim(3092957) GroupId=p-wyim(3092957) MCS_label=N/A
+   Priority=1343 Nice=0 Account=cpu-s1-pgl-0 QOS=normal
+   JobState=COMPLETED Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   DerivedExitCode=0:0
+   RunTime=00:00:02 TimeLimit=00:30:00 TimeMin=N/A
+   SubmitTime=2026-09-16T15:37:35 EligibleTime=2026-09-16T15:37:35
+   AccrueTime=2026-09-16T15:37:35
+   StartTime=2026-09-16T15:37:35 EndTime=2026-09-16T15:37:37 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-16T15:37:35
+   Partition=cpu-s1-pgl-0 AllocNode:Sid=login-0:46842
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=cpu-50
+   BatchHost=cpu-50
+   NumNodes=1 NumCPUs=2 NumTasks=1 CPUs/Task=2 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=2,mem=4G,node=1,billing=7
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   JOB_GRES=(null)
+     Nodes=cpu-50 CPU_IDs=0-1 Mem=4096 GRES=
+   MinCPUsNode=2 MinMemoryNode=4G MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/fixture/diagnostic.sbatch
+   WorkDir=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/fixture
+   StdErr=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/fixture/logs/slurm-6165460.out
+   StdIn=/dev/null
+   StdOut=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/fixture/logs/slurm-6165460.out
+   Power=
+   NtasksPerTRES:0
+
+
+LOCAL_SSH_EXIT=0

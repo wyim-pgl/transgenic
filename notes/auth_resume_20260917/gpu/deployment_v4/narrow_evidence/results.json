@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "pins": {
+    "release_v6.tar": "26c1dc0a233a95ab86977813e68310eccfce91b081de3a63586cfd7b9427628a",
+    "release_v6/release.json": "64a547b8ba5f54e87c1985f278564a9ea9fc7c8f3af07f6b6afe3bdf17f4f7d4",
+    "release_v6/release.sha256": "74a740ea154532aa3c0b807d052fb9c05bdf02fcfb6fd86845d348be72f70d9b",
+    "release_v6/code.candidate.tar": "da161088fb401dbe87382685c1b5faadc17c7255d4a89f705fe1126ecc5bcec7",
+    "scontrol-job-3163986.txt": "95d819c95d7665cb830f177c75f62db80585245d77dda26ac48159c80ad26679"
+  },
+  "transport_members": 14,
+  "ledger_entries": 13,
+  "preserved_files": 305,
+  "new_unittest_pass": 5,
+  "cpu_rejections": [
+    "task CPUs '32'",
+    "task CPUs '0'",
+    "task CPUs '65'",
+    "task CPUs ''",
+    "missing task CPUs",
+    "requested CPU32",
+    "allocated mismatch",
+    "untrusted capacity",
+    "wrong capacity",
+    "wrong capacity node"
+  ],
+  "accepted_cpu_allocations": [
+    288,
+    64
+  ],
+  "controller_suite": "Existing controller_all_tests.txt: 47 PASS, 11.273s; not rerun",
+  "source_candidate_unchanged": true,
+  "production_diff": "Only alias-before-duplicate and v5 to v6 identities; release metadata differs only in refreshed file hashes"
+}

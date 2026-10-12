@@ -1,0 +1,36 @@
+import os, stat, pathlib, hashlib, base64, json, datetime
+C = {'paths': ['/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/tmp', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/execution.lock', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/submission.lock', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/submission.lock', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/tmp', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/tmp', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/tmp', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/tmp', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/tmp', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/tmp', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/tmp', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/tmp', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/logs', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/receipts', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/submission.lock', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/tmp', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/xdg-cache', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/execution.lock'], 'layouts': {'/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/tmp': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/execution.lock': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/submission.lock': ['jobid'], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/submission.lock': ['jobid'], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/tmp': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/tmp': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/tmp': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/tmp': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/tmp': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/tmp': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/tmp': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/tmp': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/submission.lock': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/tmp': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/xdg-cache': [], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914': ['accounting-bounded-check.txt', 'batch.exitcode', 'duplicate-check-correct-user.txt', 'duplicate-check.txt', 'execution.lock', 'expected-sources.sha256', 'independent_lineage_audit.json', 'jobid', 'lineage_ncbi.baseline.tsv', 'logs', 'orthodb', 'prepare.sbatch', 'receipts', 'reviewed-small-files.sha256', 'sbatch-receipt.json', 'source-hash-attestation.txt', 'submission.lock', 'swissprot', 'tmp', 'xdg-cache'], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/receipts': ['DB.sha256', 'PROVENANCE.txt', 'SOURCE_COMMIT.txt', 'build_dbs.sh', 'swissprot_viridiplantae_reviewed.fa.gz.sha256'], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/logs': ['slurm-6163397.out', 'slurm-6163397.err'], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb': ['DONE', 'lineage.tsv', 'provenance.json'], '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot': ['DONE', 'lineage.tsv', 'provenance.json']}, 'extras': ['/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/run.sbatch', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/slurm-6163851.err', '/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/slurm-6163851.out'], 'done': 'Outputs and QC complete; see provenance.json\n'}
+files = {}
+errors = {}
+cache = {}
+def snapshot(name):
+    if name in cache: return cache[name]
+    p = pathlib.Path(name)
+    for parent in (p, *p.parents):
+        if parent.is_symlink(): raise ValueError('symlink: ' + str(parent))
+    st = p.stat()
+    r = dict(kind='directory' if stat.S_ISDIR(st.st_mode) else 'file', uid=st.st_uid, gid=st.st_gid)
+    if stat.S_ISDIR(st.st_mode):
+        names = sorted(os.listdir(p))
+        if name not in C['layouts'] or names != sorted(C['layouts'][name]):
+            raise ValueError('listing mismatch: ' + name + ' observed=' + repr(names))
+        r['children'] = {n: snapshot(str(p/n)) for n in names}
+    else:
+        if not stat.S_ISREG(st.st_mode) or st.st_size > 1048576: raise ValueError('unsupported/oversize: ' + name)
+        fd = os.open(p, os.O_RDONLY | os.O_NOFOLLOW)
+        with os.fdopen(fd, 'rb') as f:
+            before = os.fstat(f.fileno())
+            if not stat.S_ISREG(before.st_mode) or before.st_size > 1048576: raise ValueError('changed/oversize: ' + name)
+            data = f.read(1048577)
+            after = os.fstat(f.fileno())
+        if len(data) > 1048576 or (before.st_ino,before.st_size,before.st_mtime_ns) != (after.st_ino,after.st_size,after.st_mtime_ns) or len(data) != st.st_size: raise ValueError('changed: ' + name)
+        r['sha256'] = hashlib.sha256(data).hexdigest()
+        files[name] = dict(bytes=len(data), sha256=r['sha256'], base64=base64.b64encode(data).decode())
+        if p.name == 'DONE' and data.decode() != C['done']: raise ValueError('malformed DONE: ' + name)
+    cache[name] = r
+    return r
+snapshots = {}
+for name in C['paths'] + C['extras']:
+    try: snapshots[name] = snapshot(name)
+    except (OSError, ValueError, UnicodeError) as e: errors[name] = str(e)
+print(json.dumps(dict(captured_at=datetime.datetime.now(datetime.timezone.utc).isoformat(), snapshots=snapshots, files=files, errors=errors), sort_keys=True))

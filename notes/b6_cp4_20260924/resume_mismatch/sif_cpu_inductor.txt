@@ -1,0 +1,89 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+W0924 21:39:41.409000 2028528 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0924 21:39:41.445000 2028528 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+START inductor /tmp/tmpah5qa69l
+Traceback (most recent call last):
+  File "<stdin>", line 22, in <module>
+  File "/work/repo/tests/test_b6_trainer.py", line 72, in train_arm
+    return trainer.run_b6(spec, model or self.build(), train_ds, eval_ds, collate_fn=syn.synthetic_collate,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/repo/train/train_HyenaTransgenic_B6.py", line 449, in run_b6
+    result = train_loop()
+             ^^^^^^^^^^^^
+  File "/work/repo/train/train_HyenaTransgenic_B6.py", line 413, in train_loop
+    out = model(**inputs)
+          ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_dynamo/eval_frame.py", line 534, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_dynamo/eval_frame.py", line 1205, in compile_wrapper
+    raise e.remove_dynamo_frames() from None  # see TORCHDYNAMO_VERBOSE=1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py", line 1132, in _compile_fx_inner
+    raise InductorError(e, currentframe()).with_traceback(
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py", line 1109, in _compile_fx_inner
+    mb_compiled_graph = fx_codegen_and_compile(
+                        ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py", line 1929, in fx_codegen_and_compile
+    return scheme.codegen_and_compile(gm, example_inputs, inputs_to_check, graph_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py", line 1677, in codegen_and_compile
+    compiled_module = graph.compile_to_module()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/graph.py", line 2966, in compile_to_module
+    return self._compile_to_module()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/graph.py", line 2972, in _compile_to_module
+    self.codegen_with_cpp_wrapper() if self.cpp_wrapper else self.codegen()
+                                                             ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/graph.py", line 2908, in codegen
+    self.scheduler.codegen()
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/scheduler.py", line 9524, in codegen
+    self._codegen_partitions()
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/scheduler.py", line 9676, in _codegen_partitions
+    self._codegen(partition)
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/scheduler.py", line 9835, in _codegen
+    self.get_backend(device).codegen_node(node)
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/codegen/cpp.py", line 5865, in codegen_node
+    cpp_kernel_proxy.codegen_nodes(nodes)
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/codegen/cpp.py", line 4941, in codegen_nodes
+    self.codegen_functions(fn_list, var_sizes_list)
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/codegen/cpp.py", line 4726, in codegen_functions
+    self.loop_nest = LoopNest.build(scalar_kernel)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/codegen/cpp.py", line 6314, in build
+    loop = LoopLevel(var, size)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 13, in __init__
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/codegen/cpp.py", line 6234, in __post_init__
+    self.simd_nelements: int = picked_vec_isa.nelements() if picked_vec_isa else 0
+                                                             ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/cpu_vec_isa.py", line 211, in __bool__
+    return self.__bool__impl(config.cpp.vec_isa_ok)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/cpu_vec_isa.py", line 221, in __bool__impl
+    return self.check_build(VecISA._avx_code)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/cpu_vec_isa.py", line 183, in check_build
+    extra=_get_isa_dry_compile_fingerprint(self.build_arch_flags()),
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/cpu_vec_isa.py", line 30, in _get_isa_dry_compile_fingerprint
+    compiler_info = get_compiler_version_info(get_cpp_compiler())
+                                              ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/cpp_builder.py", line 395, in get_cpp_compiler
+    compiler = cpp_compiler_search(search)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/cpp_builder.py", line 108, in cpp_compiler_search
+    raise exc.InvalidCxxCompiler
+torch._inductor.exc.InductorError: InvalidCxxCompiler: No working C++ compiler found in torch._inductor.config.cpp.cxx: (None, 'CC')
+
+Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+

@@ -1,0 +1,14 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T18:33:49-05:00
+/sw/user/scripts/accounts
+/usr/bin/sacct
+/usr/bin/squeue
+/usr/bin/scontrol
+/usr/bin/sacctmgr
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1154              1499  leakage-controlled ...

@@ -1,0 +1,16 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T14:44:29-0700
+             JOBID                 NAME        STATE         TIME NODELIST(REASON)
+           6165875      est-real-sample      RUNNING         3:59 cpu-50
+6165875|RUNNING|0:0|00:03:59|
+6165875.batch|RUNNING|0:0|00:03:59|
+6165875.extern|RUNNING|0:0|00:03:59|
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker/control:
+total 1
+-rw------- 1 wyim p-wyim 1025 Sep 17 14:40 start.json
+
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker/sample:
+total 2048
+-rw------- 1 wyim p-wyim 303417 Sep 17 14:41 diagnostics.jsonl

@@ -1,0 +1,51 @@
+[
+  {
+    "label": "adapted-and-gate-tests",
+    "command": [
+      "/home/wyim/miniconda3/bin/python",
+      "-m",
+      "unittest",
+      "test_deploy",
+      "test_candidate",
+      "test_queued_gate",
+      "test_admission_cases"
+    ],
+    "cwd": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2",
+    "exit_code": 0,
+    "seconds": 12.445389198999692
+  },
+  {
+    "label": "original-tests",
+    "command": [
+      "/home/wyim/miniconda3/bin/python",
+      "-m",
+      "unittest",
+      "test_deploy"
+    ],
+    "cwd": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_p1",
+    "exit_code": 0,
+    "seconds": 20.252426675000606
+  },
+  {
+    "label": "shell-syntax",
+    "command": [
+      "/bin/bash",
+      "-n",
+      "p1.sbatch"
+    ],
+    "cwd": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2",
+    "exit_code": 0,
+    "seconds": 0.015637100999811082
+  },
+  {
+    "label": "release-ledger",
+    "command": [
+      "/usr/bin/sha256sum",
+      "-c",
+      "release.sha256"
+    ],
+    "cwd": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/release_v3",
+    "exit_code": 0,
+    "seconds": 0.1171993059997476
+  }
+]

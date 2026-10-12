@@ -1,0 +1,8 @@
+[
+  "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare",
+  "-r",
+  "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/terminal_short/reference.gtf",
+  "-o",
+  "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/terminal_short/raw/compare",
+  "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/terminal_short/predicted.gtf"
+]

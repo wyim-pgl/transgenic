@@ -1,0 +1,53 @@
+Raw capture 4 -- v7 namespace creation (the only write performed).
+Executed 2026-09-21 08:36:47 PDT (remote 2026-09-21T10:36:47-05:00).
+Author: Won <wyim@unr.edu>
+
+Script order was: absence check -> transport hash verify -> mkdir -> tar -xpf ->
+chmod. Any failing step aborted before the next (set -u, explicit exit on each).
+
+===DATE===
+2026-09-21T10:36:47-05:00     (= 2026-09-21 08:36:47 PDT)
+
+===V7_ABSENCE_CHECK===
+ABSENT_OK /work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v7_20260921
+(namespace did not exist before creation, per the authorization's
+ "all namespaces must be absent before exclusive creation" rule)
+
+===TRANSPORT_VERIFY_BEFORE_USE===
+transport=26c1dc0a233a95ab86977813e68310eccfce91b081de3a63586cfd7b9427628a
+TRANSPORT_PIN_OK
+(source: staging/dev123_p1_v6_control_20260917/release_v6.tar -- the copy ALREADY
+ present remotely. No re-transfer from local, no re-download, no rebuild.)
+
+===MEMBER_LIST_FROM_TRANSPORT===
+admission.py
+authorization.example.json
+build_release.py
+code.candidate.tar
+controller_execution_scope.json
+deploy.py
+notes/b6_mvp_candidate_inventories_20260915.json
+notes/b6_mvp_candidate_receipts_20260915.json
+notes/b6_mvp_technical_candidate_20260915.json
+operator-pins.json
+p1.sbatch
+release.json
+release.sha256
+source-manifest.json
+===MEMBER_COUNT===
+14
+
+===CREATE_AND_EXTRACT===
+umask 077; mkdir -m 700 <v7>; tar -xpf <transport> -C <v7>
+EXTRACT_DONE
+
+===FINALIZE_MODES===
+find <v7> -type d -exec chmod 700 {} +
+find <v7> -type f -exec chmod 444 {} +
+CHMOD_DONE
+
+===V6_UNTOUCHED_SPOTCHECK=== (immediately after the write)
+.../dev123_p1_release_v6_20260917/release.sha256|0|660|1789692380
+.../dev123_p1_release_v6_20260917/release.json|25219|444|1789692380
+v6 release.sha256 still 0 bytes at mode 0660 with its original mtime -- unchanged.
+A full v6 re-hash follows in v6_integrity_recheck.txt.

@@ -1,0 +1,764 @@
+diff --git a/notes/MVP_REAL_PROBES_REPORT.md b/notes/MVP_REAL_PROBES_REPORT.md
+index 6b1641c..4482727 100644
+--- a/notes/MVP_REAL_PROBES_REPORT.md
++++ b/notes/MVP_REAL_PROBES_REPORT.md
+@@ -1,10 +1,113 @@
+ # Real CUDA probe implementation — partial, NOT launch-ready
+ 
++## Independent-review fix round 1 (supersedes historical wiring claims below)
++
++Fix base: `3b62306acfa989e3bcf2a15b6506068980a9c3fe`.
++Implementation: **`981489daa2ddbb040ab0056299655899dd2b28b2`**.
++Read the complete controller review
++`notes/mvp_execution_20260916/real_probes.independent_review.md` in main read-only.
++Only the existing isolated A worktree was modified. No SSH/jobs/subagents,
++other-worktree edits, merge, push or main writes.
++
++### R1: actual training and probe decoder inputs
++
++- `src/transgenic/training/mvp_cli_runtime.py`: both train and valid constructors
++  now pass the already-bound `cfg['data']['gff_vocab_version']`. Shared
++  `validate_decoder_dataset` requires agreement of dataset vocabulary version,
++  actual `len(dataset.dt)`, config/model vocabulary size, dataset maxlength,
++  config max_label_tokens and config/model decoder positions. Frozen v3 remains
++  **290 tokens / 8192 label tokens / 8192 positions**, not v2/2048.
++- `real_probes.datasets(args, bindings, cfg, model_config)` receives loaded config
++  and actual model config, passes the same decoder version and invokes the same
++  guard. It closes the dataset if the guard rejects it.
++- Existing real two-rank `execute -> _train -> final` CPU fixture now uses tiny
++  compute dimensions but actual v3/290/8192 semantics. An observing constructor
++  asserts explicit v3 kwargs and actual tokenizer/cap on **both train and valid
++  on every rank**. No production factory is mocked beyond the existing tiny
++  external Hyena/DNA tokenizer fixture. This catches future missing-kwarg regressions.
++- Real GFFTokenizer/dataset tests cover `<empty>` IDs `[0,289,2]`, two-gene separator
++  preservation, 2701-token labels (not truncated at2048), and >8192 labels preserving
++  the existing8192/end-token cap. Negative tests reject each version/vocabulary/cap
++  inconsistency. No historical dataset defaults or B5 trainer were changed.
++
++### R2: rank-local error boundaries and clean environment
++
++- Compiled-mode main now creates one Accelerator, then uses existing
++  `_collective_preflight` around local input setup, real model/loader initialization
++  and tier retrieval. Compiler/optimizer configuration and DataLoader construction
++  also use local-operation guards. `accelerator.prepare`, optimizer update,
++  hardware collection and final gather stay **outside** local-exception wrappers
++  because they contain collectives.
++- `collective_batches` guards rank-local retrieval of exactly24 batches.
++  `one_update` checks `_batch_parts` validity collectively before tensor transfer
++  and uses the trainer's collective finite/skip checks. Completion-count agreement
++  is also collective. `collective_compiler_check` shares local Inductor-counter/
++  suppress-errors failure with every rank **before** `gather_object`.
++- Actual two-rank CPU fault programs run under the real bounded runner. Rank1-only
++  loader exception and rank1-only zero generated-kernel count both yield the
++  original diagnostic on **both ranks**, nonzero launcher exit, FAILED JSON,
++  no timeout and **no DONE**. They do not simulate CUDA/NCCL failures; the launcher,
++  process-group timeout and outer allocation deadline remain mandatory backstops.
++- Both actual MVP runtime and probe reject nonempty `TRANSGENIC_RUN_DIR` before
++  model construction, preventing inherited encoder report writes into B5. Explicit
++  tests exercise both refusal paths. Probe offline environment is set before
++  importing Accelerator/HF modules, including the earlier process-group setup.
++- Main owns accelerator cleanup through its outer finally; no collective-containing
++  whole function was wrapped as if it were a rank-local operation.
++
++### Exact validation
++
++All commands use `/home/wyim/miniconda3/envs/pdb/bin/python` and
++`PYTHONPATH=.testdeps:src` in A.
++
++Initial focused run: **26 passed, 1 failed in73.16s**. The new intended >2048 test
++fixture had only1801 real tokens; expanded it from200 to300 gene blocks (2701 tokens).
++The implementation and tokenizer/cap policy were not relaxed.
++
++Full scoped command below: **245 passed in644.32s**, no timeout this round:
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q \
++ tests/test_mvp_cli.py tests/test_mvp_finalize.py tests/test_mvp_runtime.py \
++ tests/test_weights_init.py tests/test_mvp_metrics.py tests/test_mvp_model.py \
++ tests/test_mvp_dataset.py tests/test_mvp_readiness_tools.py \
++ tests/test_mvp_readiness_review.py tests/test_mvp_real_probes.py tests/test_mvp_review_fixes.py
++```
++
++After the final offline-before-Accelerator ordering adjustment, focused rerun:
++**92 passed in112.55s** (all66 existing tooling, all15 earlier probes and11 new fix
++cases, including both actual distributed fault tests). Command uses the same
++prefix and files `tests/test_mvp_review_fixes.py tests/test_mvp_real_probes.py
++ tests/test_mvp_readiness_tools.py tests/test_mvp_readiness_review.py`.
++`py_compile` and `git diff --check` passed. Earlier historical fixture timeouts
++remain recorded below; no timeout was weakened and no historical root cause is
++claimed fixed.
++
++### Controller/resource-track handoff
++
++**Regenerate ALL consumed-code manifests, tooling bindings, prepared records and
++probe receipts** after this commit; previous v2-label results cannot certify v3.
++Independent controller re-review and real aarch64 SIF P1/P2/P4 remain required.
++Torch2.14/CUDA13.4, Transformers4.57.6 generation/cache, Accelerate1.15 parser,
++real 400M gradients, Inductor, deterministic GPU kernels, native bf16 and NCCL
++termination are still untested. This fix grants no GPU or training authorization.
++
++Resource agent must integrate this fix later (its worktree was not touched).
++Internal signatures changed to `datasets(args, bindings, cfg, model_config)` and
++`compiled_update(args, bindings, model, ds, accelerator)`; main owns Accelerator.
++Reuse `validate_decoder_dataset`, `collective_batches`, and
++`collective_compiler_check` as appropriate, never wrap collectives inside a local
++phase. Resource mode remains absent in A. No LR,250/12,metrics,RNG,heldout filtering
++or training-profile changes; dataset decoder wiring is the explicitly authorized
++correctness exception to the original no-trainer-change scope.
++
++---
++
+ ## Scope and commits
+ 
+ Only writer in `/tmp/b6-p2-readiness-1535112`, base
+ `ac8ac2d34c3ae403017a4a0d72e7531528926626`.
+ 
+ - `1639c7e6dd716bdf3a9281bd8d9ea1c05c86cd25`: five executable CUDA gate modes,
+   actual input/import/cache identity, tooling integration and CPU contracts.
+ - `b1e5e62992f8618b2aee18e12c6c7f449f8c5121`: nonzero EST generation,
+diff --git a/revision/scripts/mvp/README.readiness.md b/revision/scripts/mvp/README.readiness.md
+index fe48c6c..bd151b3 100644
+--- a/revision/scripts/mvp/README.readiness.md
++++ b/revision/scripts/mvp/README.readiness.md
+@@ -1,17 +1,20 @@
+ # Track A: fail-closed launch tooling
+ 
+ CPU-validated implementation only. No GPU/SIF/Hyena readiness is certified here.
+ `real_probes.py` now implements five CUDA-only measurement modes; **resource_budget
+ is still unimplemented and full readiness remains blocked**. See
+ `notes/MVP_REAL_PROBES_REPORT.md` for exact CLI, actual SIF version pins, independent
+ cache layout, nonzero-EST beam2 checks, CPU results and the smallest remaining task.
+-The
+-existing trainer and `mvp_cli_runtime.py:175-236` contract are unchanged.
++The readiness consumer schema remains unchanged. Review fix `981489d` corrects
++actual MVP train/valid decoder config wiring (v3/290/8192), adds collective probe
++failure guards, and rejects inherited `TRANSGENIC_RUN_DIR`. Historical B5 training
++is untouched; 250/12, LR, metrics, RNG and sampling policies are unchanged.
++**Regenerate every code/tooling binding and receipt after this fix.**
+ `--validate-only` bypasses readiness; use this tool's **check** command instead.
+ The base consumer trusts operator receipt digests; this tooling additionally
+ checks the receipt files, DONE digests, measurements, sidecars and tool identity.
+ Do not bypass it with a handcrafted readiness record.
+ 
+ ## Required decisions before deployment
+ 
+ * Author-selected **concrete checkpoint**, its weights/run_config/runtime_identity
+diff --git a/revision/scripts/mvp/real_probes.py b/revision/scripts/mvp/real_probes.py
+index a2e4c8d..e37b851 100644
+--- a/revision/scripts/mvp/real_probes.py
++++ b/revision/scripts/mvp/real_probes.py
+@@ -131,17 +131,17 @@ def parser():
+     return p
+ 
+ 
+ def setup(args):
+     require_cuda()  # Before DB/cache hashing or construction; no CPU fixtures.
+     require_allocation()
+     if os.environ.get('CUBLAS_WORKSPACE_CONFIG') != ':4096:8':
+         raise ValueError('runner must set CUBLAS_WORKSPACE_CONFIG=:4096:8 before startup')
+-    forbidden = ('TRANSGENIC_ALLOW_ENCODER_DRIFT', 'TRANSGENIC_NO_GRAD_CKPT',
++    forbidden = ('TRANSGENIC_RUN_DIR', 'TRANSGENIC_ALLOW_ENCODER_DRIFT', 'TRANSGENIC_NO_GRAD_CKPT',
+                  'TRANSGENIC_CKPT_REENTRANT', 'TRANSGENIC_NO_COMPILE', 'TRANSGENIC_COMPILE_SCOPE')
+     if any(os.environ.get(key) for key in forbidden):
+         raise ValueError('probe refuses model/compile/checkpoint override environment')
+     # Must precede all HF imports. Factories retain the exact training cache paths.
+     os.environ['HF_HUB_OFFLINE'] = '1'
+     os.environ['TRANSFORMERS_OFFLINE'] = '1'
+     record = json_snapshot(args.bindings, args.bindings_file_sha256)
+     bindings = record['bindings']
+@@ -225,22 +225,30 @@ def load_model(args, bindings):
+     audit = load_weights_only(model, weights.parent)
+     _validate_initialization_readiness(audit, {'bindings': bindings}, weights,
+                                        Path(source['run_config_path']))
+     if torch.count_nonzero(model.get_parameter(PROJECTION)):
+         raise ValueError('step0 projection is not zero')
+     return model, cfg, audit
+ 
+ 
+-def datasets(args, bindings):
++def datasets(args, bindings, cfg, model_config):
+     from transgenic.datasets.datasets import isoformDataHyena
+     common = dict(mode='train', split='train', strict=True, species='Athaliana',
+                   evidence_db=args.evidence_db, evidence_k=8,
+-                  aug_seed=20260914 + bindings['seed'], return_tile_ids=True)
+-    return isoformDataHyena(args.db, eval_fraction=1, **common)
++                  aug_seed=20260914 + bindings['seed'], return_tile_ids=True,
++                  gff_vocab_version=cfg['gff_vocab_version'])
++    ds = isoformDataHyena(args.db, eval_fraction=1, **common)
++    from transgenic.training.mvp_cli_runtime import validate_decoder_dataset, _close_dataset
++    try:
++        validate_decoder_dataset(ds, cfg, model_config)
++        return ds
++    except Exception:
++        _close_dataset(ds)
++        raise
+ 
+ 
+ def measured_batches(args, ds):
+     """Require real forward/RC evidence tiles at each full, uncropped tier."""
+     import torch
+     from transgenic.datasets.datasets import hyena_collate_fn
+     chosen = json_snapshot(args.tile_rns, args.tile_rns_sha256)
+     if set(chosen) != {str(t) for t in TIERS}:
+@@ -476,16 +484,24 @@ def one_update(accelerator, model, optimizer, batches):
+     model.train()
+     optimizer.zero_grad()
+     _set_lrs(optimizer, recipe, 0)
+     start = time.monotonic()
+     torch.cuda.reset_peak_memory_stats(accelerator.device)
+     syncs = 0
+     for batch in batches:
+         with accelerator.accumulate(model):
++            from transgenic.training.mvp_runtime import _batch_parts
++            try:
++                _batch_parts(batch, recipe)
++                valid = True
++            except (ValueError, TypeError):
++                valid = False
++            if not _collective_true(accelerator, valid):
++                raise ValueError('invalid batch contract on at least one rank')
+             kw = inputs(batch, accelerator.device)
+             # Same forward signature as run_fixed_updates (no alternate loss).
+             kw.pop('use_cache')
+             kw.pop('return_dict')
+             output = model(**kw)
+             if not _collective_true(accelerator, bool(torch.isfinite(output.loss).item())):
+                 raise FloatingPointError('nonfinite loss on a rank')
+             accelerator.backward(output.loss)
+@@ -494,102 +510,150 @@ def one_update(accelerator, model, optimizer, batches):
+                 if not _collective_true(accelerator, finite):
+                     raise FloatingPointError('nonfinite gradient on a rank')
+                 accelerator.clip_grad_norm_(model.parameters(), recipe.clip_grad_norm)
+                 optimizer.step()
+                 if not _collective_true(accelerator, not _step_was_skipped(optimizer)):
+                     raise RuntimeError('optimizer update skipped')
+                 optimizer.zero_grad()
+                 syncs += 1
+-    if syncs != 1 or len(batches) != recipe.accumulation_steps:
++    if not _collective_true(accelerator, syncs == 1 and len(batches) == recipe.accumulation_steps):
+         raise RuntimeError('probe must observe exactly one update after 24 microbatches')
+     torch.cuda.synchronize(accelerator.device)
+     finite = all(bool(torch.isfinite(p).all()) for p in model.parameters())
+     if not _collective_true(accelerator, finite):
+         raise FloatingPointError('nonfinite parameters after update')
+     return dict(rank=accelerator.process_index, wall_seconds=time.monotonic() - start,
+                 peak_cuda_bytes=torch.cuda.max_memory_allocated(accelerator.device),
+                 peak_reserved_bytes=torch.cuda.max_memory_reserved(accelerator.device),
+                 microbatches=24, optimizer_steps=syncs)
+ 
+ 
+-def compiled_update(args, bindings, model, ds):
++def collective_batches(accelerator, loader):
++    from transgenic.training.mvp_finalize import _collective_preflight
++    import itertools
++    result = []
++    def retrieve():
++        result.extend(itertools.islice(loader, 24))
++        if len(result) != 24:
++            raise ValueError('insufficient real per-rank training samples for accumulation24')
++    _collective_preflight(accelerator, retrieve)
++    return result
++
++
++def collective_compiler_check(accelerator, before):
++    import torch
++    from torch._inductor import metrics
++    from transgenic.training.mvp_finalize import _collective_preflight
++    def check():
++        if torch._dynamo.config.suppress_errors or metrics.generated_kernel_count <= before:
++            raise RuntimeError('no observed Inductor kernel generation or eager fallback enabled')
++    _collective_preflight(accelerator, check)
++
++
++def compiled_update(args, bindings, model, ds, accelerator):
+     import torch
+     from torch.utils.data import DataLoader, DistributedSampler
+     from transgenic.datasets.datasets import hyena_collate_fn
+-    from transgenic.training.mvp_runtime import MVPRecipe, make_accelerator, build_optimizer
++    from transgenic.training.mvp_runtime import MVPRecipe, build_optimizer
+     from transgenic.training.mvp_cli_runtime import (compile_bound_forward,
+         _collect_runtime_hardware, _validate_public_hardware)
+     from accelerate.utils import gather_object
+-    accelerator = make_accelerator(MVPRecipe(), mixed_precision='bf16')
+-    try:
+-        hardware = _validate_public_hardware(_collect_runtime_hardware(accelerator))
++    from transgenic.training.mvp_finalize import _collective_preflight
++    state = {}
++    hardware = _validate_public_hardware(_collect_runtime_hardware(accelerator))
++    def configure():
+         model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
+-        optimizer = build_optimizer(model, MVPRecipe())
+-        from torch._inductor import metrics
+-        before = metrics.generated_kernel_count
++        state['optimizer'] = build_optimizer(model, MVPRecipe())
+         compile_bound_forward(model)
+-        model, optimizer = accelerator.prepare(model, optimizer)
++    _collective_preflight(accelerator, configure)
++    from torch._inductor import metrics
++    before = metrics.generated_kernel_count
++    # prepare contains collectives; never nest it inside a local-status phase.
++    model, optimizer = accelerator.prepare(model, state['optimizer'])
++    def prepare_loader():
+         # Restore the real training augmentation (paired probes use fraction=1).
+         ds.eval_fraction = None
+         seed = bindings['seed']
+         aug_seed = 20260914 + seed
+         ds._aug_generator = torch.Generator().manual_seed(aug_seed + accelerator.process_index)
+         ds._aug_key = (os.getpid(), None)
+         loader = DataLoader(ds, batch_size=1, num_workers=0, collate_fn=hyena_collate_fn,
+             sampler=DistributedSampler(ds, num_replicas=4, rank=accelerator.process_index,
+                                        shuffle=True, seed=seed),
+             generator=torch.Generator().manual_seed(aug_seed + 1_000_000 + accelerator.process_index),
+             pin_memory=True)
+-        # No short-tile replacement, no repeating the same toy batch.
+-        import itertools
+-        batches = list(itertools.islice(loader, 24))
+-        if len(batches) != 24:
+-            raise ValueError('insufficient real per-rank training samples for accumulation24')
+-        measured = one_update(accelerator, model, optimizer, batches)
+-        if torch._dynamo.config.suppress_errors or metrics.generated_kernel_count <= before:
+-            raise RuntimeError('no observed Inductor kernel generation or eager fallback enabled')
+-        rank_rows = gather_object([measured])
+-        if len(rank_rows) != 4:
+-            raise RuntimeError('missing rank measurement')
+-        return dict(hardware=hardware, optimizer_steps=1, finite=True, native_bf16=True,
+-                    inductor=True, no_eager_fallback=True, ranks=rank_rows,
+-                    accumulation_steps=24, timing_scope='cold_compile_plus_one_update_not_resource_budget')
+-    finally:
+-        accelerator.end_training()
++        state['loader'] = loader
++    _collective_preflight(accelerator, prepare_loader)
++    # No short-tile replacement, no repeating the same toy batch.
++    batches = collective_batches(accelerator, state['loader'])
++    measured = one_update(accelerator, model, optimizer, batches)
++    collective_compiler_check(accelerator, before)
++    rank_rows = gather_object([measured])
++    if len(rank_rows) != 4:
++        raise RuntimeError('missing rank measurement')
++    return dict(hardware=hardware, optimizer_steps=1, finite=True, native_bf16=True,
++                inductor=True, no_eager_fallback=True, ranks=rank_rows,
++                accumulation_steps=24, timing_scope='cold_compile_plus_one_update_not_resource_budget')
+ 
+ 
+ def main(argv=None):
+     args = parser().parse_args(argv)
++    # Accelerator may import HF modules: offline policy must precede it too.
++    os.environ['HF_HUB_OFFLINE'] = '1'
++    os.environ['TRANSFORMERS_OFFLINE'] = '1'
+     started = time.monotonic()
+-    bindings, roots, runtime = setup(args)
++    require_cuda()
+     import torch
+     rank = int(os.environ.get('LOCAL_RANK', '0'))
+     torch.cuda.set_device(rank)
+     device = torch.device('cuda', rank)
+-    model, cfg, audit = load_model(args, bindings)
+-    ds = datasets(args, bindings)
++    accelerator = None
++    if args.mode in ('bf16_compile', 'four_rank_smoke'):
++        from transgenic.training.mvp_runtime import make_accelerator, MVPRecipe
++        accelerator = make_accelerator(MVPRecipe(), mixed_precision='bf16')
++    state = {}
++    ds = None
+     try:
+-        batches = measured_batches(args, ds)
++        def prepare_inputs():
++            state['inputs'] = setup(args)
++        if accelerator is None:
++            prepare_inputs()
++        else:
++            from transgenic.training.mvp_finalize import _collective_preflight
++            _collective_preflight(accelerator, prepare_inputs)
++        bindings, roots, runtime = state['inputs']
++        def initialize():
++            nonlocal ds
++            state['model'], state['cfg'], state['audit'] = load_model(args, bindings)
++            ds = datasets(args, bindings, state['cfg'], state['model'].config)
++            state['batches'] = measured_batches(args, ds)
++        if accelerator is None:
++            initialize()
++        else:
++            from transgenic.training.mvp_finalize import _collective_preflight
++            _collective_preflight(accelerator, initialize)
++        model, cfg, audit = state['model'], state['cfg'], state['audit']
++        batches = state['batches']
+         if args.mode == 'real_tokenizer':
+             seq = 'ACGTN'
+             ids = ds.encoder_tokenizer(seq, return_tensors='pt')['input_ids'][0, :-1]
+             if ds.encoder_tokenizer.decode(ids, skip_special_tokens=True).replace(' ', '') != seq:
+                 raise ValueError('real tokenizer ACGTN roundtrip failed')
+             model.to(device).eval()
+             with torch.no_grad():
+                 logits = model(**inputs(batches[30720][0], device)).logits
+             result = dict(tokenizer_roundtrip=True, hyena_loaded=True,
+                           logits_sha256=tensor_digest(logits), rc_n_alignment=True)
+         elif args.mode == 'real_hyena_step0_three_tiers':
+             result = step0(model, cfg, bindings, batches, device)
+         elif args.mode == 'generation_cache_parity':
+             result = generation(model, batches[30720][0], device)
+         else:
+-            result = compiled_update(args, bindings, model, ds)
++            result = compiled_update(args, bindings, model, ds, accelerator)
+         # Snapshot actual loaded Python and extension modules, including HF remote code.
+         imports = {str(Path(__file__).resolve()): _sha256(Path(__file__))}
+         for module in list(sys.modules.values()):
+             path = getattr(module, '__file__', None)
+             if path and Path(path).is_file():
+                 imports[str(Path(path).resolve())] = _sha256(Path(path))
+         from transgenic.training.mvp_cli_runtime import _manifest_files
+         _manifest_files(Path(bindings['consumed_code_manifest']['path']))
+@@ -614,13 +678,17 @@ def main(argv=None):
+             raise ValueError('source optional sidecars changed during probe')
+         from run_bounded import validate_measurement
+         validate_measurement(args.mode, result)
+         if int(os.environ.get('RANK', '0')) == 0:
+             _atomic_write(Path(os.environ['MVP_MEASUREMENT_OUTPUT']), _canonical_bytes(result))
+         return 0
+     finally:
+         from transgenic.training.mvp_cli_runtime import _close_dataset
+-        _close_dataset(ds)
++        try:
++            _close_dataset(ds)
++        finally:
++            if accelerator is not None:
++                accelerator.end_training()
+ 
+ 
+ if __name__ == '__main__':
+     sys.exit(main())
+diff --git a/src/transgenic/training/mvp_cli_runtime.py b/src/transgenic/training/mvp_cli_runtime.py
+index 7bfe291..e01dd0e 100644
+--- a/src/transgenic/training/mvp_cli_runtime.py
++++ b/src/transgenic/training/mvp_cli_runtime.py
+@@ -483,32 +483,43 @@ def execute(args, candidate: CandidateRecords, *, validate_only: bool,
+     verified = _VerifiedInputs(
+         db, evidence, panel, sif, config_path, weights, run_config, readiness_path, final,
+         tuple((name, _stat_identity(path)) for name, path in paths.items()),
+     )
+     return _train(args.seed, args.num_workers, candidate, artifacts, verified, recipe,
+                   readiness, args.launch_readiness_sha256, _test=_test)
+ 
+ 
++def validate_decoder_dataset(dataset, cfg, model_config):
++    """Fail before sampling when bound decoder vocabulary/cap wiring disagrees."""
++    if (dataset.gff_vocab_version != cfg['gff_vocab_version'] or
++            len(dataset.dt) != cfg['vocab_size'] or
++            len(dataset.dt) != model_config.vocab_size or
++            dataset.maxlength != cfg['max_label_tokens'] or
++            cfg['max_decoder_position_embeddings'] != model_config.max_decoder_position_embeddings or
++            dataset.maxlength != model_config.max_decoder_position_embeddings):
++        raise ValueError('dataset decoder vocabulary/label cap disagrees with bound model config')
++
++
+ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, recipe,
+            readiness, readiness_sha256, *, _test: _TestExecution | None = None) -> dict:
+     """Construct and run the reviewed runtime only from canonical verified bindings."""
+     import torch
+     from torch.utils.data import DataLoader
+     from torch.utils.data.distributed import DistributedSampler
+ 
+     from transgenic.datasets.datasets import isoformDataHyena, hyena_collate_fn
+     from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
+     from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration
+     from transgenic.training.b5_runtime import load_b5_config, model_kwargs, resolve_checkpointing
+     from transgenic.training.mvp_finalize import _collective_preflight, evaluate_and_publish_final
+     from transgenic.training.mvp_runtime import build_optimizer, make_accelerator, run_fixed_updates
+     from transgenic.training.weights_init import load_weights_only
+ 
+-    forbidden = ("TRANSGENIC_NO_GRAD_CKPT", "TRANSGENIC_CKPT_REENTRANT",
++    forbidden = ("TRANSGENIC_RUN_DIR", "TRANSGENIC_NO_GRAD_CKPT", "TRANSGENIC_CKPT_REENTRANT",
+                  "TRANSGENIC_NO_COMPILE", "TRANSGENIC_COMPILE_SCOPE")
+     present = [name for name in forbidden if os.environ.get(name)]
+     if present:
+         raise ValueError(f"MVP refuses checkpoint/compile override environment variables: {present}")
+     if resolve_checkpointing(os.environ, recipe.required_world_size) != "nonreentrant":
+         raise ValueError("MVP requires nonreentrant gradient checkpointing")
+ 
+     snapshots = dict(inputs.snapshots)
+@@ -592,20 +603,24 @@ def _train(seed, num_workers, candidate, artifacts, inputs: _VerifiedInputs, rec
+ 
+         aug_seed = 20260914 + seed
+         loaders = {}
+         def datasets():
+             nonlocal train_ds, valid_ds
+             unchanged(("db", "evidence"))
+             train_ds = isoformDataHyena(str(inputs.db), mode="train", split="train", strict=True,
+                 species="Athaliana", evidence_db=str(inputs.evidence), evidence_k=8,
++                gff_vocab_version=cfg["data"]["gff_vocab_version"],
+                 aug_seed=aug_seed, return_tile_ids=True)
+             valid_ds = isoformDataHyena(str(inputs.db), mode="train", split="valid", strict=True,
+                 species="Athaliana", evidence_db=str(inputs.evidence), evidence_k=8,
++                gff_vocab_version=cfg["data"]["gff_vocab_version"],
+                 aug_seed=aug_seed, eval_fraction=1, return_tile_ids=True)
++            for dataset in (train_ds, valid_ds):
++                validate_decoder_dataset(dataset, cfg["data"], state["model"].config)
+             unchanged(("db", "evidence"))
+             if train_ds._index_map != artifacts["train_rns"] or valid_ds._index_map != artifacts["valid_rns"]:
+                 raise ValueError("dataset index map does not match accepted inventory")
+             rank = accelerator.process_index
+             private_aug_seed = aug_seed + rank
+             train_worker_seed = aug_seed + 1_000_000 + rank
+             valid_worker_seed = aug_seed + 2_000_000 + rank
+             private_generator = None
+diff --git a/tests/mvp_cli_probe.py b/tests/mvp_cli_probe.py
+index 6451a9a..a56df6b 100644
+--- a/tests/mvp_cli_probe.py
++++ b/tests/mvp_cli_probe.py
+@@ -50,30 +50,30 @@ def source_recipe():
+     return {
+         "name": "b5-400m-test", "d_model_encoder": 8, "d_model_decoder": 16,
+         "encoder_layers": 1, "decoder_layers": 1, "encoder_n_layer": 1,
+         "encoder_attention_heads": 2, "decoder_attention_heads": 2,
+         "encoder_ffn_dim": 32, "decoder_ffn_dim": 32,
+         "attention_window": [4], "dropout": 0.0, "lr": 1e-4,
+         "weight_decay": 0.02, "effective_batch_size": 4, "max_epochs": 5,
+         "seeds": [123], "encoder_model": "tiny/local", "max_encoder_seqlen": 24,
+-        "max_decoder_position_embeddings": 32, "vocab_size": 288, "patience": 3,
++        "max_decoder_position_embeddings": 8192, "vocab_size": 290, "patience": 3,
+         "optimizer": "AdamW", "lr_warmup_fraction": 0.05,
+-        "window_policy": "sym6144-v1", "gff_vocab_version": "v2",
+-        "max_label_tokens": 2048,
++        "window_policy": "tile6144-v3", "gff_vocab_version": "v3",
++        "max_label_tokens": 8192,
+     }
+ 
+ 
+ def config(channels):
+     return HyenaTransgenicConfig(**{
+-        "vocab_size": 288, "d_model": 8, "encoder_d_model": 8, "decoder_d_model": 16,
++        "vocab_size": 290, "d_model": 8, "encoder_d_model": 8, "decoder_d_model": 16,
+         "encoder_layers": 1, "decoder_layers": 1, "encoder_n_layer": 1,
+         "encoder_attention_heads": 2, "decoder_attention_heads": 2,
+         "encoder_ffn_dim": 32, "decoder_ffn_dim": 32, "max_encoder_seqlen": 24,
+-        "max_decoder_position_embeddings": 32, "attention_window": [4], "dropout": 0.0,
++        "max_decoder_position_embeddings": 8192, "attention_window": [4], "dropout": 0.0,
+         "encoder_model": "tiny/local", "load_pretrained_encoder": False,
+         "evidence_channels": channels,
+     })
+ 
+ 
+ def build_fixture(root):
+     fixture = DatasetTests()
+     fixture.setUp()
+@@ -168,17 +168,27 @@ def main():
+     case = sys.argv[1] if len(sys.argv) > 1 else "success"
+     rank = int(os.environ["LOCAL_RANK"])
+     factory_config = patch.object(modeling.AutoConfig, "from_pretrained",
+                                   side_effect=lambda *a, **k: SimpleNamespace())
+     factory_model = patch.object(modeling.AutoModel, "from_config",
+                                  side_effect=lambda cfg, **k: TinyHyena(cfg))
+     tokenizer = patch("transgenic.datasets.datasets.AutoTokenizer.from_pretrained",
+                       return_value=Tokenizer())
+-    with factory_config, factory_model, tokenizer:
++    from transgenic.datasets import datasets as dataset_module
++    real_dataset = dataset_module.isoformDataHyena
++    decoder_splits = []
++    def checked_dataset(*args, **kwargs):
++        assert kwargs['gff_vocab_version'] == 'v3'
++        result = real_dataset(*args, **kwargs)
++        assert len(result.dt) == 290 and result.maxlength == 8192
++        decoder_splits.append(kwargs['split'])
++        return result
++    dataset_patch = patch.object(dataset_module, 'isoformDataHyena', checked_dataset)
++    with factory_config, factory_model, tokenizer, dataset_patch:
+         if rank == 0:
+             root.mkdir(parents=True, exist_ok=True)
+             build_fixture(root)
+         deadline = time.monotonic() + 20
+         while not (root / "READY").exists():
+             if time.monotonic() > deadline:
+                 raise RuntimeError("fixture setup timeout")
+             time.sleep(0.02)
+@@ -208,33 +218,34 @@ def main():
+         try:
+             with collector_patch:
+                 execute(args, candidate, validate_only=False, _test=injection)
+         except Exception as caught:
+             error = str(caught)
+         result_path = root / f"result-{rank}.json"
+         result_tmp = root / f".result-{rank}.tmp"
+         canonical(result_tmp, {"error": error, "backend_called": BACKEND_CALLS > 0,
+-                               "observation": observation})
++                               "observation": observation, "decoder_splits": decoder_splits})
+         result_tmp.replace(result_path)
+         if rank == 0:
+             deadline = time.monotonic() + 20
+             while not all((root / f"result-{item}.json").exists() for item in range(2)):
+                 if time.monotonic() > deadline:
+                     raise RuntimeError("result coordination timeout")
+                 time.sleep(0.02)
+             results = [json.loads((root / f"result-{item}.json").read_text()) for item in range(2)]
+             errors = [item["error"] for item in results]
+             writable = True
+             try:
+                 with duckdb.connect(str(root / "corpus.db")):
+                     pass
+             except Exception:
+                 writable = False
+             if case == "success":
++                assert all(item['decoder_splits'] == ['train', 'valid'] for item in results)
+                 metadata = json.loads((root / "final" / "metadata.json").read_text())
+                 clean = all(not key.startswith(("module.", "_orig_mod."))
+                             for key in safe_open(root / "final" / "model.safetensors", framework="pt").keys())
+                 training = metadata["training_summary"]
+                 streams = sorted(
+                     (item["observation"]["augmentation_streams"] for item in results),
+                     key=lambda item: item["rank"],
+                 )
+diff --git a/tests/mvp_real_probe_faults.py b/tests/mvp_real_probe_faults.py
+new file mode 100644
+index 0000000..b39212a
+--- /dev/null
++++ b/tests/mvp_real_probe_faults.py
+@@ -0,0 +1,34 @@
++"""Two real CPU ranks; fault injection only, never GPU readiness evidence."""
++import json
++import os
++from pathlib import Path
++import sys
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'revision/scripts/mvp'))
++from accelerate import Accelerator
++import torch
++from torch._inductor import metrics
++from real_probes import collective_batches, collective_compiler_check
++
++acc = Accelerator(cpu=True)
++case, output = sys.argv[1], Path(sys.argv[2])
++try:
++    if case == 'loader':
++        class Loader:
++            def __iter__(self):
++                if acc.process_index == 1:
++                    raise ValueError('injected rank1 loader failure')
++                return iter(range(24))
++        collective_batches(acc, Loader())
++    elif case == 'compiler':
++        torch._dynamo.config.suppress_errors = False
++        metrics.generated_kernel_count = 0 if acc.process_index == 1 else 1
++        collective_compiler_check(acc, 0)
++    else:
++        raise ValueError(case)
++except (ValueError, RuntimeError) as error:
++    (output / f'rank{acc.process_index}.json').write_text(json.dumps({'error': str(error)}))
++    acc.wait_for_everyone()
++    acc.end_training()
++    sys.exit(2)
++raise RuntimeError('fault did not reject all ranks')
+diff --git a/tests/test_mvp_review_fixes.py b/tests/test_mvp_review_fixes.py
+new file mode 100644
+index 0000000..ae97ff7
+--- /dev/null
++++ b/tests/test_mvp_review_fixes.py
+@@ -0,0 +1,111 @@
++"""Review R1/R2 CPU regressions; no actual SIF/CUDA certification."""
++from pathlib import Path
++from types import SimpleNamespace
++import hashlib
++import json
++import os
++import sys
++
++import duckdb
++import pytest
++
++TOOLS = Path(__file__).resolve().parents[1] / 'revision/scripts/mvp'
++sys.path.insert(0, str(TOOLS))
++import real_probes as probes
++from transgenic.training.mvp_cli_runtime import validate_decoder_dataset, _close_dataset
++from transgenic.training.b5_runtime import load_b5_config
++
++
++@pytest.fixture
++def fixture():
++    import test_mvp_dataset
++    value = test_mvp_dataset.DatasetTests()
++    value.setUp()
++    yield value
++    value.doCleanups()
++
++
++def config():
++    return load_b5_config(str(TOOLS.parents[2] / 'configs/b5_400m_win_v3.json'))
++
++
++@pytest.mark.parametrize('label', [
++    '<empty>',
++    '1|CDS1|9|+|A>CDS1<gene>20|CDS1|29|+|A>CDS1',
++    '<gene>'.join(['1|CDS1|9|+|A>CDS1'] * 300),
++    '<gene>'.join(['1|CDS1|9|+|A>CDS1'] * 1000),
++], ids=['empty', 'two-gene', 'over2048', 'cap8192'])
++def test_bound_v3_real_gff_labels_not_default_v2(fixture, label):
++    with duckdb.connect(fixture.db) as con:
++        con.execute('UPDATE geneList SET gff=?', [label])
++    cfg = config()
++    ds = probes.datasets(SimpleNamespace(db=fixture.db, evidence_db=fixture.ev),
++                         {'seed': 1}, cfg, SimpleNamespace(**cfg))
++    try:
++        tokens = ds.dt._tokenize(label)
++        expected = [ds.dt._convert_token_to_id(x) for x in tokens]
++        if len(expected) > 8192:
++            expected = expected[:8191] + [ds.dt.vocab['</s>']]
++        assert ds[0][2][0].tolist() == expected
++        assert ds.gff_vocab_version == 'v3' and len(ds.dt) == 290 and ds.maxlength == 8192
++        if label == '<empty>':
++            assert expected == [0, 289, 2]
++        if label.count('<gene>') > 100:
++            assert len(expected) > 2048
++        elif '<gene>' in label:
++            assert expected.count(ds.dt.vocab['<gene>']) == 1
++    finally:
++        _close_dataset(ds)
++
++
++@pytest.mark.parametrize('field,value', [('vocab_size', 288), ('max_label_tokens', 2048),
++    ('max_decoder_position_embeddings', 2048), ('gff_vocab_version', 'v2')])
++def test_decoder_binding_disagreement_rejected(fixture, field, value):
++    cfg = config()
++    ds = fixture.dataset(gff_vocab_version='v3')
++    broken = dict(cfg, **{field: value})
++    with pytest.raises(ValueError, match='decoder vocabulary/label cap'):
++        validate_decoder_dataset(ds, broken, SimpleNamespace(**cfg))
++
++
++def test_inherited_encoder_report_directory_refused(monkeypatch):
++    monkeypatch.setattr(probes, 'require_cuda', lambda: None)
++    monkeypatch.setattr(probes, 'require_allocation', lambda: None)
++    monkeypatch.setenv('CUBLAS_WORKSPACE_CONFIG', ':4096:8')
++    monkeypatch.setenv('TRANSGENIC_RUN_DIR', '/B5/must/not/write')
++    with pytest.raises(ValueError, match='override environment'):
++        probes.setup(SimpleNamespace())
++    from transgenic.training.mvp_cli_runtime import _train
++    with pytest.raises(ValueError, match='TRANSGENIC_RUN_DIR'):
++        _train(1, 0, None, None, None, None, None, None)
++
++
++@pytest.mark.parametrize('case,message', [('loader', 'injected rank1 loader failure'),
++    ('compiler', 'no observed Inductor kernel generation')])
++def test_real_two_rank_local_failure_no_done(tmp_path, monkeypatch, case, message):
++    import run_bounded
++    from make_launch_readiness import tooling_identity, _canonical_bytes
++    monkeypatch.setenv('MVP_DATA_MOVER_ALLOCATION_ID', 'CPU_TEST_NOT_GPU_CERTIFICATION')
++    monkeypatch.setenv('PYTHONPATH', os.pathsep.join([str(TOOLS.parents[2] / '.testdeps'),
++                                                   str(TOOLS.parents[2] / 'src')]))
++    monkeypatch.setenv('OMP_NUM_THREADS', '1')
++    bindings = {'tooling': tooling_identity()}
++    prepared = {'bindings': bindings, 'bindings_sha256': hashlib.sha256(_canonical_bytes(bindings)).hexdigest()}
++    def put(name, value):
++        path = tmp_path / name
++        payload = _canonical_bytes(value)
++        path.write_bytes(payload)
++        return str(path), hashlib.sha256(payload).hexdigest()
++    binding_path, binding_sha = put('bindings.json', prepared)
++    command_path, command_sha = put('command.json', [sys.executable, '-m', 'torch.distributed.run',
++        '--standalone', '--nproc-per-node=2', str(Path(__file__).with_name('mvp_real_probe_faults.py')),
++        case, str(tmp_path)])
++    out = tmp_path / 'bounded'
++    assert run_bounded.main(['--name', 'four_rank_smoke', '--bindings', binding_path,
++        '--bindings-file-sha256', binding_sha, '--command-file', command_path,
++        '--command-sha256', command_sha, '--output-dir', str(out), '--timeout-seconds', '90']) == 2
++    for rank in (0, 1):
++        assert message in json.loads((tmp_path / f'rank{rank}.json').read_text())['error']
++    assert not list(out.glob('*.DONE'))
++    failed = json.loads((out / 'four_rank_smoke.FAILED.json').read_text())
++    assert failed['exit_code'] != 0 and failed['timed_out'] is False

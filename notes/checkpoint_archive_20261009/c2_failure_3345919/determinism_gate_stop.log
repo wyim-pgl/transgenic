@@ -1,0 +1,21 @@
+CONTROLLER_STOPPED 3276938 {"jobs": [], "observed_job_state": "RUNNING", "phase": "blocked_determinism", "pid": 3276938, "recovery_job": 3361386, "source_commit": "d7b1a37", "started_unix": 1791750201.5162792, "updated_unix": 1791750865.7709293, "controller_stopped": true, "error": "Unresolved real four-rank resume loss mismatch at update210; frozen protocol determinism gate must be cleared before promotion/submission"}
+GRACEFUL_CHECKPOINT_SIGNAL 0 
+3309786|b5-seed|PENDING|0:00|(Priority)
+3309790|b5-seed|PENDING|0:00|(Dependency)
+3309789|b5-seed|PENDING|0:00|(Dependency)
+3309788|b5-seed|PENDING|0:00|(Dependency)
+3309787|b5-seed|PENDING|0:00|(Dependency)
+3345920|b6-wp5-pilot|PENDING|0:00|(JobHeldUser)
+3345918|b6-wp5-pilot|PENDING|0:00|(JobHeldUser)
+3345917|b6-wp5-pilot|PENDING|0:00|(JobHeldUser)
+3361386|c2-recovery-4gpu|RUNNING|42:30|gh106
+
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

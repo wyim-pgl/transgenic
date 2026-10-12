@@ -1,0 +1,156 @@
+JSON {
+  "bench": "b6_memory_129k",
+  "status": "PASS",
+  "reason": "peak reserved 33153875968 <= 100.0 GB on all 2 ranks",
+  "gate_conditions": {
+    "tier": 129024,
+    "chain_elements": 511,
+    "n_tok": 512,
+    "gate_gb": 100.0,
+    "label_tokens": 8192,
+    "architecture_sha256": "7f941f5c32ba77dc79dbcf8c179758d378f0aa012b0cf1a155fc4a6b9d450b7a"
+  },
+  "conditions": {
+    "world_size": 2,
+    "tier": 129024,
+    "chain_elements": 511,
+    "n_tok": 512,
+    "gate_gb": 100.0,
+    "label_tokens": 8192,
+    "architecture_sha256": "7f941f5c32ba77dc79dbcf8c179758d378f0aa012b0cf1a155fc4a6b9d450b7a"
+  },
+  "architecture": {
+    "encoder_model": "LongSafari/hyenadna-large-1m-seqlen-hf",
+    "encoder_d_model": 768,
+    "decoder_d_model": 1536,
+    "encoder_layers": 12,
+    "decoder_layers": 12,
+    "encoder_n_layer": 12,
+    "encoder_attention_heads": 6,
+    "decoder_attention_heads": 6,
+    "encoder_ffn_dim": 3072,
+    "decoder_ffn_dim": 3072,
+    "attention_window": [
+      1024,
+      1024,
+      1024,
+      1024,
+      1024,
+      1024,
+      1024,
+      1024,
+      1024,
+      1024,
+      1024,
+      1024
+    ],
+    "dropout": 0.1,
+    "decoder_layerdrop": 0.1,
+    "vocab_size": 290,
+    "max_encoder_seqlen": 129024,
+    "max_decoder_position_embeddings": 8192,
+    "evidence_channels": 31,
+    "b6_chain_d_model": 512,
+    "b6_chain_heads": 8,
+    "b6_chain_dropout": 0.1,
+    "b6_chain_attn_dropout": 0.1,
+    "b6_chain_elements": 512,
+    "b6_model_version": "b6-chain-gated-xattn-v1",
+    "built_decoder_layers": 12,
+    "built_chain_blocks": 12,
+    "built_evidence_proj": [
+      768,
+      31
+    ],
+    "built_chain_memory": true
+  },
+  "gate_bytes": 100000000000,
+  "worst_peak_reserved_bytes": 33153875968,
+  "ranks": [
+    {
+      "rank": 0,
+      "peak_reserved_bytes": 33153875968,
+      "peak_allocated_bytes": 27069926912,
+      "mean_step_seconds": 1.359564762271475,
+      "measured_updates": 8,
+      "compile_verified": true,
+      "device": "NVIDIA GH200 120GB",
+      "error": null
+    },
+    {
+      "rank": 1,
+      "peak_reserved_bytes": 33153875968,
+      "peak_allocated_bytes": 27069926912,
+      "mean_step_seconds": 1.3596552473609336,
+      "measured_updates": 8,
+      "compile_verified": true,
+      "device": "NVIDIA GH200 120GB",
+      "error": null
+    }
+  ],
+  "dense_channels": 31,
+  "compile": "inductor",
+  "suppress_errors": false,
+  "checkpointing": "non-reentrant",
+  "mixed_precision": "bf16",
+  "steps": 12,
+  "warmup": 4,
+  "config": "/work/repo/configs/b6_400m_win_v3.json",
+  "config_sha256": "7a224645755f6a05400bca4d8d539770790793e5eb72cf45ab10ccd74a2db58d",
+  "torch": "2.14.0a0+4fdf77b940.nv26.08",
+  "transformers": "4.57.6",
+  "inductor_activity": 3016,
+  "finished_at": "2026-09-24T19:27:07"
+}
+LOG repo: /work/nvme/bilv/wcyim/transgenic/repo_b6_cachefix_20260924 @ 7018e33 snapshot fix from b6-integration c9e242ceeb7c9f83925985fda01b0  image: /work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif
+base=nvcr.io/nvidia/pytorch:26.08-py3 built=2026-09-09T17:41:38+00:00 arch=aarch64
+The following values were not passed to `accelerate launch` and had defaults used instead:
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+W0924 19:24:32.784000 2174585 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0924 19:24:32.784000 2174584 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0924 19:24:32.824000 2174585 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0924 19:24:32.824000 2174584 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+
+NCCL version 2.30.7+cuda13.3
+
+[2026-09-24 19:24:43] gh126:2174585:2174585 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-24 19:24:43] gh126:2174584:2174584 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-24 19:24:43] gh126:2174585:2174585 [1] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId
+[2026-09-24 19:24:43] gh126:2174584:2174584 [0] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+
+[2026-09-24 19:24:43] gh126:2174585:2174585 [1] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-24 19:24:43] gh126:2174584:2174584 [0] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-24 19:24:43] gh126:2174585:2174585 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-24 19:24:43] gh126:2174584:2174584 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-24 19:24:43] gh126:2174585:2174585 [1] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-09-24 19:24:43] gh126:2174584:2174584 [0] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+{"bench": "b6_memory_129k", "status": "PASS", "reason": "peak reserved 33153875968 <= 100.0 GB on all 2 ranks", "gate_conditions": {"tier": 129024, "chain_elements": 511, "n_tok": 512, "gate_gb": 100.0, "label_tokens": 8192, "architecture_sha256": "7f941f5c32ba77dc79dbcf8c179758d378f0aa012b0cf1a155fc4a6b9d450b7a"}, "conditions": {"world_size": 2, "tier": 129024, "chain_elements": 511, "n_tok": 512, "gate_gb": 100.0, "label_tokens": 8192, "architecture_sha256": "7f941f5c32ba77dc79dbcf8c179758d378f0aa012b0cf1a155fc4a6b9d450b7a"}, "architecture": {"encoder_model": "LongSafari/hyenadna-large-1m-seqlen-hf", "encoder_d_model": 768, "decoder_d_model": 1536, "encoder_layers": 12, "decoder_layers": 12, "encoder_n_layer": 12, "encoder_attention_heads": 6, "decoder_attention_heads": 6, "encoder_ffn_dim": 3072, "decoder_ffn_dim": 3072, "attention_window": [1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024], "dropout": 0.1, "decoder_layerdrop": 0.1, "vocab_size": 290, "max_encoder_seqlen": 129024, "max_decoder_position_embeddings": 8192, "evidence_channels": 31, "b6_chain_d_model": 512, "b6_chain_heads": 8, "b6_chain_dropout": 0.1, "b6_chain_attn_dropout": 0.1, "b6_chain_elements": 512, "b6_model_version": "b6-chain-gated-xattn-v1", "built_decoder_layers": 12, "built_chain_blocks": 12, "built_evidence_proj": [768, 31], "built_chain_memory": true}, "gate_bytes": 100000000000, "worst_peak_reserved_bytes": 33153875968, "ranks": [{"rank": 0, "peak_reserved_bytes": 33153875968, "peak_allocated_bytes": 27069926912, "mean_step_seconds": 1.359564762271475, "measured_updates": 8, "compile_verified": true, "device": "NVIDIA GH200 120GB", "error": null}, {"rank": 1, "peak_reserved_bytes": 33153875968, "peak_allocated_bytes": 27069926912, "mean_step_seconds": 1.3596552473609336, "measured_updates": 8, "compile_verified": true, "device": "NVIDIA GH200 120GB", "error": null}], "dense_channels": 31, "compile": "inductor", "suppress_errors": false, "checkpointing": "non-reentrant", "mixed_precision": "bf16", "steps": 12, "warmup": 4, "config": "/work/repo/configs/b6_400m_win_v3.json", "config_sha256": "7a224645755f6a05400bca4d8d539770790793e5eb72cf45ab10ccd74a2db58d", "torch": "2.14.0a0+4fdf77b940.nv26.08", "transformers": "4.57.6", "inductor_activity": 3016, "finished_at": "2026-09-24T19:27:07"}
+[rank0]:[W924 19:27:09.520877588 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+driver_peak_mem_mib_per_gpu: gpu0=32953 gpu1=32953 
+B6 memory gate: PASS
+
+SHA256 revision/scripts/b6/bench_memory_129k.py 8bf18ae8dcf27f935d82b6393dd0ecf5a0feae0087d02359452b89cedc533f03
+SHA256 src/transgenic/training/b6_runtime.py ad76197e842cae5969b0ef769fae8d2b7e1633777e822c45546c20452576f6e1
+SHA256 revision/scripts/b6/integration_4rank.sbatch 97bec9d5b1037fe0eac9c8fef30b8153a388f43ebf86eea9d83c60ead7e2ad00
+CONTROLLER_JSON_ASSERTIONS_PASS

@@ -1,0 +1,9 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T16:45:52-0700
+uid=3092957(wyim) gid=3092957(p-wyim) groups=3092957(p-wyim),1000001(rc-pronghornusers),1000040(rc-pgl),1000073(rc-cpu_s2_core_0-enabled),1000074(rc-cpu_s3_core_0-enabled),1000075(rc-gpu_s2_core_0-enabled),1000084(rc-cpu_s1_pgl_0-enabled),1000089(rc-cpu_s6_core_0-enabled),1000101(rc-cpu_s5_core_0-enabled),1000189(rc-bch709-6)
+p-wyim:*:3092957:wyim
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan|wyim|p-wyim|2775|directory
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/lib/python3.11/site-packages|wyim|p-wyim|2775|directory
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709|wyim|p-wyim|2775|directory

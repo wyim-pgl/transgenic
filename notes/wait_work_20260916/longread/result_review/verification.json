@@ -1,0 +1,39 @@
+{
+  "status": "BOUNDED_LOCAL_CONSISTENCY_VERIFIED_NOT_PILOT_COMPLETE",
+  "receipt_sha256": "b8c5c78776a83ca1c5b25731cbfdf1bfd9c554dd3863ab2431bd38435dd3dc33",
+  "outputs_rehashed": 16,
+  "output_bytes": 28775072,
+  "source_files_git_verified": 9,
+  "versions": {
+    "minimap2": "2.28-r1209\n",
+    "samtools": "samtools 1.3.1\nUsing htslib 1.3.1\nCopyright (C) 2016 Genome Research Ltd.\n",
+    "seqkit": "seqkit v2.13.0\n"
+  },
+  "sample": {
+    "run_records": 6952504,
+    "sample_ids_md5": "5c1db94ffec26f2b92c4dceab627c59a",
+    "sampled": 10000,
+    "seed": 15565188439147493641,
+    "short_run": false
+  },
+  "sam_filter_counts": {
+    "annotation_dependent": 6321,
+    "unspliced": 3180,
+    "secondary_or_supplementary": 129,
+    "low_mapq": 313,
+    "unmapped": 171,
+    "no_ts_tag": 15
+  },
+  "sense_fraction": 0.534944089456869,
+  "wilson95": [
+    0.521108,
+    0.548726
+  ],
+  "orientation_key": "d802a86ae1673909ee21a0cd663c99ac:513e5ef30845ed754b00816a99abbf8e:0264c349bc61ccceb546648edec46ebb:65949011a59729f1bcba3a34ae8353b6",
+  "audit_md5": "a329049df63a3fa3d640dfdc89b4c854",
+  "limitations": [
+    "No fresh canonical-read/reference/tool hash or whole-run recount",
+    "No annotation-dependent audit recomputation",
+    "Extern OUT_OF_MEMORY 0:125 blocks clean-scheduler acceptance"
+  ]
+}

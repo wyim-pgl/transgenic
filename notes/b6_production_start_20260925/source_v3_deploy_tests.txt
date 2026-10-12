@@ -1,0 +1,13 @@
+/data/gpfs/home/wyim/b6-src-0fc80de.tar.gz: OK
+    from revision.scripts.evidence import b6_hsp_project as m
+E   ModuleNotFoundError: No module named 'revision'
+=========================== short test summary info ============================
+ERROR 
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 7.27s
+  /data/gpfs/home/wyim/micromamba/lib/python3.11/site-packages/_pytest/config/__init__.py:1428: PytestConfigWarning: Unknown config option: cache_dir
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+186 passed, 1 warning in 232.42s (0:03:52)

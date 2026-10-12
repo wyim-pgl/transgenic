@@ -1,0 +1,16 @@
+DEPLOYED_TESTED /work/nvme/bilv/wcyim/transgenic/ops/c2_first_forward_20261012
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+test_replaced_parameter_refused (__main__.StateRestorationTests.test_replaced_parameter_refused) ... ok
+test_restores_parameters_and_complete_buffer_registry_in_place (__main__.StateRestorationTests.test_restores_parameters_and_complete_buffer_registry_in_place) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.033s
+
+OK

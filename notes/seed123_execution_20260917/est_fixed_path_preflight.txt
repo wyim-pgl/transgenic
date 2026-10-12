@@ -1,0 +1,155 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+{
+  "files": [
+    {
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb", 
+      "exists": true, 
+      "mtime": 1789490501.782096, 
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb", 
+      "raw_prefix_bytes": "JK596275.1\t648\t4556_0:000eb3\t701\t646\t269\t576\t701\t126\t5.38e-76\t248\t-3\t28RH44RQ52\nJK596275.1\t648\t888268_0:003d25\t661\t646\t269\t537\t661\t126\t1.35e-64\t218\t-3\t28RH13DA10MV7HQ4ST3LM2RQ3DNSM1DA6SA4LP6IK9A-AT15\nJK596275.1\t648\t4540_0:008fd1\t698\t646\t269\t574\t698\t126\t1.81e-63\t215\t-3\t25RQ2RH8IL4DAGA9MV7HQ1SA9RQ11PS1SE4LI6IK5QKDN1NDA-16\nJK596275.1\t648\t4540_0:009acd\t696\t646\t269\t572\t696\t126\t2.46e-63\t215\t-3\t25RQ2RH8IL4DAGA9MV7HQ1SA9RQ11PS1SE4LI6IK5QKDN2A-4GA11\nJK596275.1\t648\t1504633_0:0007f0\t696\t646\t269\t572\t696\t126\t6.69e-63\t214\t-3\t12KR12RQ2RH8IL4DAGA9MV7HQ1SA9RQ11PS1SE4LI6IK5QKDN2A-4GA11\nJK596275.1\t648\t38727_0:001cc6\t694\t646\t269\t570\t694\t126\t9.34e-62\t211\t-3\t28RH8IL4DAGA9MV7HQ1SA9RQ11PS1SE4LI6IK2WC2QKDN2A-4GT11\nJK596275.1\t648\t38727_0:008ead\t696\t646\t269\t572\t696\t126\t3.65e-61\t209\t-3\t28RH8IL4DAGA9MV7HQ1SA7AP1RQ11PS1SE2QR1LI6IK5QKDN2A-3GSGA6RQ4\nJK596275.1\t648\t1010633_0:00d88b\t449\t646\t269\t326\t449\t126\t7.52e-61\t203\t-3\t12KR15RH13DA10MV7HQ1S-2ST2KN3RQ3DN2DHSN4KISAEKQH6GS2IK9A-AL13LI1\nJK596275.1\t648\t206008_0:0005bb\t694\t646\t269\t572\t694\t126\t1.01e-58\t202\t-3\t12KR12RQ2RH8IL4DAGA9MV7HQ1SA9RQ11PS1SEEG3LI6I-N-LK3QKDN2A-4GA11\nJK596275.1\t648\t1010633_0:00e31f\t693\t646\t269\t570\t693\t126\t1.41e-57\t199\t-3\t28RH13DA10MV7HQ1S-5KN3RQ3DN2DYSNIV1TA1KISAEK7GS2IK9A-AL3GS3PS7\nJK596275.1\t648\t422564_0:002e9d\t695\t646\t269\t572\t695\t126\t1.45e-57\t199\t-3\t12KE12RQ2RH13DA10MV7HQ4SN5SVRQ3DESLAS2IV4SP2QRRHLQ1QYDY3IK7G-N-AY2SA13\nJK596275.1\t648\t158149_0:001543\t692\t646\t269\t571\t692\t127\t1.96e-56\t196\t-3\t28RH13DA10MV7HQ1-S7LP1SARQ2GE1SF3IV4SGEQQ-Q-R-L-2DH3IL5QK1GR1A-16\nJK596275.1\t648\t191504_0:00dac7\t205\t646\t269\t82\t205\t126\t8.51e-56\t182\t-3\t8HY6HQ12RH13DA10MV7HQNS2SPSNASLM3SPRQAV1GE2AT2IN4SA3RHL-KR1DY2FVIK3KE1QH2NDA-AGDESA13\nJK596275.1\t648\t4558_0:001392\t702\t646\t269\t579\t702\t126\t4.34e-55\t193\t-3\t25RQ2RH13DA10MVQH6HQ4SN5SVRQ3DESLAS2IV4SP1QK1RHLR1QYDY3IK5QR1GYNAAH2S-G-12\nJK596275.1\t648\t38414_0:0036ae\t726\t646\t269\t603\t726\t126\t2.08e-52\t186\t-3\t28RH4RK5LM2DA10MV7HQNS2SP2LM3SARQ1SP2SLAI3SPTA2SA2QHRQL-KRQLDH3IK5QR2N-AGARDESA1GN11\nJK596275.1\t648\t191504_0:006f8b\t798\t646\t269\t675\t798\t126\t4.86e-50\t180\t-3\t15HQ12RH13DA10MV7HQNS2SPSNASLM3SPRQAV1GEDN1AT2IN4SA1Q-2LHKR1DY2FVIK5QH2NEA-AGDESAGD12\nJK596275.1\t648\t110450_0:004153\t807\t646\t269\t687\t807\t126\t2.55e-49\t178\t-3\t8HY4AD14RH10LM2DT10MV5HK1HQNS4ASLI2ASSPRQ3DASLAS3ST3SAEQ1QRRYL-K-Q-D-GS1FLIK4AS4AGASD-ST13\nJK596275.1\t648\t4533_0:004866\t693\t646\t269\t573\t693\t126\t1.93e-48\t175\t-3\t8HY4AD1HY12RH10LM2DA10MV5HK1HQNS3SGASLM2ASSPRQ4SL4SA3SAEQQ-Q-R-L-KRQRDY2FLIR4AS1DN2AGASD-ST1GS11\nJK596275.1\t648\t4540_0:003613\t153\t643\t269\t48\t153\t125\t4.03e-47\t159\t-3\t22PL1RQ2RH6G-I-I-D-L-I-G-D-G-W-C-F-V-R-4MV6VLHE1SASP8RQ11PS1SE4LI6IK5QKDN2ATA-D-S-G-G-3PL7\nJK596275.1\t648\t85692_0:00fed5\t443\t646\t269\t326\t443\t126\t1.07e-46\t166\t-3\t15HD12RH5SA4LM2DA10MV7HQNS3SN1LI2ASSPRQ3DNSLATDE1I-S-T-2SAEQ1QRRYL-K-Q-D-2FLIR3KQ5AGASD-SA1GD1VA1PS7\nJK596275.1\t648\t85692_0:00fed6\t443\t646\t269\t326\t443\t126\t1.07e-46\t166\t-3\t15HD12RH5SA4LM2DA10MV7HQNS3SN1LI2ASSPRQ3DNSLATDE1I-S-T-2SAEQ1QRRYL-K-Q-D-2FLIR3KQ5AGASD-SA1GD1VA1PS7\nJK596275.1\t648\t85692_0:00ffdf\t443\t646\t269\t326\t443\t126\t1.07e-46\t166\t-3\t15HD12RH5SA4LM2DA10MV7HQNS3SN1LI2ASSPRQ3DNSLATDE1I-S-T-2SAEQ1QRRYL-K-Q-D-2FLIR3KQ5AGASD-SA1GD1VA1PS7\nJK596275.1\t648\t200361_0:006826\t692\t646\t269\t575\t692\t126\t9.15e-46\t167\t-3\t15HD12RH5SA4LM2DA10MV7HRNS3SN1LI2ASSPRQ3DNSLATDE1I-S-T-2SAEQ1QRRYL-K-Q-D-2FLIR9AGASD-SA1GD1VA1PS7\nJK596275.1\t648\t4513_0:00e267\t665\t646\t269\t548\t665\t126\t1.37e-45\t167\t-3\t15HD12RH5SA4LM2DA10MV7HQNS3SN1LI2ASSPRQ3DHSLATDE1I-S-T-2SAEQ1QRRYL-K-Q-D-2FLIR9AGASD-SA1GD1VA1PS7\nJK596275.1\t648\t112509_0:004dab\t692\t646\t269\t575\t692\t126\t1.75e-45\t167\t-3\t15HD12RH5SA4LM2DA10MV7HQNS3SN1LI2ASSPRQ3DHSLATDE1I-S-T-2SAEQ1QRRYL-K-Q-D-2FLIR9AGASD-SA1GD1VA1PS7\nJK578847.1\t691\t1010633_0:00cbe2\t187\t690\t277\t30\t167\t138\t4.18e-92\t275\t-2\t138\nJK578847.1\t691\t1504633_0:002f7f\t195\t690\t277\t38\t175\t138\t5.50e-92\t275\t-2\t138\nJK578847.1\t691\t206008_0:0029e4\t195\t690\t277\t38\t175\t138\t5.50e-92\t275\t-2\t138\nJK578847.1\t691\t38727_0:001ac1\t195\t690\t277\t38\t175\t138\t5.50e-92\t275\t-2\t138\nJK578847.1\t691\t38727_0:008be6\t195\t690\t277\t38\t175\t138\t5.50e-92\t275\t-2\t138\nJK578847.1\t691\t38727_0:008c95\t195\t690\t277\t38\t175\t138\t5.50e-92\t275\t-2\t138\nJK578847.1\t691\t4540_", 
+      "children_truncated": false, 
+      "children": [
+        {
+          "name": "DONE", 
+          "size": 45
+        }, 
+        {
+          "name": "blastx.log", 
+          "size": 9848
+        }, 
+        {
+          "name": "commands.json", 
+          "size": 1381
+        }, 
+        {
+          "name": "makedb.log", 
+          "size": 1679
+        }, 
+        {
+          "name": "orthodb.dmnd", 
+          "size": 5740904567
+        }, 
+        {
+          "name": "orthodb.filtered.fa", 
+          "size": 5547417703
+        }, 
+        {
+          "name": "orthodb.raw13.tsv", 
+          "size": 166877275
+        }, 
+        {
+          "name": "provenance.json", 
+          "size": 31920
+        }
+      ], 
+      "symlink": false, 
+      "size": 4096
+    }, 
+    {
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot", 
+      "exists": true, 
+      "mtime": 1789489205.232398, 
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot", 
+      "raw_prefix_bytes": "JK596275.1\t648\tsp|Q9FY46|SUT41_ARATH\t685\t646\t452\t586\t650\t65\t3.51e-21\t91.3\t-3\t2QE3DE1HY4AT1HD2IL2AS3RKQD1RH1LTLISA3IMIVDE1IV1DKGE1CF7MV5HY1HQNS1SN\nJK596275.1\t648\tsp|Q8GYH8|SUT42_ARATH\t677\t646\t461\t573\t634\t62\t7.46e-20\t87.4\t-3\t2QE5HYQE3AT1HG2IL2AS3RKQE1RL1LT1SA1SA2IVDE3DKGE1CF7MV3LVQHHY1HN\nJK578847.1\t691\tsp|Q9FLF0|RS92_ARATH\t197\t690\t277\t38\t175\t138\t4.86e-85\t251\t-2\t12AT9HE28AD1GT11AV4AE5LI3AS13KR9IL2VI9EQ2IV4ST6PR5\nJK578847.1\t691\tsp|Q9LXG1|RS91_ARATH\t198\t690\t277\t38\t175\t138\t1.28e-80\t239\t-2\t2CN9AS9HD7NS20AD1GS11AV4AE5LI3AS8AS4KR7RK1IL2VI6VLED1EQ5SA1ST6PR5\nJK578847.1\t691\tsp|P49214|RS9_TOBAC\t77\t441\t277\t1\t55\t55\t2.75e-28\t102\t-2\t3IV7KR9IV9VLED1EQ7SI6PR5\nJK570678.1\t787\tsp|Q84WW5|VAP13_ARATH\t239\t1\t588\t22\t236\t216\t2.30e-46\t155\t1\t2NS1ACCSLMEQ1VT2-T1DT15AC3ANST3PL1RGGD1FCGNIVSTIV4PQ2IA1PL1YMHQ3-K-F-L-V-Q-T-V-V-V-S-D-G-T-T-S-K-EIVVLPADELM1SN1AEPA2LVVI1ED5IV1VI10EGAS2EGDN1LPGMSADSVLDNHDEIVAKSIQPSSAXSXLXFXDXDXVXSXRXTXFSESE2QETK1HSY-1DAIW2VI2SLGTDEHEEKSTRSYAATEQEQNSKQ1ILQRKL3LMIL2-E-TTS1PKSQPS2FH1ALTLFLVM2IVFGSL1CGFCLVLI3ML\nJK570678.1\t787\tsp|Q9SHC8|VAP12_ARATH\t239\t1\t588\t21\t236\t216\t1.43e-37\t132\t1\t2NI1ACCS1EY1VG4QNCY10RK2AC3ANST3PH2GS1FSGEIVSLIV4PQ2IA1PA1YLHQ1-K-D-K-F-L-L-Q-C-V-V-A-S-P-G-A-T-P2IVVTPHDELM3AEPA1RHLR3FT4IV2-A1APNR5PR1EGAS2EGDS1LPGRSADS1DSHDENVGKNIAPSSDXFXTXAXAXPXRXFXSXAXDSRSVTDSA1TDSNHSYS1DAIRSAML1ST1SLGTDEHEEKSNRSYAAVEQEL1KNKRIL1KQ2EDLQIL1KR-E-STKKRPSSKPS2FISPAFTMFY3IVFGSLLICGFLLI3LI1\nJK570678.1\t787\tsp|Q8VZ95|VAP11_ARATH\t256\t1\t588\t38\t253\t216\t2.21e-37\t132\t1\t2NI1ACCS1EY1VT4QNCN10RK2AC3ANST3PL2GSSTFCGEIVSLIV4PQ2IA1PS1YMHQ3-K-F-L-L-Q-G-V-I-A-S-P-G-V-T-A-K-EIVVT1DELM3AEPA1RHLR3FT4IT2-A1APNR5PH1EGAS2EGDS1LPGRSADS1DSHDENVGKHIGPSSEXFXSXFXEXRXFXIXVXDXNSKSATGSH1TESNHTYS1DAIRSAMLVIST1SLGTDEHEEKSQRSYAAIEQEL1KNKRIL1KR2EDLQIL1KR-E-STK1PSSQPS2FISPAFTMFY3IVFGSLLICGFLLI3LI1\nJK570678.1\t787\tsp|Q9SYC9|VAP14_ARATH\t571\t1\t315\t192\t314\t123\t8.83e-22\t94.4\t1\t1QKNV1ACCS1EN1VT3DEQNCY4VA4PARK2AY3ANSV3PL2GS1FCGEIVSLIVTI3PL2IA1PA1YMHQ1-R-D-K-L-L-F-Q-C-K-V-V-E-P-E-T-T-A2IVVTPSDELM3AEPA1RHLPVA2FTKR1RK1IM2-T1APNQ5PQ1EGAT2EGDS1\nJK570678.1\t787\tsp|Q9LVU1|VAP21_ARATH\t220\t1\t588\t25\t212\t216\t1.71e-21\t89.7\t1\t2NSSYACCD1EKLVVA3DEQNCY8NS1RK2AF3ANST2VIPQ1RWGD1FCGI1SRIV1ML2PQKR1IY3YMHQ3-K-F-L-L-Q-S-T3-P-H-T-D-V-D-E-L-P-Q1LT1ST1ADPS1RKLTVLET1FC2RK1IS1VIP-A-N-PT2PTVTPQERESAS1ESEGDASTLN1SDD-V-D-H-E-V-K-I-P-S-X-X-X-X-X-X-X-X-X-X-S-S-T-SG1TS1H-Y-1DT2MTVISQKRSLGKDEHEERSDRAYAAVEKEQNTKQKQIL1KH3LTIV1KR-R-R-NTQKRPN1PGGN1FL1ALTKFLVALALMIVFGSLLICGFLLILI1YFLIML\nJK570678.1\t787\tsp|B9DHD7|VAP22_ARATH\t386\t1\t294\t21\t132\t115\t6.08e-20\t88.2\t1\t2NT1ACCVLVEQ1VT1KT1DHQHCY8NS1RK2AC3ANSV3PA1RKGSSTFCGEIFSTIVTI3PF2IP3YMHV2-D-K-F-L-I-Q-S-T-A-V-S-A-E-T-T-D-E2VTPADSLM4PE1RKLHVI2FN4ITYL1P-A-N-3PDVS2\nJK570678.1\t787\tsp|O82213|VAP31_ARATH\t149\t1\t264\t22\t126\t105\t3.72e-19\t81.6\t1\t2NM1ACCS1EY1VT4QNCN9PRRNKN1AC3ANSY1VLVIPL1RKGSSTFCGKIVSLIV4PQ2IV1PS1YMHQ-S-F-E-K-F-M-I-Q-S-V-L-A-S-P-G-V-TCA1DEIVVTPRDELM3AEPS1RHLV3FT4IT2\nJK559843.1\t767\tsp|Q8L586|Y4958_ARATH\t287\t2\t682\t61\t287\t227\t1.42e-99\t292\t2\t1AFALAV1ATAT2VFGCVI2ST2DASADE1SGFK2LV2NTLIESED1QRIL1TKGEHN1EGNS1TA1DE1TQLAQRVFLIVL3ASVT10EG13QVLV2VFAV3FLAN5SC2YF4MLIV1KR3FNSW3DE2SR3KAQEVI4EDKR9VI6TL4AS5VI1YF1TV1LF1GA2IV2IM2AS1VI5IL3ED1TR1LVSK4TFQKSTILASLV5VSVI1VITF4GKKRDKERAVQY1\nJK552962.1\t328\tsp|P31927|SPSA_MAIZE\t1068\t326\t183\t1021\t1068\t48\t2.39e-18\t79.0\t-3\t2LV2SP3HK1TD6ST2VASA2AT1DE20\nJK552962.1\t328\tsp|A2WYE9|SPSA1_ORYSI\t1084\t323\t183\t1038\t1084\t47\t2.11e-17\t76.3\t-3\t1LV6HQ1TE9VISAYF1AK13QE1ST1TASA3\nJK552962.1\t328\tsp|Q0JGK4|SPSA1_ORYSJ\t1084\t323\t183\t1038\t1084\t47\t2.11e-17\t76.3\t-3\t1LV6HQ1TE9VISAYF1AK13QE1ST1TASA3\nJK608601.1\t499\tsp|Q9LSV0|GLYR1_ARATH\t289\t497\t228\t196\t285\t90\t1.93e-43\t145\t-3\t2PSQDAT3VI5TMAT5LG3AS1LNQKGS2NP28SA1VA21YI1VA2\nJK608601.1\t499\tsp|F4I907|GLYR2_ARATH\t358\t497\t228\t262\t351\t90\t2.26e-25\t99.8\t-3\t1SD1QNAV1LVDE1LVDSLQ2TIANNA2FYKS4AS1LIQKGSSV1NPPT15AG1GADEESNVASVQ1MT1VISA1VA3ALFY1KV1RK1LY2GS1LE5YI1VAVL1\nJK608600.1\t499\tsp|Q9LSV0|GLYR1_ARATH\t289\t3\t272\t196\t285\t90\t1.93e-43\t145\t3\t2PSQDAT3VI5TMAT5LG3AS1LNQKGS2NP28SA1VA21YI1VA2\nJK608600.1\t499\tsp|F4I907|GLYR2_ARATH\t358\t3\t272\t262\t351\t90\t2.26e-25\t99.8\t3\t1SD1QNAV1LVDE1LVDSLQ2TIANNA2FYKS4AS1LIQKGSSV1NPPT15AG1GADEESNVASVQ1MT1VISA1VA3ALFY1KV1RK", 
+      "children_truncated": false, 
+      "children": [
+        {
+          "name": "DONE", 
+          "size": 45
+        }, 
+        {
+          "name": "blastx.log", 
+          "size": 4150
+        }, 
+        {
+          "name": "commands.json", 
+          "size": 1397
+        }, 
+        {
+          "name": "makedb.log", 
+          "size": 1059
+        }, 
+        {
+          "name": "provenance.json", 
+          "size": 142541
+        }, 
+        {
+          "name": "swissprot.dmnd", 
+          "size": 21589919
+        }, 
+        {
+          "name": "swissprot.filtered.fa", 
+          "size": 20916159
+        }, 
+        {
+          "name": "swissprot.raw13.tsv", 
+          "size": 60378317
+        }
+      ], 
+      "symlink": false, 
+      "size": 4096
+    }, 
+    {
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/univec/est.univec.fa.gz", 
+      "exists": true, 
+      "mtime": 1788550486.5943265, 
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/univec/est.univec.fa.gz", 
+      "symlink": false, 
+      "size": 12533719
+    }, 
+    {
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/univec/report.tsv", 
+      "exists": true, 
+      "mtime": 1788550486.590994, 
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/univec/report.tsv", 
+      "symlink": false, 
+      "size": 1866558
+    }, 
+    {
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/est.fa.gz", 
+      "exists": true, 
+      "mtime": 1788324860.0014973, 
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/est.fa.gz", 
+      "symlink": false, 
+      "size": 15232163
+    }, 
+    {
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Sitalica/Sitalica.est.bam", 
+      "exists": true, 
+      "mtime": 1788555936.9534795, 
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Sitalica/Sitalica.est.bam", 
+      "symlink": false, 
+      "size": 18714842
+    }, 
+    {
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Sitalica/Sitalica.est.bam.bai", 
+      "exists": true, 
+      "mtime": 1788555937.418148, 
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Sitalica/Sitalica.est.bam.bai", 
+      "symlink": false, 
+      "size": 328056
+    }, 
+    {
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/PROVENANCE.txt", 
+      "prefix": "species          Sitalica\nscope            protein_training_evidence (A19.2, issue #45)\nreference        /data/gpfs/assoc/pgl/data/Transgenic/genomes/Sitalica_312_v2.fa\nreference_md5    d8f77d532d8c87f314f6175146fa6728\nprotein_resource /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz\nprotein_md5      453cb32b02e0799950d7d5f4de5f62ac   (protocol section 1, A19.1 stage-2 filtered)\nprotein_seqs     12115085   (filter_summary.json sequences_out, 408 taxa)\nminiprot         0.18-r281\nparams           --gff --outs=0.97 -N 20   (A19.2, frozen)\nchunked          6 chunks, /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/chunks_v1/MANIFEST.tsv\nchunk_reason     miniprot memory is unbounded in the query set; array 6150892 lost two\n                 species to OUT_OF_MEMORY at 64 GB. lh3/miniprot#68 is the same signature\n                 upstream and is closed with no fix.\nchunk_equivalence measured before use, job 6152995: 1x100k, a re-run of 1x100k and 2x50k\n                 concatenated are identical at the GFF and acceptance levels once the\n                 run-local MP ids are dropped. See pilot/split_equiv/REPORT.txt.\nid_renumbering   chunk ids restart at 1; merged ids are 1..13302148, contiguous and unique.\ngff              /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/Sitalica.protein.gff.gz\ngff_md5          0e17de830f3458c81b25b3366320ec77\nmrna_records     13302148\nmerged           2026-09-08T22:56:03-0700\nacceptance       NOT APPLIED HERE. A19.2 identity >= 30 %, coverage >= 70 %, no frameshift,\n                 canonical introns <= 200 kb and mapping_ambiguous flagging run as a separate\n                 pass over this GFF, so the judgement can be revised without realigning.\nrun_location     pronghorn. A19 and #45 say Delta; author decision 2026-09-07. Input is the\n                 section 1 frozen object by md5, so location cannot change the input.\n                 Log in protocol section 12.\n", 
+      "exists": true, 
+      "mtime": 1788933363.0531273, 
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/PROVENANCE.txt", 
+      "symlink": false, 
+      "size": 1995
+    }, 
+    {
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/Sitalica.protein.gff.gz", 
+      "exists": true, 
+      "mtime": 1788932876.9127657, 
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/Sitalica.protein.gff.gz", 
+      "symlink": false, 
+      "size": 9647215761
+    }
+  ], 
+  "scope": "bounded metadata and raw13 prefix only; no large hashing/scans", 
+  "observed_at": "2026-09-17T11:22:27-0700", 
+  "root": "/data/gpfs/assoc/pgl/data/Transgenic/evidence"
+}

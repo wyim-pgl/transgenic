@@ -1,0 +1,67 @@
+ont SRR14635690 reads_with_secondaries 1055476 capped 199119
+ont SRR14635690 primary_reads 8419907
+ont SRR14635691 reads_with_secondaries 1108960 capped 194913
+ont SRR14635691 primary_reads 9517371
+est est_primary reads_with_secondaries 49225 capped 1995
+est est_primary primary_reads 435858
+ont SRR16682187 reads_with_secondaries 185604 capped 2832
+ont SRR16682187 primary_reads 2364666
+ont SRR16682188 reads_with_secondaries 199918 capped 4350
+ont SRR16682188 primary_reads 2597216
+ont SRR16682189 reads_with_secondaries 181901 capped 2188
+ont SRR16682189 primary_reads 2035401
+ont SRR16682190 reads_with_secondaries 183955 capped 1886
+ont SRR16682190 primary_reads 2018879
+ont SRR16682191 reads_with_secondaries 158233 capped 1676
+ont SRR16682191 primary_reads 2004356
+ont SRR16682192 reads_with_secondaries 197648 capped 2188
+ont SRR16682192 primary_reads 2188686
+ont SRR16682193 reads_with_secondaries 173800 capped 1897
+ont SRR16682193 primary_reads 2249578
+ont SRR16682194 reads_with_secondaries 169368 capped 1924
+ont SRR16682194 primary_reads 2208793
+ont SRR16682195 reads_with_secondaries 178307 capped 1879
+ont SRR16682195 primary_reads 2298681
+pacbio SRR31342050 reads_with_secondaries 11056 capped 240
+pacbio SRR31342050 primary_reads 151906
+pacbio SRR31342051 reads_with_secondaries 6186 capped 100
+pacbio SRR31342051 primary_reads 82946
+pacbio SRR31342052 reads_with_secondaries 13132 capped 331
+pacbio SRR31342052 primary_reads 154158
+pacbio SRR31342053 reads_with_secondaries 12366 capped 227
+pacbio SRR31342053 primary_reads 126393
+pacbio SRR31342054 reads_with_secondaries 17591 capped 203
+pacbio SRR31342054 primary_reads 221308
+pacbio SRR31342055 reads_with_secondaries 14732 capped 141
+pacbio SRR31342055 primary_reads 213957
+pacbio SRR31342056 reads_with_secondaries 29176 capped 251
+pacbio SRR31342056 primary_reads 382429
+pacbio SRR31342057 reads_with_secondaries 55225 capped 509
+pacbio SRR31342057 primary_reads 574307
+pacbio SRR31342058 reads_with_secondaries 53369 capped 2349
+pacbio SRR31342058 primary_reads 492272
+pacbio SRR31342057 reads_with_secondaries 55225 capped 509
+pacbio SRR31342057 primary_reads 574307
+pacbio SRR31342058 reads_with_secondaries 53369 capped 2349
+pacbio SRR31342058 primary_reads 492272
+est sampled capped reads 1995 median 338 p90 343 max 349
+est N=100 fraction_of_capped_still_capped 1.0
+est N=200 fraction_of_capped_still_capped 0.8957
+est N=500 fraction_of_capped_still_capped 0.0
+est N=1000 fraction_of_capped_still_capped 0.0
+est N=2000 fraction_of_capped_still_capped 0.0
+est N=5000 fraction_of_capped_still_capped 0.0
+pacbio sampled capped reads 4225 median 337 p90 340 max 378
+pacbio N=100 fraction_of_capped_still_capped 1.0
+pacbio N=200 fraction_of_capped_still_capped 0.8204
+pacbio N=500 fraction_of_capped_still_capped 0.0
+pacbio N=1000 fraction_of_capped_still_capped 0.0
+pacbio N=2000 fraction_of_capped_still_capped 0.0
+pacbio N=5000 fraction_of_capped_still_capped 0.0
+ont sampled capped reads 19866 median 334 p90 344 max 513
+ont N=100 fraction_of_capped_still_capped 1.0
+ont N=200 fraction_of_capped_still_capped 0.7837
+ont N=500 fraction_of_capped_still_capped 0.0002
+ont N=1000 fraction_of_capped_still_capped 0.0
+ont N=2000 fraction_of_capped_still_capped 0.0
+ont N=5000 fraction_of_capped_still_capped 0.0

@@ -1,0 +1,97 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+deployment.tar: OK
+tar: code/revision/scripts/64_orthodb_filter.py: implausibly old time stamp 1969-12-31 16:00:00
+tar: code/revision/scripts/evidence/est_blastx.py: implausibly old time stamp 1969-12-31 16:00:00
+tar: code/revision/scripts/evidence/est_blastx_audit.py: implausibly old time stamp 1969-12-31 16:00:00
+tar: code/revision/scripts/evidence/est_blastx_audit.sbatch: implausibly old time stamp 1969-12-31 16:00:00
+tar: inputs/accounting.psv: implausibly old time stamp 1969-12-31 16:00:00
+tar: inputs/manifest.proposed.json: implausibly old time stamp 1969-12-31 16:00:00
+tar: inputs/pilot_submission_recovered.json: implausibly old time stamp 1969-12-31 16:00:00
+tar: inputs/queue.json: implausibly old time stamp 1969-12-31 16:00:00
+tar: run.sbatch: implausibly old time stamp 1969-12-31 16:00:00
+tar: deployment.sha256: implausibly old time stamp 1969-12-31 16:00:00
+code/revision/scripts/64_orthodb_filter.py: OK
+code/revision/scripts/evidence/est_blastx.py: OK
+code/revision/scripts/evidence/est_blastx_audit.py: OK
+code/revision/scripts/evidence/est_blastx_audit.sbatch: OK
+inputs/accounting.psv: OK
+inputs/manifest.proposed.json: OK
+inputs/pilot_submission_recovered.json: OK
+inputs/queue.json: OK
+run.sbatch: OK
+run.sbatch: OK
+saved queue fields ['captured_at', 'command', 'returncode', 'stdout']
+LIVE_QUEUE_BEGIN
+5664823|PENDING|chip_qc
+5668084|PENDING|pick_best
+5668083|PENDING|filter_top3
+6147940|PENDING|syl_an_Ahy_A_ODB
+6147612|PENDING|syl_an_Ahy_A
+6147349|PENDING|syl_an_Ahy_B
+6146937|PENDING|syl_an_Ahy_B
+6146936|RUNNING|syl_an_Ahy_A_ODB
+6156540|RUNNING|syl_watch_other_20m
+6156395|RUNNING|pasaPost.Ahy_A_ODB
+6165519|PENDING|v311720b3
+6165520|PENDING|v311834b1
+6165522|PENDING|v311834b3
+6165524|PENDING|v311887b3
+6165523|PENDING|v311887b2
+6165468_23|RUNNING|rh_MillCreek
+6165468_12|RUNNING|rh_MillCreek
+6165468_1|RUNNING|rh_MillCreek
+6165395_1|RUNNING|rh_eagle
+6165457|RUNNING|v311352b2
+6165456|RUNNING|v311263b3
+6165455|RUNNING|v311263b2
+6165454|RUNNING|v311188b4
+6165453|RUNNING|v311188b3
+6165452|RUNNING|v311188b1
+6165464|RUNNING|v311381b2
+6165463|RUNNING|v311352b3
+6165439|RUNNING|v311483b2
+6165447|RUNNING|v311828b3
+6165451|RUNNING|v311183b3
+6165437|RUNNING|v311380b2
+6165428|RUNNING|r_f3_FAU_Pb_5_NO2_mol_only
+6165429|RUNNING|r_f3_FAU_Pb_11_NO2_mol_only
+6165430|RUNNING|r_f3_FAU_Cu_5_NO2_mol_only
+6165431|RUNNING|r_f3_FAU_Bi_7_NO2_mol_only
+6165411|RUNNING|r_f3_FAU_Cu_2_I2_full_sc
+6165412|RUNNING|r_f3_FAU_Cu_2_I2_full_6r0m
+6165413|RUNNING|r_f3_FAU_Cu_2_Cl2_full_sc
+6165414|RUNNING|r_f3_FAU_Cu_2_Cl2_full_6r8p
+6165415|RUNNING|r_f3_FAU_Cu_2_Cl2_full_6r0p
+6165416|RUNNING|r_f3_FAU_Cu_2_Cl2_full_6r0m
+6165409|RUNNING|r_f3_FAU_Cu_3_I2_full_6r11p
+6165410|RUNNING|r_f3_FAU_Cu_3_CH3I_full_6r11p
+6165501|RUNNING|v311726b3
+6165504|RUNNING|v311822b1
+6165503|RUNNING|v311781b3
+6165502|RUNNING|v311781b2
+6165467|RUNNING|v311726b2
+6165518|RUNNING|v311720b2
+6165517|RUNNING|v311702b3
+6165516|RUNNING|v311702b2
+6165511|RUNNING|v311361b3
+6165509|RUNNING|v311325b2
+6165508|RUNNING|v311953b3
+6165507|RUNNING|v311953b1
+6165506|RUNNING|v311822b4
+6165505|RUNNING|v311822b3
+6165466|RUNNING|v311381b4
+6165465|RUNNING|v311381b3
+6165515|RUNNING|v311699b3
+6165513|RUNNING|v311370b2
+6165512|RUNNING|v311361b4
+6165510|RUNNING|v311325b3
+6165514|RUNNING|v311370b3
+6165401|PENDING|EMD
+6165403|PENDING|EMD
+6165404|PENDING|EMD
+6165405|PENDING|EMD
+LIVE_QUEUE_END
+submission UTC 2026-09-17T02:07:27.986641+00:00 expiry 2026-09-17T02:57:58.018983+00:00
+submitted=6165525

@@ -1,0 +1,8 @@
+test_actual_shell_argv_default_rw_only_for_output (__main__.BindFixTests) ... ok
+test_exact_one_option_change_and_syntax (__main__.BindFixTests) ... ok
+test_payloads_and_transport (__main__.BindFixTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.125s
+
+OK

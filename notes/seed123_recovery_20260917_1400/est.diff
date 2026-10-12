@@ -1,0 +1,11 @@
+diff --git a/.gitignore b/.gitignore
+index b1605e0..13ffebe 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -40,3 +40,6 @@ ath_chr4_comparison_*
+ # superseded figure outputs kept locally to avoid submission mix-ups
+ Figures/_deprecated/
+ *.bak-*
++
++# graft's local graph cache — regenerable, not committed (run `graft build`).
++/graft/

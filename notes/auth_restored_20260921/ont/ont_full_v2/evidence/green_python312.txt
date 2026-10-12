@@ -1,0 +1,57 @@
+test_bad_pin (__main__.Boundary.test_bad_pin) ... ok
+test_mutated_recursive_output_rejected_by_existing_gate (__main__.Boundary.test_mutated_recursive_output_rejected_by_existing_gate) ... ok
+test_no_reuse (__main__.Boundary.test_no_reuse) ... ok
+test_nonzero_child_not_complete (__main__.Boundary.test_nonzero_child_not_complete) ... ok
+test_receipt_scope_and_mutation (__main__.Boundary.test_receipt_scope_and_mutation) ... ok
+test_slurm_environment_alone_insufficient (__main__.Boundary.test_slurm_environment_alone_insufficient) ... ok
+test_success_real_child (__main__.Boundary.test_success_real_child) ... ok
+test_timeout_retains_logs_and_status (__main__.Boundary.test_timeout_retains_logs_and_status) ... ok
+test_driver_rejects_a_release_pin_mismatch_before_import (__main__.ExecuteDrivenFixture.test_driver_rejects_a_release_pin_mismatch_before_import) ... ok
+test_every_wrapper_function_is_exercised_through_execute (__main__.ExecuteDrivenFixture.test_every_wrapper_function_is_exercised_through_execute) ... file_limit_before: [-1, -1]
+ok
+test_fixture_drives_execute_to_publication (__main__.ExecuteDrivenFixture.test_fixture_drives_execute_to_publication) ... file_limit_before: [4194304, 4194304]
+ok
+test_receipt_records_declared_seams_and_substitution_identity (__main__.ExecuteDrivenFixture.test_receipt_records_declared_seams_and_substitution_identity) ... file_limit_before: [4194304, 4194304]
+ok
+test_request_without_declared_seams_is_rejected (__main__.ExecuteDrivenFixture.test_request_without_declared_seams_is_rejected) ... ok
+test_slurm_really_ran_inside_execute (__main__.ExecuteDrivenFixture.test_slurm_really_ran_inside_execute) ... file_limit_before: [4194304, 4194304]
+ok
+test_substituted_binding_is_detected_not_self_reported (__main__.ExecuteDrivenFixture.test_substituted_binding_is_detected_not_self_reported) ... file_limit_before: [4194304, 4194304]
+ok
+test_substitution_module_hash_mismatch_is_rejected (__main__.ExecuteDrivenFixture.test_substitution_module_hash_mismatch_is_rejected) ... file_limit_before: [4194304, 4194304]
+ok
+test_budget_requires_explicit_output_and_scratch_ceilings (__main__.RuntimeBoundary.test_budget_requires_explicit_output_and_scratch_ceilings) ... ok
+test_cgroup_observation_reads_declared_controller (__main__.RuntimeBoundary.test_cgroup_observation_reads_declared_controller) ... ok
+test_enforce_output_limit_sets_both_soft_and_hard (__main__.RuntimeBoundary.test_enforce_output_limit_sets_both_soft_and_hard) ... ok
+test_output_limit_actually_stops_an_oversized_write (__main__.RuntimeBoundary.test_output_limit_actually_stops_an_oversized_write) ... ok
+test_required_cgroup_absent_is_rejected_not_silently_skipped (__main__.RuntimeBoundary.test_required_cgroup_absent_is_rejected_not_silently_skipped) ... ok
+test_scratch_usage_rejects_an_over_budget_namespace (__main__.RuntimeBoundary.test_scratch_usage_rejects_an_over_budget_namespace) ... ok
+test_slurm_records_the_exact_allocated_affinity_list (__main__.RuntimeBoundary.test_slurm_records_the_exact_allocated_affinity_list) ... ok
+test_actual_nested_helper_import_layout_clean_environment (__main__.SyntheticExecute.test_actual_nested_helper_import_layout_clean_environment) ... ok
+test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute.test_closure_rejects_extras_missing_files_and_redirects) ... file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+ok
+test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute.test_execute_failure_and_postflight_mutations) ... file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+ok
+test_execute_synthetic_happy_path (__main__.SyntheticExecute.test_execute_synthetic_happy_path) ... file_limit_before: [4194304, 4194304]
+ok
+test_unlisted_imports_rejected_before_gate_import_or_marker (__main__.SyntheticExecute.test_unlisted_imports_rejected_before_gate_import_or_marker) ... file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+ok
+test_unsupported_interpreter_rejected_before_any_path_access (__main__.SyntheticExecute.test_unsupported_interpreter_rejected_before_any_path_access) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 28.972s
+
+OK

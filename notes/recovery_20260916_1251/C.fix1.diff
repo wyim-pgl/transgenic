@@ -1,0 +1,823 @@
+diff --git a/notes/TRACK_C_RECOVERY_REPORT.md b/notes/TRACK_C_RECOVERY_REPORT.md
+index a9eb89d..45a23c2 100644
+--- a/notes/TRACK_C_RECOVERY_REPORT.md
++++ b/notes/TRACK_C_RECOVERY_REPORT.md
+@@ -1,10 +1,46 @@
+ # Track C recovery report
+ 
++## Round-one C1 review fixes (supersedes the earlier C1 status below)
++
++- FIX_BASE: `2c91ecb295d88a1bc27199b0f84fe8af667abb08`; source/tests fix commit: **`53c8f7d1a0f6f5d69a2b2ff47d82cec361d06afe`**. This report update is a separate documentation commit.
++- Read all five findings verbatim in main `notes/recovery_20260916_1251/C.independent_review.md`; inspected historical wrappers and the log-layout record in `notes/RESTART_HANDOFF_20260915.md:38`. Only C1 and its CPU tests changed. `git diff --exit-code 2c91ecb` on the three C2/C3 Python files confirmed no changes; production/semantic gates remain intact.
++- **Container markers:** every scanned root checks its own markers independently of known-child exemptions (pilot, remaining8 batch, species, source unit, and audit tree). Absent container markers are allowed. Present FAILED, contradictory markers, malformed DONE, marker directories and symlinks fail. No new normal-container DONE requirement.
++- **Historical identity:** provenance must include `diamond_version`, `diamond_sha256`, `launcher_sha256`, and `taxonomy_helper_sha256`. Launcher SHA `5fa32fe8…d4e291` and helper SHA `32ea1a2e…d90302` were independently reproduced using `git show 950cf4c:<path> | sha256sum` and match both historical launch scripts. Engine SHA `0fb259d7…fed07d` is the approved pin in those scripts, not an arbitrary executable's self-declared identity. The recorded release/help lines must satisfy the exact historical 950cf4c acceptance contract (2.1.24 release, optionally .178, and .178 build). The auditor never executes the binary. Current audit/runtime hashes are recorded under separate audit-prefixed keys, not mistaken for historical producer identity.
++- **Timing/scripts/logs:** require nonempty regular `swissprot.time.txt` AND `orthodb.time.txt`, exactly as both wrappers produce. A `.time.txt` directory cannot abort inventory or stand in for evidence. Wrapper category is satisfied only by matching the archived wrapper bytes, irrespective of copied script filename: pilot SHA `8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a`; remaining8 SHA `4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c`. Require every remaining8 `logs/6164049_<0-7>.{out,err}`; empty stderr is valid inventory. An arbitrary script/log no longer substitutes for missing categories. Timing content remains an inventory, not a benchmark or format-specific timing interpretation.
++- **Closed unit inventory:** chose the smaller contract: hash all immediate regular files, reject ALL nested unit directories as UNRESOLVED even if they contain DONE. No claim to have recursively hashed rejected nested payloads. Existing tmp and symlink failures remain.
++- **Malformed evidence:** explicit top-level/nested provenance and consumed batch-input schema/type checks. Unit failures retain hashes and checks already gathered and continue inventory of the other 17 units. The unit boundary catches only declared evidence/JSON/encoding/I/O errors, not generic TypeError/KeyError/IndexError/AttributeError; a programmer-TypeError regression verifies propagation. Historical launcher ValueError validation is converted at its input-validation boundaries.
++
++### Remaining receipt gaps — intentional FAIL, not launch readiness
++
++The pilot wrapper contains no `--output`/`--error` directive, and no local submission receipt establishing the pilot log paths was found. Slurm defaults or `slurm-6163851.out` are **not inferred as authority**. Consequently `batch_artifacts:pilot:logs` is currently an explicit **UNRESOLVED FAIL** even when all 18 units pass. All 18 unit records and the rollup are still written before failure. A controller-reviewed historical submission receipt and a scoped follow-up change are required to resolve this gate; there is no CLI waiver. Neither real payload failure nor blastx resubmission follows from this missing receipt.
++
++An independent original engine version/banner receipt and the real binary bytes were not available locally. The implemented binding uses the archived wrapper's approved engine SHA and the historical launcher's version-validation contract; it does not claim an independently observed literal copyright/banner string. Unknown/mismatched historical pins explicitly fail. Original absolute files must remain resolvable for the real audit. No remote audit was performed. Wrapper-only A37 receipt/count bindings beyond the direct launcher's screened-query provenance remain outside replay scope, as the review noted. Existing tmp/execution.lock/preflight reconciliation and `.extern` OOM remain unresolved.
++
++### Round-one test evidence
++
++Baseline before edits: **65 passed**. New independent repro suite first ran against unfixed C1: **29 failed, 9 passed**, exposing all five findings. An additional directory-timing repro failed with IsADirectoryError before its fix. Synthetic unit fixtures now carry all required producer fields and named per-source timings; test-only monkeypatches substitute synthetic engine/wrapper trust anchors, never a public production override. Separate tests restore the real engine pin and prove an arbitrary self-hashed fixture binary fails. Integrated cases cover nine container-marker combinations, malformed provenance continuation with exactly one failed unit, malformed remaining8 manifest continuation, missing producer identity, and complete 18-unit FAIL rollups with no outer DONE.
++
++Final exact command from this worktree:
++
++```sh
++PYTHONPATH=.testdeps /home/wyim/micromamba/envs/kimicli/bin/python3.12 -m pytest -q \
++  revision/scripts/tests/test_est_blastx.py \
++  revision/scripts/tests/test_est_blastx_fixture.py \
++  revision/scripts/tests/test_track_c_recovery.py \
++  revision/scripts/tests/test_track_c_audit_review.py
++bash -n revision/scripts/evidence/est_blastx_audit.sbatch revision/scripts/evidence/est_phase_accept_fixture.sbatch
++/home/wyim/micromamba/envs/kimicli/bin/python3.12 -m py_compile revision/scripts/evidence/est_blastx_audit.py
++```
++
++**116 passed** (existing 65 + 51 round-one cases); bash syntax, py_compile and staged diff whitespace checks passed. This is CPU fixture verification, not actual historical payload acceptance. Scoped independent re-review remains the controller's responsibility. No SSH, jobs, main edits, subagents, merge or push; dependency/graph/ignore files excluded from commits.
++
++---
++
+ ## Scope and commits
+ 
+ - Worktree only: `/tmp/b6-p2-phase-1535433`, branch `b6-p2-phase-20260916a`.
+ - Base: `950cf4cd9ef55db276ffa1b713d8925ed6dd6dd2`.
+ - Source/tests commit: **`91e10efa61bc6ddfd9cbb850ac52727dd33e7531`**. This report is a separate documentation commit; obtain its identity with `git log -1 -- notes/TRACK_C_RECOVERY_REPORT.md`.
+ - Inspected and revised all five interrupted files rather than replacing them blindly. Added `est_phase_project.py` (established primitives and explicit blocker only) and `test_track_c_recovery.py`.
+ - No SSH, remote writes, jobs, subagents, main edits, merge, push, reset, clean, new worktree, or blastx resubmission. No dependency installation. Existing `.gitignore`, `.ignore`, `.testdeps/` and graft cache remain outside commits.
+ - Independent review remains the controller's responsibility. Advisor consultation was planning guidance, not independent review or approval.
+diff --git a/revision/scripts/evidence/est_blastx_audit.py b/revision/scripts/evidence/est_blastx_audit.py
+index e08599e..ecb160d 100644
+--- a/revision/scripts/evidence/est_blastx_audit.py
++++ b/revision/scripts/evidence/est_blastx_audit.py
+@@ -1,31 +1,37 @@
+ #!/usr/bin/env python3
+ """Fail-closed audit of completed EST blastx output trees (stage C1). stdlib only.
+ 
+ Audits the 9-species x 2-source raw13 units produced by est_blastx.py under
+   <blastx-root>/sitalica_pilot_20260914/          (pilot layout)
+   <blastx-root>/remaining8_20260915/<species>/    (batch layout)
+ per unit checks (a)-(f):
+-  (a) sha256 every unit file; recomputed raw13/dmnd/filtered hashes must equal
++  (a) sha256 every immediate regular unit file; nested directories are unresolved
++      FAIL (closed, flat inventory). Recomputed raw13/dmnd/filtered hashes must equal
+       the values recorded inside provenance.json;
+   (b) re-run the exact validate_raw() row contract over raw13 and reconcile
+       raw_hsps / hsps_lt_30aa with provenance;
+   (c) commands.json argv must equal the frozen makedb/search command tokens;
++      producer code and engine hashes bind to historical approved identities;
+   (d) resolve the query FASTA for BOTH provenance layouts (pilot: query.sha256
+       at the species root; remaining8: inputs.json + inputs.sha256 at the batch
+       root), re-hash it, and require qseqid set <= query record IDs.  An
+       unresolvable query file is a HARD FAIL, never a skip;
+-  (e) species batch.exitcode must be 0; timing files are hashed and recorded;
++  (e) species batch.exitcode must be 0; both SOURCE.time.txt files are required;
+   (f) DONE-presence gate: absence of DONE always means incomplete.
+ Additionally EVERY directory entry under the scanned roots -- including
+ preflight_20260914/ siblings and tmp/ dirs -- receives an explicit fail-closed
+ disposition (DONE / FAILED.json / NEITHER); contradictions, NEITHER and any
+ tmp/ directory require reconciliation and fail, never silently skipped.  run.sbatch and slurm .out logs are hashed into
+-the manifest.  sacct evidence is embedded VERBATIM from a login-node capture;
++the manifest. Wrapper bytes must match the archived historical scripts; all
++remaining8 logs are required. The unavailable pilot submission log-layout
++receipt is an explicit UNRESOLVED FAIL, not a guessed Slurm default.
++Container-owned markers are checked even when their child layouts are known;
++normal containers need no DONE. sacct evidence is embedded VERBATIM from a capture;
+ the persisting `.extern OUT_OF_MEMORY 0:125` anomaly is recorded as UNRESOLVED
+ -- this audit never claims clean accounting.
+ 
+ This script performs no Slurm submission and never writes inside the audited
+ tree.  Production execution requires the separate reviewed sbatch template and
+ author authorization.
+ """
+ from __future__ import annotations
+@@ -55,16 +61,106 @@ REMAINING8_SPECIES = ('Athaliana', 'Bdistachyon', 'Gmax', 'Osativa',
+ SOURCES = ('swissprot', 'orthodb')
+ UNIT_FILES = ('blastx.log', 'commands.json', 'DONE', 'makedb.log', 'provenance.json')
+ DONE_TEXT = 'Outputs and QC complete; see provenance.json\n'
+ SACCT_NOTE = ('.extern OUT_OF_MEMORY 0:125 across all 9 jobs is a recorded, '
+               'UNRESOLVED anomaly; allocation/.batch COMPLETED 0:0 is the only '
+               'accounting claim made.  No clean-accounting claim.')
+ 
+ 
++# Historical trust anchors, NOT hashes of the current auditor or caller-supplied code.
++# Launcher/helper bytes verified from git 950cf4cd9ef55db276ffa1b713d8925ed6dd6dd2.
++# Engine pin and wrapper byte identities: notes/b6_{sitalica_blastx_20260914,
++# eight_species_blastx_20260915}.sbatch. No binary is executed by this auditor.
++APPROVED_LAUNCHER_SHA256 = '5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291'
++APPROVED_HELPER_SHA256 = '32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302'
++APPROVED_DIAMOND_SHA256 = '0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d'
++APPROVED_WRAPPER_SHA256 = {
++    'pilot': '8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a',
++    'remaining8': '4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c'}
++
++
++class EvidenceError(ValueError):
++    """Invalid external evidence, as distinct from a programming error."""
++
++
++def evidence_call(function, *args, **kwargs):
++    """The historical launcher's validation APIs signal bad input with ValueError."""
++    try:
++        return function(*args, **kwargs)
++    except ValueError as exc:
++        raise EvidenceError(str(exc)) from exc
++
++
++def validate_provenance(value):
++    if type(value) is not dict:
++        raise EvidenceError('provenance must be a JSON object')
++    inputs = value.get('inputs')
++    keys = set('species source_kind source source_sha256 query query_sha256 lineage lineage_sha256 roles roles_sha256'.split())
++    if type(inputs) is not dict or set(inputs) != keys or any(
++            type(v) is not str or not v for v in inputs.values()):
++        raise EvidenceError('inputs must contain exactly the producer string fields')
++    hash_keys = ('raw_sha256 db_sha256 filtered_fasta_sha256 screening_summary_sha256 '
++                 'screening_done_sha256 source_sha256 lineage_sha256 diamond_sha256 '
++                 'launcher_sha256 taxonomy_helper_sha256').split()
++    for key in hash_keys:
++        if type(value.get(key)) is not str or not re.fullmatch('[0-9a-f]{64}', value[key]):
++            raise EvidenceError(f'invalid or missing producer hash: {key}')
++    for key in ('source', 'source_kind', 'lineage', 'diamond_version'):
++        if type(value.get(key)) is not str or not value[key]:
++            raise EvidenceError(f'invalid or missing producer string: {key}')
++    for key in ('queries', 'species_root', 'sequences_in', 'sequences_out',
++                'sequences_excluded', 'raw_hsps', 'hsps_lt_30aa'):
++        if type(value.get(key)) is not int or value[key] < 0:
++            raise EvidenceError(f'invalid or missing producer count: {key}')
++    for key in ('retained_taxids', 'excluded_taxids'):
++        if type(value.get(key)) is not list or any(type(x) is not int or x < 1 for x in value[key]):
++            raise EvidenceError(f'invalid producer taxid list: {key}')
++    counts = value.get('counts_by_taxid')
++    if type(counts) is not dict or any(
++            not re.fullmatch('[0-9]+', taxid) or type(row) is not dict or set(row) != {'in', 'out'}
++            or any(type(n) is not int or n < 0 for n in row.values())
++            for taxid, row in counts.items()):
++        raise EvidenceError('invalid counts_by_taxid object')
++    if type(value.get('fields')) is not list or any(type(x) is not str for x in value['fields']):
++        raise EvidenceError('invalid raw fields list')
++    if type(value.get('elapsed_seconds')) not in (int, float):
++        raise EvidenceError('invalid elapsed_seconds type')
++    return value
++
++
++def batch_inputs(path):
++    value = json.loads(path.read_text())
++    if type(value) is not list or any(type(row) is not dict for row in value):
++        raise EvidenceError('batch inputs.json must be a list of objects')
++    for row in value:
++        if any(type(row.get(k)) is not str or not row[k] for k in ('species', 'query', 'query_md5')):
++            raise EvidenceError('batch species/query/query_md5 must be nonempty strings')
++        if not re.fullmatch('[0-9a-f]{32}', row['query_md5']):
++            raise EvidenceError('invalid batch query_md5')
++    return value
++
++
++def producer_identity(provenance, check):
++    version = provenance['diamond_version']
++    lines = version.split('\n')
++    # Exact accepted release/build contract of 950cf4c: no current binary probes.
++    version_ok = (len(lines) == 2 and re.fullmatch(r'diamond version 2\.1\.24(?:\.178)?', lines[0])
++                  and re.fullmatch(r'diamond v2\.1\.24\.178 \(C\) .+', lines[1]))
++    expected = {'launcher_sha256': APPROVED_LAUNCHER_SHA256,
++                'taxonomy_helper_sha256': APPROVED_HELPER_SHA256,
++                'diamond_sha256': APPROVED_DIAMOND_SHA256}
++    ok = bool(version_ok) and all(expected.values()) and all(provenance[k] == v for k, v in expected.items())
++    check.add('historical_producer_identity', ok, {
++        'expected': expected, 'recorded': {k: provenance[k] for k in expected},
++        'diamond_version': version,
++        'authority': 'git 950cf4c launcher/helper; archived launch wrappers engine pin',
++        'note': 'UNRESOLVED if mismatched/missing; no independent version-banner receipt or binary execution'})
++
++
+ def md5(path):
+     h = hashlib.md5()
+     with open(path, 'rb') as f:
+         for block in iter(lambda: f.read(1024 * 1024), b''):
+             h.update(block)
+     return h.hexdigest()
+ 
+ 
+@@ -118,18 +214,17 @@ def resolve_query(layout, species, species_root, batch_root, provenance, check):
+     inputs_sha = batch_root / 'inputs.sha256'
+     if not inputs_json.is_file() or not inputs_sha.is_file():
+         check.add('query_resolution', False, f'missing {inputs_json} or {inputs_sha}')
+         return None
+     digest, _ = parse_sha256_file(inputs_sha)
+     if launcher.sha256(inputs_json) != digest:
+         check.add('query_resolution', False, 'inputs.json does not match inputs.sha256')
+         return None
+-    entries = [e for e in json.loads(inputs_json.read_text())
+-               if isinstance(e, dict) and e.get('species') == species]
++    entries = [e for e in batch_inputs(inputs_json) if e['species'] == species]
+     if len(entries) != 1:
+         check.add('query_resolution', False, f'{len(entries)} inputs.json entries for {species}')
+         return None
+     entry = entries[0]
+     ok = entry.get('query') == query
+     detail = {'layout': 'remaining8', 'inputs_query': entry.get('query'),
+               'provenance_query': query, 'inputs_query_md5': entry.get('query_md5')}
+     check.add('query_resolution', ok, detail)
+@@ -176,66 +271,69 @@ def expected_commands(recorded):
+                   '--threads', slot(makedb, '--threads'), '--no-parse-seqids']
+     exp_search = launcher.search_command(
+         search[0], slot(search, '--query'), slot(search, '--db'), slot(search, '--out'),
+         int(slot(search, '--threads')), slot(search, '--tmpdir'))
+     return exp_makedb, exp_search
+ 
+ 
+ def audit_unit(layout, species, kind, species_root, batch_root):
++    check, files = Check(), {}
+     try:
+-        return _audit_unit(layout, species, kind, species_root, batch_root)
+-    except (OSError, ValueError, TypeError, KeyError, IndexError) as exc:
++        return _audit_unit(layout, species, kind, species_root, batch_root, check, files)
++    except (OSError, EvidenceError, json.JSONDecodeError, UnicodeError) as exc:
++        check.add('malformed_or_unreadable', False, str(exc))
+         return {'unit': f'{species}/{kind}', 'layout': layout, 'status': 'FAIL',
+-                'checks': {'malformed_or_unreadable': {'status': 'FAIL', 'detail': str(exc)}},
+-                'files': {}}
++                'checks': check.results, 'files': files}
+ 
+ 
+-def _audit_unit(layout, species, kind, species_root, batch_root):
+-    unit = species_root / kind if layout == 'remaining8' else species_root / kind
+-    check = Check()
+-    files = {}
++def _audit_unit(layout, species, kind, species_root, batch_root, check, files):
++    unit = species_root / kind
+     # (f) DONE gate first: absence of DONE always means incomplete.
+     done = unit / 'DONE'
+     if not unit.is_dir():
+         check.add('unit_dir', False, f'missing unit directory: {unit}')
+         return {'unit': f'{species}/{kind}', 'checks': check.results, 'files': files,
+                 'status': 'FAIL'}
+     scan_dispositions(unit, set(), check)
++    nested = sorted(p.name for p in unit.iterdir() if p.is_dir())
++    check.add('closed_unit_inventory', not nested,
++              {'UNRESOLVED_nested_directories': nested})
+     check.add('done_gate', disposition(unit)['ok'],
+               {'present': done.is_file()})
+     if (unit / 'FAILED.json').exists():
+         check.add('failed_marker', False, 'FAILED.json present in unit')
+     provenance = None
+     prov_path = unit / 'provenance.json'
+     expected = set(UNIT_FILES) | {f'{kind}.dmnd', f'{kind}.filtered.fa', f'{kind}.raw13.tsv'}
+-    present = {p.name for p in unit.iterdir() if p.is_file()}
++    present = {p.name for p in unit.iterdir() if p.is_file() and not p.is_symlink()}
+     check.add('required_files', expected <= present, {'missing': sorted(expected - present)})
+     # (a) hash every file present; compare recorded hashes afterwards.
+     for name in sorted(present):
+         files[name] = launcher.sha256(unit / name)
+     if prov_path.is_file():
+-        provenance = json.loads(prov_path.read_text())
++        provenance = validate_provenance(json.loads(prov_path.read_text()))
+     if provenance is None or expected - present:
+         check.add('provenance_hashes', False, 'provenance.json or required files absent')
+         return {'unit': f'{species}/{kind}', 'checks': check.results, 'files': files,
+                 'status': 'FAIL'}
++    producer_identity(provenance, check)
+     hash_pairs = {f'{kind}.raw13.tsv': 'raw_sha256', f'{kind}.dmnd': 'db_sha256',
+                   f'{kind}.filtered.fa': 'filtered_fasta_sha256'}
+     mismatched = {n: {'fresh': files[n], 'recorded': provenance.get(key)}
+                   for n, key in hash_pairs.items() if files[n] != provenance.get(key)}
+     check.add('provenance_hashes', not mismatched, mismatched or 'all recorded hashes reproduced')
+     # Reproduce screening and PRE-search taxonomic exclusion, never post-top25 filtering.
+     inputs = provenance['inputs']
+     check.add('input_identity', inputs['species'] == species and inputs['source_kind'] == kind,
+               {'species': inputs['species'], 'source_kind': inputs['source_kind']})
+-    input_qc = launcher.production_inputs(**inputs)
++    input_qc = evidence_call(launcher.production_inputs, **inputs)
+     check.add('screening', all(provenance.get(k) == v for k, v in input_qc.items()), input_qc)
+     with tempfile.TemporaryDirectory(prefix='blastx-audit-filter-') as scratch:
+-        filter_qc = launcher.filter_source(inputs['source'], kind, inputs['lineage'],
++        filter_qc = evidence_call(launcher.filter_source, inputs['source'], kind, inputs['lineage'],
+                                           launcher.SPECIES[species], Path(scratch) / 'filtered.fa')
+     check.add('presearch_exclusion', all(provenance.get(k) == v for k, v in filter_qc.items()),
+               filter_qc)
+     elapsed = provenance.get('elapsed_seconds')
+     check.add('elapsed_seconds', type(elapsed) in (int, float) and math.isfinite(elapsed)
+               and elapsed >= 0, elapsed)
+     check.add('raw_fields', provenance.get('fields') == launcher.RAW13, provenance.get('fields'))
+     # (b) validate_raw contract + count reconciliation.
+@@ -246,17 +344,20 @@ def _audit_unit(layout, species, kind, species_root, batch_root):
+         check.add('raw13_contract', ok, {'recomputed': qc,
+                   'recorded': {k: provenance.get(k) for k in ('raw_hsps', 'hsps_lt_30aa')}})
+     except ValueError as exc:
+         check.add('raw13_contract', False, str(exc))
+     subjects = {h.split()[0] for h, _ in launcher.records(unit / f'{kind}.filtered.fa')}
+     unknown_subjects = set()
+     with open(unit / f'{kind}.raw13.tsv') as raw:
+         for line in raw:
+-            subject = line.rstrip('\n').split('\t')[2]
++            columns = line.rstrip('\n').split('\t')
++            if len(columns) != 13:
++                raise EvidenceError('malformed raw13 subject row')
++            subject = columns[2]
+             if subject not in subjects:
+                 unknown_subjects.add(subject)
+     check.add('subjects_presearch_filtered', not unknown_subjects, sorted(unknown_subjects)[:10])
+     # (c) frozen command tokens.
+     try:
+         recorded = json.loads((unit / 'commands.json').read_text())
+         expected = list(expected_commands(recorded))
+         makedb, search = recorded
+@@ -272,58 +373,77 @@ def _audit_unit(layout, species, kind, species_root, batch_root):
+                      and launcher.sha256(search[0]) == provenance.get('diamond_sha256'))
+         check.add('frozen_commands', recorded == expected and bound and engine_ok,
+                   {'recorded': recorded, 'paths_bound': bound, 'engine_bound': engine_ok})
+     except (ValueError, IndexError) as exc:
+         check.add('frozen_commands', False, str(exc))
+     # (d) query resolution across both layouts + qseqid subset.
+     expected_md5 = None
+     if layout == 'remaining8':
+-        try:
+-            for e in json.loads((batch_root / 'inputs.json').read_text()):
+-                if isinstance(e, dict) and e.get('species') == species:
+-                    expected_md5 = e.get('query_md5')
+-        except (OSError, ValueError):
+-            pass
+-    query_path = resolve_query(layout, species, species_root, batch_root, provenance, check)
+-    audit_query_file(query_path, provenance, expected_md5, unit / f'{kind}.raw13.tsv', check)
++        for e in batch_inputs(batch_root / 'inputs.json'):
++            if e['species'] == species:
++                expected_md5 = e['query_md5']
++    query_path = evidence_call(resolve_query, layout, species, species_root, batch_root, provenance, check)
++    evidence_call(audit_query_file, query_path, provenance, expected_md5, unit / f'{kind}.raw13.tsv', check)
+     status = 'FAIL' if check.failed() else 'PASS'
+     return {'unit': f'{species}/{kind}', 'layout': layout, 'checks': check.results,
+             'files': files, 'status': status}
+ 
+ 
+ def audit_species_root(species, species_root, check_prefix, check):
+     # (e) batch.exitcode + timing files.
+     exitcode = species_root / 'batch.exitcode'
+     ok = exitcode.is_file() and exitcode.read_text().strip() == '0'
+     check.add(f'{check_prefix}:batch_exitcode', ok,
+               exitcode.read_text().strip() if exitcode.is_file() else 'missing batch.exitcode')
+-    timing = {p.name: launcher.sha256(p) for p in sorted(species_root.glob('*.time.txt'))}
+-    check.add(f'{check_prefix}:timing_files', bool(timing) and all(
+-        (species_root / name).stat().st_size > 0 for name in timing),
+-              timing or 'missing timing evidence')
++    timing = {p.name: launcher.sha256(p) for p in sorted(species_root.glob('*.time.txt'))
++              if p.is_file() and not p.is_symlink()}
++    required = {f'{kind}.time.txt' for kind in SOURCES}
++    missing = sorted(required - set(timing))
++    invalid = sorted(name for name in required & set(timing)
++                     if (species_root / name).is_symlink() or (species_root / name).stat().st_size == 0)
++    check.add(f'{check_prefix}:timing_files', not missing and not invalid,
++              {'hashes': timing, 'missing': missing, 'invalid': invalid})
+     return timing
+ 
+ 
+ def disposition(path):
+     """Fail-closed DONE / FAILED.json / NEITHER disposition for a directory."""
+     if path.is_symlink():
+         return {'disposition': 'SYMLINK', 'ok': False}
+     if (path / 'DONE').exists() and (path / 'FAILED.json').exists():
+         return {'disposition': 'CONTRADICTORY', 'ok': False}
+     if (path / 'DONE').is_file():
+         return {'disposition': 'DONE', 'ok': (path / 'DONE').read_text() == DONE_TEXT}
+     if (path / 'FAILED.json').is_file():
+         return {'disposition': 'FAILED', 'ok': False}
+     return {'disposition': 'NEITHER', 'ok': False}
+ 
+ 
++def audit_container_markers(root, check):
++    """Containers need no DONE, but present invalid/failed markers cannot be ignored."""
++    markers = [root / name for name in ('DONE', 'FAILED.json')]
++    present = [p for p in markers if p.exists() or p.is_symlink()]
++    ok = not present
++    detail = 'NO_MARKERS_REQUIRED'
++    if present:
++        try:
++            ok = (len(present) == 1 and present[0].name == 'DONE'
++                  and not present[0].is_symlink() and present[0].is_file()
++                  and present[0].read_text() == DONE_TEXT)
++            detail = {'present': [p.name for p in present], 'valid_done_only': ok}
++        except (OSError, UnicodeError) as exc:
++            ok, detail = False, str(exc)
++    check.add(f'container_markers:{root}', ok, detail)
++
++
+ def scan_dispositions(root, known, check):
+     """Must-fix 3: EVERY sibling dir (preflight_20260914/, tmp/, ...) gets an
+     explicit disposition; NEITHER and unreconciled tmp/ are failures."""
++    audit_container_markers(root, check)
+     entries = {}
+ 
+     def visit(parent):
+         for entry in sorted(parent.iterdir()):
+             key = str(entry.relative_to(root))
+             if entry.is_symlink():
+                 entries[key] = {'disposition': 'SYMLINK', 'ok': False}
+                 continue
+@@ -340,22 +460,39 @@ def scan_dispositions(root, known, check):
+             visit(entry)
+     visit(root)
+     bad = {k: v for k, v in entries.items() if not v['ok']}
+     check.add(f'dispositions:{root}', not bad, entries or 'no unexpected sibling dirs')
+     return entries
+ 
+ 
+ def hash_batch_artifacts(root, check_name, check):
+-    """Reviewer suggestion: run.sbatch + slurm .out logs join the manifest."""
++    """Bind wrapper bytes; require receipt-backed log names, never Slurm defaults."""
++    layout = check_name.rsplit(':', 1)[-1]
++    if layout not in APPROVED_WRAPPER_SHA256:
++        raise ValueError(f'unknown batch layout: {layout}')
+     hashed = {}
+-    for pattern in ('run.sbatch', 'slurm-*.out', 'slurm-*.err', 'logs/*.out', 'logs/*.err'):
++    for pattern in ('*.sbatch', '*.out', '*.err', 'logs/*.out', 'logs/*.err'):
+         for p in sorted(root.glob(pattern)):
+-            hashed[str(p.relative_to(root))] = launcher.sha256(p)
+-    check.add(check_name, bool(hashed), hashed or 'no batch artifacts found')
++            if p.is_file() and not p.is_symlink():
++                hashed[str(p.relative_to(root))] = launcher.sha256(p)
++    scripts = [name for name, digest in hashed.items()
++               if name.endswith('.sbatch') and digest == APPROVED_WRAPPER_SHA256[layout]]
++    check.add(check_name + ':script', bool(scripts),
++              {'approved_sha256': APPROVED_WRAPPER_SHA256[layout], 'matched': scripts})
++    if layout == 'remaining8':
++        # notes/RESTART_HANDOFF_20260915.md:38 records these submission paths.
++        required = {f'logs/6164049_{i}.{ext}' for i in range(8) for ext in ('out', 'err')}
++        missing = sorted(required - set(hashed))
++        check.add(check_name + ':logs', not missing, {'missing': missing})
++    else:
++        check.add(check_name + ':logs', False,
++                  'UNRESOLVED pilot log-layout receipt: wrapper has no output/error directives; '
++                  'submission paths unavailable locally. Arbitrary .out/.err files cannot satisfy it.')
++    check.add(check_name + ':inventory', True, hashed)
+     return hashed
+ 
+ 
+ def audit_accounting(text, check):
+     """Require sacct -P --format=JobID,State,ExitCode (header, no truncation).
+ 
+     Payload completion and extern OOM are deliberately separate claims.
+     Unexpected extern state still fails; this is not an OOM waiver.
+@@ -427,17 +564,18 @@ def audit(blastx_root, out_dir, sacct_file):
+         status = 'FAIL' if (failed_units or check.failed() or len(units) != 18) else 'PASS'
+         rollup = {'status': status, 'units_audited': len(units), 'units_expected': 18,
+                   'failed_units': failed_units, 'tree_checks': check.results,
+                   'sacct_evidence_verbatim': sacct_text,
+                   'sacct_sha256': launcher.sha256(sacct_file),
+                   'sacct_note': SACCT_NOTE, 'clean_accounting': False,
+                   'accepted_phase_evidence': False, 'production_authorized': False,
+                   'audit_script_sha256': launcher.sha256(__file__),
+-                  'launcher_sha256': launcher.sha256(launcher.__file__)}
++                  'audit_runtime_launcher_sha256': launcher.sha256(launcher.__file__),
++                  'audit_runtime_taxonomy_helper_sha256': launcher.sha256(launcher.HELPER)}
+         launcher.write_json(out / 'rollup.json', rollup)
+         if status != 'PASS':
+             raise ValueError(f'audit FAILED: units={failed_units} '
+                              f'tree_checks={check.failed()} n_units={len(units)}')
+         return rollup
+ 
+ 
+ def main(argv=None):
+diff --git a/revision/scripts/tests/test_track_c_audit_review.py b/revision/scripts/tests/test_track_c_audit_review.py
+new file mode 100644
+index 0000000..7b3c420
+--- /dev/null
++++ b/revision/scripts/tests/test_track_c_audit_review.py
+@@ -0,0 +1,209 @@
++"""Round-one independent repros; synthetic anchors never authorize real data."""
++import json
++from pathlib import Path
++
++import pytest
++
++from test_track_c_recovery import audit, make_unit, make_audit_tree, synthetic_identity
++
++
++@pytest.mark.parametrize('container', ['pilot', 'batch', 'species'])
++@pytest.mark.parametrize('marker', ['FAILED.json', 'contradictory', 'invalid_DONE'])
++def test_known_container_markers_cannot_hide_behind_children(tmp_path, container, marker):
++    tree, sacct = make_audit_tree(tmp_path)
++    roots = {'pilot': tree / audit.PILOT_DIR, 'batch': tree / audit.REMAINING8_DIR,
++             'species': tree / audit.REMAINING8_DIR / 'Athaliana'}
++    root = roots[container]
++    if marker in ('FAILED.json', 'contradictory'):
++        (root / 'FAILED.json').write_text('{}')
++    if marker == 'contradictory':
++        (root / 'DONE').write_text(audit.DONE_TEXT)
++    if marker == 'invalid_DONE':
++        (root / 'DONE').write_text('not a completion receipt')
++    out = tmp_path / 'out'
++    with pytest.raises(ValueError, match='audit FAILED'):
++        audit.audit(tree, out, sacct)
++    rollup = json.loads((out / 'rollup.json').read_text())
++    assert rollup['units_audited'] == 18 and not rollup['failed_units']
++    assert rollup['tree_checks'][f'container_markers:{root}']['status'] == 'FAIL'
++    assert not (out / 'DONE').exists()
++
++
++@pytest.mark.parametrize('field', ['diamond_version', 'launcher_sha256',
++                                  'taxonomy_helper_sha256', 'diamond_sha256'])
++@pytest.mark.parametrize('mutation', ['absent', 'wrong'])
++def test_producer_identity_is_required_and_historically_bound(tmp_path, field, mutation):
++    unit = make_unit(tmp_path)
++    path = unit / 'provenance.json'
++    data = json.loads(path.read_text())
++    if mutation == 'absent':
++        del data[field]
++    else:
++        data[field] = 'NOT-DIAMOND' if field == 'diamond_version' else '0' * 64
++    path.write_text(json.dumps(data))
++    result = audit.audit_unit('pilot', 'Sitalica', 'orthodb', tmp_path, tmp_path)
++    assert result['status'] == 'FAIL'
++    assert 'provenance.json' in result['files']
++
++
++def test_self_hashed_arbitrary_binary_does_not_establish_approved_identity(tmp_path, monkeypatch):
++    # Undo ONLY the fixture engine trust anchor; the real approved pin must reject it.
++    monkeypatch.setattr(audit, 'APPROVED_DIAMOND_SHA256',
++                        '0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d', raising=False)
++    make_unit(tmp_path)
++    result = audit.audit_unit('pilot', 'Sitalica', 'orthodb', tmp_path, tmp_path)
++    assert result['status'] == 'FAIL'
++
++
++@pytest.mark.parametrize('missing', ['swissprot', 'orthodb'])
++def test_both_named_source_timing_files_required(tmp_path, missing):
++    (tmp_path / 'batch.exitcode').write_text('0')
++    for kind in audit.SOURCES:
++        if kind != missing:
++            (tmp_path / f'{kind}.time.txt').write_text('elapsed')
++    (tmp_path / 'arbitrary.time.txt').write_text('not a substitute')
++    check = audit.Check()
++    audit.audit_species_root('Sitalica', tmp_path, 'Sitalica', check)
++    assert check.failed()
++
++
++@pytest.mark.parametrize('mutation', ['missing_log', 'renamed_log', 'wrong_script'])
++def test_remaining8_requires_script_identity_and_every_named_log(tmp_path, mutation):
++    tree, _ = make_audit_tree(tmp_path)
++    batch = tree / audit.REMAINING8_DIR
++    if mutation == 'wrong_script':
++        (batch / 'run.sbatch').write_text('unapproved')
++    elif mutation == 'missing_log':
++        (batch / 'logs' / '6164049_3.err').unlink()
++    else:
++        (batch / 'logs' / '6164049_3.out').rename(batch / 'logs' / 'other.out')
++    check = audit.Check()
++    audit.hash_batch_artifacts(batch, 'batch_artifacts:remaining8', check)
++    assert check.failed()
++
++
++def test_timing_directory_is_failed_evidence_not_an_inventory_abort(tmp_path):
++    (tmp_path / 'batch.exitcode').write_text('0')
++    (tmp_path / 'swissprot.time.txt').mkdir()
++    (tmp_path / 'orthodb.time.txt').write_text('elapsed')
++    check = audit.Check()
++    audit.audit_species_root('Sitalica', tmp_path, 'Sitalica', check)
++    assert check.failed()
++
++
++def test_remaining8_empty_stderr_is_inventory_not_missing(tmp_path):
++    tree, _ = make_audit_tree(tmp_path)
++    check = audit.Check()
++    hashes = audit.hash_batch_artifacts(tree / audit.REMAINING8_DIR, 'batch_artifacts:remaining8', check)
++    assert not check.failed()
++    assert 'logs/6164049_0.err' in hashes
++
++
++def test_arbitrary_pilot_log_cannot_resolve_missing_layout_receipt(tmp_path):
++    (tmp_path / 'run.sbatch').write_text('# fixture; never submitted\n')
++    (tmp_path / 'slurm-6163851.out').write_text('guessed name')
++    check = audit.Check()
++    audit.hash_batch_artifacts(tmp_path, 'batch_artifacts:pilot', check)
++    assert check.failed()
++    assert 'UNRESOLVED' in str(check.results)
++
++
++def test_nested_unit_payload_is_not_blessed_by_nested_done(tmp_path):
++    unit = make_unit(tmp_path)
++    nested = unit / 'unexpected'
++    nested.mkdir()
++    (nested / 'DONE').write_text(audit.DONE_TEXT)
++    (nested / 'payload').write_text('not inventoried')
++    result = audit.audit_unit('pilot', 'Sitalica', 'orthodb', tmp_path, tmp_path)
++    assert result['status'] == 'FAIL'
++    assert 'provenance.json' in result['files']
++
++
++@pytest.mark.parametrize('malformed', [[], None, 'text', {'inputs': []}, {'inputs': None},
++                                     {'inputs': {'query': []}}])
++def test_json_shape_errors_preserve_hashes_and_continue_17_units(tmp_path, malformed):
++    tree, sacct = make_audit_tree(tmp_path)
++    prov = tree / audit.PILOT_DIR / 'orthodb' / 'provenance.json'
++    prov.write_text(json.dumps(malformed))
++    out = tmp_path / 'out'
++    with pytest.raises(ValueError, match='audit FAILED'):
++        audit.audit(tree, out, sacct)
++    result = json.loads((out / 'rollup.json').read_text())
++    assert result['units_audited'] == 18
++    assert result['failed_units'] == ['Sitalica/orthodb']
++    failed = json.loads((out / 'units' / 'Sitalica_orthodb.json').read_text())
++    assert failed['files']['provenance.json'] == audit.launcher.sha256(prov)
++    assert failed['checks']['done_gate']['status'] == 'PASS'
++    assert len(list((out / 'units').glob('*.json'))) == 18
++
++
++@pytest.mark.parametrize('payload', [{}, None, ['bad'], [{'species': []}],
++                                   [{'species': 'Athaliana', 'query': []}]])
++def test_batch_inputs_schema_errors_are_failed_units_not_abort(tmp_path, payload):
++    tree, sacct = make_audit_tree(tmp_path)
++    batch = tree / audit.REMAINING8_DIR
++    (batch / 'inputs.json').write_text(json.dumps(payload))
++    (batch / 'inputs.sha256').write_text(audit.launcher.sha256(batch / 'inputs.json') + '\n')
++    out = tmp_path / 'out'
++    with pytest.raises(ValueError, match='audit FAILED'):
++        audit.audit(tree, out, sacct)
++    result = json.loads((out / 'rollup.json').read_text())
++    assert result['units_audited'] == 18 and len(result['failed_units']) == 16
++    assert len(list((out / 'units').glob('*.json'))) == 18
++
++
++@pytest.mark.parametrize('marker', ['absent', 'valid_DONE', 'directory_DONE', 'dangling_DONE'])
++def test_container_marker_presence_contract(tmp_path, marker):
++    if marker == 'valid_DONE':
++        (tmp_path / 'DONE').write_text(audit.DONE_TEXT)
++    elif marker == 'directory_DONE':
++        (tmp_path / 'DONE').mkdir()
++    elif marker == 'dangling_DONE':
++        (tmp_path / 'DONE').symlink_to(tmp_path / 'absent')
++    check = audit.Check()
++    audit.audit_container_markers(tmp_path, check)
++    assert bool(check.failed()) == (marker in ('directory_DONE', 'dangling_DONE'))
++
++
++@pytest.mark.parametrize('key,value', [('counts_by_taxid', []), ('counts_by_taxid', {'1': []}),
++    ('retained_taxids', {}), ('fields', None), ('queries', True), ('inputs', {'extra': 'x'})])
++def test_malformed_nested_producer_schema_preserves_prior_checks(tmp_path, key, value):
++    unit = make_unit(tmp_path)
++    prov = unit / 'provenance.json'
++    data = json.loads(prov.read_text())
++    data[key] = value
++    prov.write_text(json.dumps(data))
++    result = audit.audit_unit('pilot', 'Sitalica', 'orthodb', tmp_path, tmp_path)
++    assert result['status'] == 'FAIL'
++    assert result['files']['provenance.json'] == audit.launcher.sha256(prov)
++    assert result['checks']['required_files']['status'] == 'PASS'
++
++
++def test_unknown_approved_engine_identity_is_explicitly_unresolved(tmp_path, monkeypatch):
++    make_unit(tmp_path)
++    monkeypatch.setattr(audit, 'APPROVED_DIAMOND_SHA256', None)
++    result = audit.audit_unit('pilot', 'Sitalica', 'orthodb', tmp_path, tmp_path)
++    assert result['status'] == 'FAIL'
++    assert 'UNRESOLVED' in str(result['checks']['historical_producer_identity'])
++
++
++def test_missing_code_fields_fail_in_integrated_inventory(tmp_path):
++    tree, sacct = make_audit_tree(tmp_path)
++    prov = tree / audit.REMAINING8_DIR / 'Gmax' / 'swissprot' / 'provenance.json'
++    data = json.loads(prov.read_text())
++    del data['launcher_sha256']
++    prov.write_text(json.dumps(data))
++    with pytest.raises(ValueError, match='audit FAILED'):
++        audit.audit(tree, tmp_path / 'out', sacct)
++    rollup = json.loads((tmp_path / 'out' / 'rollup.json').read_text())
++    assert rollup['units_audited'] == 18
++    assert rollup['failed_units'] == ['Gmax/swissprot']
++
++
++def test_programmer_error_not_silently_treated_as_bad_input(tmp_path, monkeypatch):
++    make_unit(tmp_path)
++    def broken(*args, **kwargs):
++        raise TypeError('programmer defect')
++    monkeypatch.setattr(audit.launcher, 'production_inputs', broken)
++    with pytest.raises(TypeError, match='programmer defect'):
++        audit.audit_unit('pilot', 'Sitalica', 'orthodb', tmp_path, tmp_path)
+diff --git a/revision/scripts/tests/test_track_c_recovery.py b/revision/scripts/tests/test_track_c_recovery.py
+index d85b44a..dbbe1ac 100644
+--- a/revision/scripts/tests/test_track_c_recovery.py
++++ b/revision/scripts/tests/test_track_c_recovery.py
+@@ -1,12 +1,13 @@
+ """CPU-only recovery regressions. No DIAMOND or remote jobs are invoked."""
+ import importlib.util
+ import json
+ import gzip
++import hashlib
+ from pathlib import Path
+ from types import SimpleNamespace
+ 
+ import pytest
+ 
+ HERE = Path(__file__).resolve().parents[1] / 'evidence'
+ 
+ 
+@@ -17,16 +18,26 @@ def load(name):
+     return module
+ 
+ 
+ audit = load('est_blastx_audit')
+ accept = load('est_phase_accept')
+ pin = load('est_phase_accept_fixture')
+ 
+ 
++@pytest.fixture(autouse=True)
++def synthetic_identity(monkeypatch):
++    # Fixture-only trust anchors. No production override or executable invocation.
++    monkeypatch.setattr(audit, 'APPROVED_DIAMOND_SHA256', hashlib.sha256(
++        b'fixture-engine-not-executed').hexdigest(), raising=False)
++    monkeypatch.setattr(audit, 'APPROVED_WRAPPER_SHA256', dict.fromkeys(
++        ('pilot', 'remaining8'), hashlib.sha256(b'# fixture; never submitted\n').hexdigest()),
++        raising=False)
++
++
+ @pytest.mark.parametrize('entrypoint', ['stream', 'run'])
+ def test_acceptance_blocked_before_io(tmp_path, entrypoint):
+     raw = tmp_path / 'raw.tsv'
+     raw.write_text('q\t90\tp\t30\t1\t90\t1\t30\t30\t1e-20\t100\t1\t30\n')
+     out = tmp_path / 'out'
+     with pytest.raises(ValueError, match='UNRESOLVED.*A46'):
+         if entrypoint == 'stream':
+             accept.accept_stream(raw, 'orthodb', out)
+@@ -178,17 +189,20 @@ def make_unit(root, species='Sitalica', kind='orthodb', inputs_root=None):
+     commands = [[str(diamond), 'makedb', '--in', str(filtered), '--db', str(db), '--threads', '1', '--no-parse-seqids'],
+                 audit.launcher.search_command(diamond, query, db, raw, 1, root / 'scratch')]
+     (unit / 'commands.json').write_text(json.dumps(commands))
+     for name in ['blastx.log', 'makedb.log']:
+         (unit / name).write_text('fixture log')
+     (unit / 'DONE').write_text(audit.DONE_TEXT)
+     qc.update(audit.launcher.validate_raw(raw), inputs=inputs, elapsed_seconds=1.0,
+               fields=audit.launcher.RAW13, raw_sha256=audit.launcher.sha256(raw),
+-              db_sha256=audit.launcher.sha256(db), diamond_sha256=audit.launcher.sha256(diamond))
++              db_sha256=audit.launcher.sha256(db), diamond_sha256=audit.launcher.sha256(diamond),
++              diamond_version='diamond version 2.1.24\ndiamond v2.1.24.178 (C) fixture',
++              launcher_sha256='5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291',
++              taxonomy_helper_sha256='32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302')
+     (unit / 'provenance.json').write_text(json.dumps(qc))
+     (root / 'query.sha256').write_text(inputs['query_sha256'] + '  ' + str(query) + '\n')
+     return unit
+ 
+ 
+ @pytest.mark.parametrize('mutation', ['none', 'command_query', 'raw_hash', 'raw_count',
+     'elapsed', 'input_hash', 'species', 'filter_count', 'malformed_provenance', 'unit_tmp',
+     'subject_not_in_filtered'])
+@@ -267,40 +281,55 @@ def test_boundary_lengths_remain_raw_not_accepted(tmp_path, length):
+     line = f'q\t93\tp\t31\t1\t{length * 3}\t1\t{length}\t{length}\t1e-20\t100\t1\t{length}\n'
+     raw.write_text(line)
+     assert accept.parse_row(1, line)['length'] == length
+     with pytest.raises(ValueError, match='UNRESOLVED'):
+         accept.accept_stream(raw, 'orthodb', tmp_path / 'out')
+     assert not (tmp_path / 'out').exists()
+ 
+ 
+-def test_full_18_unit_audit_and_preflight_failure(tmp_path):
++def make_audit_tree(tmp_path):
+     tree = tmp_path / 'blastx'
+     entries = []
+     for species in ('Sitalica',) + audit.REMAINING8_SPECIES:
+         root = tree / audit.PILOT_DIR if species == 'Sitalica' else tree / audit.REMAINING8_DIR / species
+         for kind in audit.SOURCES:
+             unit = make_unit(root, species, kind, tmp_path / 'inputs' / species)
+         query = json.loads((unit / 'provenance.json').read_text())['inputs']['query']
+         entries.append({'species': species, 'query': query, 'query_md5': audit.md5(query)})
+         (root / 'batch.exitcode').write_text('0')
+-        (root / 'batch.time.txt').write_text('elapsed=1')
++        for kind in audit.SOURCES:
++            (root / f'{kind}.time.txt').write_text('fixture timing')
+     batch = tree / audit.REMAINING8_DIR
+     (batch / 'inputs.json').write_text(json.dumps(entries[1:]))
+     (batch / 'inputs.sha256').write_text(audit.launcher.sha256(batch / 'inputs.json') + '  inputs.json\n')
+     for root in (tree / audit.PILOT_DIR, batch):
+         (root / 'run.sbatch').write_text('# fixture; never submitted\n')
+     sacct = tmp_path / 'sacct'
+     lines = ['JobID|State|ExitCode']
+     for job in ['6163851'] + [f'6164049_{i}' for i in range(8)]:
+         lines.extend([f'{job}|COMPLETED|0:0', f'{job}.batch|COMPLETED|0:0',
+                       f'{job}.extern|OUT_OF_MEMORY|0:125'])
+     sacct.write_text('\n'.join(lines))
+-    result = audit.audit(tree, tmp_path / 'out', sacct)
+-    assert result['status'] == 'PASS' and result['units_audited'] == 18
++    (batch / 'logs').mkdir()
++    for i in range(8):
++        for ext in ('out', 'err'):
++            (batch / 'logs' / f'6164049_{i}.{ext}').write_text('' if ext == 'err' else 'fixture log')
++    return tree, sacct
++
++
++def test_full_18_unit_audit_and_preflight_failure(tmp_path):
++    tree, sacct = make_audit_tree(tmp_path)
++    lines = sacct.read_text().splitlines()
++    # The locally unavailable pilot log receipt cannot be fabricated by this fixture.
++    with pytest.raises(ValueError, match='audit FAILED'):
++        audit.audit(tree, tmp_path / 'out', sacct)
++    result = json.loads((tmp_path / 'out' / 'rollup.json').read_text())
++    assert result['status'] == 'FAIL' and result['units_audited'] == 18
++    assert result['failed_units'] == []
+     assert result['clean_accounting'] is False
+     assert result['accepted_phase_evidence'] is False
+     sacct.write_text('\n'.join(lines[:-1]))
+     with pytest.raises(ValueError, match='audit FAILED'):
+         audit.audit(tree, tmp_path / 'bad_accounting', sacct)
+     bad = json.loads((tmp_path / 'bad_accounting' / 'rollup.json').read_text())
+     assert bad.get('units_audited') == 18
+     sacct.write_text('\n'.join(lines))

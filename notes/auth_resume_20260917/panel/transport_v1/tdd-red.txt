@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_implementation_exists (test_transport.TransportTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/panel/transport_v1/test_transport.py", line 19, in test_implementation_exists
+    self.assertTrue(hasattr(t, 'build'), 'metadata builder not implemented')
+AssertionError: False is not true : metadata builder not implemented
+
+----------------------------------------------------------------------
+Ran 1 test in 0.005s
+
+FAILED (failures=1)

@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "transport_sha256": "11d0550bd46c121c6b53e1cb51f0c528381ff41763e7e95e754d286a4d0448b5",
+  "source_files": 100,
+  "component_files": 86,
+  "changed": [
+    "revision/scripts/mvp/mvp_produce_counts.py"
+  ],
+  "archive_regular_file_counts": {
+    "source.tar": 113,
+    "reference_authority.tar": 9,
+    "cpu_site.tar": 54
+  },
+  "original_git_objects": 5,
+  "late_wal": "rejected_pending_preserved",
+  "exclusive_publication": "passed",
+  "pins": {
+    "source_inventory_sha256": "5570f32378928ccd627494652988a0ec8cda3c657cff5d63e0c496ec8c97010b",
+    "evaluation_component_sha256": "ad3e5a7aacbc5d71c3a59d9b1b6f6fd0afeff12efab10b7ed123f734e767380e",
+    "decoder_code_sha256": "b42dc4b7e70f7e2cc8cfa41dc10817a3cc2d2dc2837bb0b9637d9fab2a28f088"
+  }
+}

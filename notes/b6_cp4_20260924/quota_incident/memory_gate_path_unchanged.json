@@ -1,0 +1,6 @@
+{
+  "src/transgenic/model/modeling_b6.py": "85e1ea4a9dd57b4ae9d972ca4868c3e1dceaa8a11b5d091b8c3a8c3c95ffc2ab",
+  "revision/scripts/b6/bench_memory_129k.py": "3e8af6c83d94f164fcc115be9281784fa4e14fe9f639f5f08ab18fc48721b5c0",
+  "configs/b6_400m_win_v3.json": "7a224645755f6a05400bca4d8d539770790793e5eb72cf45ab10ccd74a2db58d",
+  "compile_b6_ast_identical_to_f1ee718": true
+}

@@ -1,0 +1,14 @@
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+protocol version mismatch (client 7, server 8)
+Traceback (most recent call last):
+  File "<string>", line 25, in <module>
+  File "/data/gpfs/home/wyim/micromamba/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['tmux', 'new-session', '-d', '-s', 'archive-b5-first8-20261009', 'exec /usr/bin/nice -n 10 /usr/bin/ionice -c 2 -n 7 /data/gpfs/assoc/pgl/data/Transgenic/.venv-ssh/bin/python -u /data/gpfs/assoc/pgl/data/Transgenic/ops/checkpoint_archive/transfers/b5-first8-20261009/runner.py /data/gpfs/assoc/pgl/data/Transgenic/ops/checkpoint_archive/transfers/b5-first8-20261009 > /data/gpfs/assoc/pgl/data/Transgenic/ops/checkpoint_archive/transfers/b5-first8-20261009/runner.log 2>&1']' returned non-zero exit status 1.

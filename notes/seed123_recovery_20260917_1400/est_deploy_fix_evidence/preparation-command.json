@@ -1,0 +1,20 @@
+[
+  "/home/wyim/miniconda3/bin/python3",
+  "-I",
+  "-B",
+  "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_deployment/prepare_controller.py",
+  "--release",
+  "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/release",
+  "--ledger-sha",
+  "96760e4d2f9c1357b64ee9eb93b116ce879f9e20997d5eb724d148c3dc42aa83",
+  "--launcher-sha",
+  "2d40d5076958bfcb048ef3c2d30c21ea8be63a452bb76245cbd71e53d458a161",
+  "--batch-sha",
+  "7fe7c107e5796043393ee6eea52d8db96cf327877577cf1679c658425ef31f1e",
+  "--namespace",
+  "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation",
+  "--stdout",
+  "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation/stdout",
+  "--stderr",
+  "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation/stderr"
+]

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "scope": "exploratory_mvp_controller_selection",
+  "selection_basis": "User delegated checkpoint selection and GPU-to-training progression; select lowest validation-loss completed epoch observed at 2026-09-16 15:45 PDT. Not a new author scientific approval or launch-readiness receipt.",
+  "source_run_seed": 123,
+  "source_checkpoint": "/work/nvme/bilv/wcyim/transgenic/runs/seed123/epoch_05",
+  "source_eval_loss": 0.6394507884979248,
+  "weights_sha256_expected": "6e5e408681dd5356548a8f4b93d28e561c22d885668a4e0015d3e314e28f8d22",
+  "run_config_sha256_expected": "c3ca0b4dfc1c9fbedb0cfba4b42887b22d4a62bc5b0c84be6b711ec630a1ef18",
+  "runtime_identity_sha256_expected": "44b6f578ec50d373d01e764d391b2a559ce4d3012c52388fc160f94fef6f887e",
+  "epoch_meta_sha256_expected": "844ecbc41f19a9287eb0101f9047b3b0100f88d2bfed1a5057261296d86943d7",
+  "mvp_seeds": [1, 2, 3],
+  "same_initialization_required": true,
+  "follow_mutable_best": false,
+  "staged_checkpoint_verified": false,
+  "requires_fresh_compute_side_hashes": true,
+  "ready_for_finetuning": false,
+  "production_authorized": false,
+  "consequence": "Later B5 best improvements do not automatically change this experiment initialization. A changed choice requires regenerated bindings and all affected preflights."
+}

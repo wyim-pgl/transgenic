@@ -1,0 +1,28 @@
+{
+  "authorized_scope": "exploratory_mvp",
+  "bindings_sha256": null,
+  "campaign_diagnostic_cap_gpu_hours": 20,
+  "campaign_diagnostic_cap_node_hours": 5,
+  "controller_record_reference": null,
+  "intent": "Single seed123 exploratory MVP; preserve B5; no production authorization",
+  "launcher_overhead_seconds": null,
+  "margin_rationale": null,
+  "max_probe_wall_seconds": null,
+  "max_training_node_hours": null,
+  "max_wall_seconds": null,
+  "memory_headroom_fraction": null,
+  "prior_smoke_node_hours": null,
+  "profile": "development-single",
+  "proposed_first_allocation_seconds": 1800,
+  "resource_envelope": {
+    "microbatches_per_rank": 24,
+    "nodes": 1,
+    "ranks": 4
+  },
+  "safety_margin": null,
+  "schema_version": 2,
+  "seeds": [
+    123
+  ],
+  "status": "INCOMPLETE_REQUEST_NOT_AUTHORIZATION"
+}

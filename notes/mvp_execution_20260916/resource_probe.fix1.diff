@@ -1,0 +1,546 @@
+diff --git a/notes/MVP_RESOURCE_PROBE_FIX1_REPORT.md b/notes/MVP_RESOURCE_PROBE_FIX1_REPORT.md
+new file mode 100644
+index 0000000..9730118
+--- /dev/null
++++ b/notes/MVP_RESOURCE_PROBE_FIX1_REPORT.md
+@@ -0,0 +1,110 @@
++# Resource probe FIX1 — RP1–RP4
++
++Branch `mvp-resource-fix1-20260916`, based on `4bd97399`. Narrow resource fixes
++only; owner commits `981489d` / `d99b1f8` were not cherry-picked or duplicated.
++**Integration/execution remains HOLD.** No SSH, jobs, CUDA execution, subagents,
++merge, push, main-checkout edits, resource PASS or training authorization.
++
++## Changes
++
++- **RP1:** `resource_probe.run.progress` now publishes immutable
++  `rankN.000000.profiling.json`, `rankN.000001.profiling.json`, etc. Sequence is
++  monotonically increasing per rank after successful collective publication.
++  Every earlier snapshot is retained. Consumers should enumerate
++  `rankN.*.profiling.json` and select the greatest numeric sequence for that rank,
++  not expect an overwritten `rankN.profiling.json`. The existing report was
++  updated; graft found no other indexed filename consumer. Snapshots remain
++  `INTERMEDIATE_PROFILING_NOT_READINESS`, never receipt/DONE. A fresh-path
++  `SystemExit` is converted to `RuntimeError` only inside this progress publisher
++  so the existing collective preflight exchanges it. The global immutable
++  `_atomic_write` is unchanged. Collision never overwrites the existing file.
++- **RP2:** extra source file `src/transgenic/training/mvp_metrics.py` factors the
++  existing local input checks into public `validate_paired_batch(batch)`, returning
++  `(rn, has_evidence)`. `paired_metric_record` calls the same helper; its off/on
++  forwards, CE math, result fields and mode restoration are unchanged. Resource
++  retrieval/device transfer calls the helper inside collective preflight before
++  any rank enters the first forward. The forward-containing function remains
++  OUTSIDE the local-only collective guard. No finalizer orchestration or shared
++  `one_update` changes are included.
++- **RP3:** exact `type(value) is int` checks now reject bool/float/string schema,
++  envelope, rank, update counts and RNs. Also hardened maxlength, input lengths,
++  inventory maximum label length and generated-kernel counts. Existing strict
++  seed, label length, valid count, capacity, EST count and memory checks are
++  covered by negative variants. Projection math is unchanged.
++- **RP4:** removed the extra EOF blank in `tests/test_mvp_resource_probe.py`.
++  Corrected the previous report's blanket whitespace claim rather than treating
++  the independently reproduced original failure as a passing historical check.
++
++## CPU verification
++
++New `tests/test_mvp_resource_fix1.py` adds 60 cases:
++
++- 57 bool/float/string rejection cases across 19 integer fields.
++- Two tests execute the actual AST-extracted nested progress function, preserving
++  its closure and sequence initialization: two successful publications followed
++  by collision or cap failure through the real single-rank collective preflight.
++  They check retained bytes, updated stage contents, failure propagation and no
++  DONE marker. This is not a simulated successful CUDA `run`.
++- A bounded two-process Gloo CPU test calls actual `paired_validation` with a DDP
++  model and rank1-only float RN metadata. Both processes exit normally with the
++  same ValueError, zero forward calls and no PASS/DONE. Only CUDA synchronize is
++  replaced by a CPU no-op; status transport uses real Gloo tensor collectives.
++  Process-group timeout is 20 seconds, parent deadline 60 seconds.
++
++Final command (worktree-local `.testdeps` symlink to read-only-use shared
++`/tmp/b6-p2-readiness-1535112/.testdeps`; no dependency installation):
++
++```
++PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q \
++  tests/test_mvp_resource_probe.py tests/test_mvp_real_probes.py \
++  tests/test_mvp_readiness_tools.py tests/test_mvp_readiness_review.py \
++  tests/test_mvp_metrics.py tests/test_mvp_resource_fix1.py
++```
++
++**186 passed in 48.25s** (the previous 126 plus 60 new cases; no subtests plugin).
++The metric regression suite is included. An earlier focused run had 74 passes.
++An initial full run using the incomplete runtime-controller dependency directory
++had 156 passes / 30 failures, all missing duckdb distribution metadata; switching
++only the local dependency symlink to the complete shared directory resolved it.
++No fixtures or validators were weakened for those failures.
++
++`git diff --check 3b62306` passed against the FIX1 working tree, covering the
++original resource diff plus these fixes, including the removed EOF blank.
++This supersedes the incorrect claim for `3b62306..4bd97399`. `git diff --cached --check` and `git diff --cached --check 3b62306`
++also passed, as did `py_compile` for both changed source and both test files.
++`graft build` refreshed the local graph; generated cache/ignore files are not
++part of this commit. Verify the delivered commit with
++`git diff --check 3b62306..HEAD`. CPU results are not pinned
++SIF/CUDA/NCCL certification or a performance/resource guarantee. Advisor planning
++consultation failed with `claude_code_version_too_old`; no advisor review is
++claimed.
++
++## Later integration contracts — do not execute this base
++
++Current resource call sites intentionally still use this base's
++`p.datasets(args, bindings)` and `p.one_update(accelerator, model, optimizer,
++batches)`. The v3/8192 fail-closed check remains. The owner's known v3 factory and
++coordinated update fixes are separately reviewed but absent from this branch.
++At later integration:
++
++1. Update resource dataset construction to
++   `p.datasets(args, bindings, cfg, model_config)` using the loaded model config
++   before wrapping/compilation. Do not change only the shared signature and leave
++   this two-argument caller. Validate both resource train and separately built
++   valid datasets with the owner's `validate_decoder_dataset` contract.
++2. Shared `compiled_update(args, bindings, model, ds, accelerator)` receives the
++   main-owned Accelerator. Resource dispatch currently occurs before the normal
++   main setup and owns its own Accelerator in `run`; reconcile the combined
++   early-dispatch/ownership/cleanup paths so exactly one owner exists.
++3. Preserve `one_update(accelerator, model, optimizer, batches)` and integrate the
++   owner's coordinated implementation. Reconcile `collective_batches` and
++   `collective_compiler_check` with the resource preloading/compiler paths without
++   nesting forward-containing or collective operations in local-only preflight.
++4. Re-review combined callers, regenerate consumed-code/tooling bindings (including
++   the changed metric source), and rerun CPU plus bounded real CUDA diagnostics
++   only after controller authorization. This commit does not remove that HOLD.
++
++The prior five-node-hour qualification also remains: the child timeout/projection
++is not an allocation-wide deadline. Controller accounting must include earlier
++smoke, startup, parent validation and teardown, prohibit unaccounted warmups, and
++impose an outer job/allocation deadline within the remaining cap.
+diff --git a/notes/MVP_RESOURCE_PROBE_REPORT.md b/notes/MVP_RESOURCE_PROBE_REPORT.md
+index c7d2afe..5ceb051 100644
+--- a/notes/MVP_RESOURCE_PROBE_REPORT.md
++++ b/notes/MVP_RESOURCE_PROBE_REPORT.md
+@@ -130,17 +130,19 @@ identity and arithmetic, **not authenticity of a controller's identity**; record
+ provenance is controller responsibility. A separate seed binding needs its own
+ prospectively bound record; three-seed intent does not unbind seed-specific data.
+ 
+ The five-node-hour smoke cap is NOT increased. This implementation may require
+ more than the remaining cap: full label/evidence scanning, long-tier compilation,
+ 864 global microbatches and full paired validation can be expensive. No real
+ measurement exists here to assert that it fits. The controller must not authorize
+ an over-cap run. If bounded execution expires, retained per-rank
+-`*.profiling.json` gives useful completed setup/inventory/cold/steady timings,
++`rankN.SEQUENCE.profiling.json` (six-digit, increasing sequence per rank;
++ retain all snapshots and select the greatest numeric sequence per rank) gives
++ useful completed setup/inventory/cold/steady timings,
+ but **cannot produce PASS or training readiness**. No timing from an incomplete
+ long tier or partial valid inventory is extrapolated into a success receipt.
+ `projected_campaign_node_hours` additionally reports probe/prior-smoke plus all
+ three projected training runs; these costs are not hidden in the training-only
+ three-seed field.
+ 
+ ## Exact CLI shape for later controller review/run
+ 
+@@ -202,14 +204,18 @@ Final focused command:
+ 
+ ```
+ PYTHONPATH=.testdeps:src /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q \
+   tests/test_mvp_resource_probe.py tests/test_mvp_real_probes.py \
+   tests/test_mvp_readiness_tools.py tests/test_mvp_readiness_review.py \
+   tests/test_mvp_metrics.py
+ ```
+ 
+-Final observed: **126 passed, 21 subtests passed in52.41s**, including the final
+-local-work coordination and label-contract checks. `py_compile` and
+-`git diff --check` passed in the same command; `graft build` refreshed the local graph. A broader run including
++Original implementation reported: **126 passed, 21 subtests passed in52.41s**,
++including the local-work coordination and label-contract checks. The original
++blanket whitespace-success claim was incorrect: independent review found a new
++EOF blank line in `tests/test_mvp_resource_probe.py` in `3b62306..4bd97399`.
++FIX1 removes it; see `MVP_RESOURCE_PROBE_FIX1_REPORT.md` for the checked range and
++fresh CPU results. The original report also recorded `py_compile` and a local
++`graft build`. A broader run including
+ `test_mvp_finalize.py` exceeded the240-second tool bound after substantial test
+ progress; no full-finalizer-suite success is claimed. No real-CUDA orchestration
+ or performance test was possible, and none was simulated into a receipt.
+diff --git a/revision/scripts/mvp/resource_probe.py b/revision/scripts/mvp/resource_probe.py
+index 29cf430..d004711 100644
+--- a/revision/scripts/mvp/resource_probe.py
++++ b/revision/scripts/mvp/resource_probe.py
+@@ -20,21 +20,22 @@ STAGES = {'setup', 'inventory', 'validation', 'publication', 'revalidation'}
+ 
+ 
+ def positive(value):
+     return type(value) in (int, float) and math.isfinite(value) and value > 0
+ 
+ 
+ def validate_budget(budget, binding_sha):
+     from run_bounded import digest
+-    if (not isinstance(budget, dict) or budget.get('schema_version') != 1 or
++    if (not isinstance(budget, dict) or type(budget.get('schema_version')) is not int or budget['schema_version'] != 1 or
+             budget.get('authorized_scope') != 'exploratory_mvp' or
+             budget.get('seeds') != [1, 2, 3] or
+             any(type(seed) is not int for seed in budget.get('seeds', [])) or
+             budget.get('resource_envelope') != dict(nodes=1, ranks=4, microbatches_per_rank=24) or
++            any(type(n) is not int for n in budget['resource_envelope'].values()) or
+             not digest(binding_sha) or budget.get('bindings_sha256') != binding_sha):
+         raise ValueError('explicit bound three-seed controller resource envelope required')
+     for key in ('controller_record_reference', 'intent', 'margin_rationale'):
+         if not isinstance(budget.get(key), str) or not budget[key].strip():
+             raise ValueError(f'explicit controller record requires {key}')
+     for key in ('safety_margin', 'memory_headroom_fraction', 'max_wall_seconds',
+                 'max_three_seed_node_hours', 'max_probe_wall_seconds', 'launcher_overhead_seconds'):
+         if not positive(budget.get(key)):
+@@ -53,23 +54,24 @@ def project_budget(budget, ranks):
+ 
+     Deliberate overcount: nine probe updates, full eval, scan, input audits and
+     serialization are added AGAIN to 250 worst steady updates, then margin.
+     This avoids subtracting cold/setup costs or hiding long inventory audits.
+     """
+     from run_bounded import digest
+     validate_budget(budget, budget.get('bindings_sha256'))
+     if (not isinstance(ranks, list) or len(ranks) != 4 or
++            any(not isinstance(r, dict) or type(r.get('rank')) is not int for r in ranks) or
+             {r.get('rank') for r in ranks} != {0, 1, 2, 3}):
+         raise ValueError('exactly four measured ranks required')
+     worst, peak, limit, elapsed = 0., 0, float('inf'), 0.
+     inventories = set()
+     for rank in ranks:
+         contract = rank.get('label_contract', {})
+-        if contract.get('gff_vocab_version') != 'v3' or contract.get('maxlength') != 8192:
++        if contract.get('gff_vocab_version') != 'v3' or type(contract.get('maxlength')) is not int or contract['maxlength'] != 8192:
+             raise ValueError('measured v3/8192 label contract required')
+         capacity = rank.get('capacity_bytes')
+         if type(capacity) is not int or capacity <= 0:
+             raise ValueError('exact observed CUDA capacity required')
+         limit = min(limit, capacity * (1 - budget['memory_headroom_fraction']))
+         if set(rank.get('stages', {})) != STAGES or set(rank.get('tiers', {})) != {str(t) for t in TIERS}:
+             raise ValueError('all measured stages and tiers required')
+         if not positive(rank.get('elapsed_seconds')) or rank['elapsed_seconds'] >= budget['max_probe_wall_seconds']:
+@@ -79,21 +81,25 @@ def project_budget(budget, ranks):
+             raise ValueError('complete valid inventory measurement required')
+         inventories.add((rank['valid_count'], rank['valid_inventory_sha256']))
+         measurements = list(rank['stages'].values())
+         for tier, coverage in rank['tiers'].items():
+             updates = coverage.get('updates', [])
+             if len(updates) != 3:
+                 raise ValueError('one cold and two steady updates per rank/tier required')
+             for index, update in enumerate(updates):
+-                if (update.get('microbatches') != 24 or update.get('optimizer_steps') != 1 or
+-                        len(update.get('rns', [])) != 24 or len(set(update['rns'])) != 24 or
++                if (type(update.get('microbatches')) is not int or update['microbatches'] != 24 or
++                        type(update.get('optimizer_steps')) is not int or update['optimizer_steps'] != 1 or
++                        len(update.get('rns', [])) != 24 or
++                        any(type(rn) is not int for rn in update['rns']) or len(set(update['rns'])) != 24 or
++                        type(update.get('generated_kernels')) is not int or update['generated_kernels'] < 0 or
+                         type(update.get('est_signal_microbatches')) is not int or
+                         not 0 < update['est_signal_microbatches'] <= 24 or
+                         update.get('input_lengths') != [int(tier)] * 24 or
++                        any(type(n) is not int for n in update['input_lengths']) or
+                         len(update.get('label_lengths', [])) != 24 or
+                         any(type(n) is not int or n <= 0 for n in update['label_lengths'])):
+                     raise ValueError('actual microbatch/update/length coverage incomplete')
+                 if index:
+                     if update.get('generated_kernels') != 0:
+                         raise ValueError('steady update recompiled; cannot extrapolate as steady')
+                     if not positive(update.get('wall_seconds')):
+                         raise ValueError('invalid steady timing')
+@@ -107,16 +113,18 @@ def project_budget(budget, ranks):
+                 if type(value) is not int or not 0 < value < capacity * (1 - budget['memory_headroom_fraction']):
+                     raise ValueError('stage memory exceeds prospective headroom or is unmeasured')
+                 peak = max(peak, value)
+         if sum(m['wall_seconds'] for m in measurements) > rank['elapsed_seconds']:
+             raise ValueError('elapsed time cannot omit measured stages or updates')
+     if len(inventories) != 1:
+         raise ValueError('rank valid inventories disagree')
+     for tier in map(str, TIERS):
++        if any(type(r['tiers'][tier].get('inventory_max_label_length')) is not int for r in ranks):
++            raise ValueError('integer inventory maximum label length required')
+         maxima = {r['tiers'][tier].get('inventory_max_label_length') for r in ranks}
+         observed = max(max(u['label_lengths']) for r in ranks for u in r['tiers'][tier]['updates'][1:])
+         if maxima != {observed}:
+             raise ValueError('steady sample must include inventory maximum label length at every tier')
+         for index in range(3):
+             rns = [rn for r in ranks for rn in r['tiers'][tier]['updates'][index]['rns']]
+             if len(set(rns)) != 96:
+                 raise ValueError('rank training samples must be disjoint within each update')
+@@ -165,17 +173,17 @@ def strict_compile_limits(config):
+             config.suppress_errors = False
+             return
+     raise RuntimeError('unsupported CUDA compiler: cannot prohibit cache-limit eager fallback')
+ 
+ 
+ def paired_validation(accelerator, model, loader, expected):
+     """Actual finalizer metric, byte transport and aggregation, without publication."""
+     from transgenic.training import mvp_finalize as f
+-    from transgenic.training.mvp_metrics import paired_metric_record, aggregate_paired_records
++    from transgenic.training.mvp_metrics import paired_metric_record, aggregate_paired_records, validate_paired_batch
+     lengths = f._all_ints(accelerator, len(loader))
+     if len(set(lengths)) != 1:
+         raise ValueError('unequal paired validation lengths')
+     records, error = [], None
+     times = dict(read_transfer_seconds=0., paired_metric_seconds=0., transport_reduce_seconds=0.)
+     iterator = None
+     def open_iterator():
+         nonlocal iterator
+@@ -183,16 +191,17 @@ def paired_validation(accelerator, model, loader, expected):
+     f._collective_preflight(accelerator, open_iterator)
+     import torch
+     for _ in range(len(loader)):
+         start = time.monotonic()
+         batch = None
+         def retrieve():
+             nonlocal batch
+             batch = f._to_device(next(iterator), accelerator.device)
++            validate_paired_batch(batch)
+             torch.cuda.synchronize(accelerator.device)
+         f._collective_preflight(accelerator, retrieve)
+         times['read_transfer_seconds'] += time.monotonic() - start
+         start = time.monotonic()
+         # DDP forwards may contain collectives: do not nest them in preflight.
+         # A backend/collective failure is terminated by the bounded launcher.
+         try:
+             records.append(paired_metric_record(model, batch))
+@@ -270,24 +279,32 @@ def run(args):
+         # Only rank-local work here: never nest DDP/transport collectives.
+         result = None
+         def checked():
+             nonlocal result
+             result = operation()
+         f._collective_preflight(accelerator, checked)
+         return result
+ 
++    progress_sequence = 0
++
+     def progress():
++        nonlocal progress_sequence
+         def publish():
+-            # Not MVP_MEASUREMENT_OUTPUT: partial work never has a receipt/DONE.
+-            _atomic_write(profile / f'rank{accelerator.process_index}.profiling.json',
+-                _canonical_bytes(dict(output_use='INTERMEDIATE_PROFILING_NOT_READINESS', measurement=row)))
++            # Immutable snapshots, never MVP_MEASUREMENT_OUTPUT or receipt/DONE.
++            try:
++                _atomic_write(profile / f'rank{accelerator.process_index}.{progress_sequence:06d}.profiling.json',
++                    _canonical_bytes(dict(output_use='INTERMEDIATE_PROFILING_NOT_READINESS', measurement=row)))
++            except SystemExit as error:
++                # The fresh-path writer uses SystemExit; preflight exchanges Exception.
++                raise RuntimeError(str(error)) from error
+             if time.monotonic() - started >= budget['max_probe_wall_seconds']:
+                 raise RuntimeError('authorized probe cap exhausted; retain partial profiling only')
+         local(publish)
++        progress_sequence += 1
+ 
+     def stage(name, operation, *, collective=False):
+         accelerator.wait_for_everyone()
+         local(lambda: (torch.cuda.synchronize(accelerator.device),
+                        torch.cuda.reset_peak_memory_stats(accelerator.device)))
+         start = time.monotonic()
+         result = operation() if collective else local(operation)
+         def finish():
+diff --git a/src/transgenic/training/mvp_metrics.py b/src/transgenic/training/mvp_metrics.py
+index 1e67370..c876cf4 100644
+--- a/src/transgenic/training/mvp_metrics.py
++++ b/src/transgenic/training/mvp_metrics.py
+@@ -56,18 +56,18 @@ def _scalar(value, name):
+     if not isinstance(value, torch.Tensor) or value.numel() != 1:
+         raise ValueError(f"{name} must be a scalar tensor")
+     result = float(value.detach().item())
+     if not math.isfinite(result):
+         raise ValueError(f"{name} must be finite")
+     return result
+ 
+ 
+-def paired_metric_record(model, batch):
+-    """Evaluate one collated 10-tuple tile with zero/off and caller-supplied/on tracks."""
++def validate_paired_batch(batch):
++    """Validate local paired inputs without a model forward or collectives."""
+     if not isinstance(batch, (tuple, list)) or len(batch) != 10:
+         raise ValueError("paired evaluation requires a collated 10-tuple batch")
+     input_ids, attention_mask, labels, _, _, _, _, _, tracks, metadata = batch
+     tensors = (input_ids, attention_mask, labels, tracks)
+     if any(not isinstance(value, torch.Tensor) or value.ndim < 1 or value.shape[0] != 1
+            for value in tensors):
+         raise ValueError("paired evaluation requires batch size one tensors")
+     if not isinstance(metadata, dict) or not {"rn", "has_evidence"}.issubset(metadata):
+@@ -77,16 +77,23 @@ def paired_metric_record(model, batch):
+     if (not isinstance(rn_tensor, torch.Tensor) or rn_tensor.numel() != 1 or
+             rn_tensor.dtype not in integer_dtypes or
+             not isinstance(evidence_tensor, torch.Tensor) or evidence_tensor.numel() != 1 or
+             evidence_tensor.dtype != torch.bool):
+         raise ValueError("batch metadata must contain one integer rn and boolean evidence flag")
+     rn = int(rn_tensor.item())
+     has_evidence = bool(evidence_tensor.item())
+ 
++    return rn, has_evidence
++
++
++def paired_metric_record(model, batch):
++    """Evaluate one collated 10-tuple tile with zero/off and caller-supplied/on tracks."""
++    rn, has_evidence = validate_paired_batch(batch)
++    input_ids, attention_mask, labels, _, _, _, _, _, tracks, _ = batch
+     was_training = model.training
+     model.eval()
+     try:
+         with torch.no_grad():
+             common = {"attention_mask": attention_mask, "labels": labels}
+             off = model(input_ids, evidence_tracks=torch.zeros_like(tracks), **common)
+             on = model(input_ids, evidence_tracks=tracks, **common)
+             off_loss, off_num, off_den = weighted_ce(off.logits, labels)
+diff --git a/tests/test_mvp_resource_fix1.py b/tests/test_mvp_resource_fix1.py
+new file mode 100644
+index 0000000..1aad3de
+--- /dev/null
++++ b/tests/test_mvp_resource_fix1.py
+@@ -0,0 +1,140 @@
++"""CPU regressions only; never CUDA/resource certification."""
++import ast
++import inspect
++import json
++import multiprocessing
++import time
++from pathlib import Path
++from types import SimpleNamespace
++
++import pytest
++
++from test_mvp_resource_probe import fixture
++import resource_probe as resource
++
++
++@pytest.mark.parametrize('convert', [bool, float, str])
++@pytest.mark.parametrize('field', [
++    'schema_version', 'nodes', 'ranks', 'microbatches_per_rank', 'seed', 'rank',
++    'maxlength', 'valid_count', 'capacity_bytes', 'microbatches', 'optimizer_steps',
++    'rn', 'input_length', 'label_length', 'generated_kernels',
++    'est_signal_microbatches', 'inventory_max_label_length', 'peak_cuda_bytes',
++    'peak_reserved_bytes'])
++def test_integer_fields_reject_coercions(field, convert):
++    budget, ranks = fixture()
++    row = ranks[0]
++    tier = row['tiers']['30720']
++    update = tier['updates'][1]
++    if field == 'schema_version': target, key = budget, field
++    elif field in ('nodes', 'ranks', 'microbatches_per_rank'): target, key = budget['resource_envelope'], field
++    elif field == 'seed': target, key = budget['seeds'], 0
++    elif field == 'maxlength': target, key = row['label_contract'], field
++    elif field in ('rank', 'valid_count', 'capacity_bytes'): target, key = row, field
++    elif field == 'inventory_max_label_length': target, key = tier, field
++    elif field in ('rn', 'input_length', 'label_length'):
++        target, key = update[{'rn': 'rns', 'input_length': 'input_lengths', 'label_length': 'label_lengths'}[field]], 0
++    else: target, key = update, field
++    target[key] = convert(target[key])
++    with pytest.raises(ValueError):
++        resource.project_budget(budget, ranks)
++
++
++def progress_callable(profile, row, local, budget):
++    # Execute the actual nested function and its sequence initialization, without
++    # pretending CUDA setup/training succeeded. Keep the nonlocal closure intact.
++    tree = ast.parse(inspect.getsource(resource.run))
++    body = tree.body[0].body
++    nodes = [node for node in body if
++             (isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'progress_sequence' for t in node.targets)) or
++             (isinstance(node, ast.FunctionDef) and node.name == 'progress')]
++    factory = ast.parse('def factory():\n    pass\n').body[0]
++    factory.body = nodes + [ast.Return(ast.Name('progress', ast.Load()))]
++    namespace = dict(resource.__dict__, profile=profile, row=row, local=local,
++                     budget=budget, started=time.monotonic(), accelerator=SimpleNamespace(process_index=0))
++    exec(compile(ast.fix_missing_locations(ast.Module([factory], [])), '<actual-progress>', 'exec'), namespace)
++    return namespace['factory']()
++
++
++@pytest.mark.parametrize('failure', ['collision', 'deadline'])
++def test_actual_progress_preserves_snapshots_and_propagates_failure(tmp_path, failure):
++    from transgenic.training.mvp_finalize import _collective_preflight
++    accelerator = SimpleNamespace(num_processes=1)
++    budget = {'max_probe_wall_seconds': 100}
++    row = {'stages': {'setup': {}}}
++    progress = progress_callable(tmp_path, row, lambda op: _collective_preflight(accelerator, op), budget)
++    progress()
++    first = tmp_path / 'rank0.000000.profiling.json'
++    original = first.read_bytes()
++    row['stages']['inventory'] = {}
++    progress()
++    assert first.read_bytes() == original
++    second = tmp_path / 'rank0.000001.profiling.json'
++    assert set(json.loads(second.read_text())['measurement']['stages']) == {'setup', 'inventory'}
++    third = tmp_path / 'rank0.000002.profiling.json'
++    if failure == 'collision':
++        third.write_bytes(b'preserve existing')
++        message = 'fresh'
++    else:
++        budget['max_probe_wall_seconds'] = 0
++        message = 'cap exhausted'
++    with pytest.raises(RuntimeError, match=message):
++        progress()
++    if failure == 'collision':
++        assert third.read_bytes() == b'preserve existing'
++    assert first.read_bytes() == original
++    assert not list(tmp_path.glob('*.DONE'))
++
++
++def _invalid_rank_worker(rank, root):
++    import datetime
++    import torch
++    import torch.distributed as dist
++    from torch.nn.parallel import DistributedDataParallel
++    dist.init_process_group('gloo', init_method='file://' + str(Path(root) / 'rendezvous'),
++                            rank=rank, world_size=2, timeout=datetime.timedelta(seconds=20))
++    try:
++        def gather(value):
++            outputs = [torch.empty_like(value) for _ in range(2)]
++            dist.all_gather(outputs, value)
++            return torch.cat(outputs)
++        accelerator = SimpleNamespace(num_processes=2, process_index=rank,
++                                      is_main_process=rank == 0, device=torch.device('cpu'), gather=gather)
++        model = DistributedDataParallel(torch.nn.Linear(2, 2))
++        model.module.register_buffer('sync_buffer', torch.zeros(1))
++        calls = []
++        model.register_forward_pre_hook(lambda *args: calls.append('forward'))
++        batch = [torch.ones(1, 2), torch.ones(1, 2), torch.ones(1, 2, dtype=torch.long),
++                 None, None, None, None, None, torch.ones(1, 2, 8),
++                 {'rn': torch.tensor([rank], dtype=torch.float32 if rank == 1 else torch.int64),
++                  'has_evidence': torch.tensor([True])}]
++        # Only CUDA synchronization is unavailable in this explicitly CPU test.
++        torch.cuda.synchronize = lambda device: None
++        try:
++            resource.paired_validation(accelerator, model, [batch], [0, 1])
++            outcome = {'pass': True}
++        except Exception as error:
++            outcome = {'pass': False, 'error': str(error), 'kind': type(error).__name__}
++        outcome['forward_calls'] = len(calls)
++        (Path(root) / f'rank{rank}.json').write_text(json.dumps(outcome))
++    finally:
++        dist.destroy_process_group()
++
++
++def test_rank1_invalid_rn_rejects_all_before_ddp_forward(tmp_path):
++    context = multiprocessing.get_context('spawn')
++    children = [context.Process(target=_invalid_rank_worker, args=(rank, str(tmp_path))) for rank in range(2)]
++    try:
++        for child in children: child.start()
++        deadline = time.monotonic() + 60
++        for child in children: child.join(max(0, deadline - time.monotonic()))
++        assert all(not child.is_alive() and child.exitcode == 0 for child in children), 'Gloo fault test hung/failed'
++    finally:
++        for child in children:
++            if child.is_alive(): child.terminate()
++        for child in children: child.join(5)
++    outcomes = [json.loads((tmp_path / f'rank{rank}.json').read_text()) for rank in range(2)]
++    assert outcomes[0] == outcomes[1]
++    assert outcomes[0]['pass'] is False and outcomes[0]['forward_calls'] == 0
++    assert outcomes[0]['kind'] == 'ValueError'
++    assert 'one integer rn' in outcomes[0]['error']
++    assert not list(tmp_path.glob('*.DONE'))
+diff --git a/tests/test_mvp_resource_probe.py b/tests/test_mvp_resource_probe.py
+index 46d8b26..d65e418 100644
+--- a/tests/test_mvp_resource_probe.py
++++ b/tests/test_mvp_resource_probe.py
+@@ -142,9 +142,8 @@ def test_unmeasured_coverage_or_undercount_rejected(damage):
+     budget, ranks = fixture()
+     update = ranks[0]['tiers']['30720']['updates'][1]
+     if damage == 'duplicate':
+         update['rns'] = ranks[1]['tiers']['30720']['updates'][1]['rns']
+     if damage == 'undercount': ranks[0]['elapsed_seconds'] = 1
+     if damage == 'no_est': update['est_signal_microbatches'] = 0
+     if damage == 'boolean_time': update['wall_seconds'] = True
+     with pytest.raises(ValueError): project_budget(budget, ranks)
+-

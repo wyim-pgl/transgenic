@@ -1,0 +1,652 @@
+diff --git a/notes/MVP_DECODER_RUNTIME_FIX1_REPORT.md b/notes/MVP_DECODER_RUNTIME_FIX1_REPORT.md
+new file mode 100644
+index 0000000..3f855bf
+--- /dev/null
++++ b/notes/MVP_DECODER_RUNTIME_FIX1_REPORT.md
+@@ -0,0 +1,97 @@
++# Decoder runtime integration fix 1 — 2026-09-16
++
++## Scope and status
++
++Branch `mvp-decoder-runtime-fix1-20260916` starts at `e6950b7` in an isolated native worktree. Addresses integrated independent review I1–I3; the old integration/review reports remain unchanged historical records. Only runtime helper, its caller, tests and this report change. No model/trainer, D1 rasterization, D2 publication implementation, panel contract or 350-row transport changes. No SSH, jobs, subagents, main merge or push.
++
++**CPU verification passes; independent review is next. A genuine GPU receipt and operational SIF/8192-token decode remain pending.** No historical CUDA measurement was invented or claimed. Advisor consultation failed with a client/model-version incompatibility; no advisor approval is claimed.
++
++## I1: project applicability and reviewed handshake
++
++Removed the blanket current-ROOT exemption. Current loaded project files map by exact relative path from this checkout to the historical checkout identified by the probe's canonical `revision/scripts/mvp/real_probes.py` location. Their digests must match A's import inventory. Original declared files are still individually rehashed, including unused imports; relocation does not waive their retention. Concrete project model/config/tokenizer/encoder-init modules are imported and checked before construction, and live imports are checked after loading and before final publication. Loaded project model/config objects must be the actual project classes; loaded remote classes retain the immutable source/config checks.
++
++The numerical wrapper, encoder initialization, configuration and tokenizer are not decoder-audit exceptions. The exact `DECODER_ONLY` tuple is a separate, closed orchestration/grammar/transport boundary, not a directory exemption or caller-selectable allowlist. It includes the decoder/panel/producer helpers, evidence decoder/windows/tracks, constrained grammar and GSF utilities. Its canonical relative-path/digest mapping must match the independently operator-supplied `runtime_preflight.decoder_code_sha256`. If A imported a file in that boundary, A's identity takes precedence; the decoder pin cannot override it. Unlisted project files cannot pass merely because they are under ROOT.
++
++This distinction does **not** claim A's 16-new-token numerical generation probe certified constrained grammar or total-length-8192 generation. Those remain separately reviewed decoder code and pending genuine execution gates.
++
++The helper hard-pins actual `git show d99b1f8:revision/scripts/mvp/{real_probes,run_bounded,make_launch_readiness}.py` SHA256 values. It checks the real probe and preparation handshake import identities against those constants and rehashes all three sibling files. Important source detail: A snapshots its imports **before** the final `run_bounded` import. Its absence from the snapshot is therefore supported, not filled in with an invented historical import; the independently pinned sibling bytes are still mandatory. A supplied arbitrary probe executable is no longer accepted solely for appearing in its own import inventory.
++
++## I2: actual completed bounded receipt
++
++Authority is the actual `d99b1f8` Git source, not a reconstructed wrapper convention. Input must be the independently digest-pinned `generation_cache_parity.json`, with exact sibling `generation_cache_parity.DONE` bytes `sha256(receipt) + '\n'`. Any sibling `generation_cache_parity.FAILED.json`, missing/mismatched DONE, raw measurement alone, failed execution or binding mismatch is rejected.
++
++Checked wrapper fields: integer `schema_version=1`, `preflight=p3_generation_parity`, integer `exit_code=0`, `timed_out=false`, present `signal=null`, `pass=true`, 64-lowercase-hex `bindings_sha256` equal to the nested measurement binding. Only then is the nested measurement passed through existing genuine-generation/version/CUDA/asset checks. Receipt expected SHA256 remains an independent request input, never copied from the receipt itself. DONE identity joins the repeated input audit.
++
++The test extracts the real three authority files from Git, verifies their fixed digests, invokes the real bounded runner and real subprocess execution/publication, and supplies an explicitly labeled **synthetic CPU measurement**. Allocation/tooling are explicit fixture substitutions. Real runner measurement-identity validation and completion publication execute; this is a wrapper-format regression, not evidence of GPU execution. The completed wrapper now reaches the next actual runtime/version check.
++
++## I3: HF scaffolding and cache policy
++
++For both bare `transformers_modules` and nested modules, exact original probe import path+digest remains mandatory. Dynamic-cache relocation is explicitly unsupported: retain the original bound `HF_MODULES_CACHE` and every original declared import. Immutable model/tokenizer caches likewise retain their original absolute-path tree identities; no relocation rewrite or blanket remote-hash membership exception was introduced.
++
++HF-generated scaffolding is allowed only when the file is empty, named exactly `__init__.py`, under the bound module cache, and its relative path matches the imported package name exactly. Actual implementation Python still must match the pinned model/tokenizer snapshot source-hash closure as well as the genuine probe import identity. No placeholder files are added to immutable snapshots.
++
++A real local dynamic import using installed CPU Transformers **4.46.3** exercises generated empty package initializers, including the bare root. A separate pinned **4.57.6** loader-contract test runs when that version is installed; here it is explicitly skipped because it is unavailable. Neither the 4.46.3 test nor a skipped 4.57.6 test establishes actual SIF behavior.
++
++## Operational request change
++
++`runtime_preflight` now contains:
++
++- `receipt: {path: '/retained/probe/generation_cache_parity.json', sha256: '<independently supplied expected digest>'}`;
++- `sif: {path: '/actual/container.sif', sha256: '<existing fixed SIF digest>'}`;
++- `decoder_code_sha256: '<independently reviewed operator code pin>'`.
++
++The decoder pin hashes UTF-8 `json.dumps(mapping, sort_keys=True, separators=(',', ':')) + '\n'`, where `mapping` is exactly `{relative: sha256(ROOT / relative) for relative in DECODER_ONLY}`. Establish it from the reviewed checkout outside the executing request; computing a digest of unreviewed code is not review or approval. No public override accepts unpinned code.
++
++The caller now defaults to `cuda`, refuses CPU/non-CUDA requests, checks the actual device index and exercises a CUDA allocation before model/tokenizer loading. Tests explicitly monkeypatch this gate to CPU; there is no public CPU bypass.
++
++The existing SIF environment/path and operator-pinned receipt remain trusted operational evidence, not cryptographic execution attestation. Genuine pinned-loader, CUDA, tokenizer, grammar/cache/EST and 8192-total-token compatibility still require controller-authorized execution.
++
++## D1/D2 and publication limits
++
++D1 coverage/junction separation, actual rasterizer verification, COMPLETE-panel validation and all 350 transport rows are unchanged. D2 still provides closed-temp atomic no-replace visibility, not directory-fsync/power-loss durability. A pre-link serialization/flush/fsync/close/recheck failure cannot publish the final name. A **post-link cleanup failure can leave a complete final file**, potentially alongside a FAILED diagnostic; that is not a partial-file publication. The earlier broad report wording about all failures leaving no evaluation file should not be applied to post-link cleanup.
++
++## Verification
++
++Existing external environment only: Python 3.12.2 at `/home/wyim/miniconda3/envs/pdb/bin/python`, external dependency paths `/tmp/mvp-decoder-resumed-testdeps:/tmp/b6-trackb-testdeps`. No generated environment or dependency files committed.
++
++Focused final tests before the optional pinned-loader skip: **28 passed in 16.03 s** (`/tmp/mvp-runtime-fix1-focused.log`, full output and durations retained). Original 107-test suite: **107 passed in 409.07 s** (`/tmp/mvp-runtime-fix1-existing107.log`, full output and durations retained). Final combined run below includes all final source edits and the explicit pinned-loader skip:
++
++```sh
++OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
++ PYTHONPATH=src:revision/scripts/mvp:/tmp/mvp-decoder-resumed-testdeps:/tmp/b6-trackb-testdeps \
++ /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q -rs \
++ tests/test_mvp_decoder_runtime.py tests/test_mvp_decoder_integration.py tests/test_mvp_decode.py \
++ revision/scripts/tests/test_mvp_panel_inputs.py tests/test_mvp_score_producer.py \
++ tests/test_mvp_score_producer_review.py tests/test_mvp_score_producer_integration.py \
++ tests/test_mvp_tracks.py --durations=15
++```
++
++Full final output (`/tmp/mvp-runtime-fix1-final.log`, exit 0):
++
++```text
++.........................s.............................................. [ 52%]
++................................................................         [100%]
++============================= slowest 15 durations =============================
++142.09s call     tests/test_mvp_decode.py::test_runner_exact_350_no_overwrite_and_partial_failure
++76.53s call     tests/test_mvp_decoder_integration.py::test_full_publication_panel_decoder_counts
++13.87s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[internal_schema]
++11.15s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[wrong_request]
++10.25s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[symlink_escape]
++9.85s call     tests/test_mvp_tracks.py::test_real_bam_to_tracks_and_129024_cpu_smoke
++9.22s setup    tests/test_mvp_decoder_integration.py::test_full_publication_panel_decoder_counts
++8.63s setup    tests/test_mvp_decoder_integration.py::test_real_panel_high_junction_and_biological_zero
++8.09s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[wrong_authority]
++7.86s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[changed_jsonl]
++7.60s call     tests/test_mvp_decoder_integration.py::test_real_panel_high_junction_and_biological_zero
++7.09s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[coverage]
++6.18s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[missing_marker]
++6.15s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[wrong_sequence]
++3.20s setup    revision/scripts/tests/test_mvp_panel_inputs.py::test_no_retained_flank_fallback
++=========================== short test summary info ============================
++SKIPPED [1] tests/test_mvp_decoder_runtime.py:183: pinned 4.57.6 not installed; CPU 4.46.3 test is not SIF validation
++135 passed, 1 skipped in 404.94s (0:06:44)
++```
++
++New negatives cover relocated changed model/config/tokenizer/encoder-init, attempted decoder-audit override, unknown local project code, operator pin mismatch, arbitrary probe/handshake identities, mutation of declared-but-unloaded imports, mutation of the late-imported runner, every completed-wrapper rejection above, changed/nonempty/unbound/misnamed HF scaffolding, unsupported cache relocation, unpinned remote implementation and CPU-device rejection. Existing tests retain actual candidate/finalizer/loaders/panel/rasterizer/count-transport work with explicitly synthetic reference, remote model/tokenizer, GPU generation and GFFCompare substitutions. These limitations remain unchanged.
++
++Independent review, real pinned-SIF receipt/decode, real frozen inputs and three completed seeds, genuine GFFCompare, structural scoring, coverage/withholding policy and scientific approval are all still pending.
+diff --git a/revision/scripts/mvp/mvp_decode_panel.py b/revision/scripts/mvp/mvp_decode_panel.py
+index 35b3953..3fb4b24 100644
+--- a/revision/scripts/mvp/mvp_decode_panel.py
++++ b/revision/scripts/mvp/mvp_decode_panel.py
+@@ -93,17 +93,18 @@ def decode_panel(payload, out, command):
+         raise FileExistsError(out)
+     out.mkdir(parents=True, exist_ok=False)
+     try:
+         panel = w.load_panel(payload['panels'])
+         d.require(len(panel) == 50, 'exact 50 loci required')
+         producer.frozen_reference(payload['fasta'], payload['reference'])
+         runs = verify_runs(payload, producer)
+         from mvp_verify_panel_inputs import load_panel_inputs
+-        from mvp_decode_runtime import verify_runtime
++        from mvp_decode_runtime import verify_runtime, require_cuda_device
++        device = require_cuda_device(payload.get('device', 'cuda'))
+         inputs = [d.identity(payload[k]) for k in ('panels','fasta','reference')]
+         if '_request_identity' in payload:
+             inputs.append(d.checked_file(payload['_request_identity']))
+         inputs.extend(verify_runtime(payload['runtime_preflight'], payload['encoder_tokenizer']))
+         files = [Path(__file__).resolve(), Path(d.__file__).resolve(), Path(w.__file__).resolve(),
+                  Path(__file__).with_name('mvp_verify_panel_inputs.py'),
+                  Path(__file__).with_name('mvp_decode_runtime.py'),
+                  Path(__file__).with_name('mvp_prepare_panel_inputs.py'),
+@@ -119,17 +120,16 @@ def decode_panel(payload, out, command):
+         code_inputs = [d.identity(p) for p in files]
+         inputs.extend(code_inputs)
+         sequences = sequences_from_fasta(payload['fasta'], panel)
+         panel_root = Path(payload['panel_inputs']).resolve(strict=True)
+         tracks, panel_records = load_panel_inputs(panel_root, payload, panel, sequences)
+         inputs.extend(panel_records)
+         encoder, tokenizer, tokenizer_files = load_tokenizers(payload['encoder_tokenizer'])
+         inputs.extend(tokenizer_files)
+-        device = payload.get('device','cpu')
+         predictions, audits = [], []
+         for seed in (1,2,3,123):
+             if seed == 123:
+                 model, audit = d.load_baseline_model(runs[1], device)
+                 checkpoint = runs[1]['initialization']['model.safetensors']['sha256']
+                 write_json(out / 'baseline_initialization.json', audit)
+                 inputs.append(d.identity(out / 'baseline_initialization.json'))
+             else:
+diff --git a/revision/scripts/mvp/mvp_decode_runtime.py b/revision/scripts/mvp/mvp_decode_runtime.py
+index b238a38..c532c01 100644
+--- a/revision/scripts/mvp/mvp_decode_runtime.py
++++ b/revision/scripts/mvp/mvp_decode_runtime.py
+@@ -1,90 +1,181 @@
+ """Mandatory operator-pinned real generation preflight and live runtime closure.
+ 
+ A receipt is trusted operator input, not cryptographic proof of execution. CPU
+ fixtures cannot satisfy the real runtime checks. No unverified override exists.
+ """
+ import hashlib
++import json
+ import os
+ from pathlib import Path
+ import sys
+ 
+ from transgenic.evidence import mvp_decode as d
+ 
+ COMMIT = '0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446'
+ SIF = '1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6'
+ VERSIONS = dict(torch='2.14.0a0+4fdf77b940.nv26.08', cuda='13.4', transformers='4.57.6', accelerate='1.15.0')
+ ROOT = Path(__file__).resolve().parents[3]
++# Reviewed fixed-A d99b1f8 Git bytes, NOT receipt-selected executable hashes.
++PROBE_CODE = {
++    'real_probes.py': '2c75dc4b31752fe39d4fa4ad7550b53ac735df1aafac89e6d307e94810ba5f3c',
++    'run_bounded.py': '307f2ce9df0c7d4fb0c06b1ffe3149da77ae26c987c4b4061e8e63b4bb7ba867',
++    'make_launch_readiness.py': 'ee303a72a079b02ce1d1b3fe1d24a2cb32f51f214baea129bc19f504c484a9b3',
++}
++# Decoder orchestration/grammar/transport, not A's numerical model implementation.
++# Exact closed boundary: no directory exemptions; independently operator-pinned.
++DECODER_ONLY = (
++    'revision/scripts/mvp/mvp_decode_panel.py',
++    'revision/scripts/mvp/mvp_decode_runtime.py',
++    'revision/scripts/mvp/mvp_verify_panel_inputs.py',
++    'revision/scripts/mvp/mvp_prepare_panel_inputs.py',
++    'revision/scripts/mvp/mvp_produce_counts.py',
++    'src/transgenic/evidence/mvp_decode.py',
++    'src/transgenic/evidence/mvp_windows.py',
++    'src/transgenic/evidence/mvp_tracks.py',
++    'src/transgenic/model/constrained_decoding.py',
++    'src/transgenic/utils/gsf.py',
++    'src/transgenic/utils/gsf_contract.py',
++    'src/transgenic/utils/gsf_grammar.py',
++)
++
++
++def completed_measurement(spec):
++    record = d.checked_file(spec['receipt'])
++    path = Path(record['path'])
++    d.require(path.name == 'generation_cache_parity.json', 'completed bounded receipt required')
++    d.require(not path.with_suffix('.FAILED.json').exists() and
++              not path.with_suffix('.FAILED.json').is_symlink(), 'failed bounded receipt')
++    done = path.with_suffix('.DONE')
++    d.require(done.is_file() and done.read_bytes() == (record['sha256'] + '\n').encode(),
++              'completed bounded DONE digest required')
++    wrapper = d.read_json(path)
++    d.require(type(wrapper.get('schema_version')) is int and wrapper['schema_version'] == 1 and
++              wrapper.get('preflight') == 'p3_generation_parity' and
++              type(wrapper.get('exit_code')) is int and wrapper['exit_code'] == 0 and
++              wrapper.get('timed_out') is False and 'signal' in wrapper and
++              wrapper['signal'] is None and wrapper.get('pass') is True,
++              'successful bounded wrapper required')
++    measurement = wrapper.get('measurement')
++    binding = wrapper.get('bindings_sha256')
++    d.require(isinstance(binding, str) and len(binding) == 64 and
++              all(c in '0123456789abcdef' for c in binding) and
++              isinstance(measurement, dict) and measurement.get('bindings_sha256') == binding,
++              'wrapper measurement binding mismatch')
++    return measurement, [record, d.identity(done)]
++
++
++def project_closure(identity, spec):
++    probe = Path(identity['probe_path'])
++    d.require(probe.is_absolute() and probe.parts[-4:] ==
++              ('revision', 'scripts', 'mvp', 'real_probes.py'), 'unsupported probe checkout')
++    old_root = probe.parents[3]
++    for name, digest in PROBE_CODE.items():
++        # A snapshots imports BEFORE its final run_bounded import; do not invent
++        # that historical import. Its sibling bytes are checked independently.
++        if name != 'run_bounded.py' or str(probe.with_name(name)) in identity['imports']:
++            d.require(identity['imports'].get(str(probe.with_name(name))) == digest,
++                      'unreviewed probe/handshake implementation')
++    # Explicit relative-root relocation only. Original imports still rehashed.
++    audited = {relative: d.identity(ROOT / relative)['sha256'] for relative in DECODER_ONLY}
++    digest = hashlib.sha256((json.dumps(audited, sort_keys=True, separators=(',', ':')) + '\n').encode()).hexdigest()
++    d.require(spec.get('decoder_code_sha256') == digest, 'operator decoder code pin mismatch')
++    return old_root, audited
++
++
++def require_cuda_device(value):
++    import torch
++    device = torch.device(value)
++    d.require(device.type == 'cuda' and torch.cuda.is_available(), 'operational CUDA device required')
++    index = torch.cuda.current_device() if device.index is None else device.index
++    d.require(0 <= index < torch.cuda.device_count(), 'CUDA device index unavailable')
++    torch.empty(0, device=device)  # Exercise allocation, not just a device string.
++    return str(device)
+ 
+ 
+ def tree_identity(root):
+     # Same canonical tree contract as frozen real_probes.py at 3b62306.
+     import json
+     root = Path(root).absolute()
+     rows = {}
+     for path in sorted(root.rglob('*')):
+         if path.is_file():
+             rows[str(path.relative_to(root))] = dict(resolved=str(path.resolve(strict=True)), sha256=d.identity(path)['sha256'])
+         elif path.is_symlink():
+             raise ValueError('broken or directory asset symlink')
+     d.require(rows, 'empty asset root')
+     return hashlib.sha256((json.dumps(rows, sort_keys=True, separators=(',', ':'), allow_nan=False) + '\n').encode()).hexdigest()
+ 
+ 
+-def verify_loaded_modules(identity, remote_hashes):
++def verify_loaded_modules(identity, remote_hashes, *, project_root=None, decoder_code=None, module_cache=None):
+     """Actual Python/extension closure, not only the receipt's declared imports."""
+     records = []
+     for name, module in list(sys.modules.items()):
+         file = getattr(module, '__file__', None)
+         if not file:
+             continue
+         d.require(Path(file).is_file(), 'loaded module file missing: ' + name)
+         actual = d.identity(file)
+-        if name.startswith('transformers_modules.'):
+-            d.require(actual['sha256'] in remote_hashes and actual['sha256'] in identity['imports'].values(),
++        path = Path(actual['path'])
++        if name == 'transformers_modules' or name.startswith('transformers_modules.'):
++            # No module-cache relocation: exact genuine probe path+bytes required.
++            d.require(module_cache is not None and path.is_relative_to(module_cache) and
++                      identity['imports'].get(actual['path']) == actual['sha256'],
++                      'remote cache relocation/unbound import unsupported')
++            scaffold = (path.name == '__init__.py' and path.read_bytes() == b'' and
++                        path.relative_to(module_cache).parts == (*name.split('.'), '__init__.py'))
++            d.require(scaffold or actual['sha256'] in remote_hashes,
+                       'loaded remote-code asset mismatch')
+-        elif not Path(actual['path']).is_relative_to(ROOT):
++        elif path.is_relative_to(ROOT):
++            relative = str(path.relative_to(ROOT))
++            expected = identity['imports'].get(str(project_root / relative)) if project_root else None
++            # Probe-consumed code always wins, even within decoder boundary.
++            if expected is None and decoder_code is not None:
++                expected = decoder_code.get(relative)
++            d.require(expected == actual['sha256'], 'project implementation differs from probe/audit: ' + relative)
++        else:
+             d.require(identity['imports'].get(actual['path']) == actual['sha256'],
+                       'loaded module outside preflight closure: ' + name)
+         records.append(actual)
+     return records
+ 
+ 
+ def verify_runtime(spec, tokenizer_spec, *, model=None, tokenizer=None):
+     """Re-run before loading, after each model load and immediately before publish.
+ 
+-    spec: {receipt:{path,sha256}, sif:{path,sha256}}. Receipt uses A's
+-    generation_cache_parity/probe_identity schema. Its expected digest is supplied
++    spec: {receipt:{path,sha256}, sif:{path,sha256}, decoder_code_sha256}.
++    Receipt is A's completed bounded wrapper, not measurement.json. Its expected digest is supplied
+     independently by the operator, never inferred from the receipt itself.
+     """
+     import torch
+     import transformers
+     import accelerate
+     from huggingface_hub.constants import HF_HUB_CACHE
+-    receipt_identity = d.checked_file(spec['receipt'])
+-    receipt = d.read_json(receipt_identity['path'])
++    receipt, records = completed_measurement(spec)
+     d.require(receipt.get('mode') == 'generation_cache_parity' and receipt.get('device') == 'cuda'
+               and receipt.get('real_runtime') is True, 'genuine generation preflight required')
+     d.require(receipt.get('cached_uncached_equal') is True and receipt.get('evidence_off_equal') is True
+               and receipt.get('nonzero_projection') is True and receipt.get('reorder_indices_sha256'),
+               'generation preflight evidence missing')
+     actual = dict(torch=str(torch.__version__), cuda=torch.version.cuda,
+                   transformers=transformers.__version__, accelerate=accelerate.__version__)
+     d.require(actual == VERSIONS and receipt['runtime']['versions'] == VERSIONS, 'runtime version pin mismatch')
+     d.require(torch.cuda.is_available(), 'actual CUDA runtime required')
+     d.require(os.environ.get('HF_HUB_OFFLINE') == '1' and os.environ.get('TRANSFORMERS_OFFLINE') == '1', 'offline runtime required')
+     d.require(spec['sif']['sha256'] == SIF, 'SIF deployment pin mismatch')
+     sif = d.checked_file(spec['sif'])
+     container = os.environ.get('APPTAINER_CONTAINER') or os.environ.get('SINGULARITY_CONTAINER')
+     d.require(container and Path(container).resolve() == Path(sif['path']), 'active container path mismatch')
+     identity = receipt['probe_identity']
+     d.require(identity['schema_version'] == 1 and identity['imports'] and identity['asset_roots'], 'runtime closure missing')
+-    d.require(identity['probe_path'] in identity['imports'], 'probe executable not bound')
+-    records = [receipt_identity, sif]
++    project_root, decoder_code = project_closure(identity, spec)
++    records.append(sif)
++    records.extend(d.checked_file(dict(path=str(Path(identity['probe_path']).with_name(name)), sha256=digest))
++                   for name, digest in PROBE_CODE.items())
+     for path, digest in identity['imports'].items():
+         records.append(d.checked_file(dict(path=path, sha256=digest)))
+     roots = identity['asset_roots']
+     for root, digest in roots.items():
+         d.require(Path(root).is_absolute() and tree_identity(root) == digest, 'offline asset tree mismatch')
+     cache = Path(HF_HUB_CACHE).absolute()
+     d.require(str(cache) in roots and str((Path.cwd()/'HFmodels').absolute()) in roots, 'actual model/tokenizer caches unbound')
+     repo = cache / 'models--LongSafari--hyenadna-large-1m-seqlen-hf'
+@@ -93,18 +184,34 @@ def verify_runtime(spec, tokenizer_spec, *, model=None, tokenizer=None):
+     d.require((snapshot/'config.json').is_file(), 'immutable model config missing')
+     tokenroot = Path(tokenizer_spec['path']).resolve(strict=True)
+     tokenrepo = Path.cwd()/'HFmodels/models--LongSafari--hyenadna-large-1m-seqlen-hf'
+     d.require((tokenrepo/'refs/main').read_text().strip() == COMMIT, 'offline tokenizer revision mismatch')
+     d.require(tokenroot in {snapshot.resolve(), (tokenrepo/'snapshots'/COMMIT).resolve()}, 'tokenizer must be the pinned Hyena snapshot')
+     remote_hashes = {d.identity(p)['sha256'] for root in (snapshot, tokenroot)
+                      for p in root.rglob('*.py') if p.is_file()}
+     d.require(remote_hashes, 'pinned remote Python closure missing')
+-    records.extend(verify_loaded_modules(identity, remote_hashes))
++    from transformers.utils.hub import HF_MODULES_CACHE
++    module_cache = Path(HF_MODULES_CACHE).resolve(strict=True)
++    # Generated package root must itself have been consumed at this exact cache.
++    scaffold = module_cache / 'transformers_modules/__init__.py'
++    d.require(str(scaffold) in identity['imports'], 'module-cache relocation unsupported')
++    # Load the concrete project factories before construction, so a relocated
++    # current model/config/tokenizer cannot evade the pre-load comparison.
++    import importlib
++    for name in ('modeling_HyenaTransgenic', 'configuration_transgenic',
++                 'tokenization_transgenic', 'encoder_init'):
++        importlib.import_module('transgenic.model.' + name)
++    records.extend(verify_loaded_modules(identity, remote_hashes, project_root=project_root,
++                                        decoder_code=decoder_code, module_cache=module_cache))
+     if model is not None:
++        from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration
++        from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
++        d.require(type(model) is transgenicForConditionalGeneration and type(model.config) is HyenaTransgenicConfig,
++                  'actual project model/config classes required')
+         hyena = model.get_encoder().hyena
+         d.require(model.config.encoder_model == 'LongSafari/hyenadna-large-1m-seqlen-hf', 'unbound encoder model')
+         d.require(getattr(hyena.config, '_commit_hash', None) == COMMIT, 'loaded model config revision mismatch')
+         raw_config = d.read_json(snapshot/'config.json')
+         overrides = dict(max_seq_len=model.config.max_encoder_seqlen,
+                          d_model=model.config.encoder_d_model, n_layer=model.config.encoder_n_layer)
+         for key, value in dict(raw_config, **overrides).items():
+             if key not in {'auto_map', 'architectures', 'torch_dtype', 'transformers_version', '_name_or_path', '_commit_hash'}:
+diff --git a/tests/test_mvp_decoder_integration.py b/tests/test_mvp_decoder_integration.py
+index 598a155..ea5c294 100644
+--- a/tests/test_mvp_decoder_integration.py
++++ b/tests/test_mvp_decoder_integration.py
+@@ -180,17 +180,17 @@ def test_atomic_no_replace(tmp_path):
+     target = tmp_path/'evaluation.json'
+     runner.write_json(target,{'original':1})
+     with pytest.raises(FileExistsError): runner.write_json(target,{'replacement':2})
+     assert d.read_json(target) == {'original':1}
+ 
+ 
+ def test_cpu_cannot_claim_runtime_receipt(tmp_path):
+     record = dump(tmp_path/'receipt.json',dict(mode='generation_cache_parity',device='cuda',real_runtime=True,runtime={'versions':runtime.VERSIONS},cached_uncached_equal=True,evidence_off_equal=True,nonzero_projection=True,reorder_indices_sha256=['stand-in-not-a-real-receipt']))
+-    with pytest.raises(ValueError,match='version pin'):
++    with pytest.raises(ValueError,match='completed bounded receipt'):
+         runtime.verify_runtime({'receipt':d.identity(record)}, {})
+     with pytest.raises(KeyError): runtime.verify_runtime({}, {})
+     with pytest.raises(ValueError,match='SHA256'):
+         runtime.verify_runtime({'receipt':dict(d.identity(record),sha256='0'*64)}, {})
+ 
+ 
+ @pytest.mark.parametrize('mutation', ['unbound_dependency','changed_dependency','remote_not_asset','missing_file'])
+ def test_loaded_closure_negative_standins(tmp_path, monkeypatch, mutation):
+@@ -252,16 +252,17 @@ def test_full_publication_panel_decoder_counts(panel_publication, tmp_path, monk
+             md['initialization_audit']={'audit':audit,'verification':'recorded','audit_sha256':hashlib.sha256(f.finalize._canonical_json(audit)).hexdigest()}
+             md['sif_code_identity']['code']['sha256']=w.sha256_file(code)
+             final=tmp_path/f'final{seed}'
+             f.finalize._publish_final(f.LocalAccelerator(),model,aggregate_paired_records([record(1,1)],[1]),final,metadata=md,training_summary=f.summary('production'))
+             payload['runs'][str(seed)]={'final':str(final),'code_manifest':str(code)}
+         # GPU runtime and expensive generation are explicit CPU stand-ins, never
+         # a receipt generated by verify_runtime. All actual decoding gates remain.
+         monkeypatch.setattr(runtime,'verify_runtime',lambda *a,**k:[])
++        monkeypatch.setattr(runtime,'require_cuda_device',lambda value:'cpu')
+         payload.update(runtime_preflight={},encoder_tokenizer={})
+         class EncoderTokenizer:
+             sep_token_id=2; pad_token_id=4
+             def __call__(self, seq, **kwargs): return {'input_ids':torch.tensor([[1]*len(seq)+[2]])}
+         tokenizer=GFFTokenizer(vocab_version='v3')
+         monkeypatch.setattr(runner,'load_tokenizers',lambda spec:(EncoderTokenizer(),tokenizer,[]))
+         seen=[]
+         fixture_gsf = '2|CDS1|11|+|A>CDS1<gene>20|CDS1|32|-|A>CDS1'
+diff --git a/tests/test_mvp_decoder_runtime.py b/tests/test_mvp_decoder_runtime.py
+new file mode 100644
+index 0000000..48c5f7a
+--- /dev/null
++++ b/tests/test_mvp_decoder_runtime.py
+@@ -0,0 +1,228 @@
++"""CPU fixtures only: never historical CUDA receipts or SIF attestation."""
++import hashlib
++import importlib.util
++import json
++from pathlib import Path
++import subprocess
++import sys
++from types import SimpleNamespace
++
++import pytest
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'revision/scripts/mvp'))
++import mvp_decode_runtime as r
++
++
++def sha(path):
++    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
++
++
++def dump(path, value):
++    path.write_text(json.dumps(value))
++    return path
++
++
++@pytest.fixture
++def bounded(tmp_path, monkeypatch):
++    """Execute real d99b1f8 runner publication with openly synthetic measurement."""
++    modules = {}
++    authority = tmp_path / 'authority/revision/scripts/mvp'
++    authority.mkdir(parents=True)
++    for name in ('make_launch_readiness', 'real_probes', 'run_bounded'):
++        path = authority / (name + '.py')
++        path.write_bytes(subprocess.check_output(['git', 'show',
++            'd99b1f8:revision/scripts/mvp/' + path.name], cwd=r.ROOT))
++        assert sha(path) == r.PROBE_CODE[path.name]
++        spec = importlib.util.spec_from_file_location(name, path)
++        module = importlib.util.module_from_spec(spec)
++        monkeypatch.setitem(sys.modules, name, module)
++        spec.loader.exec_module(module)
++        modules[name] = module
++    runner = modules['run_bounded']
++    # Allocation/tooling are CPU fixture substitutions, not operational evidence.
++    monkeypatch.setattr(runner, 'require_allocation', lambda: 'CPU_FIXTURE_NO_ALLOCATION')
++    monkeypatch.setattr(runner, 'tooling_identity', lambda: {'fixture': True})
++    bindings = {'tooling': {'fixture': True}}
++    binding_sha = hashlib.sha256(runner._canonical_bytes(bindings)).hexdigest()
++    bindings_path = dump(tmp_path / 'bindings.json', dict(bindings=bindings, bindings_sha256=binding_sha))
++    assets = tmp_path / 'assets'; assets.mkdir(); (assets / 'fixture.txt').write_text('CPU FIXTURE')
++    measurement = dict(mode='generation_cache_parity', device='cuda', real_runtime=True,
++        fixture='SYNTHETIC_CPU_NOT_GPU_EVIDENCE', cached_uncached_equal=True, evidence_off_equal=True,
++        nonzero_projection=True, reorder_indices_sha256=['fixture'], runtime={'versions': r.VERSIONS},
++        probe_identity=dict(schema_version=1, probe_path=modules['real_probes'].__file__,
++            imports={m.__file__: sha(m.__file__) for n,m in modules.items() if n != 'run_bounded'},
++            asset_roots={str(assets): r.tree_identity(assets)}))
++    script = tmp_path / 'synthetic_measurement.py'
++    script.write_text('import json, os\nv = ' + repr(measurement) + '\n'
++        "v['bindings_sha256'] = os.environ['MVP_BINDINGS_SHA256']\n"
++        "open(os.environ['MVP_MEASUREMENT_OUTPUT'], 'w').write(json.dumps(v))\n")
++    command = dump(tmp_path / 'command.json', [sys.executable, str(script)])
++    out = tmp_path / 'publication'
++    assert runner.main(['--name', 'generation_cache_parity', '--bindings', str(bindings_path),
++        '--bindings-file-sha256', sha(bindings_path), '--command-file', str(command),
++        '--command-sha256', sha(command), '--output-dir', str(out), '--timeout-seconds', '20']) == 0
++    return out / 'generation_cache_parity.json'
++
++
++def spec_for(path):
++    return {'receipt': {'path': str(path), 'sha256': sha(path)}}
++
++
++def test_real_bounded_publication(bounded):
++    measurement, records = r.completed_measurement(spec_for(bounded))
++    assert measurement['fixture'] == 'SYNTHETIC_CPU_NOT_GPU_EVIDENCE'
++    assert len(records) == 2
++    # Official wrapper now gets through completion to the actual runtime gate.
++    with pytest.raises(ValueError, match='runtime version pin'):
++        r.verify_runtime(spec_for(bounded), {})
++
++
++@pytest.mark.parametrize('mutation', ['missing_done', 'bad_done', 'failed', 'raw', 'binding',
++    'exit_code', 'timed_out', 'signal', 'pass', 'schema_version', 'preflight', 'receipt_sha'])
++def test_completed_negatives(bounded, mutation):
++    spec = spec_for(bounded)
++    wrapper = json.loads(bounded.read_text())
++    if mutation == 'missing_done': bounded.with_suffix('.DONE').unlink()
++    elif mutation == 'bad_done': bounded.with_suffix('.DONE').write_text(sha(bounded))
++    elif mutation == 'failed': bounded.with_suffix('.FAILED.json').write_text('{}')
++    elif mutation == 'receipt_sha': spec['receipt']['sha256'] = '0' * 64
++    else:
++        if mutation == 'raw': wrapper = wrapper['measurement']
++        elif mutation == 'binding': wrapper['measurement']['bindings_sha256'] = '0' * 64
++        else: wrapper[mutation] = {'exit_code': 1, 'timed_out': True, 'signal': 15,
++            'pass': False, 'schema_version': 2, 'preflight': 'wrong'}[mutation]
++        dump(bounded, wrapper)
++        spec = spec_for(bounded)
++        bounded.with_suffix('.DONE').write_text(sha(bounded) + '\n')
++    with pytest.raises(ValueError): r.completed_measurement(spec)
++
++
++@pytest.mark.parametrize('filename', ['modeling_HyenaTransgenic.py', 'configuration_transgenic.py',
++                                     'tokenization_transgenic.py', 'encoder_init.py'])
++def test_relocated_project_not_root_exempt(tmp_path, monkeypatch, filename):
++    current = tmp_path / 'current'; old = tmp_path / 'probed'
++    relative = Path('src/transgenic/model') / filename
++    for root in (current, old):
++        (root / relative).parent.mkdir(parents=True)
++        (root / relative).write_text('original = True\n')
++    identity = {'imports': {str(old / relative): sha(old / relative)}}
++    monkeypatch.setattr(r, 'ROOT', current)
++    monkeypatch.setattr(r, 'sys', SimpleNamespace(modules={'model': SimpleNamespace(__file__=str(current / relative))}))
++    assert r.verify_loaded_modules(identity, set(), project_root=old)
++    (current / relative).write_text('changed = True\n')
++    with pytest.raises(ValueError, match='project implementation'):
++        r.verify_loaded_modules(identity, set(), project_root=old)
++    # A decoder audit cannot override an identity already consumed by A.
++    with pytest.raises(ValueError, match='project implementation'):
++        r.verify_loaded_modules(identity, set(), project_root=old, decoder_code={str(relative): sha(current / relative)})
++
++
++def test_probe_handshake_and_operator_code_pin(tmp_path):
++    probe = tmp_path / 'revision/scripts/mvp/real_probes.py'
++    identity = {'probe_path': str(probe), 'imports': {str(probe.with_name(n)): h for n,h in r.PROBE_CODE.items()}}
++    closure = {p: sha(r.ROOT / p) for p in r.DECODER_ONLY}
++    pin = hashlib.sha256((json.dumps(closure, sort_keys=True, separators=(',', ':')) + '\n').encode()).hexdigest()
++    assert r.project_closure(identity, {'decoder_code_sha256': pin})[0] == tmp_path
++    without_runner = dict(identity, imports={p:h for p,h in identity['imports'].items() if not p.endswith('/run_bounded.py')})
++    assert r.project_closure(without_runner, {'decoder_code_sha256': pin})[0] == tmp_path
++    with pytest.raises(ValueError, match='operator decoder code pin'):
++        r.project_closure(identity, {'decoder_code_sha256': '0' * 64})
++    for name in r.PROBE_CODE:
++        changed = dict(identity, imports=dict(identity['imports']))
++        changed['imports'][str(probe.with_name(name))] = '0' * 64
++        with pytest.raises(ValueError, match='unreviewed probe/handshake'):
++            r.project_closure(changed, {'decoder_code_sha256': pin})
++
++
++@pytest.mark.parametrize('mutation', ['valid', 'nonempty_init', 'unbound', 'relocation', 'implementation', 'wrong_name'])
++def test_hf_scaffolding(tmp_path, monkeypatch, mutation):
++    cache = tmp_path / 'modules'; root = cache / 'transformers_modules'; root.mkdir(parents=True)
++    path = root / '__init__.py'; path.write_bytes(b'')
++    name = 'transformers_modules'
++    identity = {'imports': {str(path): sha(path)}}
++    if mutation == 'nonempty_init': path.write_text('x=1'); identity['imports'][str(path)] = sha(path)
++    if mutation == 'unbound': identity['imports'] = {}
++    if mutation == 'relocation': cache = tmp_path / 'other'
++    if mutation == 'implementation':
++        path = root / 'impl.py'; path.write_text('x=1'); name += '.impl'; identity['imports'][str(path)] = sha(path)
++    if mutation == 'wrong_name': name += '.wrong'
++    monkeypatch.setattr(r, 'sys', SimpleNamespace(modules={name: SimpleNamespace(__file__=str(path))}))
++    if mutation == 'valid': assert r.verify_loaded_modules(identity, set(), module_cache=cache)
++    else:
++        with pytest.raises(ValueError): r.verify_loaded_modules(identity, set(), module_cache=cache)
++
++
++def test_installed_transformers_dynamic_import(tmp_path, monkeypatch):
++    import transformers
++    from transformers import dynamic_module_utils as dynamic
++    cache = tmp_path / 'hf_modules'
++    monkeypatch.setattr(dynamic, 'HF_MODULES_CACHE', str(cache))
++    # Restore process-global imports/sys.path after this real CPU loader exercise.
++    monkeypatch.setattr(sys, 'path', list(sys.path))
++    for name in list(sys.modules):
++        if name == 'transformers_modules' or name.startswith('transformers_modules.'):
++            monkeypatch.delitem(sys.modules, name)
++    source = tmp_path / 'fixture_model'; source.mkdir()
++    (source / 'modeling_fixture.py').write_text('class FixtureModel:\n    pass\n')
++    cls = dynamic.get_class_from_dynamic_module('modeling_fixture.FixtureModel', str(source), local_files_only=True)
++    modules = {n: m for n,m in sys.modules.items() if n == 'transformers_modules' or n.startswith('transformers_modules.')}
++    try:
++        assert cls.__module__ in modules
++        identity = {'imports': {str(Path(m.__file__).resolve()): sha(m.__file__) for m in modules.values()}}
++        monkeypatch.setattr(r, 'sys', SimpleNamespace(modules=modules))
++        assert r.verify_loaded_modules(identity, {sha(source / 'modeling_fixture.py')}, module_cache=cache)
++        assert (cache / 'transformers_modules/__init__.py').read_bytes() == b''
++        print('CPU dynamic import transformers=' + transformers.__version__ + '; not SIF evidence')
++    finally:
++        for name in modules: sys.modules.pop(name, None)
++
++
++def test_pinned_transformers_4576_loader_contract(tmp_path, monkeypatch):
++    import transformers
++    if transformers.__version__ != '4.57.6':
++        pytest.skip('pinned 4.57.6 not installed; CPU 4.46.3 test is not SIF validation')
++    test_installed_transformers_dynamic_import(tmp_path, monkeypatch)
++
++
++def test_cpu_device_refused():
++    with pytest.raises(ValueError, match='operational CUDA'): r.require_cuda_device('cpu')
++
++
++def test_unknown_project_file_not_decoder_audited(tmp_path, monkeypatch):
++    file = tmp_path / 'unknown.py'; file.write_text('x=1')
++    monkeypatch.setattr(r, 'ROOT', tmp_path)
++    monkeypatch.setattr(r, 'sys', SimpleNamespace(modules={'unknown': SimpleNamespace(__file__=str(file))}))
++    with pytest.raises(ValueError, match='project implementation'):
++        r.verify_loaded_modules({'imports': {}}, set(), project_root=tmp_path / 'old', decoder_code={})
++
++
++def test_all_declared_bytes_and_handshake_checked(bounded, monkeypatch, tmp_path):
++    import torch
++    import transformers
++    import accelerate
++    # Explicit CPU-only runtime-gate substitutions: never a genuine CUDA PASS.
++    versions = dict(torch=str(torch.__version__), cuda=torch.version.cuda,
++                    transformers=transformers.__version__, accelerate=accelerate.__version__)
++    monkeypatch.setattr(r, 'VERSIONS', versions)
++    monkeypatch.setattr(torch.cuda, 'is_available', lambda: True)
++    monkeypatch.setenv('HF_HUB_OFFLINE', '1'); monkeypatch.setenv('TRANSFORMERS_OFFLINE', '1')
++    sif = tmp_path / 'fixture.sif'; sif.write_text('NOT A REAL SIF')
++    monkeypatch.setattr(r, 'SIF', sha(sif)); monkeypatch.setenv('APPTAINER_CONTAINER', str(sif))
++    unused = tmp_path / 'declared_but_not_loaded.py'; unused.write_text('original = 1')
++    wrapper = json.loads(bounded.read_text())
++    measurement = wrapper['measurement']; measurement['runtime']['versions'] = versions
++    measurement['probe_identity']['imports'][str(unused)] = sha(unused)
++    dump(bounded, wrapper); bounded.with_suffix('.DONE').write_text(sha(bounded) + '\n')
++    closure = {p: sha(r.ROOT / p) for p in r.DECODER_ONLY}
++    pin = hashlib.sha256((json.dumps(closure, sort_keys=True, separators=(',', ':')) + '\n').encode()).hexdigest()
++    spec = dict(spec_for(bounded), sif={'path': str(sif), 'sha256': sha(sif)}, decoder_code_sha256=pin)
++    with pytest.raises(ValueError, match='actual model/tokenizer caches unbound'):
++        r.verify_runtime(spec, {})
++    unused.write_text('changed = 2')
++    with pytest.raises(ValueError, match='SHA256'):
++        r.verify_runtime(spec, {})
++    unused.write_text('original = 1')
++    runner = Path(measurement['probe_identity']['probe_path']).with_name('run_bounded.py')
++    runner.write_text('changed handshake')
++    with pytest.raises(ValueError, match='SHA256'):
++        r.verify_runtime(spec, {})

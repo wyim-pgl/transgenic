@@ -1,0 +1,22 @@
+test_clean_launch_environment_preserves_slurm_and_ignores_bash_env (test_amendments.Amendments) ... ok
+test_policy_rejects_hard_quota_and_wrong_budget (test_amendments.Amendments) ... ok
+test_publication_threshold_counts_own_files (test_amendments.Amendments) ... ok
+test_python39_refused_before_allocation (test_amendments.Amendments) ... ok
+test_run_guard_and_failure_after_publication_keep_driver_outputs (test_amendments.Amendments) ... ok
+test_runtime_inventory_and_cgroup_fail_closed (test_amendments.Amendments) ... ok
+test_signal_bridge_executes_real_wrapper_child_cleanup (test_amendments.Amendments) ... ok
+test_start_filesystem_metadata (test_amendments.Amendments) ... ok
+test_startup_limit_exact (test_amendments.Amendments) ... ok
+test_term_and_int_raise_and_restore (test_amendments.Amendments) ... ok
+test_v1_cgroup_requires_job_hierarchy_memory_and_swap (test_amendments.Amendments) ... ok
+test_closure_and_pins (test_fixture.FixtureTests) ... ok
+test_deterministic_inputs_and_fixed_oracle (test_fixture.FixtureTests) ... ok
+test_junction_cli_help_bootstrap (test_fixture.FixtureTests) ... ok
+test_real_frozen_cli_preflight_and_panel_seam (test_fixture.FixtureTests) ... ok
+test_stub_pipeline_and_real_postflight_NOT_real_tool_evidence (test_fixture.FixtureTests) ... ok
+test_wrong_junctions_rejected (test_fixture.FixtureTests) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 19.103s
+
+OK

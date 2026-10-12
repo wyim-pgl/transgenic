@@ -1,0 +1,10 @@
+{
+ "keep": 3,
+ "bases_in": 433,
+ "bases_out": 341,
+ "records_out": 3,
+ "drop": 1,
+ "trim": 0,
+ "split": 0,
+ "records_in": 4
+}

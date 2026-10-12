@@ -1,0 +1,17 @@
+wrapper.py top-level functions reached through wrapper.execute():
+  require                REACHED
+  identity               REACHED
+  pinned                 REACHED
+  check_source_closure   REACHED
+  fresh                  REACHED
+  save                   REACHED
+  stop_group             REACHED
+  child                  REACHED
+  check_boundary         REACHED
+  binding_identity       REACHED
+  enforce_output_limit   REACHED
+  cgroup_observation     REACHED
+  check_scratch          REACHED
+  slurm                  REACHED
+  execute                REACHED
+reached 15/15

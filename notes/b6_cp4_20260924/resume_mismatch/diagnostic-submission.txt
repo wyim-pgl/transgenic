@@ -1,0 +1,14 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+/work/nvme/bilv/wcyim/b6-resume-diagnostic-20260924.tar.gz: OK
+3207331          FAILED      1:0   00:06:04 
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1024              1499  leakage-controlled ...
+SBATCH_RC=0
+SUBMISSION_RESULT 3207863
+
+SUBMISSION_ERROR 

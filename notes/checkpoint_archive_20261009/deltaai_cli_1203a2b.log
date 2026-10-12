@@ -1,0 +1,72 @@
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+test_actual_file_pool_mismatch_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_age_and_total_bytes_limits (test_checkpoint_archive.ArchiveTests) ... ok
+test_b6_pending_grad_and_zero_pending_both_complete (test_checkpoint_archive.ArchiveTests) ... ok
+test_bad_metadata_and_incomplete_optimizer_are_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_checkpoint_symlink_and_destination_symlink_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_cleanup_preserves_best_and_live_state_and_is_idempotent (test_checkpoint_archive.ArchiveTests) ... ok
+test_copy_failure_keeps_source_and_restart_finishes (test_checkpoint_archive.ArchiveTests) ... ok
+test_corrupt_destination_prevents_cleanup_and_retry (test_checkpoint_archive.ArchiveTests) ... ok
+test_duplicate_numeric_epoch_alias_cannot_weaken_cleanup_protection (test_checkpoint_archive.ArchiveTests) ... ok
+test_empty_or_missing_rank_rng_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_existing_conflicting_receipt_never_overwritten (test_checkpoint_archive.ArchiveTests) ... ok
+test_incomplete_newer_epoch_cannot_weaken_tombstone_protection (test_checkpoint_archive.ArchiveTests) ... ok
+test_incomplete_newer_epoch_preserves_latest_two_completed (test_checkpoint_archive.ArchiveTests) ... ok
+test_interrupted_receipt_write_restarts_successfully (test_checkpoint_archive.ArchiveTests) ... ok
+test_latest_two_change_before_cleanup_keeps_source (test_checkpoint_archive.ArchiveTests) ... ok
+test_lock_excludes_separate_process (test_checkpoint_archive.ArchiveTests) ... ok
+test_locking_unsupported_preserves_source (test_checkpoint_archive.ArchiveTests) ... ok
+test_manifest_traversal_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_metadata_only_plan_never_hashes_weights (test_checkpoint_archive.ArchiveTests) ... ok
+test_missing_pending_grad_is_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_new_best_after_preparation_prevents_cleanup (test_checkpoint_archive.ArchiveTests) ... ok
+test_new_incomplete_epoch_cannot_weaken_cleanup_protection (test_checkpoint_archive.ArchiveTests) ... ok
+test_plan_protects_best_latest_two_and_ignores_non_epochs (test_checkpoint_archive.ArchiveTests) ... ok
+test_pool_and_quota_failures_preserve_source (test_checkpoint_archive.ArchiveTests) ... ok
+test_prepare_hashes_all_files_and_copy_is_idempotent (test_checkpoint_archive.ArchiveTests) ... ok
+test_previously_verified_archive_can_be_archived_again (test_checkpoint_archive.ArchiveTests) ... ok
+test_publish_failure_keeps_source_and_restart_finishes (test_checkpoint_archive.ArchiveTests) ... ok
+test_receipt_recovery_does_not_accept_unexpected_checkpoint_payload (test_checkpoint_archive.ArchiveTests) ... ok
+test_sigkill_after_publication_keeps_source_then_reuses_archive (test_checkpoint_archive.ArchiveTests) ... ok
+test_sigkill_before_receipt_write_recovers_empty_temp (test_checkpoint_archive.ArchiveTests) ... ok
+test_sigkill_during_receipt_write_recovers_truncated_temp (test_checkpoint_archive.ArchiveTests) ... ok
+test_sigkill_mid_cleanup_recovers (test_checkpoint_archive.ArchiveTests) ... ok
+test_sigkill_mid_copy_source_intact_restart (test_checkpoint_archive.ArchiveTests) ... ok
+test_source_changed_after_publication_cannot_be_removed (test_checkpoint_archive.ArchiveTests) ... ok
+test_source_mutation_prevents_transfer (test_checkpoint_archive.ArchiveTests) ... ok
+test_symlink_and_overlapping_roots_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_symlink_receipt_temp_is_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_unrecognized_receipt_temp_is_quarantined_without_trusting_it (test_checkpoint_archive.ArchiveTests) ... ok
+test_unverified_pool_or_wrong_project_refused (test_checkpoint_archive.ArchiveTests) ... ok
+test_verification_requires_successful_durability_barriers (test_checkpoint_archive.ArchiveTests) ... ok
+test_wrong_remote_acknowledgment_keeps_source (test_checkpoint_archive.ArchiveTests) ... ok
+test_apply_budget_and_plan_checkpoint_cap (test_checkpoint_archive_cli.CLITests) ... ok
+test_copy_remove_and_repeated_idempotent_watch (test_checkpoint_archive_cli.CLITests) ... ok
+test_default_plan_changes_no_source_or_destination (test_checkpoint_archive_cli.CLITests) ... ok
+test_explicit_receipt_backed_archive_forwarding (test_checkpoint_archive_cli.CLITests) ... ok
+test_low_space_and_unknown_fields_fail_closed (test_checkpoint_archive_cli.CLITests) ... ok
+test_metadata_only_plan_cannot_read_checkpoint_binaries (test_checkpoint_archive_cli.CLITests) ... ok
+test_missing_archive_receipt_cannot_forward_run_epoch (test_checkpoint_archive_cli.CLITests) ... ok
+test_missing_source_waits_without_creation (test_checkpoint_archive_cli.CLITests) ... ok
+test_pull_auth_corruption_interruption_and_mutation_leave_source (test_checkpoint_archive_cli.CLITests) ... ok
+test_pull_exact_bytes_and_source_cleanup (test_checkpoint_archive_cli.CLITests) ... ok
+test_pull_host_option_injection_is_rejected (test_checkpoint_archive_cli.CLITests) ... ok
+test_remote_killed_cleanup_is_discovered_and_resumed (test_checkpoint_archive_cli.CLITests) ... ok
+test_remove_requires_apply_and_strict_limits (test_checkpoint_archive_cli.CLITests) ... ok
+test_stale_ack_and_eof_before_ack_keep_source (test_checkpoint_archive_cli.CLITests) ... ok
+test_timeout_leaves_source (test_checkpoint_archive_cli.CLITests) ... ok
+test_worker_conflict_and_destination_corruption_leave_source (test_checkpoint_archive_cli.CLITests) ... ok
+test_pending_cleanup_discovery_and_restart (test_checkpoint_archive_cli.ReceivedTests) ... ok
+test_received_publish_rehashes_and_recovers_private_stage (test_checkpoint_archive_cli.ReceivedTests) ... ok
+
+----------------------------------------------------------------------
+Ran 59 tests in 6.065s
+
+OK

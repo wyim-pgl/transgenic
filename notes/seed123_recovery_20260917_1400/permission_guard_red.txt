@@ -1,0 +1,69 @@
+test_controller_rejects_ineffective_private_permissions (__main__.Deployment) ... 
+======================================================================
+FAIL: test_controller_rejects_ineffective_private_permissions (__main__.Deployment) (target='namespace', fault='mode')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_deployment.py", line 287, in test_controller_rejects_ineffective_private_permissions
+    helper.prepare(self.release, self.sha, pins['run_compute.py'],
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_controller_rejects_ineffective_private_permissions (__main__.Deployment) (target='namespace', fault='owner')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_deployment.py", line 287, in test_controller_rejects_ineffective_private_permissions
+    helper.prepare(self.release, self.sha, pins['run_compute.py'],
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_controller_rejects_ineffective_private_permissions (__main__.Deployment) (target='stdout', fault='mode')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_deployment.py", line 287, in test_controller_rejects_ineffective_private_permissions
+    helper.prepare(self.release, self.sha, pins['run_compute.py'],
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_controller_rejects_ineffective_private_permissions (__main__.Deployment) (target='stdout', fault='owner')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_deployment.py", line 287, in test_controller_rejects_ineffective_private_permissions
+    helper.prepare(self.release, self.sha, pins['run_compute.py'],
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_controller_rejects_ineffective_private_permissions (__main__.Deployment) (target='stderr', fault='mode')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_deployment.py", line 287, in test_controller_rejects_ineffective_private_permissions
+    helper.prepare(self.release, self.sha, pins['run_compute.py'],
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_controller_rejects_ineffective_private_permissions (__main__.Deployment) (target='stderr', fault='owner')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_deployment.py", line 287, in test_controller_rejects_ineffective_private_permissions
+    helper.prepare(self.release, self.sha, pins['run_compute.py'],
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_controller_rejects_ineffective_private_permissions (__main__.Deployment) (target='preparation.json', fault='mode')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_deployment.py", line 287, in test_controller_rejects_ineffective_private_permissions
+    helper.prepare(self.release, self.sha, pins['run_compute.py'],
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_controller_rejects_ineffective_private_permissions (__main__.Deployment) (target='preparation.json', fault='owner')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_deployment.py", line 287, in test_controller_rejects_ineffective_private_permissions
+    helper.prepare(self.release, self.sha, pins['run_compute.py'],
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.767s
+
+FAILED (failures=8)

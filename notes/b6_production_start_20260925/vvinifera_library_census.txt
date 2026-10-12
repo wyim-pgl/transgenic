@@ -1,0 +1,72 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+{
+  "screened_records": 450180,
+  "missing_metadata": 0,
+  "missing_library_records": 175,
+  "missing_library_accessions": 175,
+  "fraction": 0.0003887333955306766,
+  "examples": [
+    {
+      "read": "JZ984178.1",
+      "clone": "ACT219_H08_1",
+      "header": "Vitis vinifera clone ACT219_H08_1 sequence, mRNA sequence univec=keep:1-629/629"
+    },
+    {
+      "read": "JZ984177.1",
+      "clone": "ACT219_H06_1",
+      "header": "Vitis vinifera clone ACT219_H06_1 sequence, mRNA sequence univec=keep:1-428/428"
+    },
+    {
+      "read": "JZ984176.1",
+      "clone": "ACT219_H02_1",
+      "header": "Vitis vinifera clone ACT219_H02_1 sequence, mRNA sequence univec=keep:1-585/585"
+    },
+    {
+      "read": "JZ984175.1",
+      "clone": "ACT219_G12_1",
+      "header": "Vitis vinifera clone ACT219_G12_1 sequence, mRNA sequence univec=keep:1-569/569"
+    },
+    {
+      "read": "JZ984174.1",
+      "clone": "ACT219_G08_1",
+      "header": "Vitis vinifera clone ACT219_G08_1 sequence, mRNA sequence univec=keep:1-634/634"
+    },
+    {
+      "read": "JZ984173.1",
+      "clone": "ACT219_G04_1",
+      "header": "Vitis vinifera clone ACT219_G04_1 sequence, mRNA sequence univec=keep:1-641/641"
+    },
+    {
+      "read": "JZ984172.1",
+      "clone": "ACT219_G02_1",
+      "header": "Vitis vinifera clone ACT219_G02_1 sequence, mRNA sequence univec=keep:1-643/643"
+    },
+    {
+      "read": "JZ984171.1",
+      "clone": "ACT219_F11_1",
+      "header": "Vitis vinifera clone ACT219_F11_1 sequence, mRNA sequence univec=keep:1-609/609"
+    },
+    {
+      "read": "JZ984170.1",
+      "clone": "ACT219_F10_1",
+      "header": "Vitis vinifera clone ACT219_F10_1 sequence, mRNA sequence univec=keep:1-639/639"
+    },
+    {
+      "read": "JZ984169.1",
+      "clone": "ACT219_F08_1",
+      "header": "Vitis vinifera clone ACT219_F08_1 sequence, mRNA sequence univec=keep:1-640/640"
+    },
+    {
+      "read": "JZ984168.1",
+      "clone": "ACT219_F06_1",
+      "header": "Vitis vinifera clone ACT219_F06_1 sequence, mRNA sequence univec=keep:1-642/642"
+    },
+    {
+      "read": "JZ984167.1",
+      "clone": "ACT219_F04_1",
+      "header": "Vitis vinifera clone ACT219_F04_1 sequence, mRNA sequence univec=keep:1-615/615"
+    }
+  ]
+}

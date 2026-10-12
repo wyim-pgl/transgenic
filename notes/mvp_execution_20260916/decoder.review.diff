@@ -1,0 +1,803 @@
+diff --git a/notes/MVP_PANEL_DECODER_REPORT.md b/notes/MVP_PANEL_DECODER_REPORT.md
+new file mode 100644
+index 0000000..1a9e115
+--- /dev/null
++++ b/notes/MVP_PANEL_DECODER_REPORT.md
+@@ -0,0 +1,103 @@
++# MVP panel decoder implementation — 2026-09-16
++
++Branch `mvp-panel-decoder-20260916`, based on `8803afb`. Only new decoder, test, and report files. No training/model/producer edits, jobs, SSH, merges, or pushes.
++
++## Status
++
++**CPU-tested implementation; production execution remains blocked on integration.**
++
++The controller reported incomplete verification in the base Track-B producer. The runner explicitly rejects that exact old producer SHA256 (`a3b731c217e2da92eb044e1c7815a310fbd78b18a707487b12eb20a897576f1a`). Integrate the producer owner's independently reviewed fixes before execution. A different hash is not itself approval. This branch does not reproduce or modify those fixes.
++
++The separate panel-input worker's final contract was unavailable. The implemented loader is explicitly `mvp_panel_batch_internal_v1`, a byte/shape/identity normalization interface, not an approved scientific input receipt. Controller adaptation to the final contract is still required. No ONT/HiFi inputs or training retained-population changes are introduced.
++
++## APIs and consumption interface
++
++- `src/transgenic/evidence/mvp_decode.py`: `load_panel_batch(payload, panel, sequences, pins)`, `encode_window`, `generate_one`, `validate_decode`, `gsf_gff`, `validate_gff`, `load_final_model`, `load_baseline_model`.
++- `revision/scripts/mvp/mvp_decode_panel.py`: `decode_panel(payload, new_output_directory, command)` and CLI:
++
++  ```sh
++  python revision/scripts/mvp/mvp_decode_panel.py --input decode-input.json --out NEW_DIRECTORY
++  ```
++
++`decode-input.json` contains the existing Track-B transport fields `panels`, `fasta`, `reference`, `candidate`, `runs`, plus:
++
++```json
++{
++  "panel_inputs": "/absolute/internal-batch.json",
++  "panel_input_pins": {
++    "evidence_db": {"path": "/absolute/c0lite.db", "sha256": "...", "size": 1},
++    "panels": {"path": "/absolute/panels.tsv", "sha256": "...", "size": 1},
++    "fasta": {"path": "/absolute/reference.fa", "sha256": "...", "size": 1},
++    "rasterizer_code": {"path": "/absolute/mvp_tracks.py", "sha256": "...", "size": 1}
++  },
++  "encoder_tokenizer": {
++    "path": "/absolute/pinned-local-tokenizer-snapshot",
++    "files": {"tokenizer_config.json": "...", "ALL_OTHER_SNAPSHOT_FILES": "..."}
++  },
++  "device": "cuda:0"
++}
++```
++
++Sizes above are schematic. All snapshot files, including remote-code Python files, must be enumerated with actual hashes. Loader is offline/local-only; the controller must supply the actual pinned Hyena nucleotide tokenizer, not a substitute. Tokenizer validation requires exactly 30,720 base tokens plus trailing SEP, strips only that SEP, and constructs the dataset-equivalent pad mask. Sequences come from the anchored reference FASTA through `mvp_windows`; gene strand never triggers RC.
++
++Internal batch shape:
++
++```json
++{
++  "schema": "mvp_panel_batch_internal_v1",
++  "provenance": {
++    "evidence_db": "same identity object as independently supplied pin",
++    "panels": "same identity object",
++    "fasta": "same identity object",
++    "rasterizer_code": "same identity object",
++    "population": "excluded_heldout",
++    "keep_fraction": 1,
++    "is_rc": false
++  },
++  "rows": [{
++    "gene_id": "EXACT_PANEL_ID",
++    "window": ["Chr1", 10000, 40720],
++    "sequence_sha256": "sha256 of exact genomic-forward ASCII sequence",
++    "tracks": {"path": "/absolute/locus.npy", "sha256": "...", "size": 1},
++    "dtype": "float16",
++    "shape": [30720, 8]
++  }]
++}
++```
++
++Exactly 50 distinct panel rows. Finite nonnegative capped tracks, N-base zeros, and availability-one on unmasked bases are checked. These checks cannot prove excluded-heldout provenance from an array alone; that responsibility remains with the independently reviewed worker. Caller hashes are bindings, not approval.
++
++## Model and output behavior
++
++- Final runs use existing five-payload manifest, `TRAINING_DONE`, and metadata verification via Track B. Independently parse final configuration, compare audited target semantic values, require K=8/v3/8,192 positions, and use **alias-aware `safetensors.torch.load_model(strict=True)`**. No final load uses `load_weights_only`.
++- Construction temporarily disables external pretrained encoder *weight* initialization, then restores the recorded config flag. Strict final weights supply every learned parameter. The external Hyena config/code must already be available in the pinned offline runtime cache.
++- Baseline initialization uses the concrete source checkpoint path from the verified initialization inventory and the approved `load_weights_only` 0→8 loader; projection is asserted zero. No mutable `best` lookup.
++- Paired runs reuse the same loaded final checkpoint. Fractions are all-eight-channel zeros versus the separate on artifact. Seed 123 has only fraction 0.
++- Explicit `<s>` decoder prefix/start ID 0, grammar v2+v3, beam 2, deterministic sampling disabled, cache enabled, **`max_length=8192` total**, not a new-token budget. A fresh generation config avoids inherited generation overrides. Runtime encoder hook rejects lost evidence or repeated encoding.
++- Raw IDs/tokens/planning markers are written before string conversion and grammar validation; missing EOS/truncation/malformed output fails the run. Canonical GSF is checked against `gsf_contract`; canonicalization is compared, never used to silently merge isoforms.
++- Split `<gene>` blocks before legacy conversion. Deterministic gene/transcript/feature IDs replace UUID roots without collapsing inventory; minus strands remain genomic forward. Relative half-open coordinates become genomic 1-based inclusive coordinates. Strict ID/Parent syntax, uniqueness, hierarchy and containment checks apply.
++- A successfully decoded `<empty>` yields exactly `##gff-version 3\n`. Zero-byte/whitespace GFF is invalid. No malformed/truncated sequence is turned into an empty prediction.
++- Fresh directory only, distinct output file per row, exact 350 inventory: 50×(1/2/3×off/on + 123×off). `evaluation.json` is the last publication, using the existing producer transport with checkpoint/file hashes. `decode_audit.json` binds input/source bytes and raw outputs. Input identities are rechecked after decoding. Failure leaves `FAILED.json` and partial diagnostics, not a final transport/approval/count receipt.
++
++## Verification
++
++Command in this worktree:
++
++```sh
++OMP_NUM_THREADS=1 PYTHONPATH=src .cpu/bin/pytest -q \
++  tests/test_mvp_decode.py tests/test_mvp_model.py tests/test_weights_init.py
++```
++
++Result: **35 passed, 24 subtests passed** (12 new decoder tests). Python 3.10.12, torch **2.6.0+cpu**, Transformers **4.46.3**, NumPy **2.2.6**. CLI `--help`, Python compilation, and `git diff --check` also passed. Graft refreshed locally, not committed.
++
++Coverage includes real alias-safe strict checkpoint loading with learned nonzero projection; missing projection rejection; config/audit mismatch; actual approved source-weight loader baseline reconstruction; tiny real-model beam-2 cache/no-cache parity and evidence forwarding; malformed evidence; negative dropped-evidence hook; grammar masks under beam reorder; raw transcript-plan mismatch; EOS/truncation; multi-gene/minus coordinates and deterministic hierarchy; duplicate isoform rejection; invalid/whitespace IDs; N-mask/artifact checks; mocked full 350-output orchestration, overwrite rejection and partial-failure publication behavior.
++
++The 350-output orchestration fixture intentionally mocks reference/final/input gates and generation. Tiny model tests substitute only external Hyena factories. Neither establishes production reference approval, real evidence provenance, GPU execution, or full-model sequence quality.
++
++## Remaining integration/runtime gates
++
++1. Integrate reviewed producer fixes and finalized panel-input contract; rerun real finalizer/candidate/source inventory checks. The old verifier is deliberately unusable here.
++2. Supply and validate the actual pinned offline encoder tokenizer and external Hyena config/code cache; byte identities must be approved by the controller.
++3. Run the separate worker-A **Transformers 4.57.6 / Accelerate 1.15.0** probes and actual production GPU model/checkpoint decode smoke. This branch has not run those versions or any GPU job. Confirm explicit grammar start prefix and 8,192-total-token stopping on the production checkpoint.
++4. Run a real panel decode and Track-B GFFCompare 0.12.6 smoke. No real 350 prediction corpus, counts, or scientific receipt was produced here.
++5. HiFi/ONT scoring, withholding policy, and scientific decisions remain outside this decoder.
+diff --git a/revision/scripts/mvp/mvp_decode_panel.py b/revision/scripts/mvp/mvp_decode_panel.py
+new file mode 100644
+index 0000000..e40b2d0
+--- /dev/null
++++ b/revision/scripts/mvp/mvp_decode_panel.py
+@@ -0,0 +1,173 @@
++#!/usr/bin/env python3
++"""Decode exact 350-row MVP transport. Internal panel-input adapter; no approval receipt.
++
++--input contains producer contract fields plus panel_inputs, panel_input_pins,
++and encoder_tokenizer:{path,files:{relative_path:sha256}}. Snapshot must be local.
++Requires the independently reviewed producer verifier at integration time.
++"""
++from __future__ import annotations
++import argparse
++import json
++import os
++from pathlib import Path
++import sys
++
++ROOT = Path(__file__).resolve().parents[3]
++sys.path.insert(0, str(ROOT / 'src'))
++sys.path.insert(0, str(Path(__file__).resolve().parent))
++# No accidental network fetch from model's external Hyena config/tokenizer loader.
++os.environ['HF_HUB_OFFLINE'] = '1'
++os.environ['TRANSFORMERS_OFFLINE'] = '1'
++
++from transgenic.evidence import mvp_decode as d, mvp_windows as w
++
++
++def write_json(path, value):
++    with Path(path).open('x') as handle:
++        json.dump(value, handle, sort_keys=True, indent=2)
++        handle.write('\n')
++
++
++def verify_runs(payload, producer):
++    # Controller reported incomplete checks in this exact base implementation.
++    # A different hash is NOT approval; integration still requires owner review.
++    d.require(d.identity(producer.__file__)['sha256'] !=
++              'a3b731c217e2da92eb044e1c7815a310fbd78b18a707487b12eb20a897576f1a',
++              'known-incomplete producer verifier: integrate reviewed owner fixes first')
++    from transgenic.training.mvp_cli import validate_candidate_records
++    from transgenic.training.mvp_cli_runtime import verify_candidate_artifacts
++    c = payload['candidate']
++    candidate = validate_candidate_records(c['acceptance'], c['acceptance_sha256'], c['inventory'], c['receipts'])
++    artifacts = verify_candidate_artifacts(candidate, c['corpus'], c['evidence'], payload['panels'])
++    d.require(set(payload['runs']) == {'1','2','3'}, 'exact seeds required')
++    runs = {int(s): producer.verify_final(r['final'], int(s), artifacts['valid_rns'], artifacts['sha256'], r['code_manifest']) for s,r in payload['runs'].items()}
++    d.require(len({r['code_manifest']['sha256'] for r in runs.values()}) == 1, 'cross-seed code mismatch')
++    sources = {tuple(sorted((name, value['sha256']) for name,value in r['initialization'].items())) for r in runs.values()}
++    d.require(len(sources) == 1, 'cross-seed initialization mismatch')
++    return runs
++
++
++def sequences_from_fasta(path, panel):
++    from Bio import SeqIO
++    result = {}
++    for record in SeqIO.parse(str(path), 'fasta'):
++        for locus in panel:
++            if record.id == locus.chromosome:
++                d.require(locus.gene_id not in result, 'duplicate FASTA chromosome')
++                start,end = w.evaluation_window(locus, len(record))
++                result[locus.gene_id] = str(record.seq[start:end])
++    d.require(set(result) == {l.gene_id for l in panel}, 'missing FASTA chromosome')
++    return result
++
++
++def load_tokenizers(spec):
++    from transformers import AutoTokenizer
++    from transgenic.model.tokenization_transgenic import GFFTokenizer
++    root = Path(spec['path']).resolve(strict=True)
++    d.require(root.is_dir() and spec['files'], 'pinned local encoder tokenizer required')
++    actual = {str(p.relative_to(root)) for p in root.rglob('*') if p.is_file()}
++    d.require(actual == set(spec['files']), 'tokenizer snapshot inventory mismatch')
++    identities = []
++    for name, digest in spec['files'].items():
++        path = root / name
++        d.require(path.resolve().is_relative_to(root), 'tokenizer snapshot path escape')
++        identities.append(d.checked_file({'path': str(path), 'sha256': digest}))
++    encoder = AutoTokenizer.from_pretrained(str(root), local_files_only=True, trust_remote_code=True)
++    return encoder, GFFTokenizer(vocab_version='v3'), identities
++
++
++def decode_panel(payload, out, command):
++    import torch
++    import mvp_produce_counts as producer
++    out = Path(out).resolve()
++    out.mkdir(parents=True, exist_ok=False)
++    try:
++        panel = w.load_panel(payload['panels'])
++        d.require(len(panel) == 50, 'exact 50 loci required')
++        producer.frozen_reference(payload['fasta'], payload['reference'])
++        runs = verify_runs(payload, producer)
++        inputs = [d.identity(payload[k]) for k in ('panels','fasta','reference','panel_inputs')]
++        files = [Path(__file__).resolve(), Path(d.__file__).resolve(), Path(w.__file__).resolve(),
++                 ROOT/'src/transgenic/evidence/mvp_tracks.py',
++                 ROOT/'src/transgenic/model/tokenization_transgenic.py',
++                 ROOT/'src/transgenic/model/constrained_decoding.py',
++                 ROOT/'src/transgenic/model/modeling_HyenaTransgenic.py',
++                 ROOT/'src/transgenic/model/configuration_transgenic.py',
++                 ROOT/'src/transgenic/training/weights_init.py', ROOT/'src/transgenic/training/b5_runtime.py',
++                 ROOT/'src/transgenic/utils/gsf.py', ROOT/'src/transgenic/utils/gsf_contract.py',
++                 ROOT/'src/transgenic/utils/gsf_grammar.py']
++        code_inputs = [d.identity(p) for p in files]
++        inputs.extend(code_inputs)
++        sequences = sequences_from_fasta(payload['fasta'], panel)
++        pins = payload['panel_input_pins']
++        d.require(set(pins) == {'evidence_db','panels','fasta','rasterizer_code'}, 'exact internal provenance pins required')
++        for key,path in (('evidence_db',payload['candidate']['evidence']),('panels',payload['panels']),('fasta',payload['fasta'])):
++            d.require(d.checked_file(pins[key]) == d.identity(path), 'worker input identity mismatch')
++        inputs.extend(d.checked_file(record) for record in pins.values())
++        rasterizer = ROOT / 'src/transgenic/evidence/mvp_tracks.py'
++        d.require(d.checked_file(pins['rasterizer_code'])['sha256'] == d.identity(rasterizer)['sha256'], 'rasterizer code mismatch')
++        batch = producer.read_json(payload['panel_inputs'])
++        tracks = d.load_panel_batch(batch, panel, sequences, pins)
++        inputs.extend(d.checked_file(r['tracks']) for r in batch['rows'])
++        encoder, tokenizer, tokenizer_files = load_tokenizers(payload['encoder_tokenizer'])
++        inputs.extend(tokenizer_files)
++        device = payload.get('device','cpu')
++        predictions, audits = [], []
++        for seed in (1,2,3,123):
++            if seed == 123:
++                model, audit = d.load_baseline_model(runs[1], device)
++                checkpoint = runs[1]['initialization']['model.safetensors']['sha256']
++                write_json(out / 'baseline_initialization.json', audit)
++            else:
++                model = d.load_final_model(runs[seed], device)
++                checkpoint = runs[seed]['files']['model.safetensors']['sha256']
++            for index,locus in enumerate(panel):
++                ids,mask = d.encode_window(sequences[locus.gene_id], encoder)
++                ids,mask = ids.to(device),mask.to(device)
++                on = tracks[locus.gene_id].to(device)
++                for fraction in ((0,) if seed == 123 else (0,1)):
++                    stem = f's{seed}.f{fraction}.p{index:02d}'
++                    # Persist even malformed/truncated output before tokenizer cleanup.
++                    raw = d.generate_one(model, tokenizer, ids, mask, on if fraction else torch.zeros_like(on),
++                        raw_sink=lambda value: write_json(out / (stem+'.raw.json'), value))
++                    start,end = w.evaluation_window(locus)
++                    text = d.gsf_gff(raw['gsf'], locus.chromosome, start, stem)
++                    path = out / (stem+'.gff3')
++                    with path.open('x') as handle:
++                        handle.write(text)
++                    predictions.append(dict(seed=seed, fraction=fraction, gene_id=locus.gene_id,
++                        window=[locus.chromosome,start,end], checkpoint_sha256=checkpoint, **d.identity(path)))
++                    audits.append(d.identity(out / (stem+'.raw.json')))
++            del model
++        checkpoints = {s:r['files']['model.safetensors']['sha256'] for s,r in runs.items()}
++        checkpoints[123] = runs[1]['initialization']['model.safetensors']['sha256']
++        producer.prediction_inventory(predictions, panel, checkpoints)
++        for record in inputs:
++            d.checked_file(record)
++        # Recheck producer publication inputs after the long decode, not only at entry.
++        d.require(verify_runs(payload, producer) == runs, 'run inputs mutated during decoding')
++        transport = {k:payload[k] for k in ('panels','fasta','reference','candidate','runs')}
++        transport.update(decoder={'files':{r['path']:r['sha256'] for r in code_inputs}, 'commands':[command]}, predictions=predictions)
++        write_json(out/'decode_audit.json', dict(status='DECODE_COMPLETE_NOT_APPROVAL', label='exploratory / MVP', inputs=inputs,
++            raw_outputs=audits, generation=dict(num_beams=2, do_sample=False, use_cache=True, max_length=8192),
++            panel_input_contract='INTERNAL_PENDING_CONTROLLER_INTEGRATION'))
++        # Last file only: never publish transport on a partial/failed decode.
++        write_json(out/'evaluation.json', transport)
++        return transport
++    except Exception as error:
++        write_json(out/'FAILED.json', {'error':str(error), 'status':'PARTIAL_NOT_A_RECEIPT'})
++        raise
++
++
++def main(argv=None):
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--input', type=Path, required=True)
++    parser.add_argument('--out', type=Path, required=True)
++    args = parser.parse_args(argv)
++    import mvp_produce_counts as producer
++    decode_panel(producer.read_json(args.input), args.out, [sys.executable, str(Path(__file__).resolve()), *(sys.argv[1:] if argv is None else argv)])
++    return 0
++
++
++if __name__ == '__main__':
++    raise SystemExit(main())
+diff --git a/src/transgenic/evidence/mvp_decode.py b/src/transgenic/evidence/mvp_decode.py
+new file mode 100644
+index 0000000..38bd634
+--- /dev/null
++++ b/src/transgenic/evidence/mvp_decode.py
+@@ -0,0 +1,242 @@
++"""Fail-closed MVP decode boundaries. Panel-input schema is INTERNAL, not approval."""
++from __future__ import annotations
++
++import hashlib
++import json
++from pathlib import Path
++import re
++
++import numpy as np
++import torch
++
++from . import mvp_windows as w
++
++LENGTH = 30720
++MAX_LENGTH = 8192
++
++
++def require(ok, message):
++    if not ok:
++        raise ValueError(message)
++
++
++def read_json(path):
++    def unique(items):
++        result = {}
++        for key, value in items:
++            require(key not in result, f'duplicate JSON key: {key}')
++            result[key] = value
++        return result
++    return json.loads(Path(path).read_text(), object_pairs_hook=unique)
++
++
++def identity(path):
++    path = Path(path).resolve(strict=True)
++    return dict(path=str(path), sha256=w.sha256_file(path), size=path.stat().st_size)
++
++
++def checked_file(record):
++    actual = identity(record['path'])
++    require(actual['sha256'] == record['sha256'], 'input SHA256 mismatch')
++    if 'size' in record:
++        require(actual['size'] == record['size'], 'input size mismatch')
++    return actual
++
++
++def load_panel_batch(payload, panel, sequences, pins):
++    """Normalize internal worker output; caller supplies independently checked pins.
++
++    payload: {schema, provenance, rows}; rows: gene_id, window,
++    sequence_sha256, tracks:{path,sha256,size}, dtype, shape. No ONT/HiFi.
++    pins: exact identities for evidence_db, panels, fasta, rasterizer_code;
++    provenance also carries population=excluded_heldout, keep_fraction=1, is_rc=False.
++    This is byte/shape validation, NOT a scientific approval receipt.
++    """
++    require(payload['schema'] == 'mvp_panel_batch_internal_v1', 'unknown internal schema')
++    expected = dict(pins, population='excluded_heldout', keep_fraction=1, is_rc=False)
++    require(payload['provenance'] == expected, 'panel evidence provenance mismatch')
++    require(type(payload['provenance']['keep_fraction']) is int and payload['provenance']['is_rc'] is False, 'invalid fraction/orientation types')
++    for record in pins.values():
++        checked_file(record)
++    rows = payload['rows']
++    require(len(rows) == len(panel) == 50, 'exact 50 panel inputs required')
++    by_id = {r['gene_id']: r for r in rows}
++    require(len(by_id) == 50 and set(by_id) == {p.gene_id for p in panel}, 'panel input inventory mismatch')
++    result = {}
++    for locus in panel:
++        row = by_id[locus.gene_id]
++        start, end = w.evaluation_window(locus)
++        seq = sequences[locus.gene_id]
++        require(row['window'] == [locus.chromosome, start, end] and all(type(v) is int for v in row['window'][1:]), 'input window mismatch')
++        require(len(seq) == LENGTH and row['sequence_sha256'] == hashlib.sha256(seq.encode('ascii')).hexdigest(), 'sequence mismatch')
++        require(row['dtype'] == 'float16' and row['shape'] == [LENGTH, 8], 'track metadata mismatch')
++        checked_file(row['tracks'])
++        tracks = np.load(row['tracks']['path'], allow_pickle=False)
++        require(tracks.dtype == np.float16 and tracks.shape == (LENGTH, 8), 'track array mismatch')
++        require(np.isfinite(tracks).all() and (tracks >= 0).all(), 'invalid track values')
++        masked = np.frombuffer(seq.upper().encode('ascii'), dtype='S1') == b'N'
++        require(not tracks[masked].any(), 'N bases must have zero evidence')
++        require((tracks[~masked, 7] == 1).all(), 'on availability must be one')
++        require((tracks[:, :7] <= np.float16(np.log1p(64))).all(), 'track count cap exceeded')
++        result[locus.gene_id] = torch.from_numpy(tracks.copy()).unsqueeze(0)
++    return result
++
++
++def encode_window(sequence, tokenizer):
++    require(len(sequence) == LENGTH, 'evaluation sequence must be 30720 genomic-forward bases')
++    ids = tokenizer(sequence, return_tensors='pt', truncation=False)['input_ids']
++    require(ids.shape == (1, LENGTH + 1), 'encoder must yield one base per token plus SEP')
++    require(tokenizer.sep_token_id is not None and ids[0,-1].item() == tokenizer.sep_token_id, 'missing trailing SEP')
++    ids = ids[:, :-1]
++    return ids, ids != tokenizer.pad_token_id
++
++
++def validate_decode(ids, tokenizer):
++    from transgenic.utils import gsf_contract as gc, gsf_grammar
++    ids = list(ids)
++    require(3 <= len(ids) <= MAX_LENGTH and all(type(i) is int for i in ids), 'invalid or truncated raw IDs')
++    vocab = tokenizer.get_vocab()
++    inverse = {v:k for k,v in vocab.items()}
++    require(all(i in inverse for i in ids), 'unknown token ID')
++    tokens = [inverse[i] for i in ids]
++    require(tokens[0] == '<s>' and tokens[-1] == '</s>' and '</s>' not in tokens[1:-1], 'missing/extra EOS or invalid start')
++    for i in range(1,len(tokens)):
++        require(tokens[i] in gsf_grammar.allowed_next(tokens[:i], LENGTH, v2=True, v3=True), f'grammar violation at token {i}')
++    gsf = tokenizer.convert_tokens_to_string(tokens[1:-1])
++    gc.check_caps_v3(gsf, window_len=LENGTH)
++    # Compare, never replace: canonicalization merges duplicate isoforms.
++    require(gc.canonicalize_v3(gsf) == gsf, 'noncanonical GSF (including duplicate isoforms)')
++    return dict(raw_token_ids=ids, raw_tokens=tokens, grammar_plan=[t for t in tokens if re.fullmatch(r'<tx\d+>', t)], gsf=gsf)
++
++
++def validate_gff(text):
++    require(text.startswith('##gff-version 3\n'), 'completed GFF requires exact header')
++    ids, parents = {}, []
++    for line in text.splitlines()[1:]:
++        require(bool(line) and not line.startswith('#'), 'unexpected empty/comment GFF row')
++        cols = line.split('\t')
++        require(len(cols) == 9, 'invalid GFF columns')
++        attrs = {}
++        for item in cols[8].split(';'):
++            require('=' in item, 'invalid GFF attribute')
++            key, value = item.split('=', 1)
++            require(key not in attrs and re.fullmatch(r'[A-Za-z0-9_.:-]+', value), 'noncanonical GFF ID/attribute')
++            attrs[key] = value
++        require('ID' in attrs and attrs['ID'] not in ids, 'missing/duplicate GFF ID')
++        require(cols[2] in ('gene','mRNA','exon','CDS','five_prime_UTR','three_prime_UTR'), 'unsupported GFF feature')
++        require(cols[6] in ('+','-') and 1 <= int(cols[3]) <= int(cols[4]), 'invalid genomic coordinates/strand')
++        ids[attrs['ID']] = cols
++        if cols[2] == 'gene':
++            require('Parent' not in attrs, 'gene cannot have Parent')
++        else:
++            require('Parent' in attrs, 'missing Parent')
++            parents.append((attrs['ID'],attrs['Parent']))
++    for child, parent in parents:
++        require(parent in ids, 'missing parent ID')
++        c, p = ids[child], ids[parent]
++        require(p[2] == ('gene' if c[2] == 'mRNA' else 'mRNA'), 'invalid hierarchy')
++        require(c[0] == p[0] and c[6] == p[6] and int(p[3]) <= int(c[3]) <= int(c[4]) <= int(p[4]), 'parent containment mismatch')
++    return ids
++
++
++def gsf_gff(gsf, chromosome, start, prefix):
++    from transgenic.utils import gsf_contract as gc
++    from transgenic.utils.gsf import gffString2GFF3
++    require(re.fullmatch(r'[A-Za-z0-9_.:-]+', prefix) and re.fullmatch(r'[A-Za-z0-9_.:-]+', chromosome), 'unsafe identifier')
++    try:
++        gc.check_caps_v3(gsf, window_len=LENGTH)
++        require(gc.canonicalize_v3(gsf) == gsf, 'noncanonical/duplicate GSF')
++        lines = []
++        for n, block in enumerate(gc.split_v3(gsf), 1):
++            features, txs, strand = gc._parse(block)
++            require(strand in ('+','-') and all(0 <= s < e <= LENGTH and (kind != 'CDS' or e-s >= 3) for kind,s,e,ph in features.values()), 'invalid feature coordinates')
++            rows = gffString2GFF3(block, chromosome, start, 'source=mvp')
++            require(all(rows) and sum('\tmRNA\t' in row for row in rows) == len(txs), 'legacy converter dropped transcript')
++            old = rows[0].split('\t')[8].split(';')[0].removeprefix('ID=')
++            new = f'{prefix}.g{n}'
++            for row in rows:
++                cols = row.split('\t')
++                attrs = cols[8].split(';')
++                cols[8] = ';'.join(k+'='+ (new+v[len(old):] if k in ('ID','Parent') and (v == old or v.startswith(old+'.')) else v) for k,v in (a.split('=',1) for a in attrs))
++                lines.append('\t'.join(cols))
++        text = '##gff-version 3\n' + ''.join(line+'\n' for line in lines)
++        validate_gff(text)
++        return text
++    except (KeyError, IndexError, TypeError) as error:
++        raise ValueError('malformed GSF') from error
++
++
++def generate_one(model, tokenizer, input_ids, attention_mask, tracks, *, raw_sink=None):
++    from transformers import GenerationConfig, LogitsProcessorList
++    from transgenic.model.constrained_decoding import GSFGrammarLogitsProcessor
++    require(input_ids.shape == attention_mask.shape == (1,LENGTH), 'invalid sequence batch')
++    require(tracks.shape == (1,LENGTH,8) and tracks.is_floating_point() and torch.isfinite(tracks).all(), 'invalid evidence batch')
++    require(tracks.device == input_ids.device == attention_mask.device, 'batch device mismatch')
++    processor = GSFGrammarLogitsProcessor(tokenizer, [LENGTH], num_beams=2, v2=True, v3=True)
++    model.eval()
++    received = []
++    hook = model.get_encoder().register_forward_pre_hook(
++        lambda module, args, kwargs: received.append(kwargs.get('evidence_tracks')), with_kwargs=True)
++    try:
++        with torch.inference_mode():
++            output = model.generate(input_ids=input_ids, attention_mask=attention_mask,
++                evidence_tracks=tracks, decoder_input_ids=torch.tensor([[tokenizer.get_vocab()['<s>']]], device=input_ids.device),
++                decoder_start_token_id=tokenizer.get_vocab()['<s>'],
++                num_beams=2, do_sample=False, use_cache=True, max_length=MAX_LENGTH,
++                generation_config=GenerationConfig(), num_return_sequences=1,
++                eos_token_id=tokenizer.get_vocab()['</s>'], pad_token_id=tokenizer.get_vocab()['<pad>'],
++                logits_processor=LogitsProcessorList([processor]))
++    finally:
++        hook.remove()
++    require(len(received) == 1 and received[0] is not None and torch.equal(received[0], tracks),
++            'generation did not forward evidence exactly once to encoder')
++    require(output.ndim == 2 and output.shape[0] == 1, 'expected one top-beam sequence')
++    ids = output[0].cpu().tolist()
++    if raw_sink is not None:
++        inverse = {v:k for k,v in tokenizer.get_vocab().items()}
++        tokens = [inverse.get(i, '<unknown-ID>') for i in ids]
++        raw_sink(dict(raw_token_ids=ids, raw_tokens=tokens,
++                      grammar_plan=[t for t in tokens if re.fullmatch(r'<tx\d+>', t)]))
++    return validate_decode(ids, tokenizer)
++
++
++def load_final_model(verified_run, device='cpu'):
++    """Caller must verify publication; independently parse config and strictly load aliases."""
++    from safetensors.torch import load_model
++    from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
++    from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration
++    files = verified_run['files']
++    config_file = checked_file(files['config.json'])
++    weights = checked_file(files['model.safetensors'])
++    raw = read_json(config_file['path'])
++    require(raw.get('evidence_channels') == 8 and type(raw.get('evidence_channels')) is int, 'final must have eight evidence channels')
++    require(raw.get('vocab_size') == 290 and raw.get('max_decoder_position_embeddings') == MAX_LENGTH, 'final must use v3/A27 config')
++    config = HyenaTransgenicConfig(**raw)
++    if 'metadata.json' in files:
++        metadata = read_json(checked_file(files['metadata.json'])['path'])
++        target = metadata['initialization_audit']['audit']['target_semantics']['fields']
++        for name, record in target.items():
++            require(getattr(config, name, None) == record['value'], f'final config/audit mismatch: {name}')
++    # This construction-only switch prevents external pretrained loading. All
++    # learned tensors (including projection) then come from strict final bytes.
++    pretrained = config.load_pretrained_encoder
++    config.load_pretrained_encoder = False
++    model = transgenicForConditionalGeneration(config)
++    config.load_pretrained_encoder = pretrained
++    load_model(model, weights['path'], strict=True, device='cpu')
++    checked_file(files['model.safetensors'])
++    checked_file(files['config.json'])
++    return model.to(device).eval()
++
++
++def load_baseline_model(verified_run, device='cpu'):
++    from transgenic.training.weights_init import load_weights_only
++    model = load_final_model(verified_run, 'cpu')
++    for record in verified_run['initialization'].values():
++        checked_file(record)
++    source = checked_file(verified_run['initialization']['model.safetensors'])
++    # Resolved audit path, not a caller's mutable best symlink.
++    audit = load_weights_only(model, Path(source['path']).parent)
++    require(not model.get_encoder().evidence_proj.weight.detach().count_nonzero(), 'baseline projection not zero')
++    checked_file(verified_run['initialization']['model.safetensors'])
++    return model.to(device).eval(), audit
+diff --git a/tests/test_mvp_decode.py b/tests/test_mvp_decode.py
+new file mode 100644
+index 0000000..9762758
+--- /dev/null
++++ b/tests/test_mvp_decode.py
+@@ -0,0 +1,261 @@
++"""Decoder boundary tests; CPU only, no claim about production GPU runtime."""
++import json
++from pathlib import Path
++from types import SimpleNamespace
++import numpy as np
++import pytest
++import torch
++from transgenic.evidence import mvp_decode as d
++from transgenic.model.tokenization_transgenic import GFFTokenizer
++
++
++def test_raw_empty_and_truncation():
++    tok = GFFTokenizer(vocab_version='v3')
++    ids = tok('<empty>')['input_ids']
++    result = d.validate_decode(ids, tok)
++    assert result['gsf'] == '<empty>'
++    assert d.gsf_gff(result['gsf'], 'Chr1', 100, 'p') == '##gff-version 3\n'
++    for bad in (ids[:-1], [], ids + [tok.eos_token_id]):
++        with pytest.raises(ValueError):
++            d.validate_decode(bad, tok)
++
++
++def test_multi_gene_minus_deterministic_and_no_dedup():
++    gsf = '2|CDS1|11|+|A>CDS1<gene>20|CDS1|32|-|A>CDS1'
++    out = d.gsf_gff(gsf, 'Chr1', 100, 'p')
++    assert out == d.gsf_gff(gsf, 'Chr1', 100, 'p')
++    assert '\t103\t111\t.\t+' in out
++    assert '\t121\t132\t.\t-' in out
++    assert out.count('\tgene\t') == 2
++    assert out.count('\tmRNA\t') == 2
++    for bad in ('', ' ', '2|CDS1|11|+|A>CDS1;CDS1', '2|CDS1|2|+|A>CDS1'):
++        with pytest.raises(ValueError):
++            d.gsf_gff(bad, 'Chr1', 100, 'p')
++
++
++def test_generation_kwargs_tracks_and_rejection():
++    tok = GFFTokenizer(vocab_version='v3')
++    class Encoder(torch.nn.Module):
++        def forward(self, ids, evidence_tracks=None): return ids
++    class Model:
++        encoder = Encoder()
++        drop_tracks = False
++        def get_encoder(self): return self.encoder
++        config = SimpleNamespace(decoder_start_token_id=tok.bos_token_id,
++                                 eos_token_id=tok.eos_token_id, pad_token_id=tok.pad_token_id)
++        def eval(self): return self
++        def generate(self, **kwargs):
++            self.kwargs = kwargs
++            self.encoder(kwargs['input_ids'], evidence_tracks=None if self.drop_tracks else kwargs['evidence_tracks'])
++            return torch.tensor([tok('<empty>')['input_ids']])
++    model = Model()
++    ids = torch.ones((1,30720), dtype=torch.long)
++    tracks = torch.ones((1,30720,8), dtype=torch.float16)
++    d.generate_one(model, tok, ids, ids.bool(), tracks)
++    assert model.kwargs['max_length'] == 8192
++    assert 'max_new_tokens' not in model.kwargs
++    assert model.kwargs['num_beams'] == 2
++    assert model.kwargs['do_sample'] is False and model.kwargs['use_cache'] is True
++    assert model.kwargs['evidence_tracks'] is tracks
++    with pytest.raises(ValueError):
++        d.generate_one(model, tok, ids, ids.bool(), tracks[:,:,:7])
++    model.drop_tracks = True
++    with pytest.raises(ValueError,match='forward evidence'):
++        d.generate_one(model, tok, ids, ids.bool(), tracks)
++
++
++def test_sequence_sep_and_no_rc():
++    class Tok:
++        sep_token_id = 9
++        pad_token_id = 0
++        def __call__(self, seq, **kwargs):
++            assert seq == 'A' * 30720
++            return {'input_ids': torch.tensor([[1]*30720+[9]])}
++    ids, mask = d.encode_window('A'*30720, Tok())
++    assert ids.shape == mask.shape == (1,30720)
++
++
++def test_normalize_rejects_bad_identifiers():
++    for text in ('', ' \n', '##gff-version 3\nChr1\tx\tgene\t1\t3\t.\t+\t.\tID=t \n'):
++        with pytest.raises(ValueError):
++            d.validate_gff(text)
++    d.validate_gff('##gff-version 3\n')
++
++
++def test_raw_planning_validation_and_beam_reorder():
++    from transgenic.model.constrained_decoding import GSFGrammarLogitsProcessor
++    tok = GFFTokenizer(vocab_version='v3')
++    gsf = '2|CDS1|11|+|A>CDS1<gene>20|CDS1|32|-|A>CDS1'
++    ids = tok(gsf)['input_ids']
++    result = d.validate_decode(ids, tok)
++    assert result['grammar_plan'] == ['<tx1>','<tx1>']
++    assert result['raw_token_ids'] == ids and result['gsf'] == gsf
++    bad = list(ids)
++    bad[bad.index(tok.vocab['<tx1>'])] = tok.vocab['<tx2>']
++    with pytest.raises(ValueError):
++        d.validate_decode(bad, tok)
++    processor = GSFGrammarLogitsProcessor(tok, [30720], num_beams=2, v2=True, v3=True)
++    prefixes = torch.tensor([[0, tok.vocab['2']], [0,tok.vocab['<empty>']]])
++    scores = torch.zeros((2,290))
++    expected = processor(prefixes, scores)
++    actual = processor(prefixes.flip(0), scores)
++    assert torch.equal(expected.flip(0), actual)
++
++
++def test_strict_final_load_preserves_projection_and_aliases(tmp_path, monkeypatch):
++    from safetensors.torch import save_model, save_file, load_file
++    from test_mvp_model import tiny_config, TinyHyena, modeling
++    monkeypatch.setattr(modeling.AutoConfig, 'from_pretrained', lambda *a,**k: SimpleNamespace())
++    monkeypatch.setattr(modeling.AutoModel, 'from_config', lambda c,**k: TinyHyena(c))
++    config = tiny_config(evidence_channels=8)
++    config.vocab_size = 290
++    config.max_decoder_position_embeddings = 8192
++    model = modeling.transgenicForConditionalGeneration(config).eval()
++    with torch.no_grad():
++        model.get_encoder().evidence_proj.weight.copy_(torch.eye(8))
++    config.save_pretrained(tmp_path)
++    save_model(model, str(tmp_path/'model.safetensors'))
++    run = {'files': {n:d.identity(tmp_path/n) for n in ('config.json','model.safetensors')}}
++    loaded = d.load_final_model(run)
++    assert torch.equal(loaded.get_encoder().evidence_proj.weight, torch.eye(8))
++    assert loaded.lm_head.weight is loaded.transgenic.decoder_embed_tokens.weight
++    for key,value in model.state_dict().items():
++        assert torch.equal(value, loaded.state_dict()[key])
++    metadata = tmp_path/'metadata.json'
++    metadata.write_text(json.dumps({'initialization_audit':{'audit':{'target_semantics':{'fields':{'d_model':{'value':999}}}}}}))
++    run['files']['metadata.json'] = d.identity(metadata)
++    with pytest.raises(ValueError,match='config/audit'):
++        d.load_final_model(run)
++    del run['files']['metadata.json']
++    state = load_file(str(tmp_path/'model.safetensors'))
++    del state['transgenic.encoder.evidence_proj.weight']
++    save_file(state, str(tmp_path/'model.safetensors'))
++    run['files']['model.safetensors'] = d.identity(tmp_path/'model.safetensors')
++    with pytest.raises(RuntimeError):
++        d.load_final_model(run)
++
++
++def test_tiny_real_beam_cache_tracks_and_negative(tmp_path, monkeypatch):
++    from test_mvp_model import tiny_config, TinyHyena, modeling
++    monkeypatch.setattr(modeling.AutoConfig, 'from_pretrained', lambda *a,**k: SimpleNamespace())
++    monkeypatch.setattr(modeling.AutoModel, 'from_config', lambda c,**k: TinyHyena(c))
++    model = modeling.transgenicForConditionalGeneration(tiny_config(evidence_channels=8)).eval()
++    with torch.no_grad():
++        model.get_encoder().evidence_proj.weight.copy_(torch.eye(8))
++    ids = torch.tensor([[3,4,5,6]*6])
++    tracks = torch.rand(1,24,8)
++    seen = []
++    hook = model.get_encoder().register_forward_pre_hook(lambda m,a,k: seen.append(k.get('evidence_tracks')), with_kwargs=True)
++    kwargs = dict(input_ids=ids,evidence_tracks=tracks,num_beams=2,do_sample=False,max_length=8,eos_token_id=None)
++    with torch.inference_mode():
++        a = model.generate(**kwargs,use_cache=True)
++        b = model.generate(**kwargs,use_cache=False)
++    hook.remove()
++    assert torch.equal(a,b) and len(seen) == 2 and all(t is tracks for t in seen)
++    with pytest.raises(ValueError):
++        model.generate(**dict(kwargs,evidence_tracks=tracks[:,:,:7]))
++
++
++def test_internal_batch_identity_shape_and_n_mask(tmp_path):
++    from transgenic.evidence import mvp_windows as w
++    from unittest.mock import patch
++    seq = 'N'+'A'*30719
++    panel = [SimpleNamespace(gene_id=f'g{i}',chromosome='Chr1') for i in range(50)]
++    array = np.ones((30720,8),dtype=np.float16); array[0]=0
++    path = tmp_path/'on.npy'; np.save(path,array)
++    pin = tmp_path/'pin'; pin.write_text('frozen')
++    pins = {k:d.identity(pin) for k in ('evidence_db','panels','fasta','rasterizer_code')}
++    rows = [dict(gene_id=p.gene_id, window=['Chr1',0,30720], sequence_sha256=d.hashlib.sha256(seq.encode()).hexdigest(), tracks=d.identity(path), dtype='float16',shape=[30720,8]) for p in panel]
++    payload = dict(schema='mvp_panel_batch_internal_v1', provenance=dict(pins,population='excluded_heldout',keep_fraction=1,is_rc=False), rows=rows)
++    with patch.object(w,'evaluation_window',return_value=(0,30720)):
++        assert len(d.load_panel_batch(payload,panel,{p.gene_id:seq for p in panel},pins)) == 50
++        rows[0]['window'][1] = 1
++        with pytest.raises(ValueError,match='window'):
++            d.load_panel_batch(payload,panel,{p.gene_id:seq for p in panel},pins)
++        rows[0]['window'][1] = 0
++        array[0] = 1; np.save(path,array)
++        for row in rows: row['tracks'] = d.identity(path)
++        with pytest.raises(ValueError,match='N bases'):
++            d.load_panel_batch(payload,panel,{p.gene_id:seq for p in panel},pins)
++
++
++def test_runner_exact_350_no_overwrite_and_partial_failure(tmp_path, monkeypatch):
++    import importlib.util
++    import sys
++    root = Path(__file__).resolve().parents[1]
++    spec = importlib.util.spec_from_file_location('decode_runner_test',root/'revision/scripts/mvp/mvp_decode_panel.py')
++    runner = importlib.util.module_from_spec(spec); spec.loader.exec_module(runner)
++    import mvp_produce_counts as producer
++    panel_path = root/'revision/protocols/b6_panels_v1.tsv'
++    panel = runner.w.load_panel(panel_path)
++    pin = tmp_path/'pin'; pin.write_text('fake CPU fixture')
++    inp = tmp_path/'batch.json'; inp.write_text('{"rows":[]}')
++    runs = {s: {'files':{'model.safetensors':d.identity(pin)},'initialization':{'model.safetensors':d.identity(pin)}} for s in (1,2,3)}
++    payload = dict(panels=str(panel_path),fasta=str(pin),reference=str(pin),panel_inputs=str(inp),
++        candidate={'evidence':str(pin)},runs={},encoder_tokenizer={})
++    payload['panel_input_pins'] = dict(evidence_db=d.identity(pin),panels=d.identity(panel_path),fasta=d.identity(pin),rasterizer_code=d.identity(root/'src/transgenic/evidence/mvp_tracks.py'))
++    monkeypatch.setattr(producer,'frozen_reference',lambda *a: None)
++    monkeypatch.setattr(runner,'verify_runs',lambda *a:runs)
++    monkeypatch.setattr(runner,'sequences_from_fasta',lambda *a:{p.gene_id:'A'*30720 for p in panel})
++    monkeypatch.setattr(d,'load_panel_batch',lambda *a:{p.gene_id:torch.ones((1,30720,8),dtype=torch.float16) for p in panel})
++    monkeypatch.setattr(runner,'load_tokenizers',lambda *a:(None,None,[]))
++    monkeypatch.setattr(d,'load_final_model',lambda *a:object())
++    monkeypatch.setattr(d,'load_baseline_model',lambda *a:(object(),{}))
++    monkeypatch.setattr(d,'encode_window',lambda *a:(torch.ones((1,30720),dtype=torch.long),torch.ones((1,30720),dtype=torch.bool)))
++    def generated(*a,raw_sink):
++        raw = dict(gsf='<empty>',raw_token_ids=[0,289,2],grammar_plan=[])
++        raw_sink(raw)
++        return raw
++    monkeypatch.setattr(d,'generate_one',generated)
++    out = tmp_path/'success'
++    transport = runner.decode_panel(payload,out,['python','fixture'])
++    assert len(transport['predictions']) == 350
++    assert len({row['path'] for row in transport['predictions']}) == 350
++    assert len(list(out.glob('*.gff3'))) == len(list(out.glob('*.raw.json'))) == 350
++    assert all(Path(r['path']).read_text() == '##gff-version 3\n' for r in transport['predictions'])
++    with pytest.raises(FileExistsError): runner.decode_panel(payload,out,['python','fixture'])
++    def fail(*a,**k): raise ValueError('truncated')
++    monkeypatch.setattr(d,'generate_one',fail)
++    out = tmp_path/'failure'
++    with pytest.raises(ValueError,match='truncated'): runner.decode_panel(payload,out,['python','fixture'])
++    assert (out/'FAILED.json').exists() and not (out/'evaluation.json').exists()
++
++
++def test_baseline_approved_loader_actual_roundtrip(tmp_path):
++    from test_weights_init import WeightsInitTests, modeling, HyenaTransgenicConfig
++    from transgenic.training.b5_runtime import model_kwargs
++    from safetensors.torch import save_model
++    fixture = WeightsInitTests()
++    fixture.setUp()
++    try:
++        recipe = dict(fixture.recipe,vocab_size=290,max_decoder_position_embeddings=8192,gff_vocab_version='v3',max_label_tokens=8192)
++        run_config = dict(fixture.run_config,recipe=recipe)
++        fixture._write_json(fixture.run/'run_config.json',run_config)
++        cfg = dict(model_kwargs(recipe),load_pretrained_encoder=False)
++        source = modeling.transgenicForConditionalGeneration(HyenaTransgenicConfig(**cfg)).eval()
++        save_model(source, fixture.epoch/'model.safetensors')
++        final = modeling.transgenicForConditionalGeneration(HyenaTransgenicConfig(**cfg,evidence_channels=8)).eval()
++        with torch.no_grad(): final.get_encoder().evidence_proj.weight.fill_(0.25)
++        final.config.save_pretrained(tmp_path)
++        save_model(final,tmp_path/'model.safetensors')
++        run = dict(files={n:d.identity(tmp_path/n) for n in ('config.json','model.safetensors')},
++                   initialization={'model.safetensors':d.identity(fixture.epoch/'model.safetensors'),'run_config.json':d.identity(fixture.run/'run_config.json')})
++        baseline,audit = d.load_baseline_model(run)
++        assert baseline.get_encoder().evidence_proj.weight.count_nonzero() == 0
++        for key,value in source.state_dict().items():
++            assert torch.equal(value,baseline.state_dict()[key])
++        assert audit['resolved_weights_path'] == str(fixture.epoch/'model.safetensors')
++    finally:
++        fixture.doCleanups()
++
++
++def test_known_incomplete_verifier_blocked():
++    import importlib.util
++    root = Path(__file__).resolve().parents[1]
++    spec = importlib.util.spec_from_file_location('decode_guard_test',root/'revision/scripts/mvp/mvp_decode_panel.py')
++    runner = importlib.util.module_from_spec(spec); spec.loader.exec_module(runner)
++    import mvp_produce_counts as producer
++    if d.identity(producer.__file__)['sha256'] != 'a3b731c217e2da92eb044e1c7815a310fbd78b18a707487b12eb20a897576f1a':
++        pytest.skip('owner verifier changed; old-vulnerability veto no longer applies')
++    with pytest.raises(ValueError,match='known-incomplete'):
++        runner.verify_runs({},producer)

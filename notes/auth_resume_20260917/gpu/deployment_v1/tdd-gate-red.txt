@@ -1,0 +1,21 @@
+test_candidate_manifest_exact_closure (test_candidate.CandidateTests) ... ok
+test_controller_gate_rejects_unreviewed_stale_overbudget_old_receipts (test_candidate.CandidateTests) ... FAIL
+test_new_namespace_and_preserved_exclusions (test_candidate.CandidateTests) ... ok
+test_no_overwrite (test_candidate.CandidateTests) ... ok
+test_old_prepared_receipt_rejected (test_candidate.CandidateTests) ... ok
+test_prepare_profile_seed (test_candidate.CandidateTests) ... ok
+test_wrong_archive_pin_rejected (test_candidate.CandidateTests) ... ok
+test_wrong_manifest_pin_rejected (test_candidate.CandidateTests) ... ok
+
+======================================================================
+FAIL: test_controller_gate_rejects_unreviewed_stale_overbudget_old_receipts (test_candidate.CandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v1/test_candidate.py", line 68, in test_controller_gate_rejects_unreviewed_stale_overbudget_old_receipts
+    self.assertTrue(hasattr(d, 'validate_controller_gate'), 'missing conditional execution gate')
+AssertionError: False is not true : missing conditional execution gate
+
+----------------------------------------------------------------------
+Ran 8 tests in 3.025s
+
+FAILED (failures=1)

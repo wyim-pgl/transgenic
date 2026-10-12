@@ -1,0 +1,10 @@
+{
+  "status": "PASS_capture_consistency_only",
+  "remote_read_files": 24,
+  "remote_read_bytes": 330122,
+  "max_remote_file_bytes": 142550,
+  "producer_command_log_links_checked": 2,
+  "raw_data_reads": 0,
+  "member_header_report_sequence_receipt_checked": true,
+  "application_tests_run": false
+}

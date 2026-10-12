@@ -1,0 +1,9 @@
+{"checkpoint_exists": false, "error_tail": [], "failure_marker": false, "latest_updates": [{"alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "epoch": 0, "global_step": 10, "loss": 5.954935550689697, "lr": 2.2177866489243737e-07}, {"alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "epoch": 0, "global_step": 20, "loss": 4.722436904907227, "lr": 4.4355732978487474e-07}, {"alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "epoch": 0, "global_step": 30, "loss": 5.093722343444824, "lr": 6.65335994677312e-07}, {"alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "epoch": 0, "global_step": 40, "loss": 4.072268486022949, "lr": 8.871146595697495e-07}, {"alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "epoch": 0, "global_step": 50, "loss": 4.310044765472412, "lr": 1.1088933244621867e-06}], "observed_at": "2026-10-11T02:26:09.092129+00:00"}
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

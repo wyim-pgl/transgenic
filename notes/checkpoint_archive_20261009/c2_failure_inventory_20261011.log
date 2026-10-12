@@ -1,0 +1,50 @@
+ACCOUNTING
+JobID|State|ExitCode|Start|End|Elapsed|MaxRSS|ReqMem
+3345919|FAILED|1:0|2026-10-10T20:42:29|2026-10-10T22:43:40|02:01:11||454240M
+3345919.batch|FAILED|1:0|2026-10-10T20:42:29|2026-10-10T22:43:40|02:01:11|81520768K|
+3345919.extern|COMPLETED|0:0|2026-10-10T20:42:29|2026-10-10T22:43:40|02:01:11||
+3345919.0|FAILED|6:0|2026-10-10T21:25:05|2026-10-10T21:25:07|00:00:02|768K|
+3345919.1|COMPLETED|0:0|2026-10-10T21:26:08|2026-10-10T21:26:08|00:00:00|640K|
+3345919.2|COMPLETED|0:0|2026-10-10T21:27:57|2026-10-10T21:27:58|00:00:01|1M|
+3345919.3|COMPLETED|0:0|2026-10-10T21:29:13|2026-10-10T21:29:16|00:00:03|19712K|
+
+RUN_FILES
+{"name": "TRAINING_FAILED", "bytes": 0, "mtime": 1791690220.0, "dir": false}
+{"name": "data_order.jsonl", "bytes": 132, "mtime": 1791683675.0, "dir": false}
+{"name": "draw_log", "bytes": 4096, "mtime": 1791683674.0, "dir": true}
+{"name": "latest_state", "bytes": 4096, "mtime": 1791688433.0, "dir": true}
+{"name": "run_config_b6.json", "bytes": 25013, "mtime": 1791683674.0, "dir": false}
+{"name": "runtime_identity.txt", "bytes": 23704, "mtime": 1791683674.0, "dir": false}
+{"name": "train.err", "bytes": 18612, "mtime": 1791690220.0, "dir": false}
+CHECKPOINT_FILES
+{"name": "accelerate_state/model.safetensors", "bytes": 2198495648}
+{"name": "accelerate_state/optimizer.bin", "bytes": 3529085419}
+{"name": "accelerate_state/random_states_0.pkl", "bytes": 15537}
+{"name": "accelerate_state/random_states_1.pkl", "bytes": 15473}
+{"name": "accelerate_state/random_states_2.pkl", "bytes": 15537}
+{"name": "accelerate_state/random_states_3.pkl", "bytes": 15537}
+{"name": "accelerate_state/scheduler.bin", "bytes": 1465}
+{"name": "identity.json", "bytes": 25013}
+{"name": "meta.json", "bytes": 286}
+DRAW_TAILS
+TRACE_FILES
+QUEUE
+       JOBID             NAME      STATE               NODELIST(REASON)   PRIORITY     NICE
+     3309786          b5-seed    PENDING                     (Priority)        870     1100
+     3345917     b6-wp5-pilot    PENDING                     (Priority)        870     1100
+     3345918     b6-wp5-pilot    PENDING                   (Dependency)          1     1100
+     3309790          b5-seed    PENDING                   (Dependency)          1     1100
+     3309789          b5-seed    PENDING                   (Dependency)          1     1100
+     3309788          b5-seed    PENDING                   (Dependency)          1     1100
+     3309787          b5-seed    PENDING                   (Dependency)          1     1100
+     3345920     b6-wp5-pilot    PENDING                  (JobHeldUser)          0        0
+
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

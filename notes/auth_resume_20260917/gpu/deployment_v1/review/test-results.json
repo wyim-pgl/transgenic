@@ -1,0 +1,18 @@
+[
+  {
+    "exit_code": 0,
+    "log": "adapted-tests.txt"
+  },
+  {
+    "exit_code": 0,
+    "log": "original-tests.txt"
+  },
+  {
+    "exit_code": 0,
+    "log": "shell-syntax.txt"
+  },
+  {
+    "exit_code": 0,
+    "log": "release-ledger.txt"
+  }
+]

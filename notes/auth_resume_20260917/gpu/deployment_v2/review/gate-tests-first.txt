@@ -1,0 +1,131 @@
+.....EE.EE.E........
+======================================================================
+ERROR: test_b5_unbounded_or_same_node_fails (test_admission_cases.AdmissionCases)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_admission_cases.py", line 71, in test_b5_unbounded_or_same_node_fails
+    with self.assertRaises(ValueError): a.reconcile(auth,current,changed,rows,NOW)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 250, in reconcile
+    node = allocation(jobs[current], current, now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 244, in allocation
+    timestamp(j.get('SubmitTime', ''), now); timestamp(j.get('StartTime', ''), now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 223, in timestamp
+    from zoneinfo import ZoneInfo
+ModuleNotFoundError: No module named 'zoneinfo'
+
+======================================================================
+ERROR: test_bad_actual_allocation_and_old_active_fail (test_admission_cases.AdmissionCases) (key='StartTime', value='2099-01-01T00:00:00')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_admission_cases.py", line 52, in test_bad_actual_allocation_and_old_active_fail
+    a.reconcile(auth,current,changed,rows,NOW)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 250, in reconcile
+    node = allocation(jobs[current], current, now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 244, in allocation
+    timestamp(j.get('SubmitTime', ''), now); timestamp(j.get('StartTime', ''), now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 223, in timestamp
+    from zoneinfo import ZoneInfo
+ModuleNotFoundError: No module named 'zoneinfo'
+
+======================================================================
+ERROR: test_bad_actual_allocation_and_old_active_fail (test_admission_cases.AdmissionCases) (old='state')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_admission_cases.py", line 56, in test_bad_actual_allocation_and_old_active_fail
+    a.reconcile(auth,current,jobs,changed,NOW)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 250, in reconcile
+    node = allocation(jobs[current], current, now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 244, in allocation
+    timestamp(j.get('SubmitTime', ''), now); timestamp(j.get('StartTime', ''), now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 223, in timestamp
+    from zoneinfo import ZoneInfo
+ModuleNotFoundError: No module named 'zoneinfo'
+
+======================================================================
+ERROR: test_bad_actual_allocation_and_old_active_fail (test_admission_cases.AdmissionCases) (old='elapsed')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_admission_cases.py", line 56, in test_bad_actual_allocation_and_old_active_fail
+    a.reconcile(auth,current,jobs,changed,NOW)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 250, in reconcile
+    node = allocation(jobs[current], current, now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 244, in allocation
+    timestamp(j.get('SubmitTime', ''), now); timestamp(j.get('StartTime', ''), now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 223, in timestamp
+    from zoneinfo import ZoneInfo
+ModuleNotFoundError: No module named 'zoneinfo'
+
+======================================================================
+ERROR: test_bad_actual_allocation_and_old_active_fail (test_admission_cases.AdmissionCases) (old='alloc')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_admission_cases.py", line 56, in test_bad_actual_allocation_and_old_active_fail
+    a.reconcile(auth,current,jobs,changed,NOW)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 250, in reconcile
+    node = allocation(jobs[current], current, now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 244, in allocation
+    timestamp(j.get('SubmitTime', ''), now); timestamp(j.get('StartTime', ''), now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 223, in timestamp
+    from zoneinfo import ZoneInfo
+ModuleNotFoundError: No module named 'zoneinfo'
+
+======================================================================
+ERROR: test_bad_actual_allocation_and_old_active_fail (test_admission_cases.AdmissionCases)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_admission_cases.py", line 58, in test_bad_actual_allocation_and_old_active_fail
+    with self.assertRaises(ValueError): a.reconcile(auth,current,jobs,changed,NOW)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 250, in reconcile
+    node = allocation(jobs[current], current, now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 244, in allocation
+    timestamp(j.get('SubmitTime', ''), now); timestamp(j.get('StartTime', ''), now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 223, in timestamp
+    from zoneinfo import ZoneInfo
+ModuleNotFoundError: No module named 'zoneinfo'
+
+======================================================================
+ERROR: test_fresh_full_reconciliation_self_once_and_b5_maximum (test_admission_cases.AdmissionCases)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_admission_cases.py", line 39, in test_fresh_full_reconciliation_self_once_and_b5_maximum
+    r = a.reconcile(auth,current,jobs,rows,NOW)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 250, in reconcile
+    node = allocation(jobs[current], current, now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 244, in allocation
+    timestamp(j.get('SubmitTime', ''), now); timestamp(j.get('StartTime', ''), now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 223, in timestamp
+    from zoneinfo import ZoneInfo
+ModuleNotFoundError: No module named 'zoneinfo'
+
+======================================================================
+ERROR: test_reconciliation_enforces_node_and_gpu_caps_independently (test_admission_cases.AdmissionCases)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_admission_cases.py", line 89, in test_reconciliation_enforces_node_and_gpu_caps_independently
+    with self.assertRaises(ValueError): a.reconcile(auth,current,jobs,changed,NOW)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 250, in reconcile
+    node = allocation(jobs[current], current, now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 244, in allocation
+    timestamp(j.get('SubmitTime', ''), now); timestamp(j.get('StartTime', ''), now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 223, in timestamp
+    from zoneinfo import ZoneInfo
+ModuleNotFoundError: No module named 'zoneinfo'
+
+======================================================================
+ERROR: test_unknown_diagnostic_or_pending_reservation_fails (test_admission_cases.AdmissionCases)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_admission_cases.py", line 63, in test_unknown_diagnostic_or_pending_reservation_fails
+    with self.assertRaises(ValueError): a.reconcile(auth,current,jobs,rows,NOW)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 250, in reconcile
+    node = allocation(jobs[current], current, now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 244, in allocation
+    timestamp(j.get('SubmitTime', ''), now); timestamp(j.get('StartTime', ''), now)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/admission.py", line 223, in timestamp
+    from zoneinfo import ZoneInfo
+ModuleNotFoundError: No module named 'zoneinfo'
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.641s
+
+FAILED (errors=9)

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "4GzTTiZ04g",
+      "name": "Check B6 every thirty minutes",
+      "description": "Check B6 every thirty minutes",
+      "schedule": "30m",
+      "scheduleType": "interval",
+      "intervalMs": 1800000,
+      "subagent_type": "general-purpose",
+      "prompt": "사용자가 승인한 30분 주기 상태 확인이다. 루트 /mnt/f/scratch/develop/Transgenic/transgenic_local의 .atl/resume.md 및 notes/RESTART_HANDOFF_20260924_PI.md부터 읽고 최신 B6 벤치/후속 기록을 확인한다. 원래 job 3205730은 2026-09-24 15:59 PDT 실측 FAILED 1:0, elapsed 00:01:21이었다. ssh -o BatchMode=yes -o ConnectTimeout=20 pronghorn 경유 같은 옵션 ssh dtai로 squeue/sacct와 해당 job의 로그 및 JSON을 읽기 전용으로 확인한다. timeout 150초 제한. 원래 로그 /work/nvme/bilv/wcyim/transgenic/repo_b6/b6-mem129k-3205730.out, JSON /work/nvme/bilv/wcyim/transgenic/runs/b6_bench/mem129k-3205730.json. 최신 인계에 명시된 새 B6 잡이 있다면 해당 잡을 대신 조회하되 B5/운영학습은 건드리지 않는다. 새 실패나 완료 결과에만 advisor를 호출해 실제 로그/결과 근거로 검토 요청한다. advisor가 클라이언트 버전 오류로 실패하면 검토 불가라고 기록하고 자동 업데이트하지 않는다. 이미 검토/기록된 동일 terminal 상태이면 advisor를 반복 호출하지 말고 변경 없음으로 짧게 보고한다. 대기/실행 중은 시각과 실제 상태만 보고한다. COMPLETED만으로 게이트 PASS 단정 금지. 필요시 최신 인계 문서에 관측 및 차단 사유를 추가하되 다른 변경 보존. 신규 잡 제출/재제출/취소/파티션변경/코드수정/커밋/푸시 금지. 확인과 검토만 수행한다. 한국어로 결과를 간결하게 보고하고 U+2014 문자는 사용하지 않는다.",
+      "isolated": false,
+      "enabled": true,
+      "createdAt": "2026-09-24T22:59:35.912Z",
+      "runCount": 47,
+      "lastStatus": "success",
+      "lastRun": "2026-09-25T22:31:07.803Z",
+      "nextRun": "2026-09-25T22:31:12.741Z"
+    }
+  ]
+}

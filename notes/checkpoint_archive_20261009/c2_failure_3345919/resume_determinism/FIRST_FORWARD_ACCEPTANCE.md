@@ -1,0 +1,5 @@
+# First-forward diagnostic acceptance
+
+Independent review approved bounded execution after full buffer registry restoration and primed_reset control. Local2 + actualNGC2 state restoration testsPASS. Production code staysd7b1a37. Remote immutable ops/c2_first_forward_20261012 source hashes in first_forward_manifest.sha256; script1h30/4GPU,3freshprocesses.
+
+Require exactly12target reports (3cases×4ranks), finite losses, micro5041, cold0primers/other5exactindices4801–4805, optimizerupdates0. No newcheckpoint/DONE/FAILED; clone's original210 checkpoint payload hashes unchanged. All initial/restored parameter+completebuffer hashes,inputtensors,RNG equal. Check source/inputstats again. Cold must reproduce historicalCfirstloss; primed must reproduceBfirstloss (allranks). Primed target must reuse its graph (graphs_after==graphs_before), reset target must compilefreshgraph, reset logits should equalcold. The comparator's exit0 only means observations complete. If any reproduction/control assumption fails, record the falsified hypothesis and continue diagnosis, never promote automatically.

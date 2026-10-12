@@ -1,0 +1,14 @@
+{
+  "preparation_unchanged": true,
+  "builder_matches_backup": true,
+  "binder_matches_accepted_sha": "93ea442d0dc60c1d8df2ee0b479361d89a188f9b43bba4327740f896efec27b2",
+  "report_sha256": "5ed6b478a3fa2b1fa47c2a4249879ad1d01442a3bde6d5f82830302a1d75394b",
+  "report_no_forbidden_character": true,
+  "preparation_hashes": {
+    "build_release.py": "a75c460c6e0e078565a9177d0ac712ae9f78315f012abfe4fd299cd9c0aa0cf5",
+    "run_compute.py": "0c4321cb199374907dc99680a9ad8fb2c01202e7e17a4c62f6573543dc0697ea",
+    "sample.sbatch": "7fe7c107e5796043393ee6eea52d8db96cf327877577cf1679c658425ef31f1e",
+    "test_deployment.py": "ee138ed82e98e2511571d5d4e596d846b8e8ce0b3b673082e47355373ec9567c",
+    "prepare_controller.py": "130312188bd022aa534b4701bf9cbe379539a29075585516fc6cb9b48ce0bd3b"
+  }
+}

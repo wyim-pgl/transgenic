@@ -1,0 +1,9 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+9cb959923f67c07a1d7174fc3074e0a5582d5521f77d1966b1b53ad022133218  pacbio_metadata.sbatch
+cf9ee1fdd5b95ecc0b4a8f8e229fb6046a01262eccb9b7b8d85287f3c98ff7dc  inputs/pacbio_tasks.json
+SBATCH_RC=0
+PACBIO_METADATA_SUBMISSION_RESULT 6172167
+
+PACBIO_METADATA_SUBMISSION_ERROR 

@@ -1,0 +1,6 @@
+import os, pathlib, json, hashlib, sys, datetime
+p=pathlib.Path('/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/c1_reconciled')
+paths=[p, p/'inputs', p/'code', p/'audit', p/'scratch', p/'logs', p/'run.sbatch']
+parents={str(q):dict(is_symlink=q.is_symlink(), exists=q.exists()) for q in p.parents}
+e=pathlib.Path(sys.executable).resolve()
+print(json.dumps(dict(captured_at=datetime.datetime.now(datetime.timezone.utc).isoformat(), paths={str(q):os.path.lexists(q) for q in paths}, parents=parents, python=dict(path=sys.executable, resolved=str(e), version=sys.version, sha256=hashlib.sha256(e.read_bytes()).hexdigest())),sort_keys=True))

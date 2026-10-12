@@ -1,0 +1,12 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________________ test_cli_compute_enforcement _________________________
+tests/test_est_real_sample.py:229: in test_cli_compute_enforcement
+    assert 'real-source CLI requires SLURM_JOB_ID; no login-node execution' in capsys.readouterr().err
+E   AssertionError: assert 'real-source CLI requires SLURM_JOB_ID; no login-node execution' in 'usage: __main__.py [-h] --manifest MANIFEST --sha SHA --out OUT\n                   --producer-path-proof PRODUCER_PATH_PROOF\n__main__.py: error: the following arguments are required: --producer-path-proof\n'
+E    +  where 'usage: __main__.py [-h] --manifest MANIFEST --sha SHA --out OUT\n                   --producer-path-proof PRODUCER_PATH_PROOF\n__main__.py: error: the following arguments are required: --producer-path-proof\n' = CaptureResult(out='', err='usage: __main__.py [-h] --manifest MANIFEST --sha SHA --out OUT\n                   --producer-path-proof PRODUCER_PATH_PROOF\n__main__.py: error: the following arguments are required: --producer-path-proof\n').err
+E    +    where CaptureResult(out='', err='usage: __main__.py [-h] --manifest MANIFEST --sha SHA --out OUT\n                   --producer-path-proof PRODUCER_PATH_PROOF\n__main__.py: error: the following arguments are required: --producer-path-proof\n') = <bound method CaptureFixture.readouterr of <_pytest.capture.CaptureFixture object at 0x78b57d660220>>()
+E    +      where <bound method CaptureFixture.readouterr of <_pytest.capture.CaptureFixture object at 0x78b57d660220>> = <_pytest.capture.CaptureFixture object at 0x78b57d660220>.readouterr
+=========================== short test summary info ============================
+FAILED tests/test_est_real_sample.py::test_cli_compute_enforcement - Assertio...
+1 failed in 0.15s

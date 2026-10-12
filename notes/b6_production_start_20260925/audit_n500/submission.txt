@@ -1,0 +1,9 @@
+7ed14a54c05822e7ef224a87438cb138b8c3b441b37217d0a13e8366692b5001  /data/gpfs/assoc/pgl/data/Transgenic/evidence/audit_align_n500/b6_audit_align_n500_vv.sbatch
+19ba63acf58e5f96f1318cf2491693c285a475d64514aa029502b4dd1d47d3f8  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/c0_view_n500.py
+966560b376fa8270daab40653639b598799602a4cf6a1ddf9e087ca041e2d635  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/c0_n500.sbatch
+AUDIT_N500_VV 6173193 (21 tasks)
+EST 6173194
+PACBIO 6173195
+ONT 6173196
+HSP 6173197
+PROTEIN_C0 6173198

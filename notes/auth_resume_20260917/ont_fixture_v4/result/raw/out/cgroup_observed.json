@@ -1,0 +1,52 @@
+{
+  "hierarchy": [
+    {
+      "memory.failcnt": "0",
+      "memory.limit_in_bytes": "4294967296",
+      "memory.memsw.limit_in_bytes": "4294967296",
+      "memory.oom_control": "oom_kill_disable 0\nunder_oom 0",
+      "memory.use_hierarchy": "1",
+      "path": "/sys/fs/cgroup/memory/slurm/uid_3092957/job_6165965/step_0",
+      "tasks": "27202\n27203"
+    },
+    {
+      "memory.failcnt": "0",
+      "memory.limit_in_bytes": "4294967296",
+      "memory.memsw.limit_in_bytes": "4294967296",
+      "memory.oom_control": "oom_kill_disable 0\nunder_oom 0",
+      "memory.use_hierarchy": "1",
+      "path": "/sys/fs/cgroup/memory/slurm/uid_3092957/job_6165965",
+      "tasks": "27118\n27119\n27120\n27121\n27122"
+    },
+    {
+      "memory.failcnt": "0",
+      "memory.limit_in_bytes": "9223372036854771712",
+      "memory.memsw.limit_in_bytes": "9223372036854771712",
+      "memory.oom_control": "oom_kill_disable 0\nunder_oom 0",
+      "memory.use_hierarchy": "1",
+      "path": "/sys/fs/cgroup/memory/slurm/uid_3092957",
+      "tasks": ""
+    },
+    {
+      "memory.failcnt": "0",
+      "memory.limit_in_bytes": "9223372036854771712",
+      "memory.memsw.limit_in_bytes": "9223372036854771712",
+      "memory.oom_control": "oom_kill_disable 0\nunder_oom 0",
+      "memory.use_hierarchy": "1",
+      "path": "/sys/fs/cgroup/memory/slurm",
+      "tasks": ""
+    },
+    {
+      "memory.failcnt": "0",
+      "memory.limit_in_bytes": "9223372036854771712",
+      "memory.memsw.limit_in_bytes": "9223372036854771712",
+      "memory.oom_control": "oom_kill_disable 0\nunder_oom 0",
+      "memory.use_hierarchy": "1",
+      "path": "/sys/fs/cgroup/memory",
+      "tasks": "1\n2\n4\n6\n7\n8\n9\n10\n11\n12\n13\n14\n18\n19\n20\n24\n25\n26\n29\n30\n31\n33\n34\n35\n36\n39\n40\n41\n44\n45\n46\n49\n50\n51\n54\n55\n56\n59\n60\n61\n64\n65\n66\n69\n70\n71\n74\n75\n76\n79\n80\n81\n84\n85\n86\n89\n90\n91\n94\n95\n96\n99\n100\n101\n104\n105\n106\n109\n110\n111\n114\n115\n116\n119\n120\n121\n124\n125\n126\n129\n130\n131\n134\n135\n136\n139\n140\n141\n144\n145\n146\n149\n150\n151\n154\n155\n156\n159\n160\n161\n164\n165\n166\n169\n170\n171\n173\n174\n175\n176\n179\n180\n181\n183\n184\n185\n186\n189\n190\n191\n193\n194\n195\n196\n199\n200\n201\n203\n204\n205\n206\n209\n210\n211\n213\n214\n215\n216\n219\n220\n221\n223\n224\n225\n226\n229\n230\n231\n233\n234\n235\n236\n239\n240\n241\n243\n244\n245\n246\n249\n250\n251\n253\n254\n255\n256\n259\n260\n261\n263\n264\n265\n266\n269\n270\n271\n273\n274\n275\n276\n279\n280\n281\n283\n284\n285\n286\n289\n290\n291\n293\n294\n295\n296\n299\n300\n301\n303\n304\n305\n306\n309\n310\n311\n313\n314\n315\n316\n319\n320\n321\n323\n324\n325\n326\n331\n332\n333\n334\n335\n336\n337\n338\n339\n341\n342\n343\n350\n351\n352\n353\n354\n362\n364\n365\n366\n368\n371\n378\n392\n435\n468\n486\n515\n521\n522\n524\n525\n526\n527\n536\n542\n543\n544\n545\n546\n547\n548\n549\n550\n551\n552\n553\n562\n563\n564\n565\n566\n567\n588\n705\n733\n734\n735\n742\n743\n765\n766\n767\n781\n787\n1341\n1510\n1964\n2256\n2266\n2274\n2291\n2379\n2380\n2407\n3214\n3307\n3402\n3570\n3658\n3995\n4342\n4530\n4611\n4620\n4621\n4622\n4690\n4968\n5042\n5094\n5179\n5201\n5205\n5229\n5234\n5253\n5275\n5276\n5277\n5278\n5489\n5493\n5650\n5713\n6102\n6122\n6124\n6134\n6148\n6346\n6402\n6403\n6404\n6408\n6486\n7073\n7228\n7356\n7467\n7476\n7596\n7865\n7940\n7973\n8018\n8029\n8597\n8858\n9069\n9074\n9361\n9371\n9500\n9678\n10015\n10060\n10701\n11146\n11636\n11865\n12079\n12387\n12764\n12773\n12845\n12954\n12955\n12969\n13259\n13363\n13390\n13678\n13684\n13750\n13989\n14007\n14025\n14202\n14525\n14652\n14944\n15136\n15305\n15330\n15558\n15862\n15912\n16175\n17016\n17286\n17483\n17644\n17731\n17746\n17769\n18173\n18759\n20121\n20627\n21241\n21252\n21772\n21903\n22225\n22636\n22700\n23048\n23312\n23880\n24319\n24320\n24322\n25206\n25377\n25668\n25962\n26669\n26849\n27078\n27324\n27351\n27591\n27638\n28093\n29072\n29337\n29339\n29363\n29465\n30400\n30402\n30447\n30688\n31226\n31719\n31821\n31899\n31916\n31957\n32240\n32628\n32746\n32994\n33237\n33348\n33563\n33980\n34396\n34712\n34962\n35254\n35664\n35856\n36419\n37744\n38253\n38605\n38613\n38620\n39665\n39937\n40146\n40338\n40365\n40399\n41008\n41080\n41608\n41865\n42939\n43099\n43166\n43244\n43315\n43637\n44317\n44405\n44564\n45946\n46292\n46399\n46806\n47077\n47324\n47914\n48081\n48460\n48603\n48665\n48710\n48719\n48959\n48995\n49012\n49675\n49927\n49969\n50020\n50069\n50739\n51006\n51155\n51254\n51390\n51924\n52326\n53275\n54534\n54917\n55037\n55794\n56617\n57573\n57587\n58689\n58964\n59083\n59312\n59372\n59646\n60010\n60612\n61032\n61137\n61272\n62002\n62004\n62283\n62986\n63601\n63889\n63990\n64153\n64457\n64524\n64545\n64597\n64755\n64756\n64779\n64983\n65126\n65260\n65525"
+    }
+  ],
+  "membership": "20:pids:/system.slice/slurmd.service\n19:hugetlb:/\n18:cpu:/system.slice/slurmd.service\n17:perf_event:/\n16:devices:/slurm/uid_3092957/job_6165965/step_0\n15:cpuset:/slurm/uid_3092957/job_6165965/step_0\n14:blkio,freezer,memory,cpuacct:/slurm/uid_3092957/job_6165965/step_0\n13:net_prio:/\n12:net_cls:/\n1:name=systemd:/system.slice/slurmd.service\n",
+  "scope": "current process and inherited children; scheduler reaping separately reviewed",
+  "version": 1
+}

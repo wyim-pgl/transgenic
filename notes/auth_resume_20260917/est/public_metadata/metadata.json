@@ -1,0 +1,908 @@
+[
+  {
+    "accession": "JK596275.1",
+    "member_id": "93e7f878d4428de707c194eafd51bb92e3aa82f5cfc97c968d3ed9b94b95ffc4",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK596275                 648 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK596275\n",
+    "version_raw": "VERSION     JK596275.1\n",
+    "definition_raw": "DEFINITION  CFGZ9178.g1 CFGZ Setaria italica Yugu1 floral spike Setaria italica\n            cDNA clone CFGZ9178 3', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0093  row: D  column: 16.\n",
+    "header_raw": "LOCUS       JK596275                 648 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ9178.g1 CFGZ Setaria italica Yugu1 floral spike Setaria italica\n            cDNA clone CFGZ9178 3', mRNA sequence.\nACCESSION   JK596275\nVERSION     JK596275.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 648)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0093  row: D  column: 16.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..648\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ9178\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..648\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ9178\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ9178"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 648,
+    "sequence_sha256": "f9292dc5afe031653a67d1ff7d1afe99a3e7434d43fa9c83b0dc9963e14fc9ae",
+    "parent_original_sequence_sha256": "f9292dc5afe031653a67d1ff7d1afe99a3e7434d43fa9c83b0dc9963e14fc9ae",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "8616e9dae664527bd508c5c0deb18facdacfe5d77f985f7983d349d30782e897",
+    "raw_byte_start": 0,
+    "raw_byte_end": 3799,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK578847.1",
+    "member_id": "14e57c2241c7e331f31863cbbea451a5e24f0beba1818d2193feaf066381968b",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK578847                 691 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK578847\n",
+    "version_raw": "VERSION     JK578847.1\n",
+    "definition_raw": "DEFINITION  CFBX9727.g1 CFBX Setaria italica Yugu1 whole seedlings Setaria\n            italica cDNA clone CFBX9727 3', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736317\n",
+    "biosample": [
+      "SAMN00736317"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFBX 0101  row: N  column: 7.\n",
+    "header_raw": "LOCUS       JK578847                 691 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFBX9727.g1 CFBX Setaria italica Yugu1 whole seedlings Setaria\n            italica cDNA clone CFBX9727 3', mRNA sequence.\nACCESSION   JK578847\nVERSION     JK578847.1\nDBLINK      BioSample: SAMN00736317\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 691)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFBX 0101  row: N  column: 7.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..691\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFBX9727\"\n                     /tissue_type=\"whole seedlings\"\n                     /clone_lib=\"SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..691\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFBX9727\"\n                     /tissue_type=\"whole seedlings\"\n                     /clone_lib=\"SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFBX9727"
+      ],
+      "tissue_type": [
+        "whole seedlings"
+      ],
+      "clone_lib": [
+        "SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 691,
+    "sequence_sha256": "c29b61e2d92938f002ff82818cd1c83a6818c29e05a3a139179b4b8c2f640e06",
+    "parent_original_sequence_sha256": "c29b61e2d92938f002ff82818cd1c83a6818c29e05a3a139179b4b8c2f640e06",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "66a585791d961c674173fabf82d4d3d0078ce6d177c2416419dbca6d9d24245e",
+    "raw_byte_start": 3800,
+    "raw_byte_end": 7665,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK570678.1",
+    "member_id": "28da579d71ff1b0a929b2c87049b73f2e53d229225bfd2686bd8a826f72c44ad",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK570678                 787 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK570678\n",
+    "version_raw": "VERSION     JK570678.1\n",
+    "definition_raw": "DEFINITION  CFBX14764.b1 CFBX Setaria italica Yugu1 whole seedlings Setaria\n            italica cDNA clone CFBX14764 5', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736317\n",
+    "biosample": [
+      "SAMN00736317"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFBX 0153  row: H  column: 19.\n",
+    "header_raw": "LOCUS       JK570678                 787 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFBX14764.b1 CFBX Setaria italica Yugu1 whole seedlings Setaria\n            italica cDNA clone CFBX14764 5', mRNA sequence.\nACCESSION   JK570678\nVERSION     JK570678.1\nDBLINK      BioSample: SAMN00736317\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 787)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFBX 0153  row: H  column: 19.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..787\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFBX14764\"\n                     /tissue_type=\"whole seedlings\"\n                     /clone_lib=\"SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..787\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFBX14764\"\n                     /tissue_type=\"whole seedlings\"\n                     /clone_lib=\"SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFBX14764"
+      ],
+      "tissue_type": [
+        "whole seedlings"
+      ],
+      "clone_lib": [
+        "SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 787,
+    "sequence_sha256": "80ac566281b8f16a287fa6ed4986c7606e4a9dafc8fe2be6faec3089ac276c15",
+    "parent_original_sequence_sha256": "80ac566281b8f16a287fa6ed4986c7606e4a9dafc8fe2be6faec3089ac276c15",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "7fa1ce71fc672b00910ba662850705bb9892f659c4de14a3592020bf22b876af",
+    "raw_byte_start": 7666,
+    "raw_byte_end": 11660,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK559843.1",
+    "member_id": "d21b7ef7ee2b0187b04c52625363a6f4d1ed7456dc63a97dcaf65bf5bbb39d5d",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK559843                 767 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK559843\n",
+    "version_raw": "VERSION     JK559843.1\n",
+    "definition_raw": "DEFINITION  CFBX8241.b1 CFBX Setaria italica Yugu1 whole seedlings Setaria\n            italica cDNA clone CFBX8241 5', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736317\n",
+    "biosample": [
+      "SAMN00736317"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFBX 0085  row: B  column: 21.\n",
+    "header_raw": "LOCUS       JK559843                 767 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFBX8241.b1 CFBX Setaria italica Yugu1 whole seedlings Setaria\n            italica cDNA clone CFBX8241 5', mRNA sequence.\nACCESSION   JK559843\nVERSION     JK559843.1\nDBLINK      BioSample: SAMN00736317\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 767)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFBX 0085  row: B  column: 21.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..767\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFBX8241\"\n                     /tissue_type=\"whole seedlings\"\n                     /clone_lib=\"SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..767\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFBX8241\"\n                     /tissue_type=\"whole seedlings\"\n                     /clone_lib=\"SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFBX8241"
+      ],
+      "tissue_type": [
+        "whole seedlings"
+      ],
+      "clone_lib": [
+        "SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 767,
+    "sequence_sha256": "8651085069b500c599820f3ad9d5e0cbd917ecf167dde60f410344da550aceac",
+    "parent_original_sequence_sha256": "8651085069b500c599820f3ad9d5e0cbd917ecf167dde60f410344da550aceac",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "d0c11a3440ae4e3a9f8fe6206ffc9c20e0fb205eb5cf30db81f4c47562653718",
+    "raw_byte_start": 11661,
+    "raw_byte_end": 15620,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK552962.1",
+    "member_id": "0a57585e524b24dd8b0f3d87ed01c07e77bf68bcca89c00a355c39803c11c36e",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK552962                 328 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK552962\n",
+    "version_raw": "VERSION     JK552962.1\n",
+    "definition_raw": "DEFINITION  CFBX4385.g1 CFBX Setaria italica Yugu1 whole seedlings Setaria\n            italica cDNA clone CFBX4385 3', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736317\n",
+    "biosample": [
+      "SAMN00736317"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFBX 0045  row: B  column: 17.\n",
+    "header_raw": "LOCUS       JK552962                 328 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFBX4385.g1 CFBX Setaria italica Yugu1 whole seedlings Setaria\n            italica cDNA clone CFBX4385 3', mRNA sequence.\nACCESSION   JK552962\nVERSION     JK552962.1\nDBLINK      BioSample: SAMN00736317\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 328)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFBX 0045  row: B  column: 17.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..328\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFBX4385\"\n                     /tissue_type=\"whole seedlings\"\n                     /clone_lib=\"SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..328\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFBX4385\"\n                     /tissue_type=\"whole seedlings\"\n                     /clone_lib=\"SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFBX4385"
+      ],
+      "tissue_type": [
+        "whole seedlings"
+      ],
+      "clone_lib": [
+        "SAMN00736317 CFBX Setaria italica Yugu1 whole\n                     seedlings"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 328,
+    "sequence_sha256": "059ce5b495a92dc3a868f6d5ccc0c98d903d4f7c396e830e3ed34100afc903d6",
+    "parent_original_sequence_sha256": "059ce5b495a92dc3a868f6d5ccc0c98d903d4f7c396e830e3ed34100afc903d6",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "87a4a215c6a1dbf2fb178e3eb558efc6b9cc814aea97ad697511d0c97462e9fb",
+    "raw_byte_start": 15621,
+    "raw_byte_end": 19027,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "GW787538.1",
+    "member_id": "b4aca5b89a324fa87d26a2e6165446ab9ccfefa2006a95b848bd05dc165be5e9",
+    "record_date": "12-JAN-2011",
+    "locus_raw": "LOCUS       GW787538                 383 bp    mRNA    linear   EST 12-JAN-2011\n",
+    "accession_raw": "ACCESSION   GW787538\n",
+    "version_raw": "VERSION     GW787538.1\n",
+    "definition_raw": "DEFINITION  Sl_EST0697 Salinity stress responsive genes from cv. PRASAD\n            (Setaria italica L.) Setaria italica cDNA, mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00168307\n",
+    "biosample": [
+      "SAMN00168307"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Manoj Prasad\n            National Institute for Plant Genome Research\n            JNU Campus, New Delhi-110067, India\n            Tel: 0091-11-26735160\n            Fax: 0091-11-26741658\n            Email: manoj_pds@yahoo.com.\n",
+    "header_raw": "LOCUS       GW787538                 383 bp    mRNA    linear   EST 12-JAN-2011\nDEFINITION  Sl_EST0697 Salinity stress responsive genes from cv. PRASAD\n            (Setaria italica L.) Setaria italica cDNA, mRNA sequence.\nACCESSION   GW787538\nVERSION     GW787538.1\nDBLINK      BioSample: SAMN00168307\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 383)\n  AUTHORS   Puranik,S., Jha,S., Srivastava,P.S., Sreenivasulu,N. and Prasad,M.\n  TITLE     Comparative transcriptome analysis of contrasting foxtail millet\n            cultivars in response to short-term salinity stress\n  JOURNAL   J. Plant Physiol. 168 (3), 280-287 (2011)\nCOMMENT     Contact: Manoj Prasad\n            National Institute for Plant Genome Research\n            JNU Campus, New Delhi-110067, India\n            Tel: 0091-11-26735160\n            Fax: 0091-11-26741658\n            Email: manoj_pds@yahoo.com.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..383\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /cultivar=\"PRASAD\"\n                     /db_xref=\"taxon:4555\"\n                     /clone_lib=\"SAMN00168307 Salinity stress responsive genes\n                     from cv. PRASAD (Setaria italica L.)\"\n                     /dev_stage=\"21 days old seedlings\"\n                     /note=\"Suppression subtractive hybridization (SSH) library\n                     of 6 hour salt stressed foxtail millet.\"\n",
+    "source_feature_raw": "     source          1..383\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /cultivar=\"PRASAD\"\n                     /db_xref=\"taxon:4555\"\n                     /clone_lib=\"SAMN00168307 Salinity stress responsive genes\n                     from cv. PRASAD (Setaria italica L.)\"\n                     /dev_stage=\"21 days old seedlings\"\n                     /note=\"Suppression subtractive hybridization (SSH) library\n                     of 6 hour salt stressed foxtail millet.\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "cultivar": [
+        "PRASAD"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone_lib": [
+        "SAMN00168307 Salinity stress responsive genes\n                     from cv. PRASAD (Setaria italica L.)"
+      ],
+      "dev_stage": [
+        "21 days old seedlings"
+      ],
+      "note": [
+        "Suppression subtractive hybridization (SSH) library\n                     of 6 hour salt stressed foxtail millet."
+      ]
+    },
+    "sequence_length": 383,
+    "sequence_sha256": "9401b0b0f2d7f2a6a751119fece88e6baeb26f3a8525d33eca4582c550251859",
+    "parent_original_sequence_sha256": "9401b0b0f2d7f2a6a751119fece88e6baeb26f3a8525d33eca4582c550251859",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "960777523f232a7a7b4e7a5b0386b00d2ad3844da7f92cc0f912a735689a4a6b",
+    "raw_byte_start": 19028,
+    "raw_byte_end": 21287,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK608601.1",
+    "member_id": "799ecf94ba841403fbd1c1c11665743bc19a331f16782fd48bf373b772c61fdf",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK608601                 499 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK608601\n",
+    "version_raw": "VERSION     JK608601.1\n",
+    "definition_raw": "DEFINITION  CFGZ16439.g1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16439 3', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: N  column: 6.\n",
+    "header_raw": "LOCUS       JK608601                 499 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ16439.g1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16439 3', mRNA sequence.\nACCESSION   JK608601\nVERSION     JK608601.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 499)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: N  column: 6.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..499\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16439\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..499\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16439\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ16439"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 499,
+    "sequence_sha256": "dc7f5afd92c19b798e54d18f1c5a7f60f4bff5aa479dc25ab3e5441174eb6975",
+    "parent_original_sequence_sha256": "dc7f5afd92c19b798e54d18f1c5a7f60f4bff5aa479dc25ab3e5441174eb6975",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "af397acb9b7e4f7d8890f42bce6ae1afd0bc154a0124120e659421a169dca82a",
+    "raw_byte_start": 21288,
+    "raw_byte_end": 24905,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK608600.1",
+    "member_id": "f46b3f2d1f82de4b917b8edafd315202e843cac668d32a1fea555c3bbdb52c25",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK608600                 499 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK608600\n",
+    "version_raw": "VERSION     JK608600.1\n",
+    "definition_raw": "DEFINITION  CFGZ16439.b1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16439 5', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: N  column: 6.\n",
+    "header_raw": "LOCUS       JK608600                 499 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ16439.b1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16439 5', mRNA sequence.\nACCESSION   JK608600\nVERSION     JK608600.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 499)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: N  column: 6.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..499\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16439\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..499\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16439\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ16439"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 499,
+    "sequence_sha256": "d3bc43e0a9d9c7f02623f5943131b4ca246261379c703db599c4dd1a2ab36106",
+    "parent_original_sequence_sha256": "d3bc43e0a9d9c7f02623f5943131b4ca246261379c703db599c4dd1a2ab36106",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "ed1b170fd7bf9c645da2ccd5f472eeb418c19df3fc792ae3da6187775d7291d4",
+    "raw_byte_start": 24906,
+    "raw_byte_end": 28523,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK608599.1",
+    "member_id": "1fdf6f9be5d6704457b7d16ff9cd74193e7d89c43c0714bbf8d33fc7153d237f",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK608599                 580 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK608599\n",
+    "version_raw": "VERSION     JK608599.1\n",
+    "definition_raw": "DEFINITION  CFGZ16438.g1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16438 3', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: L  column: 6.\n",
+    "header_raw": "LOCUS       JK608599                 580 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ16438.g1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16438 3', mRNA sequence.\nACCESSION   JK608599\nVERSION     JK608599.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 580)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: L  column: 6.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..580\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16438\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..580\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16438\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ16438"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 580,
+    "sequence_sha256": "2904e1cb005c2f92e9ae04a754a029ab85f8a8ea6d06efea4d2ab5ae9b4cf0fe",
+    "parent_original_sequence_sha256": "2904e1cb005c2f92e9ae04a754a029ab85f8a8ea6d06efea4d2ab5ae9b4cf0fe",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "ca528a45ab836f646fc27e035175426cca5c7ae22e2857c6ad70039ba1dfd4d3",
+    "raw_byte_start": 28524,
+    "raw_byte_end": 32240,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK608598.1",
+    "member_id": "3f58136306e38a8249f9affba461686cfc4177ebcc20c3ecc7db352362c554ec",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK608598                 580 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK608598\n",
+    "version_raw": "VERSION     JK608598.1\n",
+    "definition_raw": "DEFINITION  CFGZ16438.b1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16438 5', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: L  column: 6.\n",
+    "header_raw": "LOCUS       JK608598                 580 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ16438.b1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16438 5', mRNA sequence.\nACCESSION   JK608598\nVERSION     JK608598.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 580)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: L  column: 6.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..580\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16438\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..580\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16438\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ16438"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 580,
+    "sequence_sha256": "e6026bd9d9590cd097eb962f96f7304f711f0103008d3575238b91bd8c4491c0",
+    "parent_original_sequence_sha256": "e6026bd9d9590cd097eb962f96f7304f711f0103008d3575238b91bd8c4491c0",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "2fde5e3668a61aa59b7fb868164d97993db68d1bb3a50429ed1ccded92f5af9d",
+    "raw_byte_start": 32241,
+    "raw_byte_end": 35957,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK608597.1",
+    "member_id": "30df83196e49279e880bc9288bed8617d2419834d3058da37f29a67d1f434429",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK608597                 435 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK608597\n",
+    "version_raw": "VERSION     JK608597.1\n",
+    "definition_raw": "DEFINITION  CFGZ16437.g1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16437 3', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: J  column: 6.\n",
+    "header_raw": "LOCUS       JK608597                 435 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ16437.g1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16437 3', mRNA sequence.\nACCESSION   JK608597\nVERSION     JK608597.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 435)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: J  column: 6.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..435\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16437\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..435\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16437\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ16437"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 435,
+    "sequence_sha256": "a7004667388fa3203130aff42e7db80ac35f35c78b8589e00b3733706db92288",
+    "parent_original_sequence_sha256": "a7004667388fa3203130aff42e7db80ac35f35c78b8589e00b3733706db92288",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "7eb9283ca41297741b0e6b22c564d90d9ebc561ca6969e93e2929c50a0b6d3a5",
+    "raw_byte_start": 35958,
+    "raw_byte_end": 39495,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK608596.1",
+    "member_id": "1126dd3a097c06a11a7f1ac3be1df2ad6fb8e030e058365b2dcfddc67fbe5063",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK608596                 435 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK608596\n",
+    "version_raw": "VERSION     JK608596.1\n",
+    "definition_raw": "DEFINITION  CFGZ16437.b1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16437 5', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: J  column: 6.\n",
+    "header_raw": "LOCUS       JK608596                 435 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ16437.b1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16437 5', mRNA sequence.\nACCESSION   JK608596\nVERSION     JK608596.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 435)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: J  column: 6.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..435\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16437\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..435\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16437\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ16437"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 435,
+    "sequence_sha256": "3f9723514d773853c73792cfab7bb60d850960aed77fc904e0efc32bcb4b7021",
+    "parent_original_sequence_sha256": "3f9723514d773853c73792cfab7bb60d850960aed77fc904e0efc32bcb4b7021",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "efdbd12eb4a257487ef31787f0e13e09042199593c0c34b4e066ee00211c10a2",
+    "raw_byte_start": 39496,
+    "raw_byte_end": 43033,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK608595.1",
+    "member_id": "facb6648459d84060802c11ff88fe8686a0f3df9acf418898bb7163060c4defd",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK608595                 716 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK608595\n",
+    "version_raw": "VERSION     JK608595.1\n",
+    "definition_raw": "DEFINITION  CFGZ16436.g1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16436 3', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: H  column: 6.\n",
+    "header_raw": "LOCUS       JK608595                 716 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ16436.g1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16436 3', mRNA sequence.\nACCESSION   JK608595\nVERSION     JK608595.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 716)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: H  column: 6.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..716\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16436\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..716\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16436\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ16436"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 716,
+    "sequence_sha256": "13fd3f942b8ac8934966a95fd94ead794fcf048506b4acf3d81eade1fbd37dbd",
+    "parent_original_sequence_sha256": "13fd3f942b8ac8934966a95fd94ead794fcf048506b4acf3d81eade1fbd37dbd",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "7988c4c0fc9b1935a3f3d5d553b8f1e22c43702dedd01936252cd70b7b44a95c",
+    "raw_byte_start": 43034,
+    "raw_byte_end": 46920,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK608594.1",
+    "member_id": "b76a9571d24b6dd85c1531d51b5c6b8e4a38739db6e21e771c3591e8ae9703ce",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK608594                 702 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK608594\n",
+    "version_raw": "VERSION     JK608594.1\n",
+    "definition_raw": "DEFINITION  CFGZ16436.b1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16436 5', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: H  column: 6.\n",
+    "header_raw": "LOCUS       JK608594                 702 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ16436.b1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16436 5', mRNA sequence.\nACCESSION   JK608594\nVERSION     JK608594.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 702)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: H  column: 6.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..702\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16436\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..702\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16436\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ16436"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 702,
+    "sequence_sha256": "aa5cb71c5695a03b0f42fc7969fa4eee908379e7a051e17ee8d5b296d53954f2",
+    "parent_original_sequence_sha256": "aa5cb71c5695a03b0f42fc7969fa4eee908379e7a051e17ee8d5b296d53954f2",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "0e56ef11cea245fce32f38c20a3a6bec724bd035549ddbd42d3558067679d679",
+    "raw_byte_start": 46921,
+    "raw_byte_end": 50792,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK608593.1",
+    "member_id": "8240cbce858e543e4d6972a8ad6625d310ac76e5abae32cc7e62697400cbf284",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK608593                 716 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK608593\n",
+    "version_raw": "VERSION     JK608593.1\n",
+    "definition_raw": "DEFINITION  CFGZ16435.g1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16435 3', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: F  column: 6.\n",
+    "header_raw": "LOCUS       JK608593                 716 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ16435.g1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16435 3', mRNA sequence.\nACCESSION   JK608593\nVERSION     JK608593.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 716)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: F  column: 6.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..716\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16435\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..716\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16435\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ16435"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 716,
+    "sequence_sha256": "b6113b9e801d990f8dd07696a7fa1b773bb65d693cbae3709142b64669805be3",
+    "parent_original_sequence_sha256": "b6113b9e801d990f8dd07696a7fa1b773bb65d693cbae3709142b64669805be3",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "3dc7f97c7ae3287aba7c1c1c4f47daa6f36194341cb55d25ccc4bb177fb2d7b8",
+    "raw_byte_start": 50793,
+    "raw_byte_end": 54679,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  },
+  {
+    "accession": "JK608592.1",
+    "member_id": "5e218e315ca600a8a67498bf16db3a494ddb6c492e247ecb60b7f95ca9118d96",
+    "record_date": "06-OCT-2011",
+    "locus_raw": "LOCUS       JK608592                 699 bp    mRNA    linear   EST 06-OCT-2011\n",
+    "accession_raw": "ACCESSION   JK608592\n",
+    "version_raw": "VERSION     JK608592.1\n",
+    "definition_raw": "DEFINITION  CFGZ16435.b1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16435 5', mRNA sequence.\n",
+    "dblink_raw": "DBLINK      BioSample: SAMN00736318\n",
+    "biosample": [
+      "SAMN00736318"
+    ],
+    "bioproject": [],
+    "comment_raw": "COMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: F  column: 6.\n",
+    "header_raw": "LOCUS       JK608592                 699 bp    mRNA    linear   EST 06-OCT-2011\nDEFINITION  CFGZ16435.b1 CFGZ Setaria italica Yugu1 floral spike Setaria\n            italica cDNA clone CFGZ16435 5', mRNA sequence.\nACCESSION   JK608592\nVERSION     JK608592.1\nDBLINK      BioSample: SAMN00736318\nKEYWORDS    EST.\nSOURCE      Setaria italica (foxtail millet)\n  ORGANISM  Setaria italica\n            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;\n            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD\n            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.\nREFERENCE   1  (bases 1 to 699)\n  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.\n  TITLE     DOE Joint Genome Institute Setaria italica EST project\n  JOURNAL   Unpublished\nCOMMENT     Contact: Lindquist,E.A.\n            DOE Joint Genome Institute\n            2800 Mitchell Drive, Walnut Creek, CA 94598, USA\n            Tel: 925 296 5600\n            Fax: 925 296 5710\n            Email: cdna@jgi-psf.org\n            cDNA Library Preparation: DOE Joint Genome Institute:\n            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome\n            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome\n            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries\n            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)\n            Plate: CFGZ 0169  row: F  column: 6.\n",
+    "features_raw": "FEATURES             Location/Qualifiers\n     source          1..699\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16435\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "source_feature_raw": "     source          1..699\n                     /organism=\"Setaria italica\"\n                     /mol_type=\"mRNA\"\n                     /strain=\"Yugu1\"\n                     /db_xref=\"taxon:4555\"\n                     /clone=\"CFGZ16435\"\n                     /tissue_type=\"floral spike\"\n                     /clone_lib=\"SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike\"\n                     /lab_host=\"DH10B TonA\"\n                     /note=\"Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA).\"\n",
+    "qualifiers": {
+      "organism": [
+        "Setaria italica"
+      ],
+      "mol_type": [
+        "mRNA"
+      ],
+      "strain": [
+        "Yugu1"
+      ],
+      "db_xref": [
+        "taxon:4555"
+      ],
+      "clone": [
+        "CFGZ16435"
+      ],
+      "tissue_type": [
+        "floral spike"
+      ],
+      "clone_lib": [
+        "SAMN00736318 CFGZ Setaria italica Yugu1 floral\n                     spike"
+      ],
+      "lab_host": [
+        "DH10B TonA"
+      ],
+      "note": [
+        "Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI\n                     (B); The library was made from oligo(dT)-primed cDNA and\n                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,\n                     Mountain View, CA) using the SMART system (BD Biosciences,\n                     San Jose, CA). To generate the first strand, polyA RNA was\n                     primed with an oligo(dT) primer\n                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,\n                     G, or C). The second strand was synthesized by PCR using\n                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'\n                     followed by digestion of the SfiI sites. cDNA was size\n                     selected >2kb using 1.1% agarose gel electrophoresis, then\n                     ligated into pDNR-LIB. Library is normalized. Library was\n                     created and sequencing performed by the DOE Joint Genome\n                     Institute (Walnut Creek, CA)."
+      ]
+    },
+    "sequence_length": 699,
+    "sequence_sha256": "b8a0ebac5dbc226c3ad6539acd8700287ead513c8e2f93ed40643e3af629f029",
+    "parent_original_sequence_sha256": "b8a0ebac5dbc226c3ad6539acd8700287ead513c8e2f93ed40643e3af629f029",
+    "parent_source_sha256": "ff7474961d7253a7cca69e886e2b566c9977a312fe79528978ef059b2c94cbec",
+    "sequence_exact_match": true,
+    "record_sha256": "11393c05d0d9a862a7939c11fa0421a0443064e30999437a7296de32cdd7e0b3",
+    "raw_byte_start": 54680,
+    "raw_byte_end": 58547,
+    "a11_status": "unassessable",
+    "training_eligible": false
+  }
+]

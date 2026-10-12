@@ -1,0 +1,71 @@
+$ ssh -o BatchMode=yes pronghorn 'date -Is; sacct -j 6163851,6164049 -X -P --format=JobID,WorkDir%180,Comment%150,SystemComment%150,AdminComment%150; sacctmgr -n -P show assoc where user=wyim format=User,Account,Partition,QOS; df -Pk /data/gpfs/assoc/pgl/data/Transgenic /tmp; scontrol show node cpu-50; scontrol show node cpu-51'
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T15:35:13-0700
+JobID|WorkDir|Comment|SystemComment|AdminComment
+6163851|/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914|||
+6164049_0|/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915|||
+6164049_1|/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915|||
+6164049_2|/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915|||
+6164049_3|/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915|||
+6164049_4|/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915|||
+6164049_5|/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915|||
+6164049_6|/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915|||
+6164049_7|/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915|||
+wyim|cpu-s1-pgl-0|cpu-s1-pgl-0|normal
+wyim|cpu-s6-test-0|cpu-s6-test-0|normal
+wyim|cpu-s6-test-0|cpu-s6-core-0|normal
+wyim|cpu-s3-sponsored-0|cpu-s3-sponsored-0|normal
+wyim|cpu-s3-sponsored-0|cpu-s3-core-0|normal
+wyim|cpu-s5-bch709-6|cpu-core-0|student
+wyim|cpu-s5-bch709-5|cpu-core-0|student
+wyim|cpu-s5-bch709-4|cpu-core-0|student
+wyim|cpu-s5-bch709-3|cpu-core-0|student
+wyim|cpu-s5-bch709-2|cpu-core-0|student
+wyim|gpu-s2-pgl-0|gpu-s2-core-0|normal
+wyim|cpu-s2-pgl-0|cpu-s2-core-0|normal
+wyim|cpu-s2-bch709-1|cpu-s2-core-0|renter
+Filesystem     1024-blocks        Used   Available Capacity Mounted on
+pronghorn-0    64424509440 35495370752 28929138688      56% /data/gpfs
+/dev/md2         379153380    11783176   348087208       4% /
+NodeName=cpu-50 Arch=x86_64 CoresPerSocket=16 
+   CPUAlloc=6 CPUTot=64 CPULoad=1.62
+   AvailableFeatures=intelv4
+   ActiveFeatures=intelv4
+   Gres=(null)
+   NodeAddr=cpu-50 NodeHostName=cpu-50 Version=20.11.7
+   OS=Linux 3.10.0-1160.31.1.el7.x86_64 #1 SMP Thu Jun 10 13:32:12 UTC 2021 
+   RealMemory=256000 AllocMem=74240 FreeMem=206916 Sockets=2 Boards=1
+   MemSpecLimit=24000
+   State=MIXED ThreadsPerCore=2 TmpDisk=0 Weight=200 Owner=N/A MCS_label=N/A
+   Partitions=cpu-s1-pgl-0 
+   BootTime=2026-06-17T12:40:33 SlurmdStartTime=2026-06-17T12:44:42
+   CfgTRES=cpu=64,mem=250G,billing=314
+   AllocTRES=cpu=6,mem=72.50G
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/s ExtSensorsWatts=0 ExtSensorsTemp=n/s
+   Comment=(null)
+
+NodeName=cpu-51 Arch=x86_64 CoresPerSocket=16 
+   CPUAlloc=0 CPUTot=64 CPULoad=0.01
+   AvailableFeatures=intelv4
+   ActiveFeatures=intelv4
+   Gres=(null)
+   NodeAddr=cpu-51 NodeHostName=cpu-51 Version=20.11.7
+   OS=Linux 3.10.0-1160.31.1.el7.x86_64 #1 SMP Thu Jun 10 13:32:12 UTC 2021 
+   RealMemory=256000 AllocMem=0 FreeMem=222465 Sockets=2 Boards=1
+   MemSpecLimit=24000
+   State=IDLE ThreadsPerCore=2 TmpDisk=0 Weight=200 Owner=N/A MCS_label=N/A
+   Partitions=cpu-s1-pgl-0 
+   BootTime=2026-06-18T09:34:17 SlurmdStartTime=2026-06-18T09:39:40
+   CfgTRES=cpu=64,mem=250G,billing=314
+   AllocTRES=
+   CapWatts=n/a
+   CurrentWatts=0 AveWatts=0
+   ExtSensorsJoules=n/s ExtSensorsWatts=0 ExtSensorsTemp=n/s
+   Comment=(null)
+
+
+LOCAL_SSH_EXIT=0

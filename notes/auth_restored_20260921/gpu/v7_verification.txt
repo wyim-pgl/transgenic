@@ -1,0 +1,83 @@
+Raw capture 5 -- independent from-scratch verification of the v7 tree (read-only).
+Executed 2026-09-21 08:37:14 PDT (remote 2026-09-21T10:37:14-05:00), as a
+separate SSH invocation from the creation pass -- every value re-read from disk.
+
+===V7_TREE===
+dev123_p1_release_v7_20260921:
+drwx------+ 3 wcyim grp_202    4096 2026-09-21 10:36:47 -0500 .
+-r--r--r--+ 1 wcyim grp_202   27611 admission.py
+-r--r--r--+ 1 wcyim grp_202    2608 authorization.example.json
+-r--r--r--+ 1 wcyim grp_202    5688 build_release.py
+-r--r--r--+ 1 wcyim grp_202 1873920 code.candidate.tar
+-r--r--r--+ 1 wcyim grp_202    3332 controller_execution_scope.json
+-r--r--r--+ 1 wcyim grp_202   29149 deploy.py
+drwx------+ 2 wcyim grp_202    4096 notes
+-r--r--r--+ 1 wcyim grp_202   11828 operator-pins.json
+-r--r--r--+ 1 wcyim grp_202    2010 p1.sbatch
+-r--r--r--+ 1 wcyim grp_202   25219 release.json
+-r--r--r--+ 1 wcyim grp_202    1181 release.sha256
+-r--r--r--+ 1 wcyim grp_202   12174 source-manifest.json
+notes/:
+-r--r--r--+ 1 wcyim grp_202 859299 b6_mvp_candidate_inventories_20260915.json
+-r--r--r--+ 1 wcyim grp_202  11786 b6_mvp_candidate_receipts_20260915.json
+-r--r--r--+ 1 wcyim grp_202   9832 b6_mvp_technical_candidate_20260915.json
+
+All payload mtimes read 1969-12-31 18:00:00 -0600 (epoch 0). That is a property
+of the immutable transport archive itself -- `tar tvf release_v6.tar` records
+every member at epoch 0 -- faithfully restored by `tar -xp`. It is not a defect
+and not a clock problem.
+
+===V7_ENTRY_COUNTS===
+regular_files=14
+symlinks=0
+dirs=2
+owner_writable_files=0
+non_0444_files:       (empty -- no file is anything other than 0444)
+
+===V7_HASHES=== path|sha256|size|mode|owner|inode
+admission.py|6f75c8113ff37376b3c62d4ae6f9a52d58d9ebbbbef76151a49b92119f467fa4|27611|444|wcyim|522420017204131209
+authorization.example.json|25e75757eca9baed93522d73cb22cae9e0acfa0338ac5ef561b760e4dc4fec1f|2608|444|wcyim|522420017204131210
+build_release.py|06d5cab84d436de615ca681b69760c1b22eaab7f3ae9fd3339d1bc536f154049|5688|444|wcyim|522420017204131211
+code.candidate.tar|da161088fb401dbe87382685c1b5faadc17c7255d4a89f705fe1126ecc5bcec7|1873920|444|wcyim|522420017204131212
+controller_execution_scope.json|5566677068d0b22a9f1db7d0683c650e5bcc26f13d84c421aac1b8b7eb9c68aa|3332|444|wcyim|522420017204131213
+deploy.py|3eba7fa940c31f37f3bc7ea3d9229b8723fde62749d850759b1d062e587e1543|29149|444|wcyim|522420017204131214
+notes/b6_mvp_candidate_inventories_20260915.json|9f79019679bfdd25b0a2bdac7cae63d01fa6d874be03fa3ef3f81cfd0a880a98|859299|444|wcyim|522420017204131216
+notes/b6_mvp_candidate_receipts_20260915.json|73204a4ed98624b1567a5eb26fd6b2bbafbb597e0bd4b807685e8c703c807bac|11786|444|wcyim|522420017204131217
+notes/b6_mvp_technical_candidate_20260915.json|faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e|9832|444|wcyim|522420017204131218
+operator-pins.json|45bd57640d7c55ee7ce7b1f20ab48b58729f5e58b880c4608813b99356d28c72|11828|444|wcyim|522420017204131219
+p1.sbatch|f3b4dd15f3c589b7d329c311e537451a7ba087486c3d89cb74ce10a82288901a|2010|444|wcyim|522420017204131220
+release.json|64a547b8ba5f54e87c1985f278564a9ea9fc7c8f3af07f6b6afe3bdf17f4f7d4|25219|444|wcyim|522420017204131221
+release.sha256|74a740ea154532aa3c0b807d052fb9c05bdf02fcfb6fd86845d348be72f70d9b|1181|444|wcyim|522420017204131222
+source-manifest.json|4eb7476aa36e77ed8967bc5d6ea73f005deb078b5a5e9b9491976f3d4c79eb0a|12174|444|wcyim|522420017204131223
+
+===V7_LEDGER_SELFCHECK=== (sha256sum -c release.sha256, run on the v7 tree)
+ledger_line_count=13
+code.candidate.tar: OK
+source-manifest.json: OK
+notes/b6_mvp_technical_candidate_20260915.json: OK
+notes/b6_mvp_candidate_inventories_20260915.json: OK
+notes/b6_mvp_candidate_receipts_20260915.json: OK
+deploy.py: OK
+admission.py: OK
+authorization.example.json: OK
+p1.sbatch: OK
+build_release.py: OK
+controller_execution_scope.json: OK
+operator-pins.json: OK
+release.json: OK
+-> 13/13 OK, 0 FAILED.
+
+===V7_LEDGER_FILE_IDENTITY===
+74a740ea154532aa3c0b807d052fb9c05bdf02fcfb6fd86845d348be72f70d9b  release.sha256
+4eb7476aa36e77ed8967bc5d6ea73f005deb078b5a5e9b9491976f3d4c79eb0a  source-manifest.json
+64a547b8ba5f54e87c1985f278564a9ea9fc7c8f3af07f6b6afe3bdf17f4f7d4  release.json
+(the two members v6 never completed are now present at their expected identities)
+
+===SQUEUE=== (08:37 PDT, read-only)
+   3149358      b5-seed    PENDING       0:00 (Priority)
+   3149363      b5-seed    PENDING       0:00 (Dependency)
+   3149362      b5-seed    PENDING       0:00 (Dependency)
+   3149361      b5-seed    PENDING       0:00 (Dependency)
+   3149360      b5-seed    PENDING       0:00 (Dependency)
+   3149359      b5-seed    PENDING       0:00 (Dependency)
+No job was submitted. No MVP diagnostic job is queued or running.

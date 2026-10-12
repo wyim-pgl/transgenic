@@ -1,0 +1,121 @@
+{
+  "counts_by_taxid": {
+    "3702": {
+      "in": 1,
+      "out": 0
+    },
+    "4530": {
+      "in": 1,
+      "out": 1
+    },
+    "88": {
+      "in": 1,
+      "out": 0
+    },
+    "99": {
+      "in": 1,
+      "out": 0
+    }
+  },
+  "database_getseq_sha256": "b85533e81d71838ef11b668a7d6580aa1877bfe5e20dccb47a313d485414191e",
+  "db_sha256": "b9a7608ce64fa3b2d4f18bbf00e46a3da4a47f628d20c925c03770ccfdae4037",
+  "diamond_version": "diamond version 2.1.24\ndiamond v2.1.24.178 (C) Max Planck Society for the Advancement of Science, Benjamin J. Buchfink, University of Tuebingen",
+  "excluded_taxids": [
+    88,
+    99,
+    3702
+  ],
+  "fields": [
+    "qseqid",
+    "qlen",
+    "sseqid",
+    "slen",
+    "qstart",
+    "qend",
+    "sstart",
+    "send",
+    "length",
+    "evalue",
+    "bitscore",
+    "qframe",
+    "btop",
+    "cigar",
+    "qseq_gapped",
+    "sseq_gapped",
+    "qseq_translated"
+  ],
+  "filtered_fasta_sha256": "dc0a6d07692b691870ca0c8227288ec196624448f88a9d12d31b052dd65488da",
+  "hsps_lt_30aa": 0,
+  "lineage": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/fixture/result/engine_fixture/lineage.tsv",
+  "lineage_sha256": "6ddc847469fae4f1f514acfd053faa90e2f7142d725985419cef2c642e361928",
+  "note": "Raw endpoints are 1-based; >=30aa acceptance and phase projection are downstream, not applied here.",
+  "query_sha256": "9712780ae80992c83870127da394ea0dfa5e159c152324abbbf96c81342090f3",
+  "raw_hsps": 6,
+  "raw_sha256": "3b43cbb2618adc69e532775c269b7a1e24f5494c49ef8c6dc8a7e3b64036f3dc",
+  "retained_taxids": [
+    4530
+  ],
+  "sequences_excluded": 3,
+  "sequences_in": 4,
+  "sequences_out": 1,
+  "source": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/fixture/result/engine_fixture/swissprot/source.fa",
+  "source_kind": "swissprot",
+  "source_sha256": "4f9fb81c23ef7b967ba7c1dc54c86f5ca2349e1515e8ea1e1b283e23991b672c",
+  "species_root": 3702,
+  "traceback_checks": {
+    "deletion": {
+      "cigar": "90M3D87M",
+      "frameshifts": [],
+      "net_frameshift_nt": 0,
+      "query_reverse": false,
+      "translated_residues": 177
+    },
+    "insertion": {
+      "cigar": "90M3I90M",
+      "frameshifts": [],
+      "net_frameshift_nt": 0,
+      "query_reverse": false,
+      "translated_residues": 183
+    },
+    "minus1": {
+      "cigar": "90M1/90M",
+      "frameshifts": [
+        {
+          "delta_nt": -1,
+          "marker": "/",
+          "oriented_nt_offset": 270
+        }
+      ],
+      "net_frameshift_nt": -1,
+      "query_reverse": false,
+      "translated_residues": 180
+    },
+    "ordinary": {
+      "cigar": "180M",
+      "frameshifts": [],
+      "net_frameshift_nt": 0,
+      "query_reverse": false,
+      "translated_residues": 180
+    },
+    "plus1": {
+      "cigar": "90M1\\90M",
+      "frameshifts": [
+        {
+          "delta_nt": 1,
+          "marker": "\\",
+          "oriented_nt_offset": 270
+        }
+      ],
+      "net_frameshift_nt": 1,
+      "query_reverse": false,
+      "translated_residues": 180
+    },
+    "reverse": {
+      "cigar": "180M",
+      "frameshifts": [],
+      "net_frameshift_nt": 0,
+      "query_reverse": true,
+      "translated_residues": 180
+    }
+  }
+}

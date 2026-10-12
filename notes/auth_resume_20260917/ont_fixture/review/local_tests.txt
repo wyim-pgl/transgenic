@@ -1,0 +1,67 @@
+test_closure_and_pins (reviewed_tests.FixtureTests) ... ok
+test_deterministic_inputs_and_fixed_oracle (reviewed_tests.FixtureTests) ... ok
+test_junction_cli_help_bootstrap (reviewed_tests.FixtureTests) ... FAIL
+test_real_frozen_cli_preflight_and_panel_seam (reviewed_tests.FixtureTests) ... ok
+test_stub_pipeline_and_real_postflight_NOT_real_tool_evidence (reviewed_tests.FixtureTests) ... FAIL
+test_wrong_junctions_rejected (reviewed_tests.FixtureTests) ... ok
+
+======================================================================
+FAIL: test_junction_cli_help_bootstrap (reviewed_tests.FixtureTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/test_fixture.py", line 93, in test_junction_cli_help_bootstrap
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/fixture.py", line 333, in <module>
+    sys.exit(main())
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/fixture.py", line 326, in main
+    return entry(args.release.resolve(), args.root.resolve(), args.kind,
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/fixture.py", line 164, in entry
+    j = module(release/'frozen/revision/scripts/mvp/mvp_junction_table.py', 'fixture_junction_cli')
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/fixture.py", line 66, in module
+    spec.loader.exec_module(m)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/package/frozen/revision/scripts/mvp/mvp_junction_table.py", line 51, in <module>
+    ES = load_evidence_support()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/package/frozen/revision/scripts/mvp/mvp_junction_table.py", line 47, in load_evidence_support
+    spec.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/package/frozen/revision/scripts/59_evidence_support.py", line 242, in <module>
+    class Junction:
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/package/frozen/revision/scripts/59_evidence_support.py", line 244, in Junction
+    corrected: tuple | None
+TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'
+
+
+======================================================================
+FAIL: test_stub_pipeline_and_real_postflight_NOT_real_tool_evidence (reviewed_tests.FixtureTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/test_fixture.py", line 77, in test_stub_pipeline_and_real_postflight_NOT_real_tool_evidence
+    self.assertEqual(receipt['exit_code'], 0, (control/'driver.stderr').read_text())
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/fixture.py", line 333, in <module>
+    sys.exit(main())
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/fixture.py", line 326, in main
+    return entry(args.release.resolve(), args.root.resolve(), args.kind,
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/fixture.py", line 177, in entry
+    driver.main(argv)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/package/frozen/revision/scripts/mvp/mvp_align_panel_longreads.py", line 225, in main
+    print(json.dumps(execute(p.parse_args(argv)), indent=2))
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/package/frozen/revision/scripts/mvp/mvp_align_panel_longreads.py", line 198, in execute
+    run([sys.executable, str(SCRIPTS / 'mvp/mvp_junction_table.py'), '--alignment',
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/package/frozen/revision/scripts/mvp/mvp_align_panel_longreads.py", line 175, in run
+    subprocess.run(command, check=True, stderr=err)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/fixture.py", line 172, in run
+    result = original_run(actual, *args, **kwargs)
+  File "/home/wyim/miniconda3/lib/python3.8/subprocess.py", line 516, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/home/wyim/miniconda3/bin/python3', '-I', '-B', '/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/fixture.py', 'entry', '/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/package', '/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/review/tmptzzhlipm/synthetic', 'junction', '--', '--alignment', 'ONT:uf=false:/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/review/tmptzzhlipm/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel.bam', '--panels', '/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/review/tmptzzhlipm/synthetic/panel.tsv', '--out', '/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/review/tmptzzhlipm/synthetic/evidence/mvp_scoring_20260916/SRR28341943/junctions.tsv', '--qc-out', '/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture/review/tmptzzhlipm/synthetic/evidence/mvp_scoring_20260916/SRR28341943/junctions.qc.json']' returned non-zero exit status 1.
+
+
+----------------------------------------------------------------------
+Ran 6 tests in 6.352s
+
+FAILED (failures=2)

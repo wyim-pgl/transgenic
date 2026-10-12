@@ -1,0 +1,10 @@
+{
+  "host_compat_source_pins_match": true,
+  "ledger": "10e2ec018cf00bb9180f8884b44a00a1d376734e7c5abfeb84e97be706facaa9",
+  "prior_v2_source_and_operator_pins_unchanged": true,
+  "release_json": "e0d2262a7aa94b49cdf08de764d6b807c75779dc32a5a7e83ff12810084c5389",
+  "source_archive": "da161088fb401dbe87382685c1b5faadc17c7255d4a89f705fe1126ecc5bcec7",
+  "source_files": 103,
+  "transport": "b3dafe316605a8ccaae61e94854fe527bd8591cb4600ae152afae017d2807458",
+  "transport_files": 14
+}

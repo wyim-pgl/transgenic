@@ -1,0 +1,968 @@
+diff --git a/notes/MVP_EVALUATION_INPUT_CONTRACT.md b/notes/MVP_EVALUATION_INPUT_CONTRACT.md
+new file mode 100644
+index 0000000..8f6f250
+--- /dev/null
++++ b/notes/MVP_EVALUATION_INPUT_CONTRACT.md
+@@ -0,0 +1,58 @@
++# MVP evaluation producer contract (Track B, controller review required)
++
++Interface: `revision/scripts/mvp/mvp_produce_counts.py --input evaluation.json --out NEW_DIRECTORY`.
++Python: `produce(evaluation_manifest_path, new_output_directory)` in that script.
++Training does not wait for this evaluator. No GPU, alignment, fetching, or jobs here.
++
++Decoder writes a JSON transport manifest, **not an approval or trusted count receipt**:
++
++```json
++{
++  "panels": "/absolute/b6_panels_v1.tsv",
++  "fasta": "/absolute/Athaliana_167_TAIR10.fa",
++  "reference": "/absolute/Athaliana_167_TAIR10.gene.clean.gff3",
++  "candidate": {"acceptance": "/absolute/acceptance.json", "acceptance_sha256": "...", "inventory": "/absolute/inventory.json", "receipts": "/absolute/receipts.json", "corpus": "/absolute/corpus.db", "evidence": "/absolute/c0lite.db"},
++  "runs": {
++    "1": {"final": "/absolute/mvp_seed1/final", "code_manifest": "/absolute/consumed_code_manifest.json"},
++    "2": {"final": "/absolute/mvp_seed2/final", "code_manifest": "/absolute/consumed_code_manifest.json"},
++    "3": {"final": "/absolute/mvp_seed3/final", "code_manifest": "/absolute/consumed_code_manifest.json"}
++  },
++  "decoder": {"files": {"/absolute/decoder.py": "sha256"}, "commands": [["python", "decoder.py", "..."]]},
++  "predictions": [
++    {"seed": 1, "fraction": 0, "gene_id": "EXACT_PANEL_ID", "window": ["Chr1", 10000, 40720], "path": "/absolute/locus.gff3", "sha256": "...", "size": 1234, "checkpoint_sha256": "..."}
++  ]
++}
++```
++
++Exactly 350 prediction rows: each frozen panel locus × seeds 1/2/3 × fractions
++0/1, plus seed **123**, fraction **0** for each locus. Integers, not booleans or
++strings. Window is chromosome, **0-based half-open** start/end from
++`mvp_windows.evaluation_window`. GFF3 coordinates are **1-based inclusive,
++genomic forward reference**, known genomic strands; gene/mRNA/exon/CDS hierarchy.
++Empty header-only GFF3 is a completed zero-prediction decode, never a missing file.
++Each row binds the actual checkpoint bytes: final `model.safetensors` for 1/2/3;
++initialization audit's source model for 123. One independent file per row.
++
++Final directories use the existing `mvp_finalize` five-payload `manifest.json`,
++`TRAINING_DONE`, metadata, paired records/summary unchanged. No separate invented
++seed receipt. Candidate records use existing CLI schemas and actual DB inventory
++verification. Code manifests are those hashed in final metadata; their listed
++source bytes must remain locally available. Initialization source files also
++remain locally available. Decoder files/commands are recorded provenance, not
++proof a command ran. Counts are derived afresh from raw GFF, never accepted from
++this JSON.
++
++Reference authority: repository commit
++`92d8020ee79eeedd7f1d50167b1c8dc94700fb16:data/manifests/b5_species_v1.tsv`,
++Athaliana row. Missing git object or mismatch fails closed. No caller reference
++hash can replace this anchor. GFFCompare **0.12.6** must be on PATH. The producer
++runs only local GFFCompare comparisons, records executable bytes/version, exact
++commands and output bytes. It does not run alignments.
++
++Outputs: `counts.json`, `statistics.json`, `receipt.json`, per-locus restricted
++GTF and GFFCompare outputs. Independent read-splice P/R is **absent**, not negative,
++until the separate alignment provenance/author coverage policy is resolved.
++Final decisions remain blocked; withholding and HiFi policy are not inferred.
++Duplicate structure ambiguity is rejected rather than silently introducing a
++new isoform deduplication rule (see scoring report). Operational use requires
++controller review and real GFFCompare smoke validation.
+diff --git a/notes/MVP_SCORE_PROVENANCE_REPORT.md b/notes/MVP_SCORE_PROVENANCE_REPORT.md
+new file mode 100644
+index 0000000..767927d
+--- /dev/null
++++ b/notes/MVP_SCORE_PROVENANCE_REPORT.md
+@@ -0,0 +1,140 @@
++# MVP score provenance implementation report
++
++## Identity / status
++
++- Worktree `/tmp/b6-p2-scoring-1535144`, branch `b6-p2-scoring-1535144`.
++- Verified requested base: `2276fcb1efdeb124a97a11dced8d73e4d48560e0`.
++- Implementation: **`1a9253d02b0202106e29587ff689bb1e2e1f3e72`**.
++- **Partial evaluation implementation; controller review required before use.**
++  No empirical efficacy, real-tool certification, training authorization, or
++  complete connected biological evaluation is claimed.
++- Decoder interface published early at
++  **`notes/MVP_EVALUATION_INPUT_CONTRACT.md`**. Producer:
++  `revision/scripts/mvp/mvp_produce_counts.py`.
++- No training code, approved bootstrap math, fixed thresholds, legacy scorer,
++  main worktree, or approved protocol was edited. Training does not wait on this
++  producer. No GPU, real alignment, remote action, job, subagent, merge or push.
++  Pre-existing `.gitignore` change and `.ignore` remain outside task commits.
++
++## What is implemented
++
++1. **Existing finalizer receipts, not a parallel trust schema.** Reads the exact
++   five-payload `manifest.json`, `TRAINING_DONE`, `metadata.json`, paired JSONL,
++   paired summary and final safetensors produced by `mvp_finalize`. Reuses its
++   metadata validation and `mvp_metrics.aggregate_paired_records`. Binds seed
++   1/2/3, augmentation seed, fixed recipe, source checkpoint/audit file bytes,
++   final checkpoint/config bytes, code-manifest hash and listed code bytes,
++   corpus/evidence/panel identities, and exact complete valid RN inventory.
++   Duplicate final RN records fail even if the manifest is rehashed.
++2. **Actual candidate inventory reuse.** Reuses `validate_candidate_records`
++   and `verify_candidate_artifacts`, including read-only corpus/evidence DB
++   metadata comparisons. All seeds share data, consumed-code and initialization
++   source identities. Code-manifest package comparisons use overlapping package
++   fields: the existing finalizer runtime schema does not include duckdb.
++3. **Commit-bound reference identity.** Reads the existing immutable git object
++   `92d8020ee79eeedd7f1d50167b1c8dc94700fb16:data/manifests/b5_species_v1.tsv`.
++   Exact Athaliana FASTA MD5 `513e5ef30845ed754b00816a99abbf8e`; GFF MD5
++   `0264c349bc61ccceb546648edec46ebb`. Missing git anchor or mismatched data fails
++   closed. No caller-provided reference hash/approval can substitute. FASTA
++   lengths are streamed and frozen panel windows checked against them.
++4. **Raw reference-dependent count production.** Reuses script 24 restriction
++   and script 07 half-open parser behind strict validation. Exact panel gene
++   geometry/strand and gene-overlap prediction restriction; explicit exons,
++   CDS containment, unique transcript IDs, known strands and parent hierarchy.
++   Multi-exon comparisons invoke GFFCompare 0.12.6, accept `=` only after exact
++   chain/strand cross-check; monoexonic matches require exact nonempty CDS.
++   TP/FP/FN, commands, executable/version, inputs, restricted GTF and scorer
++   output identities are retained. No caller counts are accepted as verified.
++5. **350-output transport inventory.** All frozen 50 loci × three seeds × off/on,
++   plus 50 seed-123 baseline outputs. Exact window, checkpoint, bytes and unique
++   file identity required; partial panels and cross-seed checkpoint substitution
++   fail. Empty header-only GFF is zero prediction; missing files are errors.
++   Baseline reference F1 percentages are reported for all50/core20. Bootstrap
++   computation calls the unchanged existing adapter in the same invocation.
++6. **Boundaries preserved.** Reference F1 is not independent read-splice P/R.
++   Structural metrics are absent, never zero-filled; withholding remains
++   unassessable; coverage/HiFi author-policy block and `decision=null` remain.
++   Old `mvp_score.py --input counts.json` is intentionally still an unverified
++   count adapter; loading producer counts there does not transfer verification.
++
++Local receipts establish byte/schema/identity consistency. They cannot prove
++historical training or decoder execution against a party capable of rewriting
++all artifacts, and are not scientific approval. Decoder commands are explicitly
++recorded, not independently witnessed. Existing metadata `verification` labels
++are not treated as substitute evidence for byte checks.
++
++## Actual CPU verification
++
++Main covering run:
++
++```sh
++PYTHONPATH=/tmp/b6-trackb-testdeps:src \
++  /home/wyim/miniconda3/envs/pdb/bin/python -m pytest \
++  tests/test_mvp_score_producer.py tests/test_mvp_score_producer_integration.py \
++  tests/test_mvp_scoring.py tests/test_mvp_scoring_driver.py \
++  tests/test_mvp_metrics.py revision/scripts/tests/test_evidence_support.py -q
++```
++
++**115 passed, 21 subtests passed** (21.55 s final main run). New producer suites
++account for **20 tests**. Coverage includes hand-count TP/FP/FN, strand and exact
++mono CDS changes, duplicate-isoform rejection, malformed GFF, missing/empty
++predictions, full350 inventory, partial panel, wrong windows/checkpoints,
++actual finalizer publication, wrong seeds, missing RN, byte mutation, rehashed
++bad summary/duplicate RN/test-scope/marker, missing authority anchor and wrong
++reference bytes. The full350 integration uses the actual frozen panel and real
++CPU finalizer publication, but **synthetic reference/candidate authority and an
++explicit GFFCompare subprocess stand-in**; it is not biological/tool validation.
++
++Additional reused candidate gate verification:
++
++```sh
++PYTHONPATH=/tmp/b6-p2-readiness-1535112/.testdeps:/tmp/b6-trackb-testdeps:src \
++  /home/wyim/miniconda3/envs/pdb/bin/python -m pytest \
++  tests/test_mvp_cli.py -k candidate -q
++```
++
++**16 passed, 29 deselected** (17.08 s). Initial attempt using only Track B's
++existing test dependencies had 6 import failures because duckdb was absent;
++reused the already-installed local temporary dependency directory read-only.
++No repository/system dependency installation was made. Initial new tests also
++caught the real duckdb/runtime-package schema difference and script 24's final
++attribute newline capture; both were fixed, with the latter confined to the
++locally loaded restrictor instance rather than editing the frozen script.
++
++`compileall` for the task modules/tests and `git diff --check` passed. Graft was
++queried before source work and refreshed after implementation. This is targeted
++CPU verification, not the complete repository test suite.
++
++## Remaining gaps / required review
++
++- **Real GFFCompare 0.12.6 is not installed on PATH here.** No real comparison
++  binary was run. Exact tmap behavior, actual frozen-reference parsing, decoder
++  GFF compatibility and successful full-panel empirical production still need
++  an authorized local CPU smoke. Fake tool fixtures are explicitly not proof.
++- **Duplicate-isoform multiplicity policy remains unresolved.** Identical
++  multi-exon intron chains or monoexonic CDS structures in either selected set
++  currently fail closed. This includes reference isoforms differing only in
++  terminal boundaries. They are not silently deduplicated and cannot inflate
++  TP. This may block real scoring. Controller/author must settle multiplicity
++  semantics before extending this producer; the approved document does not
++  specify a duplicate policy sufficient to justify inventing one here.
++- **Independent read-evidence provenance is not connected to this producer.**
++  The existing alignment driver/table remain as before, including their
++  external-reference-gate boundary. The new reference gate does not certify old
++  alignments. No HiFi/ONT coverage, independently verified splice P/R, complete
++  chain support, or withholding-equivalence receipt was produced. This is a
++  remaining requested integration, not completed work.
++- The manifest binds declared decoder code/commands/output bytes/checkpoint,
++  but the separately owned decoder must actually emit and use this contract.
++  No decoder or training run was invoked and no real prediction was produced.
++- The strict GFF adapter requires ordered gene/transcript/features and explicit
++  exons; unsupported feature forms fail instead of silently normalizing. Real
++  compatibility may require a reviewed normalization producer, not relaxation
++  of identity or denominator checks.
++- No resume/overwrite: failures may leave partial comparison directories, but
++  no final receipt is published until verification and statistics finish.
++- Author HiFi/ONT-only coverage and withholding policy remain unresolved. No
++  new authority booleans or final-decision bypass were introduced.
++
++Controller should review these gaps before operational promotion. The unchanged
++training path can proceed through its own approved gates independently.
+diff --git a/revision/scripts/mvp/SCORING.md b/revision/scripts/mvp/SCORING.md
+index c1d2cd8..9989006 100644
+--- a/revision/scripts/mvp/SCORING.md
++++ b/revision/scripts/mvp/SCORING.md
+@@ -1,13 +1,55 @@
+ # Track B CPU scoring boundary
+ 
+ Exploratory / MVP only. No training authorization, GPU decoder, job submission,
+ or empirical results are supplied by these programs.
+ 
++## Raw-GFF producer (new, controller review required)
++
++`mvp_produce_counts.py --input evaluation.json --out NEW_DIRECTORY` derives
++reference-dependent counts in the same invocation that verifies finalizer
++receipts and computes the existing statistics. Exact decoder transport contract:
++`notes/MVP_EVALUATION_INPUT_CONTRACT.md`. Do not feed `counts.json` back into the
++legacy adapter and describe its output as independently verified: that adapter
++still deliberately labels caller-supplied counts unverified.
++
++The producer binds the existing finalizer five-file manifest, marker, production
++metadata, seed/augmentation recipe, checkpoint and source initialization bytes,
++consumed code manifest/source bytes, paired summary, and complete valid RN set
++from the existing candidate/inventory/actual-DB verifier. All three runs must
++share consumed code and initialization source identities. Hashes establish local
++consistency, not proof of historical execution, authority, or scientific approval.
++
++FASTA/GFF MD5 authority is the Athaliana row of commit
++`92d8020ee79eeedd7f1d50167b1c8dc94700fb16:data/manifests/b5_species_v1.tsv`,
++read from git, not supplied by the caller. Missing anchor or wrong bytes fails.
++The reference is restricted by the existing script 24, then checked against
++panel gene coordinates/strand; raw predictions are restricted by gene overlap.
++A strict wrapper reuses script 07's half-open parser. Explicit exon rows and
++ordered gene/transcript/features are required; unsupported features and malformed
++geometry fail instead of silently changing denominators. Monoexonic matches
++require identical nonempty CDS intervals and strand. Multiexonic matching runs
++GFFCompare 0.12.6 and accepts only `=` with independently equal intron chains and
++strand. Exact commands, executable bytes/version, comparison output bytes,
++TP/FP/FN and per-locus input identities are retained. Empty prediction files are
++valid completed zero predictions; missing files are errors.
++
++**Unresolved multiplicity:** duplicate identical intron-chain structures (or
++identical monoexonic CDS structures) in either selected prediction/reference
++set currently fail closed. No silent deduplication, many-to-one TP inflation,
++or new author-approved multiplicity policy is asserted. This may block real
++panel scoring and needs controller/author resolution before operational use.
++Reference-dependent F1 and the seed-123 baseline are not independent splice P/R.
++Read-evidence coverage and withholding remain unavailable/unassessable, with
++unchanged author HiFi-policy block and `decision=null`. No training code or
++bootstrap math/thresholds changed. The legacy alignment driver below retains
++its explicit external-reference-gate limitation; this producer's reference gate
++does not retroactively certify any alignment outputs.
++
+ ## Alignment driver
+ 
+ `mvp_align_panel_longreads.py --help` lists required local inputs. Without
+ `--execute`, it only performs preparatory schema/geometry/byte checks, not
+ scientific input validation. The explicit `--execute` mode invokes minimap2,
+ seqkit, samtools, the existing orientation sampler/scorer, and the junction
+ wrapper locally. It never submits jobs. Run only in an authorized compute
+ allocation after independent review and real-tool smoke tests.
+diff --git a/revision/scripts/mvp/mvp_produce_counts.py b/revision/scripts/mvp/mvp_produce_counts.py
+new file mode 100644
+index 0000000..7f402a1
+--- /dev/null
++++ b/revision/scripts/mvp/mvp_produce_counts.py
+@@ -0,0 +1,388 @@
++#!/usr/bin/env python3
++"""Local raw-GFF reference scoring; receipts are consistency evidence, not authorization."""
++import argparse
++import csv
++import hashlib
++import importlib.util
++import io
++import json
++from pathlib import Path
++import re
++import shutil
++import subprocess
++import sys
++
++ROOT = Path(__file__).resolve().parents[3]
++sys.path.insert(0, str(ROOT / 'src'))
++from transgenic.evidence import mvp_windows as w
++from transgenic.evidence.mvp_bootstrap import validate_paired_record
++
++AUTHORITY_COMMIT = '92d8020ee79eeedd7f1d50167b1c8dc94700fb16'
++AUTHORITY_PATH = 'data/manifests/b5_species_v1.tsv'
++
++
++def require(ok, message):
++    if not ok:
++        raise ValueError(message)
++
++
++def read_json(path):
++    # Duplicate keys must not silently replace a seed or a file identity.
++    def unique(items):
++        result = {}
++        for k, v in items:
++            require(k not in result, f'duplicate JSON key: {k}')
++            result[k] = v
++        return result
++    return json.loads(Path(path).read_text(), object_pairs_hook=unique)
++
++
++def file_identity(path):
++    path = Path(path).resolve(strict=True)
++    require(path.is_file(), f'not a file: {path}')
++    return {'path': str(path), 'sha256': w.sha256_file(path), 'size': path.stat().st_size}
++
++
++def check_file(path, expected):
++    actual = file_identity(path)
++    require(actual['sha256'] == expected['sha256'], f'file hash mismatch: {path}')
++    if 'size' in expected:
++        require(type(expected['size']) is int and actual['size'] == expected['size'], f'file size mismatch: {path}')
++    return actual
++
++
++def frozen_reference(fasta, reference):
++    """Read authority from an existing immutable git object, never the working copy."""
++    proc = subprocess.run(['git', '-C', str(ROOT), 'show', f'{AUTHORITY_COMMIT}:{AUTHORITY_PATH}'],
++                          check=True, capture_output=True)
++    rows = list(csv.DictReader(io.StringIO(proc.stdout.decode()), delimiter='\t'))
++    rows = [r for r in rows if r['species_id'] == 'Athaliana']
++    require(len(rows) == 1, 'missing/ambiguous frozen Athaliana manifest row')
++    bound = {}
++    for name, path in [('fasta', fasta), ('gff', reference)]:
++        digest = hashlib.md5()
++        with Path(path).open('rb') as f:
++            for block in iter(lambda: f.read(1 << 20), b''):
++                digest.update(block)
++        require(digest.hexdigest() == rows[0][name + '_md5'], f'frozen {name} identity mismatch')
++        bound[name] = file_identity(path)
++    return {'commit': AUTHORITY_COMMIT, 'manifest': AUTHORITY_PATH,
++            'manifest_sha256': hashlib.sha256(proc.stdout).hexdigest(), 'files': bound}
++
++
++def verify_final(final, seed, expected_rns, data_hashes, code_manifest):
++    """Consume exactly mvp_finalize's existing publication format."""
++    from transgenic.training.mvp_finalize import _validate_metadata
++    from transgenic.training.mvp_metrics import aggregate_paired_records
++    final = Path(final).resolve(strict=True)
++    require((final / 'TRAINING_DONE').read_bytes() == b'complete\n', 'final is not complete')
++    manifest = read_json(final / 'manifest.json')
++    names = {'metadata.json', 'paired_records.jsonl', 'paired_summary.json', 'model.safetensors', 'config.json'}
++    require(set(manifest) == {'files'} and set(manifest['files']) == names, 'final manifest inventory mismatch')
++    files = {name: check_file(final / name, manifest['files'][name]) for name in names}
++    metadata = read_json(final / 'metadata.json')
++    _validate_metadata(metadata, metadata.get('training_summary'))
++    require(metadata['identity_scope'] == 'production', 'test final cannot establish MVP run identity')
++    require(metadata['seed_augmentation'] == {'seed': seed, 'aug_seed': 20260914 + seed}, 'cross-seed final mismatch')
++    for name, digest in data_hashes.items():
++        require(metadata['data_identities'][name]['sha256'] == digest, f'final {name} identity mismatch')
++    code = check_file(code_manifest, metadata['sif_code_identity']['code'])
++    source = read_json(code_manifest)
++    require(set(source) == {'files', 'external_packages'} and source['files'], 'invalid consumed code manifest')
++    code_files = [check_file(p, {'sha256': h}) for p, h in source['files'].items()]
++    # Finalizer metadata omits duckdb, while the consumed-code manifest includes it.
++    for package in set(source['external_packages']) & set(metadata['runtime_packages']):
++        require(metadata['runtime_packages'][package] == source['external_packages'][package], 'code/runtime package mismatch')
++    audit_files = metadata['initialization_audit']['audit']['files']
++    initialization = {name: check_file(record['path'], record['before'])
++                      for name, record in audit_files.items() if record is not None}
++    source_config = read_json(initialization['run_config.json']['path'])
++    require(type(source_config.get('seed')) is int and source_config['seed'] == 123, 'baseline source is not seed 123')
++    records = [json.loads(line) for line in (final / 'paired_records.jsonl').read_text().splitlines()]
++    for record in records:
++        validate_paired_record(record)
++    require(len(records) == len({r['rn'] for r in records}), 'final contains duplicate RN records')
++    summary = aggregate_paired_records(records, expected_rns)
++    require(read_json(final / 'paired_summary.json') == {k: v for k, v in summary.items() if k != 'records'},
++            'paired summary mismatch')
++    from safetensors import safe_open
++    with safe_open(str(final / 'model.safetensors'), framework='pt') as model:
++        require(bool(list(model.keys())), 'empty final checkpoint')
++    return {'final': str(final), 'manifest': file_identity(final / 'manifest.json'),
++            'done': file_identity(final / 'TRAINING_DONE'), 'files': files,
++            'seed': seed, 'code_manifest': code, 'code_files': code_files,
++            'initialization': initialization, 'valid_rns': list(expected_rns)}
++
++
++def legacy_module(name):
++    path = ROOT / 'revision/scripts' / name
++    spec = importlib.util.spec_from_file_location('mvp_' + path.stem, path)
++    mod = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(mod)
++    return mod
++
++
++def fasta_lengths(path):
++    lengths = {}
++    chrom = None
++    with Path(path).open() as f:
++        for line in f:
++            if line.startswith('>'):
++                chrom = line[1:].split()[0]
++                require(chrom not in lengths, 'duplicate FASTA contig')
++                lengths[chrom] = 0
++            elif line.strip():
++                require(chrom is not None, 'FASTA sequence before header')
++                lengths[chrom] += len(line.strip())
++    return lengths
++
++
++def read_gff(path):
++    """Strict preflight around the existing half-open GFF parser; never repair data."""
++    genes, transcripts, features = {}, {}, []
++    with Path(path).open() as f:
++        for line in f:
++            if not line.strip() or line.startswith('#'):
++                continue
++            cols = line.rstrip('\n').split('\t')
++            require(len(cols) == 9, 'malformed GFF: expected nine columns')
++            chrom, _, kind, start, end, _, strand, phase, attrs = cols
++            require(int(start) >= 1 and int(end) >= int(start) and strand in ('+', '-'), 'invalid GFF coordinates/strand')
++            fields = [a.split('=', 1) for a in attrs.split(';') if a]
++            require(all(len(a) == 2 for a in fields) and len(dict(fields)) == len(fields), 'malformed GFF attributes')
++            attrs = dict(fields)
++            span = (chrom, int(start) - 1, int(end), strand)
++            if kind == 'gene':
++                gid = attrs.get('ID')
++                require(gid and gid not in genes, 'missing/duplicate GFF gene ID')
++                genes[gid] = span
++            elif kind in ('mRNA', 'transcript'):
++                tid, parent = attrs.get('ID'), attrs.get('Parent')
++                require(tid and tid not in transcripts and parent in genes, 'missing/duplicate transcript or unordered/orphan gene')
++                transcripts[tid] = (parent, span)
++            elif kind in ('exon', 'CDS', 'five_prime_UTR', 'three_prime_UTR'):
++                require(kind != 'CDS' or phase in ('0', '1', '2'), 'invalid CDS phase')
++                for parent in attrs.get('Parent', '').split(','):
++                    require(parent in transcripts, 'orphan/unordered GFF feature')
++                    features.append((parent, span))
++            else:
++                raise ValueError(f'unsupported GFF feature {kind}; no silent omission')
++    def contained(child, parent):
++        return child[0] == parent[0] and child[3] == parent[3] and parent[1] <= child[1] < child[2] <= parent[2]
++    for parent, span in transcripts.values():
++        require(contained(span, genes[parent]), 'transcript outside parent gene')
++    for parent, span in features:
++        require(contained(span, transcripts[parent][1]), 'feature outside transcript')
++    parsed = legacy_module('07_selfconsistency_stats.py').load_gff(str(path))
++    for gene in parsed.values():
++        require(gene['transcripts'], 'GFF gene has no transcripts; only a header-only file represents zero predictions')
++        for tx in gene['transcripts'].values():
++            require(tx['exons'], 'explicit exon geometry required; CDS is not an exon substitute')
++            for key in ('exons', 'cdss'):
++                tx[key].sort()
++                require(all(a[1] < b[0] for a, b in zip(tx[key], tx[key][1:])), 'duplicate/overlapping/adjacent GFF segments')
++            require(all(any(a <= c < d <= b for a, b in tx['exons']) for c, d in tx['cdss']), 'CDS outside exons')
++    return parsed
++
++
++def select_transcripts(genes, locus, reference=False):
++    if reference:
++        require(locus.gene_id in genes, f'reference missing panel gene {locus.gene_id}')
++        gene = genes[locus.gene_id]
++        require((gene['chrom'], gene['start'], gene['end'], gene['strand']) ==
++                (locus.chromosome, locus.gene_start0, locus.gene_end0, locus.strand), 'panel/reference gene geometry mismatch')
++        result = gene['transcripts']
++        require(result, 'reference gene has no transcripts')
++        return result
++    return {tid: tx for gene in genes.values() for tid, tx in gene['transcripts'].items()
++            if tx['chrom'] == locus.chromosome and tx['start'] < locus.gene_end0 and tx['end'] > locus.gene_start0}
++
++
++def structure(tx):
++    exons = tx['exons']
++    if len(exons) == 1:
++        # No CDS cannot be an exact-CDS match, including two noncoding transcripts.
++        return (tx['chrom'], tx['strand'], 'mono', tuple(tx['cdss'])) if tx['cdss'] else None
++    return (tx['chrom'], tx['strand'], 'multi', tuple((a[1], b[0]) for a, b in zip(exons, exons[1:])))
++
++
++def write_gtf(path, transcripts):
++    with Path(path).open('x') as out:
++        for tid, tx in sorted(transcripts.items()):
++            require(not any(c in tid for c in '\"\t\n;'), 'unsafe transcript ID for GTF')
++            for a, b in tx['exons']:
++                out.write(f'{tx["chrom"]}\tMVP\texon\t{a+1}\t{b}\t.\t{tx["strand"]}\t.\tgene_id "g"; transcript_id "{tid}";\n')
++
++
++def reference_counts(predicted, reference, directory, executable):
++    """One-to-one exact matches; ambiguous duplicate structures fail closed."""
++    directory = Path(directory)
++    directory.mkdir()
++    for label, txs in [('predicted', predicted), ('reference', reference)]:
++        keys = [structure(t) for t in txs.values() if structure(t) is not None]
++        require(len(keys) == len(set(keys)), f'{label} duplicate isoform structures: author multiplicity policy needed')
++    pm = {k: v for k, v in predicted.items() if len(v['exons']) > 1}
++    rm = {k: v for k, v in reference.items() if len(v['exons']) > 1}
++    write_gtf(directory / 'predicted.gtf', pm)
++    write_gtf(directory / 'reference.gtf', rm)
++    matches = set()
++    command = None
++    if pm and rm:
++        command = [executable, '-r', str(directory / 'reference.gtf'), '-o', str(directory / 'compare'), str(directory / 'predicted.gtf')]
++        result = subprocess.run(command, check=True, capture_output=True, text=True)
++        (directory / 'stdout.txt').write_text(result.stdout)
++        (directory / 'stderr.txt').write_text(result.stderr)
++        maps = list(directory.glob('*.tmap'))
++        require(len(maps) == 1, 'missing/ambiguous GFFCompare tmap')
++        with maps[0].open() as f:
++            rows = list(csv.DictReader(f, delimiter='\t'))
++        require(len(rows) == len(pm) and {r['qry_id'] for r in rows} == set(pm), 'GFFCompare query inventory mismatch')
++        for row in rows:
++            if row['class_code'] == '=':
++                ref, pred = row['ref_id'], row['qry_id']
++                require(ref in rm and structure(pm[pred]) == structure(rm[ref]), 'GFFCompare exact-chain mismatch')
++                matches.add(ref)
++    mono_ref = {structure(tx) for tx in reference.values() if len(tx['exons']) == 1 and structure(tx) is not None}
++    mono_pred = {structure(tx) for tx in predicted.values() if len(tx['exons']) == 1 and structure(tx) is not None}
++    tp = len(matches) + len(mono_ref & mono_pred)
++    counts = {'f1_tp': tp, 'f1_predicted': len(predicted), 'f1_reference': len(reference)}
++    return counts, {'command': command, 'counts': counts, 'TP': tp, 'FP': len(predicted)-tp,
++                    'FN': len(reference)-tp, 'outputs': [file_identity(p) for p in sorted(directory.iterdir())]}
++
++
++def prediction_inventory(rows, panel, checkpoints):
++    expected = {(s, f, l.gene_id) for l in panel for s, f in [(1,0),(1,1),(2,0),(2,1),(3,0),(3,1),(123,0)]}
++    actual, paths = {}, set()
++    loci = {l.gene_id: l for l in panel}
++    for row in rows:
++        require(type(row['seed']) is int and type(row['fraction']) is int, 'seed/fraction must be integers')
++        key = row['seed'], row['fraction'], row['gene_id']
++        require(key in expected and key not in actual, 'unexpected/duplicate prediction identity')
++        locus = loci[row['gene_id']]
++        require(row['window'] == [locus.chromosome, *w.evaluation_window(locus)], 'prediction panel window mismatch')
++        require(row['checkpoint_sha256'] == checkpoints[row['seed']], 'prediction checkpoint/seed mismatch')
++        identity = check_file(row['path'], row)
++        stat = Path(identity['path']).stat()
++        inode = stat.st_dev, stat.st_ino
++        require(inode not in paths, 'duplicate prediction file')
++        paths.add(inode)
++        actual[key] = identity
++    require(set(actual) == expected, 'exact full50 three-seed off/on plus baseline inventory required')
++    return actual
++
++
++def produce(input_path, out):
++    from transgenic.training.mvp_cli import validate_candidate_records
++    from transgenic.training.mvp_cli_runtime import verify_candidate_artifacts
++    import mvp_score
++    out = Path(out).resolve()
++    payload = read_json(input_path)
++    inputs = [file_identity(input_path)]
++    panel = w.load_panel(payload['panels'])
++    inputs.append(file_identity(payload['panels']))
++    authority = frozen_reference(payload['fasta'], payload['reference'])
++    inputs.extend(authority['files'].values())
++    lengths = fasta_lengths(payload['fasta'])
++    for locus in panel:
++        require(locus.chromosome in lengths, 'panel chromosome absent from FASTA')
++        w.evaluation_window(locus, lengths[locus.chromosome])
++    c = payload['candidate']
++    candidate = validate_candidate_records(c['acceptance'], c['acceptance_sha256'], c['inventory'], c['receipts'])
++    artifacts = verify_candidate_artifacts(candidate, c['corpus'], c['evidence'], payload['panels'])
++    inputs.extend(file_identity(c[k]) for k in ('acceptance','inventory','receipts','corpus','evidence'))
++    require(set(payload['runs']) == {'1','2','3'}, 'exact final seeds 1/2/3 required')
++    runs = {s: verify_final(r['final'], int(s), artifacts['valid_rns'], artifacts['sha256'], r['code_manifest'])
++            for s, r in payload['runs'].items()}
++    require(len({r['code_manifest']['sha256'] for r in runs.values()}) == 1, 'cross-seed consumed code mismatch')
++    source_identities = {tuple(sorted((name, identity['sha256']) for name, identity in r['initialization'].items())) for r in runs.values()}
++    require(len(source_identities) == 1, 'cross-seed initialization source inventory mismatch')
++    checkpoints = {int(s): r['files']['model.safetensors']['sha256'] for s, r in runs.items()}
++    baselines = {r['initialization']['model.safetensors']['sha256'] for r in runs.values()}
++    require(len(baselines) == 1, 'cross-seed baseline mismatch')
++    checkpoints[123] = baselines.pop()
++    for run in runs.values():
++        inputs.extend([run['manifest'], run['done'], run['code_manifest'], *run['files'].values(), *run['code_files'], *run['initialization'].values()])
++    decoder = payload['decoder']
++    require(decoder['files'] and decoder['commands'] and all(isinstance(cmd, list) and cmd and all(isinstance(x,str) and x for x in cmd) for cmd in decoder['commands']), 'decoder code/commands missing')
++    inputs.extend(check_file(p, {'sha256': h}) for p, h in decoder['files'].items())
++    predictions = prediction_inventory(payload['predictions'], panel, checkpoints)
++    inputs.extend(predictions.values())
++    executable = shutil.which('gffcompare')
++    require(executable, 'GFFCompare 0.12.6 required')
++    executable = str(Path(executable).resolve())
++    version = subprocess.run([executable, '--version'], check=True, capture_output=True, text=True)
++    require(re.search(r'\bv?0\.12\.6\b', version.stdout + version.stderr), 'GFFCompare version must be 0.12.6')
++    inputs.append(file_identity(executable))
++    scorer_sources = [Path(__file__), ROOT/'revision/scripts/07_selfconsistency_stats.py',
++                      ROOT/'revision/scripts/24_restrict_reference_to_test_genes.py',
++                      Path(mvp_score.__file__), Path(mvp_score.b.__file__), Path(w.__file__)]
++    scorer_sources.extend(ROOT/'src/transgenic/training'/name for name in
++                          ('mvp_cli.py', 'mvp_cli_runtime.py', 'mvp_finalize.py', 'mvp_metrics.py', 'mvp_runtime.py', 'weights_init.py'))
++    inputs.extend(file_identity(path) for path in scorer_sources)
++    out.mkdir(parents=True, exist_ok=False)
++    restricted = out / 'reference.panel.gff3'
++    restrictor = legacy_module('24_restrict_reference_to_test_genes.py')
++    # Legacy regex captures a newline when ID/Parent is the final attribute.
++    # Tighten only this local module instance; do not rewrite the frozen script.
++    restrictor.ID_RE = re.compile(r'(?:^|;)ID=([^;\s]+)')
++    restrictor.PARENT_RE = re.compile(r'(?:^|;)Parent=([^;\s]+)')
++    restrictor.restrict(Path(payload['reference']), {l.gene_id for l in panel}, restricted)
++    reference = read_gff(restricted)
++    restricted_identity = file_identity(restricted)
++    loci, receipts, baseline = [], [], []
++    for locus in panel:
++        refs = select_transcripts(reference, locus, reference=True)
++        row = {'gene_id': locus.gene_id, 'seeds': {str(s): {} for s in (1,2,3)}}
++        for seed, fraction in [(1,0),(1,1),(2,0),(2,1),(3,0),(3,1),(123,0)]:
++            identity = predictions[seed, fraction, locus.gene_id]
++            genes = read_gff(identity['path'])
++            start, end = w.evaluation_window(locus)
++            require(all(g['chrom'] == locus.chromosome and start <= g['start'] < g['end'] <= end for g in genes.values()), 'prediction outside decoded window')
++            predicted = select_transcripts(genes, locus)
++            counts, receipt = reference_counts(predicted, refs, out / f'{len(receipts):04d}', executable)
++            receipts.append(dict(receipt, seed=seed, fraction=fraction, gene_id=locus.gene_id, prediction=identity))
++            if seed == 123:
++                baseline.append({'gene_id': locus.gene_id, **counts})
++            else:
++                row['seeds'][str(seed)]['on' if fraction else 'off'] = counts
++        loci.append(row)
++    counts = {'pairs': {s: r['files']['paired_records.jsonl']['path'] for s,r in runs.items()}, 'loci': loci}
++    result = mvp_score.score(counts, panel)
++    result.update(pair_run_provenance_status='FINALIZER_BYTES_METADATA_INVENTORY_CONSISTENT',
++                  three_seed_identity_verified=True, three_seed_policy_verified=True,
++                  count_provenance_status='DERIVED_FROM_RAW_GFF_IN_THIS_INVOCATION',
++                  reference_identity_status='COMMIT_BOUND_SPECIES_MANIFEST',
++                  baseline_reference_counts=baseline,
++                  provenance_caveat='Receipts establish local consistency, not cryptographic proof of historical execution or scientific approval.')
++    baseline_rows = [{'gene_id': c['gene_id'], 'seeds': {'123': {'off': {k:v for k,v in c.items() if k != 'gene_id'}}}} for c in baseline]
++    core_ids = {l.gene_id for l in panel if l.panel == 'mvp_core'}
++    result['baseline_reference_F1_percent'] = {
++        'all50': mvp_score.metric(baseline_rows, 'off', 'F1', (123,)),
++        'core20': mvp_score.metric([r for r in baseline_rows if r['gene_id'] in core_ids], 'off', 'F1', (123,))}
++    for identity in inputs:
++        check_file(identity['path'], identity)
++    for name, obj in [('counts.json', counts), ('statistics.json', result)]:
++        with (out/name).open('x') as f:
++            json.dump(obj, f, indent=2, allow_nan=False)
++    receipt = {'label': 'exploratory / MVP', 'authority': authority, 'inputs': inputs, 'runs': runs,
++               'decoder_recorded_commands': decoder['commands'], 'gffcompare_version': version.stdout + version.stderr,
++               'gffcompare_version_command': [executable, '--version'],
++               'comparisons': receipts, 'outputs': [restricted_identity, *[file_identity(out/n) for n in ('counts.json','statistics.json')]],
++               'independent_read_splice_status': 'ABSENT_NOT_NEGATIVE', 'coverage_policy': 'PENDING_AUTHOR',
++               'withholding_status': 'UNASSESSABLE', 'decision': None}
++    with (out/'receipt.json').open('x') as f:
++        json.dump(receipt, f, indent=2, allow_nan=False)
++    return result
++
++
++def main(argv=None):
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--input', required=True, type=Path)
++    parser.add_argument('--out', required=True, type=Path)
++    args = parser.parse_args(argv)
++    produce(args.input, args.out)
++    return 0
++
++
++if __name__ == '__main__':
++    raise SystemExit(main())
+diff --git a/tests/test_mvp_score_producer.py b/tests/test_mvp_score_producer.py
+new file mode 100644
+index 0000000..e498a9b
+--- /dev/null
++++ b/tests/test_mvp_score_producer.py
+@@ -0,0 +1,226 @@
++"""CPU fixtures only: no biological measurements or external alignments."""
++import copy
++import hashlib
++import importlib.util
++import json
++from pathlib import Path
++import subprocess
++import sys
++
++import pytest
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / 'revision/scripts/mvp'))
++import mvp_produce_counts as p
++from transgenic.evidence import mvp_windows as w
++
++
++def dump(path, value):
++    path.write_text(json.dumps(value))
++    return path
++
++
++def locus():
++    return w.PanelLocus('mvp_core', 'g', 'Chr1', 30001, 31000, '+', 1000)
++
++
++def gff(path, entries):
++    lines = ['##gff-version 3', 'Chr1\tx\tgene\t30001\t31000\t.\t+\t.\tID=g']
++    for tid, strand, exons, cds in entries:
++        # Separate minus-strand gene to keep valid parent strand geometry.
++        parent = 'g'
++        if strand == '-':
++            parent = 'gm' + tid
++            lines.append(f'Chr1\tx\tgene\t30001\t31000\t.\t-\t.\tID={parent}')
++        lines.append(f'Chr1\tx\tmRNA\t{exons[0][0]}\t{exons[-1][1]}\t.\t{strand}\t.\tID={tid};Parent={parent}')
++        for kind, spans in [('exon',exons),('CDS',cds)]:
++            for a,b in spans:
++                lines.append(f'Chr1\tx\t{kind}\t{a}\t{b}\t.\t{strand}\t{0 if kind == "CDS" else "."}\tParent={tid}')
++    path.write_text('\n'.join(lines)+'\n')
++    return path
++
++
++def txs(path):
++    return p.select_transcripts(p.read_gff(path), locus())
++
++
++def fake_gffcompare(tmp_path):
++    """Explicit stand-in: exact-chain matching fixture, NOT tool certification."""
++    path = tmp_path / 'gffcompare'
++    path.write_text('''#!/usr/bin/env python3
++import sys
++from pathlib import Path
++if '--version' in sys.argv:
++    print('gffcompare v0.12.6'); raise SystemExit()
++def read(path):
++    tx = {}
++    for line in Path(path).read_text().splitlines():
++        f = line.split('\\t'); tid = f[8].split('transcript_id "')[1].split('"')[0]
++        tx.setdefault(tid, [f[0],f[6],[]])[2].append((int(f[3]),int(f[4])))
++    return {k:(v[0],v[1],tuple((a[1],b[0]) for a,b in zip(v[2],v[2][1:]))) for k,v in tx.items()}
++r=read(sys.argv[sys.argv.index('-r')+1]); q=read(sys.argv[-1])
++out=Path(sys.argv[-1]).parent/'compare.predicted.gtf.tmap'
++with out.open('w') as f:
++    f.write('ref_gene_id\\tref_id\\tclass_code\\tqry_gene_id\\tqry_id\\n')
++    for tid,key in q.items():
++        hit=next((k for k,v in r.items() if v==key),'-')
++        f.write('g\\t'+hit+'\\t'+('=' if hit!='-' else 'u')+'\\tg\\t'+tid+'\\n')
++''')
++    path.chmod(0o755)
++    return str(path)
++
++
++def test_hand_counts_chain_mono_strand_and_gene_restriction(tmp_path):
++    multi = [(30001,30100),(30201,30300)]
++    mono = [(30501,30600)]
++    ref = txs(gff(tmp_path/'ref.gff', [('r','+',multi,multi),('mono','+',mono,[(30510,30590)])]))
++    pred = txs(gff(tmp_path/'pred.gff', [('p','+',multi,multi),('wrongstrand','-',mono,[(30510,30590)])]))
++    counts, receipt = p.reference_counts(pred, ref, tmp_path/'result', fake_gffcompare(tmp_path))
++    assert counts == {'f1_tp':1,'f1_predicted':2,'f1_reference':2}
++    assert (receipt['TP'],receipt['FP'],receipt['FN']) == (1,1,1)
++    assert receipt['command'] and receipt['outputs']
++    pred['wrongstrand']['strand'] = '+'
++    counts, _ = p.reference_counts(pred, ref, tmp_path/'result2', str(tmp_path/'gffcompare'))
++    assert counts['f1_tp'] == 2
++    pred['wrongstrand']['cdss'] = [(30510,30591)]
++    assert p.reference_counts(pred, ref, tmp_path/'result3', str(tmp_path/'gffcompare'))[0]['f1_tp'] == 1
++    pred['p']['start'], pred['p']['end'] = 40000,41000
++    genes = {'x':{'transcripts':pred}}
++    assert set(p.select_transcripts(genes,locus())) == {'wrongstrand'}
++
++
++def test_empty_predictions_are_zero_not_missing(tmp_path):
++    path = tmp_path/'empty.gff'; path.write_text('##gff-version 3\n')
++    assert p.read_gff(path) == {}
++    mono = [(30001,30100)]
++    ref = txs(gff(tmp_path/'ref.gff',[('r','+',mono,mono)]))
++    counts, receipt = p.reference_counts({},ref,tmp_path/'out','not-invoked')
++    assert counts == {'f1_tp':0,'f1_predicted':0,'f1_reference':1}
++    assert receipt['FN'] == 1
++    with pytest.raises(FileNotFoundError): p.read_gff(tmp_path/'absent')
++
++
++def test_duplicate_isoform_policy_fails_closed(tmp_path):
++    mono = [(30001,30100)]
++    pred = txs(gff(tmp_path/'p.gff',[('p','+',mono,mono),('duplicate','+',mono,mono)]))
++    with pytest.raises(ValueError,match='duplicate isoform'):
++        p.reference_counts(pred,{},tmp_path/'out','unused')
++
++
++@pytest.mark.parametrize('change', ['columns','strand','orphan','duplicate','overlap','phase','missing_exon'])
++def test_malformed_gff_rejected(tmp_path, change):
++    path = gff(tmp_path/'p.gff',[('p','+',[(30001,30100)],[(30001,30100)])])
++    text = path.read_text()
++    if change == 'columns': text += 'broken\n'
++    elif change == 'strand': text = text.replace('\t+\t','\t.\t')
++    elif change == 'orphan': text = text.replace('Parent=p','Parent=unknown')
++    elif change == 'duplicate': text += text.splitlines()[2]+'\n'
++    elif change == 'overlap': text += text.splitlines()[3]+'\n'
++    elif change == 'phase': text = text.replace('\t0\tParent=p','\t.\tParent=p')
++    else: text = '\n'.join(l for l in text.splitlines() if '\texon\t' not in l)
++    path.write_text(text)
++    with pytest.raises(ValueError): p.read_gff(path)
++
++
++def prediction_rows(tmp_path, panel):
++    checkpoints = {s: str(s)*64 for s in (1,2,3,123)}
++    rows = []
++    for l in panel:
++        for s,f in [(1,0),(1,1),(2,0),(2,1),(3,0),(3,1),(123,0)]:
++            path = tmp_path/f'{len(rows)}.gff'; path.write_text('##gff-version 3\n')
++            rows.append(dict(p.file_identity(path), seed=s, fraction=f, gene_id=l.gene_id,
++                             window=[l.chromosome,*w.evaluation_window(l)],checkpoint_sha256=checkpoints[s]))
++    return rows, checkpoints
++
++
++def test_full_frozen_panel_inventory_350_and_cross_seed(tmp_path):
++    panel = w.load_panel(ROOT/'revision/protocols/b6_panels_v1.tsv')
++    rows, checkpoints = prediction_rows(tmp_path,panel)
++    assert len(p.prediction_inventory(rows,panel,checkpoints)) == 350
++    with pytest.raises(ValueError,match='full50'): p.prediction_inventory(rows[:-1],panel,checkpoints)
++    bad = copy.deepcopy(rows); bad[0]['checkpoint_sha256'] = checkpoints[2]
++    with pytest.raises(ValueError,match='checkpoint'): p.prediction_inventory(bad,panel,checkpoints)
++    bad = copy.deepcopy(rows); bad[0]['window'][1] += 1
++    with pytest.raises(ValueError,match='window'): p.prediction_inventory(bad,panel,checkpoints)
++    bad = copy.deepcopy(rows); bad[1].update({k:bad[0][k] for k in ('path','sha256','size')})
++    with pytest.raises(ValueError,match='duplicate prediction file'): p.prediction_inventory(bad,panel,checkpoints)
++
++
++def test_actual_commit_anchor_wrong_reference_and_missing_anchor(tmp_path,monkeypatch):
++    fasta = tmp_path/'fake.fa'; fasta.write_text('>Chr1\nA\n')
++    with pytest.raises(ValueError,match='frozen fasta'):
++        p.frozen_reference(fasta,fasta)
++    monkeypatch.setattr(p,'AUTHORITY_COMMIT','0'*40)
++    with pytest.raises(subprocess.CalledProcessError): p.frozen_reference(fasta,fasta)
++
++
++def finalized_fixture(tmp_path, seed=1, hashes=None):
++    import test_mvp_finalize as f
++    md = f.metadata('production')
++    md['seed_augmentation'] = {'seed':seed, 'aug_seed':20260914+seed}
++    if hashes is not None:
++        md['data_identities'] = {k:{'sha256':v,'verification':'recorded'} for k,v in hashes.items()}
++    source = tmp_path/'source'; source.mkdir()
++    (source/'model.safetensors').write_bytes(b'explicit synthetic source')
++    dump(source/'run_config.json',{'seed':123})
++    audit = md['initialization_audit']['audit']
++    audit['resolved_checkpoint_dir'] = str(source)
++    audit['resolved_weights_path'] = str(source/'model.safetensors')
++    for name in ('model.safetensors','run_config.json'):
++        identity = p.file_identity(source/name)
++        snap = {'sha256':identity['sha256'],'size':identity['size'],'device':1,'inode':1,'mtime_ns':1}
++        audit['files'][name] = {'path':identity['path'],'before':snap,'after':dict(snap)}
++    md['initialization_audit']['audit_sha256'] = hashlib.sha256(f.finalize._canonical_json(audit)).hexdigest()
++    code = dump(tmp_path/'code.json',{'files':{str(Path(__file__)):w.sha256_file(__file__)},
++                                    'external_packages':{'torch':'test-version','duckdb':'test-version'}})
++    md['sif_code_identity']['code']['sha256'] = w.sha256_file(code)
++    f.publish(tmp_path,md=md,train=f.summary('production'))
++    hashes = {k:v['sha256'] for k,v in md['data_identities'].items()}
++    return tmp_path/'final',hashes,code
++
++
++def test_reuses_actual_finalizer_publication_and_complete_inventory(tmp_path):
++    final, hashes, code = finalized_fixture(tmp_path)
++    receipt = p.verify_final(final,1,[1],hashes,code)
++    assert receipt['seed'] == 1 and receipt['valid_rns'] == [1]
++    for seed in (2,3):
++        with pytest.raises(ValueError,match='cross-seed'): p.verify_final(final,seed,[1],hashes,code)
++    with pytest.raises(ValueError,match='inventory mismatch'): p.verify_final(final,1,[1,2],hashes,code)
++    (final/'paired_records.jsonl').write_text('{}\n')
++    with pytest.raises(ValueError,match='hash mismatch'): p.verify_final(final,1,[1],hashes,code)
++
++
++def test_final_code_input_and_source_byte_bindings(tmp_path):
++    final, hashes, code = finalized_fixture(tmp_path)
++    bad = dict(hashes,panel='0'*64)
++    with pytest.raises(ValueError,match='panel identity'): p.verify_final(final,1,[1],bad,code)
++    original = code.read_text(); code.write_text('{}')
++    with pytest.raises(ValueError,match='hash mismatch'): p.verify_final(final,1,[1],hashes,code)
++    code.write_text(original)
++    (tmp_path/'source/model.safetensors').write_bytes(b'mutated')
++    with pytest.raises(ValueError,match='hash mismatch'): p.verify_final(final,1,[1],hashes,code)
++
++
++@pytest.mark.parametrize('mutation', ['summary','duplicate_rn','test_scope','marker'])
++def test_rehashed_final_does_not_bypass_semantic_checks(tmp_path, mutation):
++    final, hashes, code = finalized_fixture(tmp_path)
++    if mutation == 'summary':
++        dump(final/'paired_summary.json',{'primary_delta':999})
++    elif mutation == 'duplicate_rn':
++        path=final/'paired_records.jsonl'; path.write_text(path.read_text()*2)
++    elif mutation == 'test_scope':
++        metadata=p.read_json(final/'metadata.json'); metadata['identity_scope']='test'
++        dump(final/'metadata.json',metadata)
++    else:
++        (final/'TRAINING_DONE').write_text('incomplete\n')
++    manifest=p.read_json(final/'manifest.json')
++    for name in manifest['files']:
++        identity=p.file_identity(final/name)
++        manifest['files'][name]={k:identity[k] for k in ('sha256','size')}
++    dump(final/'manifest.json',manifest)
++    with pytest.raises(ValueError): p.verify_final(final,1,[1],hashes,code)
++
++
++def test_json_duplicate_seed_rejected(tmp_path):
++    path=tmp_path/'x.json'; path.write_text('{"1":1,"1":2}')
++    with pytest.raises(ValueError,match='duplicate JSON'): p.read_json(path)
+diff --git a/tests/test_mvp_score_producer_integration.py b/tests/test_mvp_score_producer_integration.py
+new file mode 100644
+index 0000000..d875ac9
+--- /dev/null
++++ b/tests/test_mvp_score_producer_integration.py
+@@ -0,0 +1,66 @@
++"""Full350 transport/receipt integration, synthetic authority/candidate/tool fixtures."""
++import json
++from pathlib import Path
++
++import pytest
++from test_mvp_score_producer import p, w, ROOT, dump, finalized_fixture, fake_gffcompare, prediction_rows
++
++
++def test_full_producer_actual_finalizer_frozen_panel_synthetic_biology(tmp_path, monkeypatch):
++    from transgenic.training import mvp_cli, mvp_cli_runtime
++    panel_path = ROOT/'revision/protocols/b6_panels_v1.tsv'
++    panel = w.load_panel(panel_path)
++    # No biological reference authority or candidate acceptance is asserted here.
++    candidate = {}
++    for name in ('acceptance','inventory','receipts','corpus','evidence'):
++        path = tmp_path/(name+'.json'); path.write_text('{}')
++        candidate[name] = str(path)
++    candidate['acceptance_sha256'] = w.sha256_file(candidate['acceptance'])
++    hashes = {k:w.sha256_file(candidate[k]) for k in ('corpus','evidence')}
++    hashes['panel'] = w.sha256_file(panel_path)
++    monkeypatch.setattr(mvp_cli,'validate_candidate_records',lambda *a: object())
++    monkeypatch.setattr(mvp_cli_runtime,'verify_candidate_artifacts',lambda *a: {'valid_rns':[1],'sha256':hashes})
++    reference = tmp_path/'reference.gff'
++    lines = ['##gff-version 3']
++    for l in panel:
++        for kind, attrs, start, end in [('gene',f'ID={l.gene_id}',l.start1,l.fin1),
++                                      ('mRNA',f'ID=t{l.gene_id};Parent={l.gene_id}',l.start1,l.fin1),
++                                      ('exon',f'Parent=t{l.gene_id}',l.start1,l.start1+9),
++                                      ('exon',f'Parent=t{l.gene_id}',l.fin1-9,l.fin1)]:
++            lines.append(f'{l.chromosome}\ttest\t{kind}\t{start}\t{end}\t.\t{l.strand}\t.\t{attrs}')
++    reference.write_text('\n'.join(lines)+'\n')
++    fasta = tmp_path/'ref.fa'; fasta.write_text('>synthetic\nA\n')
++    monkeypatch.setattr(p,'frozen_reference',lambda a,b: {'test_fixture_only':True,'files':{'fasta':p.file_identity(a),'gff':p.file_identity(b)}})
++    monkeypatch.setattr(p,'fasta_lengths',lambda _: {l.chromosome:100000000 for l in panel})
++    rows, _ = prediction_rows(tmp_path,panel)
++    runs, checkpoints = {}, {}
++    for seed in (1,2,3):
++        run = tmp_path/f'seed{seed}'; run.mkdir()
++        final, _, code = finalized_fixture(run,seed,hashes)
++        runs[str(seed)] = {'final':str(final),'code_manifest':str(code)}
++        checkpoints[seed] = w.sha256_file(final/'model.safetensors')
++    checkpoints[123] = w.sha256_file(tmp_path/'seed1/source/model.safetensors')
++    for row in rows: row['checkpoint_sha256'] = checkpoints[row['seed']]
++    executable = fake_gffcompare(tmp_path)
++    monkeypatch.setattr(p.shutil,'which',lambda _: executable)
++    payload = {'panels':str(panel_path),'fasta':str(fasta),'reference':str(reference),
++               'candidate':candidate,'runs':runs,'predictions':rows,
++               'decoder':{'files':{str(Path(__file__)):w.sha256_file(__file__)},'commands':[['synthetic-test-only']]}}
++    input_path = dump(tmp_path/'evaluation.json',payload)
++    out = tmp_path/'result'
++    result = p.produce(input_path,out)
++    assert result['three_seed_identity_verified'] is True
++    assert result['count_provenance_status'] == 'DERIVED_FROM_RAW_GFF_IN_THIS_INVOCATION'
++    assert result['structural_available'] is False and result['decision'] is None
++    assert len(result['baseline_reference_counts']) == 50
++    receipt = json.loads((out/'receipt.json').read_text())
++    assert len(receipt['comparisons']) == 350
++    assert receipt['independent_read_splice_status'] == 'ABSENT_NOT_NEGATIVE'
++    assert receipt['coverage_policy'] == 'PENDING_AUTHOR'
++    assert receipt['withholding_status'] == 'UNASSESSABLE'
++    assert receipt['runs']['2']['seed'] == 2
++    assert len(json.loads((out/'counts.json').read_text())['loci']) == 50
++    with pytest.raises(FileExistsError): p.produce(input_path,out)
++    # Declared GFF bytes cannot be modified after decoding.
++    Path(rows[0]['path']).write_text('mutated')
++    with pytest.raises(ValueError,match='hash mismatch'): p.produce(input_path,tmp_path/'other')

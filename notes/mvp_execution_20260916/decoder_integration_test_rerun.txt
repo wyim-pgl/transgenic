@@ -1,0 +1,35 @@
+START_UTC=2026-09-17T01:26:45Z
+ARCHIVE=/tmp/mvp-decoder-integrated-verify.nZRhJc
+GIT_DIR=/mnt/f/scratch/develop/Transgenic/transgenic_local/.git
+AUTHORITY_COMMIT=e6950b76c7500516232c1f1c936dbbe04792b8ae
+PYTHON=/home/wyim/miniconda3/envs/pdb/bin/python
+Python 3.12.2
+PYTEST=/home/wyim/.local/bin/pytest
+ENV: OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src:revision/scripts/mvp:/tmp/mvp-decoder-resumed-testdeps:/tmp/b6-trackb-testdeps
+COMMAND: pytest -q tests/test_mvp_decoder_integration.py tests/test_mvp_decode.py revision/scripts/tests/test_mvp_panel_inputs.py tests/test_mvp_score_producer.py tests/test_mvp_score_producer_review.py tests/test_mvp_score_producer_integration.py tests/test_mvp_tracks.py --durations=10
+/bin/bash: /home/wyim/.local/bin/pytest: /usr/bin/python: bad interpreter: No such file or directory
+
+EXIT_CODE=126
+ELAPSED_SECONDS=0
+END_UTC=2026-09-17T01:26:45Z
+
+INTERPRETER_ENTRYPOINT_RUN_START_UTC=2026-09-17T01:27:01Z
+COMMAND: /home/wyim/miniconda3/envs/pdb/bin/python -m pytest -q tests/test_mvp_decoder_integration.py tests/test_mvp_decode.py revision/scripts/tests/test_mvp_panel_inputs.py tests/test_mvp_score_producer.py tests/test_mvp_score_producer_review.py tests/test_mvp_score_producer_integration.py tests/test_mvp_tracks.py --durations=10
+........................................................................ [ 67%]
+...................................                                      [100%]
+============================= slowest 10 durations =============================
+205.93s call     tests/test_mvp_decode.py::test_runner_exact_350_no_overwrite_and_partial_failure
+69.76s call     tests/test_mvp_decoder_integration.py::test_full_publication_panel_decoder_counts
+23.12s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[wrong_authority]
+16.60s call     tests/test_mvp_tracks.py::test_real_bam_to_tracks_and_129024_cpu_smoke
+14.40s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[symlink_escape]
+10.18s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[wrong_request]
+9.49s setup    tests/test_mvp_decoder_integration.py::test_full_publication_panel_decoder_counts
+9.37s setup    tests/test_mvp_decoder_integration.py::test_real_panel_high_junction_and_biological_zero
+8.96s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[missing_marker]
+8.19s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[coverage]
+107 passed in 514.67s (0:08:34)
+
+EXIT_CODE=0
+ELAPSED_SECONDS=517
+END_UTC=2026-09-17T01:35:38Z

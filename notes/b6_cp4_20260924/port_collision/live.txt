@@ -1,0 +1,35 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-25T01:40:53-05:00
+3210279 b6-int4 ghx4-interactive PENDING 0:00 N/A (Priority)
+JobId=3210279 JobName=b6-int4
+   UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A
+   Priority=1405 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh
+   JobState=PENDING Reason=Priority Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:00:00 TimeLimit=01:30:00 TimeMin=N/A
+   SubmitTime=2026-09-25T01:40:42 EligibleTime=2026-09-25T01:40:42
+   AccrueTime=2026-09-25T01:40:42
+   StartTime=Unknown EndTime=Unknown Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-25T01:40:42 Scheduler=Main
+   Partition=ghx4-interactive AllocNode:Sid=gh-login03:2322138
+   ReqNodeList=(null) ExcNodeList=gh[062,093]
+   NodeList=
+   NumNodes=1-1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:*
+   ReqTRES=cpu=64,mem=227120M,node=1,billing=4000,gres/gpu=2
+   AllocTRES=(null)
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null)
+   Command=/work/hdd/bilv/wcyim/transgenic/run_hdd_cp4.sh
+   SubmitLine=sbatch --parsable --account=bilv-dtai-gh --partition=ghx4-interactive --nodes=1 --gpus-per-node=2 --cpus-per-task=64 --time=01:30:00 --exclude=gh062,gh093 --job-name=b6-int4 --output=%x-%j.out /work/hdd/bilv/wcyim/transgenic/run_hdd_cp4.sh
+   WorkDir=/work/hdd/bilv/wcyim/transgenic/repo_b6_filestore_20260924
+   StdErr=
+   StdIn=/dev/null
+   StdOut=/work/hdd/bilv/wcyim/transgenic/repo_b6_filestore_20260924/b6-int4-3210279.out
+   MemPerTres=gpu:113560
+   TresPerNode=gres/gpu:2
+   TresPerTask=cpu=64
+

@@ -1,0 +1,28 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+deployment.tar: OK
+authority.tsv: OK
+frozen/revision/protocols/b6_panels_v1.tsv: OK
+frozen/revision/scripts/59_evidence_support.py: OK
+frozen/revision/scripts/67_orientation_audit.py: OK
+frozen/revision/scripts/68_sample_fasta.py: OK
+frozen/revision/scripts/mvp/mvp_align_panel_longreads.py: OK
+frozen/revision/scripts/mvp/mvp_junction_table.py: OK
+frozen/revision/scripts/mvp/mvp_score.py: OK
+frozen/src/transgenic/evidence/mvp_bootstrap.py: OK
+frozen/src/transgenic/evidence/mvp_windows.py: OK
+gate.py: OK
+orientation_pilot.sbatch: OK
+source_pins.json: OK
+2026-09-16T21:40:42-0700
+             JOBID                           NAME ST       TIME NODELIST(REASON)
+           6147940               syl_an_Ahy_A_ODB PD       0:00 (JobHeldUser)
+           6147612                   syl_an_Ahy_A PD       0:00 (JobHeldUser)
+           6147349                   syl_an_Ahy_B PD       0:00 (JobHeldUser)
+           6146937                   syl_an_Ahy_B PD       0:00 (JobHeldUser)
+           6165525     est_c1_reconciled_20260916  R    2:33:14 cpu-50
+           6146936               syl_an_Ahy_A_ODB  R 13-06:26:58 cpu-50
+           6156540            syl_watch_other_20m  R 6-09:49:40 cpu-50
+           6156395             pasaPost.Ahy_A_ODB  R 6-19:49:45 cpu-50
+submitted=6165555

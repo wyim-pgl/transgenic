@@ -1,0 +1,101 @@
+[
+  {
+    "file": "submission_attempt.json",
+    "size_before": 1255,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 1255,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  },
+  {
+    "file": "preparation.json",
+    "size_before": 1826,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 1826,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  },
+  {
+    "file": "submission_result.json",
+    "size_before": 1315,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 1315,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  },
+  {
+    "file": "worker/control/start.json",
+    "size_before": 1025,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 1025,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  },
+  {
+    "file": "worker/control/verification.json",
+    "size_before": 465,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 465,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  },
+  {
+    "file": "worker/control/result.json",
+    "size_before": 11409,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 11409,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  },
+  {
+    "file": "worker/sample/report.json",
+    "size_before": 12190,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 12190,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  },
+  {
+    "file": "worker/sample/COMPLETE",
+    "size_before": 65,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 65,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  },
+  {
+    "file": "stdout",
+    "size_before": 0,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 0,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  },
+  {
+    "file": "stderr",
+    "size_before": 0,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 0,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  },
+  {
+    "file": "worker/sample/diagnostics.jsonl",
+    "size_before": 12557738,
+    "stat_rc": 0,
+    "stat_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n",
+    "fetch_rc": 0,
+    "received": 12557738,
+    "fetch_stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+  }
+]

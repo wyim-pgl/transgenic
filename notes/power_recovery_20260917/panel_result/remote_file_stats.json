@@ -1,0 +1,1143 @@
+[
+  {
+    "path": "outputs/job-6165628/OBSERVATIONS_COMPLETE.json",
+    "mtime": 1789631919.394476,
+    "inode": 622454922,
+    "mode": 33188,
+    "size": 218
+  },
+  {
+    "path": "outputs/job-6165628/cpu_runtime.json",
+    "mtime": 1789630868.611732,
+    "inode": 622454711,
+    "mode": 33188,
+    "size": 1394
+  },
+  {
+    "path": "outputs/job-6165628/git_authority.json",
+    "mtime": 1789630865.882763,
+    "inode": 622454710,
+    "mode": 33188,
+    "size": 840
+  },
+  {
+    "path": "outputs/job-6165628/panel_counts.json",
+    "mtime": 1789631919.39326,
+    "inode": 622454921,
+    "mode": 33188,
+    "size": 18739
+  },
+  {
+    "path": "outputs/job-6165628/reference.panel.gff3",
+    "mtime": 1789631104.308836,
+    "inode": 622454706,
+    "mode": 33188,
+    "size": 88875
+  },
+  {
+    "path": "outputs/job-6165628/reference_compatibility.json",
+    "mtime": 1789631179.614936,
+    "inode": 622454715,
+    "mode": 33188,
+    "size": 39710
+  },
+  {
+    "path": "outputs/job-6165628/reference_identity.json",
+    "mtime": 1789630869.614038,
+    "inode": 622454713,
+    "mode": 33188,
+    "size": 657
+  },
+  {
+    "path": "outputs/job-6165628/request.json",
+    "mtime": 1789630868.616132,
+    "inode": 622454712,
+    "mode": 33188,
+    "size": 1068
+  },
+  {
+    "path": "outputs/job-6165628/source_identity.json",
+    "mtime": 1789630865.882145,
+    "inode": 622454709,
+    "mode": 33188,
+    "size": 11986
+  },
+  {
+    "path": "outputs/job-6165628/panel/00.fa",
+    "mtime": 1789631586.540867,
+    "inode": 622454779,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/00.jsonl",
+    "mtime": 1789631588.209034,
+    "inode": 622454780,
+    "mode": 33188,
+    "size": 24220
+  },
+  {
+    "path": "outputs/job-6165628/panel/00.npy",
+    "mtime": 1789631586.5364285,
+    "inode": 622454778,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/01.fa",
+    "mtime": 1789631715.905205,
+    "inode": 622454868,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/01.jsonl",
+    "mtime": 1789631720.782347,
+    "inode": 622454869,
+    "mode": 33188,
+    "size": 75513
+  },
+  {
+    "path": "outputs/job-6165628/panel/01.npy",
+    "mtime": 1789631715.9016836,
+    "inode": 622454867,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/02.fa",
+    "mtime": 1789631493.490461,
+    "inode": 622454718,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/02.jsonl",
+    "mtime": 1789631494.463919,
+    "inode": 622454719,
+    "mode": 33188,
+    "size": 11109
+  },
+  {
+    "path": "outputs/job-6165628/panel/02.npy",
+    "mtime": 1789631493.4869618,
+    "inode": 622454717,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/03.fa",
+    "mtime": 1789631588.86124,
+    "inode": 622454782,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/03.jsonl",
+    "mtime": 1789631600.948678,
+    "inode": 622454783,
+    "mode": 33188,
+    "size": 185884
+  },
+  {
+    "path": "outputs/job-6165628/panel/03.npy",
+    "mtime": 1789631588.8578062,
+    "inode": 622454781,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/04.fa",
+    "mtime": 1789631721.408036,
+    "inode": 622454871,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/04.jsonl",
+    "mtime": 1789631722.977739,
+    "inode": 622454872,
+    "mode": 33188,
+    "size": 17009
+  },
+  {
+    "path": "outputs/job-6165628/panel/04.npy",
+    "mtime": 1789631721.4047556,
+    "inode": 622454870,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/05.fa",
+    "mtime": 1789631509.947881,
+    "inode": 622454749,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/05.jsonl",
+    "mtime": 1789631518.567011,
+    "inode": 622454750,
+    "mode": 33188,
+    "size": 136494
+  },
+  {
+    "path": "outputs/job-6165628/panel/05.npy",
+    "mtime": 1789631509.9444273,
+    "inode": 622454748,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/06.fa",
+    "mtime": 1789631519.18662,
+    "inode": 622454752,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/06.jsonl",
+    "mtime": 1789631519.855094,
+    "inode": 622454753,
+    "mode": 33188,
+    "size": 7637
+  },
+  {
+    "path": "outputs/job-6165628/panel/06.npy",
+    "mtime": 1789631519.1825044,
+    "inode": 622454751,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/07.fa",
+    "mtime": 1789631520.432739,
+    "inode": 622454755,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/07.jsonl",
+    "mtime": 1789631525.185382,
+    "inode": 622454756,
+    "mode": 33188,
+    "size": 53148
+  },
+  {
+    "path": "outputs/job-6165628/panel/07.npy",
+    "mtime": 1789631520.4281132,
+    "inode": 622454754,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/08.fa",
+    "mtime": 1789631723.631123,
+    "inode": 622454874,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/08.jsonl",
+    "mtime": 1789631727.248155,
+    "inode": 622454875,
+    "mode": 33188,
+    "size": 51865
+  },
+  {
+    "path": "outputs/job-6165628/panel/08.npy",
+    "mtime": 1789631723.6271224,
+    "inode": 622454873,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/09.fa",
+    "mtime": 1789631727.898835,
+    "inode": 622454877,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/09.jsonl",
+    "mtime": 1789631747.575468,
+    "inode": 622454888,
+    "mode": 33188,
+    "size": 269097
+  },
+  {
+    "path": "outputs/job-6165628/panel/09.npy",
+    "mtime": 1789631727.8946867,
+    "inode": 622454876,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/10.fa",
+    "mtime": 1789631664.92385,
+    "inode": 622454838,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/10.jsonl",
+    "mtime": 1789631668.005969,
+    "inode": 622454839,
+    "mode": 33188,
+    "size": 49805
+  },
+  {
+    "path": "outputs/job-6165628/panel/10.npy",
+    "mtime": 1789631664.9201877,
+    "inode": 622454837,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/11.fa",
+    "mtime": 1789631668.596276,
+    "inode": 622454841,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/11.jsonl",
+    "mtime": 1789631676.212672,
+    "inode": 622454842,
+    "mode": 33188,
+    "size": 128952
+  },
+  {
+    "path": "outputs/job-6165628/panel/11.npy",
+    "mtime": 1789631668.5923948,
+    "inode": 622454840,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/12.fa",
+    "mtime": 1789631525.770729,
+    "inode": 622454758,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/12.jsonl",
+    "mtime": 1789631531.029281,
+    "inode": 622454759,
+    "mode": 33188,
+    "size": 81148
+  },
+  {
+    "path": "outputs/job-6165628/panel/12.npy",
+    "mtime": 1789631525.7667618,
+    "inode": 622454757,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/13.fa",
+    "mtime": 1789631601.568747,
+    "inode": 622454785,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/13.jsonl",
+    "mtime": 1789631611.403431,
+    "inode": 622454786,
+    "mode": 33188,
+    "size": 108780
+  },
+  {
+    "path": "outputs/job-6165628/panel/13.npy",
+    "mtime": 1789631601.564684,
+    "inode": 622454784,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/14.fa",
+    "mtime": 1789631676.802828,
+    "inode": 622454844,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/14.jsonl",
+    "mtime": 1789631679.829597,
+    "inode": 622454845,
+    "mode": 33188,
+    "size": 36490
+  },
+  {
+    "path": "outputs/job-6165628/panel/14.npy",
+    "mtime": 1789631676.7987633,
+    "inode": 622454843,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/15.fa",
+    "mtime": 1789631748.218067,
+    "inode": 622454890,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/15.jsonl",
+    "mtime": 1789631750.096018,
+    "inode": 622454891,
+    "mode": 33188,
+    "size": 15460
+  },
+  {
+    "path": "outputs/job-6165628/panel/15.npy",
+    "mtime": 1789631748.2145371,
+    "inode": 622454889,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/16.fa",
+    "mtime": 1789631495.022747,
+    "inode": 622454721,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/16.jsonl",
+    "mtime": 1789631496.475065,
+    "inode": 622454722,
+    "mode": 33188,
+    "size": 17355
+  },
+  {
+    "path": "outputs/job-6165628/panel/16.npy",
+    "mtime": 1789631495.0180323,
+    "inode": 622454720,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/17.fa",
+    "mtime": 1789631612.035073,
+    "inode": 622454788,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/17.jsonl",
+    "mtime": 1789631619.795053,
+    "inode": 622454789,
+    "mode": 33188,
+    "size": 74853
+  },
+  {
+    "path": "outputs/job-6165628/panel/17.npy",
+    "mtime": 1789631612.0315216,
+    "inode": 622454787,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/18.fa",
+    "mtime": 1789631620.504295,
+    "inode": 622454791,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/18.jsonl",
+    "mtime": 1789631626.375639,
+    "inode": 622454792,
+    "mode": 33188,
+    "size": 86401
+  },
+  {
+    "path": "outputs/job-6165628/panel/18.npy",
+    "mtime": 1789631620.5007904,
+    "inode": 622454790,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/19.fa",
+    "mtime": 1789631627.004643,
+    "inode": 622454794,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/19.jsonl",
+    "mtime": 1789631629.150647,
+    "inode": 622454795,
+    "mode": 33188,
+    "size": 18557
+  },
+  {
+    "path": "outputs/job-6165628/panel/19.npy",
+    "mtime": 1789631627.0011568,
+    "inode": 622454793,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/20.fa",
+    "mtime": 1789631531.646154,
+    "inode": 622454761,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/20.jsonl",
+    "mtime": 1789631551.404343,
+    "inode": 622454762,
+    "mode": 33188,
+    "size": 291409
+  },
+  {
+    "path": "outputs/job-6165628/panel/20.npy",
+    "mtime": 1789631531.6426833,
+    "inode": 622454760,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/21.fa",
+    "mtime": 1789631551.949361,
+    "inode": 622454764,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/21.jsonl",
+    "mtime": 1789631553.423479,
+    "inode": 622454765,
+    "mode": 33188,
+    "size": 11647
+  },
+  {
+    "path": "outputs/job-6165628/panel/21.npy",
+    "mtime": 1789631551.945115,
+    "inode": 622454763,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/22.fa",
+    "mtime": 1789631629.766226,
+    "inode": 622454797,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/22.jsonl",
+    "mtime": 1789631632.993199,
+    "inode": 622454798,
+    "mode": 33188,
+    "size": 32134
+  },
+  {
+    "path": "outputs/job-6165628/panel/22.npy",
+    "mtime": 1789631629.7626913,
+    "inode": 622454796,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/23.fa",
+    "mtime": 1789631750.710793,
+    "inode": 622454905,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/23.jsonl",
+    "mtime": 1789631752.657968,
+    "inode": 622454906,
+    "mode": 33188,
+    "size": 17899
+  },
+  {
+    "path": "outputs/job-6165628/panel/23.npy",
+    "mtime": 1789631750.7067273,
+    "inode": 622454892,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/24.fa",
+    "mtime": 1789631753.257704,
+    "inode": 622454908,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/24.jsonl",
+    "mtime": 1789631754.735565,
+    "inode": 622454909,
+    "mode": 33188,
+    "size": 17190
+  },
+  {
+    "path": "outputs/job-6165628/panel/24.npy",
+    "mtime": 1789631753.2541733,
+    "inode": 622454907,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/25.fa",
+    "mtime": 1789631633.586096,
+    "inode": 622454800,
+    "mode": 33188,
+    "size": 30767
+  },
+  {
+    "path": "outputs/job-6165628/panel/25.jsonl",
+    "mtime": 1789631634.215856,
+    "inode": 622454801,
+    "mode": 33188,
+    "size": 12315
+  },
+  {
+    "path": "outputs/job-6165628/panel/25.npy",
+    "mtime": 1789631633.5822632,
+    "inode": 622454799,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/26.fa",
+    "mtime": 1789631634.870852,
+    "inode": 622454803,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/26.jsonl",
+    "mtime": 1789631638.623311,
+    "inode": 622454804,
+    "mode": 33188,
+    "size": 34045
+  },
+  {
+    "path": "outputs/job-6165628/panel/26.npy",
+    "mtime": 1789631634.866949,
+    "inode": 622454802,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/27.fa",
+    "mtime": 1789631553.960966,
+    "inode": 622454767,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/27.jsonl",
+    "mtime": 1789631555.620476,
+    "inode": 622454768,
+    "mode": 33188,
+    "size": 20150
+  },
+  {
+    "path": "outputs/job-6165628/panel/27.npy",
+    "mtime": 1789631553.9571173,
+    "inode": 622454766,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/28.fa",
+    "mtime": 1789631639.119095,
+    "inode": 622454806,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/28.jsonl",
+    "mtime": 1789631639.641266,
+    "inode": 622454807,
+    "mode": 33188,
+    "size": 3391
+  },
+  {
+    "path": "outputs/job-6165628/panel/28.npy",
+    "mtime": 1789631639.1149633,
+    "inode": 622454805,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/29.fa",
+    "mtime": 1789631497.022804,
+    "inode": 622454724,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/29.jsonl",
+    "mtime": 1789631497.484262,
+    "inode": 622454725,
+    "mode": 33188,
+    "size": 3464
+  },
+  {
+    "path": "outputs/job-6165628/panel/29.npy",
+    "mtime": 1789631497.0187428,
+    "inode": 622454723,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/30.fa",
+    "mtime": 1789631498.068144,
+    "inode": 622454727,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/30.jsonl",
+    "mtime": 1789631499.609436,
+    "inode": 622454728,
+    "mode": 33188,
+    "size": 16595
+  },
+  {
+    "path": "outputs/job-6165628/panel/30.npy",
+    "mtime": 1789631498.0639694,
+    "inode": 622454726,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/31.fa",
+    "mtime": 1789631755.326201,
+    "inode": 622454911,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/31.jsonl",
+    "mtime": 1789631756.280833,
+    "inode": 622454912,
+    "mode": 33188,
+    "size": 15229
+  },
+  {
+    "path": "outputs/job-6165628/panel/31.npy",
+    "mtime": 1789631755.3216023,
+    "inode": 622454910,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/32.fa",
+    "mtime": 1789631500.21644,
+    "inode": 622454732,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/32.jsonl",
+    "mtime": 1789631506.751597,
+    "inode": 622454734,
+    "mode": 33188,
+    "size": 61907
+  },
+  {
+    "path": "outputs/job-6165628/panel/32.npy",
+    "mtime": 1789631500.2122731,
+    "inode": 622454729,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/33.fa",
+    "mtime": 1789631640.305683,
+    "inode": 622454809,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/33.jsonl",
+    "mtime": 1789631641.320749,
+    "inode": 622454810,
+    "mode": 33188,
+    "size": 13888
+  },
+  {
+    "path": "outputs/job-6165628/panel/33.npy",
+    "mtime": 1789631640.3022995,
+    "inode": 622454808,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/34.fa",
+    "mtime": 1789631641.924421,
+    "inode": 622454819,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/34.jsonl",
+    "mtime": 1789631648.436159,
+    "inode": 622454821,
+    "mode": 33188,
+    "size": 88537
+  },
+  {
+    "path": "outputs/job-6165628/panel/34.npy",
+    "mtime": 1789631641.9205477,
+    "inode": 622454811,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/35.fa",
+    "mtime": 1789631507.327499,
+    "inode": 622454743,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/35.jsonl",
+    "mtime": 1789631508.189837,
+    "inode": 622454744,
+    "mode": 33188,
+    "size": 9392
+  },
+  {
+    "path": "outputs/job-6165628/panel/35.npy",
+    "mtime": 1789631507.323962,
+    "inode": 622454742,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/36.fa",
+    "mtime": 1789631680.469603,
+    "inode": 622454847,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/36.jsonl",
+    "mtime": 1789631681.417973,
+    "inode": 622454848,
+    "mode": 33188,
+    "size": 6933
+  },
+  {
+    "path": "outputs/job-6165628/panel/36.npy",
+    "mtime": 1789631680.465564,
+    "inode": 622454846,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/37.fa",
+    "mtime": 1789631681.971151,
+    "inode": 622454850,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/37.jsonl",
+    "mtime": 1789631684.825213,
+    "inode": 622454851,
+    "mode": 33188,
+    "size": 37215
+  },
+  {
+    "path": "outputs/job-6165628/panel/37.npy",
+    "mtime": 1789631681.9662344,
+    "inode": 622454849,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/38.fa",
+    "mtime": 1789631556.161166,
+    "inode": 622454770,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/38.jsonl",
+    "mtime": 1789631556.965514,
+    "inode": 622454771,
+    "mode": 33188,
+    "size": 11734
+  },
+  {
+    "path": "outputs/job-6165628/panel/38.npy",
+    "mtime": 1789631556.15712,
+    "inode": 622454769,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/39.fa",
+    "mtime": 1789631508.785996,
+    "inode": 622454746,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/39.jsonl",
+    "mtime": 1789631509.20184,
+    "inode": 622454747,
+    "mode": 33188,
+    "size": 2515
+  },
+  {
+    "path": "outputs/job-6165628/panel/39.npy",
+    "mtime": 1789631508.7813008,
+    "inode": 622454745,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/40.fa",
+    "mtime": 1789631685.416186,
+    "inode": 622454853,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/40.jsonl",
+    "mtime": 1789631687.813611,
+    "inode": 622454854,
+    "mode": 33188,
+    "size": 24771
+  },
+  {
+    "path": "outputs/job-6165628/panel/40.npy",
+    "mtime": 1789631685.411991,
+    "inode": 622454852,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/41.fa",
+    "mtime": 1789631756.842166,
+    "inode": 622454914,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/41.jsonl",
+    "mtime": 1789631758.25936,
+    "inode": 622454915,
+    "mode": 33188,
+    "size": 13433
+  },
+  {
+    "path": "outputs/job-6165628/panel/41.npy",
+    "mtime": 1789631756.837686,
+    "inode": 622454913,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/42.fa",
+    "mtime": 1789631688.388741,
+    "inode": 622454856,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/42.jsonl",
+    "mtime": 1789631690.924661,
+    "inode": 622454857,
+    "mode": 33188,
+    "size": 24063
+  },
+  {
+    "path": "outputs/job-6165628/panel/42.npy",
+    "mtime": 1789631688.38515,
+    "inode": 622454855,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/43.fa",
+    "mtime": 1789631649.065496,
+    "inode": 622454828,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/43.jsonl",
+    "mtime": 1789631664.125785,
+    "inode": 622454834,
+    "mode": 33188,
+    "size": 221189
+  },
+  {
+    "path": "outputs/job-6165628/panel/43.npy",
+    "mtime": 1789631649.0612624,
+    "inode": 622454827,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/44.fa",
+    "mtime": 1789631758.906188,
+    "inode": 622454917,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/44.jsonl",
+    "mtime": 1789631763.26755,
+    "inode": 622454918,
+    "mode": 33188,
+    "size": 48256
+  },
+  {
+    "path": "outputs/job-6165628/panel/44.npy",
+    "mtime": 1789631758.9015079,
+    "inode": 622454916,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/45.fa",
+    "mtime": 1789631557.568092,
+    "inode": 622454773,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/45.jsonl",
+    "mtime": 1789631584.33465,
+    "inode": 622454774,
+    "mode": 33188,
+    "size": 310302
+  },
+  {
+    "path": "outputs/job-6165628/panel/45.npy",
+    "mtime": 1789631557.5641038,
+    "inode": 622454772,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/46.fa",
+    "mtime": 1789631691.49374,
+    "inode": 622454859,
+    "mode": 33188,
+    "size": 30767
+  },
+  {
+    "path": "outputs/job-6165628/panel/46.jsonl",
+    "mtime": 1789631694.085743,
+    "inode": 622454860,
+    "mode": 33188,
+    "size": 43432
+  },
+  {
+    "path": "outputs/job-6165628/panel/46.npy",
+    "mtime": 1789631691.4902325,
+    "inode": 622454858,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/47.fa",
+    "mtime": 1789631584.914518,
+    "inode": 622454776,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/47.jsonl",
+    "mtime": 1789631585.813028,
+    "inode": 622454777,
+    "mode": 33188,
+    "size": 11432
+  },
+  {
+    "path": "outputs/job-6165628/panel/47.npy",
+    "mtime": 1789631584.9101245,
+    "inode": 622454775,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/48.fa",
+    "mtime": 1789631694.676539,
+    "inode": 622454862,
+    "mode": 33188,
+    "size": 30771
+  },
+  {
+    "path": "outputs/job-6165628/panel/48.jsonl",
+    "mtime": 1789631697.748391,
+    "inode": 622454863,
+    "mode": 33188,
+    "size": 30503
+  },
+  {
+    "path": "outputs/job-6165628/panel/48.npy",
+    "mtime": 1789631694.672009,
+    "inode": 622454861,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/49.fa",
+    "mtime": 1789631698.362134,
+    "inode": 622454865,
+    "mode": 33188,
+    "size": 30769
+  },
+  {
+    "path": "outputs/job-6165628/panel/49.jsonl",
+    "mtime": 1789631715.016954,
+    "inode": 622454866,
+    "mode": 33188,
+    "size": 264549
+  },
+  {
+    "path": "outputs/job-6165628/panel/49.npy",
+    "mtime": 1789631698.3579628,
+    "inode": 622454864,
+    "mode": 33188,
+    "size": 491648
+  },
+  {
+    "path": "outputs/job-6165628/panel/COMPLETE",
+    "mtime": 1789631919.251472,
+    "inode": 622454920,
+    "mode": 33188,
+    "size": 65
+  },
+  {
+    "path": "outputs/job-6165628/panel/manifest.json",
+    "mtime": 1789631841.275252,
+    "inode": 622454919,
+    "mode": 33188,
+    "size": 38854
+  },
+  {
+    "path": "logs/panel-6165628.err",
+    "mtime": 1789630864.263913,
+    "inode": 622454707,
+    "mode": 33188,
+    "size": 0
+  },
+  {
+    "path": "logs/panel-6165628.out",
+    "mtime": 1789630864.263549,
+    "inode": 621469530,
+    "mode": 33188,
+    "size": 0
+  }
+]

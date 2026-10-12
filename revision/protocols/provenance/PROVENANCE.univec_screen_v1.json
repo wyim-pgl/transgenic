@@ -1,0 +1,34 @@
+{
+  "provenance_id": "univec_screen_v1",
+  "purpose": "Settles A46 rule 9's blastn identity: which BLAST+ actually screened the 11 EST sets against UniVec_Core (B1 A21).",
+  "measured_on": "2026-09-21",
+  "source": "the screening's own receipts on pronghorn: <evidence>/est/<species>/univec/PROVENANCE.txt, written by the screening run itself on 2026-09-03",
+  "blastn": {
+    "version_recorded_by_the_run": "blastn: 2.5.0+",
+    "candidate_binary": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/blastn",
+    "candidate_sha256": "f103f27d48b128a4652a130afc5be97b3349cfb1e4232d86c8471fca994bfdf5",
+    "candidate_version": "2.5.0+",
+    "match": "version strings agree",
+    "caveat": "The receipt records a VERSION STRING, not a path or sha256, so it does not uniquely identify the binary. No second blastn reporting 2.5.0+ was found, but the search was not exhaustive. This is the same failure mode demonstrated by the two minimap2 builds in PROVENANCE.cpu_tools_v1.json."
+  },
+  "univec_db": {
+    "name": "UniVec_Core",
+    "build": "10.0 (README last updated 22 May 2017)",
+    "downloaded": "2026-09-03T14:20:27-07:00 from ftp.ncbi.nlm.nih.gov/pub/UniVec/",
+    "md5": "82f07865312b1ddc2d86b324f6ff85ac"
+  },
+  "params_recorded_by_the_run": "-task blastn -reward 1 -penalty -5 -gapopen 3 -gapextend 3 -dust yes -soft_masking true -evalue 700 -searchsp 1750000000000",
+  "params_match_B1_A21": true,
+  "trimmer": "revision/scripts/61_univec_trim.py min_len=121 terminal_nt=25",
+  "receipts_present": {
+    "count": 11,
+    "species": ["Athaliana", "Bdistachyon", "Gmax", "Osativa", "Ppatens", "Ptrichocarpa", "Sbicolor", "Sitalica", "Vvinifera", "Zmays", "Slycopersicum"],
+    "note": "every one of the 11 EST sets has its own PROVENANCE.txt; all 11 md5s are distinct"
+  },
+  "cross_check_athaliana": {
+    "input_md5_in_receipt": "3d87af2e533b1f97f066a889204f4289",
+    "local_fa_md5_in_DATASET_ROLES_est_v1": "3d87af2e533b1f97f066a889204f4289",
+    "match": true,
+    "summary_counts": {"records_in": 1529700, "keep": 741649, "records_out": 755367, "drop": 774531, "trim": 8546, "split": 4974, "bases_in": 400627814, "bases_out": 329280580}
+  }
+}

@@ -1,0 +1,41 @@
+LOCAL_START_UTC=2026-09-17T07:34:52.761592+00:00
+COMMAND=ssh -o BatchMode=yes -o ConnectTimeout=15 pronghorn 'ssh -o BatchMode=yes -o ConnectTimeout=15 dtai '"'"'date -Is; hostname; whoami; squeue -u wcyim -o "%.18i %.30j %.12T %.12M %.30R"; sacct -j 3163986,3163545,3131537,3131538,3149356,3149357,3149358,3149359,3149360,3149361,3149362,3149363 -P --format=JobID,User,JobName,State,ExitCode,Start,End,Elapsed,ElapsedRaw,AllocTRES,NodeList; scontrol show job 3163986 -o'"'"''
+RETURN_CODE=0
+STDOUT
+2026-09-17T02:34:54-05:00
+gh-login01.delta.ncsa.illinois.edu
+wcyim
+             JOBID                           NAME        STATE         TIME               NODELIST(REASON)
+           3163986             mvp8-final-p1-0916      PENDING         0:00                     (Priority)
+           3149363                        b5-seed      PENDING         0:00                   (Dependency)
+           3149362                        b5-seed      PENDING         0:00                   (Dependency)
+           3149361                        b5-seed      PENDING         0:00                   (Dependency)
+           3149360                        b5-seed      PENDING         0:00                   (Dependency)
+           3149359                        b5-seed      PENDING         0:00                   (Dependency)
+           3149358                        b5-seed      PENDING         0:00                   (Dependency)
+           3149357                        b5-seed      PENDING         0:00                   (Dependency)
+           3149356                        b5-seed      PENDING         0:00                   (Dependency)
+           3131538                        b5-seed      RUNNING        57:25                          gh024
+JobID|User|JobName|State|ExitCode|Start|End|Elapsed|ElapsedRaw|AllocTRES|NodeList
+3131537|wcyim|b5-seed|COMPLETED|0:0|2026-09-16T08:01:50|2026-09-16T18:49:58|10:48:08|38888|billing=4000,cpu=64,gres/gpu=4,mem=454240M,node=1|gh086
+3131537.batch||batch|COMPLETED|0:0|2026-09-16T08:01:50|2026-09-16T18:49:58|10:48:08|38888|cpu=64,gres/gpu=4,mem=454240M,node=1|gh086
+3131537.extern||extern|COMPLETED|0:0|2026-09-16T08:01:50|2026-09-16T18:49:58|10:48:08|38888|billing=4000,cpu=64,gres/gpu=4,mem=454240M,node=1|gh086
+3131538|wcyim|b5-seed|RUNNING|0:0|2026-09-17T01:37:29|Unknown|00:57:25|3445|billing=4000,cpu=64,gres/gpu=4,mem=454240M,node=1|gh024
+3131538.batch||batch|RUNNING|0:0|2026-09-17T01:37:29|Unknown|00:57:25|3445|cpu=64,gres/gpu=4,mem=454240M,node=1|gh024
+3131538.extern||extern|RUNNING|0:0|2026-09-17T01:37:29|Unknown|00:57:25|3445|billing=4000,cpu=64,gres/gpu=4,mem=454240M,node=1|gh024
+3149356|wcyim|b5-seed|PENDING|0:0|Unknown|Unknown|00:00:00|0||None assigned
+3149357|wcyim|b5-seed|PENDING|0:0|Unknown|Unknown|00:00:00|0||None assigned
+3149358|wcyim|b5-seed|PENDING|0:0|Unknown|Unknown|00:00:00|0||None assigned
+3149359|wcyim|b5-seed|PENDING|0:0|Unknown|Unknown|00:00:00|0||None assigned
+3149360|wcyim|b5-seed|PENDING|0:0|Unknown|Unknown|00:00:00|0||None assigned
+3149361|wcyim|b5-seed|PENDING|0:0|Unknown|Unknown|00:00:00|0||None assigned
+3149362|wcyim|b5-seed|PENDING|0:0|Unknown|Unknown|00:00:00|0||None assigned
+3149363|wcyim|b5-seed|PENDING|0:0|Unknown|Unknown|00:00:00|0||None assigned
+3163545|wcyim|mvp8-p1-0916|CANCELLED by 97434|0:0|None|2026-09-16T22:19:57|00:00:00|0||None assigned
+3163986|wcyim|mvp8-final-p1-0916|PENDING|0:0|Unknown|Unknown|00:00:00|0||None assigned
+JobId=3163986 JobName=mvp8-final-p1-0916 UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=733 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Priority Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=00:30:00 TimeMin=N/A SubmitTime=2026-09-16T22:21:23 EligibleTime=2026-09-16T22:21:23 AccrueTime=2026-09-16T22:21:23 StartTime=2026-09-18T03:01:35 EndTime=2026-09-18T03:31:35 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-17T02:34:53 Scheduler=Main Partition=ghx4 AllocNode:Sid=gh-login01:1781115 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1-1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=NO Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final_p1_release/p1.sbatch SubmitLine=sbatch --parsable --exclude=gh062,gh093 p1.sbatch WorkDir=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final_p1_release StdErr=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-3163986.err StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-3163986.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64
+
+STDERR
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

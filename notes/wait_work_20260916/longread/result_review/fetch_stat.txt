@@ -1,0 +1,33 @@
+14789|regular file
+65|regular file
+2951|regular file
+195|regular file
+1690|regular file
+8538965|regular file
+11|regular file
+0|regular empty file
+74|regular file
+0|regular empty file
+15|regular file
+0|regular empty file
+147|regular file
+0|regular empty file
+20228425|regular file
+908|regular file
+1691|regular file
+0|regular empty file
+14790|regular file
+0|regular empty file
+14946|regular file
+1111|regular file
+2533|regular file
+1163|regular file
+11367|regular file
+9320|regular file
+8996|regular file
+15526|regular file
+2592|regular file
+45948|regular file
+10149|regular file
+14571|regular file
+166414|regular file

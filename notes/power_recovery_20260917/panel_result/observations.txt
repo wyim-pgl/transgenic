@@ -1,0 +1,107 @@
+2026-09-17T00:45:34-0700
+JobID|State|ExitCode|Elapsed|AllocCPUS|ReqMem|MaxRSS|NodeList
+6165628|RUNNING|0:0|00:04:31|4|16Gn||cpu-50
+6165628.batch|RUNNING|0:0|00:04:31|4|16Gn||cpu-50
+6165628.extern|RUNNING|0:0|00:04:31|4|16Gn||cpu-50
+6165628|RUNNING|4:32|cpu-50
+
+STDERR:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+
+2026-09-17T00:47:35-0700
+JobID|State|ExitCode|Elapsed|AllocCPUS|ReqMem|MaxRSS|NodeList
+6165628|RUNNING|0:0|00:06:32|4|16Gn||cpu-50
+6165628.batch|RUNNING|0:0|00:06:32|4|16Gn||cpu-50
+6165628.extern|RUNNING|0:0|00:06:32|4|16Gn||cpu-50
+6165628|RUNNING|6:32|cpu-50
+
+STDERR:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+
+2026-09-17T00:49:36-0700
+JobID|State|ExitCode|Elapsed|AllocCPUS|ReqMem|MaxRSS|NodeList
+6165628|RUNNING|0:0|00:08:33|4|16Gn||cpu-50
+6165628.batch|RUNNING|0:0|00:08:33|4|16Gn||cpu-50
+6165628.extern|RUNNING|0:0|00:08:33|4|16Gn||cpu-50
+6165628|RUNNING|8:33|cpu-50
+
+STDERR:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+
+2026-09-17T00:51:36-0700
+JobID|State|ExitCode|Elapsed|AllocCPUS|ReqMem|MaxRSS|NodeList
+6165628|RUNNING|0:0|00:10:33|4|16Gn||cpu-50
+6165628.batch|RUNNING|0:0|00:10:33|4|16Gn||cpu-50
+6165628.extern|RUNNING|0:0|00:10:33|4|16Gn||cpu-50
+6165628|RUNNING|10:34|cpu-50
+
+STDERR:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+
+2026-09-17T00:53:37-0700
+JobID|State|ExitCode|Elapsed|AllocCPUS|ReqMem|MaxRSS|NodeList
+6165628|RUNNING|0:0|00:12:34|4|16Gn||cpu-50
+6165628.batch|RUNNING|0:0|00:12:34|4|16Gn||cpu-50
+6165628.extern|RUNNING|0:0|00:12:34|4|16Gn||cpu-50
+6165628|RUNNING|12:34|cpu-50
+
+STDERR:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+
+2026-09-17T00:55:38-0700
+JobID|State|ExitCode|Elapsed|AllocCPUS|ReqMem|MaxRSS|NodeList
+6165628|RUNNING|0:0|00:14:35|4|16Gn||cpu-50
+6165628.batch|RUNNING|0:0|00:14:35|4|16Gn||cpu-50
+6165628.extern|RUNNING|0:0|00:14:35|4|16Gn||cpu-50
+6165628|RUNNING|14:35|cpu-50
+
+STDERR:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+
+2026-09-17T00:57:38-0700
+JobID|State|ExitCode|Elapsed|AllocCPUS|ReqMem|MaxRSS|NodeList
+6165628|RUNNING|0:0|00:16:35|4|16Gn||cpu-50
+6165628.batch|RUNNING|0:0|00:16:35|4|16Gn||cpu-50
+6165628.extern|RUNNING|0:0|00:16:35|4|16Gn||cpu-50
+6165628|RUNNING|16:35|cpu-50
+
+STDERR:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+
+2026-09-17T00:59:39-0700
+JobID|State|ExitCode|Elapsed|AllocCPUS|ReqMem|MaxRSS|NodeList
+6165628|RUNNING|0:0|00:18:36|4|16Gn||cpu-50
+6165628.batch|RUNNING|0:0|00:18:36|4|16Gn||cpu-50
+6165628.extern|RUNNING|0:0|00:18:36|4|16Gn||cpu-50
+6165628|RUNNING|18:36|cpu-50
+
+STDERR:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+
+2026-09-17T01:01:39-0700
+JobID|State|ExitCode|Elapsed|AllocCPUS|ReqMem|MaxRSS|NodeList
+6165628|COMPLETED|0:0|00:18:53|4|16Gn||cpu-50
+6165628.batch|COMPLETED|0:0|00:18:53|4|16Gn|787524K|cpu-50
+6165628.extern|OUT_OF_MEMORY|0:125|00:18:53|4|16Gn|1480K|cpu-50
+
+STDERR:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+

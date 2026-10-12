@@ -1,0 +1,20 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T00:41:02-0700
+             JOBID                             NAME      STATE         TIME               NODELIST(REASON)
+           6147940                 syl_an_Ahy_A_ODB    PENDING         0:00                  (JobHeldUser)
+           6147612                     syl_an_Ahy_A    PENDING         0:00                  (JobHeldUser)
+           6147349                     syl_an_Ahy_B    PENDING         0:00                  (JobHeldUser)
+           6146937                     syl_an_Ahy_B    PENDING         0:00                  (JobHeldUser)
+           6146936                 syl_an_Ahy_A_ODB    RUNNING  13-09:27:18                         cpu-50
+           6156540              syl_watch_other_20m    RUNNING   6-12:50:00                         cpu-50
+           6156395               pasaPost.Ahy_A_ODB    RUNNING   6-22:50:05                         cpu-50
+JobID|User|Account|Partition|State|Submit
+6165556|wyim|cpu-s1-pgl-0|cpu-s1-pgl-0|FAILED|2026-09-16T21:50:23
+6165556.batch||cpu-s1-pgl-0||FAILED|2026-09-16T21:50:24
+6165556.extern||cpu-s1-pgl-0||OUT_OF_MEMORY|2026-09-16T21:50:24
+6165559|wyim|cpu-s1-pgl-0|cpu-s1-pgl-0|COMPLETED|2026-09-16T22:01:57
+6165559.batch||cpu-s1-pgl-0||COMPLETED|2026-09-16T22:01:57
+6165559.extern||cpu-s1-pgl-0||OUT_OF_MEMORY|2026-09-16T22:01:57
+6165628

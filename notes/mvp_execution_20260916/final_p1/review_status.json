@@ -1,0 +1,24 @@
+{
+  "source_commit": "b660bf1e7dc48287ca34a0d6e3aeb53d45f599b6",
+  "source_review": "ACCEPT: fresh bindings and separately authorized bounded diagnostics only",
+  "source_review_report": "notes/mvp_execution_20260916/final_source.independent_review.md",
+  "controller_report_commit": "0a19b3a",
+  "deployment_review": "PENDING",
+  "release_ledger_sha256": "5b36bdf09a8b8eb548147654e23d6ad59fe18542642a05eb720f22be102fdfb8",
+  "frozen_reference_git_authority": {
+    "commit": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16",
+    "path": "data/manifests/b5_species_v1.tsv",
+    "transport_status": "DEFERRED_UNVERIFIED",
+    "required_before": "later panel/evaluation consumers of frozen_reference",
+    "p1_calls_frozen_reference": false,
+    "source_archive_is_git_authority": false,
+    "working_manifest_is_git_authority": false
+  },
+  "old_job": {
+    "id": "3163545",
+    "controller_reported_status": "PENDING Priority at 20:08 PDT",
+    "live_status_checked_here": false,
+    "action": "NONE; controller-only fresh state and pending-only cancellation decision after deployment approval"
+  },
+  "training_ready": false
+}

@@ -1,0 +1,28 @@
+random states loaded successfully")
+    except Exception:
+        logger.info("Could not load random states")
+
+    return override_attributes
+
+RNG_KEYS ['step', 'random_state', 'numpy_random_seed', 'torch_manual_seed', 'torch_cuda_manual_seed']
+RNG_SUMMARY [('step', "<class 'int'>", None), ('random_state', "<class 'tuple'>", 3), ('numpy_random_seed', "<class 'tuple'>", 5), ('torch_manual_seed', "<class 'torch.Tensor'>", 5056), ('torch_cuda_manual_seed', "<class 'list'>", 4)]
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+Lmod has detected the following error: The following module(s) are unknown:
+"apptainer"
+
+Please check the spelling or version number. Also try "module spider ..."
+It is also possible your cache file is out-of-date; it may help to try:
+  $ module --ignore_cache load "apptainer"
+
+Also make sure that all modulefiles written in TCL start with the string
+#%Module
+
+
+

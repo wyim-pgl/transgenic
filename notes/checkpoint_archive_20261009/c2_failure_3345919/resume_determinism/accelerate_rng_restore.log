@@ -1,0 +1,39 @@
+    try:
+        states = load(input_dir.joinpath(f"{RNG_STATE_NAME}_{process_index}.pkl"))
+        if "step" in states:
+            override_attributes["step"] = states["step"]
+        random.setstate(states["random_state"])
+        np.random.set_state(states["numpy_random_seed"])
+        torch.set_rng_state(states["torch_manual_seed"])
+        if is_xpu_available():
+            torch.xpu.set_rng_state_all(states["torch_xpu_manual_seed"])
+        if is_mlu_available():
+            torch.mlu.set_rng_state_all(states["torch_mlu_manual_seed"])
+        elif is_sdaa_available():
+            torch.sdaa.set_rng_state_all(states["torch_sdaa_manual_seed"])
+        elif is_musa_available():
+            torch.musa.set_rng_state_all(states["torch_musa_manual_seed"])
+        if is_hpu_available():
+            torch.hpu.set_rng_state_all(states["torch_hpu_manual_seed"])
+        if is_neuron_available():
+            torch.neuron.set_rng_state_all(states["torch_neuron_manual_seed"])
+        if is_cuda_available():
+            torch.cuda.set_rng_state_all(states["torch_cuda_manual_seed"])
+        if is_torch_xla_available():
+            xm.set_rng_state(states["xm_seed"])
+        logger.info("All random states loaded successfully")
+    except Exception:
+        logger.info("Could not load random states")
+
+    return override_attributes
+
+GENOMES True
+INPUTS {'cache': '/work/b6_prep_20260925/obs_cache/train_v1', 'corpus': '/work/b6_prep_20260925/corpus/b5_full_b6_v1.db', 'evidence': '/hdd_prep/merged/b6_v1/evidence_c0.db', 'freeze': '/work/b6_prep_20260925/corpus/freeze.json', 'references': {'Athaliana': '/work/genomes/Athaliana_167_TAIR10.fa', 'Bdistachyon': '/work/genomes/Bdistachyon_314_v3.0.fa', 'Gmax': '/work/genomes/Gmax_880_v6.0.fa', 'Osativa': '/work/genomes/Osativa_323_v7.0.fa', 'Ppatens': '/work/genomes/Ppatens_318_v3.fa', 'Ptrichocarpa': '/work/genomes/Ptrichocarpa_533_v4.0.fa', 'Sbicolor': '/work/genomes/Sbicolor_730_v5.0.fa', 'Sitalica': '/work/genomes/Sitalica_312_v2.fa', 'Vvinifera': '/work/genomes/Vvinifera_T2T_ref.fa'}, 'roles': '/work/b6_prep_20260925/source_v18/data/manifests/DATASET_ROLES.b6_v1.tsv'}
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

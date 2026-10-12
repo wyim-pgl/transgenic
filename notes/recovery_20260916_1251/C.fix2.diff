@@ -1,0 +1,103 @@
+diff --git a/notes/TRACK_C_RECOVERY_REPORT.md b/notes/TRACK_C_RECOVERY_REPORT.md
+index 45a23c2..bf2ed02 100644
+--- a/notes/TRACK_C_RECOVERY_REPORT.md
++++ b/notes/TRACK_C_RECOVERY_REPORT.md
+@@ -97,8 +97,23 @@ PYTHONPATH=.testdeps /home/wyim/micromamba/envs/kimicli/bin/python3.12 -m pytest
+   revision/scripts/tests/test_est_blastx.py \
+   revision/scripts/tests/test_est_blastx_fixture.py \
+   revision/scripts/tests/test_track_c_recovery.py
+ ```
+ 
+ **65 passed** (22 baseline + 43 recovery cases). Includes a complete synthetic 18-unit audit, both provenance layouts, failed accounting/preflight rollups preserving inventory, both-strand hand-built RICH17 diagnostic cases, 29/30/31 raw-boundary nonacceptance, and production gates creating no output.
+ 
+ `bash -n` passed for both recovered sbatch templates; `py_compile` passed for all four Track C Python modules. Staged `git diff --check` initially caught one trailing whitespace line; corrected before the successful source commit. No full-repository, real-DIAMOND, Slurm or production-data test claim.
++
++## Round two — scoped filtered-FASTA iteration regression
++
++FIX_BASE: `b7547e2edc175f7eac9713c8465b5b20e396a86f`. Read `notes/recovery_20260916_1251/C.fix1_review.md` completely. Original five findings remain addressed. The sole production change wraps **consumption** of `launcher.records()` in the filtered-subject set comprehension, converting its expected validation `ValueError` into `EvidenceError`. The unit-wide exception boundary is unchanged; no blanket ValueError/TypeError catch, policy/provenance change or C2/C3 change was introduced.
++
++Three integrated 18-unit regressions cover malformed FASTA, empty FASTA, and one valid record followed by an empty record. The last case explicitly proves the generator yields a valid prefix before raising during later iteration. Each verifies 18 manifests, 17 passing units under the existing synthetic trust anchors, the failed unit's gathered hashes and prior checks, final rollup and FAILED marker, and no outer DONE. All three tests failed against FIX_BASE with escaping FASTA ValueError before the source fix. The existing programmer-TypeError propagation regression remains passing.
++
++Baseline: **116 passed**. Final exact command (same worktree):
++
++```sh
++PYTHONPATH=.testdeps /home/wyim/micromamba/envs/kimicli/bin/python3.12 -m pytest -q revision/scripts/tests/test_est_blastx.py revision/scripts/tests/test_est_blastx_fixture.py revision/scripts/tests/test_track_c_recovery.py revision/scripts/tests/test_track_c_audit_review.py
++bash -n revision/scripts/evidence/est_blastx_audit.sbatch revision/scripts/evidence/est_phase_accept_fixture.sbatch
++```
++
++Result: **119 passed**; both shell syntax checks and `git diff --check` passed. Source/tests/report are committed together; exact commit is available with `git log -1 -- notes/TRACK_C_RECOVERY_REPORT.md`. Existing missing pilot log receipt, real-data/identity limitations, `.extern` anomaly and C2/C3 gates are unchanged. No subagents, remote actions, main edits, merge or push. Controller scoped re-review remains pending.
+diff --git a/revision/scripts/evidence/est_blastx_audit.py b/revision/scripts/evidence/est_blastx_audit.py
+index ecb160d..4836753 100644
+--- a/revision/scripts/evidence/est_blastx_audit.py
++++ b/revision/scripts/evidence/est_blastx_audit.py
+@@ -340,17 +340,21 @@ def _audit_unit(layout, species, kind, species_root, batch_root, check, files):
+     try:
+         qc = launcher.validate_raw(unit / f'{kind}.raw13.tsv')
+         ok = (qc['raw_hsps'] == provenance.get('raw_hsps')
+               and qc['hsps_lt_30aa'] == provenance.get('hsps_lt_30aa'))
+         check.add('raw13_contract', ok, {'recomputed': qc,
+                   'recorded': {k: provenance.get(k) for k in ('raw_hsps', 'hsps_lt_30aa')}})
+     except ValueError as exc:
+         check.add('raw13_contract', False, str(exc))
+-    subjects = {h.split()[0] for h, _ in launcher.records(unit / f'{kind}.filtered.fa')}
++    try:
++        # records() validates lazily: catch evidence errors during consumption.
++        subjects = {h.split()[0] for h, _ in launcher.records(unit / f'{kind}.filtered.fa')}
++    except ValueError as exc:
++        raise EvidenceError(str(exc)) from exc
+     unknown_subjects = set()
+     with open(unit / f'{kind}.raw13.tsv') as raw:
+         for line in raw:
+             columns = line.rstrip('\n').split('\t')
+             if len(columns) != 13:
+                 raise EvidenceError('malformed raw13 subject row')
+             subject = columns[2]
+             if subject not in subjects:
+diff --git a/revision/scripts/tests/test_track_c_audit_review.py b/revision/scripts/tests/test_track_c_audit_review.py
+index 7b3c420..d79f043 100644
+--- a/revision/scripts/tests/test_track_c_audit_review.py
++++ b/revision/scripts/tests/test_track_c_audit_review.py
+@@ -195,15 +195,43 @@ def test_missing_code_fields_fail_in_integrated_inventory(tmp_path):
+     prov.write_text(json.dumps(data))
+     with pytest.raises(ValueError, match='audit FAILED'):
+         audit.audit(tree, tmp_path / 'out', sacct)
+     rollup = json.loads((tmp_path / 'out' / 'rollup.json').read_text())
+     assert rollup['units_audited'] == 18
+     assert rollup['failed_units'] == ['Gmax/swissprot']
+ 
+ 
++@pytest.mark.parametrize('contents', ['not FASTA\n', '', '>valid\nM\n>empty\n'],
++                         ids=['malformed', 'empty', 'valid-prefix-then-malformed'])
++def test_filtered_fasta_iteration_failure_preserves_all_unit_inventory(tmp_path, contents):
++    tree, sacct = make_audit_tree(tmp_path)
++    damaged = tree / audit.PILOT_DIR / 'orthodb' / 'orthodb.filtered.fa'
++    damaged.write_text(contents)
++    if contents.startswith('>valid'):
++        records = audit.launcher.records(damaged)
++        assert next(records) == ('valid', 'M')
++        with pytest.raises(ValueError, match='malformed FASTA record'):
++            next(records)
++    out = tmp_path / 'out'
++    with pytest.raises(ValueError, match='audit FAILED'):
++        audit.audit(tree, out, sacct)
++    rollup = json.loads((out / 'rollup.json').read_text())
++    assert rollup['units_audited'] == 18
++    assert rollup['failed_units'] == ['Sitalica/orthodb']
++    manifests = [json.loads(p.read_text()) for p in (out / 'units').glob('*.json')]
++    assert len(manifests) == 18
++    assert sum(m['status'] == 'PASS' for m in manifests) == 17
++    failed = next(m for m in manifests if m['unit'] == 'Sitalica/orthodb')
++    assert failed['files']['orthodb.filtered.fa'] == audit.launcher.sha256(damaged)
++    assert failed['checks']['done_gate']['status'] == 'PASS'
++    assert failed['checks']['provenance_hashes']['status'] == 'FAIL'
++    assert 'FASTA' in failed['checks']['malformed_or_unreadable']['detail']
++    assert (out / 'FAILED.json').is_file() and not (out / 'DONE').exists()
++
++
+ def test_programmer_error_not_silently_treated_as_bad_input(tmp_path, monkeypatch):
+     make_unit(tmp_path)
+     def broken(*args, **kwargs):
+         raise TypeError('programmer defect')
+     monkeypatch.setattr(audit.launcher, 'production_inputs', broken)
+     with pytest.raises(TypeError, match='programmer defect'):
+         audit.audit_unit('pilot', 'Sitalica', 'orthodb', tmp_path, tmp_path)

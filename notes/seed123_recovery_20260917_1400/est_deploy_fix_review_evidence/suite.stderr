@@ -1,0 +1,38 @@
+test_batch_deadline_stops_worker_cleanup (__main__.Deployment) ... ok
+test_batch_forwards_once_and_enforces_grace_deadline (__main__.Deployment) ... ok
+test_build_inventory_and_no_overwrite (__main__.Deployment) ... ok
+test_builder_rejects_bad_source_pin (__main__.Deployment) ... ok
+test_complete_receipt_and_output_collision (__main__.Deployment) ... ok
+test_controller_preparation_contract (__main__.Deployment) ... FAIL
+test_controller_rejects_changed_bytes_without_execution (__main__.Deployment) ... ok
+test_environment_context_does_not_capture_secrets (__main__.Deployment) ... ok
+test_exception_still_postchecks (__main__.Deployment) ... ok
+test_first_term_during_result_publication (__main__.Deployment) ... ok
+test_first_term_during_verification_publication (__main__.Deployment) ... ok
+test_missing_marker_refuses_receipt (__main__.Deployment) ... ok
+test_nonzero_preserves_worker_output (__main__.Deployment) ... ok
+test_postcheck_blocks_publication (__main__.Deployment) ... ok
+test_postchecks_share_bounded_deadline (__main__.Deployment) ... ok
+test_runtime_failure_prevents_worker (__main__.Deployment) ... ok
+test_runtime_postcheck_blocks_receipt (__main__.Deployment) ... ok
+test_shadow_preloaded_package_rejected (__main__.Deployment) ... ok
+test_source_pin_wrong_and_source_link_refused (__main__.Deployment) ... ok
+test_tamper_extra_missing_and_symlink (__main__.Deployment) ... ok
+test_tampered_diagnostics_refuse_receipt (__main__.Deployment) ... ok
+test_term_postflight_retains_receipt (__main__.Deployment) ... ok
+test_term_preflight_retains_receipt (__main__.Deployment) ... ok
+test_working_directory_shadow_does_not_load (__main__.Deployment) ... ok
+test_wrong_ledger (__main__.Deployment) ... ok
+
+======================================================================
+FAIL: test_controller_preparation_contract (__main__.Deployment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_deployment/test_deployment.py", line 255, in test_controller_preparation_contract
+    self.assertEqual(namespace.stat().st_mode & 0o777, 0o700)
+AssertionError: 511 != 448
+
+----------------------------------------------------------------------
+Ran 25 tests in 55.092s
+
+FAILED (failures=1)

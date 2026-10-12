@@ -1,0 +1,49 @@
+{
+  "adversarial_rejections": 50,
+  "counts": {
+    "dispositions": {
+      "HSP_RULE_ACCEPTED": 414,
+      "source_bound_replay_failure: query codon truth": 30,
+      "source_bound_replay_failure: subject truth": 18
+    },
+    "geometry_success": 380,
+    "geometry_unsuccessful": 34,
+    "hsps": 462
+  },
+  "newly_accepted": 29,
+  "newly_accepted_geometry_failure_reasons": {
+    "self_overlap_policy_unresolved": 29
+  },
+  "newly_accepted_geometry_failures": 29,
+  "proof_size": 235630,
+  "protected_inputs_unchanged": {
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_failure_diagnosis/producer_path_proof.json": "a2843aa36a006730c1fd3fe02a34b76afd772f1e01328162f7c0f9af88a2b6a9",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_result/raw/worker/sample/diagnostics.jsonl": "8d8c8be00102a6ba7e7b5cdd875dbeca5a99b18290c024f3690cd849e670fb1d",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_result/raw/worker/sample/report.json": "2e97691107440fd6d9e09341d3feb2588823cc28f9c9da5bf4f064a6d95728d8"
+  },
+  "python": "3.8.20 (default, Oct  3 2024, 15:24:27) \n[GCC 11.2.0]",
+  "replay_sha256": "30840e05d6f800aad7500e2b5d667128575094a33fe265830405d60aa65ba2f5",
+  "resolved": [
+    {
+      "length_contract": "DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30",
+      "producer_path": "diamond-2.1.24.178/legacy-blocked-transcript-join",
+      "producer_path_proof_sha256": "a2843aa36a006730c1fd3fe02a34b76afd772f1e01328162f7c0f9af88a2b6a9",
+      "producer_record_sha256": "988b6a0d18a1306c3bf482ec56f2e6099cd104fe4ed1aaf0af6cce172a381681"
+    },
+    {
+      "length_contract": "DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_GE30",
+      "producer_path": "diamond-2.1.24.178/legacy-direct",
+      "producer_path_proof_sha256": "a2843aa36a006730c1fd3fe02a34b76afd772f1e01328162f7c0f9af88a2b6a9",
+      "producer_record_sha256": "9cc7b7ebdbd1de664697d490d07975e89f6e146be6d4b8b4e0b22a67d72e466d"
+    }
+  ],
+  "source_hashes": {
+    "revision/scripts/evidence/est_hsp_contract.py": "83343fc7c687ecc417ce6cbeb4bdbff8f0e8e532f9e2423146dadfc08bf4513f",
+    "revision/scripts/evidence/est_real_sample.py": "bd51f14592ff1131d4eae4c2948c514efd42a7f82fda0f2e423ecb57a87bc7a8",
+    "tasknotes/real_sample/replay_retained.py": "b239c6affec26edb1f9ceb4a6edd777ef235011e1ceb4ee7f275a9856374c508",
+    "tests/test_est_approved_contract_integration.py": "3eb1f36ffaa3928ba4d30fd82553696e2b06356f9bae09d9f93cc9cdc8ef8c6f",
+    "tests/test_est_hsp_contract.py": "579672e2423e48b54e91cdee34445a2023dc6402283d049c9d4c91097e895dfd",
+    "tests/test_est_phase_conflicts.py": "735f42a9975d32e2ba296008ac49788d2b4f2427b164c697494b6d30fe7a4d73",
+    "tests/test_est_real_sample.py": "f68869fc79e5852992e94989af35eba957449f4c3aa637c4bb3b8d11a64e5515"
+  }
+}

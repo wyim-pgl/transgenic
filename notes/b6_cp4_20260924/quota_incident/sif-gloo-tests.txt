@@ -1,0 +1,5 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+....................                                                     [100%]
+20 passed in 59.04s

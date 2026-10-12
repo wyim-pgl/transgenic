@@ -1,0 +1,12 @@
+7bf48c35d9545b2ef242c842af9de37f4eff6a98c91da844b92e3b3b12fa68da  /data/gpfs/assoc/pgl/data/Transgenic/evidence/audit_align_n100/b6_audit_align_n100.sbatch
+1aa644a9d948dfd6eaecbd6ae45b8a59ad5fb4054c618ba3eafc2959093093ff  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/est_c0_n100.sbatch
+a86b5dee82b8478bfe0b6d0b67e5663f439945b18fe934f28b760d1999230e61  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/est_view_n100.py
+AUDIT_N100 Bdistachyon 6172717
+EST_C0_N100 Bdistachyon 6172718
+6172697 b6_prot_c0_Bdistachyon PENDING
+6172696 b6_hsp_Bdistachyon RUNNING
+Bdistachyon.molecule_map.tsv
+Bdistachyon.molecule_map.tsv.PROVENANCE.txt
+Bdistachyon.molecule_map.tsv.sha256
+moved partial hsp_v3/Bdistachyon aside
+HSP_N100 Bdistachyon 6172719 (afterok 6172718)  PROTEIN_C0 6172720 (afterok 6172719)

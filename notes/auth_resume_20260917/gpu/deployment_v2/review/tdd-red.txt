@@ -1,0 +1,45 @@
+FFFFF
+======================================================================
+FAIL: test_caps_independent_and_self_once (test_queued_gate.QueuedGateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_queued_gate.py", line 43, in test_caps_independent_and_self_once
+    self.assertTrue(hasattr(d, 'admission'), 'accounting reconciliation missing')
+AssertionError: False is not true : accounting reconciliation missing
+
+======================================================================
+FAIL: test_finance_requires_clear_units_and_full_b5_reserve (test_queued_gate.QueuedGateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_queued_gate.py", line 49, in test_finance_requires_clear_units_and_full_b5_reserve
+    self.assertTrue(hasattr(d, 'admission'), 'finance gate missing')
+AssertionError: False is not true : finance gate missing
+
+======================================================================
+FAIL: test_live_observation_freshness (test_queued_gate.QueuedGateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_queued_gate.py", line 32, in test_live_observation_freshness
+    self.assertTrue(hasattr(d, 'admission'), 'bounded observation checker missing')
+AssertionError: False is not true : bounded observation checker missing
+
+======================================================================
+FAIL: test_queued_authority_has_no_observation_age (test_queued_gate.QueuedGateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_queued_gate.py", line 13, in test_queued_authority_has_no_observation_age
+    self.assertTrue(hasattr(d, 'admission'), 'durable/live split missing')
+AssertionError: False is not true : durable/live split missing
+
+======================================================================
+FAIL: test_timeout_is_once_and_persistent_evidence (test_queued_gate.QueuedGateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v2/test_queued_gate.py", line 59, in test_timeout_is_once_and_persistent_evidence
+    self.assertTrue(hasattr(d, 'admission'), 'bounded query runner missing')
+AssertionError: False is not true : bounded query runner missing
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.009s
+
+FAILED (failures=5)

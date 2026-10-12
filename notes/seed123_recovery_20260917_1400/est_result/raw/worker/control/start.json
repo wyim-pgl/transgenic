@@ -1,0 +1,29 @@
+{
+  "argv": [
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/release/run_compute.py",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/release",
+    "46563a19f5699c55df12df7241af7f807e6d98bed0d7c0666138ce78804c40d6",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker"
+  ],
+  "deadline_expired": false,
+  "environment": {
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/usr/bin:/bin"
+  },
+  "errors": [],
+  "interrupted": false,
+  "ledger_sha256": "46563a19f5699c55df12df7241af7f807e6d98bed0d7c0666138ce78804c40d6",
+  "postcheck_attempted": false,
+  "runtime_libraries_hermetic": false,
+  "slurm": {
+    "SLURM_CPUS_PER_TASK": "2",
+    "SLURM_JOB_ACCOUNT": "cpu-s1-pgl-0",
+    "SLURM_JOB_ID": "6165875",
+    "SLURM_JOB_NODELIST": "cpu-50",
+    "SLURM_JOB_PARTITION": "cpu-s1-pgl-0",
+    "SLURM_MEM_PER_NODE": "8192"
+  },
+  "status": "INCOMPLETE",
+  "worker_returncode": null
+}

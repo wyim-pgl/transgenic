@@ -1,0 +1,17 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+stage.sha256: OK
+smoke.py: OK
+smoke.sbatch: OK
+mvp_produce_counts.py: OK
+2026-09-16T18:55:00-0700
+             JOBID                           NAME ST       TIME NODELIST(REASON)
+           6147940               syl_an_Ahy_A_ODB PD       0:00 (JobHeldUser)
+           6147612                   syl_an_Ahy_A PD       0:00 (JobHeldUser)
+           6147349                   syl_an_Ahy_B PD       0:00 (JobHeldUser)
+           6146937                   syl_an_Ahy_B PD       0:00 (JobHeldUser)
+           6146936               syl_an_Ahy_A_ODB  R 13-03:41:16 cpu-50
+           6156540            syl_watch_other_20m  R 6-07:03:58 cpu-50
+           6156395             pasaPost.Ahy_A_ODB  R 6-17:04:03 cpu-50
+submitted=6165521

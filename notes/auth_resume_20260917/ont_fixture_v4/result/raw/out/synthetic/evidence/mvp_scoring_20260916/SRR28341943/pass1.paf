@@ -1,0 +1,7 @@
+positive_0	1000	2	997	+	fixture_chr	60000	20002	21197	994	1195	60	tp:A:P	cm:i:325	s1:i:987	s2:i:0	dv:f:0.0002	rl:i:0
+positive_1	1000	2	997	+	fixture_chr	60000	20002	21197	994	1195	60	tp:A:P	cm:i:325	s1:i:987	s2:i:0	dv:f:0.0002	rl:i:0
+positive_2	1000	2	997	+	fixture_chr	60000	20002	21197	994	1195	60	tp:A:P	cm:i:325	s1:i:987	s2:i:0	dv:f:0.0002	rl:i:0
+below_threshold_0	1000	3	996	+	fixture_chr	60000	30003	31196	991	1193	60	tp:A:P	cm:i:336	s1:i:984	s2:i:0	dv:f:0.0002	rl:i:0
+below_threshold_1	1000	3	996	+	fixture_chr	60000	30003	31196	991	1193	60	tp:A:P	cm:i:336	s1:i:984	s2:i:0	dv:f:0.0002	rl:i:0
+unspliced	1000	4	997	+	fixture_chr	60000	40004	40997	993	993	60	tp:A:P	cm:i:335	s1:i:993	s2:i:0	dv:f:0.0002	rl:i:0
+outside	1000	2	1000	+	outside_chr	4000	1002	2000	998	998	60	tp:A:P	cm:i:340	s1:i:998	s2:i:0	dv:f:0.0002	rl:i:0

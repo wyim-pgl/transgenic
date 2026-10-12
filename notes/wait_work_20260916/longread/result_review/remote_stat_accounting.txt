@@ -1,0 +1,12 @@
+2026-09-16T21:54:40-0700
+JobID|State|ExitCode|Elapsed|TotalCPU|MaxRSS|AllocCPUS
+6165555|COMPLETED|0:0|00:02:28|02:45.569||4
+6165555.batch|COMPLETED|0:0|00:02:28|02:45.568|51000K|4
+6165555.extern|OUT_OF_MEMORY|0:125|00:02:28|00:00.001|1480K|4
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/receipt.json|14789|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/COMPLETE|65|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/sample.fa|8538965|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/sample_alignment.stdout|20228425|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/slurm-6165555.out|14790|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/slurm-6165555.err|0|regular empty file
+FAILED_ABSENT

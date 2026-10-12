@@ -1,0 +1,10 @@
+test_aliases_are_ambiguous_even_when_equal (test_field_alias.FieldAliasTests) ... ok
+test_changed_normalized_value_rejected_in_final_snapshot (test_field_alias.FieldAliasTests) ... ok
+test_exact_retained_line_normalizes (test_field_alias.FieldAliasTests) ... ok
+test_only_observed_alias_and_no_default (test_field_alias.FieldAliasTests) ... ok
+test_raw_format_full_admission (test_field_alias.FieldAliasTests) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 1.078s
+
+OK

@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "pronghorn",
+    "ssh -o BatchMode=yes -o ConnectTimeout=10 dtai /usr/bin/python3 -B -"
+  ],
+  "stdin_sha256": "f9ed3c4280225ffc6e86d1c01f2f7d84168fbf53eca1e2cb9caacee98b24b5fb",
+  "sources_sha256": {
+    "admission.py": "5465b5a483d070f533dbc76be7c7c9dd05eb20aed6ec1021759431918e836bed",
+    "deploy.py": "47eeb513ebecb06ddd3f06d9d5d92133ea9594deaf0197100663da337630d297"
+  },
+  "exit_code": 0,
+  "stdout": "{\"durable_24h_authority\": \"synthetic pass\", \"node_capacity\": \"synthetic pass\", \"python\": \"3.6.15 (default, Sep 23 2021, 15:41:43) [GCC]\", \"remote_files_written\": false, \"stdlib_api\": \"Popen universal_newlines, timeout, session, query in-memory sink\", \"syntax_modules\": [\"admission.py\", \"deploy.py\"]}\n",
+  "stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+}

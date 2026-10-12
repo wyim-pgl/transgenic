@@ -1,0 +1,8 @@
+file	n	mean_len	primer_any	primer_both	smart	isoexp	polyA3_or_T5	polyA3	polyT5	first_header
+pacbio/Athaliana_zhang2023_PRJNA911826/SRR22719002.fa.gz	5000	3138	0.000	0.000	0.000	0.000	0.988	0.988	0.001	SRR22719002.1 1/1
+pacbio/Athaliana_zhang2023_PRJNA911826/SRR22719003.fa.gz	5000	3321	0.000	0.000	0.000	0.000	0.994	0.994	0.000	SRR22719003.1 1/1
+pacbio/Zmays_wang2020_zenodo2611319/F1maize.flnc.fa.gz	5000	3111	0.000	0.000	0.000	0.000	0.001	0.000	0.000	m54119_180505_171923/63176878/ccs
+pacbio/Zmays_wang2018_PRJEB22122/ERR2093901.fa.gz	5000	722	0.001	0.000	0.001	0.000	0.013	0.008	0.005	i0HQ_bract|c1/f3p8/658 isoform=c1;full_length_coverage=3;non_full_length_coverage=8;isoform_length=658
+pacbio/Zmays_wang2018_PRJEB22122/ERR2093902.fa.gz	5000	706	0.002	0.000	0.002	0.000	0.013	0.007	0.006	i0HQ_leaf|c23/f9p37/709 isoform=c23;full_length_coverage=9;non_full_length_coverage=37;isoform_length=709
+pacbio/Zmays_B73_ccs_PRJNA1470126/SRR38818769.fa.gz	5000	1881	0.004	0.003	0.003	0.003	0.001	0.001	0.000	SRR38818769.1 m64192_250314_081518/19/ccs/1
+pacbio/Zmays_kinnex_hybrid_PRJNA1290227/SRR34503567.fa.gz	5000	1885	0.000	0.000	0.000	0.000	0.000	0.000	0.000	SRR34503567.1/1 m84130_240721_104456_s3/266866944/ccs/4682_6248 length=1566

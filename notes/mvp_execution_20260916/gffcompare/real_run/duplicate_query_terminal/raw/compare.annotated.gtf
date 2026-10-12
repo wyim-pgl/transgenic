@@ -1,0 +1,8 @@
+smoke1	MVP	transcript	101	600	.	+	.	transcript_id "q"; gene_id "g"; gene_name "g"; xloc "XLOC_000001"; cmp_ref "r"; class_code "="; tss_id "TSS1";
+smoke1	MVP	exon	101	200	.	+	.	transcript_id "q"; gene_id "g"; exon_number "1";
+smoke1	MVP	exon	301	400	.	+	.	transcript_id "q"; gene_id "g"; exon_number "2";
+smoke1	MVP	exon	501	600	.	+	.	transcript_id "q"; gene_id "g"; exon_number "3";
+smoke1	MVP	transcript	121	580	.	+	.	transcript_id "q_terminal"; gene_id "g"; gene_name "g"; xloc "XLOC_000001"; contained_in "q"; cmp_ref "r"; class_code "="; tss_id "TSS1";
+smoke1	MVP	exon	121	200	.	+	.	transcript_id "q_terminal"; gene_id "g"; exon_number "1";
+smoke1	MVP	exon	301	400	.	+	.	transcript_id "q_terminal"; gene_id "g"; exon_number "2";
+smoke1	MVP	exon	501	580	.	+	.	transcript_id "q_terminal"; gene_id "g"; exon_number "3";

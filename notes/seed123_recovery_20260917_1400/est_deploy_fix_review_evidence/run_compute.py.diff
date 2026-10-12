@@ -1,0 +1,172 @@
+--- backup/run_compute.py
++++ current/run_compute.py
+@@ -8,10 +8,18 @@
+ from pathlib import Path
+ import platform
+ import resource
++import signal
+ import stat
+ import subprocess
+ import sys
+ import time
++
++POSTCHECK_SECONDS = 35
++
++
++class Interrupted(BaseException):
++    """Launcher interruption, including the batch grace deadline."""
++
+ 
+ MODULES = ('est_real_sample', 'est_hsp_contract', 'est_hsp_expanded', 'est_phase_accept', 'est_phase_project')
+ FILES = {'code/evidence/' + name + '.py' for name in MODULES} | {
+@@ -63,6 +71,11 @@
+         stream.write('\n')
+         stream.flush()
+         os.fsync(stream.fileno())
++    fd = os.open(str(Path(path).parent), os.O_RDONLY | os.O_DIRECTORY)
++    try:
++        os.fsync(fd)
++    finally:
++        os.close(fd)
+ 
+ 
+ def verify_release(release, expected):
+@@ -161,12 +174,37 @@
+                   environment={k: os.environ[k] for k in ('PATH', 'LANG', 'LC_ALL', 'LD_LIBRARY_PATH',
+                                'LD_PRELOAD', 'PYTHONHOME', 'PYTHONPATH', 'BASH_ENV') if k in os.environ},
+                   runtime_libraries_hermetic=False)
++    result['interrupted'] = False
++    result['deadline_expired'] = False
++    interruptible = False
++    finished = False
++
++    def interrupt(signum, frame):
++        if finished:
++            return
++        first = not result['interrupted']
++        result['interrupted'] = True
++        result['status'] = 'INCOMPLETE'
++        deadline = signum in (signal.SIGALRM, signal.SIGUSR1)
++        result['deadline_expired'] |= deadline
++        if first or deadline:
++            result['errors'].append('launcher signal: ' + str(signum))
++        # Repeated TERM cannot tear down worker cleanup or receipt publication.
++        if interruptible and (first or deadline):
++            raise Interrupted('launcher signal: ' + str(signum))
++
++    previous_handlers = {sig: signal.signal(sig, interrupt) for sig in
++                         (signal.SIGTERM, signal.SIGINT, signal.SIGALRM, signal.SIGUSR1)}
+     loaded = None
+     ledger = None
+     previous_path = list(sys.path)
+     sys.dont_write_bytecode = True
+     try:
++        write_json(control / 'start.json', result)
++        interruptible = True
++        require(not result['interrupted'], 'interrupted during startup')
+         ledger = verify_release(release, expected)
++        require(digest(small_bytes(Path(__file__))) == ledger['files']['run_compute.py'], 'launcher SHA mismatch')
+         manifest = json.loads(small_bytes(release / 'manifest.json'))
+         result['runtime_before'] = runtime_identity(manifest)
+         require(not any(n == 'evidence' or n.startswith('evidence.') for n in sys.modules),
+@@ -189,38 +227,76 @@
+     except BaseException as exc:
+         result['errors'].append(type(exc).__name__ + ': ' + str(exc))
+     finally:
+-        # Never exec away the verifier; independently try all after-checks on failure too.
++        interruptible = False
++        # The worker restores our handlers before its cleanup. Its own ALRM is
++        # unchanged. Batch USR1 supplies an independent 40s grace deadline even
++        # during that cleanup; all launcher postchecks share one 35s budget.
++        signal.setitimer(signal.ITIMER_REAL, POSTCHECK_SECONDS)
+         result['postcheck_attempted'] = True
+         result['postchecks'] = {}
+         for label, check in (
+             ('ledger', lambda: verify_release(release, expected)),
+             ('imports', lambda: closure(release, ledger, loaded)),
+-            ('runtime', lambda: runtime_identity(json.loads(small_bytes(release / 'manifest.json'))))):
++            ('runtime', lambda: runtime_identity(json.loads(small_bytes(release / 'manifest.json')))),
++            ('binding', lambda: report_binding(out / 'sample', ledger['files']['manifest.json']))):
++            if result['deadline_expired']:
++                result['postchecks'][label] = 'SKIPPED_DEADLINE'
++                continue
+             try:
++                interruptible = True
++                require(not result['deadline_expired'], 'grace deadline expired')
+                 value = check()
+                 result['postchecks'][label] = 'PASS'
+                 if label == 'runtime':
+                     result['runtime_after'] = value
++                elif label == 'binding':
++                    result['worker_binding'] = value
+             except BaseException as exc:
+                 result['postchecks'][label] = 'FAIL'
+                 result['errors'].append('postcheck ' + label + ': ' + str(exc))
++            finally:
++                interruptible = False
+         sys.path[:] = previous_path
+-        try:
+-            result['worker_binding'] = report_binding(out / 'sample', ledger['files']['manifest.json'])
+-        except BaseException as exc:
+-            result['errors'].append('worker binding: ' + str(exc))
++        signal.setitimer(signal.ITIMER_REAL, 0)
+         result['elapsed_seconds'] = time.monotonic() - start
+         result['rusage_self'] = list(resource.getrusage(resource.RUSAGE_SELF))
+         result['rusage_children'] = list(resource.getrusage(resource.RUSAGE_CHILDREN))
+-        success = (not result['errors'] and result['worker_returncode'] == 0
++        success = (not result['interrupted'] and not result['errors'] and result['worker_returncode'] == 0
+                    and result['worker_binding']['worker_status'] == 'COMPLETE')
+         if success:
+             result['status'] = 'VERIFIED_DIAGNOSTIC_COMPLETE'
+-        write_json(control / 'result.json', result)
+-        if success:
+-            write_json(control / 'verification.json', dict(status=result['status'], biological_acceptance=False,
+-                       ledger_sha256=expected, result_sha256=file_sha(control / 'result.json'),
+-                       **result['worker_binding']))
++        candidate_success = success
++        old_mask = None
++        try:
++            write_json(control / 'result.json', result)
++            if success and not result['interrupted']:
++                write_json(control / 'verification.json', dict(status=result['status'], biological_acceptance=False,
++                           ledger_sha256=expected, result_sha256=file_sha(control / 'result.json'),
++                           **result['worker_binding']))
++            # Receipt commit boundary: account for signals during either write,
++            # then mask repeats while reconciling. No retry or artifact deletion.
++            old_mask = signal.pthread_sigmask(signal.SIG_BLOCK, previous_handlers)
++            for sig in signal.sigpending().intersection(previous_handlers):
++                interrupt(sig, None)
++            success = success and not result['interrupted']
++            if candidate_success and not success:
++                result['status'] = 'INCOMPLETE'
++                verification = control / 'verification.json'
++                if verification.exists():
++                    verification.rename(control / 'verification.interrupted.json')
++                write_json(control / 'interrupted-result.json', result)
++                os.replace(control / 'interrupted-result.json', control / 'result.json')
++                fd = os.open(str(control), os.O_RDONLY | os.O_DIRECTORY)
++                try:
++                    os.fsync(fd)
++                finally:
++                    os.close(fd)
++            finished = True
++        finally:
++            if old_mask is not None:
++                signal.pthread_sigmask(signal.SIG_SETMASK, old_mask)
++            for sig, handler in previous_handlers.items():
++                signal.signal(sig, handler)
+     return 0 if success else (result['worker_returncode'] or 1)
+ 
+ 
+@@ -236,9 +312,8 @@
+         print('Package inventory/SHA verified; no compute or biological acceptance')
+         return 0
+     require(args.out is not None and os.environ.get('SLURM_JOB_ID'), 'fresh output and Slurm allocation required')
+-    # This executing launcher must be the same bytes included in the pinned package.
+-    ledger = verify_release(args.release, args.expected_ledger_sha)
+-    require(digest(small_bytes(Path(__file__))) == ledger['files']['run_compute.py'], 'launcher SHA mismatch')
++    # Independent controller pin checks happen before this launcher executes.
++    # Runtime package/self checks belong inside the recorded signal lifecycle.
+     return run(args.release, args.expected_ledger_sha, args.out)
+ 
+ 

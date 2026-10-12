@@ -1,0 +1,149 @@
+test_bad_pin (__main__.Boundary) ... ok
+test_mutated_recursive_output_rejected_by_existing_gate (__main__.Boundary) ... ok
+test_no_reuse (__main__.Boundary) ... ok
+test_nonzero_child_not_complete (__main__.Boundary) ... ok
+test_receipt_scope_and_mutation (__main__.Boundary) ... ok
+test_slurm_environment_alone_insufficient (__main__.Boundary) ... ok
+test_success_real_child (__main__.Boundary) ... ok
+test_timeout_retains_logs_and_status (__main__.Boundary) ... ok
+test_driver_rejects_a_release_pin_mismatch_before_import (__main__.ExecuteDrivenFixture) ... ok
+test_every_wrapper_function_is_exercised_through_execute (__main__.ExecuteDrivenFixture) ... file_limit_before: [-1, -1]
+ERROR
+test_fixture_drives_execute_to_publication (__main__.ExecuteDrivenFixture) ... file_limit_before: [4194304, 4194304]
+ERROR
+test_receipt_records_declared_seams_and_substitution_identity (__main__.ExecuteDrivenFixture) ... file_limit_before: [4194304, 4194304]
+ERROR
+test_request_without_declared_seams_is_rejected (__main__.ExecuteDrivenFixture) ... file_limit_before: [4194304, 4194304]
+FAIL
+test_slurm_really_ran_inside_execute (__main__.ExecuteDrivenFixture) ... file_limit_before: [4194304, 4194304]
+ERROR
+test_substituted_binding_is_detected_not_self_reported (__main__.ExecuteDrivenFixture) ... file_limit_before: [4194304, 4194304]
+ERROR
+test_substitution_module_hash_mismatch_is_rejected (__main__.ExecuteDrivenFixture) ... file_limit_before: [4194304, 4194304]
+FAIL
+test_budget_requires_explicit_output_and_scratch_ceilings (__main__.RuntimeBoundary) ... ok
+test_cgroup_observation_reads_declared_controller (__main__.RuntimeBoundary) ... ok
+test_enforce_output_limit_sets_both_soft_and_hard (__main__.RuntimeBoundary) ... ok
+test_output_limit_actually_stops_an_oversized_write (__main__.RuntimeBoundary) ... ok
+test_required_cgroup_absent_is_rejected_not_silently_skipped (__main__.RuntimeBoundary) ... ok
+test_scratch_usage_rejects_an_over_budget_namespace (__main__.RuntimeBoundary) ... ok
+test_slurm_records_the_exact_allocated_affinity_list (__main__.RuntimeBoundary) ... ok
+test_actual_nested_helper_import_layout_clean_environment (__main__.SyntheticExecute) ... ok
+test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute) ... file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+ok
+test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute) ... file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+ok
+test_execute_synthetic_happy_path (__main__.SyntheticExecute) ... file_limit_before: [4194304, 4194304]
+ok
+test_unlisted_imports_rejected_before_gate_import_or_marker (__main__.SyntheticExecute) ... file_limit_before: [4194304, 4194304]
+file_limit_before: [4194304, 4194304]
+ok
+test_unsupported_interpreter_rejected_before_any_path_access (__main__.SyntheticExecute) ... ok
+
+======================================================================
+ERROR: test_every_wrapper_function_is_exercised_through_execute (__main__.ExecuteDrivenFixture)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 580, in test_every_wrapper_function_is_exercised_through_execute
+    self.invoke(trace=tracer)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 520, in invoke
+    return self.fx.run(self.w, request, self.reqpath)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/fixture_execute.py", line 64, in run
+    return wrapper.execute(str(request_path), digest(request_path),
+  File "/tmp/ont_execdriven_2rsdhb_s/code/wrapper.py", line 297, in execute
+  File "/tmp/ont_execdriven_2rsdhb_s/release/gate.py", line 48, in read_binding
+  File "/tmp/ont_execdriven_2rsdhb_s/release/gate.py", line 30, in require
+ValueError: canonical roles schema mismatch
+
+======================================================================
+ERROR: test_fixture_drives_execute_to_publication (__main__.ExecuteDrivenFixture)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 525, in test_fixture_drives_execute_to_publication
+    receipt = self.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 517, in invoke
+    return self.fx.run(self.w, request, self.reqpath)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/fixture_execute.py", line 64, in run
+    return wrapper.execute(str(request_path), digest(request_path),
+  File "/tmp/ont_execdriven_xhheobcr/code/wrapper.py", line 286, in execute
+  File "/tmp/ont_execdriven_xhheobcr/release/gate.py", line 79, in load_driver
+  File "/tmp/ont_execdriven_xhheobcr/release/gate.py", line 30, in require
+ValueError: wrong imported windows source
+
+======================================================================
+ERROR: test_receipt_records_declared_seams_and_substitution_identity (__main__.ExecuteDrivenFixture)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 540, in test_receipt_records_declared_seams_and_substitution_identity
+    receipt = self.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 517, in invoke
+    return self.fx.run(self.w, request, self.reqpath)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/fixture_execute.py", line 64, in run
+    return wrapper.execute(str(request_path), digest(request_path),
+  File "/tmp/ont_execdriven_gnk03ut9/code/wrapper.py", line 286, in execute
+  File "/tmp/ont_execdriven_gnk03ut9/release/gate.py", line 79, in load_driver
+  File "/tmp/ont_execdriven_gnk03ut9/release/gate.py", line 30, in require
+ValueError: wrong imported windows source
+
+======================================================================
+ERROR: test_slurm_really_ran_inside_execute (__main__.ExecuteDrivenFixture)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 533, in test_slurm_really_ran_inside_execute
+    receipt = self.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 517, in invoke
+    return self.fx.run(self.w, request, self.reqpath)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/fixture_execute.py", line 64, in run
+    return wrapper.execute(str(request_path), digest(request_path),
+  File "/tmp/ont_execdriven_106pcxmp/code/wrapper.py", line 286, in execute
+  File "/tmp/ont_execdriven_106pcxmp/release/gate.py", line 79, in load_driver
+  File "/tmp/ont_execdriven_106pcxmp/release/gate.py", line 30, in require
+ValueError: wrong imported windows source
+
+======================================================================
+ERROR: test_substituted_binding_is_detected_not_self_reported (__main__.ExecuteDrivenFixture)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 546, in test_substituted_binding_is_detected_not_self_reported
+    receipt = self.invoke()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 517, in invoke
+    return self.fx.run(self.w, request, self.reqpath)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/fixture_execute.py", line 64, in run
+    return wrapper.execute(str(request_path), digest(request_path),
+  File "/tmp/ont_execdriven_aqr0vpj5/code/wrapper.py", line 286, in execute
+  File "/tmp/ont_execdriven_aqr0vpj5/release/gate.py", line 79, in load_driver
+  File "/tmp/ont_execdriven_aqr0vpj5/release/gate.py", line 30, in require
+ValueError: wrong imported windows source
+
+======================================================================
+FAIL: test_request_without_declared_seams_is_rejected (__main__.ExecuteDrivenFixture)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 556, in test_request_without_declared_seams_is_rejected
+    self.assertIn('seam', str(caught.exception))
+AssertionError: 'seam' not found in 'wrong imported windows source'
+
+======================================================================
+FAIL: test_substitution_module_hash_mismatch_is_rejected (__main__.ExecuteDrivenFixture)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_restored_20260921/ont/ont_full_v2/.red2/test_wrapper.py", line 563, in test_substitution_module_hash_mismatch_is_rejected
+    self.assertIn('pin mismatch', str(caught.exception))
+AssertionError: 'pin mismatch' not found in 'wrong imported windows source'
+
+----------------------------------------------------------------------
+Ran 29 tests in 18.052s
+
+FAILED (failures=2, errors=5)

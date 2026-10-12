@@ -1,0 +1,414 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-09-17T04:20:19.459219+00:00",
+  "status_as_of": "2026-09-16T21:14:15-07:00",
+  "live_queries_this_task": 0,
+  "owner": "controller only: remote writes/submissions; this worker local repro records only",
+  "evidence": [
+    {
+      "path": "captured/mvp-final-source-full-cpu.log",
+      "origin": "/tmp/mvp-final-source-full-cpu.log",
+      "kind": "finished_test_log",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789611689253903309,
+      "size_bytes": 7273,
+      "sha256": "142745e3dc7234fca0821af9015209e4255e77ecea55b6ff9b5f70f95d5a119f"
+    },
+    {
+      "path": "captured/mvp-final-source-focused.log",
+      "origin": "/tmp/mvp-final-source-focused.log",
+      "kind": "finished_test_log",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789611182425903187,
+      "size_bytes": 2082,
+      "sha256": "2016deb314cb92106b90d1eb6bbbee1b748a1a98a34032cb5eee4edf0586161e"
+    },
+    {
+      "path": "captured/mvp-final-source-mvp-cpu.log",
+      "origin": "/tmp/mvp-final-source-mvp-cpu.log",
+      "kind": "finished_test_log",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789612773541905904,
+      "size_bytes": 159051,
+      "sha256": "2983a7c990dd1feedf9d00e49be8ccd3191da1af0a13b9a7db4ba33b405c649d"
+    },
+    {
+      "path": "captured/mvp-final-source-mvp-cpu-retry.log",
+      "origin": "/tmp/mvp-final-source-mvp-cpu-retry.log",
+      "kind": "finished_test_log",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789614080085904811,
+      "size_bytes": 3187,
+      "sha256": "179297e402a67efba3fc7a1d84d9a3de069387954ba9f77f5f6243007d1c0b76"
+    },
+    {
+      "path": "captured/mvp-final-env-check.log",
+      "origin": "/tmp/mvp-final-env-check.log",
+      "kind": "finished_test_log",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789612962633902267,
+      "size_bytes": 99,
+      "sha256": "325eaef24167888670b0fd66da8c63ab6af469697d742a401afc841f2b4ee8ef"
+    },
+    {
+      "path": "captured/resume.md",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/.atl/resume.md",
+      "kind": "timestamped_document_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789618702343040800,
+      "size_bytes": 6879,
+      "sha256": "718025bacc3dbab80df665672716ac06da29dcc6af267d520e0fb85da5c23888"
+    },
+    {
+      "path": "captured/todo.md",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/.atl/todo.md",
+      "kind": "timestamped_document_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789618714308781100,
+      "size_bytes": 12676,
+      "sha256": "c8f0d8a5508c7fadd667d545458ea5876ffc1b12b1ad8cef60be9e7ede61e497"
+    },
+    {
+      "path": "captured/priority.md",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/MVP_TRAINING_PRIORITY_20260916_1545.md",
+      "kind": "timestamped_document_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789615310254300800,
+      "size_bytes": 21060,
+      "sha256": "58a55c4c38f6b56a0f23fabc30be20456878020aa70154dea0f87b35b732c76f"
+    },
+    {
+      "path": "captured/decoder.md",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/MVP_DECODER_CONNECTION_20260916.md",
+      "kind": "timestamped_document_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789611398413057900,
+      "size_bytes": 13508,
+      "sha256": "c5001d95810a1d1a5dfe6610657087c6d747ad4521020fda233af4583a8b242a"
+    },
+    {
+      "path": "captured/est.md",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/EST_EXECUTION_20260916_1530.md",
+      "kind": "timestamped_document_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789610876987611000,
+      "size_bytes": 18607,
+      "sha256": "54e04127a4a98c85b4885f92d5b22c88c4053ae4061842adf008fc0b4e0896e3"
+    },
+    {
+      "path": "captured/initial_live_status.txt",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/wait_work_20260916/initial_live_status.txt",
+      "kind": "timestamped_record_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789618456067161000,
+      "size_bytes": 1427,
+      "sha256": "3bfd401fcc0efd6b2f6eb25775cb9d13b507c028016f1a93913382993140734e"
+    },
+    {
+      "path": "captured/final_source_report.md",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_source_report.md",
+      "kind": "timestamped_document_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789614298348527600,
+      "size_bytes": 15605,
+      "sha256": "bb934f653a8c7095d80831fc345f47d4482f225079028c0768a5384e7212ba51"
+    },
+    {
+      "path": "captured/source_review.md",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_source.independent_review.md",
+      "kind": "timestamped_document_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789614764951487800,
+      "size_bytes": 15114,
+      "sha256": "3462343dd16b80456191366398082cebcd307a347e0a9d90a48738efaa045f37"
+    },
+    {
+      "path": "captured/deployment_review.md",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_p1/deployment.independent_review.md",
+      "kind": "timestamped_document_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789615115896418600,
+      "size_bytes": 9336,
+      "sha256": "c8b8b1652454b689918a4b6cb4427080dfca8c822330445d30aa7b8aa062ee31"
+    },
+    {
+      "path": "captured/controller_scope.json",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_p1/controller_execution_scope.json",
+      "kind": "timestamped_record_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789615218687732000,
+      "size_bytes": 1230,
+      "sha256": "d3315a62a9d26b17b802f65b21c156aa430f32f8354efeda28028b8997350f31"
+    },
+    {
+      "path": "captured/initialization.json",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/MVP_INITIALIZATION_SELECTION_20260916.json",
+      "kind": "timestamped_record_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789599158507675000,
+      "size_bytes": 1301,
+      "sha256": "864e17239a8cabcbe2bb1c571458be6e73ab44d2c3c130bc3a4b240078e64ad7"
+    },
+    {
+      "path": "captured/submission.txt",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_p1/submission_receipt.txt",
+      "kind": "timestamped_record_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789615282469025200,
+      "size_bytes": 3599,
+      "sha256": "787b1c918c760b9d23b1943d9ba29b4854d41771df6a09d8c5bc692affaf3fbf"
+    },
+    {
+      "path": "captured/cancellation.txt",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_p1/old_pending_cancellation.txt",
+      "kind": "timestamped_record_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789615196722347800,
+      "size_bytes": 1850,
+      "sha256": "3b648cd92a45981e74337b038b97f2337604c43bdd848ae401f9ff89bba8d348"
+    },
+    {
+      "path": "captured/release.json",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_p1/release/release.json",
+      "kind": "timestamped_record_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789614633224645900,
+      "size_bytes": 12524,
+      "sha256": "7b6e1ed4bbf635c7b25b47b2564453d9b176f6a21f858c87c95e270f5bee0689"
+    },
+    {
+      "path": "captured/release.sha256",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_p1/release/release.sha256",
+      "kind": "timestamped_record_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789614633285637300,
+      "size_bytes": 646,
+      "sha256": "5b36bdf09a8b8eb548147654e23d6ad59fe18542642a05eb720f22be102fdfb8"
+    },
+    {
+      "path": "captured/deploy.py",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_p1/release/deploy.py",
+      "kind": "timestamped_record_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789614633154348900,
+      "size_bytes": 22528,
+      "sha256": "49922d81bc11eb17d651f0ea4132f0d1a8e6bcc3299dcc026d8bf6182c8b8cc6"
+    },
+    {
+      "path": "captured/code.tar",
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/mvp_execution_20260916/final_p1/release/code.tar",
+      "kind": "timestamped_record_snapshot",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "original_mtime_ns": 1789614633137602200,
+      "size_bytes": 1832960,
+      "sha256": "0fb803cf0612623fa0023bb1f0f28b4b2f6a227a930833f50f74cd31a64e9cd2"
+    },
+    {
+      "path": "captured/exact_decode_panel.py",
+      "origin": "git:b660bf1e7dc48287ca34a0d6e3aeb53d45f599b6:revision/scripts/mvp/mvp_decode_panel.py",
+      "kind": "immutable_git_blob",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "size_bytes": 11155,
+      "sha256": "f78bf49c0eb50f414f9019656eb476510c0e89c86f864aa95c88ebbc97f05a52"
+    },
+    {
+      "path": "captured/exact_test_mvp_decode.py",
+      "origin": "git:b660bf1e7dc48287ca34a0d6e3aeb53d45f599b6:tests/test_mvp_decode.py",
+      "kind": "immutable_git_blob",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "size_bytes": 13457,
+      "sha256": "9b5f76cfd4cfd392b42f2e0792f9d90a688eb4b8ff9c283ee64c278f734214e0"
+    },
+    {
+      "path": "captured/git_final_report.md",
+      "origin": "git:b660bf1e7dc48287ca34a0d6e3aeb53d45f599b6:notes/MVP_FINAL_SOURCE_INTEGRATION_REPORT.md",
+      "kind": "immutable_git_blob",
+      "captured_at": "2026-09-17T04:20:19.459219+00:00",
+      "size_bytes": 15605,
+      "sha256": "bb934f653a8c7095d80831fc345f47d4482f225079028c0768a5384e7212ba51"
+    }
+  ],
+  "reference_documents": {
+    "resume.md": ".atl/resume.md",
+    "todo.md": ".atl/todo.md",
+    "priority.md": "notes/MVP_TRAINING_PRIORITY_20260916_1545.md",
+    "decoder.md": "notes/MVP_DECODER_CONNECTION_20260916.md",
+    "est.md": "notes/EST_EXECUTION_20260916_1530.md",
+    "initial_live_status.txt": "notes/wait_work_20260916/initial_live_status.txt",
+    "final_source_report.md": "notes/mvp_execution_20260916/final_source_report.md",
+    "source_review.md": "notes/mvp_execution_20260916/final_source.independent_review.md",
+    "deployment_review.md": "notes/mvp_execution_20260916/final_p1/deployment.independent_review.md",
+    "controller_scope.json": "notes/mvp_execution_20260916/final_p1/controller_execution_scope.json",
+    "initialization.json": "notes/MVP_INITIALIZATION_SELECTION_20260916.json",
+    "submission.txt": "notes/mvp_execution_20260916/final_p1/submission_receipt.txt",
+    "cancellation.txt": "notes/mvp_execution_20260916/final_p1/old_pending_cancellation.txt",
+    "release.json": "notes/mvp_execution_20260916/final_p1/release/release.json",
+    "release.sha256": "notes/mvp_execution_20260916/final_p1/release/release.sha256",
+    "deploy.py": "notes/mvp_execution_20260916/final_p1/release/deploy.py",
+    "code.tar": "notes/mvp_execution_20260916/final_p1/release/code.tar"
+  },
+  "source": {
+    "commit": "b660bf1e7dc48287ca34a0d6e3aeb53d45f599b6",
+    "executable_commit": "362eb899d8d43164ec1e0fb0f3b174ead9b1ba40",
+    "relative_pin": "555c3618e792dbed06bfc2c392b99efe79fd16853e8c92abe252a5b34cbd0c44",
+    "decoder_pin": "b53c31756d4fba10b144afd87e6ff8bc7db0bfbeaf4d346d085243a726512cfb",
+    "component_count": 86,
+    "decoder_count": 13,
+    "release_archive_sha256": "0fb803cf0612623fa0023bb1f0f28b4b2f6a227a930833f50f74cd31a64e9cd2",
+    "release_ledger_sha256": "5b36bdf09a8b8eb548147654e23d6ad59fe18542642a05eb720f22be102fdfb8"
+  },
+  "expected_remote_pins": {
+    "weights": "6e5e408681dd5356548a8f4b93d28e561c22d885668a4e0015d3e314e28f8d22",
+    "run_config": "c3ca0b4dfc1c9fbedb0cfba4b42887b22d4a62bc5b0c84be6b711ec630a1ef18",
+    "runtime_identity": "44b6f578ec50d373d01e764d391b2a559ce4d3012c52388fc160f94fef6f887e",
+    "meta": "844ecbc41f19a9287eb0101f9047b3b0100f88d2bfed1a5057261296d86943d7",
+    "eval": "0df4e4a7350f3e1cec0884f835aa94f148cbf5042998c25d296e424c5554df4f",
+    "corpus": "6840c93fd0b999e09b8dc2897adca1f4dbae36f2ef0f8fcc10ee66371295e222",
+    "evidence": "ed2d0eef2b205626db0983ab9f029f84c30514babc77c330bdb250b2fdfe3d0d",
+    "sif": "1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6",
+    "acceptance": "faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e"
+  },
+  "artifacts": {
+    "checkpoint": "/work/nvme/bilv/wcyim/transgenic/runs/seed123/epoch_05",
+    "corpus": "/work/nvme/bilv/wcyim/transgenic/db/b5_full_a40_v1.db",
+    "evidence_staged": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/evidence/fullc0lite.db",
+    "evidence_bytes": 1068773376,
+    "sif": "/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif",
+    "panel": "revision/protocols/b6_panels_v1.tsv",
+    "panel_sha256": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243",
+    "reference_authority": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16:data/manifests/b5_species_v1.tsv",
+    "fasta_authority_path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+    "fasta_md5_expected": "513e5ef30845ed754b00816a99abbf8e",
+    "gff_authority_path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+    "gff_md5_expected": "0264c349bc61ccceb546648edec46ebb",
+    "hyena_revision": "0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446",
+    "remote_bytes_rehashed_by_this_task": false
+  },
+  "budget": {
+    "scope": "cumulative diagnostics; not training",
+    "cap_node_hours": 5,
+    "cap_gpu_hours": 20,
+    "actual_node_hours_at_snapshot": 0,
+    "reserved_node_hours": 0.5,
+    "reserved_gpu_hours": 2,
+    "remaining_unreserved_node_hours": 4.5,
+    "includes": "all allocation startup/copy/hash/verification/teardown and prior attempts",
+    "training_budget": "unestablished pending resource measurement",
+    "automatic_retry": false
+  },
+  "jobs": [
+    {
+      "id": 3163545,
+      "role": "obsolete d99 P1",
+      "state": "CANCELLED",
+      "elapsed_seconds": 0,
+      "allocated": false,
+      "evidence": "captured/initial_live_status.txt"
+    },
+    {
+      "id": 3163986,
+      "role": "b660 S0/P1 only",
+      "state": "PENDING",
+      "reason": "Priority",
+      "elapsed_seconds": 0,
+      "allocated": false,
+      "evidence": "captured/initial_live_status.txt"
+    },
+    {
+      "id": 6165525,
+      "role": "C1 reconciled audit",
+      "state": "RUNNING",
+      "elapsed": "02:06:47",
+      "evidence": "captured/initial_live_status.txt"
+    },
+    {
+      "id": 6165461,
+      "role": "C1 baseline",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "unit_pass": 18,
+      "unit_total": 18,
+      "extern": "OOM 0:125",
+      "evidence": "captured/est.md"
+    },
+    {
+      "id": 6165460,
+      "role": "HSP initial diagnostic",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "extern": "OOM 0:125",
+      "scientific_acceptance": false,
+      "evidence": "captured/est.md"
+    },
+    {
+      "id": 6165462,
+      "role": "HSP expanded diagnostic",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "extern": "OOM 0:125",
+      "semantic_result": "INCONCLUSIVE:132 ELICITED/12 NOT_ELICITED/0 INVALID",
+      "evidence": "captured/est.md"
+    },
+    {
+      "id": 6165521,
+      "role": "GFFCompare synthetic diagnostic",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "extern": "OOM 0:125",
+      "recovered_semantic_result": "PASS 16 cases,236 files,34 maps; no rerun",
+      "evidence": "captured/decoder.md"
+    }
+  ],
+  "protected_b5": {
+    "next_job": 3131538,
+    "next_state": "PENDING Priority",
+    "dependent_jobs": [
+      3149356,
+      3149357,
+      3149358,
+      3149359,
+      3149360,
+      3149361,
+      3149362,
+      3149363
+    ],
+    "prior_job": 3131537,
+    "prior_job_live_state_not_in_capture": true,
+    "modify": false,
+    "seeds_456_789": "deferred"
+  },
+  "gates": {
+    "controller_authorization": "bounded S0/P1 only in captured/controller_scope.json",
+    "source_review": "ACCEPT bounded export/fresh binding only",
+    "deployment_review": "ACCEPT bounded S0/P1 only",
+    "cpu_verification": "reported scoped599PASS/1SKIP/64subtests; controller46PASS/1SKIP; whole repo crashed",
+    "real_gpu": "no PASS observed",
+    "six_gate_readiness": false,
+    "training_done": false,
+    "real_350_predictions": false,
+    "phase": "pure geometry reviewed; production projection/policy unfinished; not MVP prerequisite",
+    "scientific": "HSP length policy, duplicate isoforms, HiFi vs ONT-only and withholding unresolved; no GO/STOP emitted"
+  },
+  "native_crash": {
+    "status": "UNRESOLVED",
+    "reruns_this_task": 0,
+    "reason_no_rerun": "quiet log gives failure positions but no predecessor node IDs or failure tracebacks; minimal predecessor cannot be identified",
+    "reported_exit": 139,
+    "current_frame": "b660 mvp_decode_panel.py:141 ids,mask = ids.to(device),mask.to(device)",
+    "adjacent_frame": "line142 tracks[locus.gene_id].to(device); earlier review paraphrased this as141",
+    "fixture": "tests/test_mvp_decode.py:190 test_runner_exact_350_no_overwrite_and_partial_failure",
+    "cause": "unknown; separate missing Accelerate/psutil Python failures do not establish native cause",
+    "passing_reruns_prove_fixed": false
+  },
+  "historical_environment": {
+    "source": "captured/git_final_report.md",
+    "python": "3.12.2",
+    "torch": "2.6.0",
+    "transformers": "4.46.3",
+    "accelerate": "0.34.2",
+    "duckdb": "1.5.5",
+    "exact_original_full_command_not_preserved": true,
+    "current_environment_not_substituted": true
+  },
+  "advisor": "consultation failed client/model version incompatibility; no advice or approval"
+}

@@ -1,0 +1,2363 @@
+{
+  "authority": {
+    "commit": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16",
+    "manifest_sha256": "3ca7a3b9a5793f62d25f503c93cfd7167eb17f7c5b90de7830e6a8777117f783",
+    "objects": [
+      {
+        "bytes": 257,
+        "oid": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16",
+        "type": "commit"
+      },
+      {
+        "bytes": 852,
+        "oid": "ffff3bcb4c0a54e1893e637747f432ccb0d5369e",
+        "type": "tree"
+      },
+      {
+        "bytes": 69,
+        "oid": "4b71774b05a533bb68fe37183f96ef3ab98efbc1",
+        "type": "tree"
+      },
+      {
+        "bytes": 99,
+        "oid": "25dd0a4520ad2d37e43af36562c660b96fbbd466",
+        "type": "tree"
+      },
+      {
+        "bytes": 2533,
+        "oid": "d41b313a230ecde4b51f045a91e5ea39b00c40d9",
+        "type": "blob"
+      }
+    ],
+    "path": "data/manifests/b5_species_v1.tsv",
+    "scope": "sparse_original_git_objects_only_not_checkout_or_history"
+  },
+  "authority_verifier_sha256": "0b3917b7fa33df0d1818bdbad992f664e8dc6b959639a09aa998f75a97e8b2dc",
+  "budget": {
+    "approved": false,
+    "campaign_cap_node_hours": 5,
+    "cpu_workload_on_gpu_backed_node": true,
+    "max_node_hours": 1,
+    "max_nodes": 1,
+    "wall_minutes_ceiling": 60,
+    "zero_gpu_billing_claim": false
+  },
+  "canonical_G": "/data/gpfs/assoc/pgl/data/Transgenic",
+  "consumer_archive_sha256": "da161088fb401dbe87382685c1b5faadc17c7255d4a89f705fe1126ecc5bcec7",
+  "consumer_archive_size": 1873920,
+  "consumer_closure": [
+    {
+      "path": "/work/repo/revision/scripts/mvp/mvp_panel_compatibility.py",
+      "sha256": "ffc67337496cae5c2b3cdcf3bfb708bac3d7d74f09ec96f4b618fc5c3e0a0aa2",
+      "size": 11297
+    },
+    {
+      "path": "/work/repo/revision/scripts/mvp/mvp_verify_panel_inputs.py",
+      "sha256": "8478a39077dcb7d94f65218f719b7e9380757f44a3c799dcc6dedf933b621bae",
+      "size": 6217
+    },
+    {
+      "path": "/work/repo/revision/scripts/mvp/mvp_prepare_panel_inputs.py",
+      "sha256": "3f7ae796f142c8e41221c79d9ea088b2d2c2c66a430f5b08c645df517c37e8ac",
+      "size": 9262
+    },
+    {
+      "path": "/work/repo/revision/scripts/mvp/mvp_produce_counts.py",
+      "sha256": "bde70591e6fc89a3c1e7190c262b7a2804d5deedc1df36563cd3ea140b25ab40",
+      "size": 44923
+    },
+    {
+      "path": "/work/repo/revision/scripts/mvp/mvp_decode_panel.py",
+      "sha256": "57d29a5526848bc147596dc4cd358f06e8f17966b38c2caaf2039c98ee0c5dfc",
+      "size": 12538
+    },
+    {
+      "path": "/work/repo/revision/scripts/mvp/mvp_decode_runtime.py",
+      "sha256": "b0ffac46cff61f23262f5f8455a2217f823278b7b0225f4b9a445f8957db7d03",
+      "size": 13815
+    },
+    {
+      "path": "/work/repo/src/transgenic/evidence/mvp_tracks.py",
+      "sha256": "80a27c1909f41041c50af8d719856bbea914b80b804c6b6a4e07b715718922c6",
+      "size": 4801
+    },
+    {
+      "path": "/work/repo/src/transgenic/evidence/mvp_windows.py",
+      "sha256": "7583e0886418c606b0f0fd5d34440553390e1064d233f5e2ad7200603d1a4775",
+      "size": 10149
+    },
+    {
+      "path": "/work/repo/src/transgenic/evidence/mvp_decode.py",
+      "sha256": "4b05e3737200d8ace7c19dd581dcc612c7b0abe2a42df8a07bb1bc80ec226201",
+      "size": 10466
+    },
+    {
+      "path": "/work/repo/src/transgenic/training/mvp_cli.py",
+      "sha256": "29ec1682fdd5dbb8a02049f57c107e5e5d12d9851d9b2df38db6f5841d11a8e5",
+      "size": 12766
+    },
+    {
+      "path": "/work/repo/src/transgenic/training/mvp_cli_runtime.py",
+      "sha256": "a34d11559ee38eee2a240d0ab720660cddec038eb46410c31d159ba96b078bf7",
+      "size": 38236
+    },
+    {
+      "path": "/work/repo/src/transgenic/training/mvp_runtime.py",
+      "sha256": "e359896b54160015a0929d4a2708b1c21641a0cbb3cc04b4e18e438135db871d",
+      "size": 16207
+    },
+    {
+      "path": "/work/repo/src/transgenic/training/mvp_profiles.py",
+      "sha256": "77348d6ded60596023f6b29a15e94c1eda9b16b476173bf2f9908f0805685968",
+      "size": 654
+    }
+  ],
+  "consumer_files": [
+    {
+      "path": "configs/b5_400m_ctx_v2.json",
+      "sha256": "9ab3f14d7c5f20b391186ceb3bc0a159b6d2cf3340aa29d717341815ca8b15bd",
+      "size": 1752
+    },
+    {
+      "path": "configs/b5_400m_v1.json",
+      "sha256": "f9eb3dfb0068b2f23d66f32359af9b7b3313ed26a2461ce43ae847b6e02b08cd",
+      "size": 1484
+    },
+    {
+      "path": "configs/b5_400m_win_v3.json",
+      "sha256": "9b8bef9b642526835a0817e9b13ae50b7c7f274fe882256426cb78f90c080d79",
+      "size": 2013
+    },
+    {
+      "path": "revision/protocols/b6_panels_v1.tsv",
+      "sha256": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243",
+      "size": 166414
+    },
+    {
+      "path": "revision/scripts/07_selfconsistency_stats.py",
+      "sha256": "54aaf75dda57b0e1e4928cd127d4fb4699af7bd73f769d643121e91f5c953e3d",
+      "size": 10482
+    },
+    {
+      "path": "revision/scripts/24_restrict_reference_to_test_genes.py",
+      "sha256": "e46147a5911b56140cd47659da7d96d80fd1c81ea4b94eb5b6db7c0696036f39",
+      "size": 5347
+    },
+    {
+      "path": "revision/scripts/mvp/README.readiness.md",
+      "sha256": "0a2a4c590f7c370a0215ca1296d5bdaab8369f11f35cb04ec996b2027f2454ba",
+      "size": 11836
+    },
+    {
+      "path": "revision/scripts/mvp/SCORING.md",
+      "sha256": "bc1453a1bf0ada615e0fdcc009aa4610fa6e53031cdaac9d345a17b037247ca8",
+      "size": 9732
+    },
+    {
+      "path": "revision/scripts/mvp/accelerate_mvp.json",
+      "sha256": "22e9016b5d87cd9166c62d0ab7099aa11ce4d49b88c3cd569b9d75f1ad042f28",
+      "size": 404
+    },
+    {
+      "path": "revision/scripts/mvp/make_launch_readiness.py",
+      "sha256": "a5b2c895bd76699718655993d67430b9459c5db07d5f47636feb6acc77ce6de2",
+      "size": 20723
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_align_panel_longreads.py",
+      "sha256": "fcf5be4412a25c399df9b9ea1f9637a1e9a733b336794a2244a6c8e9ce19564b",
+      "size": 11367
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_build_c0lite.py",
+      "sha256": "4c66a890a1e0cd304d3c6ce095bd4c8f9cac8d0d0fa800d8ecb5fbfaaf233738",
+      "size": 20617
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_decode_panel.py",
+      "sha256": "57d29a5526848bc147596dc4cd358f06e8f17966b38c2caaf2039c98ee0c5dfc",
+      "size": 12538
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_decode_runtime.py",
+      "sha256": "b0ffac46cff61f23262f5f8455a2217f823278b7b0225f4b9a445f8957db7d03",
+      "size": 13815
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_junction_table.py",
+      "sha256": "8e8006bd181732b826a09f36b830a84ea218caf725912a0d43d5b9df3ab9afc8",
+      "size": 9320
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_panel_compatibility.py",
+      "sha256": "ffc67337496cae5c2b3cdcf3bfb708bac3d7d74f09ec96f4b618fc5c3e0a0aa2",
+      "size": 11297
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_prepare_panel_inputs.py",
+      "sha256": "3f7ae796f142c8e41221c79d9ea088b2d2c2c66a430f5b08c645df517c37e8ac",
+      "size": 9262
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_produce_counts.py",
+      "sha256": "bde70591e6fc89a3c1e7190c262b7a2804d5deedc1df36563cd3ea140b25ab40",
+      "size": 44923
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_score.py",
+      "sha256": "b974877aa4739d88d6904aabfe30c05ee2cb67ed5ff7b0b28d51c656a23dfd50",
+      "size": 11818
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_verify_panel_inputs.py",
+      "sha256": "8478a39077dcb7d94f65218f719b7e9380757f44a3c799dcc6dedf933b621bae",
+      "size": 6217
+    },
+    {
+      "path": "revision/scripts/mvp/mvp_verify_pinned_panel.py",
+      "sha256": "307749d202a0facdce86880cd1dad07c3da4e291099e5d2c99203c88f7b4dab2",
+      "size": 2395
+    },
+    {
+      "path": "revision/scripts/mvp/real_probes.py",
+      "sha256": "7f9507f4fced687e1886c659224d4b778b3486a2b390dac1e8f3c6954e46c7ae",
+      "size": 38350
+    },
+    {
+      "path": "revision/scripts/mvp/resource_probe.py",
+      "sha256": "81baf49407017b000966ef72be7ae9a6f35f3fc5f598517c74a470fadbe41e0e",
+      "size": 30959
+    },
+    {
+      "path": "revision/scripts/mvp/run_bounded.py",
+      "sha256": "8b2f4042e03732c16d633fb66444b1b91e87cef54d3c696104775beebf19a932",
+      "size": 10449
+    },
+    {
+      "path": "revision/scripts/mvp/run_training.py",
+      "sha256": "62d9499259645c29175698aab7fbb9eb56a1edd3bc6cc7ac6dc2dda1bdd48998",
+      "size": 6959
+    },
+    {
+      "path": "revision/scripts/mvp/stage_checkpoint.py",
+      "sha256": "b426cb2b6cbe12c2d95981fc871c3b4e1e598828304befdabbce1be7db86352b",
+      "size": 8975
+    },
+    {
+      "path": "src/run_genome_annotation.py",
+      "sha256": "083f93674695e17abe937cb38f349ce3bc6e65c36354499e3d047af6c2f29126",
+      "size": 38930
+    },
+    {
+      "path": "src/transgenic/datasets/__init__.py",
+      "sha256": "f424d16b1bba09af41ddf5a020360dd5a683206b5a72acfa3b4bf1ac380d4d0e",
+      "size": 87
+    },
+    {
+      "path": "src/transgenic/datasets/build_b5.py",
+      "sha256": "979536de28d8319b9869bb3b3bd2d26fe25ff68f06f2e44e8ea1fd31220fc0ca",
+      "size": 39809
+    },
+    {
+      "path": "src/transgenic/datasets/datasets.py",
+      "sha256": "4ca5c6c05f1827e64f7f7a4338b7bc5de940778a7b5b400a69bcd1682a4f0859",
+      "size": 46171
+    },
+    {
+      "path": "src/transgenic/datasets/hisat2_extract_splice_sites_gff3.py",
+      "sha256": "8f6b91c6b19bfa9498c27b214e64f52c11f1fe197d37b485a303485533a9584c",
+      "size": 5148
+    },
+    {
+      "path": "src/transgenic/datasets/prepGffForSegmentation.sh",
+      "sha256": "4c83230e204abfae2c4d3657c8343ae69871a170c4cfb0614d2edd0f4d57ef30",
+      "size": 617
+    },
+    {
+      "path": "src/transgenic/datasets/preprocess.py",
+      "sha256": "a15ef4f00299ce9af0aadcac57ff6eae013d914447fbcab04794c13a8934c547",
+      "size": 11998
+    },
+    {
+      "path": "src/transgenic/datasets/qc_flags.py",
+      "sha256": "29a52907b72e66ab2d0c1d7cd64883542789d3f475a399590d17efe2ef4797ff",
+      "size": 994
+    },
+    {
+      "path": "src/transgenic/evidence/mvp_bootstrap.py",
+      "sha256": "21555321217318ec162dc52e528b5f6540513165ca9b469c5312969ad0908172",
+      "size": 15088
+    },
+    {
+      "path": "src/transgenic/evidence/mvp_decode.py",
+      "sha256": "4b05e3737200d8ace7c19dd581dcc612c7b0abe2a42df8a07bb1bc80ec226201",
+      "size": 10466
+    },
+    {
+      "path": "src/transgenic/evidence/mvp_tracks.py",
+      "sha256": "80a27c1909f41041c50af8d719856bbea914b80b804c6b6a4e07b715718922c6",
+      "size": 4801
+    },
+    {
+      "path": "src/transgenic/evidence/mvp_windows.py",
+      "sha256": "7583e0886418c606b0f0fd5d34440553390e1064d233f5e2ad7200603d1a4775",
+      "size": 10149
+    },
+    {
+      "path": "src/transgenic/misc/classifyGeneSignal.py",
+      "sha256": "70b8d9639993d2eeb68545e3818e25269df5f7e1a5998956d68cecb05e140795",
+      "size": 3582
+    },
+    {
+      "path": "src/transgenic/misc/configuration_transgenic.py",
+      "sha256": "2ed3df1e0a627688f131924c4f7be12ef59a70ec4031240545195344d6ce70fe",
+      "size": 18928
+    },
+    {
+      "path": "src/transgenic/misc/devAlignGenerationLabelNumbers.py",
+      "sha256": "3f77de51b72b76e61b3aa4d179537e521353f9e0b127885f64b848a063ee395b",
+      "size": 7546
+    },
+    {
+      "path": "src/transgenic/misc/finetune_AgroSegmentNT.py",
+      "sha256": "d4ea4475585c39bc0e16d5a5fe034beb9dc1b3f6484bc7445fdbb9c07a16f422",
+      "size": 8642
+    },
+    {
+      "path": "src/transgenic/misc/hisat2_extract_splice_sites_gff3.py",
+      "sha256": "0ad3e4c1fd774df6af53b194c7b04da8c79ad7bae70307a430ace1828a5cc5d5",
+      "size": 6184
+    },
+    {
+      "path": "src/transgenic/misc/maxSize.py",
+      "sha256": "e07556f7fc2307b07097809a5b1ce6c4cc07326f9713568b963382e04a040e4f",
+      "size": 3833
+    },
+    {
+      "path": "src/transgenic/misc/modeling_HeynaTransgenic.py",
+      "sha256": "ca02ace950abd748e96955c3e0aabf10b127843b0844220fc7f6971a194b9e03",
+      "size": 67373
+    },
+    {
+      "path": "src/transgenic/misc/modeling_transgenic.py",
+      "sha256": "e78ca7acf7973516ca2bb8c530c35b1b539d3c9d0c06d50889a645fe8bf892bb",
+      "size": 52212
+    },
+    {
+      "path": "src/transgenic/misc/predict_transgenic.py",
+      "sha256": "19b4445eb4c95a168a1668cc43d5ad007496be75ed19ed67356ddf929b19e18c",
+      "size": 3185
+    },
+    {
+      "path": "src/transgenic/misc/test.py",
+      "sha256": "2d9e094db0b7edebb5eb01622cece1856c40268367285e7da03eae7bc2e72ab2",
+      "size": 519
+    },
+    {
+      "path": "src/transgenic/misc/test_AgroSegmentNT.py",
+      "sha256": "4ade388fc9ab16ff56ccf1d88a905f4fd3228c9e52e7d52a3c54cdd917b1d91b",
+      "size": 3958
+    },
+    {
+      "path": "src/transgenic/misc/test_HyenaSegmentNT.py",
+      "sha256": "d9a063506e52c71c5a776e28d8a4142f2cbdfac1a1922b28eeb5e5ea81373c54",
+      "size": 4858
+    },
+    {
+      "path": "src/transgenic/misc/testingAdjustCoords.py",
+      "sha256": "959c0fa6f6ae7d19cb28c344c04edae1af2616547a455afbc55c2961103d62d2",
+      "size": 5380
+    },
+    {
+      "path": "src/transgenic/misc/testingHyena.py",
+      "sha256": "918dedbfea904239f942dfa4a21032c4462fda3976eb7da375227017fc9fa587",
+      "size": 5476
+    },
+    {
+      "path": "src/transgenic/misc/testingHyenaDual.py",
+      "sha256": "14a5de68aacfd1956830f43eaf003a0c4b89511f06c62c9a2e7ffb0d0f6105c0",
+      "size": 5851
+    },
+    {
+      "path": "src/transgenic/misc/testingHyenaPostnoPost.py",
+      "sha256": "d6d4a8f0a82f1b1ba58561e812ace539ed021198c959f4eee25fb996e0a35003",
+      "size": 6740
+    },
+    {
+      "path": "src/transgenic/misc/testingNT.py",
+      "sha256": "6e5f73f5f4e501d8ad90804a6fa15c5cdbce34e35362fa95d5a47cf40e7e9809",
+      "size": 6628
+    },
+    {
+      "path": "src/transgenic/misc/testingT5Hyena.py",
+      "sha256": "dbe356d0f5e63a326eb771148c858216b9abaadeb9ab963174b115b20c0a7da3",
+      "size": 5742
+    },
+    {
+      "path": "src/transgenic/misc/testingT5Transgenic.py",
+      "sha256": "30a42e9cfc0ec2b56dfb28b37a65b9efef46b13f8a2952cfb24b0ea3e2c0a588",
+      "size": 5745
+    },
+    {
+      "path": "src/transgenic/misc/tokenization_transgenic.py",
+      "sha256": "d992c7139457ee56b2b4d1c3259288bfeca990ecb0afaf0415fd08c29f7ce001",
+      "size": 4798
+    },
+    {
+      "path": "src/transgenic/misc/trainBiLSTMRegressionHead.py",
+      "sha256": "805748e3f1d46e34fce452fc82993b1ce3550b847a18095f8759296e43b8b6ca",
+      "size": 19045
+    },
+    {
+      "path": "src/transgenic/misc/trainHyenaMLM.py",
+      "sha256": "38404c251a7c4e511ca0c362879e11a831d72827209162d9ac98f3d19beb960a",
+      "size": 7542
+    },
+    {
+      "path": "src/transgenic/misc/trainHyenaSegment.py",
+      "sha256": "03c13c27bd9672962e7e25d03a67c2a23aee8493f8201486a4700dac02c00b50",
+      "size": 12320
+    },
+    {
+      "path": "src/transgenic/misc/trainReinforce.py",
+      "sha256": "44e5ebd405da97c1c8c7f55fd90f5c644de484e58ab6d854d256a2ccde3c38f2",
+      "size": 6090
+    },
+    {
+      "path": "src/transgenic/misc/train_LEDMLM.py",
+      "sha256": "8b9d637f16cb57ed4c04b9b848a972c3fd21f788d22be284a70bb3a1467cc90b",
+      "size": 9232
+    },
+    {
+      "path": "src/transgenic/misc/train_T5Transgenic.py",
+      "sha256": "eb535447bb3f365994fb079f936b6c12c421da3763e57ad9e722b21ec4d2f8d9",
+      "size": 6786
+    },
+    {
+      "path": "src/transgenic/misc/train_T5hyena.py",
+      "sha256": "1552d8f8cafe9091b34ef768a9a83d9f8fb6f8cd0b98653eca21adf8abdd03b3",
+      "size": 7171
+    },
+    {
+      "path": "src/transgenic/misc/train_hyena.py",
+      "sha256": "3c5db7effe1c57305945db241fd9363d9d2f8f422324b323d4e4708bab40399c",
+      "size": 8521
+    },
+    {
+      "path": "src/transgenic/misc/train_transgenic.py",
+      "sha256": "de56c9115a628aae22e0b8a9d8f8099a7e1d8616f28dee786216037f1185a315",
+      "size": 18084
+    },
+    {
+      "path": "src/transgenic/misc/utils_transgenic.py",
+      "sha256": "9e9046d2f4af13e69237c7be6fd10a4de2bffe759ede22ad188940a683808ced",
+      "size": 97417
+    },
+    {
+      "path": "src/transgenic/model/__init__.py",
+      "sha256": "4fa547844dca8a12a944055d0a80c4dd9ee47323102adb2d912b7fc4eb8bb9db",
+      "size": 213
+    },
+    {
+      "path": "src/transgenic/model/configuration_transgenic.py",
+      "sha256": "7428623b9513ddc1dce5864d6d3e10e4c85df66fe6085920d863f01858f591d5",
+      "size": 8872
+    },
+    {
+      "path": "src/transgenic/model/constrained_decoding.py",
+      "sha256": "ea3229f7eb266a2c68a4f0c59fad10601ed6e35bbc3d325b22eed721055c32ff",
+      "size": 2319
+    },
+    {
+      "path": "src/transgenic/model/encoder_init.py",
+      "sha256": "97963a37cb2a742efd7314380cebc22f892d033c472691186180ab0488c1f1ae",
+      "size": 5201
+    },
+    {
+      "path": "src/transgenic/model/modeling_HeynaTransgenic.py",
+      "sha256": "25e5a7b4f871137267e0d20a686cfe25481adade4fbbe3ed5b6aebfd0ff188fc",
+      "size": 50797
+    },
+    {
+      "path": "src/transgenic/model/modeling_HyenaTransgenic.py",
+      "sha256": "520b6edd5b828758270720f6da4e61ee51b0cca7bbd9c61b9a09c6c6cae2eaf9",
+      "size": 51096
+    },
+    {
+      "path": "src/transgenic/model/modeling_NTTransgenic.py",
+      "sha256": "5cb7af344a6006cc8aefa11c18a22f164902b84d98607457a527530aca943923",
+      "size": 79188
+    },
+    {
+      "path": "src/transgenic/model/tokenization_transgenic.py",
+      "sha256": "ddcae97e5a2cdda23d1616412b4f5c34a6d016737919839e45255b5160cf2777",
+      "size": 12641
+    },
+    {
+      "path": "src/transgenic/training/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "src/transgenic/training/b5_runtime.py",
+      "sha256": "b5a9d7675fec14762cbe1107fc956690e3ae9fb5c9b185b34b4351922d4bc2b9",
+      "size": 14460
+    },
+    {
+      "path": "src/transgenic/training/mvp_cli.py",
+      "sha256": "29ec1682fdd5dbb8a02049f57c107e5e5d12d9851d9b2df38db6f5841d11a8e5",
+      "size": 12766
+    },
+    {
+      "path": "src/transgenic/training/mvp_cli_runtime.py",
+      "sha256": "a34d11559ee38eee2a240d0ab720660cddec038eb46410c31d159ba96b078bf7",
+      "size": 38236
+    },
+    {
+      "path": "src/transgenic/training/mvp_finalize.py",
+      "sha256": "3cd6395911ae2e8618ca03f0210b74a01a225f6ee134573065a5cb5d12181239",
+      "size": 36482
+    },
+    {
+      "path": "src/transgenic/training/mvp_metrics.py",
+      "sha256": "d7a8fe68ce3b3abe52503108dec5704ef0610c16fe0d33abecf9224c9c49abed",
+      "size": 8766
+    },
+    {
+      "path": "src/transgenic/training/mvp_profiles.py",
+      "sha256": "77348d6ded60596023f6b29a15e94c1eda9b16b476173bf2f9908f0805685968",
+      "size": 654
+    },
+    {
+      "path": "src/transgenic/training/mvp_runtime.py",
+      "sha256": "e359896b54160015a0929d4a2708b1c21641a0cbb3cc04b4e18e438135db871d",
+      "size": 16207
+    },
+    {
+      "path": "src/transgenic/training/weights_init.py",
+      "sha256": "2a4287adb02bb941015eb8956158c6f653da17db60b08b7d5eec9be233829d4a",
+      "size": 13210
+    },
+    {
+      "path": "src/transgenic/utils/__init__.py",
+      "sha256": "bdbbba50ba622c412e3e877812f580634bba05c638183e4d243a3c32e2ceb282",
+      "size": 115
+    },
+    {
+      "path": "src/transgenic/utils/gsf.py",
+      "sha256": "d82eeb72dd868e1d0f97d2afd96874407284581740b2dbb0123850480a728ea9",
+      "size": 19669
+    },
+    {
+      "path": "src/transgenic/utils/gsf_contract.py",
+      "sha256": "c71d2381f22faec1e4e7030ba7a991eb3f3c25b38c22334e5c60c91cd98bd8c9",
+      "size": 36103
+    },
+    {
+      "path": "src/transgenic/utils/gsf_grammar.py",
+      "sha256": "4075dde4b837d3a94d21a60f7248f5308d5fa05b2c0a6bcf933020fbd1c098cb",
+      "size": 11629
+    },
+    {
+      "path": "src/transgenic/utils/huggingface_integration.py",
+      "sha256": "7052500fccc5bf98f757fc0c09e94b05d6013356399800c7993e7bdd922bc9d7",
+      "size": 23040
+    },
+    {
+      "path": "src/transgenic/utils/postprocess.py",
+      "sha256": "40c7fe95b291072e2cdf9de3ee32d06c46fececf7c4971c1ad6833b92b7ab645",
+      "size": 62505
+    },
+    {
+      "path": "src/transgenic/utils/sequence.py",
+      "sha256": "9d897ac1ab52c0c34520b60d6cd9fc3881c66bebf62628b912e64d5fdec8b4e8",
+      "size": 14599
+    },
+    {
+      "path": "train/profile_training.py",
+      "sha256": "db3255f5125cb731fc33dcd002b04d4976d709089f9fffa646da1d5f47ae0c29",
+      "size": 8900
+    },
+    {
+      "path": "train/train_HyenaMLM.py",
+      "sha256": "ca7345afbe1c7ba7bd7a80495121848c74ca68ac86f4a8e2a15d3040d68e7382",
+      "size": 7713
+    },
+    {
+      "path": "train/train_HyenaSegment.py",
+      "sha256": "7610a864d5cf195b8cfc588ed92fe1b4b0c22d0e22c8fe55d33e6bb522b0e4df",
+      "size": 13265
+    },
+    {
+      "path": "train/train_HyenaT5Transgenic.py",
+      "sha256": "1f241065b2e41f610e3555da205f56b6f47714b8cc69e2493bc92c9312474a2f",
+      "size": 7360
+    },
+    {
+      "path": "train/train_HyenaTransgenic.py",
+      "sha256": "68cbefe65228d71e70f047f3cd4277f27a265236929b42af96cc5c45cf86be88",
+      "size": 52262
+    },
+    {
+      "path": "train/train_HyenaTransgenic_GB10.py",
+      "sha256": "71f401d4f8a43645f33f70a184ca953a85c1b5dcfd5be8d85a774be7709ca46e",
+      "size": 28856
+    },
+    {
+      "path": "train/train_HyenaTransgenic_MVP.py",
+      "sha256": "2cf2f50a9ab2dc312d1e5ff19d430ef807882155f876331c0ba8717849fa6cef",
+      "size": 316
+    },
+    {
+      "path": "train/train_HyenaTransgenic_RTX4090.py",
+      "sha256": "8e7c28a90d34eeffd224401d2a4ed26d4d48b6111dd06d0f8b36f9c8331f242e",
+      "size": 30723
+    },
+    {
+      "path": "train/train_NTSegment.py",
+      "sha256": "3737dde279bfaaf3d8b5474c1ef0d5444298d75d31336aa31910a9f7d687d802",
+      "size": 8592
+    },
+    {
+      "path": "train/train_NTT5Transgenic.py",
+      "sha256": "6ed9e1be62a40025a0f2a19ccb824e864da2fd6bc7094c6cb80fde146cea1532",
+      "size": 6912
+    },
+    {
+      "path": "train/train_NTTransgenic.py",
+      "sha256": "41a6c9d4aa3e0de25cc56858728a4f0cfe1d64ee6f834da2d9cb291d56a1ad49",
+      "size": 18180
+    }
+  ],
+  "consumer_root": "/work/repo",
+  "historical_authority": {
+    "accepted_data_sha256": {
+      "corpus": "6840c93fd0b999e09b8dc2897adca1f4dbae36f2ef0f8fcc10ee66371295e222",
+      "evidence": "ed2d0eef2b205626db0983ab9f029f84c30514babc77c330bdb250b2fdfe3d0d",
+      "panel": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243"
+    },
+    "reference": {
+      "commit": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16",
+      "files": {
+        "fasta": {
+          "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+          "sha256": "63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973",
+          "size": 121183059
+        },
+        "gff": {
+          "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+          "sha256": "529510b60756c9a1ae5a590ec4097fd4b9773649c29e6a5543553118bb042c38",
+          "size": 60503119
+        }
+      },
+      "manifest": "data/manifests/b5_species_v1.tsv",
+      "manifest_sha256": "3ca7a3b9a5793f62d25f503c93cfd7167eb17f7c5b90de7830e6a8777117f783"
+    }
+  },
+  "historical_files": [
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/protocols/b6_panels_v1.tsv",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/protocols/b6_panels_v1.tsv",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/source/revision/protocols/b6_panels_v1.tsv",
+      "sha256": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243",
+      "size": 166414
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "genomes/Athaliana_167_TAIR10.fa",
+      "sha256": "63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973",
+      "size": 121183059
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+      "sha256": "529510b60756c9a1ae5a590ec4097fd4b9773649c29e6a5543553118bb042c38",
+      "size": 60503119
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_technical_candidate_20260915.json",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_technical_candidate_20260915.json",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_technical_candidate_20260915.json",
+      "sha256": "faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e",
+      "size": 9832
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_candidate_inventories_20260915.json",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_candidate_inventories_20260915.json",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_candidate_inventories_20260915.json",
+      "sha256": "9f79019679bfdd25b0a2bdac7cae63d01fa6d874be03fa3ef3f81cfd0a880a98",
+      "size": 859299
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_candidate_receipts_20260915.json",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_candidate_receipts_20260915.json",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_candidate_receipts_20260915.json",
+      "sha256": "73204a4ed98624b1567a5eb26fd6b2bbafbb597e0bd4b807685e8c703c807bac",
+      "size": 11786
+    },
+    {
+      "action": "reuse_existing_no_copy",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/training_input/db/b5_full_a40_v1.db",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/training_input/db/b5_full_a40_v1.db",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "training_input/db/b5_full_a40_v1.db",
+      "sha256": "6840c93fd0b999e09b8dc2897adca1f4dbae36f2ef0f8fcc10ee66371295e222",
+      "size": 23534252032
+    },
+    {
+      "action": "reuse_existing_no_copy",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_full_20260915/fullc0lite.db",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_full_20260915/fullc0lite.db",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp_full_20260915/fullc0lite.db",
+      "sha256": "ed2d0eef2b205626db0983ab9f029f84c30514babc77c330bdb250b2fdfe3d0d",
+      "size": 1068773376
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/scripts/mvp/mvp_prepare_panel_inputs.py",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/scripts/mvp/mvp_prepare_panel_inputs.py",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/source/revision/scripts/mvp/mvp_prepare_panel_inputs.py",
+      "sha256": "3f7ae796f142c8e41221c79d9ea088b2d2c2c66a430f5b08c645df517c37e8ac",
+      "size": 9262
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/src/transgenic/evidence/mvp_tracks.py",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/src/transgenic/evidence/mvp_tracks.py",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/source/src/transgenic/evidence/mvp_tracks.py",
+      "sha256": "80a27c1909f41041c50af8d719856bbea914b80b804c6b6a4e07b715718922c6",
+      "size": 4801
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/src/transgenic/evidence/mvp_windows.py",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/src/transgenic/evidence/mvp_windows.py",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/source/src/transgenic/evidence/mvp_windows.py",
+      "sha256": "7583e0886418c606b0f0fd5d34440553390e1064d233f5e2ad7200603d1a4775",
+      "size": 10149
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/src/transgenic/training/mvp_cli.py",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/src/transgenic/training/mvp_cli.py",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/source/src/transgenic/training/mvp_cli.py",
+      "sha256": "1afd2b128ad0fc831505156489f2f834e6f56c668e4c676497219ee9b461afbd",
+      "size": 12568
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/src/transgenic/training/mvp_cli_runtime.py",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/src/transgenic/training/mvp_cli_runtime.py",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/source/src/transgenic/training/mvp_cli_runtime.py",
+      "sha256": "7dc6adb43341e027501fa6b439f1132257bae76a9371baa8f42d240eaf4e8cfc",
+      "size": 36523
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/scripts/mvp/mvp_produce_counts.py",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/scripts/mvp/mvp_produce_counts.py",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/source/revision/scripts/mvp/mvp_produce_counts.py",
+      "sha256": "6069fb5fe0771015d044d820a4cbbff313d9f3d2982991e1c58c17bc8aa726dc",
+      "size": 35157
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/request.json",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/request.json",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/request.json",
+      "sha256": "90872e0c4e01706947b80020af8d4319a72949701088e51ff6b3b7bd5768d01f",
+      "size": 1068
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/manifest.json",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/manifest.json",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/manifest.json",
+      "sha256": "7528c9bff5a9a9b177b1ad333ad76525a1d02d3c4cde4e0550865ff12e0acc0e",
+      "size": 38854
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/COMPLETE",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/COMPLETE",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/COMPLETE",
+      "sha256": "600be19cd4deef9c84be302f0716ac77e8a3429ee70bda4be7ff20dbefe3c7eb",
+      "size": 65
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/00.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/00.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/00.fa",
+      "sha256": "dde3b04e48353fc66d00acd4c257086643f09a69b3871df2a34f27b8d25a835f",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/00.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/00.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/00.npy",
+      "sha256": "60b12e8194a4698f125912324d16e8ee0012685286e21574371c0e8ebd95af23",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/00.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/00.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/00.jsonl",
+      "sha256": "299072963daf84d768694fd6149c451165d2c6c781ee8335cb15f92f5e960523",
+      "size": 24220
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/01.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/01.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/01.fa",
+      "sha256": "0d1da97e27d6c05d1fa0d33dfc8724a463e10229df10b69199cb67d03cf5e118",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/01.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/01.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/01.npy",
+      "sha256": "fc636de30b6c2a3864708050320815976ebeb00e43ac48bf8e833814093bef79",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/01.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/01.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/01.jsonl",
+      "sha256": "31fbc14d6a58ce25d0f89b8950594ad8ecf86c96d0a5be4faa6bbd71e8b7b0f6",
+      "size": 75513
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/02.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/02.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/02.fa",
+      "sha256": "2ec8bf9f1f32bb3a6529f1b96d58db384d238b9a3e3d4cb722048d9ee2598247",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/02.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/02.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/02.npy",
+      "sha256": "11c629317a0c11a2b60aac05b14b244fb789174ebaebed0b5a71aa22bfb8593a",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/02.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/02.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/02.jsonl",
+      "sha256": "5037755ffeff111ac09ed04d58f155a710a3489fe64952e302b609ea3b9048b8",
+      "size": 11109
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/03.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/03.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/03.fa",
+      "sha256": "a54762325e31a3239cfc6cf7a0e370d8daafc3c5172b42f145912e0d910549e8",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/03.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/03.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/03.npy",
+      "sha256": "e3b7ca4748bb1e2bb23e7f36691ea847a60d6ac572e9e225ae42d98eff646be7",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/03.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/03.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/03.jsonl",
+      "sha256": "4b8a2be13701499e19acc8609bb950783395f6639402809fca82950a4f964dd3",
+      "size": 185884
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/04.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/04.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/04.fa",
+      "sha256": "1338b702a73fa0afbef333f3e6d184976db1f006e6e9e2570d043c5478ade94b",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/04.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/04.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/04.npy",
+      "sha256": "0708818f447e88b3e3c1d16ee5fa2a53c309e2a56e7a1b6d91ace0313bed47bf",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/04.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/04.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/04.jsonl",
+      "sha256": "5e1bfc99a496e007b3df324a33e346b58d9ff39f188796e3379a0886c64cc9f0",
+      "size": 17009
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/05.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/05.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/05.fa",
+      "sha256": "fa7312b467b1f88a1c55ac6fe1ce8f29b050f4d5a4d28ee366f77a366beb9dc6",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/05.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/05.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/05.npy",
+      "sha256": "a0067895b35187c0fe8990d8455da433d69726adf721bd1b202c0b81706547c3",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/05.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/05.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/05.jsonl",
+      "sha256": "d9026466c9ecb3178ce9b3bb233a7bcdc48fbfeede359367f8023410a28ac285",
+      "size": 136494
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/06.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/06.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/06.fa",
+      "sha256": "45b51c657e2f91fb504ad149966e716d9bcec586d9dec8cc665db3dff515464c",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/06.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/06.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/06.npy",
+      "sha256": "52e95960b8edd0f6f903f9271a08120ba33f1f3aa80992e2798b5e22817a2bbc",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/06.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/06.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/06.jsonl",
+      "sha256": "86bca1fa6d2280ad337101bad20a6f374ba7f93213c1218b99dc0f79d2756960",
+      "size": 7637
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/07.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/07.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/07.fa",
+      "sha256": "0e298ede8416dc52681d7fa7c504ce2876219b336865b5bb8365d49d79ad2a30",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/07.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/07.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/07.npy",
+      "sha256": "4e192f9a58ea5a5d787c2d5e70f1b24cea8caf635f94b0032420b28ea04f0767",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/07.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/07.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/07.jsonl",
+      "sha256": "72ac20095c0500e2756c6704785fccab7639bf4a97f6b551a3c2de6afe64dc77",
+      "size": 53148
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/08.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/08.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/08.fa",
+      "sha256": "a3e5f3ab8ed9383be000f51638e79ba59cf3d90ee836b21b93a50a774d5f6c14",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/08.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/08.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/08.npy",
+      "sha256": "6b31c11eeb831ff68c7d411765a7d1a7781b27dbcfc333582b602b688b8f3e55",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/08.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/08.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/08.jsonl",
+      "sha256": "04883237f539e4cac8daa89ea6ac2ee3a7ec79087de93a5b6b260be0cc5e6fa1",
+      "size": 51865
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/09.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/09.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/09.fa",
+      "sha256": "0e91d09248342b913ba4ae128d58f466b47f3de73aaece2ca1259555e5512c1c",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/09.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/09.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/09.npy",
+      "sha256": "e64002bc11198024d1b12c5ff5f092c1af8e2d7bb5c647709fdc35309e0b1267",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/09.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/09.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/09.jsonl",
+      "sha256": "695bc2a465168900a3174996cfde93ecf94af01cc1b64aab3cb815e430046992",
+      "size": 269097
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/10.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/10.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/10.fa",
+      "sha256": "925200ea9d3829d5ccc2b2b1b2446f24e189128947c0ae4d93abed1e8c37d94f",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/10.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/10.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/10.npy",
+      "sha256": "e63fa7a7fef077cd89f85473cb13f05b8033236096f83c5c229a69dea40e9b23",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/10.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/10.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/10.jsonl",
+      "sha256": "7aeb0a3406a651cfffc71fbbd6dc1ce31eb9d1a4f643ae32823d29b1afb828c4",
+      "size": 49805
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/11.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/11.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/11.fa",
+      "sha256": "00a71d2cceff2cc6dffdd6d0351fe52732b448a1dc1bb8d26718539089217010",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/11.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/11.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/11.npy",
+      "sha256": "4cbed491e0d4eed05a289eabb240c7c765e6e614c937958737d16b97598cdf64",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/11.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/11.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/11.jsonl",
+      "sha256": "3a85b928795f03bcdfe4e34a31959a03b22f33d019943103b163407aa97e6e52",
+      "size": 128952
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/12.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/12.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/12.fa",
+      "sha256": "8c94e23f0a0060890df92ec826315f2d3034623619ec2088be2a96a754413a45",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/12.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/12.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/12.npy",
+      "sha256": "7c1ed62143381df2885ec47e7fd01ed10e09fb00a83642b18c8636602d05fed2",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/12.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/12.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/12.jsonl",
+      "sha256": "64d6b5975ab294045966b4d68d7c46aef209a8f689baab331e88bac3ac1a6f28",
+      "size": 81148
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/13.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/13.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/13.fa",
+      "sha256": "9dfb3200c6d079e51c68177a192d73d728f44180edf70dddd2a5ebfca67184d8",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/13.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/13.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/13.npy",
+      "sha256": "d560e55e8a92db670ed690ce0a236d971b66898dbfe059797dc2b764b818e882",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/13.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/13.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/13.jsonl",
+      "sha256": "55e452d0c33be9f604699ca6f830ca95362e3ae9cd29481ccfc8eaee0ccb3017",
+      "size": 108780
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/14.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/14.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/14.fa",
+      "sha256": "ac510a268259d9d551edcd7650f5e3f31149fe3eb54272fcb9975a15c52a0d69",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/14.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/14.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/14.npy",
+      "sha256": "9de62faeee8a656d74b42691df9b2f8912f7c2aa2aeef9cf2e24a443ac5184b1",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/14.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/14.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/14.jsonl",
+      "sha256": "22d8d5d708de58f4aa3e7f945d2ecd3d34469327152f46e2b4acefff4ff7f9de",
+      "size": 36490
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/15.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/15.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/15.fa",
+      "sha256": "42878de5a00a19d7d0a6268b368169a7b7caa475a7fd9ff865f3112547c3d9a7",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/15.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/15.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/15.npy",
+      "sha256": "78fbee84a2cf53f0d22d66bc57c2e20862a54166291652a7bb6e7b7859c8e7dd",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/15.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/15.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/15.jsonl",
+      "sha256": "064e314aea3221566fbc2037d1c334d81d327bd25d96c4126bd02864a976b25b",
+      "size": 15460
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/16.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/16.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/16.fa",
+      "sha256": "c130e487598e347d23581ab58d6fa503ae1b48ae2fe6dd72fe15a13fdc87dced",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/16.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/16.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/16.npy",
+      "sha256": "8eee1c68c559820d6cbe740cecd4165b77512cc782969623b3759f8507df2730",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/16.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/16.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/16.jsonl",
+      "sha256": "f11d74552c3032cb83fad683c50116b2a13f397ed49f2f5a214c653f7751be6b",
+      "size": 17355
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/17.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/17.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/17.fa",
+      "sha256": "444a625a8d681cb54a1e0eef07e806fb120c39fac5f44f54913d68f5b8a5261c",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/17.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/17.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/17.npy",
+      "sha256": "f3017da6df8c83e387cf70ea70ffa5bd5935503c38bd4f7287e7e4f0787a92ef",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/17.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/17.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/17.jsonl",
+      "sha256": "7b19f05b0b055912abdd4813879f6c4492aa17625ddb2b9e36a97dde433c51e2",
+      "size": 74853
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/18.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/18.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/18.fa",
+      "sha256": "c75b53e303b0f68c16e4a011e5fc0e8bdb051baa8b03ae9153d4b644fa7b6ada",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/18.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/18.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/18.npy",
+      "sha256": "993a620fcfc87590076647a07d1bcd9a5be18cb5021d6c69be565437c6393afc",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/18.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/18.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/18.jsonl",
+      "sha256": "083b4e291646e93475daea183e4c5e9f8a6e4bbde81263c2e7b3e504ce92388c",
+      "size": 86401
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/19.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/19.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/19.fa",
+      "sha256": "c9bc539d5e52b0c68cc67c3e6d69112caf8d2cd8f31e5e5275f78619e5ea9572",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/19.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/19.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/19.npy",
+      "sha256": "c0b2309082a0ef6e933598fcb6f67a51a608283af6192f789ccb2b8be15f1dc1",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/19.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/19.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/19.jsonl",
+      "sha256": "46a5648a502a9abcb73f27a41cc5d413c071fe15cb34d29a5ef8c5158c60b8af",
+      "size": 18557
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/20.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/20.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/20.fa",
+      "sha256": "bc28355ad56e3032c9c4054263f9a375ff1d02042590891bf0f8242c780a67e8",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/20.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/20.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/20.npy",
+      "sha256": "3bbe019ef735c7f3ee12c61669a8231a3bb8050d7beb1aadbe9da82f0b2bc90d",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/20.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/20.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/20.jsonl",
+      "sha256": "71da4de52375b405168c619d513eb336809fca8434da4f3cf60c55346d13d193",
+      "size": 291409
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/21.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/21.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/21.fa",
+      "sha256": "85fd7b30a473dc277344ec38adad186ae44e9dfcbbe30695b6770d21338cf7c8",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/21.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/21.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/21.npy",
+      "sha256": "be6c3436ce70e72f49223c053501a7a4fc7547298e82618a27cfc6ddc71e30bc",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/21.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/21.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/21.jsonl",
+      "sha256": "efb0bf49b58b1e03bd36895c12d076d48c1bfd315a6051d712d51dce8efcb90e",
+      "size": 11647
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/22.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/22.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/22.fa",
+      "sha256": "6a7d634199ef3268c14393f9886303c9d54aaee461bcc13b7990f3ad416c16c7",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/22.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/22.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/22.npy",
+      "sha256": "4c6754ccce5884ac74c6bbf021fd168ddd14273d9a280bc33ba6d45ad6adc8f6",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/22.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/22.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/22.jsonl",
+      "sha256": "8be7d868e6523a79d3554d904508277a93b795dc9bec271af69f969c7032559b",
+      "size": 32134
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/23.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/23.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/23.fa",
+      "sha256": "232fc2df7dc718071b48ac7589d0f8c115831c718795523223979e238f48ec31",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/23.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/23.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/23.npy",
+      "sha256": "7a02be2724116374a95cc282ad5027bcf984d7dea1eab08e32a32542e246fbad",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/23.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/23.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/23.jsonl",
+      "sha256": "29381f55c396dd642bbf1c9388caaa29ad50b929f961790bf9d927fb7bab6cbe",
+      "size": 17899
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/24.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/24.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/24.fa",
+      "sha256": "cbd3e5a6c335ab438354072fc4c04c8475e4868b6a790ab8a2d689e53e406d34",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/24.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/24.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/24.npy",
+      "sha256": "7ea29e5402439fa438acbe71871d77de03412ec37109becaed128ac170440886",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/24.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/24.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/24.jsonl",
+      "sha256": "f7a2df1b19598ba8e75cfa9ca522e37834969a7fe0430ce66966fe9f7a47b194",
+      "size": 17190
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/25.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/25.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/25.fa",
+      "sha256": "465048eb389e23a6026094de61f2b0c87a39e3469c65255abe65491f14db54bb",
+      "size": 30767
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/25.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/25.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/25.npy",
+      "sha256": "3e23e1c8c187ce634ac24cde66e52b62b011b14454522cd39fd287bbb6063ecc",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/25.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/25.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/25.jsonl",
+      "sha256": "1a15ca1551828064264cb1aef88fb09ce50e42acce71a4d2bd15b22a457bc2c4",
+      "size": 12315
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/26.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/26.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/26.fa",
+      "sha256": "1d50a0e5d09cad22ddfbd4391e5382e34c708bf26238409d4c63cc8a63890760",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/26.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/26.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/26.npy",
+      "sha256": "4f9eaebed5f3d2b3e9dc44146942a0ff78378576f07f8efb8e98d7398e0a9890",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/26.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/26.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/26.jsonl",
+      "sha256": "5cfc603d575b43ea955f259a1b9a9781fc9e304f1d45d8a107089b5c6c972a23",
+      "size": 34045
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/27.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/27.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/27.fa",
+      "sha256": "517b50666930d4bca49819a3c77a4ca488b83b1c5df34b12d73ca3be3017f5f2",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/27.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/27.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/27.npy",
+      "sha256": "6a18135f33a72db16073ab8c467d3f13a07a8c9a649414ee67114fa8aed7c3b7",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/27.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/27.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/27.jsonl",
+      "sha256": "c83cb58aa83bad14bd125f3b59847696a4d4eec7eb850c9494c2537864925a50",
+      "size": 20150
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/28.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/28.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/28.fa",
+      "sha256": "227d70f247cc80316e11cd724fa6dcec83b6b57b167465ee972bb51cd21f45b4",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/28.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/28.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/28.npy",
+      "sha256": "f2315f61bf47f4b79b25f461b1e8c57c17fcad30f96cd98a395c45b25a8925d8",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/28.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/28.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/28.jsonl",
+      "sha256": "6dac9ea7268b34c6570c47d69fc96e3befcbbbbf8919dcb401600f083128e4e8",
+      "size": 3391
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/29.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/29.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/29.fa",
+      "sha256": "020020f0683ac1619d904dd8c36e26446268711448949b4ee1ba19d4e40c3b82",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/29.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/29.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/29.npy",
+      "sha256": "f97e8c013625b40bbcfe5fd990be4b50642e76fa6736d92f76a1658c098177b1",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/29.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/29.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/29.jsonl",
+      "sha256": "33219083efaf51fce0f8e6a0b55f3bde8fc21d53c2b510aecff069e450c23ca1",
+      "size": 3464
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/30.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/30.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/30.fa",
+      "sha256": "17b16ba22b75828e524b7ef25127ff52289b25437e0f2c7e96bc8fe228f821c0",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/30.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/30.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/30.npy",
+      "sha256": "12a84afd39b3073c4e00b8e638cd8e3c44086766c5f81731093d7575c37d6da9",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/30.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/30.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/30.jsonl",
+      "sha256": "135821e05182b09753fe2a09a392d3e2ec9f939451a06889602acbcf7a535b18",
+      "size": 16595
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/31.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/31.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/31.fa",
+      "sha256": "e148ca48ba04f87144e2f17c3a3a1d38195a9323b6aaeaba063396abc00e5995",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/31.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/31.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/31.npy",
+      "sha256": "df1c36857dfc50bd5f79b83df07f6cc28426bc0e13413c517583bbe0c243a090",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/31.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/31.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/31.jsonl",
+      "sha256": "2b156e6ac8f94eba155dfc57f6f39a6121384219a0b0e0a72dde5a95e41c5eec",
+      "size": 15229
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/32.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/32.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/32.fa",
+      "sha256": "ffbd6e5396c42753b752b37237bf10f33f771212c3aec1fc0e4608e0988bb227",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/32.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/32.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/32.npy",
+      "sha256": "b46017833a5018a5dcd1e81f081707f6544b846a4035f58147f1947c03545373",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/32.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/32.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/32.jsonl",
+      "sha256": "9bca2f3d3e219fbf9e5de39b71e0dda04e59225296060df02bc38a4e8ff5a170",
+      "size": 61907
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/33.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/33.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/33.fa",
+      "sha256": "57d49f6bb109cb61bd28bbf748497d6749fc7d1a44f9135640525217afd26e1b",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/33.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/33.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/33.npy",
+      "sha256": "381a395ac1b6b7e9633037b9081815d7e89bdc8ee2ec5e8802f5c5415599d7b5",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/33.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/33.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/33.jsonl",
+      "sha256": "b567649060b49538b31b8bf7bca52946939a56c591ec9664aa73f6516d93c48d",
+      "size": 13888
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/34.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/34.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/34.fa",
+      "sha256": "05982acfaec2798613673856e5ff7a85c696bc6fd9c0455382e977b9f2a033c9",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/34.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/34.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/34.npy",
+      "sha256": "4105438196ed6edb79837b3e62f51c6821b0d06ce770b4c555387b424c5ca799",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/34.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/34.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/34.jsonl",
+      "sha256": "072c392b0422445d6a4a7849f43f3e1a8eddd45790f57d388a583465888dda4a",
+      "size": 88537
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/35.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/35.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/35.fa",
+      "sha256": "abd8623274e91a07f6258f3434921775141fcfc16209d8910131e1e3721fd74a",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/35.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/35.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/35.npy",
+      "sha256": "3f93f4550a42899bf99b2dbeb1796ec33810a7f2f49677ecb621f74268efd7a0",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/35.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/35.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/35.jsonl",
+      "sha256": "5d82462003ccc39ed0661b861de278989ca9e9bd8b783e925f9948a2bc1494db",
+      "size": 9392
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/36.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/36.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/36.fa",
+      "sha256": "34a407c8f713c860e34e37a8ce8ccde453913ad0114d9246e1034a53a152c898",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/36.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/36.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/36.npy",
+      "sha256": "fdce09ac51156a52be6446e3bfd950c652898a845a0af4a2bc1c7798d247946e",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/36.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/36.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/36.jsonl",
+      "sha256": "60e4802047f7c6ddaa496ac2bf70736b83e0a8ad1c939cff153d71bf8a58fc80",
+      "size": 6933
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/37.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/37.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/37.fa",
+      "sha256": "d4bc0fe6d5485d1b9a527fc6cca5bc881a6c2d219acaebea5cc84e20aa6c4c82",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/37.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/37.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/37.npy",
+      "sha256": "c6c2fa96821457fb466006ba59d22edcf7a47e3000d00a41ef5ffb90f7585b9e",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/37.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/37.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/37.jsonl",
+      "sha256": "f889cf80783a6f0a49be41ce0d859f3e46741659414d05a4919afbfb752e8d72",
+      "size": 37215
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/38.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/38.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/38.fa",
+      "sha256": "9a23019ed5c98a64a4ba5a34aba9cda4097c8950a722b501718448bdbbda1119",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/38.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/38.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/38.npy",
+      "sha256": "4e9a28792e9bad2140a9654674da4db8319e1762c664700df9fbbb3b5a62dd25",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/38.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/38.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/38.jsonl",
+      "sha256": "574f3b4cd37883a2a8829d5b8d89d60776fc06aaad02da30af02bc1eb8e4493d",
+      "size": 11734
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/39.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/39.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/39.fa",
+      "sha256": "abe25ed958aa626a730ae40f7ed4472cf47e2372bb1e50d1da4476766b9063bb",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/39.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/39.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/39.npy",
+      "sha256": "a1abb6c20b1f075c01babad96e7b3369a1cab65179f2b833cf82dda30bb90efd",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/39.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/39.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/39.jsonl",
+      "sha256": "fc3b74b2a05963335700ea7c77cc29764c9e18820c6c279120d2a9a39b0f22a8",
+      "size": 2515
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/40.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/40.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/40.fa",
+      "sha256": "87aa6ea110161c803aca1a2a85409ff91c99497d7e280c5c538b40231f3a557f",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/40.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/40.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/40.npy",
+      "sha256": "6c71fe6c022e8604a4db3370a092efa45cfc1a9a94cec5e39a294f43c3dda8fe",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/40.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/40.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/40.jsonl",
+      "sha256": "becee23f1f051cbd79973ef2ae3b0ef45f3da98c867929ceca19078c9669abd5",
+      "size": 24771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/41.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/41.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/41.fa",
+      "sha256": "7e1cd68bc2283874f780e1ef4f4c90378b28dc01643f78e0e140ae21f55ed85a",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/41.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/41.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/41.npy",
+      "sha256": "504377d86cb024e6c3d81647e89c3d1cc36ff579b16a45827559432d6dad2526",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/41.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/41.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/41.jsonl",
+      "sha256": "82ca7f811aaf073c4f3927385ed54a233db55738386237a48396f60e8b606a84",
+      "size": 13433
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/42.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/42.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/42.fa",
+      "sha256": "c63a2291df4824a0df73a33bf8b080b273296dd8d633daf6959aebe908819001",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/42.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/42.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/42.npy",
+      "sha256": "08b78bff3c9b123dc9fba8804b1fb16ab3ab6a2114eef7ce6e783459a8eb5f62",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/42.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/42.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/42.jsonl",
+      "sha256": "8b89fd484d6a1a63ba282ffa49540ad2253f5d24fae3d56fd6827094687476d3",
+      "size": 24063
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/43.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/43.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/43.fa",
+      "sha256": "e39f315b062bc5d27321580451fb9cc86069dce770073d3c2b073ca8cdca7af7",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/43.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/43.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/43.npy",
+      "sha256": "5c420c1eca05350b8a103e80e4f0eaf4b55dd4cd178104ffd4c7b69b468e25ea",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/43.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/43.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/43.jsonl",
+      "sha256": "48404a217cc0eaa9c77018d1a6157760da9fc9617fd39179f6b557688bf2efd8",
+      "size": 221189
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/44.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/44.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/44.fa",
+      "sha256": "895a3c59cc8c1fba4482b2ffa99c8fac10d6b1277203a4d4a02a93f10dae7259",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/44.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/44.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/44.npy",
+      "sha256": "aa98467fd805fdac9ae4d4d92ee127e62a02e7f8031285afe89588e58a9e5c10",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/44.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/44.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/44.jsonl",
+      "sha256": "4c231e0b713a394c67bd9584cff06ec266a2b7d13a499b429b2cccc02afcdf8e",
+      "size": 48256
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/45.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/45.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/45.fa",
+      "sha256": "d68aa56c324aac39b8ac84907853337da9bc9f019bfb721af21967ed469830d1",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/45.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/45.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/45.npy",
+      "sha256": "53c02b2758b6cd98c2801b79621568231d60288d79f6334373192acd3f6013c2",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/45.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/45.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/45.jsonl",
+      "sha256": "8cbb260d1223d6d4fec1efbb3d39190f5e197647d0f2f8bffc50e01532508817",
+      "size": 310302
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/46.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/46.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/46.fa",
+      "sha256": "98832e4f3fb631b59aa1f719f5864b4e1cc146723e35a6fea3391dad8fb039ba",
+      "size": 30767
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/46.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/46.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/46.npy",
+      "sha256": "9dfd6cc179b9924b01a9e8f3dae6225427de8d480e76eceaf3ecf4856bcbce87",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/46.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/46.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/46.jsonl",
+      "sha256": "a5b8f4c4362def15b8720028f4ca66e0db9d276639f7c81e7e25a4822581a445",
+      "size": 43432
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/47.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/47.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/47.fa",
+      "sha256": "49e51375a4fa71fe6d935df0f1ea2eaf125fde8c26e5bca3d9de5a80e2572034",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/47.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/47.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/47.npy",
+      "sha256": "ebe46f3ee1babfb02a72d49bbc2f8bcdbe2df2856d48bfe2bd80d6549611872d",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/47.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/47.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/47.jsonl",
+      "sha256": "ec02ea258ac3c286be306f06e7afa3e22c498ab7292513ee78823d95527893ae",
+      "size": 11432
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/48.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/48.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/48.fa",
+      "sha256": "18202ee621bdcfacfab5f64f43943c7d491b3f511804decefbb1e91c3af9bd62",
+      "size": 30771
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/48.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/48.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/48.npy",
+      "sha256": "8776407c47fa98fb0f9d595e8fee98c2e9e545abc86ac67707f90c56e24bfc5c",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/48.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/48.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/48.jsonl",
+      "sha256": "0d58dc09109bbda1b07a07e405eeb6b84b6628b22b4b610376880782166a949b",
+      "size": 30503
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/49.fa",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/49.fa",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/49.fa",
+      "sha256": "850d317ddb3db63616909fa35b340996bf62ce10bb0d2406b18c0b97212486d0",
+      "size": 30769
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/49.npy",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/49.npy",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/49.npy",
+      "sha256": "f7c34dbcb58969483bd85d4c461c694fee5bff0e5c7c27db8a6760ee1161f692",
+      "size": 491648
+    },
+    {
+      "action": "replica_after_review",
+      "final_backing_path": null,
+      "original_path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/49.jsonl",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/49.jsonl",
+      "provenance": "historical recorded bytes; canonical mount is not physical original continuity",
+      "relative_path": "evidence/mvp50_reference_map_20260916/outputs/job-6165628/panel/49.jsonl",
+      "sha256": "fa9fd14cd149ad26cdb34e0e97c7ef89fee520650e1a7bc6b136509697600a0d",
+      "size": 264549
+    }
+  ],
+  "historical_manifest_sha256": "7528c9bff5a9a9b177b1ad333ad76525a1d02d3c4cde4e0550865ff12e0acc0e",
+  "historical_packages": {
+    "duckdb": "1.5.5",
+    "numpy": "1.26.4"
+  },
+  "host_namespace": "/work/nvme/bilv/wcyim/transgenic/seed123_panel_transport_20260917",
+  "independent_no_copy_amendment": null,
+  "mount_binding": null,
+  "output_parent": null,
+  "p1_stage_receipt": null,
+  "request": {
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/request.json",
+    "sha256": "c5cc29ecea746375ebb4d5388d38fa2bb8db0d5c42088ac67bc47b4caa7da9a9",
+    "size": 1264
+  },
+  "reviewed_resource_binding": null,
+  "runtime": {
+    "architecture": "aarch64",
+    "duckdb": "1.5.5",
+    "git": "2.43.0",
+    "numpy": "2.1.0",
+    "python": "3.12.3",
+    "sif": "/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif",
+    "sif_sha256": "1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6",
+    "sif_size": 11120398336,
+    "torch": "2.14.0a0+4fdf77b940.nv26.08"
+  },
+  "schema": 1,
+  "status": "PREPARATION_ONLY_BLOCKED",
+  "wrapper": {
+    "path": "revision/scripts/mvp/mvp_verify_pinned_panel.py",
+    "sha256": "307749d202a0facdce86880cd1dad07c3da4e291099e5d2c99203c88f7b4dab2",
+    "size": 2395
+  }
+}

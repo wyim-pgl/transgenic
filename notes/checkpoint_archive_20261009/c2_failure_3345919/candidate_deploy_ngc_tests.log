@@ -1,0 +1,55 @@
+RC 0
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/work/repo/tests/test_b6_trainer.py:370: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp59vxfpz7/b6/data_order.jsonl' mode='r' encoding='UTF-8'>
+  for line in open(os.path.join(self.tmp.name, run, "data_order.jsonl")):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/work/repo/tests/test_b6_trainer.py:370: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp59vxfpz7/c2/data_order.jsonl' mode='r' encoding='UTF-8'>
+  for line in open(os.path.join(self.tmp.name, run, "data_order.jsonl")):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/work/repo/tests/test_b6_trainer.py:370: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp59vxfpz7/res/data_order.jsonl' mode='r' encoding='UTF-8'>
+  for line in open(os.path.join(self.tmp.name, run, "data_order.jsonl")):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/work/repo/tests/test_b6_trainer.py:377: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp59vxfpz7/b6/draw_log/rank00.tsv' mode='r' encoding='UTF-8'>
+  return sorted(set(l for f in os.listdir(d) for l in open(os.path.join(d, f))))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/work/repo/tests/test_b6_trainer.py:377: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp59vxfpz7/c2/draw_log/rank00.tsv' mode='r' encoding='UTF-8'>
+  return sorted(set(l for f in os.listdir(d) for l in open(os.path.join(d, f))))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/work/repo/tests/test_b6_trainer.py:377: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp59vxfpz7/res/draw_log/rank00.tsv' mode='r' encoding='UTF-8'>
+  return sorted(set(l for f in os.listdir(d) for l in open(os.path.join(d, f))))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/work/repo/src/transgenic/datasets/build_b5.py:25: ImportWarning: can't resolve package from __spec__ or __package__, falling back on __name__ and __path__
+  from ..utils import gsf_contract as gc  # type: ignore
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/work/repo/tests/test_b6_trainer.py:324: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp1k6lkb_r/own2/latest_state/identity.json' mode='r' encoding='UTF-8'>
+  ident = json.load(open(os.path.join(own, rt.CHECKPOINT_IDENTITY)))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/work/repo/tests/test_b6_trainer.py:326: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp1k6lkb_r/own2/latest_state/identity.json' mode='w' encoding='UTF-8'>
+  json.dump(ident, open(os.path.join(own, rt.CHECKPOINT_IDENTITY), "w"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+[RANK 0] Removed shared tensor {'transgenic.decoder.embed_tokens.weight', 'lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+----------------------------------------------------------------------
+Ran 75 tests in 67.788s
+
+OK (skipped=1)
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

@@ -1,0 +1,10 @@
+[
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Athaliana"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/PROVENANCE_est.tsv"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/PROVENANCE.txt"]
+]

@@ -1,0 +1,3 @@
+usage: -c [-h] --manifest MANIFEST --sha SHA --out OUT --producer-path-proof
+          PRODUCER_PATH_PROOF
+-c: error: real-source CLI requires SLURM_JOB_ID; no login-node execution

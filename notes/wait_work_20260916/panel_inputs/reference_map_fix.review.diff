@@ -1,0 +1,761 @@
+diff --git a/notes/MVP_REFERENCE_MAP_FIX_REPORT.md b/notes/MVP_REFERENCE_MAP_FIX_REPORT.md
+new file mode 100644
+index 0000000..6877ac6
+--- /dev/null
++++ b/notes/MVP_REFERENCE_MAP_FIX_REPORT.md
+@@ -0,0 +1,142 @@
++# Evaluation-only reference mapping fix — 2026-09-16
++
++## Status and exact source
++
++Implementation commit: **`9acd7dbb99304f193704ba6a174340cc540e4c68`**.
++Branch: `mvp-eval-reference-map-20260916`, created directly from
++`b660bf1e7dc48287ca34a0d6e3aeb53d45f599b6` in an isolated worktree.
++This report is a subsequent documentation-only commit; implementation pins below
++refer to 9acd7db and remain unchanged by the report.
++
++Local CPU tests pass. **Actual 50-locus compatibility remains unverified.**
++Controller independent review and a new immutable evaluation CPU release/allocation
++are required. No submission, SSH, job inspection/change, merge, push, production
++DB query/hash, reference rebuild, or scientific-policy decision was performed.
++Training source b660 and job 3163986 were left untouched; no live job status is
++asserted. Job6165559's old failure/publication must remain immutable.
++
++## Root cause and implementation interface
++
++The neutral diagnosis and result review identify an empty restricted reference:
++panel keys are builder IDs (`AthNNNNNN`), whereas raw GFF IDs are original IDs.
++`71_b6_panels.py:230–260` already joins `gene_key_map` and uses the original IDs
++when constructing panel geometry. Panel creation is not changed.
++
++Only production source changed: `revision/scripts/mvp/mvp_produce_counts.py`.
++The shared adapter remains inside that already-audited `DECODER_ONLY` member:
++
++- `resolve_reference_mapping(panel, corpus, authority, accepted_hashes, panel_path)`:
++  invoked after existing candidate/inventory/byte gates. Rechecks accepted corpus
++  and panel SHA256 and frozen reference identities; opens DuckDB read-only with
++  one thread and refuses WAL snapshots. Queries only the Athaliana manifest and
++  requested 50 species-keyed map rows. Requires total unique keys, non-null/nonempty
++  original IDs, one-to-one original IDs, exact map coordinates, and full manifest
++  FASTA/GFF SHA256 equality to `frozen_reference`'s actual byte identities.
++- `prepare_mapped_reference(panel, reference, restricted, mapping)`:
++  restricts unchanged raw GFF by original IDs, checks restriction gene count and
++  exact strict-parser inventory, then selects by mapped ID with exact raw
++  chromosome/start/end/strand equality. Diagnostic subsets use the same helper,
++  not an alias/coordinate/Name/prefix fallback.
++- `recheck_reference_mapping(mapping)`: rehashes source identities and rejects a
++  newly appeared WAL before publication. Both callers invoke it.
++- `select_transcripts(..., reference=True, reference_id=...)` explicitly accepts
++  the mapped raw key. The prediction overlap branch is unchanged.
++
++The `reference_mapping` receipt in scorer `receipt.json` and CPU
++`reference_compatibility.json` records method `corpus_gene_key_map`, ordered builder
++and original IDs, original Name (diagnostic only), species, geometry, panel strand,
++corpus/panel/reference/source-code pins and frozen authority. Map strand is not
++invented: the raw GFF strand is checked against the panel. Duplicate structures
++are neither repaired nor deduplicated; existing author-policy refusal remains.
++
++Patched CPU wrapper: **`tasknotes/reference_mapping/run_panel_cpu.py`**.
++Copied from the neutral wrapper; only shared preparation, mapping diagnostics,
++per-locus fallback, and identity recheck were changed. The external/main wrapper
++was not edited. Candidate checks also run in `--reference-only` mode. Joint
++preparation errors remain failed diagnostics; per-locus fallback still calls the
++same strict mapped helper. No decoder-ready or scientific PASS is created.
++
++## New pins and deployment boundary
++
++| Pin | SHA256 |
++|---|---|
++| Producer | `ace42b9233de3b49c40e2b7b930e65c4567ef1cd49ac193bc9472030f0bf806b` |
++| Decoder operator `decoder_code_sha256` | `c0e8c141b1963abe1bd5b1b167bada5e3089057da7c4855dd61aa4fb4610b0d7` |
++| Evaluation component closure (86 files) | `44078a800aab35c991d6792899659627f76a1867520a40724887c9003bd9133f` |
++| Patched CPU wrapper template | `ac727d1caab301eb2c35782512710713ad9ad8c90715653600eb9c4d824bc202` |
++| Unchanged panel TSV | `79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243` |
++| Exact first-gene fixture | `192ae64c5fb3a81067400b4ea8d6600e314e8e4da1747ec7be4b50d4c29b9350` |
++
++Decoder pin uses the unchanged `mvp_decode_runtime.DECODER_ONLY` ordered-independent
++relative-path/hash object, sorted compact JSON plus newline, SHA256. No closure
++exemption or runtime pin relaxation was added. Component closure uses tracked
++`src/transgenic/`, `configs/`, `revision/scripts/mvp/` and
++`train/train_HyenaTransgenic_MVP.py` with the same serialization. Recomputing it
++at b660 reproduces the old `555c3618e792dbed06bfc2c392b99efe79fd16853e8c92abe252a5b34cbd0c44`.
++
++**The copied wrapper is not yet a runnable new release.** Per the requested
++mapping-only edit boundary it retains the historical hardcoded b660 source,
++component and source-inventory guards. Those guards intentionally reject the new
++evaluation tree. Controller packaging must create a fresh source inventory, bind
++its digest and the new evaluation commit/component in the staged wrapper, and
++independently review/pin that final wrapper's new hash. Do not use the template
++hash above as the hash of that future repinned entrypoint. No new source-inventory
++or release-tar digest is claimed here.
++
++`mvp_prepare_panel_inputs.preflight` hashes the changed producer and the unchanged
++verifier requires exact source/input inventory equality. Therefore publish a
++**new panel namespace under the new evaluation pin**. Do not rewrite/reuse
++6165559's manifest/COMPLETE or bypass its stale-code refusal. Training consumed
++code remains separately verified at its retained bound training root by the
++existing `verify_training_code` protocol; no training/evaluation HEAD equality
++was introduced. Current 772 probe/handshake constants and numerical files are
++unchanged. Decoder SIF/package compatibility remains a separate controller gate.
++
++## Verification evidence
++
++Red regression: `test_real_prefix_mapping_and_identity_case` failed with missing
++`resolve_reference_mapping` before implementation. Initial system Python lacked
++Torch; tests were run with the existing local `/tmp/mvp-final-source-env` instead.
++The first combined run exposed a test-fixture window issue: the actual mitochondrial
++first gene is too near the chromosome start for an MVP window. The CPU fallback
++unit test now explicitly stubs only window eligibility; production window logic
++was not changed. Both full350 integrations use the actual frozen panel geometry.
++
++Final command (local CPU):
++
++```sh
++OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONPATH=src \
++/tmp/mvp-final-source-env/bin/python -m pytest -q -rs \
++ tests/test_mvp_reference_mapping.py \
++ tests/test_mvp_score_producer.py \
++ tests/test_mvp_score_producer_integration.py \
++ tests/test_mvp_decoder_integration.py \
++ tests/test_mvp_decoder_runtime.py \
++ tests/test_mvp_final_source_integration.py
++```
++
++**98 passed, 1 skipped, 439.67s.** Skip: pinned Transformers 4.57.6 is not installed;
++local 4.46.3 is not SIF validation. No GPU/runtime approval is implied.
++
++Coverage includes real-prefix `Ath000001 → ATMG00010.TAIR10`; identity mapping;
++long raw ID/short Name and counter negatives; missing/duplicate/wrong-species/null/
++empty/many-to-one IDs; wrong coordinates, strand and hashes; duplicate raw genes;
++empty reference rejection versus valid empty predictions; CPU shared-helper and
++per-locus diagnostic paths; stale panel producer identity refusal; actual full350
++producer/decoder integration gates with explicit consistent synthetic
++`gene_key_map` and `build_manifest` authority. No actual 50 raw-map query was run.
++
++`git diff --check` passed. The following invariant check returned an empty diff:
++
++```sh
++git diff --exit-code b660bf1 -- src train configs revision/protocols \
++ revision/scripts/mvp/real_probes.py revision/scripts/mvp/run_bounded.py \
++ revision/scripts/mvp/make_launch_readiness.py revision/scripts/mvp/mvp_decode_runtime.py
++```
++
++Panel bytes/order/core20, 350 transport keys, evaluation windows, prediction
++selection, scoring denominators, training/finalizer/model/probe code remain
++unchanged. Only task source/tests/fixture and this report are committed. Graft
++was queried before source work and rebuilt locally afterward; graph cache is
++untracked. Advisor consultation failed due client/model version incompatibility;
++there is no advisor or independent-review approval to claim.
+diff --git a/revision/scripts/mvp/mvp_produce_counts.py b/revision/scripts/mvp/mvp_produce_counts.py
+index 570c76e..c0a5e1d 100644
+--- a/revision/scripts/mvp/mvp_produce_counts.py
++++ b/revision/scripts/mvp/mvp_produce_counts.py
+@@ -276,20 +276,86 @@ def read_gff(path):
+             require(tx['exons'], 'explicit exon geometry required; CDS is not an exon substitute')
+             for key in ('exons', 'cdss'):
+                 tx[key].sort()
+                 require(all(a[1] < b[0] for a, b in zip(tx[key], tx[key][1:])), 'duplicate/overlapping/adjacent GFF segments')
+             require(all(any(a <= c < d <= b for a, b in tx['exons']) for c, d in tx['cdss']), 'CDS outside exons')
+     return parsed
+ 
+ 
+-def select_transcripts(genes, locus, reference=False):
++def resolve_reference_mapping(panel, corpus, authority, accepted_hashes, panel_path):
++    """After candidate gates, bind all 50 builder keys to the corpus's original IDs.
++
++    No aliases, ordinal reconstruction, coordinate lookup or label-table queries.
++    The caller must recheck this receipt's sources immediately before publication.
++    """
++    import duckdb
++    keys = [l.gene_id for l in panel]
++    require(len(keys) == len(set(keys)) == 50, 'exact unique 50 panel keys required')
++    sources = [check_file(corpus, {'sha256': accepted_hashes['corpus']}),
++               check_file(panel_path, {'sha256': accepted_hashes['panel']})]
++    sources.extend(check_file(r['path'], r) for r in authority['files'].values())
++    sources.extend(file_identity(path) for path in
++                   (Path(__file__), Path(w.__file__), ROOT/'revision/scripts/24_restrict_reference_to_test_genes.py',
++                    ROOT/'revision/scripts/07_selfconsistency_stats.py'))
++    corpus = sources[0]['path']
++    require(not Path(corpus + '.wal').exists(), 'corpus WAL is not a frozen snapshot')
++    with duckdb.connect(corpus, read_only=True, config={'threads': 1}) as con:
++        manifest = con.execute('SELECT species_id,fasta_sha256,gff_sha256 FROM build_manifest WHERE species_id=?',
++                               ['Athaliana']).fetchall()
++        rows = con.execute('SELECT species_id,gene_id,gene_id_original,name_original,chromosome,start0,end0 '
++                           'FROM gene_key_map WHERE species_id=? AND gene_id IN (' + ','.join('?' for _ in keys) + ')',
++                           ['Athaliana', *keys]).fetchall()
++    require(manifest == [('Athaliana', authority['files']['fasta']['sha256'], authority['files']['gff']['sha256'])],
++            'corpus build_manifest/reference full SHA256 mismatch or duplicate species')
++    require(len(rows) == 50 and len({r[1] for r in rows}) == 50 and {r[1] for r in rows} == set(keys),
++            'missing/duplicate/wrong-species reference mapping')
++    require(all(r[0] == 'Athaliana' and isinstance(r[2], str) and re.fullmatch(r'[A-Za-z0-9_.:-]+', r[2]) for r in rows),
++            'null/empty/invalid original reference ID or wrong species')
++    require(len({r[2] for r in rows}) == 50, 'many-to-one original reference mapping')
++    by_key = {r[1]: r for r in rows}
++    ordered = []
++    for locus in panel:
++        row = by_key[locus.gene_id]
++        require(row[4:] == (locus.chromosome, locus.gene_start0, locus.gene_end0), 'corpus mapping/panel geometry mismatch')
++        ordered.append(dict(zip(('species_id','gene_id','gene_id_original','name_original','chromosome','start0','end0'), row),
++                            strand=locus.strand))
++    receipt = dict(method='corpus_gene_key_map', rows=ordered, sources=sources, authority=authority)
++    recheck_reference_mapping(receipt)
++    return receipt
++
++
++def recheck_reference_mapping(receipt):
++    require(not Path(receipt['sources'][0]['path'] + '.wal').exists(), 'corpus WAL appeared')
++    for record in receipt['sources']:
++        check_file(record['path'], record)
++
++
++def prepare_mapped_reference(panel, reference, restricted, mapping):
++    """Shared strict preparation; subsets are only for CPU failure diagnostics."""
++    rows = {r['gene_id']: r for r in mapping['rows']}
++    originals = {rows[l.gene_id]['gene_id_original'] for l in panel}
++    require(panel and len(originals) == len(panel), 'empty/duplicate reference selection')
++    restrictor = legacy_module('24_restrict_reference_to_test_genes.py')
++    # Tighten only the local legacy module, never alter raw GFF bytes/IDs.
++    restrictor.ID_RE = re.compile(r'(?:^|;)ID=([^;\s]+)')
++    restrictor.PARENT_RE = re.compile(r'(?:^|;)Parent=([^;\s]+)')
++    counts = restrictor.restrict(Path(reference), originals, Path(restricted))
++    require(counts[0] == len(originals), 'reference restriction gene inventory mismatch')
++    genes = read_gff(restricted)
++    require(set(genes) == originals, 'reference strict parser inventory mismatch')
++    return {l.gene_id: select_transcripts(genes, l, reference=True,
++            reference_id=rows[l.gene_id]['gene_id_original']) for l in panel}
++
++
++def select_transcripts(genes, locus, reference=False, *, reference_id=None):
+     if reference:
+-        require(locus.gene_id in genes, f'reference missing panel gene {locus.gene_id}')
+-        gene = genes[locus.gene_id]
++        key = locus.gene_id if reference_id is None else reference_id
++        require(key in genes, f'reference missing panel gene {locus.gene_id} (raw {key})')
++        gene = genes[key]
+         require((gene['chrom'], gene['start'], gene['end'], gene['strand']) ==
+                 (locus.chromosome, locus.gene_start0, locus.gene_end0, locus.strand), 'panel/reference gene geometry mismatch')
+         result = gene['transcripts']
+         require(result, 'reference gene has no transcripts')
+         return result
+     return {tid: tx for gene in genes.values() for tid, tx in gene['transcripts'].items()
+             if tx['chrom'] == locus.chromosome and tx['start'] < locus.gene_end0 and tx['end'] > locus.gene_start0}
+ 
+@@ -411,28 +477,23 @@ def produce(input_path, out):
+     inputs.append(file_identity(executable))
+     scorer_sources = [Path(__file__), ROOT/'revision/scripts/07_selfconsistency_stats.py',
+                       ROOT/'revision/scripts/24_restrict_reference_to_test_genes.py',
+                       Path(mvp_score.__file__), Path(mvp_score.b.__file__), Path(w.__file__)]
+     scorer_sources.extend(ROOT/'src/transgenic/training'/name for name in
+                           ('mvp_cli.py', 'mvp_cli_runtime.py', 'mvp_finalize.py', 'mvp_metrics.py', 'mvp_runtime.py', 'weights_init.py'))
+     inputs.extend(file_identity(path) for path in scorer_sources)
+     out.mkdir(parents=True, exist_ok=False)
++    mapping = resolve_reference_mapping(panel, c['corpus'], authority, artifacts['sha256'], payload['panels'])
+     restricted = out / 'reference.panel.gff3'
+-    restrictor = legacy_module('24_restrict_reference_to_test_genes.py')
+-    # Legacy regex captures a newline when ID/Parent is the final attribute.
+-    # Tighten only this local module instance; do not rewrite the frozen script.
+-    restrictor.ID_RE = re.compile(r'(?:^|;)ID=([^;\s]+)')
+-    restrictor.PARENT_RE = re.compile(r'(?:^|;)Parent=([^;\s]+)')
+-    restrictor.restrict(Path(payload['reference']), {l.gene_id for l in panel}, restricted)
+-    reference = read_gff(restricted)
++    reference = prepare_mapped_reference(panel, payload['reference'], restricted, mapping)
+     restricted_identity = file_identity(restricted)
+     loci, receipts, baseline = [], [], []
+     for locus in panel:
+-        refs = select_transcripts(reference, locus, reference=True)
++        refs = reference[locus.gene_id]
+         row = {'gene_id': locus.gene_id, 'seeds': {str(s): {} for s in (1,2,3)}}
+         for seed, fraction in [(1,0),(1,1),(2,0),(2,1),(3,0),(3,1),(123,0)]:
+             identity = predictions[seed, fraction, locus.gene_id]
+             genes = read_gff(identity['path'])
+             start, end = w.evaluation_window(locus)
+             require(all(g['chrom'] == locus.chromosome and start <= g['start'] < g['end'] <= end for g in genes.values()), 'prediction outside decoded window')
+             predicted = select_transcripts(genes, locus)
+             counts, receipt = reference_counts(predicted, refs, out / f'{len(receipts):04d}', executable)
+@@ -452,20 +513,21 @@ def produce(input_path, out):
+                   provenance_caveat='Receipts establish local consistency, not historical execution or scientific approval. Seed-123 source bytes agree with initialization declarations; an external concrete pin for the intended historical best checkpoint remains required.')
+     baseline_rows = [{'gene_id': c['gene_id'], 'seeds': {'123': {'off': {k:v for k,v in c.items() if k != 'gene_id'}}}} for c in baseline]
+     core_ids = {l.gene_id for l in panel if l.panel == 'mvp_core'}
+     result['baseline_reference_F1_percent'] = {
+         'all50': mvp_score.metric(baseline_rows, 'off', 'F1', (123,)),
+         'core20': mvp_score.metric([r for r in baseline_rows if r['gene_id'] in core_ids], 'off', 'F1', (123,))}
+     for identity in inputs:
+         check_file(identity['path'], identity)
++    recheck_reference_mapping(mapping)
+     for name, obj in [('counts.json', counts), ('statistics.json', result)]:
+         with (out/name).open('x') as f:
+             json.dump(obj, f, indent=2, allow_nan=False)
+-    receipt = {'label': 'exploratory / MVP', 'authority': authority, 'inputs': inputs, 'runs': runs,
++    receipt = {'label': 'exploratory / MVP', 'authority': authority, 'reference_mapping': mapping, 'inputs': inputs, 'runs': runs,
+                'decoder_recorded_commands': decoder['commands'], 'gffcompare_version': version.stdout + version.stderr,
+                'gffcompare_version_command': [executable, '--version'],
+                'comparisons': receipts, 'outputs': [restricted_identity, *[file_identity(out/n) for n in ('counts.json','statistics.json')]],
+                'independent_read_splice_status': 'ABSENT_NOT_NEGATIVE', 'coverage_policy': 'PENDING_AUTHOR',
+                'withholding_status': 'UNASSESSABLE', 'decision': None}
+     with (out/'receipt.json').open('x') as f:
+         json.dump(receipt, f, indent=2, allow_nan=False)
+     return result
+diff --git a/tasknotes/reference_mapping/run_panel_cpu.py b/tasknotes/reference_mapping/run_panel_cpu.py
+new file mode 100644
+index 0000000..1762589
+--- /dev/null
++++ b/tasknotes/reference_mapping/run_panel_cpu.py
+@@ -0,0 +1,167 @@
++#!/usr/bin/env python3
++"""Bounded CPU observations, no predictions, score, policy change or training."""
++import argparse
++from collections import defaultdict
++import hashlib
++import importlib.metadata
++import json
++import os
++from pathlib import Path
++import re
++import sys
++import time
++import authority
++
++SOURCE_COMMIT='b660bf1e7dc48287ca34a0d6e3aeb53d45f599b6'
++SOURCE_PIN='555c3618e792dbed06bfc2c392b99efe79fd16853e8c92abe252a5b34cbd0c44'
++ACCEPTANCE='faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e'
++COMPANIONS={'notes/b6_mvp_technical_candidate_20260915.json':ACCEPTANCE,
++ 'notes/b6_mvp_candidate_inventories_20260915.json':'9f79019679bfdd25b0a2bdac7cae63d01fa6d874be03fa3ef3f81cfd0a880a98',
++ 'notes/b6_mvp_candidate_receipts_20260915.json':'73204a4ed98624b1567a5eb26fd6b2bbafbb597e0bd4b807685e8c703c807bac'}
++
++def dump(path,data):
++    with Path(path).open('x') as f: json.dump(data,f,sort_keys=True,indent=2,allow_nan=False); f.write('\n')
++
++def sha(path):
++    h=hashlib.sha256()
++    with Path(path).open('rb') as f:
++        for b in iter(lambda:f.read(1<<20),b''): h.update(b)
++    return h.hexdigest()
++
++def verify_source(root):
++    if sha(root/'source_pins.json')!='7b6e1ed4bbf635c7b25b47b2564453d9b176f6a21f858c87c95e270f5bee0689': raise ValueError('reviewed release inventory identity differs')
++    pins=json.loads((root/'source_pins.json').read_text())
++    if pins['commit']!=SOURCE_COMMIT: raise ValueError('source commit differs')
++    for name,expected in {**pins['source_files'],**COMPANIONS}.items():
++        p=root/name
++        if Path(name).is_absolute() or '..' in Path(name).parts or p.is_symlink() or sha(p)!=expected: raise ValueError('source/companion mismatch: '+name)
++    expected_py={n for n in pins['source_files'] if n.endswith('.py') and n.startswith(('src/transgenic/','revision/scripts/mvp/'))}
++    actual_py={str(p.relative_to(root)) for base in ('src/transgenic','revision/scripts/mvp') for p in (root/base).rglob('*.py')}
++    if actual_py!=expected_py: raise ValueError('unexpected or missing executable source')
++    components={n:sha(root/n) for n in pins['source_files'] if n.startswith(('src/transgenic/','configs/','revision/scripts/mvp/')) or n=='train/train_HyenaTransgenic_MVP.py'}
++    # Reviewed pin enumerates all tracked component files, not a caller-selected subset.
++    if hashlib.sha256((json.dumps(components,sort_keys=True,separators=(',',':'))+'\n').encode()).hexdigest()!=SOURCE_PIN: raise ValueError('component-source closure mismatch')
++    return {'commit':SOURCE_COMMIT,'component_sha256':SOURCE_PIN,'files':pins['source_files'],'companions':COMPANIONS}
++
++def cpu_runtime(root,out):
++    dep=root.parent/'cpu_dependency.json'
++    if sha(dep)!='cf4d509e8914d6bcf44e6a96a79fe127e4521f7592e4a768a7e2659760ec3435': raise ValueError('CPU wheel receipt changed')
++    site=Path(os.environ['MVP_CPU_SITE']).resolve(strict=True)
++    if site!=root.parent/'cpu_site': raise ValueError('unexpected CPU site path')
++    records=json.loads(dep.read_text())
++    for name,digest in records['files'].items():
++        if sha(site/name)!=digest: raise ValueError('CPU dependency file mismatch: '+name)
++    versions={n:importlib.metadata.version(n) for n in ('numpy','duckdb','torch')}
++    if sys.version_info[:2]!=(3,10) or versions!={'numpy':'1.26.4','duckdb':'1.5.5','torch':'1.13.1+cpu'}: raise ValueError('CPU candidate runtime versions differ: '+str(versions))
++    # The following are genuine imports, but no torch.cuda/GPU/model operations.
++    import numpy,duckdb,torch
++    from transgenic.training import mvp_cli_runtime
++    import mvp_prepare_panel_inputs as panel
++    if panel.ROOT!=root: raise ValueError('producer imported from wrong source root')
++    container=os.environ.get('SINGULARITY_CONTAINER')
++    if not container or Path(container).resolve()!=Path('/data/gpfs/assoc/pgl/singularity/micromamba.sif').resolve(): raise ValueError('expected CPU container absent')
++    dump(out/'cpu_runtime.json',{'python':sys.version,'executable':sys.executable,'executable_sha256':sha(sys.executable),
++         'container':{'path':container,'sha256':sha(container)},'packages':versions,'cpu_dependency_receipt_sha256':sha(dep),
++         'module_files':{n:{'path':m.__file__,'sha256':sha(m.__file__)} for n,m in [('numpy',numpy),('duckdb',duckdb),('torch',torch)]},
++         'cuda_visible_devices':os.environ['CUDA_VISIBLE_DEVICES'],'scope':'CPU_utilities_not_decoder_SIF_certification'})
++    return panel
++
++def duplicate_groups(transcripts, producer):
++    groups=defaultdict(list)
++    for tid,tx in transcripts.items():
++        key=producer.structure(tx)
++        if key is not None: groups[key].append(tid)
++    return [{'structure':key,'transcript_ids':ids} for key,ids in groups.items() if len(ids)>1]
++
++def reference_audit(payload,out):
++    import mvp_produce_counts as p
++    w=p.w
++    binding=p.frozen_reference(payload['fasta'],payload['reference'])
++    dump(out/'reference_identity.json',binding)
++    loci=w.load_panel(payload['panels']); lengths=p.fasta_lengths(payload['fasta'])
++    report={'scope':'raw_reference_compatibility_observations_not_scoring','reference_identity':binding,
++            'panel':p.file_identity(payload['panels']),'fasta_lengths':lengths,'loci':[],
++            'duplicate_policy':'REPORT_ONLY_NO_DEDUP_NO_CHANGED_F1_POLICY','scientific_verdict':None}
++    # Candidate gates precede the read-only mapping query, including --reference-only.
++    from transgenic.training.mvp_cli import validate_candidate_records
++    from transgenic.training.mvp_cli_runtime import verify_candidate_artifacts
++    c=payload['candidate']
++    candidate=validate_candidate_records(c['acceptance'],c['acceptance_sha256'],c['inventory'],c['receipts'])
++    accepted=verify_candidate_artifacts(candidate,c['corpus'],c['evidence'],payload['panels'])
++    mapping=p.resolve_reference_mapping(loci,c['corpus'],binding,accepted['sha256'],payload['panels'])
++    report['reference_mapping']=mapping
++    mapped={r['gene_id']:r['gene_id_original'] for r in mapping['rows']}
++    restricted=out/'reference.panel.gff3'
++    try:
++        genes=p.prepare_mapped_reference(loci,payload['reference'],restricted,mapping)
++        report['panel_strict_parser']={'ok':True,'genes':len(genes),'transcripts':sum(len(t) for t in genes.values())}
++    except Exception as e:
++        genes=None; report['panel_strict_parser']={'ok':False,'stage':'mapped_reference_preparation','error':str(e),'type':type(e).__name__}
++    if restricted.exists(): report['restricted_reference']=p.file_identity(restricted)
++    # Individual files allow every locus failure to be observed even if the joint parser failed.
++    for i,locus in enumerate(loci):
++        row={'gene_id':locus.gene_id,'gene_id_original':mapped[locus.gene_id],'panel_strand':locus.strand,'panel_gene':[locus.chromosome,locus.gene_start0,locus.gene_end0]}
++        try:
++            if locus.chromosome not in lengths: raise ValueError('panel chromosome absent from FASTA')
++            row['window']=[locus.chromosome,*w.evaluation_window(locus,lengths[locus.chromosome])]
++            local=genes
++            if local is None:
++                path=out/('reference.%02d.gff3'%i)
++                local=p.prepare_mapped_reference([locus],payload['reference'],path,mapping)
++            txs=local[locus.gene_id]
++            row.update(strict_parser_and_panel_geometry_ok=True,transcript_count=len(txs),duplicate_structures=duplicate_groups(txs,p),
++                       noncoding_mono_transcripts=[tid for tid,t in txs.items() if len(t['exons'])==1 and not t['cdss']])
++        except Exception as e: row.update(strict_parser_and_panel_geometry_ok=False,error=str(e),error_type=type(e).__name__)
++        report['loci'].append(row)
++    report['n_loci']=len(report['loci'])
++    report['compatible_locus_count']=sum(r['strict_parser_and_panel_geometry_ok'] for r in report['loci'])
++    report['duplicate_ambiguous_locus_count']=sum(bool(r.get('duplicate_structures')) for r in report['loci'])
++    # Rehash raw authoritative bytes after parsing; no GFF repair or deduplication.
++    if p.frozen_reference(payload['fasta'],payload['reference'])!=binding: raise ValueError('reference changed during audit')
++    p.recheck_reference_mapping(mapping)
++    dump(out/'reference_compatibility.json',report)
++    return report
++
++def main():
++    ap=argparse.ArgumentParser(description=__doc__); ap.add_argument('--root',type=Path,required=True); ap.add_argument('--out',type=Path,required=True)
++    ap.add_argument('--reference-only',action='store_true',help='explicit partial diagnostic; never a 50-raster completion')
++    a=ap.parse_args(); root=a.root.resolve(strict=True); out=a.out.absolute()
++    if not os.environ.get('SLURM_JOB_ID'): raise ValueError('large inputs may only be read in compute allocation')
++    if not 1<=int(os.environ.get('SLURM_CPUS_PER_TASK','0'))<=4: raise ValueError('CPU allocation outside 1..4 bound')
++    if os.environ.get('CUDA_VISIBLE_DEVICES')!='': raise ValueError('CUDA_VISIBLE_DEVICES must be empty')
++    out.mkdir(parents=True,exist_ok=False)
++    started=time.monotonic()
++    try:
++        source=verify_source(root); objects=authority.verify(root)
++        dump(out/'source_identity.json',source); dump(out/'git_authority.json',objects)
++        sys.path[:0]=[str(root/'revision/scripts/mvp'),str(root/'src')]
++        import mvp_produce_counts as p
++        from transgenic.evidence import mvp_windows as w
++        if p.ROOT!=root: raise ValueError('reference producer imported from wrong source root')
++        panel=None if a.reference_only else cpu_runtime(root,out)
++        # Paths and expected identities come from unchanged accepted records and original Git bytes.
++        import csv,io
++        rows=list(csv.DictReader(io.StringIO(authority.git(root,'show',authority.SPEC).decode()),delimiter='\t'))
++        ref=[r for r in rows if r['species_id']=='Athaliana']
++        if len(ref)!=1: raise ValueError('ambiguous authority species')
++        accepted=json.loads((root/'notes/b6_mvp_technical_candidate_20260915.json').read_text())
++        payload={'panels':str(root/'revision/protocols/b6_panels_v1.tsv'),'fasta':ref[0]['fasta'],'reference':ref[0]['gff'],
++                 'candidate':{'acceptance':str(root/'notes/b6_mvp_technical_candidate_20260915.json'),'acceptance_sha256':ACCEPTANCE,
++                 'inventory':str(root/'notes/b6_mvp_candidate_inventories_20260915.json'),'receipts':str(root/'notes/b6_mvp_candidate_receipts_20260915.json'),
++                 'corpus':accepted['inputs']['corpus']['path'],'evidence':accepted['artifact']['path']}}
++        dump(out/'request.json',payload)
++        report=reference_audit(payload,out)
++        if a.reference_only:
++            dump(out/'REFERENCE_ONLY.json',{'scope':'reference_only_raster_not_run','reference_report_sha256':sha(out/'reference_compatibility.json')}); return
++        manifest=panel.prepare(out/'request.json',out/'panel')
++        verify_source(root); authority.verify(root)
++        if len(manifest['loci'])!=50: raise ValueError('missing raster loci')
++        counts=[{k:r[k] for k in ('gene_id','window','selected_molecule_count','biological_nonzero_per_channel','availability_nonzero','zero_biological_support')} for r in manifest['loci']]
++        dump(out/'panel_counts.json',{'scope':'raw_EST_input_counts_only','population':'excluded_heldout','rn':None,'training_eligible':False,'loci':counts,
++             'manifest_sha256':sha(out/'panel/manifest.json'),'reference_report_sha256':sha(out/'reference_compatibility.json'),
++             'reference_compatible_loci':report['compatible_locus_count'],'duplicate_ambiguous_loci':report['duplicate_ambiguous_locus_count'],'scientific_verdict':None})
++        dump(out/'OBSERVATIONS_COMPLETE.json',{'job_id':os.environ['SLURM_JOB_ID'],'seconds':time.monotonic()-started,'counts_sha256':sha(out/'panel_counts.json'),'scope':'raw_CPU_observations_not_prediction_or_scientific_approval'})
++    except Exception as e:
++        dump(out/'FAILED.json',{'error':str(e),'type':type(e).__name__,'seconds':time.monotonic()-started,'scope':'incomplete_observations'}); raise
++
++if __name__=='__main__': main()
+diff --git a/tests/fixtures/mvp_reference_first_gene.gff3 b/tests/fixtures/mvp_reference_first_gene.gff3
+new file mode 100644
+index 0000000..f42f583
+--- /dev/null
++++ b/tests/fixtures/mvp_reference_first_gene.gff3
+@@ -0,0 +1,6 @@
++##gff-version 3
++##annot-version TAIR10
++ChrM	phytozomev10	gene	273	734	.	-	.	ID=ATMG00010.TAIR10;Name=ATMG00010
++ChrM	phytozomev10	mRNA	273	734	.	-	.	ID=ATMG00010.1.TAIR10;Parent=ATMG00010.TAIR10;Name=ATMG00010.1;longest=1;pacid=19643678
++ChrM	phytozomev10	exon	273	734	.	-	.	ID=nbis-exon-207326;Parent=ATMG00010.1.TAIR10;pacid=19643678
++ChrM	phytozomev10	CDS	273	734	.	-	0	ID=ATMG00010.1.TAIR10.CDS.1;Parent=ATMG00010.1.TAIR10;pacid=19643678
+diff --git a/tests/test_mvp_decoder_integration.py b/tests/test_mvp_decoder_integration.py
+index ea5c294..ee6ac3f 100644
+--- a/tests/test_mvp_decoder_integration.py
++++ b/tests/test_mvp_decoder_integration.py
+@@ -50,16 +50,22 @@ def panel_publication(tmp_path, monkeypatch):
+     def synthetic_authority(a,b):
+         return {'CPU_SYNTHETIC_NOT_REFERENCE_APPROVAL':True,'files':{'fasta':d.identity(a),'gff':d.identity(b)}}
+     monkeypatch.setattr(p,'frozen_reference',synthetic_authority)
+     monkeypatch.setattr(panel_producer,'frozen_reference',synthetic_authority)
+     corpus, evidence = tmp_path/'corpus.db', tmp_path/'evidence.db'
+     with duckdb.connect(str(corpus)) as c:
+         c.execute('CREATE TABLE geneList(rn INT, chromosome VARCHAR, start INT, fin INT, split VARCHAR, is_rc BOOLEAN, species_id VARCHAR)')
+         c.execute("INSERT INTO geneList VALUES (1,'Chr1',10,20,'valid',false,'Athaliana'),(2,'Chr2',10,20,'train',false,'Athaliana')")
++        # Explicit synthetic mapping authority, consistent with synthetic raw bytes.
++        c.execute('CREATE TABLE gene_key_map(species_id VARCHAR,gene_id VARCHAR,gene_id_original VARCHAR,name_original VARCHAR,chromosome VARCHAR,start0 BIGINT,end0 BIGINT)')
++        c.executemany('INSERT INTO gene_key_map VALUES (?,?,?,?,?,?,?)',
++            [('Athaliana',l.gene_id,l.gene_id,None,l.chromosome,l.gene_start0,l.gene_end0) for l in panel])
++        c.execute('CREATE TABLE build_manifest(species_id VARCHAR,fasta_sha256 VARCHAR,gff_sha256 VARCHAR)')
++        c.execute('INSERT INTO build_manifest VALUES (?,?,?)', ['Athaliana',w.sha256_file(fasta),w.sha256_file(reference)])
+     with duckdb.connect(str(evidence)) as c:
+         c.execute('CREATE TABLE corpus_tile(rn INT, chrom VARCHAR, start0 INT, end0 INT, split VARCHAR, is_rc BOOLEAN)')
+         c.execute("INSERT INTO corpus_tile VALUES (1,'Chr1',10,20,'valid',false),(2,'Chr2',10,20,'train',false)")
+         c.execute('CREATE TABLE est_molecule(molecule_id VARCHAR, strand VARCHAR, excluded BOOLEAN, cause VARCHAR, primary_count INT)')
+         c.execute('CREATE TABLE est_member(member VARCHAR, molecule_id VARCHAR)')
+         c.execute('CREATE TABLE est_block(molecule_id VARCHAR,chrom VARCHAR,start0 INT,end0 INT)')
+         c.execute('CREATE TABLE est_junction(molecule_id VARCHAR,chrom VARCHAR,donor0 INT,acceptor0 INT)')
+         c.execute('CREATE TABLE tile_est(rn INT,molecule_id VARCHAR)')
+@@ -113,17 +119,17 @@ def test_real_panel_high_junction_and_biological_zero(panel_publication):
+         changed=a.copy(); changed[index]=value; np.save(path,changed)
+         track['sha256']=w.sha256_file(path)
+         (root/'manifest.json').write_text(panel_producer.canonical(manifest))
+         (root/'COMPLETE').write_text(w.sha256_file(root/'manifest.json')+'\n')
+         with pytest.raises(ValueError,match=message):
+             adapter.load_panel_inputs(root,payload,panel,sequences)
+ 
+ 
+-@pytest.mark.parametrize('mutation', ['missing_marker','changed_jsonl','symlink_escape','coverage','wrong_sequence','wrong_request','wrong_authority','internal_schema'])
++@pytest.mark.parametrize('mutation', ['missing_marker','changed_jsonl','symlink_escape','coverage','wrong_sequence','wrong_request','wrong_authority','stale_producer','internal_schema'])
+ def test_panel_rejects_mutations(panel_publication, mutation, tmp_path):
+     payload,panel,sequences,manifest,_ = panel_publication
+     root = Path(payload['panel_inputs'])
+     row = manifest['loci'][0]
+     if mutation == 'missing_marker':
+         (root/'COMPLETE').unlink()
+     elif mutation == 'changed_jsonl':
+         (root/row['provenance']['path']).write_text('{}\n')
+@@ -133,16 +139,19 @@ def test_panel_rejects_mutations(panel_publication, mutation, tmp_path):
+         path.unlink(); path.symlink_to(outside)
+     else:
+         if mutation == 'coverage':
+             path = root/row['track']['path']; a = np.load(path); a[12,0]=5; np.save(path,a)
+             row['track']['sha256'] = w.sha256_file(path)
+         elif mutation == 'wrong_sequence': row['sequence_sha256']='0'*64
+         elif mutation == 'wrong_request': payload['candidate']=dict(payload['candidate'],acceptance_sha256='0'*64)
+         elif mutation == 'wrong_authority': manifest['authority']={}
++        elif mutation == 'stale_producer':
++            for record in manifest['inputs']:
++                if record['path'].endswith('/mvp_produce_counts.py'): record['sha256']='0'*64
+         else: manifest={'schema':'mvp_panel_batch_internal_v1'}
+         (root/'manifest.json').write_text(panel_producer.canonical(manifest))
+         (root/'COMPLETE').write_text(w.sha256_file(root/'manifest.json')+'\n')
+     with pytest.raises((ValueError,KeyError,FileNotFoundError)):
+         adapter.load_panel_inputs(root,payload,panel,sequences)
+ 
+ 
+ @pytest.mark.parametrize('phase', ['serialization','flush','fsync','close','final_rehash'])
+diff --git a/tests/test_mvp_reference_mapping.py b/tests/test_mvp_reference_mapping.py
+new file mode 100644
+index 0000000..6750e61
+--- /dev/null
++++ b/tests/test_mvp_reference_mapping.py
+@@ -0,0 +1,143 @@
++"""Synthetic corpus authority plus exact first complete gene from retained 128KiB prefix.
++Not an actual 50-locus reference compatibility certification.
++"""
++from dataclasses import replace
++from pathlib import Path
++import sys
++import importlib.util
++from types import SimpleNamespace
++
++import duckdb
++import pytest
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT/'revision/scripts/mvp'))
++import mvp_produce_counts as p
++from transgenic.utils import gsf_contract as gc
++
++
++@pytest.fixture
++def mapped(tmp_path):
++    first = (ROOT/'tests/fixtures/mvp_reference_first_gene.gff3').read_text()
++    gene = list(gc.parse_gff3(first.splitlines(), species_code=gc.species_code('Athaliana')))[0]
++    assert gene.gene_id == 'Ath000001' and gene.gene_id_original == 'ATMG00010.TAIR10'
++    assert gc.gene_key('Ath', 'ATMG00010.TAIR10', 'ATMG00010', 73) == 'Ath000073'
++    assert gc.gene_key('Ath', 'shortID', 'otherName', 73) == 'shortID'
++    panel = [p.w.PanelLocus('mvp_core', 'Ath000001', 'ChrM', 273, 734, '-', 462)]
++    rows = [('Athaliana', 'Ath000001', 'ATMG00010.TAIR10', 'ATMG00010', 'ChrM', 272, 734)]
++    text = first
++    for i in range(2, 51):
++        key = f'Ath{i:06d}'
++        raw = key if i == 2 else f'RAW_{i}.LONG_REFERENCE_ID'
++        panel.append(replace(panel[0], gene_id=key))
++        rows.append(('Athaliana', key, raw, 'shortName', 'ChrM', 272, 734))
++        text += first[first.index('ChrM'):].replace('ATMG00010.TAIR10', raw).replace('ATMG00010.1', f't{i}')
++    reference = tmp_path/'ref.gff3'; reference.write_text(text)
++    fasta = tmp_path/'ref.fa'; fasta.write_text('>ChrM\n'+'A'*1000+'\n')
++    panel_file = tmp_path/'panel.tsv'; panel_file.write_text(repr(panel))
++    corpus = tmp_path/'corpus.db'
++    authority = {'SYNTHETIC_AUTHORITY_NOT_APPROVAL': True, 'files': {'fasta': p.file_identity(fasta), 'gff': p.file_identity(reference)}}
++    with duckdb.connect(str(corpus)) as c:
++        c.execute('CREATE TABLE gene_key_map(species_id VARCHAR,gene_id VARCHAR,gene_id_original VARCHAR,name_original VARCHAR,chromosome VARCHAR,start0 BIGINT,end0 BIGINT)')
++        c.executemany('INSERT INTO gene_key_map VALUES (?,?,?,?,?,?,?)', rows)
++        c.execute('CREATE TABLE build_manifest(species_id VARCHAR,fasta_sha256 VARCHAR,gff_sha256 VARCHAR)')
++        c.execute('INSERT INTO build_manifest VALUES (?,?,?)', ['Athaliana', authority['files']['fasta']['sha256'], authority['files']['gff']['sha256']])
++    def resolve():
++        return p.resolve_reference_mapping(panel, corpus, authority,
++            {'corpus': p.w.sha256_file(corpus), 'panel': p.w.sha256_file(panel_file)}, panel_file)
++    return panel, corpus, reference, authority, resolve
++
++
++def test_real_prefix_mapping_and_identity_case(mapped, tmp_path):
++    panel, corpus, reference, authority, resolve = mapped
++    before = reference.read_bytes()
++    receipt = resolve()
++    txs = p.prepare_mapped_reference(panel, reference, tmp_path/'subset.gff3', receipt)
++    assert len(txs) == 50 and len(txs['Ath000001']) == 1
++    assert receipt['method'] == 'corpus_gene_key_map'
++    assert receipt['rows'][0]['gene_id_original'] == 'ATMG00010.TAIR10'
++    assert receipt['rows'][1]['gene_id_original'] == 'Ath000002'
++    assert reference.read_bytes() == before
++    p.recheck_reference_mapping(receipt)
++    corpus.write_bytes(b'changed')
++    with pytest.raises(ValueError, match='hash mismatch'): p.recheck_reference_mapping(receipt)
++
++
++@pytest.mark.parametrize('sql', [
++    "DELETE FROM gene_key_map WHERE gene_id='Ath000001'",
++    "INSERT INTO gene_key_map SELECT * FROM gene_key_map WHERE gene_id='Ath000001'",
++    "UPDATE gene_key_map SET species_id='Wrong' WHERE gene_id='Ath000001'",
++    "UPDATE gene_key_map SET gene_id_original=NULL WHERE gene_id='Ath000001'",
++    "UPDATE gene_key_map SET gene_id_original='' WHERE gene_id='Ath000001'",
++    "UPDATE gene_key_map SET gene_id_original='Ath000002' WHERE gene_id='Ath000001'",
++    "UPDATE gene_key_map SET start0=273 WHERE gene_id='Ath000001'",
++    "UPDATE gene_key_map SET chromosome='Chr1' WHERE gene_id='Ath000001'",
++    "UPDATE build_manifest SET fasta_sha256='wrong'",
++    "UPDATE build_manifest SET gff_sha256='wrong'",
++    "INSERT INTO build_manifest SELECT * FROM build_manifest",
++])
++def test_bad_authoritative_mapping_rejected(mapped, sql):
++    _, corpus, _, _, resolve = mapped
++    with duckdb.connect(str(corpus)) as c: c.execute(sql)
++    with pytest.raises(ValueError): resolve()
++
++
++@pytest.mark.parametrize('change', ['name', 'counter', 'strand', 'empty', 'duplicate'])
++def test_no_alias_counter_geometry_or_empty_reference_fallback(mapped, tmp_path, change):
++    panel, corpus, reference, authority, resolve = mapped
++    if change in ('name', 'counter'):
++        with duckdb.connect(str(corpus)) as c:
++            c.execute("UPDATE gene_key_map SET gene_id_original=? WHERE gene_id='Ath000001'", ['ATMG00010' if change=='name' else 'Ath000001'])
++    receipt = resolve()
++    if change == 'strand': panel = [replace(panel[0], strand='+'), *panel[1:]]
++    elif change == 'empty': reference.write_text('##gff-version 3\n')
++    elif change == 'duplicate': reference.write_text(reference.read_text()+reference.read_text())
++    with pytest.raises(ValueError): p.prepare_mapped_reference(panel, reference, tmp_path/'bad.gff3', receipt)
++    empty = tmp_path/'empty.gff3'; empty.write_text('##gff-version 3\n')
++    assert p.select_transcripts(p.read_gff(empty), panel[0]) == {}
++
++
++@pytest.mark.parametrize('joint_failure', [False, True])
++def test_cpu_wrapper_uses_shared_mapping_and_diagnostic_fallback(mapped, tmp_path, monkeypatch, joint_failure):
++    panel, corpus, reference, authority, resolve = mapped
++    from transgenic.training import mvp_cli, mvp_cli_runtime
++    monkeypatch.setitem(sys.modules, 'authority', SimpleNamespace())  # packaging companion; not exercised
++    spec = importlib.util.spec_from_file_location('reference_cpu_test', ROOT/'tasknotes/reference_mapping/run_panel_cpu.py')
++    wrapper = importlib.util.module_from_spec(spec); spec.loader.exec_module(wrapper)
++    panel_path = tmp_path/'panel.tsv'
++    payload = dict(fasta=authority['files']['fasta']['path'], reference=str(reference), panels=str(panel_path),
++        candidate=dict(corpus=str(corpus), acceptance='synthetic', acceptance_sha256='synthetic', inventory='synthetic', receipts='synthetic', evidence='synthetic'))
++    monkeypatch.setattr(p, 'frozen_reference', lambda *a: authority)
++    monkeypatch.setattr(p.w, 'load_panel', lambda *a: panel)
++    monkeypatch.setattr(p, 'fasta_lengths', lambda *a: {'ChrM': 100000})
++    # The real mitochondrial first gene is not an eligible nuclear MVP window.
++    # This test exercises mapping/fallback only, not window eligibility.
++    monkeypatch.setattr(p.w, 'evaluation_window', lambda *a: (0, 30720))
++    monkeypatch.setattr(mvp_cli, 'validate_candidate_records', lambda *a: object())
++    monkeypatch.setattr(mvp_cli_runtime, 'verify_candidate_artifacts', lambda *a: {'sha256':dict(corpus=p.w.sha256_file(corpus),panel=p.w.sha256_file(panel_path))})
++    original = p.prepare_mapped_reference
++    calls = []
++    def preparation(loci, reference, restricted, receipt):
++        calls.append([l.gene_id for l in loci])
++        if joint_failure and len(loci) == 50: raise ValueError('explicit joint diagnostic failure fixture')
++        return original(loci, reference, restricted, receipt)
++    monkeypatch.setattr(p, 'prepare_mapped_reference', preparation)
++    out = tmp_path/'cpu'; out.mkdir()
++    report = wrapper.reference_audit(payload, out)
++    assert report['compatible_locus_count'] == 50  # synthetic panel only
++    assert report['panel_strict_parser']['ok'] is (not joint_failure)
++    assert len(calls) == (51 if joint_failure else 1)
++    assert report['loci'][0]['gene_id_original'] == 'ATMG00010.TAIR10'
++    assert report['reference_mapping'] == resolve()
++
++
++def test_accepted_hashes_and_exact_panel_gate(mapped):
++    panel, corpus, reference, authority, resolve = mapped
++    with pytest.raises(ValueError, match='hash mismatch'):
++        p.resolve_reference_mapping(panel, corpus, authority, {'corpus':'0'*64,'panel':'0'*64}, corpus)
++    with pytest.raises(ValueError, match='hash mismatch'):
++        p.resolve_reference_mapping(panel, corpus, authority, {'corpus':p.w.sha256_file(corpus),'panel':'0'*64}, corpus)
++    reference.write_text('##gff-version 3\n')
++    with pytest.raises(ValueError, match='hash mismatch'): resolve()
++    with pytest.raises(ValueError, match='50'):
++        p.resolve_reference_mapping(panel[:-1], corpus, authority, {}, corpus)
+diff --git a/tests/test_mvp_score_producer_integration.py b/tests/test_mvp_score_producer_integration.py
+index 8629185..a1c9eee 100644
+--- a/tests/test_mvp_score_producer_integration.py
++++ b/tests/test_mvp_score_producer_integration.py
+@@ -1,13 +1,14 @@
+ """Full350 transport/receipt integration, synthetic authority/candidate/tool fixtures."""
+ import json
+ from pathlib import Path
+ 
+ import pytest
++import duckdb
+ from test_mvp_score_producer import p, w, ROOT, dump, finalized_fixture, fake_gffcompare, prediction_rows
+ 
+ 
+ def test_full_producer_actual_finalizer_frozen_panel_synthetic_biology(tmp_path, monkeypatch):
+     from transgenic.training import mvp_cli, mvp_cli_runtime
+     panel_path = ROOT/'revision/protocols/b6_panels_v1.tsv'
+     panel = w.load_panel(panel_path)
+     # No biological reference authority or candidate acceptance is asserted here.
+@@ -25,16 +26,25 @@ def test_full_producer_actual_finalizer_frozen_panel_synthetic_biology(tmp_path,
+     for l in panel:
+         for kind, attrs, start, end in [('gene',f'ID={l.gene_id}',l.start1,l.fin1),
+                                       ('mRNA',f'ID=t{l.gene_id};Parent={l.gene_id}',l.start1,l.fin1),
+                                       ('exon',f'Parent=t{l.gene_id}',l.start1,l.start1+9),
+                                       ('exon',f'Parent=t{l.gene_id}',l.fin1-9,l.fin1)]:
+             lines.append(f'{l.chromosome}\ttest\t{kind}\t{start}\t{end}\t.\t{l.strand}\t.\t{attrs}')
+     reference.write_text('\n'.join(lines)+'\n')
+     fasta = tmp_path/'ref.fa'; fasta.write_text('>synthetic\nA\n')
++    # Replace dummy corpus with a genuine tiny, explicitly synthetic authority.
++    Path(candidate['corpus']).unlink()
++    with duckdb.connect(candidate['corpus']) as c:
++        c.execute('CREATE TABLE gene_key_map(species_id VARCHAR,gene_id VARCHAR,gene_id_original VARCHAR,name_original VARCHAR,chromosome VARCHAR,start0 BIGINT,end0 BIGINT)')
++        c.executemany('INSERT INTO gene_key_map VALUES (?,?,?,?,?,?,?)',
++            [('Athaliana',l.gene_id,l.gene_id,None,l.chromosome,l.gene_start0,l.gene_end0) for l in panel])
++        c.execute('CREATE TABLE build_manifest(species_id VARCHAR,fasta_sha256 VARCHAR,gff_sha256 VARCHAR)')
++        c.execute('INSERT INTO build_manifest VALUES (?,?,?)', ['Athaliana',w.sha256_file(fasta),w.sha256_file(reference)])
++    hashes['corpus'] = w.sha256_file(candidate['corpus'])
+     monkeypatch.setattr(p,'frozen_reference',lambda a,b: {'test_fixture_only':True,'files':{'fasta':p.file_identity(a),'gff':p.file_identity(b)}})
+     monkeypatch.setattr(p,'fasta_lengths',lambda _: {l.chromosome:100000000 for l in panel})
+     rows, _ = prediction_rows(tmp_path,panel)
+     runs, checkpoints = {}, {}
+     for seed in (1,2,3):
+         run = tmp_path/f'seed{seed}'; run.mkdir()
+         # Three runs consume ONE serialized baseline. Re-saving equal tensors
+         # can reorder safetensors alias metadata and change its byte identity.
+@@ -53,16 +63,18 @@ def test_full_producer_actual_finalizer_frozen_panel_synthetic_biology(tmp_path,
+     out = tmp_path/'result'
+     result = p.produce(input_path,out)
+     assert result['three_seed_identity_verified'] is True
+     assert result['count_provenance_status'] == 'DERIVED_FROM_RAW_GFF_IN_THIS_INVOCATION'
+     assert result['structural_available'] is False and result['decision'] is None
+     assert len(result['baseline_reference_counts']) == 50
+     receipt = json.loads((out/'receipt.json').read_text())
+     assert len(receipt['comparisons']) == 350
++    assert receipt['reference_mapping']['method'] == 'corpus_gene_key_map'
++    assert [r['gene_id'] for r in receipt['reference_mapping']['rows']] == [l.gene_id for l in panel]
+     assert receipt['independent_read_splice_status'] == 'ABSENT_NOT_NEGATIVE'
+     assert receipt['coverage_policy'] == 'PENDING_AUTHOR'
+     assert receipt['withholding_status'] == 'UNASSESSABLE'
+     assert receipt['runs']['2']['seed'] == 2
+     assert len(json.loads((out/'counts.json').read_text())['loci']) == 50
+     with pytest.raises(FileExistsError): p.produce(input_path,out)
+     # Declared GFF bytes cannot be modified after decoding.
+     Path(rows[0]['path']).write_text('mutated')

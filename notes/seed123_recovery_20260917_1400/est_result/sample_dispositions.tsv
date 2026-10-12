@@ -1,0 +1,17 @@
+qname	orthodb	swissprot	HSP_RULE_ACCEPTED	source_bound_replay_failure: query codon truth	source_bound_replay_failure: subject truth	source_bound_replay_failure: reported length must equal M+I+D (frameshifts excluded)	geometry_success	geometry_failed
+JK596275.1	25	2	27	0	0	0	27	0
+JK578847.1	25	3	28	0	0	0	28	0
+JK570678.1	25	7	4	18	10	0	4	0
+JK559843.1	25	1	26	0	0	0	26	0
+JK552962.1	25	3	28	0	0	0	28	0
+GW787538.1	25	0	11	12	0	2	11	0
+JK608601.1	25	2	27	0	0	0	27	0
+JK608600.1	25	2	27	0	0	0	27	0
+JK608599.1	25	10	35	0	0	0	35	0
+JK608598.1	25	10	35	0	0	0	35	0
+JK608597.1	25	5	29	0	0	1	29	0
+JK608596.1	25	5	29	0	0	1	29	0
+JK608595.1	25	1	22	0	4	0	22	0
+JK608594.1	25	1	22	0	4	0	22	0
+JK608593.1	25	5	5	0	0	25	0	5
+JK608592.1	25	5	30	0	0	0	30	0

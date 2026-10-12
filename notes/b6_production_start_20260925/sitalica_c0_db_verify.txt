@@ -1,0 +1,45 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-25T15:52:23-0700
+-rw-r--r-- 1 wyim p-wyim 128724992 Sep 25 15:26 /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/c0/Sitalica_est_v1/out_arrow_retry/Sitalica.est.c0.db
+02116ca6e92a628965b638a418dea3c52e6d0af83ef8c47114d386b7c9481064  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/c0/Sitalica_est_v1/out_arrow_retry/Sitalica.est.c0.db
+6172228|COMPLETED|0:0||32Gn|00:03:06
+6172228.batch|COMPLETED|0:0|3983096K|32Gn|00:03:06
+6172228.extern|OUT_OF_MEMORY|0:125|1480K|32Gn|00:03:06
+adbc_driver_duckdb
+duckdb
+duckdb-1.5.5.dist-info
+_duckdb.cpython-311-x86_64-linux-gnu.so
+_duckdb-stubs
+pyarrow
+pyarrow-25.0.1.dist-info
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/duckdb_runtime/duckdb/__init__.py", line 12, in <module>
+    from _duckdb import (
+ImportError: /lib64/libm.so.6: version `GLIBC_2.23' not found (required by /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/duckdb_runtime/_duckdb.cpython-311-x86_64-linux-gnu.so)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+=== container schema check
+2026-09-25T15:52:56-0700
+duckdb 1.5.5
+TABLE aligned_block 83894 species,source,dataset,run,library,genotype_stratum,role,validation_only,provenance_sha256,alignment_id,molecule_id,alignment_block_index,block_index,chrom,start0,end0,strand
+TABLE audit_placement 131279 species,source,molecule_id,member_id,origin,placement_kind,chrom,start0,end0,mapq
+TABLE c0_meta 4 key,value
+TABLE c0_provenance 22 species,source,key,value
+TABLE c0_qc 68 species,source,metric,value
+TABLE chain_junction 49002 species,source,dataset,run,library,genotype_stratum,role,validation_only,provenance_sha256,chain_id,tx_order,junction_key
+TABLE est_protein_hsp 0 hsp_id,species,library,molecule_id,est_accession,protein_id,protein_source,protein_species,est_start,est_end,frame,evalue,bitscore,interval_index,chrom,genomic_start0,genomic_end0,strand,phase,diamond_version,database_sha256,command_sha256,provenance_sha256,source,dataset,run,genotype_stratum,role,v
+TABLE evidence_alignment 66219 species,source,dataset,run,library,genotype_stratum,role,validation_only,provenance_sha256,alignment_id,member_id,molecule_id,read_name,record_index,placement_kind,flag,chrom,start0,end0,alignment_strand,transcript_strand,ts_tag,mapq,cigar,query_length,aligned_query,aligned_fraction,identity,accepte
+TABLE excluded_interval 54801 species,source,chrom,start0,end0,cause,scope,gene_id,tile_rn
+TABLE excluded_junction_coordinate 131 species,source,chrom,strand,kind,coordinate0,excluded_gene_id,neighbour_gene_id
+TABLE heldout_locus 0 species,source,gene_id,chrom,start0,end0
+TABLE junction 24090 species,source,dataset,run,library,genotype_stratum,role,validation_only,provenance_sha256,junction_key,chrom,strand,start0,end0,donor0,acceptor0,n_molecules,n_molecules_train_track,n_molecules_library_capped,n_observations
+TABLE junction_observation 52171 species,source,dataset,run,library,genotype_stratum,role,validation_only,provenance_sha256,observation_id,alignment_id,molecule_id,intron_index,chrom,strand,raw_start0,raw_end0,raw_donor0,raw_acceptor0,start0,end0,donor0,acceptor0,correction_status,correction_radius,accepted,canonical,junction_key
+TABLE junction_support 33937 species,source,dataset,run,library,genotype_stratum,role,validation_only,provenance_sha256,junction_key,molecule_id,n_observations,molecule_state,excluded_4c
+TABLE molecule_exclusion 36510 species,source,molecule_id,n_members,n_secondary,n_placements,cause_a,cause_a_direct,cause_a_train_tiles,unauditable_secondary,unauditable_low_mapq,excluded,train_tiles_excluded,audited,low_mapq_secondary_only
+TABLE molecule_member 66040 species,source,dataset,run,library,genotype_stratum,role,validation_only,provenance_sha256,member_id,molecule_id,read_name,accession,accession_stem,accession_version,part_index,clone_key,bioproject,unit_rule,superseded_version,molecule_state,train_tiles_excluded,exclusion_cause
+TABLE partial_chain 31723 species,source,dataset,run,library,genotype_stratum,role,validation_only,provenance_sha256,chain_id,alignment_id,molecule_id,member_id,placement_rank,chrom,strand,start0,end0,n_introns,intron_chain_key,all_junctions_accepted
+TABLE partial_chain_intron 52171 species,source,dataset,run,library,genotype_stratum,role,validation_only,provenance_sha256,chain_id,intron_index,tx_order,observation_id,chrom,strand,start0,end0,donor0,acceptor0,correction_status,accepted

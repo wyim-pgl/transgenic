@@ -1,0 +1,9 @@
+##gff-version 3
+fixture_chr	fixture	gene	20001	21200	.	+	.	ID=g0
+fixture_chr	fixture	mRNA	20001	21200	.	+	.	ID=t0;Parent=g0
+fixture_chr	fixture	exon	20001	20500	.	+	.	Parent=t0
+fixture_chr	fixture	exon	20701	21200	.	+	.	Parent=t0
+fixture_chr	fixture	gene	30001	31200	.	+	.	ID=g1
+fixture_chr	fixture	mRNA	30001	31200	.	+	.	ID=t1;Parent=g1
+fixture_chr	fixture	exon	30001	30500	.	+	.	Parent=t1
+fixture_chr	fixture	exon	30701	31200	.	+	.	Parent=t1

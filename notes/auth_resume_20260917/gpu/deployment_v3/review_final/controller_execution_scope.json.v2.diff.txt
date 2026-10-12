@@ -1,0 +1,45 @@
+--- v2/controller_execution_scope.json
++++ v5/controller_execution_scope.json
+@@ -1,5 +1,12 @@
+ {
+-  "schema_version": 3,
++  "schema_version": 4,
++  "attempt_basis": "REVIEWED_3163986_FAILURE_RECOVERY_NOT_AUTOMATIC_RETRY",
++  "old3163986": {"state": "FAILED", "exit_code": "1:0", "elapsed_seconds": 51, "nodes": 1, "gpus": 4, "allocated_cpus": 288, "requested_cpus": 64},
++  "old3163545": {"state": "CANCELLED", "exit_code": "0:0", "elapsed_seconds": 0},
++  "evidence_recovery_source": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/inputs/evidence/fullc0lite.db",
++  "evidence_recovery_policy": "Pinned read-only source retained unchanged, exclusive private destination, before/after source identity and source/destination hashes; no fallback",
++  "cpus_requested": 64,
++  "allocated_cpu_policy": "64 or fresh trusted exclusive-node CPUTot; NumTasks1 and CPUsPerTask64 required", 
+   "scope": "S0_P1_DIAGNOSTIC_ONLY",
+   "profile": "development-single",
+   "seed": 123,
+@@ -24,7 +31,7 @@
+   "timezone": "America/Chicago",
+   "required_prior_ids": ["3163545", "3163986"],
+   "execution_gate": {
+-    "authorization": "staging/dev123_p1_controller_authorization_v3.json",
++    "authorization": "staging/dev123_p1_controller_authorization_v5.json",
+     "authorization_pin_environment": "DEPLOY_CONTROLLER_GATE_SHA256",
+     "transport_pin_environment": "DEPLOY_RELEASE_TRANSPORT_SHA256",
+     "ledger_pin_environment": "DEPLOY_RELEASE_LEDGER_SHA256",
+@@ -33,6 +40,8 @@
+     "live_query_max_age_monotonic_seconds": 300,
+     "per_query_timeout_seconds": 15,
+     "query_retries": 0,
++    "aggregate_stdout_stderr_bytes_max": 16777216,
++    "capture_failure_policy": "kill process group, bounded 2-second reap, bounded prefix and original error retained; never truncate and admit", 
+     "single_controller_reservation_through_terminal_reconciliation": "required, not attested by this template",
+     "status": "No actual approved authorization created"
+   },
+@@ -44,8 +53,8 @@
+     "not_a_training_cap_or_measured_cost": true
+   },
+   "future_reservations": [{"identity": "panel-candidate-not-submitted", "submitted": false, "node_hours": 1, "gpu_hours": 4}],
+-  "namespace": "staging/dev123_p1_release_v3_20260917",
+-  "job_namespace": "dev123-p1-v3-job-ID",
++  "namespace": "staging/dev123_p1_release_v5_20260917",
++  "job_namespace": "dev123-p1-v5-job-ID",
+   "excluded_nodes": ["gh062", "gh093"],
+   "no_cancellation_or_submission_in_compute_code": true,
+   "snapshot_limitation": "Read-only observations cannot guarantee future scheduler/account activity. Controller must serialize all diagnostic admissions and retain this single reservation through terminal reconciliation."

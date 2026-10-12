@@ -1,0 +1,71 @@
+{"init_from": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/review_final/tmp/tmpt6dxpiz6/inputs/b5_seed123_epoch05/checkpoint", "status": "staged", "weights_sha256": "2e2205000753f91a44fa4346d5a231729796998bff841a1333fd46e27d7e172f"}
+{"init_from": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/review_final/tmp/tmp5tn53q65/inputs/b5_seed123_epoch05/checkpoint", "status": "staged", "weights_sha256": "2e2205000753f91a44fa4346d5a231729796998bff841a1333fd46e27d7e172f"}
+{"init_from": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/review_final/tmp/tmpuffvkoce/inputs/b5_seed123_epoch05/checkpoint", "status": "staged", "weights_sha256": "2e2205000753f91a44fa4346d5a231729796998bff841a1333fd46e27d7e172f"}
+{"init_from": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/review_final/tmp/tmpou_jpavl/inputs/b5_seed123_epoch05/checkpoint", "status": "staged", "weights_sha256": "2e2205000753f91a44fa4346d5a231729796998bff841a1333fd46e27d7e172f"}
+{"init_from": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/review_final/tmp/tmpi_e2xyuv/inputs/b5_seed123_epoch05/checkpoint", "status": "staged", "weights_sha256": "2e2205000753f91a44fa4346d5a231729796998bff841a1333fd46e27d7e172f"}
+{
+  "clean": {
+    "stage_inventory": [
+      "eval.json",
+      "meta.json",
+      "model.safetensors"
+    ],
+    "run_root_inventory": [
+      "STAGING_DONE",
+      "checkpoint",
+      "run_config.json",
+      "runtime_identity.txt",
+      "staging_receipt.json"
+    ],
+    "source_unchanged": true,
+    "prepare_profile": "development-single",
+    "prepare_seed": 123,
+    "p1_wrong_seed_rejected": true
+  },
+  "source_unknown": {
+    "rejected": "epoch05 exact inventory changed",
+    "commands_before_rejection": 1
+  },
+  "source_regular_changed": {
+    "rejected": "epoch05 files changed during staging",
+    "commands_before_rejection": 1
+  },
+  "destination_unknown": {
+    "rejected": "epoch05 exact inventory changed",
+    "commands_before_rejection": 1
+  },
+  "prepare_wrong_seed": {
+    "rejected": "old/cross-profile prepared receipt rejected",
+    "commands_before_rejection": 2
+  },
+  "two_snapshots_advancing_elapsed_and_volatile_node_fields": "admitted",
+  "changed_final_capacity": "node capacity changed during admission",
+  "changed_final_request": "allocation changed during admission",
+  "capture_extra": {
+    "decode": {
+      "error": "UnicodeDecodeError('utf-8', b'\\xff', 0, 1, 'invalid start byte')",
+      "timed_out": false,
+      "exit_code": 0,
+      "captured_bytes": 1,
+      "kill_error": null,
+      "reap_error": null
+    },
+    "spawn": {
+      "error": "FileNotFoundError(2, 'No such file or directory')",
+      "timed_out": false,
+      "exit_code": null,
+      "captured_bytes": 0,
+      "kill_error": null,
+      "reap_error": null
+    },
+    "descendant-timeout": {
+      "error": "TimeoutExpired(['/home/wyim/miniconda3/bin/python', '-c', 'import os,time; p=os.fork(); time.sleep(2)'], 0.05)",
+      "timed_out": true,
+      "exit_code": -9,
+      "captured_bytes": 0,
+      "kill_error": null,
+      "reap_error": null
+    }
+  },
+  "limitations": "Local tiny fixtures. Actual archived stage main, copy, fsync and hashes executed. Local DrvFS rejects renameat2 with EINVAL, so publication used a fixture-only no-existing-path os.rename adapter, not production atomicity verification. Tiny-fixture reserve set to zero because local disk has less than 40GiB free. Prepare/GPU/tile work replaced with explicit fixture outputs. No real allocation, data hashing, or remote actions."
+}

@@ -1,0 +1,30 @@
+{
+  "files": {
+    "code/evidence/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "code/evidence/est_hsp_contract.py": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1",
+    "code/evidence/est_hsp_expanded.py": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1",
+    "code/evidence/est_phase_accept.py": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1",
+    "code/evidence/est_phase_project.py": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1",
+    "code/evidence/est_real_sample.py": "af28d86c8f2543d0fc2dcea849d62484be840bc94d52b030f16dcab08443113f",
+    "manifest.json": "62a4be58051be2a3702ef4192022fa707084aa0dcc6669fb38ce30ac65cc58ad",
+    "run_compute.py": "c254230d103887c8317325408b1ac0a8b8c0572e389f33f4d5afb5d01d02b2a3",
+    "sample.sbatch": "a9ee5613952f45994298b6bfc434a6b818b437764bab5ff8ee730879d0456308"
+  },
+  "runtime": {
+    "python": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3.11",
+    "python_sha256": "74d2337199fe0880e01a38cd136c03f28de4383b833393657ce8420ce3c57415",
+    "python_version": "3.11.14",
+    "reader_htslib": "1.23",
+    "reader_samtools": "1.21",
+    "reader_sha256": "a579aed31a13841cc0950a487b59729355d0b9fbcc39293e0b90b960133217bc"
+  },
+  "schema": 1,
+  "scope": "one bounded Sitalica diagnostic; not biological acceptance",
+  "source_hashes": {
+    "revision/scripts/evidence/est_hsp_contract.py": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1",
+    "revision/scripts/evidence/est_hsp_expanded.py": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1",
+    "revision/scripts/evidence/est_phase_accept.py": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1",
+    "revision/scripts/evidence/est_phase_project.py": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1",
+    "revision/scripts/evidence/est_real_sample.py": "af28d86c8f2543d0fc2dcea849d62484be840bc94d52b030f16dcab08443113f"
+  }
+}

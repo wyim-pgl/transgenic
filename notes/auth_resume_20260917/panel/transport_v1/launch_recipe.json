@@ -1,0 +1,120 @@
+{
+  "budget": {
+    "approved": false,
+    "campaign_cap_node_hours": 5,
+    "cpu_workload_on_gpu_backed_node": true,
+    "max_node_hours": 1,
+    "max_nodes": 1,
+    "wall_minutes_ceiling": 60,
+    "zero_gpu_billing_claim": false
+  },
+  "container_argv": null,
+  "container_options": [
+    "exec",
+    "--cleanenv",
+    "--containall",
+    "--no-home",
+    "--no-mount",
+    "hostfs"
+  ],
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_NO_REPLACE_OBJECTS": "1",
+    "HF_HUB_OFFLINE": "1",
+    "MKL_NUM_THREADS": "1",
+    "NVIDIA_VISIBLE_DEVICES": "void",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "PYTHONPATH": "/work/repo/src:/work/repo/revision/scripts/mvp",
+    "TRANSFORMERS_OFFLINE": "1"
+  },
+  "existing_database_mounts": [
+    {
+      "container": "/data/gpfs/assoc/pgl/data/Transgenic/training_input/db/b5_full_a40_v1.db",
+      "host": null,
+      "mode": "ro",
+      "requires": "actual reviewed stable P1 stage receipt; no copy and no search fallback",
+      "sha256": "6840c93fd0b999e09b8dc2897adca1f4dbae36f2ef0f8fcc10ee66371295e222",
+      "size": 23534252032
+    },
+    {
+      "container": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_full_20260915/fullc0lite.db",
+      "host": null,
+      "mode": "ro",
+      "requires": "actual reviewed stable P1 stage receipt; no copy and no search fallback",
+      "sha256": "ed2d0eef2b205626db0983ab9f029f84c30514babc77c330bdb250b2fdfe3d0d",
+      "size": 1068773376
+    }
+  ],
+  "host_namespace": "/work/nvme/bilv/wcyim/transgenic/seed123_panel_transport_20260917",
+  "output_mount": {
+    "container": "/panel-output",
+    "host": null,
+    "mode": "rw",
+    "requires": "separate existing canonical parent, fresh exclusive run child, no receipt/pending reuse"
+  },
+  "replica_tree": {
+    "container": "/data/gpfs/assoc/pgl/data/Transgenic",
+    "host": null,
+    "mode": "ro",
+    "requires": "reviewed exact 165 nonDB-file tree plus request; DB placeholders, no extras"
+  },
+  "request_mount": {
+    "container": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/request.json",
+    "host": null,
+    "mode": "ro",
+    "sha256": "c5cc29ecea746375ebb4d5388d38fa2bb8db0d5c42088ac67bc47b4caa7da9a9",
+    "size": 1264
+  },
+  "required_preimport_checks": [
+    "real scheduler allocation verified via controller accounting, aarch64, one node, <=60min; no spoofed Slurm variables",
+    "independent amended no-copy review identifies replicas explicitly; transfer inventory equals fixed manifest",
+    "P1 terminal reviewed stage receipt pins stable DB backing paths, lifecycle lock and device/inode/stat identity",
+    "SIF identity verification only in approved compute context; no DB/SIF login hashing",
+    "fixed exact Python/NumPy/DuckDB/Torch/Git versions and module locations in intended SIF",
+    "all 103 current source file sizes/hashes, full tree inventory including five separately inventoried Git objects, no extras/symlinks/pycache",
+    "existing pinned authority.py verify, then compare returned authority to fixed five-object receipt and original manifest digest",
+    "exact original 167 historical identities through canonical G, fixed request identity, no DB WAL",
+    "actual /proc/self/mountinfo and stat provenance: canonical G/source/request RO, only separate output RW; no unexpected child overlays",
+    "clear inherited container/Python/Git/loader injection; explicit intended interpreter and safe cwd; reject foreign imports",
+    "atomic no-clobber namespace claim, receipt/pending collision rejection, retain stdout/stderr and failure sentinel",
+    "repeat mount/input/request/source integrity after proof; no automatic retry or deletion"
+  ],
+  "requires_future_reviewed_adapter": true,
+  "runtime": {
+    "architecture": "aarch64",
+    "duckdb": "1.5.5",
+    "git": "2.43.0",
+    "numpy": "2.1.0",
+    "python": "3.12.3",
+    "sif": "/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif",
+    "sif_sha256": "1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6",
+    "sif_size": 11120398336,
+    "torch": "2.14.0a0+4fdf77b940.nv26.08"
+  },
+  "source_mount": {
+    "container": "/work/repo",
+    "host": null,
+    "mode": "ro",
+    "requires": "exact 103-file current snapshot plus independently inventoried sparse Git authority; reject all extras"
+  },
+  "status": "BLOCKED_PREPARATION_ONLY",
+  "warning": "CPU workload on GPU-backed allocation can bill GPUs. No training; no acceptance receipt is created here.",
+  "wrapper_argv": [
+    "-B",
+    "/work/repo/revision/scripts/mvp/mvp_verify_pinned_panel.py",
+    "--input",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/request.json",
+    "--expected-sha256",
+    "c5cc29ecea746375ebb4d5388d38fa2bb8db0d5c42088ac67bc47b4caa7da9a9",
+    "--expected-size",
+    "1264",
+    "--out",
+    "/panel-output/compatibility.json"
+  ],
+  "wrapper_interpreter": null
+}

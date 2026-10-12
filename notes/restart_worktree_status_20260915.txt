@@ -1,0 +1,45 @@
+ M .gitignore
+ M quarantine.md
+ M revision/protocols/B6_EVIDENCE_MODE_WORKPLAN_v1.ko.md
+ M revision/protocols/B6_EVIDENCE_MODE_WORKPLAN_v1.md
+ M revision/protocols/B6_WORKPLAN_README.ko.md
+ M revision/protocols/B6_WORKPLAN_README.md
+ M revision/protocols/PROTOCOL_B1_frozen_v1.md
+?? .atl/
+?? .claude/
+?? .gemini/
+?? .ignore
+?? .mcp.json
+?? AGENTS.md
+?? GEMINI.md
+?? notes/RESTART_HANDOFF_20260915.md
+?? notes/b6_a46_r3_wording_fixes_20260914.md
+?? notes/b6_blastx_controller_verification_20260914.md
+?? notes/b6_blastx_eight_inputs_20260915.json
+?? notes/b6_blastx_execution_plan_20260914.md
+?? notes/b6_blastx_lineage_preflight_20260914.md
+?? notes/b6_eight_species_blastx_20260915.sbatch
+?? notes/b6_execution_approval_20260914.md
+?? notes/b6_mvp_data_implementation_plan_20260914.md
+?? notes/b6_mvp_dataset_increment_plan_20260915.md
+?? notes/b6_mvp_full_build_20260915.md
+?? notes/b6_mvp_input_preflight_20260914.py
+?? notes/b6_mvp_model_increment_plan_20260915.md
+?? notes/b6_mvp_operational_smoke_20260915.md
+?? notes/b6_sitalica_blastx_20260914.sbatch
+?? notes/restart_branches_20260915.txt
+?? notes/restart_deltaai_20260915.txt
+?? notes/restart_status_20260915.txt
+?? notes/restart_worktree_status_20260915.txt
+?? opencode.json
+?? revision/protocols/B6_MVP_PILOT_v1.md
+?? revision/protocols/b6_eligible_loci_v1.tsv
+?? revision/protocols/b6_eligible_loci_v1.tsv.sha256
+?? revision/protocols/b6_est_molecules_v1.tsv
+?? revision/protocols/b6_est_molecules_v1.tsv.sha256
+?? revision/protocols/b6_panels_v1.tsv
+?? revision/protocols/b6_panels_v1.tsv.sha256
+?? revision/scripts/71_b6_panels.py
+?? revision/scripts/72_mvp_select_loci.py
+?? revision/scripts/72a_est_molecules_per_locus.sh
+?? revision/scripts/tests/test_b6_panels.py

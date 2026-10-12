@@ -1,0 +1,39 @@
+test_actual_shell_argv_default_rw_only_for_output (__main__.BindFixTests) ... FAIL
+test_exact_one_option_change_and_syntax (__main__.BindFixTests) ... FAIL
+test_payloads_and_transport (__main__.BindFixTests) ... FAIL
+
+======================================================================
+FAIL: test_actual_shell_argv_default_rw_only_for_output (__main__.BindFixTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_bindfix1.py", line 69, in test_actual_shell_argv_default_rw_only_for_output
+    self.assertEqual(new, expected)
+AssertionError: Lists differ: ['--s[174 chars]tputs:rw', '/data/gpfs/assoc/pgl/singularity/m[418 chars]999'] != ['--s[174 chars]tputs', '/data/gpfs/assoc/pgl/singularity/micr[415 chars]999']
+
+First differing element 9:
+'RELEASE/outputs:RELEASE/outputs:rw'
+'RELEASE/outputs:RELEASE/outputs'
+
+Diff is 813 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_exact_one_option_change_and_syntax (__main__.BindFixTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_bindfix1.py", line 60, in test_exact_one_option_change_and_syntax
+    self.assertEqual((NEW / 'panel_cpu.sbatch').read_bytes(),
+AssertionError: b'#!/[1896 chars]ARENT:rw" \\\n "$SIF" env CUDA_VISIBLE_DEVICES[339 chars]T"\n' != b'#!/[1896 chars]ARENT" \\\n "$SIF" env CUDA_VISIBLE_DEVICES= O[336 chars]T"\n'
+
+======================================================================
+FAIL: test_payloads_and_transport (__main__.BindFixTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_bindfix1.py", line 47, in test_payloads_and_transport
+    self.assertEqual({p.name for p in NEW.iterdir()}, set(old['files']) | {'transport.json'})
+AssertionError: Items in the first set but not the second:
+'source'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.167s
+
+FAILED (failures=3)

@@ -1,0 +1,43 @@
+{
+  "unchanged_original_functions": [
+    "require",
+    "digest",
+    "write_json",
+    "inventory",
+    "module",
+    "verify_release",
+    "generate",
+    "panel_seam",
+    "bindings",
+    "entry",
+    "require_rows",
+    "postflight",
+    "main"
+  ],
+  "changed_original_functions": [
+    "run"
+  ],
+  "package_equal": true,
+  "closure_keys": [
+    "libraries",
+    "path_resolution",
+    "python",
+    "tools",
+    "versions"
+  ],
+  "python_modules": {
+    "isolated": 118,
+    "ordinary_helper": 118
+  },
+  "pth": {
+    "isolated": {
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/lib/python3.11/site-packages/coloredlogs.pth": "import os; exec('try: __import__(\"coloredlogs\").auto_install() if os.environ.get(\"COLOREDLOGS_AUTO_INSTALL\") else None\\nexcept ImportError: pass')\n",
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/lib/python3.11/site-packages/distutils-precedence.pth": "import os; var = 'SETUPTOOLS_USE_DISTUTILS'; enabled = os.environ.get(var, 'local') == 'local'; enabled and __import__('_distutils_hack').add_shim(); \n"
+    },
+    "ordinary_helper": {
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/lib/python3.11/site-packages/coloredlogs.pth": "import os; exec('try: __import__(\"coloredlogs\").auto_install() if os.environ.get(\"COLOREDLOGS_AUTO_INSTALL\") else None\\nexcept ImportError: pass')\n",
+      "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/lib/python3.11/site-packages/distutils-precedence.pth": "import os; var = 'SETUPTOOLS_USE_DISTUTILS'; enabled = os.environ.get(var, 'local') == 'local'; enabled and __import__('_distutils_hack').add_shim(); \n"
+    }
+  },
+  "closure_contains_observation_keys": false
+}

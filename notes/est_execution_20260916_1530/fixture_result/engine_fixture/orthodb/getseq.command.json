@@ -1,0 +1,8 @@
+[
+  "/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond",
+  "getseq",
+  "--db",
+  "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/fixture/result/engine_fixture/orthodb/orthodb.dmnd",
+  "--out",
+  "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/fixture/result/engine_fixture/orthodb/database.getseq.fa"
+]

@@ -1,0 +1,18 @@
+fixture.py: OK
+runtime.json: OK
+fixture.sbatch: OK
+package/frozen/revision/protocols/b6_panels_v1.tsv: OK
+package/frozen/revision/scripts/59_evidence_support.py: OK
+package/frozen/revision/scripts/67_orientation_audit.py: OK
+package/frozen/revision/scripts/68_sample_fasta.py: OK
+package/frozen/revision/scripts/mvp/mvp_align_panel_longreads.py: OK
+package/frozen/revision/scripts/mvp/mvp_junction_table.py: OK
+package/frozen/revision/scripts/mvp/mvp_score.py: OK
+package/frozen/src/transgenic/evidence/mvp_bootstrap.py: OK
+package/frozen/src/transgenic/evidence/mvp_windows.py: OK
+package/gate.py: OK
+package/source_pins.json: OK
+package/wrapper.py: OK
+runtime_closure.py: OK
+runtime_evidence/expected_closure.json: OK
+JobId=6165962 JobName=ont_f4_fixture UserId=wyim(3092957) GroupId=p-wyim(3092957) MCS_label=N/A Priority=95699 Nice=0 Account=cpu-s1-pgl-0 QOS=normal JobState=RUNNING Reason=None Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:01 TimeLimit=00:06:00 TimeMin=N/A SubmitTime=2026-09-17T16:57:34 EligibleTime=2026-09-17T16:57:34 AccrueTime=2026-09-17T16:57:34 StartTime=2026-09-17T16:57:34 EndTime=2026-09-17T17:03:35 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-17T16:57:34 Partition=cpu-s1-pgl-0 AllocNode:Sid=login-0:20613 ReqNodeList=(null) ExcNodeList=(null) NodeList=cpu-50 BatchHost=cpu-50 NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* TRES=cpu=4,mem=4G,node=1,billing=9 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=4 MinMemoryNode=4G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/data/gpfs/home/wyim/ont_f4_20260917_1653/release/fixture.sbatch WorkDir=/data/gpfs/home/wyim/ont_f4_20260917_1653 StdErr=/data/gpfs/home/wyim/ont_f4_20260917_1653/stderr StdIn=/dev/null StdOut=/data/gpfs/home/wyim/ont_f4_20260917_1653/stdout Power= NtasksPerTRES:0

@@ -1,0 +1,16 @@
+{"pid": 1217585, "exists": true, "rank_env": {"CUDA_VISIBLE_DEVICES": "0,1,2,3", "RANK": "0", "WORLD_SIZE": "4", "LOCAL_RANK": "0"}}
+{"pid": 1217586, "exists": true, "rank_env": {"CUDA_VISIBLE_DEVICES": "0,1,2,3", "RANK": "1", "WORLD_SIZE": "4", "LOCAL_RANK": "1"}}
+{"pid": 1217587, "exists": true, "rank_env": {"CUDA_VISIBLE_DEVICES": "0,1,2,3", "RANK": "2", "WORLD_SIZE": "4", "LOCAL_RANK": "2"}}
+{"pid": 1217588, "exists": true, "rank_env": {"CUDA_VISIBLE_DEVICES": "0,1,2,3", "RANK": "3", "WORLD_SIZE": "4", "LOCAL_RANK": "3"}}
+MONITOR_CUDA_VISIBLE_DEVICES=0,1,2
+0, GPU-2b570a44-18e2-6316-35f9-d6fc4b60b32a, 39533 MiB, 100 %
+1, GPU-6e95f486-4224-1fe4-bba2-c6c5ef04553f, 39651 MiB, 100 %
+2, GPU-c9c5a8bd-abd9-0189-27f5-e0f709accf3c, 39295 MiB, 100 %
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

@@ -1,0 +1,57 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+  lcm_layout_gen:    0
+  lcm_mirror_count:  1
+  lcm_entry_count:   3
+    lcme_id:             N/A
+    lcme_mirror_id:      N/A
+    lcme_flags:          0
+    lcme_extent.e_start: 0
+    lcme_extent.e_end:   16777216
+      stripe_count:  1       stripe_size:   1048576       pattern:       raid0       stripe_offset: -1       pool:          ddn_ssd
+
+    lcme_id:             N/A
+    lcme_mirror_id:      N/A
+    lcme_flags:          0
+    lcme_extent.e_start: 16777216
+    lcme_extent.e_end:   4294967296
+      stripe_count:  4       stripe_size:   1048576       pattern:       raid0       stripe_offset: -1       pool:          ddn_ssd
+
+    lcme_id:             N/A
+    lcme_mirror_id:      N/A
+    lcme_flags:          0
+    lcme_extent.e_start: 4294967296
+    lcme_extent.e_end:   EOF
+      stripe_count:  24       stripe_size:   1048576       pattern:       raid0       stripe_offset: -1       pool:          ddn_ssd
+
+  lcm_layout_gen:    0
+  lcm_mirror_count:  1
+  lcm_entry_count:   3
+    lcme_id:             N/A
+    lcme_mirror_id:      N/A
+    lcme_flags:          0
+    lcme_extent.e_start: 0
+    lcme_extent.e_end:   16777216
+      stripe_count:  1       stripe_size:   1048576       pattern:       raid0       stripe_offset: -1       pool:          ddn_hdd
+
+    lcme_id:             N/A
+    lcme_mirror_id:      N/A
+    lcme_flags:          0
+    lcme_extent.e_start: 16777216
+    lcme_extent.e_end:   4294967296
+      stripe_count:  4       stripe_size:   1048576       pattern:       raid0       stripe_offset: -1       pool:          ddn_hdd
+
+    lcme_id:             N/A
+    lcme_mirror_id:      N/A
+    lcme_flags:          0
+    lcme_extent.e_start: 4294967296
+    lcme_extent.e_end:   EOF
+      stripe_count:  -1       stripe_size:   1048576       pattern:       raid0       stripe_offset: -1       pool:          ddn_hdd
+
+Disk quotas for prj 22169 (pid 22169):
+      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace
+lfs quota: Cannot find pool 'nvme'
+Disk quotas for prj 22169 (pid 22169):
+      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace
+lfs quota: Cannot find pool 'hdd'

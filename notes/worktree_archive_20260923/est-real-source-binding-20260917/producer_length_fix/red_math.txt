@@ -1,0 +1,370 @@
+FFFFFFFFFFFFFFFFFFFFF                                                    [100%]
+=================================== FAILURES ===================================
+______________ test_explicit_midf_formula_boundaries[/-False-29] _______________
+
+reported = 29, reverse = False, shifts = '/'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[/-False-30] _______________
+
+reported = 30, reverse = False, shifts = '/'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[/-False-31] _______________
+
+reported = 31, reverse = False, shifts = '/'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+_______________ test_explicit_midf_formula_boundaries[/-True-29] _______________
+
+reported = 29, reverse = True, shifts = '/'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+_______________ test_explicit_midf_formula_boundaries[/-True-30] _______________
+
+reported = 30, reverse = True, shifts = '/'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+_______________ test_explicit_midf_formula_boundaries[/-True-31] _______________
+
+reported = 31, reverse = True, shifts = '/'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[\\-False-29] ______________
+
+reported = 29, reverse = False, shifts = '\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[\\-False-30] ______________
+
+reported = 30, reverse = False, shifts = '\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[\\-False-31] ______________
+
+reported = 31, reverse = False, shifts = '\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[\\-True-29] _______________
+
+reported = 29, reverse = True, shifts = '\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[\\-True-30] _______________
+
+reported = 30, reverse = True, shifts = '\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[\\-True-31] _______________
+
+reported = 31, reverse = True, shifts = '\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+_____________ test_explicit_midf_formula_boundaries[/\\-False-29] ______________
+
+reported = 29, reverse = False, shifts = '/\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+_____________ test_explicit_midf_formula_boundaries[/\\-False-30] ______________
+
+reported = 30, reverse = False, shifts = '/\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+_____________ test_explicit_midf_formula_boundaries[/\\-False-31] ______________
+
+reported = 31, reverse = False, shifts = '/\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[/\\-True-29] ______________
+
+reported = 29, reverse = True, shifts = '/\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[/\\-True-30] ______________
+
+reported = 30, reverse = True, shifts = '/\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+______________ test_explicit_midf_formula_boundaries[/\\-True-31] ______________
+
+reported = 31, reverse = True, shifts = '/\\'
+
+    @pytest.mark.parametrize('reported', [29, 30, 31])
+    @pytest.mark.parametrize('reverse', [False, True])
+    @pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
+    def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
+        n = reported - len(shifts)
+        row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
+                                   'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
+        row[8] = str(reported)
+        mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+>       result = api().classify_rich17(row, dna, protein, length_contract=mode)
+E       TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:129: TypeError
+________ test_unknown_length_mode_rejected_even_without_shifts[unknown] ________
+
+mode = 'unknown'
+
+    @pytest.mark.parametrize('mode', ['unknown', '', None])
+    def test_unknown_length_mode_rejected_even_without_shifts(mode):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        for fn, fields in ((api().classify_rich17, row), (api().adapt_raw13, row[:13])):
+            with pytest.raises(ValueError, match='length contract'):
+>               fn(fields, dna, protein, length_contract=mode)
+E               TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:145: TypeError
+___________ test_unknown_length_mode_rejected_even_without_shifts[] ____________
+
+mode = ''
+
+    @pytest.mark.parametrize('mode', ['unknown', '', None])
+    def test_unknown_length_mode_rejected_even_without_shifts(mode):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        for fn, fields in ((api().classify_rich17, row), (api().adapt_raw13, row[:13])):
+            with pytest.raises(ValueError, match='length contract'):
+>               fn(fields, dna, protein, length_contract=mode)
+E               TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:145: TypeError
+_________ test_unknown_length_mode_rejected_even_without_shifts[None] __________
+
+mode = None
+
+    @pytest.mark.parametrize('mode', ['unknown', '', None])
+    def test_unknown_length_mode_rejected_even_without_shifts(mode):
+        row, dna, protein = fixture('K'*30, 'K'*30)
+        for fn, fields in ((api().classify_rich17, row), (api().adapt_raw13, row[:13])):
+            with pytest.raises(ValueError, match='length contract'):
+>               fn(fields, dna, protein, length_contract=mode)
+E               TypeError: classify_rich17() got an unexpected keyword argument 'length_contract'
+
+tests/test_est_hsp_contract.py:145: TypeError
+=========================== short test summary info ============================
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/-False-29]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/-False-30]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/-False-31]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/-True-29]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/-True-30]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/-True-31]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[\\-False-29]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[\\-False-30]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[\\-False-31]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[\\-True-29]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[\\-True-30]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[\\-True-31]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/\\-False-29]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/\\-False-30]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/\\-False-31]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/\\-True-29]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/\\-True-30]
+FAILED tests/test_est_hsp_contract.py::test_explicit_midf_formula_boundaries[/\\-True-31]
+FAILED tests/test_est_hsp_contract.py::test_unknown_length_mode_rejected_even_without_shifts[unknown]
+FAILED tests/test_est_hsp_contract.py::test_unknown_length_mode_rejected_even_without_shifts[]
+FAILED tests/test_est_hsp_contract.py::test_unknown_length_mode_rejected_even_without_shifts[None]
+21 failed, 65 deselected in 0.24s

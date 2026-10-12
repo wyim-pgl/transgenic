@@ -1,0 +1,502 @@
+{
+  "alias_control_propagates": {
+    "blockers": [],
+    "components": [
+      {
+        "causes": [
+          [
+            "overlap",
+            "old",
+            "old:excluded-secondary",
+            "held",
+            "heldout"
+          ]
+        ],
+        "disposition": "excluded",
+        "id": [
+          "new",
+          "old"
+        ],
+        "members": [
+          "new",
+          "old"
+        ],
+        "ready": false,
+        "secondary_placements": 1,
+        "support_members": {
+          "primary": [
+            "new"
+          ]
+        },
+        "total_placements": 3,
+        "training_eligible": false,
+        "training_support_members": []
+      }
+    ],
+    "diagnostic_ready": true,
+    "edges": [
+      [
+        "new",
+        "old",
+        "clone",
+        "normalized_inventory"
+      ],
+      [
+        "new",
+        "old",
+        "version",
+        "normalized_inventory"
+      ]
+    ],
+    "exhaustiveness": {
+      "fraction": 1.0,
+      "molecules_all": 1,
+      "molecules_lt50": 1
+    }
+  },
+  "contradictory_known": "component clone contradiction",
+  "contradictory_libraries_two_ready_versions": {
+    "blockers": [],
+    "components": [
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "new"
+        ],
+        "members": [
+          "new"
+        ],
+        "ready": true,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "new"
+          ]
+        },
+        "total_placements": 1,
+        "training_eligible": false,
+        "training_support_members": [
+          "new"
+        ]
+      },
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "old"
+        ],
+        "members": [
+          "old"
+        ],
+        "ready": true,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "old"
+          ]
+        },
+        "total_placements": 1,
+        "training_eligible": false,
+        "training_support_members": [
+          "old"
+        ]
+      }
+    ],
+    "diagnostic_ready": true,
+    "edges": [],
+    "exhaustiveness": {
+      "fraction": 1.0,
+      "molecules_all": 2,
+      "molecules_lt50": 2
+    }
+  },
+  "cross_dataset_same_bug": {
+    "blockers": [],
+    "components": [
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "new"
+        ],
+        "members": [
+          "new"
+        ],
+        "ready": true,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "new"
+          ]
+        },
+        "total_placements": 1,
+        "training_eligible": false,
+        "training_support_members": [
+          "new"
+        ]
+      },
+      {
+        "causes": [
+          [
+            "overlap",
+            "old",
+            "old:excluded-secondary",
+            "held",
+            "heldout"
+          ]
+        ],
+        "disposition": "excluded",
+        "id": [
+          "old"
+        ],
+        "members": [
+          "old"
+        ],
+        "ready": false,
+        "secondary_placements": 1,
+        "support_members": {
+          "primary": [
+            "old"
+          ]
+        },
+        "total_placements": 2,
+        "training_eligible": false,
+        "training_support_members": []
+      }
+    ],
+    "diagnostic_ready": true,
+    "edges": [],
+    "exhaustiveness": {
+      "fraction": 1.0,
+      "molecules_all": 2,
+      "molecules_lt50": 2
+    }
+  },
+  "determinism": "72 permutations identical",
+  "empty_proof": "orphan/invalid relation",
+  "explicit_parent_known_unavailable_is_trusted": {
+    "blockers": [],
+    "components": [
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "a",
+          "b"
+        ],
+        "members": [
+          "a",
+          "b"
+        ],
+        "ready": true,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "a",
+            "b"
+          ]
+        },
+        "total_placements": 2,
+        "training_eligible": false,
+        "training_support_members": [
+          "a",
+          "b"
+        ]
+      }
+    ],
+    "diagnostic_ready": true,
+    "edges": [
+      [
+        "a",
+        "b",
+        "parent",
+        "caller-parent-proof"
+      ]
+    ],
+    "exhaustiveness": {
+      "fraction": 1.0,
+      "molecules_all": 1,
+      "molecules_lt50": 1
+    }
+  },
+  "explicit_version_control_rejects": "relation library contradiction",
+  "genuinely_distinct_libraries_control": {
+    "blockers": [],
+    "components": [
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "new"
+        ],
+        "members": [
+          "new"
+        ],
+        "ready": true,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "new"
+          ]
+        },
+        "total_placements": 1,
+        "training_eligible": false,
+        "training_support_members": [
+          "new"
+        ]
+      },
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "old"
+        ],
+        "members": [
+          "old"
+        ],
+        "ready": true,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "old"
+          ]
+        },
+        "total_placements": 1,
+        "training_eligible": false,
+        "training_support_members": [
+          "old"
+        ]
+      }
+    ],
+    "diagnostic_ready": true,
+    "edges": [],
+    "exhaustiveness": {
+      "fraction": 1.0,
+      "molecules_all": 2,
+      "molecules_lt50": 2
+    }
+  },
+  "known_and_fallback_not_signature_merged": {
+    "blockers": [],
+    "components": [
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "a"
+        ],
+        "members": [
+          "a"
+        ],
+        "ready": true,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "a"
+          ]
+        },
+        "total_placements": 1,
+        "training_eligible": false,
+        "training_support_members": [
+          "a"
+        ]
+      },
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "b"
+        ],
+        "members": [
+          "b"
+        ],
+        "ready": true,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "b"
+          ]
+        },
+        "total_placements": 1,
+        "training_eligible": false,
+        "training_support_members": [
+          "b"
+        ]
+      }
+    ],
+    "diagnostic_ready": true,
+    "edges": [],
+    "exhaustiveness": {
+      "fraction": 1.0,
+      "molecules_all": 2,
+      "molecules_lt50": 2
+    }
+  },
+  "mapq_boundary": "5 retained; 4 excluded",
+  "old_exclusion_fails_to_propagate_and_rejoin_passes": {
+    "blockers": [],
+    "components": [
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "new"
+        ],
+        "members": [
+          "new"
+        ],
+        "ready": true,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "new"
+          ]
+        },
+        "total_placements": 1,
+        "training_eligible": false,
+        "training_support_members": [
+          "new"
+        ]
+      },
+      {
+        "causes": [
+          [
+            "overlap",
+            "old",
+            "old:excluded-secondary",
+            "held",
+            "heldout"
+          ]
+        ],
+        "disposition": "excluded",
+        "id": [
+          "old"
+        ],
+        "members": [
+          "old"
+        ],
+        "ready": false,
+        "secondary_placements": 1,
+        "support_members": {
+          "primary": [
+            "old"
+          ]
+        },
+        "total_placements": 2,
+        "training_eligible": false,
+        "training_support_members": []
+      }
+    ],
+    "diagnostic_ready": true,
+    "edges": [],
+    "exhaustiveness": {
+      "fraction": 1.0,
+      "molecules_all": 2,
+      "molecules_lt50": 2
+    }
+  },
+  "source_sha256": {
+    "revision/scripts/evidence/est_molecule_closure.py": "53d2f8fbf58f8851e669d25701f01d5ced02682351d7c4ea45cd6b6af144eb1f",
+    "revision/scripts/tests/test_est_molecule_closure.py": "88ddb85f0e262e7a8da1ed750f454e35228647dce7adb794299596ec6722583a",
+    "tasknotes/a11_molecule_closure_20260917.md": "cf3bf112a1c3e1c576a18b92a85348acb8dc19d9fcca7f221a865bf5c6d7123e"
+  },
+  "whole_input_block_clone_unavailable_unknown": {
+    "blockers": [
+      "unresolved_identity:b"
+    ],
+    "components": [
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "a"
+        ],
+        "members": [
+          "a"
+        ],
+        "ready": false,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "a"
+          ]
+        },
+        "total_placements": 1,
+        "training_eligible": false,
+        "training_support_members": []
+      },
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "b"
+        ],
+        "members": [
+          "b"
+        ],
+        "ready": false,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "b"
+          ]
+        },
+        "total_placements": 1,
+        "training_eligible": false,
+        "training_support_members": []
+      }
+    ],
+    "diagnostic_ready": false,
+    "edges": [],
+    "exhaustiveness": {
+      "fraction": 1.0,
+      "molecules_all": 2,
+      "molecules_lt50": 2
+    }
+  },
+  "whole_input_block_uninspected_lib": {
+    "blockers": [
+      "unresolved_identity:b"
+    ],
+    "components": [
+      {
+        "causes": [],
+        "disposition": "retained",
+        "id": [
+          "a",
+          "b"
+        ],
+        "members": [
+          "a",
+          "b"
+        ],
+        "ready": false,
+        "secondary_placements": 0,
+        "support_members": {
+          "primary": [
+            "a",
+            "b"
+          ]
+        },
+        "total_placements": 2,
+        "training_eligible": false,
+        "training_support_members": []
+      }
+    ],
+    "diagnostic_ready": false,
+    "edges": [
+      [
+        "a",
+        "b",
+        "parent",
+        "caller-parent-proof"
+      ]
+    ],
+    "exhaustiveness": {
+      "fraction": 1.0,
+      "molecules_all": 1,
+      "molecules_lt50": 1
+    }
+  }
+}

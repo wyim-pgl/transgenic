@@ -1,0 +1,7 @@
+REPRO: different pinned commands/engine provenance, identical search/HSP IDs; report manifests differ
+.REPRO: real child diagnostic discarded; only exit 7 remains
+.REPRO: leader exited, stdout-holding child survives timeout cleanup (reviewer kills it)
+.......usage: __main__.py [-h] --manifest MANIFEST --sha SHA --out OUT
+__main__.py: error: manifest size/hash mismatch
+.
+10 passed in 5.76s

@@ -1,0 +1,105 @@
+{
+  "argv": [
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/review_checks.py"
+  ],
+  "elapsed_seconds": 1.3578182989999732,
+  "environment": {
+    "LANG": "en_US.UTF-8",
+    "PATH": "/home/wyim/.pi/agent/bin:/home/wyim/.local/bin:/mnt/f/scratch/bin/bin/linux:/home/wyim/.local/bin:/home/wyim/.local/kimi-shim:/home/wyim/.kimi-code/bin:/home/wyim/.opencode/bin:/home/wyim/.local/bin:/home/wyim/miniconda3/bin:/home/wyim/miniconda3/condabin:/home/wyim/scratch/bin/genevalidator/genevalidator/bin:/home/wyim/.nvm/versions/node/v22.22.0/bin:/mnt/f/scratch/bin/bin/linux:~/scratch/bin/last-1047/src:~/scratch/bin/script:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/c/Program Files (x86)/Common Files/Oracle/Java/javapath:/mnt/c/Program Files (x86)/Intel/iCLS Client:/mnt/c/Program Files/Intel/iCLS Client:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0:/mnt/c/WINDOWS/System32/OpenSSH:/mnt/c/Program Files (x86)/Intel/Intel(R) Management Engine Components/DAL:/mnt/c/Program Files/Intel/Intel(R) Management Engine Components/DAL:/mnt/c/Program Files (x86)/Intel/Intel(R) Management Engine Components/IPT:/mnt/c/Program Files/Intel/Intel(R) Management Engine Components/IPT:/mnt/c/Program Files/Git/cmd:/mnt/c/Program Files/Docker/Docker/resources/bin:/mnt/c/ProgramData/DockerDesktop/version-bin:/mnt/c/Program Files/dotnet:/mnt/c/Program Files/Common Files/Teruten/DSFilter:/mnt/c/Program Files/Microsoft VS Code/bin:/mnt/c/Program Files (x86)/PDFtk/bin:/mnt/c/Program Files/Volta:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/c/Program Files (x86)/Common Files/Oracle/Java/javapath:/mnt/c/Program Files (x86)/Intel/iCLS Client:/mnt/c/Program Files/Intel/iCLS Client:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0:/mnt/c/WINDOWS/System32/OpenSSH:/mnt/c/Program Files (x86)/Intel/Intel(R) Management Engine Components/DAL:/mnt/c/Program Files/Intel/Intel(R) Management Engine Components/DAL:/mnt/c/Program Files (x86)/Intel/Intel(R) Management Engine Components/IPT:/mnt/c/Program Files/Intel/Intel(R) Management Engine Components/IPT:/mnt/c/Program Files/Git/cmd:/mnt/c/Program Files/Docker/Docker/resources/bin:/mnt/c/ProgramData/DockerDesktop/version-bin:/mnt/c/Program Files/dotnet:/mnt/c/Program Files/Common Files/Teruten/DSFilter:/mnt/c/Program Files/Microsoft VS Code/bin:/mnt/c/Program Files (x86)/PDFtk/bin:/mnt/c/Users/Won Yim/AppData/Local/Volta/bin:/mnt/c/Users/Won Yim/AppData/Local/Microsoft/WindowsApps:/mnt/c/Program Files/Bandizip:/mnt/c/Users/Won Yim/AppData/Local/Programs/Hyper/resources/bin:/mnt/c/npm-global:/mnt/c/Users/Won Yim/AppData/Local/Programs/Antigravity/bin:/mnt/c/Users/Won Yim/AppData/Local/Python/bin:/mnt/c/Users/Won Yim/.lmstudio/bin:/mnt/c/Users/Won Yim/AppData/Local/Box/Box Edit:/snap/bin:/home/wyim/go/bin:/mnt/c/Program Files/Oracle/VirtualBox:/home/wyim/.grit/bin"
+  },
+  "errors": [
+    "RuntimeError: review failure"
+  ],
+  "ledger_sha256": "3c15d93eb9cfedf134fdfdc8a1a9f9a2f02b30df41d0e5fa6e8d7381ea0d266a",
+  "loaded_modules": {
+    "evidence": {
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/tmpaq7waxh8/release/code/evidence/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence.est_hsp_contract": {
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/tmpaq7waxh8/release/code/evidence/est_hsp_contract.py",
+      "sha256": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1"
+    },
+    "evidence.est_hsp_expanded": {
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/tmpaq7waxh8/release/code/evidence/est_hsp_expanded.py",
+      "sha256": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1"
+    },
+    "evidence.est_phase_accept": {
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/tmpaq7waxh8/release/code/evidence/est_phase_accept.py",
+      "sha256": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1"
+    },
+    "evidence.est_phase_project": {
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/tmpaq7waxh8/release/code/evidence/est_phase_project.py",
+      "sha256": "faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1"
+    },
+    "evidence.est_real_sample": {
+      "origin": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/tmpaq7waxh8/release/code/evidence/est_real_sample.py",
+      "sha256": "d2f82cf419fa903f5d0d45e8e7a4c5bccb6e14428a7f0026b40f2c1efdc0a971"
+    }
+  },
+  "postcheck_attempted": true,
+  "postchecks": {
+    "imports": "PASS",
+    "ledger": "PASS",
+    "runtime": "PASS"
+  },
+  "runtime_after": {
+    "fixture": true
+  },
+  "runtime_before": {
+    "fixture": true
+  },
+  "runtime_libraries_hermetic": false,
+  "rusage_children": [
+    1.4714990000000001,
+    4.769591,
+    292904,
+    0,
+    0,
+    0,
+    637223,
+    51,
+    0,
+    6914,
+    0,
+    0,
+    0,
+    0,
+    199534,
+    185
+  ],
+  "rusage_self": [
+    0.1583,
+    0.47490099999999996,
+    292112,
+    0,
+    0,
+    0,
+    114881,
+    5,
+    0,
+    7906,
+    0,
+    0,
+    0,
+    0,
+    15170,
+    40
+  ],
+  "slurm": {},
+  "status": "INCOMPLETE",
+  "worker_argv": [
+    "--manifest",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/tmpaq7waxh8/release/manifest.json",
+    "--sha",
+    "62a4be58051be2a3702ef4192022fa707084aa0dcc6669fb38ce30ac65cc58ad",
+    "--out",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/noisy-failure-output/sample"
+  ],
+  "worker_binding": {
+    "diagnostics_sha256": "b885fe49dbce4a89fc20cfef68b7925fb87cb0ee88b2d33b645d9f180733f08a",
+    "report_sha256": "1adf69704e5dd3bdedc89f75cf83451ec87ab0cfa57904daa623ae8f14ad230c",
+    "worker_status": "COMPLETE"
+  },
+  "worker_returncode": null
+}

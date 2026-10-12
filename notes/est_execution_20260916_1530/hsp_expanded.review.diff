@@ -1,0 +1,820 @@
+diff --git a/notes/EST_HSP_EXPANDED_REPORT.md b/notes/EST_HSP_EXPANDED_REPORT.md
+new file mode 100644
+index 0000000..b9ad5ef
+--- /dev/null
++++ b/notes/EST_HSP_EXPANDED_REPORT.md
+@@ -0,0 +1,168 @@
++# EST HSP expanded diagnostic — 2026-09-16 15:41
++
++## Disposition
++
++Diagnostic implementation only. **C2 acceptance and C3 projection remain CLOSED.**
++No author 30-aa rule is selected. No engine execution, SSH writes, submissions,
++subagents, merge, push, or production-data search was performed in this task.
++Branch: `est-hsp-expanded-20260916-1541`, based on exact
++`5c7a0aa7e83a33ab3e18abd922e8fff6428b5f35` in the native isolated worktree.
++Historical `est_blastx_fixture.py`, `est_blastx.py`, acceptance and projection
++modules are unchanged. Implementation follows the full discriminator contract
++`EST_HSP_CONTRACT_20260916_1530.md` supplied by the controller.
++
++## Actual first-job finding (not simulated execution)
++
++Read the fetched job 6165460 `fixture_result/engine_fixture` inputs and both
++real raw17 files. The new independent interpreter successfully rechecked all
++12 rows against the supplied DNA and retained protein FASTAs; input/raw hashes
++were checked against fetched provenance. The receipt reports binary hash
++`0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d`
++and version 2.1.24.178. This task did not rehash a live remote executable.
++
++Both source labels give the same counts (M includes substitutions):
++
++| Query | col9 | M | I | D | F | Query residues | Shift-delimited query blocks |
++|---|---:|---:|---:|---:|---:|---:|---|
++| ordinary | 180 | 180 | 0 | 0 | 0 | 180 | 180 |
++| reverse | 180 | 180 | 0 | 0 | 0 | 180 | 180 |
++| plus1 | 180 | 180 | 0 | 0 | 1 | 180 | 90,90 |
++| minus1 | 180 | 180 | 0 | 0 | 1 | 180 | 90,90 |
++| insertion | 183 | 180 | 3 | 0 | 0 | 183 | 183 |
++| deletion | 180 | 177 | 0 | 3 | 0 | 177 | 177 |
++
++Observed col9 is **M+I+D, excluding F**, across these rows. Backslash +1 and
++slash −1 oriented-nucleotide consumption satisfy codon truth. Deliberately
++reversing those signs fails on each of the four shifted source/query rows.
++The minus-one row includes a real query/subject substitution (`SA` in BTOP),
++which is checked rather than assuming every paired column is an exact match.
++This is evidence about these emitted engine traces, not author policy approval,
++and the two source labels are not independent biological replicates.
++
++Raw SHA256: OrthoDB
++`70dbe2c48ef41d5e984b45e91e0fc324f3f7adb15a2b7bf86e5f6f69e90fb901`;
++Swiss-Prot `3b43cbb2618adc69e532775c269b7a1e24f5494c49ef8c6dc8a7e3b64036f3dc`.
++`fixture_result.txt` records allocation and batch COMPLETED/0:0, payload exit 0,
++but extern **OUT_OF_MEMORY/0:125**. This is not clean accounting. Controller
++must inspect all steps before interpreting scheduler success.
++
++Reproduce the read-only recheck (no engine invocation):
++
++```sh
++python notes/est_hsp_recheck_first.py /path/to/fixture_result/engine_fixture
++```
++
++## Bounded family selected
++
++`revision/scripts/evidence/est_hsp_expanded.py` contains one standalone stdlib
++truth interpreter, fixed generator, report writer, and runner. No import of
++candidate decomposition, old replay, acceptance, or projection. Only the runner
++lazily imports the historical launcher (and its taxonomy helper) to preserve
++production DIAMOND flags and child-process termination behavior.
++
++**24 shapes × 3 leading offsets × both strands = 144 queries**, one tiny
++24-protein synthetic database, one makedb and one production-flag blastx. This
++is a small discriminator family, not an unbounded cross-product of edit sites,
++sequences, and penalties. Taxonomy filtering is not retested; the historical
++fixture already covers it. No claim that a particular short trace will be
++elicited under `--min-orf 30`, scoring, evalue, or `--max-hsps 1`.
++
++Shapes:
++- exact 29/30/31;
++- one internal D in 30/31 subject residues (29/30 query residues);
++- one internal I with 29/30 paired residues (30/31 query residues);
++- both shift signs in 29/30/31-residue traces;
++- both shift signs between 29+29, 29+30, 29+31 blocks;
++- long 180-aa ±1-nt shift anchors and +3/−3-aa gap controls;
++- two opposite shifts with nonempty 29/30/31 blocks (net zero).
++
++Each case has 20 independent stop-free codons on each flank and offset 0/1/2;
++all queries exceed 100 nt. The target does not include those flanks. Signed
++initial frames ±1/±2/±3 are explicitly required, not inferred from names.
++Sequential oriented-DNA edit ledgers record actual deleted/inserted bases.
++Baseline translation and ledger reconstruction are checked independently before
++interpreting a case. Reverse complements reuse the oriented edit truth.
++
++## Reporting and failure behavior
++
++Before any interpretation, raw bytes are copied exclusively to `raw-first.tsv`
++and hashed in `raw-first.json` with the entire expected case inventory. Every
++row (including malformed/off-target rows) is retained in `diagnostic.json`.
++Per-row reports include raw/sequence hashes, M/I/D/F, reported length,
++M+I+D, M+I+D+F, query residues M+I, paired M, block counts, initial/post-shift
++frames, endpoints, nucleotide codons/residues, and hypothetical ≥30 decisions
++for each reading and block. Whole query counts and sum of blocks are explicitly
++redundant, not purportedly distinguishable policies.
++
++The interpreter translates each consumed codon on oriented input DNA and checks
++protein residues and final endpoints, then checks translated-query serialization,
++BTOP and CIGAR. Rich engine fields are cross-checks, not independent truth.
++I consumes (3 nt,0 aa); D (0 nt,1 aa); shifts (±1 nt,0 aa) on both strands.
++Wrong-sign negative controls are also attempted for every emitted shifted row.
++
++ELICITED requires exact intended subject, endpoints, initial frame, counts,
++block counts, and every shift position/direction. Missing, clipped, shifted-at-a-
++different-site, or off-target traces remain NOT_ELICITED, not validated negatives.
++All missing cases are logged; no filtering to successful traces. Interpretation
++errors are INVALID. Any missing/invalid/unexpected row, surviving wrong-sign
++control, or absent globally consistent col9 reading makes the summary
++INCONCLUSIVE. Even complete coverage says DIAGNOSTIC_COMPLETE_REVIEW_REQUIRED:
++`certified=false`, `production_authorized=false`, and policy UNRESOLVED always.
++DONE means diagnostic process completion only, not certification. Engine failure
++preserves available raw output and attempts reporting, then writes FAILED;
++SIGKILL/OOM may leave incomplete artifacts, never evidence of passing.
++
++## CPU verification and limitations
++
++CPU fixtures are explicitly labeled synthetic interpreter tests, not engine
++execution. They cover both shift signs on all six initial frames, reverse
++coordinates, ordinary and shifted 29/30/31 boundaries, boundary I/D, mismatches,
++29+29/29+30/29+31 blocks, canceling shifts, standard-code residues, wrong-sign
++rejection, corrupted serialization/endpoints, tampered edit ledger, clipped
++trace handling, and raw-first preservation for malformed rows.
++
++Run:
++
++```sh
++python -m pytest revision/scripts/tests/test_est_blastx.py \
++  revision/scripts/tests/test_est_blastx_fixture.py \
++  revision/scripts/tests/test_est_hsp_expanded.py -q
++```
++
++Verified result: **35 CPU tests passed** (13 new diagnostic tests and 22 historical
++launcher/fixture tests). The fetched first-job read-only recheck also completed
++successfully for all 12 rows. Historical source/gate files have zero diff from
++the pinned base.
++
++The expanded family has **not** run on DIAMOND. No fabricated raw17, relaxed
++flags, or CPU-generated engine success is used. CPU tests cannot prove trace
++elicitation or installed-engine behavior. Strategic advisor consultation was
++attempted but unavailable due to client/model-version incompatibility; no
++independent model review is claimed. Controller review and actual bounded
++execution remain mandatory.
++
++## Controller execution handoff
++
++Source/test implementation commit:
++`a98f5c0cc08e6f6a5ac27905d71a4478e9a0e789`.
++Use the companion `est_hsp_expanded_20260916_1541.sbatch` after reviewing source
++and pins. The wrapper is a subsequent documentation-only commit and stages the
++source commit above. Complete non-stdlib runtime import pins measured after that
++source commit:
++
++| File under revision/scripts | SHA256 |
++|---|---|
++| evidence/est_hsp_expanded.py | `aaa8348b4e5d47d43c065857e3bb06509f63086a6d2c79f35f93e88bc211b3e4` |
++| evidence/est_blastx.py | `5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291` |
++| 64_orthodb_filter.py | `32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302` |
++
++The interpreter itself has no project imports. The separate read-only recheck
++script is not imported by the engine runner and is not part of its closure. Hard allocation: **2 CPUs, 4 GB, 30 minutes**, no GPU/array/network or
++production inputs. This is a bounded estimate for 144 short synthetic queries,
++not measured runtime/RSS. Do not increase automatically on failure.
++
++Controller must check live queue/accounting before staging/submitting, stage a
++commit archive (not a worktree copy) in the wrapper's exclusive namespace,
++verify its complete import-closure hashes, make staged code read-only, and inspect
++batch AND extern accounting plus raw/report/FAILED/DONE evidence afterward.
++No acceptance or projection follows automatically, even if all shapes elicit.
+diff --git a/notes/est_hsp_expanded_20260916_1541.sbatch b/notes/est_hsp_expanded_20260916_1541.sbatch
+new file mode 100644
+index 0000000..098d63e
+--- /dev/null
++++ b/notes/est_hsp_expanded_20260916_1541.sbatch
+@@ -0,0 +1,50 @@
++#!/bin/bash
++#SBATCH --job-name=est_hsp_expand_1541
++#SBATCH --account=cpu-s1-pgl-0
++#SBATCH --partition=cpu-s1-pgl-0
++#SBATCH --nodes=1
++#SBATCH --ntasks=1
++#SBATCH --cpus-per-task=2
++#SBATCH --mem=4G
++#SBATCH --time=00:30:00
++#SBATCH --no-requeue
++#SBATCH --output=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1541/expanded/logs/slurm-%j.out
++# TEMPLATE ONLY. Controller reviews, checks live jobs, stages archive, submits.
++# Stage code from a98f5c0cc08e6f6a5ac27905d71a4478e9a0e789, not a mutable worktree.
++# No acceptance or projection, even if payload exit is zero.
++set -euo pipefail
++umask 077
++N=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1541/expanded
++W=$N/code
++PY=/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python
++DIAMOND=/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond
++export PATH=/usr/bin:/bin LC_ALL=C PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1
++export OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
++unset PYTHONPATH PYTHONHOME
++[[ -n "${SLURM_JOB_ID:-}" && "${SLURM_CPUS_PER_TASK:-}" == 2 ]]
++[[ -x "$PY" && -x "$DIAMOND" && -d "$W" && ! -L "$W" ]]
++[[ "$(readlink -f "$N")" == "$N" && "$(readlink -f "$W")" == "$W" ]]
++[[ ! -e "$N/result" && ! -L "$N/result" ]]
++mkdir "$N/execution.lock"
++trap 'rc=$?; printf "%s\n" "$rc" > "$N/batch.exitcode"' EXIT
++mkdir "$N/tmp"
++export TMPDIR=$N/tmp
++cd "$W"
++# Complete non-stdlib runtime import closure, measured AFTER source commit.
++printf '%s\n' \
++ 'aaa8348b4e5d47d43c065857e3bb06509f63086a6d2c79f35f93e88bc211b3e4  revision/scripts/evidence/est_hsp_expanded.py' \
++ '5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291  revision/scripts/evidence/est_blastx.py' \
++ '32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302  revision/scripts/64_orthodb_filter.py' \
++ "0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d  $DIAMOND" \
++ | sha256sum -c - > "$N/hash-check.txt"
++{
++ date -u; hostname; printf 'job=%s\n' "$SLURM_JOB_ID"
++ printf 'source_commit=a98f5c0cc08e6f6a5ac27905d71a4478e9a0e789\n'
++ printf 'python=%s\ndiamond=%s\nthreads=2\n' "$PY" "$DIAMOND"
++ "$PY" -I -B --version
++ "$DIAMOND" version
++ "$DIAMOND" help
++} > "$N/runtime.txt" 2>&1
++/usr/bin/time -v -o "$N/time.txt" \
++ "$PY" -I -B "$W/revision/scripts/evidence/est_hsp_expanded.py" \
++ --diamond "$DIAMOND" --out-dir "$N/result" --tmpdir "$N/tmp"
+diff --git a/notes/est_hsp_recheck_first.py b/notes/est_hsp_recheck_first.py
+new file mode 100644
+index 0000000..cff925e
+--- /dev/null
++++ b/notes/est_hsp_recheck_first.py
+@@ -0,0 +1,49 @@
++"""Read-only independent recheck of fetched job 6165460 (no engine execution)."""
++import json
++from pathlib import Path
++import sys
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'revision/scripts/evidence'))
++import est_hsp_expanded as diagnostic
++
++
++def fasta(path):
++    records = {}
++    for block in path.read_text().split('>')[1:]:
++        lines = block.splitlines()
++        records[lines[0].split()[0]] = ''.join(lines[1:])
++    return records
++
++
++def main(root):
++    root = Path(root)
++    queries = fasta(root / 'queries.fa')
++    provenance = json.loads((root / 'provenance.json').read_text())
++    diagnostic.require(provenance['diamond_sha256'] == diagnostic.ENGINE_SHA256, 'recorded engine pin')
++    results = []
++    for source in ('orthodb', 'swissprot'):
++        raw = root / source / (source + '.raw17.tsv')
++        protein_path = root / source / (source + '.filtered.fa')
++        proteins = fasta(protein_path)
++        pins = provenance['sources'][source]
++        for path, pin in [(raw, 'raw_sha256'), (root / 'queries.fa', 'query_sha256'),
++                          (protein_path, 'filtered_fasta_sha256')]:
++            diagnostic.require(diagnostic.digest(path) == pins[pin], str(path) + ' pin')
++        for line in raw.read_text().splitlines():
++            row = line.split('\t')
++            result = diagnostic.interpret(row, queries[row[0]], proteins[row[2]])
++            if result['counts']['F']:
++                try:
++                    diagnostic.interpret(row, queries[row[0]], proteins[row[2]], shift_sign=-1)
++                except ValueError:
++                    result['wrong_sign_rejected'] = True
++                else:
++                    raise ValueError('wrong-sign negative control survived')
++            results.append(dict(source=source, query=row[0], counts=result['counts'],
++                                metrics=result['metrics'], blocks=result['blocks'],
++                                wrong_sign_rejected=result.get('wrong_sign_rejected')))
++    print(json.dumps(dict(recorded_engine_sha256=diagnostic.ENGINE_SHA256,
++                         live_binary_rehashed=False, certified=False, rows=results), indent=2))
++
++
++if __name__ == '__main__':
++    main(sys.argv[1])
+diff --git a/revision/scripts/evidence/est_hsp_expanded.py b/revision/scripts/evidence/est_hsp_expanded.py
+new file mode 100644
+index 0000000..6eb473e
+--- /dev/null
++++ b/revision/scripts/evidence/est_hsp_expanded.py
+@@ -0,0 +1,330 @@
++#!/usr/bin/env python3
++"""Bounded DIAMOND diagnostic, never acceptance or projection.
++
++The truth interpreter uses oriented input DNA + the standard genetic code.
++Aligned strings drive its cursor; BTOP/CIGAR are redundant serialization checks,
++not independent biological evidence. No candidate decomposition or old replay.
++"""
++import argparse
++from collections import Counter
++import hashlib
++import itertools
++import json
++import math
++from pathlib import Path
++import random
++import shutil
++import signal
++import sys
++
++ENGINE_SHA256 = '0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d'
++# NCBI standard code, T/C/A/G lexical order (including stop codons).
++CODE = dict(zip((''.join(x) for x in itertools.product('TCAG', repeat=3)),
++                'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'))
++ENCODE = dict(zip('ACDEFGHIKLMNPQRSTVWY',
++                  'GCC TGC GAC GAG TTC GGC CAC ATC AAG CTG ATG AAC CCC CAG CGC AGC ACC GTG TGG TAC'.split()))
++
++
++def require(ok, message):
++    if not ok:
++        raise ValueError(message)
++
++
++def rc(dna):
++    return dna.translate(str.maketrans('ACGT', 'TGCA'))[::-1]
++
++
++def digest(path):
++    h = hashlib.sha256()
++    with open(path, 'rb') as handle:
++        for chunk in iter(lambda: handle.read(1024 * 1024), b''):
++            h.update(chunk)
++    return h.hexdigest()
++
++
++def write_json(path, obj):
++    Path(path).write_text(json.dumps(obj, indent=2, sort_keys=True) + '\n')
++
++
++def interpret(row, dna, protein, *, shift_sign=1):
++    """Interpret one rich17 row. shift_sign=-1 is a CPU negative control only.
++
++    Unknown positive col9 semantics are reported, not assumed away. Caller must
++    treat no consistent reading as inconclusive. M includes substitutions.
++    """
++    require(len(row) == 17 and all(row), 'expected 17 nonempty fields')
++    qlen, slen = int(row[1]), int(row[3])
++    qs, qe, ss, se, length = map(int, row[4:9])
++    frame = int(row[11])
++    require(qlen == len(dna) and slen == len(protein), 'input lengths')
++    require(set(dna) <= set('ACGT'), 'noncanonical DNA')
++    require(frame in (-3, -2, -1, 1, 2, 3), 'frame')
++    require(1 <= qs <= qlen and 1 <= qe <= qlen and 1 <= ss <= se <= slen, 'coordinates')
++    require((qs <= qe) == (frame > 0) and length > 0, 'orientation/length')
++    require(math.isfinite(float(row[9])) and 0 <= float(row[9]) <= 1e-5
++            and math.isfinite(float(row[10])) and float(row[10]) > 0, 'scores')
++    dna = dna if frame > 0 else rc(dna)
++    start = qs - 1 if frame > 0 else qlen - qs
++    end = qe if frame > 0 else qlen - qe + 1
++    require(abs(frame) == start % 3 + 1, 'initial frame disagrees with DNA start')
++    pos, subject = start, ss - 1
++    qg, sg = row[14:16]
++    require(len(qg) == len(sg) and len(qg) > 0, 'aligned string lengths')
++    counts = dict(M=0, I=0, D=0, F=0)
++    blocks, frames, shifts, codons, ops, translated = [0], [frame], [], [], [], []
++    btop, run = [], 0
++    for q, s in zip(qg, sg):
++        if q == s and q not in '-/\\':
++            run += 1
++        else:
++            if run:
++                btop.append(str(run))
++                run = 0
++            btop.append(q + s)
++        if q in '/\\':
++            require(s == '-', 'shift must not consume subject')
++            delta = (1 if q == '\\' else -1) * shift_sign
++            shifts.append(dict(at=pos, delta=delta, marker=q))
++            pos += delta
++            require(0 <= pos <= qlen, 'shift outside DNA')
++            counts['F'] += 1
++            ops.append(q)
++            blocks.append(0)
++            frames.append((1 if frame > 0 else -1) * (pos % 3 + 1))
++            continue
++        require(q != '-' or s != '-', 'double gap')
++        op = 'D' if q == '-' else ('I' if s == '-' else 'M')
++        counts[op] += 1
++        ops.append(op)
++        if q != '-':
++            codon = dna[pos:pos + 3]
++            require(len(codon) == 3 and CODE.get(codon) == q, f'codon truth at {pos}: {codon} != {q}')
++            codons.append(dict(at=pos, codon=codon, residue=q))
++            translated.append(q)
++            pos += 3
++            blocks[-1] += 1
++        if s != '-':
++            require(subject < slen and protein[subject] == s, f'protein truth at {subject}')
++            subject += 1
++    if run:
++        btop.append(str(run))
++    cigar = ''.join(str(len(list(group))) + op for op, group in itertools.groupby(ops))
++    require(''.join(btop) == row[12], 'BTOP serialization')
++    require(cigar == row[13], 'CIGAR serialization')
++    require(''.join(translated) == row[16], 'translated sequence')
++    require(pos == end and subject == se, 'terminal coordinates')
++    m, i, d, f = (counts[k] for k in 'MIDF')
++    metrics = dict(reported=length, columns_excluding_F=m+i+d, columns_including_F=m+i+d+f,
++                   query_residues=m+i, paired=m, max_block=max(blocks), sum_blocks=sum(blocks))
++    return dict(counts=counts, metrics=metrics, blocks=blocks, frames=frames,
++                shifts=shifts, codons=codons, oriented_start=start, oriented_end=end,
++                subject_start=ss, subject_end=se, initial_frame=frame,
++                col9_matches=[key for key, value in metrics.items() if key != 'reported' and value == length],
++                thresholds={key: value >= 30 for key, value in metrics.items()},
++                block_thresholds=[n >= 30 for n in blocks],
++                each_block_ge30=all(n >= 30 for n in blocks),
++                qualifying_blocks=[n for n in blocks if n >= 30])
++
++
++def make_cases():
++    """24 predeclared shapes x 3 offsets x 2 strands; no combinatorial search.
++
++    Edit coordinates are sequential, zero-based ORIENTED DNA coordinates.
++    Flanks are independent stop-free 20-codon contexts, not target extensions.
++    Every minus-one deletion reuses the last base of the preceding codon when
++    interpreted, possibly changing the first residue of the following block.
++    """
++    shapes = []
++    for n in (29, 30, 31):
++        shapes.append((f'exact{n}', n, []))
++    for n in (30, 31):
++        shapes.append((f'D{n}', n, [(14, 'D', 1)]))
++    for n in (29, 30):
++        shapes.append((f'I{n}', n, [(14, 'I', 1)]))
++    for n in (29, 30, 31):
++        for delta in (1, -1):
++            shapes.append((f'short{n}_{delta}', n, [(14, 'F', delta)]))
++    for n in (29, 30, 31):
++        for delta in (1, -1):
++            shapes.append((f'blocks29_{n}_{delta}', 29+n, [(29, 'F', delta)]))
++    shapes.extend([('long_plus', 180, [(90, 'F', 1)]),
++                   ('long_minus', 180, [(90, 'F', -1)]),
++                   ('long_I', 180, [(90, 'I', 3)]),
++                   ('long_D', 180, [(90, 'D', 3)]),
++                   ('cancel', 90, [(29, 'F', 1), (59, 'F', -1)])])
++    cases = []
++    rng = random.Random(202609161541)
++    for name, n, edits in shapes:
++        protein = ''.join(rng.choice(list(ENCODE)) for _ in range(n))
++        left = ''.join(ENCODE[rng.choice(list(ENCODE))] for _ in range(20))
++        right = ''.join(ENCODE[rng.choice(list(ENCODE))] for _ in range(20))
++        coding = ''.join(ENCODE[a] for a in protein)
++        for offset in range(3):
++            baseline = 'C' * offset + left + coding + right
++            dna, ledger, expected_shifts = baseline, [], []
++            start, change = offset + len(left), 0
++            counts = dict(M=n, I=0, D=0, F=0)
++            blocks, previous = [], 0
++            for aa, kind, amount in edits:
++                at = start + aa * 3 + change
++                if kind == 'F':
++                    deleted = dna[at:at+1] if amount < 0 else ''
++                    inserted = 'C' if amount > 0 else ''
++                    expected_shifts.append(dict(at=at, delta=amount))
++                    blocks.append(aa-previous)
++                    previous = aa
++                    counts['F'] += 1
++                elif kind == 'I':
++                    deleted, inserted = '', 'CAGTGGCCC'[:3*amount]
++                    counts['I'] += amount
++                else:
++                    deleted, inserted = dna[at:at+3*amount], ''
++                    counts['M'] -= amount
++                    counts['D'] += amount
++                ledger.append(dict(at=at, deleted=deleted, inserted=inserted, kind=kind))
++                dna = dna[:at] + inserted + dna[at+len(deleted):]
++                change += len(inserted)-len(deleted)
++            blocks.append(n-previous + counts['I']-counts['D'])
++            for sign in (1, -1):
++                ident = f'{name}_o{offset}_{"fwd" if sign > 0 else "rev"}'
++                cases.append(dict(id=ident, subject=name, family=name, protein=protein,
++                                  baseline_dna=baseline, oriented_dna=dna, edits=ledger,
++                                  dna=dna if sign > 0 else rc(dna), start=start,
++                                  end=start+3*n+change, expected_frame=sign*(offset+1),
++                                  expected_counts=counts, expected_blocks=blocks,
++                                  expected_shifts=expected_shifts))
++    return cases
++
++
++def validate_case(case):
++    """Reconstruct query independently from the written sequential edit ledger."""
++    dna = case['baseline_dna']
++    start = case['start']
++    coding = dna[start:start + 3 * len(case['protein'])]
++    require(''.join(CODE[coding[i:i+3]] for i in range(0, len(coding), 3))
++            == case['protein'], 'baseline protein/codon ledger')
++    for edit in case['edits']:
++        at, deleted, inserted = edit['at'], edit['deleted'], edit['inserted']
++        require(0 <= at <= len(dna) and dna[at:at+len(deleted)] == deleted,
++                'edit ledger deleted bases')
++        dna = dna[:at] + inserted + dna[at+len(deleted):]
++    oriented = case['dna'] if case['expected_frame'] > 0 else rc(case['dna'])
++    require(dna == oriented == case['oriented_dna'], 'edit ledger oriented DNA')
++
++
++def elicited(result, case):
++    return (result['counts'] == case['expected_counts']
++            and result['blocks'] == case['expected_blocks']
++            and [{k: s[k] for k in ('at', 'delta')} for s in result['shifts']] == case['expected_shifts']
++            and result['oriented_start'] == case['start'] and result['oriented_end'] == case['end']
++            and result['subject_start'] == 1 and result['subject_end'] == len(case['protein'])
++            and result['initial_frame'] == case['expected_frame'])
++
++
++def diagnose(raw, cases, out):
++    """Persist all raw bytes and inventory BEFORE parsing; keep every failure/hit."""
++    raw, out = Path(raw), Path(out)
++    snapshot = out / 'raw-first.tsv'
++    # Exclusive creation avoids silently replacing earlier evidence.
++    with snapshot.open('xb') as target, raw.open('rb') as source:
++        shutil.copyfileobj(source, target)
++    write_json(out / 'raw-first.json', dict(raw_sha256=digest(snapshot),
++               cases_expected=[c['id'] for c in cases], certified=False, production_authorized=False))
++    by_id = {c['id']: c for c in cases}
++    proteins = {c['subject']: c['protein'] for c in cases}
++    rows, seen = [], Counter()
++    for number, line in enumerate(snapshot.read_text().splitlines(), 1):
++        record = dict(number=number, raw=line, status='INVALID',
++                      row_sha256=hashlib.sha256(line.encode()).hexdigest())
++        try:
++            fields = line.split('\t')
++            case = by_id[fields[0]]
++            validate_case(case)
++            record.update(query_sequence_sha256=hashlib.sha256(case['dna'].encode()).hexdigest(),
++                          protein_sequence_sha256=hashlib.sha256(proteins[fields[2]].encode()).hexdigest())
++            result = interpret(fields, case['dna'], proteins[fields[2]])
++            same_subject = fields[2] == case['subject']
++            record.update(result=result, status='ELICITED' if same_subject and elicited(result, case) else 'NOT_ELICITED')
++            seen[case['id']] += record['status'] == 'ELICITED'
++            if result['counts']['F']:
++                try:
++                    interpret(fields, case['dna'], proteins[fields[2]], shift_sign=-1)
++                    record['wrong_sign_rejected'] = False
++                except ValueError:
++                    record['wrong_sign_rejected'] = True
++        except (ValueError, KeyError, IndexError) as error:
++            record['error'] = str(error)
++        rows.append(record)
++    inventory = [dict(id=c['id'], family=c['family'], expected_counts=c['expected_counts'],
++                      expected_blocks=c['expected_blocks'],
++                      status='ELICITED' if seen[c['id']] == 1 else 'NOT_ELICITED',
++                      elicited_rows=seen[c['id']]) for c in cases]
++    readings = [set(r['result']['col9_matches']) for r in rows if 'result' in r]
++    consistent = sorted(set.intersection(*readings)) if readings else []
++    complete = (bool(consistent) and bool(rows) and all(c['status'] == 'ELICITED' for c in inventory)
++                and all(r['status'] == 'ELICITED' and r['result']['col9_matches']
++                        and r.get('wrong_sign_rejected', True) for r in rows))
++    report = dict(status='DIAGNOSTIC_COMPLETE_REVIEW_REQUIRED' if complete else 'INCONCLUSIVE',
++                  certified=False, production_authorized=False, acceptance_policy='UNRESOLVED',
++                  raw_sha256=digest(snapshot), consistent_col9_readings=consistent,
++                  cases=inventory, rows=rows)
++    write_json(out / 'diagnostic.json', report)
++    return report
++
++
++def run(diamond, out, tmpdir):
++    # Only the runner imports the frozen launcher; interpreter remains standalone.
++    sys.path.insert(0, str(Path(__file__).resolve().parent))
++    import est_blastx as launcher
++    out = Path(out)
++    out.mkdir()  # refuse reuse, including symlinks
++    try:
++        require(Path(diamond).is_absolute() and digest(diamond) == ENGINE_SHA256, 'engine hash pin')
++        version = launcher.engine_version(diamond)
++        cases = make_cases()
++        write_json(out / 'manifest.json', dict(cases=cases, code=CODE))
++        query, target = out / 'queries.fa', out / 'proteins.fa'
++        query.write_text(''.join(f'>{c["id"]}\n{c["dna"]}\n' for c in cases))
++        proteins = {c['subject']: c['protein'] for c in cases}
++        target.write_text(''.join(f'>{k}\n{v}\n' for k, v in proteins.items()))
++        provenance = dict(diamond_sha256=ENGINE_SHA256, version=version,
++                          query_sha256=digest(query), protein_sha256=digest(target),
++                          imports={str(p): digest(p) for p in
++                                   (Path(__file__), Path(launcher.__file__), launcher.HELPER)},
++                          production_authorized=False, certified=False)
++        write_json(out / 'provenance.json', provenance)
++        raw, db = out / 'expanded.raw17.tsv', out / 'expanded.dmnd'
++        commands = [[diamond, 'makedb', '--in', str(target), '--db', str(db),
++                     '--threads', '2', '--no-parse-seqids'],
++                    launcher.search_command(diamond, query, db, raw, 2, tmpdir, rich=True)]
++        write_json(out / 'commands.json', commands)
++        launcher.execute(commands[0], out / 'makedb.log')
++        try:
++            launcher.execute(commands[1], out / 'blastx.log')
++        except BaseException:
++            if raw.exists():
++                diagnose(raw, cases, out)
++            raise
++        report = diagnose(raw, cases, out)
++        (out / 'DONE').write_text(report['status'] + '\nNOT CERTIFICATION\n')
++        return report
++    except BaseException as error:
++        (out / 'FAILED').write_text(str(error) + '\n')
++        raise
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--diamond', required=True)
++    parser.add_argument('--out-dir', required=True)
++    parser.add_argument('--tmpdir', required=True)
++    args = parser.parse_args()
++    def interrupted(signum, _frame):
++        raise InterruptedError(f'signal {signum}')
++    signal.signal(signal.SIGTERM, interrupted)
++    signal.signal(signal.SIGINT, interrupted)
++    run(args.diamond, args.out_dir, args.tmpdir)
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/revision/scripts/tests/test_est_hsp_expanded.py b/revision/scripts/tests/test_est_hsp_expanded.py
+new file mode 100644
+index 0000000..a53611f
+--- /dev/null
++++ b/revision/scripts/tests/test_est_hsp_expanded.py
+@@ -0,0 +1,193 @@
++"""CPU-only truth fixtures: these rows are NOT engine execution evidence."""
++import importlib.util
++from pathlib import Path
++import tempfile
++import unittest
++
++MODULE = Path(__file__).resolve().parents[1] / 'evidence/est_hsp_expanded.py'
++
++
++def load():
++    spec = importlib.util.spec_from_file_location('expanded', MODULE)
++    mod = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(mod)
++    return mod
++
++
++class TruthTests(unittest.TestCase):
++    def setUp(self):
++        self.assertTrue(MODULE.exists(), 'new independent interpreter is missing')
++        self.m = load()
++
++    def row(self, dna, q, s, btop, cigar, frame=1, offset=0, col9=None):
++        protein = s.replace('-', '')
++        end = len(dna) - offset
++        qs, qe = offset + 1, len(dna)
++        if frame < 0:
++            qs, qe = len(dna) - offset, 1
++        return ['q', str(len(dna)), 'p', str(len(protein)), str(qs), str(qe),
++                '1', str(len(protein)), str(col9 or len(q.replace('\\', '').replace('/', ''))),
++                '1e-20', '100', str(frame), btop, cigar, q, s,
++                q.replace('-', '').replace('\\', '').replace('/', '')], protein
++
++    def test_both_shift_signs_on_all_six_frames_and_wrong_sign(self):
++        for offset in range(3):
++            for sign in (1, -1):
++                for core, q, btop, cigar in [('ATGCGCT', 'M\\A', '1\\-1', '1M1\\1M'),
++                                             ('ATGCT', 'M/A', '1/-1', '1M1/1M')]:
++                    oriented = 'C' * offset + core
++                    dna = oriented if sign > 0 else self.m.rc(oriented)
++                    row, protein = self.row(dna, q, 'M-A', btop, cigar,
++                                            sign * (offset + 1), offset)
++                    result = self.m.interpret(row, dna, protein)
++                    self.assertEqual(result['counts'], dict(M=2, I=0, D=0, F=1))
++                    self.assertEqual(result['blocks'], [1, 1])
++                    with self.assertRaises(ValueError):
++                        self.m.interpret(row, dna, protein, shift_sign=-1)
++
++    def test_insertion_deletion_and_mismatch(self):
++        row, p = self.row('ATGGCTTGG', 'MA-W', 'M-QF', '1A--QWF', '1M1I1D1M')
++        r = self.m.interpret(row, 'ATGGCTTGG', p)
++        self.assertEqual(r['counts'], dict(M=2, I=1, D=1, F=0))
++        self.assertEqual(r['metrics']['query_residues'], 3)
++        self.assertEqual(r['metrics']['paired'], 2)
++        row[16] = 'MAF'
++        with self.assertRaises(ValueError):
++            self.m.interpret(row, 'ATGGCTTGG', p)
++
++    def test_multiple_canceling_shifts(self):
++        row, p = self.row('ATGCGCTGG', 'M\\A/W', 'M-A-W', '1\\-1/-1', '1M1\\1M1/1M')
++        r = self.m.interpret(row, 'ATGCGCTGG', p)
++        self.assertEqual(r['blocks'], [1, 1, 1])
++        self.assertEqual([s['delta'] for s in r['shifts']], [1, -1])
++
++    def test_boundary_metrics_and_unknown_reported_length(self):
++        for n in (29, 30, 31):
++            row, p = self.row('GCT' * n, 'A' * n, 'A' * n, str(n), f'{n}M')
++            r = self.m.interpret(row, 'GCT' * n, p)
++            self.assertEqual(r['thresholds']['reported'], n >= 30)
++            row[8] = '999'
++            r = self.m.interpret(row, 'GCT' * n, p)
++            self.assertEqual(r['col9_matches'], [])
++
++    def test_short_shift_threshold_and_serialization_failures(self):
++        for n in (29, 30, 31):
++            dna = 'ATG'*14 + 'C' + 'GCT'*(n-14)
++            row, p = self.row(dna, 'M'*14 + '\\' + 'A'*(n-14),
++                              'M'*14 + '-' + 'A'*(n-14),
++                              f'14\\-{n-14}', f'14M1\\{n-14}M')
++            result = self.m.interpret(row, dna, p)
++            self.assertEqual(result['metrics']['columns_including_F'], n+1)
++            self.assertEqual(result['thresholds']['reported'], n >= 30)
++            for column, bad in [(5, '3'), (11, '2'), (12, '99'), (13, '99M'),
++                                (9, 'nan'), (15, 'Z' + row[15][1:])]:
++                broken = row.copy()
++                broken[column] = bad
++                with self.assertRaises(ValueError):
++                    self.m.interpret(broken, dna, p)
++
++    def test_shift_block_boundaries_both_strands(self):
++        for n in (29, 30, 31):
++            for marker, middle in [('\\', 'C'), ('/', '')]:
++                core = 'ATG' * 29 + middle + 'GCT' * n
++                if marker == '/':
++                    core = 'ATG' * 29 + ('GCT' * n)[1:]
++                for sign in (1, -1):
++                    dna = core if sign > 0 else self.m.rc(core)
++                    row, p = self.row(dna, 'M'*29 + marker + 'A'*n,
++                                      'M'*29 + '-' + 'A'*n,
++                                      f'29{marker}-{n}', f'29M1{marker}{n}M', sign)
++                    r = self.m.interpret(row, dna, p)
++                    self.assertEqual(r['blocks'], [29, n])
++                    self.assertEqual(r['block_thresholds'], [False, n >= 30])
++                    self.assertTrue(r['thresholds']['reported'])
++                    self.assertFalse(r['each_block_ge30'])
++
++    def test_manifest_bounded_and_ledger_reconstructs_dna(self):
++        cases = self.m.make_cases()
++        self.assertEqual(len(cases), 144)
++        self.assertEqual({c['expected_frame'] for c in cases}, {-3, -2, -1, 1, 2, 3})
++        for c in cases:
++            self.m.validate_case(c)
++            dna = c['baseline_dna']
++            for edit in c['edits']:
++                at = edit['at']
++                self.assertEqual(dna[at:at + len(edit['deleted'])], edit['deleted'])
++                dna = dna[:at] + edit['inserted'] + dna[at + len(edit['deleted']):]
++            self.assertEqual(dna, c['oriented_dna'])
++            self.assertGreaterEqual(len(dna), 100)
++            self.assertEqual(c['dna'], dna if c['expected_frame'] > 0 else self.m.rc(dna))
++
++    def test_ledger_tampering_rejected(self):
++        case = self.m.make_cases()[18]  # first deletion family
++        self.m.validate_case(case)
++        case['edits'][0]['deleted'] = 'AAA'
++        with self.assertRaises(ValueError):
++            self.m.validate_case(case)
++
++    def test_standard_code_known_residues(self):
++        for codon, amino in [('ATG', 'M'), ('GCT', 'A'), ('TGG', 'W'),
++                             ('TAA', '*'), ('TAG', '*'), ('TGA', '*'), ('AGC', 'S')]:
++            self.assertEqual(self.m.CODE[codon], amino)
++        for amino, codon in self.m.ENCODE.items():
++            self.assertEqual(self.m.CODE[codon], amino)
++
++    def test_boundary_indels_separate_paired_and_query(self):
++        for n in (29, 30):
++            dna = 'ATG'*14 + 'GCT' + 'ATG'*(n-14)
++            row, p = self.row(dna, 'M'*14 + 'A' + 'M'*(n-14),
++                              'M'*14 + '-' + 'M'*(n-14),
++                              f'14A-{n-14}', f'14M1I{n-14}M')
++            r = self.m.interpret(row, dna, p)
++            self.assertEqual(r['metrics']['paired'], n)
++            self.assertEqual(r['metrics']['query_residues'], n+1)
++            dna = 'ATG'*n
++            row, p = self.row(dna, 'M'*14 + '-' + 'M'*(n-14),
++                              'M'*14 + 'A' + 'M'*(n-14),
++                              f'14-A{n-14}', f'14M1D{n-14}M')
++            r = self.m.interpret(row, dna, p)
++            self.assertEqual(r['metrics']['query_residues'], n)
++            self.assertEqual(r['metrics']['reported'], n+1)
++
++    def test_raw_first_and_missing_cases_never_pass(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            out = Path(tmp)
++            raw = out / 'raw.tsv'
++            raw.write_text('broken\trow\n')
++            cases = self.m.make_cases()[:1]
++            report = self.m.diagnose(raw, cases, out)
++            self.assertEqual((out / 'raw-first.tsv').read_bytes(), raw.read_bytes())
++            self.assertEqual(report['status'], 'INCONCLUSIVE')
++            self.assertFalse(report['certified'])
++            self.assertEqual(report['cases'][0]['status'], 'NOT_ELICITED')
++            self.assertEqual(report['rows'][0]['status'], 'INVALID')
++
++    def test_complete_diagnostic_still_never_certifies(self):
++        case = self.m.make_cases()[0]
++        protein = case['protein']
++        row = [case['id'], str(len(case['dna'])), case['subject'], '29',
++               str(case['start']+1), str(case['end']), '1', '29', '29',
++               '1e-20', '100', '1', '29', '29M', protein, protein, protein]
++        with tempfile.TemporaryDirectory() as tmp:
++            out = Path(tmp)
++            raw = out / 'raw.tsv'
++            raw.write_text('\t'.join(row) + '\n')
++            report = self.m.diagnose(raw, [case], out)
++            self.assertEqual(report['status'], 'DIAGNOSTIC_COMPLETE_REVIEW_REQUIRED')
++            self.assertFalse(report['certified'])
++            self.assertFalse(report['production_authorized'])
++            self.assertEqual(report['acceptance_policy'], 'UNRESOLVED')
++            with self.assertRaises(FileExistsError):
++                self.m.diagnose(raw, [case], out)
++
++    def test_clipped_trace_is_not_negative_validation(self):
++        c = self.m.make_cases()[0]
++        result = {'counts': c['expected_counts'], 'blocks': c['expected_blocks'],
++                  'shifts': [], 'oriented_start': c['start'] + 3,
++                  'oriented_end': c['end'], 'subject_start': 1,
++                  'subject_end': len(c['protein']), 'initial_frame': c['expected_frame']}
++        self.assertFalse(self.m.elicited(result, c))
++
++
++if __name__ == '__main__':
++    unittest.main()

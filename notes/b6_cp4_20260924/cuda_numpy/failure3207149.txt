@@ -1,0 +1,216 @@
+
+FILE /work/nvme/bilv/wcyim/transgenic/repo_b6_cachefix_20260924/b6-int4-3207149.out
+repo: /work/nvme/bilv/wcyim/transgenic/repo_b6_cachefix_20260924 @ 7018e33 snapshot fix from b6-integration c9e242ceeb7c9f83925985fda01b0  image: /work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif
+The following values were not passed to `accelerate launch` and had defaults used instead:
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+[rank0]:W0924 19:34:06.940000 2681444 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank1]:W0924 19:34:06.940000 2681445 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank0]:W0924 19:34:06.987000 2681444 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank1]:W0924 19:34:06.987000 2681445 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+NCCL version 2.30.7+cuda13.3
+
+[2026-09-24 19:34:08] gh052:2681444:2681444 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-24 19:34:08] gh052:2681445:2681445 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-24 19:34:08] gh052:2681444:2681444 [0] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId
+[2026-09-24 19:34:08] gh052:2681445:2681445 [1] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+
+[2026-09-24 19:34:08] gh052:2681444:2681444 [0] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-24 19:34:08] gh052:2681445:2681445 [1] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-24 19:34:08] gh052:2681445:2681445 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-24 19:34:08] gh052:2681444:2681444 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-24 19:34:08] gh052:2681445:2681445 [1] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-09-24 19:34:08] gh052:2681444:2681444 [0] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet runarm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+
+Traceback (most recent call last):
+  File "/work/repo/revision/scripts/b6/integration_4rank.py", line 313, in main
+    report["straight"] = train("straight")
+                         ^^^^^^^^^^^^^^^^^
+  File "/work/repo/revision/scripts/b6/integration_4rank.py", line 274, in train
+    return trainer.run_b6(spec, model_factory(args, cfg), train_ds, eval_ds, collate_fn=wp3["collate"],
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/repo/train/train_HyenaTransgenic_B6.py", line 449, in run_b6
+    result = train_loop()
+             ^^^^^^^^^^^^
+  File "/work/repo/train/train_HyenaTransgenic_B6.py", line 408, in train_loop
+    rt.validate_b6_batch(batch)
+  File "/work/repo/src/transgenic/training/b6_runtime.py", line 83, in validate_b6_batch
+    spec.validate_batch(batch, training=with_labels)
+  File "/work/repo/src/transgenic/evidence/b6_track_spec.py", line 398, in validate_batch
+    mask = np.asarray(batch["chain_mask"])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_tensor.py", line 1250, in __array__
+    return self.numpy()
+           ^^^^^^^^^^^^
+TypeError: can't convert cuda:1 device type tensor to numpy. Use Tensor.cpu() to copy the tensor to host memory first.
+Traceback (most recent call last):
+  File "/work/repo/revision/scripts/b6/integration_4rank.py", line 313, in main
+    report["straight"] = train("straight")
+                         ^^^^^^^^^^^^^^^^^
+  File "/work/repo/revision/scripts/b6/integration_4rank.py", line 274, in train
+    return trainer.run_b6(spec, model_factory(args, cfg), train_ds, eval_ds, collate_fn=wp3["collate"],
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/repo/train/train_HyenaTransgenic_B6.py", line 449, in run_b6
+    result = train_loop()
+             ^^^^^^^^^^^^
+  File "/work/repo/train/train_HyenaTransgenic_B6.py", line 408, in train_loop
+    rt.validate_b6_batch(batch)
+  File "/work/repo/src/transgenic/training/b6_runtime.py", line 83, in validate_b6_batch
+    spec.validate_batch(batch, training=with_labels)
+  File "/work/repo/src/transgenic/evidence/b6_track_spec.py", line 398, in validate_batch
+    mask = np.asarray(batch["chain_mask"])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/_tensor.py", line 1250, in __array__
+    return self.numpy()
+           ^^^^^^^^^^^^
+TypeError: can't convert cuda:0 device type tensor to numpy. Use Tensor.cpu() to copy the tensor to host memory first.
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+{"status": "FAIL", "failures": ["training: TypeError: can't convert cuda:0 device type tensor to numpy. Use Tensor.cpu() to copy the tensor to host memory first.", "per-link verification: 1 records, 1 distinct", "training: TypeError: can't convert cuda:1 device type tensor to numpy. Use Tensor.cpu() to copy the tensor to host memory first.", "per-link verification: 1 records, 1 distinct"]}
+[rank0]:[W924 19:34:36.864634615 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+W0924 19:34:37.468000 2681201 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 2681445 closing signal SIGTERM
+E0924 19:34:37.582000 2681201 torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: 2) local_rank: 0 (pid: 2681444) of binary: /usr/bin/python3
+Traceback (most recent call last):
+  File "/usr/local/bin/accelerate", line 6, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/usr/local/lib/python3.12/dist-packages/accelerate/commands/launch.py", line 1404, in launch_command
+    multi_gpu_launcher(args)
+  File "/usr/local/lib/python3.12/dist-packages/accelerate/commands/launch.py", line 1029, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/run.py", line 1019, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/launcher/api.py", line 386, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+revision/scripts/b6/integration_4rank.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-09-24_19:34:37
+  host      : gh052.hsn.cm.delta.internal.ncsa.edu
+  rank      : 1 (local_rank: 1)
+  exitcode  : 2 (pid: 2681445) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-09-24_19:34:37
+  host      : gh052.hsn.cm.delta.internal.ncsa.edu
+  rank      : 0 (local_rank: 0)
+  exitcode  : 2 (pid: 2681444) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+B6 4-rank integration: ERROR rc=1
+
+
+FILE /work/nvme/bilv/wcyim/transgenic/runs/b6_int4/run_3207149/report.json
+{
+ "started": "2026-09-24T19:34:03",
+ "world_size": 2,
+ "args": {
+  "model": "real",
+  "data": "wp3-fixtures",
+  "config": "configs/b6_400m_win_v3.json",
+  "tier": 600,
+  "rows": 48,
+  "accumulation": 4,
+  "n_pilot": 3,
+  "stop_at": 1,
+  "backend": "inductor",
+  "mixed_precision": "bf16",
+  "gen_tokens": 12,
+  "nondeterministic": false,
+  "out": "/work/runs/b6_int4/run_3207149"
+ },
+ "wp3_pairs": [
+  {
+   "wid": "Athaliana:Chr1:0-600",
+   "fw": 1,
+   "rc": 2,
+   "tracks_nonzero": 2709,
+   "chain_elements": 7,
+   "label_genes": 1,
+   "label_fw": "100|five_prime_UTR1|110|+|.;110|CDS1|200|+|A;300|CDS2|390|+|A;390|three_prime_UTR1|400|+|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1",
+   "label_rc": "200|three_prime_UTR1|210|-|.;210|CDS2|300|-|A;400|CDS1|490|-|A;490|five_prime_UTR1|500|-|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1"
+  },
+  {
+   "wid": "Athaliana:Chr1:3000-3600",
+   "fw": 7,
+   "rc": 8,
+   "tracks_nonzero": 1800,
+   "chain_elements": 0,
+   "label_genes": 1,
+   "label_fw": "90|three_prime_UTR1|100|-|.;100|CDS2|200|-|A;300|CDS1|390|-|A;390|five_prime_UTR1|400|-|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1",
+   "label_rc": "200|five_prime_UTR1|210|+|.;210|CDS1|300|+|A;400|CDS2|500|+|A;500|three_prime_UTR1|510|+|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1"
+  }
+ ],
+ "wp3_note": "label RC asserted: fixture labels are real v3 GSF (tests/b6_fixtures.tile_labels); each RC twin label == reverse_complement_v3(forward) both ways and its served tokens match",
+ "reachable_updates": 3,
+ "rc_pairs_checked": 2,
+ "link_record_sha256": [
+  "68cac3f6bd7590842126afd146264cd4e72873bc37c7a5704f8e9ff6313664b8"
+ ],
+ "generation_row_kinds": [
+  "wp3_forward",
+  "wp3_rc"
+ ],
+ "generation": [
+  {
+   "rank": 0,
+   "parity": {
+    "beams1": {
+     "sequences_equal": true,
+     "max_score_diff": 0.0014864206314086914
+    },
+    "beams2": {
+     "sequences_equal": true,
+     "max_score_diff": 0.0017147064208984375
+    }
+   }
+  },
+  {
+   "rank": 1,
+   "parity": {
+    "beams1": {
+     "sequences_equal": true,
+     "max_score_diff": 0.0014864206314086914
+    },
+    "beams2": {
+     "sequences_equal": true,
+     "max_score_diff": 0.0017147064208984375
+    }
+   }
+  }
+ ],
+ "failures": [
+  "training: TypeError: can't convert cuda:0 device type tensor to numpy. Use Tensor.cpu() to copy the tensor to host memory first.",
+  "per-link verification: 1 records, 1 distinct",
+  "training: TypeError: can't convert cuda:1 device type tensor to numpy. Use Tensor.cpu() to copy the tensor to host memory first.",
+  "per-link verification: 1 records, 1 distinct"
+ ],
+ "status": "FAIL",
+ "finished": "2026-09-24T19:34:36"
+}

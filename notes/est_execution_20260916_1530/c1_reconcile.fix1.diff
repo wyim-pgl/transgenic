@@ -1,0 +1,275 @@
+diff --git a/notes/EST_C1_RECONCILIATION_REPORT.md b/notes/EST_C1_RECONCILIATION_REPORT.md
+index 9b299ab..ccd995f 100644
+--- a/notes/EST_C1_RECONCILIATION_REPORT.md
++++ b/notes/EST_C1_RECONCILIATION_REPORT.md
+@@ -65,8 +65,27 @@ PYTHONPATH=.testdeps /home/wyim/miniconda3/envs/agent-reach/bin/python -m pytest
+ # 56 passed in 5.22s
+ git diff --check
+ # exit0
+ ```
+ 
+ TDD: initial32 new cases failed on missing APIs; later negative tests reproduced missing preflight-lock coverage, self-consistent broadened receipt listings, late mutation acceptance, active extra accounting steps and noncanonical capture paths before fixes.56new tests cover pilot positive/negative bindings, manifest mutations, preflight full small tree, actual array task bindings and18unit integrated PASS/FAIL with semantic gates false.119original tests remain unchanged. Tests use synthetic anchors only through pytest monkeypatch; production exposes no anchor override.
+ 
+ Graft orientation/query/caller output estimated **885,659 tokens saved** (tool estimate). No claim of independent code review or production C1 success is made.
++
++## Round1 review fixes (FIX_BASE 21456324923c2c84610bd63e8b6ae868eae2f535)
++
++Read the complete independent review at main `notes/est_execution_20260916_1530/c1_reconcile.independent_review.md`; reproduced both P2 findings before edits.
++
++- **R1:** `load_reconciliation` now also catches the specific `csv.Error` and `RecursionError` evidence/parser failures. Overlimit CSV fields and deeply nested JSON produce failed `historical_reconciliation`, rollup FAIL, FAILED.json and all18 unit reports. No blanket Exception catch; a TypeError programmer-defect regression still propagates.
++- **R2:** both batch artifact inventories are captured before the first expensive unit audit. Exact pilot/array `run.sbatch` identities must match their existing historical pins. The two wrappers and18 receipt-backed required logs retain initial digest/size and are rechecked before rollup with regular-file/no-symlink-ancestor checks. Size changes fail before hashing, so a grown artifact is not needlessly reread. Deleted files, same-byte symlinks and equal-size content mutations fail while preserving all18 unit reports. No large unit payload is rehashed by this final check.
++- Queue freshness remains initial-only. A positive integration test advances the clock two hours after the18th unit and forbids further raw13/DMND/filtered-FASTA hashing; the final20 small-file checks still PASS. This is not continuous writer exclusion or a new scheduler policy.
++
++TDD RED:14 failures (two parser-limit reproductions and12 producer-artifact mutation cases),57 passed. Added two guard cases for programmer-error propagation and no end-time queue aging/payload rehash. Final full regression command:
++
++```sh
++PYTHONPATH=.testdeps /home/wyim/miniconda3/envs/agent-reach/bin/python -m pytest revision/scripts/tests/test_est_blastx.py revision/scripts/tests/test_est_blastx_fixture.py revision/scripts/tests/test_track_c_recovery.py revision/scripts/tests/test_track_c_audit_review.py revision/scripts/tests/test_c1_reconciliation.py -q --tb=short
++# 191 passed in 12.95s (175 previous +16 new)
++git diff --check
++# exit0
++```
++
++Only auditor, reconciliation tests and this report changed. No real manifest, policy/authorization, remote state, job or deployed snapshot changed. Baseline6165461 remains untouched; all19 operationally unbound paths and scientific/extern limitations above remain unchanged. Independent controller re-review is pending. Round1 graft query estimated52,687 tokens saved.
+diff --git a/revision/scripts/evidence/est_blastx_audit.py b/revision/scripts/evidence/est_blastx_audit.py
+index 8034586..4efee5a 100644
+--- a/revision/scripts/evidence/est_blastx_audit.py
++++ b/revision/scripts/evidence/est_blastx_audit.py
+@@ -614,17 +614,18 @@ def load_reconciliation(path, digest, root, sacct_text, check):
+                 require_evidence(fresh['kind'] == 'directory' and set(fresh['children']) == {'jobid'} and
+                                  (target / 'jobid').read_text() == expected_job + '\n', 'submission sentinel listing/jobid')
+             else:
+                 require_evidence(fresh['kind'] == 'directory', 'historical container kind')
+             reconciled[name] = fresh
+         check.add('historical_reconciliation', True, {'manifest': str(path), 'sha256': digest,
+                   'evidence': data, 'note': 'historical dispositions only; extern and scientific gates unresolved'})
+         return reconciled
+-    except (OSError, ValueError, UnicodeError) as exc:
++    except (OSError, ValueError, UnicodeError, csv.Error, RecursionError) as exc:
++        # External CSV/JSON parser limits are failed evidence, not an inventory abort.
+         check.add('historical_reconciliation', False, {'manifest': str(path), 'error': str(exc)})
+         return {}
+ 
+ 
+ def scan_dispositions(root, known, check, reconciled=None):
+     """Must-fix 3: EVERY sibling dir (preflight_20260914/, tmp/, ...) gets an
+     explicit disposition; NEITHER and unreconciled tmp/ are failures."""
+     audit_container_markers(root, check)
+@@ -656,37 +657,42 @@ def scan_dispositions(root, known, check, reconciled=None):
+             entries[key] = state
+             visit(entry)
+     visit(root)
+     bad = {k: v for k, v in entries.items() if not v['ok']}
+     check.add(f'dispositions:{root}', not bad, entries or 'no unexpected sibling dirs')
+     return entries
+ 
+ 
++def required_batch_logs(layout):
++    return ({f'logs/6164049_{i}.{ext}' for i in range(8) for ext in ('out', 'err')}
++            if layout == 'remaining8' else {'slurm-6163851.out', 'slurm-6163851.err'})
++
++
+ def hash_batch_artifacts(root, check_name, check, pilot_receipt=None):
+     """Bind wrapper bytes; require receipt-backed log names, never Slurm defaults."""
+     layout = check_name.rsplit(':', 1)[-1]
+     if layout not in APPROVED_WRAPPER_SHA256:
+         raise ValueError(f'unknown batch layout: {layout}')
+     hashed = {}
+     for pattern in ('*.sbatch', '*.out', '*.err', 'logs/*.out', 'logs/*.err'):
+         for p in sorted(root.glob(pattern)):
+-            if p.is_file() and not p.is_symlink():
++            if regular_path(p):
+                 hashed[str(p.relative_to(root))] = launcher.sha256(p)
+     scripts = [name for name, digest in hashed.items()
+                if name.endswith('.sbatch') and digest == APPROVED_WRAPPER_SHA256[layout]]
+     check.add(check_name + ':script', bool(scripts),
+               {'approved_sha256': APPROVED_WRAPPER_SHA256[layout], 'matched': scripts})
+     if layout == 'remaining8':
+         # notes/RESTART_HANDOFF_20260915.md:38 records these submission paths.
+-        required = {f'logs/6164049_{i}.{ext}' for i in range(8) for ext in ('out', 'err')}
++        required = required_batch_logs(layout)
+         missing = sorted(required - set(hashed))
+         check.add(check_name + ':logs', not missing, {'missing': missing})
+     else:
+-        detail = {'required': ['slurm-6163851.out', 'slurm-6163851.err']}
++        detail = {'required': sorted(required_batch_logs(layout))}
+         try:
+             require_evidence(pilot_receipt is not None, 'UNRESOLVED pilot log-layout receipt absent')
+             receipt = Path(pilot_receipt)
+             require_evidence(regular_path(receipt) and launcher.sha256(receipt) == PILOT_RECEIPT_SHA256,
+                              'UNRESOLVED recovered pilot receipt hash/source mismatch')
+             # Whole-extract pin binds source session, raw-record hashes, call/result,
+             # command paths and jobid. No shell execution or substring-based approval.
+             records = json.loads(receipt.read_text())
+@@ -749,24 +755,37 @@ def audit(blastx_root, out_dir, sacct_file, pilot_receipt=None,
+         pilot_root = blastx_root / PILOT_DIR
+         batch_root = blastx_root / REMAINING8_DIR
+         for root, name in ((pilot_root, PILOT_DIR), (batch_root, REMAINING8_DIR)):
+             check.add(f'root_present:{name}', root.is_dir(), str(root))
+         if not pilot_root.is_dir() or not batch_root.is_dir():
+             launcher.write_json(out / 'rollup.json',
+                                 {'status': 'FAIL', 'checks': check.results})
+             raise ValueError(f'audit FAILED: {check.failed()}')
++        # Bind BOTH producers before any expensive unit hashing; only these small
++        # wrappers/receipt-backed logs are rehashed at the end (never unit payloads).
++        batch_bindings = {}
++        for root, layout in ((pilot_root, 'pilot'), (batch_root, 'remaining8')):
++            hashes = hash_batch_artifacts(root, 'batch_artifacts:' + layout, check, pilot_receipt)
++            for name in sorted({'run.sbatch'} | required_batch_logs(layout)):
++                path = root / name
++                try:
++                    digest = hashes.get(name)
++                    require_evidence(digest is not None and regular_path(path), f'missing/nonregular artifact: {path}')
++                    if name == 'run.sbatch':
++                        require_evidence(digest == APPROVED_WRAPPER_SHA256[layout], 'producing wrapper pin mismatch')
++                    batch_bindings[path] = (digest, path.stat().st_size)
++                except (OSError, EvidenceError) as exc:
++                    check.add('batch_artifact_binding:' + str(path), False, str(exc))
+         # Pilot layout: unit dirs + query.sha256 at species root.
+         audit_species_root('Sitalica', pilot_root, 'Sitalica', check)
+-        hash_batch_artifacts(pilot_root, 'batch_artifacts:pilot', check, pilot_receipt)
+         scan_dispositions(pilot_root, set(SOURCES), check, reconciled)
+         for kind in SOURCES:
+             units.append(audit_unit('pilot', 'Sitalica', kind, pilot_root, pilot_root))
+         # remaining8 layout: <batch>/<species>/<kind>; inputs at the batch root.
+-        hash_batch_artifacts(batch_root, 'batch_artifacts:remaining8', check)
+         scan_dispositions(batch_root, set(REMAINING8_SPECIES) | {'logs'}, check, reconciled)
+         if (batch_root / 'logs').is_dir():
+             scan_dispositions(batch_root / 'logs', set(), check)
+         for species in REMAINING8_SPECIES:
+             species_root = batch_root / species
+             if not species_root.is_dir():
+                 check.add(f'{species}:species_root', False, f'missing {species_root}')
+                 continue
+@@ -780,16 +799,24 @@ def audit(blastx_root, out_dir, sacct_file, pilot_receipt=None,
+         # Unit hashing can take hours: detect changes since the initial small-tree binding.
+         for name, expected in reconciled.items():
+             try:
+                 unchanged = historical_snapshot(Path(name)) == expected
+                 detail = 'unchanged historical snapshot'
+             except (OSError, EvidenceError, UnicodeError) as exc:
+                 unchanged, detail = False, str(exc)
+             check.add('reconciliation_final:' + name, unchanged, detail)
++        for path, (digest, size) in batch_bindings.items():
++            try:
++                unchanged = (regular_path(path) and path.stat().st_size == size
++                             and launcher.sha256(path) == digest)
++                detail = {'initial_sha256': digest, 'initial_size': size}
++            except OSError as exc:
++                unchanged, detail = False, str(exc)
++            check.add('batch_artifact_final:' + str(path), unchanged, detail)
+         for unit in units:
+             launcher.write_json(out / 'units' / (unit['unit'].replace('/', '_') + '.json'), unit)
+         failed_units = [u['unit'] for u in units if u['status'] != 'PASS']
+         status = 'FAIL' if (failed_units or check.failed() or len(units) != 18) else 'PASS'
+         rollup = {'status': status, 'units_audited': len(units), 'units_expected': 18,
+                   'failed_units': failed_units, 'tree_checks': check.results,
+                   'sacct_evidence_verbatim': sacct_text,
+                   'sacct_sha256': launcher.sha256(sacct_file),
+diff --git a/revision/scripts/tests/test_c1_reconciliation.py b/revision/scripts/tests/test_c1_reconciliation.py
+index a4007a3..295f828 100644
+--- a/revision/scripts/tests/test_c1_reconciliation.py
++++ b/revision/scripts/tests/test_c1_reconciliation.py
+@@ -278,8 +278,103 @@ def test_integration_retains_18_units_and_semantic_gates(tmp_path, monkeypatch,
+         with pytest.raises(ValueError, match='audit FAILED'):
+             audit.audit(tree, out, sacct, RECEIPT, path, digest)
+         result = json.loads((out / 'rollup.json').read_text())
+     assert result['units_audited'] == 18 and result['failed_units'] == []
+     assert len(list((out / 'units').glob('*.json'))) == 18
+     assert result['status'] == ('PASS' if valid else 'FAIL')
+     assert not result['clean_accounting'] and not result['accepted_phase_evidence'] and not result['production_authorized']
+     assert 'UNRESOLVED' in result['sacct_note']
++
++
++@pytest.mark.parametrize('malformed', ['csv_field', 'deep_json'])
++def test_parser_limits_preserve_18_unit_inventory(tmp_path, monkeypatch, malformed):
++    tree, sacct, _, path, data = manifest_fixture(tmp_path, monkeypatch)
++    if malformed == 'csv_field':
++        capture = tmp_path / 'oversized-accounting.psv'
++        capture.write_text('JobID|State|ExitCode\n' + 'x' * (audit.csv.field_size_limit() + 1)
++                           + '|COMPLETED|0:0\n')
++        data['accounting'] = {'path': str(capture), 'sha256': audit.launcher.sha256(capture)}
++        path.write_text(json.dumps(data))
++    else:
++        path.write_text('[' * 1100 + '0' + ']' * 1100)
++    out = tmp_path / 'out'
++    with pytest.raises(ValueError, match='audit FAILED'):
++        audit.audit(tree, out, sacct, RECEIPT, path, audit.launcher.sha256(path))
++    result = json.loads((out / 'rollup.json').read_text())
++    assert result['status'] == 'FAIL' and result['units_audited'] == 18
++    assert result['failed_units'] == []
++    assert result['tree_checks']['historical_reconciliation']['status'] == 'FAIL'
++    assert len(list((out / 'units').glob('*.json'))) == 18
++    assert (out / 'FAILED.json').exists() and not (out / 'DONE').exists()
++
++
++@pytest.mark.parametrize('target', ['pilot_wrapper', 'array_wrapper', 'pilot_log', 'array_log'])
++@pytest.mark.parametrize('mutation', ['bytes', 'delete', 'symlink'])
++def test_late_producer_artifact_changes_preserve_failed_inventory(tmp_path, monkeypatch, target, mutation):
++    tree, sacct, root, path, _ = manifest_fixture(tmp_path, monkeypatch)
++    batch = tree / audit.REMAINING8_DIR
++    artifact = {'pilot_wrapper': root / 'run.sbatch', 'array_wrapper': batch / 'run.sbatch',
++                'pilot_log': root / 'slurm-6163851.out',
++                'array_log': batch / 'logs/6164049_0.err'}[target]
++    original = audit.audit_unit
++    mutated = False
++    def mutate_after_binding(*args):
++        nonlocal mutated
++        if not mutated:
++            before = artifact.read_bytes()
++            if mutation == 'bytes':
++                # Equal length where possible: size checks alone cannot detect this.
++                artifact.write_bytes(b'x' * len(before) if before else b'changed')
++            else:
++                artifact.unlink()
++                if mutation == 'symlink':
++                    replacement = tmp_path / 'replacement'
++                    replacement.write_bytes(before)
++                    artifact.symlink_to(replacement)
++            mutated = True
++        return original(*args)
++    monkeypatch.setattr(audit, 'audit_unit', mutate_after_binding)
++    out = tmp_path / 'out'
++    with pytest.raises(ValueError, match='audit FAILED'):
++        audit.audit(tree, out, sacct, RECEIPT, path, audit.launcher.sha256(path))
++    result = json.loads((out / 'rollup.json').read_text())
++    assert result['status'] == 'FAIL' and result['units_audited'] == 18
++    assert result['failed_units'] == []
++    assert result['tree_checks']['batch_artifact_final:' + str(artifact)]['status'] == 'FAIL'
++    assert len(list((out / 'units').glob('*.json'))) == 18
++    assert (out / 'FAILED.json').exists() and not (out / 'DONE').exists()
++
++
++def test_final_checks_do_not_rehash_payload_or_age_out_queue(tmp_path, monkeypatch):
++    tree, sacct, _, path, _ = manifest_fixture(tmp_path, monkeypatch)
++    original_unit, original_hash = audit.audit_unit, audit.launcher.sha256
++    real_datetime = audit.datetime.datetime
++    class Later(real_datetime):
++        @classmethod
++        def now(cls, tz=None):
++            return real_datetime.now(tz) + audit.datetime.timedelta(hours=2)
++    count = 0
++    def no_payload_hash(path):
++        assert not str(path).endswith(('.raw13.tsv', '.dmnd', '.filtered.fa'))
++        return original_hash(path)
++    def finish_units(*args):
++        nonlocal count
++        result = original_unit(*args)
++        count += 1
++        if count == 18:
++            monkeypatch.setattr(audit.datetime, 'datetime', Later)
++            monkeypatch.setattr(audit.launcher, 'sha256', no_payload_hash)
++        return result
++    monkeypatch.setattr(audit, 'audit_unit', finish_units)
++    result = audit.audit(tree, tmp_path / 'out', sacct, RECEIPT, path, original_hash(path))
++    assert result['status'] == 'PASS' and result['units_audited'] == 18
++    final = [c for name, c in result['tree_checks'].items() if name.startswith('batch_artifact_final:')]
++    assert len(final) == 20 and all(c['status'] == 'PASS' for c in final)
++
++
++def test_reconciliation_programmer_error_still_propagates(tmp_path, monkeypatch):
++    tree, sacct, _, path, _ = manifest_fixture(tmp_path, monkeypatch)
++    def broken(*args):
++        raise TypeError('programmer defect')
++    monkeypatch.setattr(audit, 'completed_jobs', broken)
++    with pytest.raises(TypeError, match='programmer defect'):
++        audit.load_reconciliation(path, audit.launcher.sha256(path), tree, sacct.read_text(), audit.Check())

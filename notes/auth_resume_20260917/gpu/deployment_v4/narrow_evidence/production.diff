@@ -1,0 +1,106 @@
+--- v5/admission.py
++++ v6/admission.py
+@@ -19,7 +19,7 @@
+ UID = 97434
+ CLUSTER = 'delta-gh'
+ START = '2026-09-16T00:00:00'
+-NAMESPACE = '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v5_20260917'
++NAMESPACE = '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v6_20260917'
+ ACCOUNTS_SHA = '44302f2e6bd0773e1acd87c521947e3dac4ca9c581e9c79b7433489f22be35f5'
+ TERMINAL = {'COMPLETED', 'FAILED', 'CANCELLED', 'TIMEOUT', 'OUT_OF_MEMORY', 'NODE_FAIL', 'BOOT_FAIL', 'DEADLINE', 'PREEMPTED', 'REVOKED'}
+ FIELDS = 'JobIDRaw,JobName%100,User,UID,Account,Partition,State%40,ElapsedRaw,AllocNodes,AllocCPUS,AllocTRES%200,ReqTRES%200,TimelimitRaw,Submit,Start,End,NodeList%100,ExitCode'
+@@ -244,7 +244,7 @@
+     matches = list(re.finditer(r'(?:^| )([A-Za-z][A-Za-z0-9_/:]*)=', text))
+     out = {}
+     for i, m in enumerate(matches):
+-        k = m[1]
++        k = 'CPUsPerTask' if m[1] == 'CPUs/Task' else m[1]
+         need(k not in out, 'duplicate scheduler field')
+         out[k] = text[m.end():matches[i+1].start() if i+1 < len(matches) else len(text)].strip()
+     return out
+--- v5/authorization.example.json
++++ v6/authorization.example.json
+@@ -41,7 +41,7 @@
+   "gpus": 4,
+   "issued_at_unix": null,
+   "ledger_sha256": null,
+-  "namespace": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v5_20260917",
++  "namespace": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v6_20260917",
+   "node_hours_max": 0.5,
+   "nodes": 1,
+   "one_attempt": true,
+--- v5/build_release.py
++++ v6/build_release.py
+@@ -95,7 +95,7 @@
+ 
+ 
+ if __name__ == '__main__':
+-    out = build(HERE.parent / 'candidate', HERE / 'release_v5')
++    out = build(HERE.parent / 'candidate', HERE / 'release_v6')
+     print('Release:', out)
+     for name in ('release.json', 'release.sha256', 'operator-pins.json'):
+         print(name, d.sha(out / name))
+--- v5/controller_execution_scope.json
++++ v6/controller_execution_scope.json
+@@ -31,7 +31,7 @@
+   "timezone": "America/Chicago",
+   "required_prior_ids": ["3163545", "3163986"],
+   "execution_gate": {
+-    "authorization": "staging/dev123_p1_controller_authorization_v5.json",
++    "authorization": "staging/dev123_p1_controller_authorization_v6.json",
+     "authorization_pin_environment": "DEPLOY_CONTROLLER_GATE_SHA256",
+     "transport_pin_environment": "DEPLOY_RELEASE_TRANSPORT_SHA256",
+     "ledger_pin_environment": "DEPLOY_RELEASE_LEDGER_SHA256",
+@@ -53,8 +53,8 @@
+     "not_a_training_cap_or_measured_cost": true
+   },
+   "future_reservations": [{"identity": "panel-candidate-not-submitted", "submitted": false, "node_hours": 1, "gpu_hours": 4}],
+-  "namespace": "staging/dev123_p1_release_v5_20260917",
+-  "job_namespace": "dev123-p1-v5-job-ID",
++  "namespace": "staging/dev123_p1_release_v6_20260917",
++  "job_namespace": "dev123-p1-v6-job-ID",
+   "excluded_nodes": ["gh062", "gh093"],
+   "no_cancellation_or_submission_in_compute_code": true,
+   "snapshot_limitation": "Read-only observations cannot guarantee future scheduler/account activity. Controller must serialize all diagnostic admissions and retain this single reservation through terminal reconciliation."
+--- v5/deploy.py
++++ v6/deploy.py
+@@ -261,7 +261,7 @@
+ 
+ 
+ def controller_gate(release):
+-    path = ROOT / 'staging/dev123_p1_controller_authorization_v5.json'
++    path = ROOT / 'staging/dev123_p1_controller_authorization_v6.json'
+     digest = os.environ.get('DEPLOY_CONTROLLER_GATE_SHA256', '')
+     require(re.fullmatch('[0-9a-f]{64}', digest) is not None, 'independently pinned controller gate required')
+     pinned(path, digest)
+@@ -287,7 +287,7 @@
+     # Keep the existing namespace intact; each allocation owns one fresh subtree.
+     job_id = os.environ['SLURM_JOB_ID']
+     require(re.fullmatch(r'[0-9]+', job_id) is not None, 'invalid Slurm job ID')
+-    job = ROOT / ('dev123-p1-v5-job-' + job_id)
++    job = ROOT / ('dev123-p1-v6-job-' + job_id)
+     job.mkdir()  # collision is a blocker, never resume or overwrite
+     control = job / 'probe/p1_control'
+     control.mkdir(parents=True)
+--- v5/p1.sbatch
++++ v6/p1.sbatch
+@@ -1,5 +1,5 @@
+ #!/bin/bash
+-#SBATCH --job-name=dev123-p1-v5-0917
++#SBATCH --job-name=dev123-p1-v6-0917
+ #SBATCH --account=bilv-dtai-gh
+ #SBATCH --partition=ghx4
+ #SBATCH --nodes=1
+@@ -10,9 +10,9 @@
+ #SBATCH --no-requeue
+ #SBATCH --time=00:30:00
+ #SBATCH --exclude=gh062,gh093
+-#SBATCH --chdir=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v5_20260917
+-#SBATCH --output=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-v5-%j.out
+-#SBATCH --error=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-v5-%j.err
++#SBATCH --chdir=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v6_20260917
++#SBATCH --output=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-v6-%j.out
++#SBATCH --error=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-v6-%j.err
+ set -euo pipefail
+ umask 077
+ # Fixed reviewed exclusions. Live B5 placement is checked before staging; no worker submission.

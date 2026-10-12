@@ -1,0 +1,19 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+{
+  "python": "/data/gpfs/home/wyim/micromamba/envs/signalp6/bin/python",
+  "version": "3.10.20 | packaged by conda-forge | (main, Jun 11 2026, 03:31:56) [GCC 14.3.0]",
+  "packages": [
+    {
+      "name": "torch",
+      "version": "1.13.1+cpu",
+      "path": "/data/gpfs/home/wyim/micromamba/envs/signalp6/lib/python3.10/site-packages/torch-1.13.1+cpu.dist-info"
+    },
+    {
+      "name": "numpy",
+      "version": "1.26.4",
+      "path": "/data/gpfs/home/wyim/micromamba/envs/signalp6/lib/python3.10/site-packages/numpy-1.26.4.dist-info"
+    }
+  ]
+}

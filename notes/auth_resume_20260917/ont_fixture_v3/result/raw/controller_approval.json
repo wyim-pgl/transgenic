@@ -1,0 +1,35 @@
+{
+  "scope": "TEST_ONLY_REAL_TOOL_FIXTURE",
+  "runtime_closure_approved": true,
+  "scheduler_cgroup_reviewed": true,
+  "output_policy": "finite_fixture_soft_aggregate",
+  "aggregate_review_limit_bytes": 268435456,
+  "aggregate_hard_limit_bytes": null,
+  "per_file_hard_limit_bytes": 4194304,
+  "cpus": 4,
+  "memory_mib": 4096,
+  "wall_seconds": 360,
+  "output": "/data/gpfs/home/wyim/ont_f4_20260917_1653/out",
+  "scheduler_logs": [
+    "/data/gpfs/home/wyim/ont_f4_20260917_1653/stdout",
+    "/data/gpfs/home/wyim/ont_f4_20260917_1653/stderr"
+  ],
+  "manifest_sha256": "2cd93e7b93182a51dc9198d4f697af7b9f36b826e0286d1538f26c96af09b904",
+  "runtime_closure_sha256": "17028c5096c789ec7d198c489d08eec8cbc0224ec1ebd492115a475d9ee243ce",
+  "transport_sha256": "cb2ff57a481cfbb7451ef5e40a3832ccf32b740c2454bf0eb8164502d1de97c7",
+  "controller_decision": "One bounded attempt after scoped independent v2 and v3 restriction reviews. Runtime approval means the observed essential installation is trusted under the policy below, not a claim that compute comparison already passed.",
+  "runtime_trust_policy": "Trust wyim-owned p-wyim-only-group installation and ordinary site administrators. No installation, upgrade or environment edits by this workflow during the attempt. Compute must compare the pinned closure; controller must rehash enumerated runtime files after work. Not malicious-same-UID resistance.",
+  "containment_scope": "Only reviewed site-v1 hierarchy permitted. Actual job PID, four-CPU affinity, hierarchical 4GiB RAM and combined memsw are verified before alignment; unknown layout refuses. Terminal batch/extern and reaping remain acceptance checks.",
+  "review_references": [
+    "ont_fixture_v2/review_v2/INDEPENDENT_REVIEW.md",
+    "ont_fixture_v3/RESTRICTION_REVIEW.md",
+    "ont_fixture_v3/CONTROLLER_PLAN.md",
+    "ont_fixture_v2/controller_runtime_ownership.txt"
+  ],
+  "automatic_retry": false,
+  "full_ont_authorized": false,
+  "training_eligible": false,
+  "scientific_acceptance": false,
+  "extern_oom_resolved": false,
+  "final_acceptance": "Require verified fixed oracle and declared seams, final stdout/receipt/marker identities, no FAILED, source/input/runtime preservation, output and scheduler log logical/allocated sizes within reviewed threshold, and clean terminal job/batch/extern accounting. Any unexplained extern OOM rejects clean fixture acceptance; retain workload diagnostics separately."
+}

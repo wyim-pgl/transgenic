@@ -1,0 +1,30 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+SPECIES Athaliana DONE True
+{"output": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/metadata/est/Athaliana/c0_metadata.tsv", "reads": 1046825, "sha256": "69864a25b2a1f6ac67d3be8f8e091021f2885f3ac4a57299d9a1ecd3d361b5d0"}
+
+SPECIES Bdistachyon DONE True
+{"output": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/metadata/est/Bdistachyon/c0_metadata.tsv", "reads": 206123, "sha256": "f701aa0f6a29f9f6a29f8931d3dffb1619d4998f5ced4695b8797cfe9a0a2f58"}
+
+SPECIES Gmax DONE False
+b6_c0_metadata failed: DN591027.1: FASTA header 'cDNA clone AGTT_Gm-r1030-2842 5', mRNA sequence univec=keep:1-664/664' disagrees with the recorded clone 'AGTT>Gm-r1030-2842'
+
+SPECIES Osativa DONE True
+{"output": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/metadata/est/Osativa/c0_metadata.tsv", "reads": 1244141, "sha256": "e68c4ee6615509cdf7fac971715121303e99e9c417a76efe821fadce7ba9adc7"}
+
+SPECIES Ppatens DONE True
+{"output": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/metadata/est/Ppatens/c0_metadata.tsv", "reads": 381809, "sha256": "ece3512b67aa2b9284dc61556bd8861d22273ea7b38e83c3f6a9b838cd3a0e0d"}
+
+SPECIES Ptrichocarpa DONE True
+{"output": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/metadata/est/Ptrichocarpa/c0_metadata.tsv", "reads": 89450, "sha256": "b3e7684b01cc802e319a8bd4348b36bd6bfece61fd3abe0611c115bfb6fca15a"}
+
+SPECIES Sbicolor DONE True
+{"output": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/metadata/est/Sbicolor/c0_metadata.tsv", "reads": 209441, "sha256": "fe5c25694f580032eac5924640d0674921704b14036b8b2d25fdc56c83b280f8"}
+
+SPECIES Sitalica DONE True
+{"output": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/metadata/est/Sitalica/c0_metadata.tsv", "reads": 66040, "sha256": "fe6c7c782ba81c18684628298c518997a24bacd4a2683dbe468424df5e32cf8f"}
+
+SPECIES Vvinifera DONE False
+b6_c0_metadata failed: JZ984178.1: --est-meta JZ984178.1 has no /clone_lib qualifier; the library cannot be established
+

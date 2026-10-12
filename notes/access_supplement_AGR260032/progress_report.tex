@@ -1,0 +1,53 @@
+\documentclass[11pt]{article}
+\usepackage[margin=0.9in]{geometry}
+\usepackage{fontspec}\setmainfont{TeX Gyre Termes}
+\usepackage{tabularx,booktabs}\usepackage{enumitem}\setlist{nosep,leftmargin=1.2em}
+\usepackage{titlesec}\titleformat{\section}{\normalfont\bfseries}{\thesection.}{0.5em}{}\titlespacing*{\section}{0pt}{9pt}{3pt}
+\pagestyle{plain}\setlength{\parindent}{0pt}\setlength{\parskip}{4pt}
+\begin{document}
+{\large\bfseries Progress Report — ACCESS project AGR260032}\\[2pt]
+{\small Leakage-controlled, evidence-aware gene annotation for plant genomes. PI: Won Yim, University of Nevada, Reno. Resource: NCSA DeltaAI (GH200). Report date: October 3, 2026.}
+
+\section{Project goal}
+We are training a deep-learning gene-structure annotation model for plant genomes. A model of about 400 million parameters reads up to 129,024 nt of genomic sequence and outputs gene structures. A sequence-only baseline is compared with a new model that also reads evidence tracks from ESTs, PacBio and ONT long reads, and cross-species protein alignments. Every evidence record is filtered so that no held-out locus used for validation or testing can leak into training inputs. The pre-registered question is whether the evidence improves gene prediction beyond the sequence-only model, tested with control experiments that isolate what part of the evidence drives any gain.
+
+\section{Use of the current allocation}
+Of 1,499 GPU-hours awarded, about 650 have been used and 849 remain.
+
+\begin{tabularx}{\linewidth}{Xrl}\toprule
+Activity & GPU-h & Outcome\\\midrule
+Sequence-only baseline, seed 123, 4 GPUs, NGC PyTorch 26.08 with torch.compile & 630 & Epoch 13; validation loss still improving; early stopping running\\
+Runtime qualification over three sequence-length tiers, 1--4 GPUs & 13 & Production runtime selected; time and memory measured per tier\\
+Evidence-aware model integration tests & 5 & Memory gate passed at 63 GB per GPU (limit 100 GB); byte-identical checkpoint resume; distributed fault handling verified\\\bottomrule
+\end{tabularx}
+
+\section{Preparatory work on campus resources (no ACCESS charge)}
+\begin{itemize}
+\item Built 28 leakage-filtered evidence databases for 9 plant species from ESTs, PacBio, ONT and protein alignments. Each species passed exhaustiveness of at least 0.999, zero leakage and all integrity checks.
+\item Merged them into one 786 GB evidence database and re-validated the training corpus against it; 37.85 million molecules were consistent with the leakage repair.
+\item Built a 654-million-row training cache in 455 shards. Every input is bound by cryptographic hash and re-verified at each job start.
+\item All inputs are staged on DeltaAI, and the first evidence-aware training run is ready to submit.
+\end{itemize}
+
+\section{Remaining work and GPU-hour requirement}
+Measured on DeltaAI with 4 GPUs: about 45 GPU-hours per epoch for the baseline model and about 49.5 for the evidence-aware model. Early stopping (patience 3, maximum 22 epochs) is expected near epoch 18. Our protocol requires the confirmatory baseline seeds 456 and 789 to finish before submission.
+
+\begin{tabularx}{\linewidth}{Xrr}\toprule
+Work & Expected & Maximum\\\midrule
+Finish baseline seed 123 & 270 & 411\\
+Baseline confirmatory seed 456 & 812 & 992\\
+Baseline confirmatory seed 789 & 812 & 992\\
+Fixed-budget pilot: evidence-aware model and sequence-only counterpart on the same data (4,099 updates each) & 196 & 196\\
+Full training of both models to early stopping & 1,584 & 1,980\\
+Three fixed-budget controls: shuffled evidence, presence-only evidence, reading-frame channels removed & 294 & 294\\
+Evaluation on held-out panels in 9 species and an independent maize test & 50 & 50\\\midrule
+Total needed & 4,018 & 4,915\\
+Remaining balance & 849 & 849\\
+Shortfall & 3,169 & 4,066\\
+Contingency (15\%) for queue preemption and one re-run & 603 & 737\\\midrule
+\textbf{Supplement requested} & \textbf{3,800} & \\\bottomrule
+\end{tabularx}
+
+\section{Expected outcomes}
+A pre-registered, leakage-controlled test of whether transcript and protein evidence improves deep-learning gene annotation in plants, with three random seeds for the baseline and control experiments that attribute any gain to evidence content, evidence detail and reading-frame information. Code, frozen protocols and evaluation panels will be released with the manuscript.
+\end{document}

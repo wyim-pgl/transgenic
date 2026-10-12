@@ -1,0 +1,17 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T19:54:14-05:00
+1944304 Is   cl_syn       04:41 python3 -
+State:	I (idle)
+SigPnd:	0000000000000100
+ShdPnd:	0000000000004000
+             JOBID                         NAME        STATE         TIME NODELIST(REASON)
+           3149356                      b5-seed      PENDING         0:00 (Priority)
+           3149363                      b5-seed      PENDING         0:00 (Dependency)
+           3149362                      b5-seed      PENDING         0:00 (Dependency)
+           3149361                      b5-seed      PENDING         0:00 (Dependency)
+           3149360                      b5-seed      PENDING         0:00 (Dependency)
+           3149359                      b5-seed      PENDING         0:00 (Dependency)
+           3149358                      b5-seed      PENDING         0:00 (Dependency)
+           3149357                      b5-seed      PENDING         0:00 (Dependency)

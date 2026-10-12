@@ -1,0 +1,438 @@
+EXIT_CODES eager 0
+unsplit 0
+
+REPORT eager {
+  "started": "2026-09-24T22:06:21",
+  "world_size": 2,
+  "args": {
+    "model": "real",
+    "data": "wp3-fixtures",
+    "config": "configs/b6_400m_win_v3.json",
+    "tier": 600,
+    "rows": 48,
+    "accumulation": 4,
+    "n_pilot": 3,
+    "stop_at": 1,
+    "backend": "none",
+    "mixed_precision": "bf16",
+    "gen_tokens": 12,
+    "nondeterministic": false,
+    "out": "/work/runs/b6_resume_diagnostic/job_3207863/eager"
+  },
+  "wp3_pairs": [
+    {
+      "wid": "Athaliana:Chr1:0-600",
+      "fw": 1,
+      "rc": 2,
+      "tracks_nonzero": 2709,
+      "chain_elements": 7,
+      "label_genes": 1,
+      "label_fw": "100|five_prime_UTR1|110|+|.;110|CDS1|200|+|A;300|CDS2|390|+|A;390|three_prime_UTR1|400|+|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1",
+      "label_rc": "200|three_prime_UTR1|210|-|.;210|CDS2|300|-|A;400|CDS1|490|-|A;490|five_prime_UTR1|500|-|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1"
+    },
+    {
+      "wid": "Athaliana:Chr1:3000-3600",
+      "fw": 7,
+      "rc": 8,
+      "tracks_nonzero": 1800,
+      "chain_elements": 0,
+      "label_genes": 1,
+      "label_fw": "90|three_prime_UTR1|100|-|.;100|CDS2|200|-|A;300|CDS1|390|-|A;390|five_prime_UTR1|400|-|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1",
+      "label_rc": "200|five_prime_UTR1|210|+|.;210|CDS1|300|+|A;400|CDS2|500|+|A;500|three_prime_UTR1|510|+|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1"
+    }
+  ],
+  "wp3_note": "label RC asserted: fixture labels are real v3 GSF (tests/b6_fixtures.tile_labels); each RC twin label == reverse_complement_v3(forward) both ways and its served tokens match",
+  "reachable_updates": 3,
+  "rc_pairs_checked": 2,
+  "straight": {
+    "done": true,
+    "global_step": 3,
+    "history": [
+      {
+        "epoch": 1,
+        "global_step": 1,
+        "data_order_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38",
+        "train": 5.949192047119141,
+        "de_novo": 6.012733459472656,
+        "evidence": 6.012733459472656
+      },
+      {
+        "epoch": 2,
+        "global_step": 3,
+        "data_order_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4",
+        "train": 5.33688481648763,
+        "de_novo": 3.567622661590576,
+        "evidence": 3.567622661590576
+      }
+    ],
+    "reason": "max epochs"
+  },
+  "preempted": {
+    "preempted": true,
+    "global_step": 1,
+    "history": []
+  },
+  "resumed": {
+    "done": true,
+    "global_step": 3,
+    "history": [
+      {
+        "epoch": 1,
+        "global_step": 1,
+        "data_order_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38",
+        "train": 5.514983654022217,
+        "de_novo": 6.012733459472656,
+        "evidence": 6.012733459472656
+      },
+      {
+        "epoch": 2,
+        "global_step": 3,
+        "data_order_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4",
+        "train": 5.33688481648763,
+        "de_novo": 3.567622661590576,
+        "evidence": 3.567622661590576
+      }
+    ],
+    "reason": "max epochs"
+  },
+  "link_record_sha256": [
+    "4b5cc96b8f3adccea8f0ad4827fed8caed4c6f88973b1068e180f38a769e47f2",
+    "4b5cc96b8f3adccea8f0ad4827fed8caed4c6f88973b1068e180f38a769e47f2",
+    "4b5cc96b8f3adccea8f0ad4827fed8caed4c6f88973b1068e180f38a769e47f2"
+  ],
+  "resume_byte_identical": true,
+  "generation_row_kinds": [
+    "wp3_forward",
+    "wp3_rc"
+  ],
+  "generation": [
+    {
+      "rank": 0,
+      "parity": {
+        "beams1": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0014864206314086914
+        },
+        "beams2": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0017147064208984375
+        }
+      }
+    },
+    {
+      "rank": 1,
+      "parity": {
+        "beams1": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0014864206314086914
+        },
+        "beams2": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0017147064208984375
+        }
+      }
+    }
+  ],
+  "failures": [],
+  "status": "PASS",
+  "finished": "2026-09-24T22:07:31"
+}
+LOG eager The following values were not passed to `accelerate launch` and had defaults used instead:
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+{"diagnostic_only": true, "case": "eager", "rank": "1", "optimize_ddp": true, "backend": "none"}
+{"diagnostic_only": true, "case": "eager", "rank": "0", "optimize_ddp": true, "backend": "none"}
+[rank0]:W0924 22:06:24.379000 3861811 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank1]:W0924 22:06:24.379000 3861812 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank1]:W0924 22:06:24.417000 3861812 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank0]:W0924 22:06:24.417000 3861811 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+NCCL version 2.30.7+cuda13.3
+
+[2026-09-24 22:06:25] gh028:3861811:3861811 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-24 22:06:25] gh028:3861812:3861812 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-24 22:06:25] gh028:3861811:3861811 [0] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId
+[2026-09-24 22:06:25] gh028:3861812:3861812 [1] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+
+[2026-09-24 22:06:25] gh028:3861811:3861811 [0] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-24 22:06:25] gh028:3861812:3861812 [1] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-24 22:06:25] gh028:3861811:3861811 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-24 22:06:25] gh028:3861812:3861812 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-24 22:06:25] gh028:3861811:3861811 [0] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-09-24 22:06:25] gh028:3861812:3861812 [1] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+
+[2026-09-24 22:06:25] gh028:3861811:3861811 [0] ras/client_support.cc:181 (rasClientInitSocket) NCCL WARN Call to bind failed: 
+[2026-09-24 22:06:25] gh028:3861812:3861812 [1] ras/client_support.cc:181 (rasClientInitSocket) NCCL WARN Call to bind failed: Address already in use
+Address already in use
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet runarm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+{"epoch_end": 1, "arm": "B6", "data_order_first1000_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38", "evidence_channel": "on", "train": 5.949192047119141, "de_novo": 6.012733459472656, "evidence": 6.012733459472656}
+[RANK 0] Removed shared tensor {'transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.decoder.embed_tokens.weight', 'transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', 'lm_head.weight', 'transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+published /work/runs/b6_resume_diagnostic/job_3207863/eager/straight/step_00003
+published /work/runs/b6_resume_diagnostic/job_3207863/eager/straight/step_00003
+{"epoch_end": 2, "arm": "B6", "data_order_first1000_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4", "evidence_channel": "on", "train": 5.33688481648763, "de_novo": 3.567622661590576, "evidence": 3.567622661590576}
+[RANK 0] Removed shared tensor {'transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.decoder.embed_tokens.weight', 'transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', 'lm_head.weight', 'transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet runarm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+
+[RANK 0] Removed shared tensor {'transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.decoder.embed_tokens.weight', 'transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', 'lm_head.weight', 'transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)
+
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+resumed from /work/runs/b6_resume_diagnostic/job_3207863/eager/resumed/latest_state: epoch 0 step 2 global_step 1
+resumed from /work/runs/b6_resume_diagnostic/job_3207863/eager/resumed/latest_state: epoch 0 step 2 global_step 1
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet runarm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+
+{"epoch_end": 1, "arm": "B6", "data_order_first1000_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38", "evidence_channel": "on", "train": 5.514983654022217, "de_novo": 6.012733459472656, "evidence": 6.012733459472656}
+[RANK 0] Removed shared tensor {'transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.decoder.embed_tokens.weight', 'transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', 'lm_head.weight', 'transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+published /work/runs/b6_resume_diagnostic/job_3207863/eager/resumed/step_00003
+published /work/runs/b6_resume_diagnostic/job_3207863/eager/resumed/step_00003
+{"epoch_end": 2, "arm": "B6", "data_order_first1000_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4", "evidence_channel": "on", "train": 5.33688481648763, "de_novo": 3.567622661590576, "evidence": 3.567622661590576}
+[RANK 0] Removed shared tensor {'transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.decoder.embed_tokens.weight', 'transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', 'lm_head.weight', 'transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', 'transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', 'transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+{"status": "PASS", "failures": []}
+[rank0]:[W924 22:07:31.980774716 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+
+SOURCE_VERIFY eager 217 True
+MODEL_HASHES eager [('straight', '8fa44f8e2bd0aeae0258004c143901c7de6f41b08befa31a5a9f0deba811af89'), ('resumed', '8fa44f8e2bd0aeae0258004c143901c7de6f41b08befa31a5a9f0deba811af89')]
+REPORT unsplit {
+  "started": "2026-09-24T22:07:46",
+  "world_size": 2,
+  "args": {
+    "model": "real",
+    "data": "wp3-fixtures",
+    "config": "configs/b6_400m_win_v3.json",
+    "tier": 600,
+    "rows": 48,
+    "accumulation": 4,
+    "n_pilot": 3,
+    "stop_at": 1,
+    "backend": "inductor",
+    "mixed_precision": "bf16",
+    "gen_tokens": 12,
+    "nondeterministic": false,
+    "out": "/work/runs/b6_resume_diagnostic/job_3207863/unsplit"
+  },
+  "wp3_pairs": [
+    {
+      "wid": "Athaliana:Chr1:0-600",
+      "fw": 1,
+      "rc": 2,
+      "tracks_nonzero": 2709,
+      "chain_elements": 7,
+      "label_genes": 1,
+      "label_fw": "100|five_prime_UTR1|110|+|.;110|CDS1|200|+|A;300|CDS2|390|+|A;390|three_prime_UTR1|400|+|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1",
+      "label_rc": "200|three_prime_UTR1|210|-|.;210|CDS2|300|-|A;400|CDS1|490|-|A;490|five_prime_UTR1|500|-|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1"
+    },
+    {
+      "wid": "Athaliana:Chr1:3000-3600",
+      "fw": 7,
+      "rc": 8,
+      "tracks_nonzero": 1800,
+      "chain_elements": 0,
+      "label_genes": 1,
+      "label_fw": "90|three_prime_UTR1|100|-|.;100|CDS2|200|-|A;300|CDS1|390|-|A;390|five_prime_UTR1|400|-|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1",
+      "label_rc": "200|five_prime_UTR1|210|+|.;210|CDS1|300|+|A;400|CDS2|500|+|A;500|three_prime_UTR1|510|+|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1"
+    }
+  ],
+  "wp3_note": "label RC asserted: fixture labels are real v3 GSF (tests/b6_fixtures.tile_labels); each RC twin label == reverse_complement_v3(forward) both ways and its served tokens match",
+  "reachable_updates": 3,
+  "rc_pairs_checked": 2,
+  "straight": {
+    "done": true,
+    "global_step": 3,
+    "history": [
+      {
+        "epoch": 1,
+        "global_step": 1,
+        "data_order_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38",
+        "train": 6.031167348225911,
+        "de_novo": 4.67405891418457,
+        "evidence": 4.67405891418457
+      },
+      {
+        "epoch": 2,
+        "global_step": 3,
+        "data_order_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4",
+        "train": 4.759981791178386,
+        "de_novo": 3.483001947402954,
+        "evidence": 3.483001947402954
+      }
+    ],
+    "reason": "max epochs"
+  },
+  "preempted": {
+    "preempted": true,
+    "global_step": 1,
+    "history": []
+  },
+  "resumed": {
+    "done": true,
+    "global_step": 3,
+    "history": [
+      {
+        "epoch": 1,
+        "global_step": 1,
+        "data_order_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38",
+        "train": 5.422635555267334,
+        "de_novo": 4.67405891418457,
+        "evidence": 4.67405891418457
+      },
+      {
+        "epoch": 2,
+        "global_step": 3,
+        "data_order_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4",
+        "train": 4.759981791178386,
+        "de_novo": 3.483001947402954,
+        "evidence": 3.483001947402954
+      }
+    ],
+    "reason": "max epochs"
+  },
+  "link_record_sha256": [
+    "466b29854c483911661aeee9fddfa0140df89f65b28223915a1ca3bff95bee1f",
+    "466b29854c483911661aeee9fddfa0140df89f65b28223915a1ca3bff95bee1f",
+    "466b29854c483911661aeee9fddfa0140df89f65b28223915a1ca3bff95bee1f"
+  ],
+  "resume_byte_identical": true,
+  "generation_row_kinds": [
+    "wp3_forward",
+    "wp3_rc"
+  ],
+  "generation": [
+    {
+      "rank": 0,
+      "parity": {
+        "beams1": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0014864206314086914
+        },
+        "beams2": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0017147064208984375
+        }
+      }
+    },
+    {
+      "rank": 1,
+      "parity": {
+        "beams1": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0014864206314086914
+        },
+        "beams2": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0017147064208984375
+        }
+      }
+    }
+  ],
+  "failures": [],
+  "status": "PASS",
+  "finished": "2026-09-24T22:11:44"
+}
+LOG unsplit The following values were not passed to `accelerate launch` and had defaults used instead:
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+{"diagnostic_only": true, "case": "unsplit", "rank": "1", "optimize_ddp": false, "backend": "inductor"}
+{"diagnostic_only": true, "case": "unsplit", "rank": "0", "optimize_ddp": false, "backend": "inductor"}
+[rank0]:W0924 22:07:49.003000 3864688 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank1]:W0924 22:07:49.003000 3864689 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank0]:W0924 22:07:49.040000 3864688 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank1]:W0924 22:07:49.040000 3864689 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+NCCL version 2.30.7+cuda13.3
+
+[2026-09-24 22:07:49] gh028:3864688:3864688 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-24 22:07:49] gh028:3864689:3864689 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-24 22:07:49] gh028:3864688:3864688 [0] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId
+[2026-09-24 22:07:49] gh028:3864689:3864689 [1] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+
+[2026-09-24 22:07:49] gh028:3864689:3864689 [1] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-24 22:07:49] gh028:3864688:3864688 [0] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-24 22:07:49] gh028:3864688:3864688 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-24 22:07:49] gh028:3864689:3864689 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-24 22:07:49] gh028:3864688:3864688 [0] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-09-24 22:07:49] gh028:3864689:3864689 [1] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+
+[2026-09-24 22:07:49] gh028:3864689:3864689 [1] ras/client_support.cc:181 (rasClientInitSocket) NCCL WARN Call to bind failed: 
+[2026-09-24 22:07:49] gh028:3864688:3864688 [0] ras/client_support.cc:181 (rasClientInitSocket) NCCL WARN Call to bind failed: Address already in use
+Address already in use
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet runarm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+{"epoch_end": 1, "arm": "B6", "data_order_first1000_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38", "evidence_channel": "on", "train": 6.031167348225911, "de_novo": 4.67405891418457, "evidence": 4.67405891418457}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+published /work/runs/b6_resume_diagnostic/job_3207863/unsplit/straight/step_00003
+published /work/runs/b6_resume_diagnostic/job_3207863/unsplit/straight/step_00003
+{"epoch_end": 2, "arm": "B6", "data_order_first1000_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4", "evidence_channel": "on", "train": 4.759981791178386, "de_novo": 3.483001947402954, "evidence": 3.483001947402954}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet runarm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)
+
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+resumed from /work/runs/b6_resume_diagnostic/job_3207863/unsplit/resumed/latest_state: epoch 0 step 2 global_step 1
+resumed from /work/runs/b6_resume_diagnostic/job_3207863/unsplit/resumed/latest_state: epoch 0 step 2 global_step 1
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+{"epoch_end": 1, "arm": "B6", "data_order_first1000_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38", "evidence_channel": "on", "train": 5.422635555267334, "de_novo": 4.67405891418457, "evidence": 4.67405891418457}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+published /work/runs/b6_resume_diagnostic/job_3207863/unsplit/resumed/step_00003
+published /work/runs/b6_resume_diagnostic/job_3207863/unsplit/resumed/step_00003
+{"epoch_end": 2, "arm": "B6", "data_order_first1000_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4", "evidence_channel": "on", "train": 4.759981791178386, "de_novo": 3.483001947402954, "evidence": 3.483001947402954}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+{"status": "PASS", "failures": []}
+[rank0]:[W924 22:11:46.196220531 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+
+SOURCE_VERIFY unsplit 217 True
+MODEL_HASHES unsplit [('straight', '05a396a95e5faac8f77ae9a41e86e16d19de6d38a2c0bd4d37969a14499270d0'), ('resumed', '05a396a95e5faac8f77ae9a41e86e16d19de6d38a2c0bd4d37969a14499270d0')]
+CONTROLLER_VERIFIED_BOTH_DIAGNOSTICS

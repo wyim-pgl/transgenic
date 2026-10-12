@@ -1,0 +1,6 @@
+smoke1	MVP	exon	101	200	.	+	.	gene_id "g"; transcript_id "r";
+smoke1	MVP	exon	301	400	.	+	.	gene_id "g"; transcript_id "r";
+smoke1	MVP	exon	501	600	.	+	.	gene_id "g"; transcript_id "r";
+smoke1	MVP	exon	101	200	.	+	.	gene_id "g"; transcript_id "r_alt";
+smoke1	MVP	exon	311	400	.	+	.	gene_id "g"; transcript_id "r_alt";
+smoke1	MVP	exon	501	600	.	+	.	gene_id "g"; transcript_id "r_alt";

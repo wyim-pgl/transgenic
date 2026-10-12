@@ -1,0 +1,20 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+b6-source-filestore.sha256: OK
+SOURCE_OK=220
+/work/hdd/bilv/wcyim/transgenic/run_hdd_cp4.sh: OK
+[master e2a91b7] snapshot test fix from b6-integration 3511a5a3fe2eec1d3ef318354adbed060de12a9f
+ 1 file changed, 15 insertions(+), 6 deletions(-)
+e2a91b7f4485e5eeb3b23d40fee0cac9a8a6bc10 snapshot test fix from b6-integration 3511a5a3fe2eec1d3ef318354adbed060de12a9f
+3209815          FAILED      1:0   00:01:29 
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1023              1499  leakage-controlled ...
+{"filesystem_available_bytes": 1021166772224, "pool": "ddn_hdd", "project_id": 22169, "quota_remaining_bytes": 1072977473536, "required_bytes": 107374182400, "results_dir": "/work/hdd/bilv/wcyim/transgenic/runs/b6_int4"}
+SBATCH_RC=0
+CP4_FILESTORE_WP3_SUBMISSION_RESULT 3210279
+
+CP4_FILESTORE_WP3_SUBMISSION_ERROR 

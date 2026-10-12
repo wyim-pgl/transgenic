@@ -1,0 +1,9 @@
+# Allocated-task file-limit correction
+
+Job6165962 failed before generation/alignment because actual inherited RLIMIT_FSIZE did not equal4MiB/4MiB. Its actual tuple was not printed, so the precise propagation mechanism remains unknown. Fresh site configuration reports PropagateResourceLimits=ALL; do not claim it is disabled or that a particular inherited value was measured. Original job/package/logs remain unchanged; externOOM0:125 remains separately unresolved.
+
+New v4 copies the17payloadfiles of v3. Only fixture.py changes: a small enforce_startup_file_limit helper logs the actual inheritedtuple to stderr, sets both soft/hard to4194304 inside the allocatedPython task, verifies exact resultingtuple and returns both. run calls it after genuine allocation/CPU checks and before outputdirectory/fixturefilecreation. The new file_limit_observed.json preserves the result. Existing approval, subsequent exactlimitguard, workloadhardlimit, site-v1/runtime/scientific checks remain intact. An inheritedhardlimittoo small cannot be raised and refuses; no fabricated success or relaxed threshold.
+
+TDD:three actualchild-process tests failed beforeimplementation. Unlimitedinheritance and differentsoftlimit now produce4MiB/4MiB,insufficienthardlimitrefuseswithoutstdoutsuccessandretainsstderrbeforevalue. Firstfullrunfound theoldtest's globalprintmock alsointerceptednewstderrlogging; loggernowusesstderr.write/flush, retaining originalfinalstdoutfailuretest unchanged. Final21testsPASS16.284s;17payloadmanifestchecksPASS. Candidate manifestSHA13da604041044f3ce0192b2049d644a603b9bbef8d14d38c70fedc07ae92d3b9.
+
+No remote writes/job from this correction yet. A second explicitly reviewed tinyattempt may be considered with a newnamespace/newapproval/newmanifest, same4CPU4GiB360s ceiling, no autoretry. First2seconds remain accounted. Runtimeclosure/data/oracle/panelreference seams unchanged. Independent scopedreview required before deployment; real F4 still notpassed.

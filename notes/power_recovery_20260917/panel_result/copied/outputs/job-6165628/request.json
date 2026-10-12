@@ -1,0 +1,13 @@
+{
+  "candidate": {
+    "acceptance": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_technical_candidate_20260915.json",
+    "acceptance_sha256": "faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e",
+    "corpus": "/data/gpfs/assoc/pgl/data/Transgenic/training_input/db/b5_full_a40_v1.db",
+    "evidence": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_full_20260915/fullc0lite.db",
+    "inventory": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_candidate_inventories_20260915.json",
+    "receipts": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/notes/b6_mvp_candidate_receipts_20260915.json"
+  },
+  "fasta": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+  "panels": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916/source/revision/protocols/b6_panels_v1.tsv",
+  "reference": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3"
+}

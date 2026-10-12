@@ -1,0 +1,47 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T19:28:53-05:00
+             JOBID                         NAME        STATE         TIME NODELIST(REASON)
+           3149356                      b5-seed      PENDING         0:00 (Priority)
+           3149363                      b5-seed      PENDING         0:00 (Dependency)
+           3149362                      b5-seed      PENDING         0:00 (Dependency)
+           3149361                      b5-seed      PENDING         0:00 (Dependency)
+           3149360                      b5-seed      PENDING         0:00 (Dependency)
+           3149359                      b5-seed      PENDING         0:00 (Dependency)
+           3149358                      b5-seed      PENDING         0:00 (Dependency)
+           3149357                      b5-seed      PENDING         0:00 (Dependency)
+3131537|b5-seed|COMPLETED|0:0|38888|1|64|billing=4000,cpu=64,gres/gpu=4,mem=454240M,node=1
+3131538|b5-seed|COMPLETED|0:0|38812|1|64|billing=4000,cpu=64,gres/gpu=4,mem=454240M,node=1
+3149356|b5-seed|PENDING|0:0|0|1|0|
+3163545|mvp8-p1-0916|CANCELLED by 97434|0:0|0|0|0|
+3163986|mvp8-final-p1-0916|FAILED|1:0|51|1|288|billing=4000,cpu=288,gres/gpu=4,mem=454240M,node=1
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1154              1499  leakage-controlled ...
+Quota usage for user wcyim:
+-----------------------------------------------------------------------------------------------
+|        Directory Path        |  User   |  User   |  User   |   User   |   User   |   User   |
+|                              |  Block  |  Soft   |  Hard   |   File   |   Soft   |   Hard   |
+|                              |  Used   |  Quota  |  Limit  |   Used   |   Quota  |   Limit  |
+-----------------------------------------------------------------------------------------------
+| /u/wcyim                     | 12176K  | 102400M | 103G    | 334      | 750k     | 760k     |
+-----------------------------------------------------------------------------------------------
+
+Quota usage for allocations user wcyim is a member of:
+--------------------------------------------------------------------------------------------------------------
+|        Directory Path        | Allocation | Allocation | Allocation | Allocation | Allocation | Allocation |
+|                              |   Block    |    Soft    |    Hard    |    File    |    Soft    |    Hard    |
+|                              |   Used     |    Quota   |    Limit   |    Used    |    Quota   |    Limit   |
+--------------------------------------------------------------------------------------------------------------
+| /projects/bilv               | 8k         | 500G       | 550G       | 2          | 850000     | 935000     |
+--------------------------------------------------------------------------------------------------------------
+| /work/nvme/bilv              | 363.5G     | 500G       | 550G       | 4738       | 2550000    | 2805000    |
+--------------------------------------------------------------------------------------------------------------
+| /work/hdd/bilv               | 4.008M     | 1000G      | 1.074T     | 4738       | 2550000    | 2805000    |
+--------------------------------------------------------------------------------------------------------------
+/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/inputs/evidence/fullc0lite.db|1068773376|wcyim|444
+NEW_RELEASE_ABSENT
+AUTH_ABSENT

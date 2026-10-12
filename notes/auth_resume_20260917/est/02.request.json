@@ -1,0 +1,12 @@
+[
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/chunks"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/accept"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/univec"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/INPUT_INVENTORY_20260903_all.tsv"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/miniprot.index.err"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/chunks_v1/MANIFEST.tsv"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Sitalica/PROVENANCE.txt"]
+]

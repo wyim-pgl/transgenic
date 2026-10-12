@@ -1,0 +1,5 @@
+/mnt/f/scratch/develop/Transgenic/transgenic_local  9a8c8e1 [main]
+/tmp/pi-agent-73f937cb-177e-441-5126f730            a314bf9 [b6-mvp-fixed-runtime-review1]
+/tmp/pi-agent-b10daa08-ca65-488-98acd2c2            0a8120b [won/b6-mvp-finalize]
+/tmp/pi-agent-cd045566-e51e-457-7a91c647            3a63314 [b6-mvp-weights-init-review1]
+/tmp/pi-agent-round2-f6b1e77                        1c47ae5 (detached HEAD)

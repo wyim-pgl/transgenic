@@ -1,0 +1,13 @@
+code.candidate.tar: OK
+source-manifest.json: OK
+notes/b6_mvp_technical_candidate_20260915.json: OK
+notes/b6_mvp_candidate_inventories_20260915.json: OK
+notes/b6_mvp_candidate_receipts_20260915.json: OK
+deploy.py: OK
+admission.py: OK
+authorization.example.json: OK
+p1.sbatch: OK
+build_release.py: OK
+controller_execution_scope.json: OK
+operator-pins.json: OK
+release.json: OK

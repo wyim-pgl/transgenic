@@ -1,0 +1,13 @@
+{
+  "status": "PASS_LOCAL_CANDIDATE_BINDINGS_ONLY",
+  "historical_input_stat_matches": 15,
+  "closure_files_rehashed": 13,
+  "launcher_rehashed": true,
+  "request": {
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/request.json",
+    "sha256": "c5cc29ecea746375ebb4d5388d38fa2bb8db0d5c42088ac67bc47b4caa7da9a9",
+    "size": 1264
+  },
+  "actual50_run": false,
+  "remote_deployment": false
+}

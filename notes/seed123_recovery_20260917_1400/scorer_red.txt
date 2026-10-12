@@ -1,0 +1,44 @@
+FFFFFFFF                                                                 [100%]
+=================================== FAILURES ===================================
+____ test_development_scorer_rejects_conflicting_run_id[b5_seed123-payload] ____
+tests/test_mvp_seed123_eval.py:154: in test_development_scorer_rejects_conflicting_run_id
+    with pytest.raises(ValueError, match='run identity mismatch'):
+E   Failed: DID NOT RAISE ValueError
+___ test_development_scorer_rejects_conflicting_run_id[b5_seed123-metadata] ____
+tests/test_mvp_seed123_eval.py:154: in test_development_scorer_rejects_conflicting_run_id
+    with pytest.raises(ValueError, match='run identity mismatch'):
+E   Failed: DID NOT RAISE ValueError
+_________ test_development_scorer_rejects_conflicting_run_id[-payload] _________
+tests/test_mvp_seed123_eval.py:154: in test_development_scorer_rejects_conflicting_run_id
+    with pytest.raises(ValueError, match='run identity mismatch'):
+E   Failed: DID NOT RAISE ValueError
+________ test_development_scorer_rejects_conflicting_run_id[-metadata] _________
+tests/test_mvp_seed123_eval.py:154: in test_development_scorer_rejects_conflicting_run_id
+    with pytest.raises(ValueError, match='run identity mismatch'):
+E   Failed: DID NOT RAISE ValueError
+_______ test_development_scorer_rejects_conflicting_run_id[None-payload] _______
+tests/test_mvp_seed123_eval.py:154: in test_development_scorer_rejects_conflicting_run_id
+    with pytest.raises(ValueError, match='run identity mismatch'):
+E   Failed: DID NOT RAISE ValueError
+______ test_development_scorer_rejects_conflicting_run_id[None-metadata] _______
+tests/test_mvp_seed123_eval.py:154: in test_development_scorer_rejects_conflicting_run_id
+    with pytest.raises(ValueError, match='run identity mismatch'):
+E   Failed: DID NOT RAISE ValueError
+_______ test_development_scorer_rejects_conflicting_run_id[123-payload] ________
+tests/test_mvp_seed123_eval.py:154: in test_development_scorer_rejects_conflicting_run_id
+    with pytest.raises(ValueError, match='run identity mismatch'):
+E   Failed: DID NOT RAISE ValueError
+_______ test_development_scorer_rejects_conflicting_run_id[123-metadata] _______
+tests/test_mvp_seed123_eval.py:154: in test_development_scorer_rejects_conflicting_run_id
+    with pytest.raises(ValueError, match='run identity mismatch'):
+E   Failed: DID NOT RAISE ValueError
+=========================== short test summary info ============================
+FAILED tests/test_mvp_seed123_eval.py::test_development_scorer_rejects_conflicting_run_id[b5_seed123-payload]
+FAILED tests/test_mvp_seed123_eval.py::test_development_scorer_rejects_conflicting_run_id[b5_seed123-metadata]
+FAILED tests/test_mvp_seed123_eval.py::test_development_scorer_rejects_conflicting_run_id[-payload]
+FAILED tests/test_mvp_seed123_eval.py::test_development_scorer_rejects_conflicting_run_id[-metadata]
+FAILED tests/test_mvp_seed123_eval.py::test_development_scorer_rejects_conflicting_run_id[None-payload]
+FAILED tests/test_mvp_seed123_eval.py::test_development_scorer_rejects_conflicting_run_id[None-metadata]
+FAILED tests/test_mvp_seed123_eval.py::test_development_scorer_rejects_conflicting_run_id[123-payload]
+FAILED tests/test_mvp_seed123_eval.py::test_development_scorer_rejects_conflicting_run_id[123-metadata]
+8 failed, 41 deselected in 1.95s

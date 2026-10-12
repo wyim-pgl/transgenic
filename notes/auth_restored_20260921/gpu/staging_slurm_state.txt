@@ -1,0 +1,39 @@
+Raw capture 3 -- Slurm state, read-only (sacct/squeue only; no submission,
+no cancellation, no requeue, no relabelling was performed).
+Executed 2026-09-21 08:28:22 PDT (remote 2026-09-21T10:28:22-05:00).
+
+===SACCT_B5_HEAD===
+JobID|JobName|State|Submit|Start|End|Elapsed|AllocTRES
+3149356|b5-seed|COMPLETED|2026-09-14T09:04:18|2026-09-18T20:06:07|2026-09-19T06:54:56|10:48:49|billing=4000,cpu=64,gres/gpu=4,mem=454240M,node=1
+3149357|b5-seed|COMPLETED|2026-09-14T09:04:18|2026-09-19T07:33:51|2026-09-19T18:20:47|10:46:56|billing=4000,cpu=64,gres/gpu=4,mem=454240M,node=1
+3149358|b5-seed|PENDING|2026-09-14T09:04:18|Unknown|Unknown|00:00:00|
+3149359|b5-seed|PENDING|2026-09-14T09:04:18|Unknown|Unknown|00:00:00|
+3149360|b5-seed|PENDING|2026-09-14T09:04:18|Unknown|Unknown|00:00:00|
+3149361|b5-seed|PENDING|2026-09-14T09:04:18|Unknown|Unknown|00:00:00|
+3149362|b5-seed|PENDING|2026-09-14T09:04:18|Unknown|Unknown|00:00:00|
+3149363|b5-seed|PENDING|2026-09-14T09:04:18|Unknown|Unknown|00:00:00|
+
+===SACCT_3163986=== (old terminal MVP failure -- untouched)
+3163986|mvp8-final-p1-0916|FAILED|1:0|2026-09-17T18:47:46|2026-09-17T18:48:37|00:00:51|billing=4000,cpu=288,gres/gpu=4,mem=454240M,node=1
+3163986.batch|batch|FAILED|1:0|2026-09-17T18:47:46|2026-09-17T18:48:37|00:00:51|cpu=288,gres/gpu=4,mem=454240M,node=1
+3163986.extern|extern|COMPLETED|0:0|2026-09-17T18:47:46|2026-09-17T18:48:37|00:00:51|billing=4000,cpu=288,gres/gpu=4,mem=454240M,node=1
+Identical to the record in OLD_P1_RECONCILIATION.md: 51 s, FAILED 1:0,
+extern COMPLETED 0:0, cpu=288 allocated against a 64-CPU request.
+
+===SQUEUE_ALL_USER===
+   3149358      b5-seed    PENDING       0:00      1 (Priority)
+   3149363      b5-seed    PENDING       0:00      1 (Dependency)
+   3149362      b5-seed    PENDING       0:00      1 (Dependency)
+   3149361      b5-seed    PENDING       0:00      1 (Dependency)
+   3149360      b5-seed    PENDING       0:00      1 (Dependency)
+   3149359      b5-seed    PENDING       0:00      1 (Dependency)
+No MVP diagnostic job is queued or running. No job of any kind was submitted.
+
+Delta versus the 2026-09-17 authorization record:
+  then: 8 b5-seed PENDING, each 11 h x 4 GPU -> 352 GPU-hour forward reserve
+  now:  2 COMPLETED (3149356, 3149357), 6 PENDING
+        consumed by those two: 10:48:49 + 10:46:56 = 21:35:45 node-hours
+                               = 21.5958 node-hours / 86.3833 GPU-hours
+        remaining forward reserve: 6 x 11 h x 4 GPU = 264 GPU-hours
+This is real consumption that postdates EXECUTION_DECISION_V6 and invalidates
+the account-headroom arithmetic pinned in that record.

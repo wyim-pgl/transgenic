@@ -1,0 +1,14 @@
+.gitignore
+.ignore
+revision/scripts/evidence/est_real_sample.py
+tasknotes/real_sample/REPORT.md
+tasknotes/real_sample/REVIEW_FIXES.md
+tasknotes/real_sample/build_manifest.py
+tasknotes/real_sample/compute_proposal.sbatch
+tasknotes/real_sample/revision_binder_green.txt
+tasknotes/real_sample/revision_focused.txt
+tasknotes/real_sample/revision_red.txt
+tasknotes/real_sample/revision_review_boundaries.txt
+tasknotes/real_sample/sitalica.manifest.json
+tasknotes/real_sample/verification.txt
+tests/test_est_real_sample.py

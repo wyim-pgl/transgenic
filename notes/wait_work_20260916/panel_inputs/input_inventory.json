@@ -1,0 +1,88 @@
+{
+  "utc": "2026-09-17T04:19:59.325211+00:00",
+  "host": "login-0",
+  "files": [
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+      "bytes": 121183059,
+      "mtime_ns": 1765586312325613831
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+      "bytes": 60503119,
+      "mtime_ns": 1765586389180447814
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/training_input/db/b5_full_a40_v1.db",
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/training_input/db/b5_full_a40_v1.db",
+      "bytes": 23534252032,
+      "mtime_ns": 1788678744508540150
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_full_20260915/fullc0lite.db",
+      "realpath": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_full_20260915/fullc0lite.db",
+      "bytes": 1068773376,
+      "mtime_ns": 1789516052975409629
+    },
+    {
+      "path": "/data/gpfs/home/wyim/scratch/singularity/micromamba.sif",
+      "realpath": "/data/gpfs/assoc/pgl/singularity/micromamba.sif",
+      "bytes": 130813952,
+      "mtime_ns": 1778609006435044139
+    },
+    {
+      "path": "/data/gpfs/home/wyim/micromamba/bin/python",
+      "realpath": "/data/gpfs/home/wyim/micromamba/bin/python3.11",
+      "bytes": 25517344,
+      "mtime_ns": 1772577997399764871
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3.11",
+      "realpath": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3.11",
+      "bytes": 25553408,
+      "mtime_ns": 1769735145234336472
+    }
+  ],
+  "packages": [
+    {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/lib/python3.11/site-packages/numpy-1.26.4.dist-info/METADATA",
+      "metadata": [
+        "Name: numpy",
+        "Version: 1.26.4",
+        "Requires-Python: >=3.9"
+      ]
+    },
+    {
+      "path": "/data/gpfs/home/wyim/micromamba/lib/python3.11/site-packages/numpy-2.3.1.dist-info/METADATA",
+      "metadata": [
+        "Name: numpy",
+        "Version: 2.3.1",
+        "Requires-Python: >=3.11"
+      ]
+    },
+    {
+      "path": "/data/gpfs/home/wyim/.local/lib/python3.11/site-packages/duckdb-1.5.5.dist-info/METADATA",
+      "metadata": [
+        "Name: duckdb",
+        "Version: 1.5.5",
+        "Requires-Python: >=3.10.0"
+      ]
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/worktrees/mvp-cpu-deps-20260914/site/pysam-0.23.3.dist-info/METADATA",
+      "metadata": [
+        "Name: pysam",
+        "Version: 0.23.3",
+        "Requires-Python: >=3.8"
+      ]
+    }
+  ],
+  "receipts": {
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_full_20260915/SUCCESS.json": "{\n  \"status\": \"PASS\",\n  \"full_build_success\": true,\n  \"scope\": \"FULL SOURCE candidate MVP; NOT_FOR_PRODUCTION_TRAINING; CPU data project only.\",\n  \"production_training_accepted\": false,\n  \"db_sha256\": \"ed2d0eef2b205626db0983ab9f029f84c30514babc77c330bdb250b2fdfe3d0d\",\n  \"db_bytes\": 1068773376,\n  \"disk_after\": {\n    \"total\": 65970697666560,\n    \"used\": 36347981070336,\n    \"free\": 29622716596224\n  }\n}",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_full_20260915/input_identities.json": "{\n  \"/data/gpfs/assoc/pgl/data/Transgenic/training_input/db/b5_full_a40_v1.db\": {\n    \"sha256\": \"6840c93fd0b999e09b8dc2897adca1f4dbae36f2ef0f8fcc10ee66371295e222\",\n    \"bytes\": 23534252032,\n    \"hash_seconds\": 68.27722219657153\n  },\n  \"/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Athaliana/Athaliana.est.bam\": {\n    \"sha256\": \"f4598638a377d2ed6a89a9a01242f9872207ab6e55c98da5fe3e104764f0760e\",\n    \"bytes\": 126988517,\n    \"hash_seconds\": 0.40426178835332394\n  },\n  \"/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa\": {\n    \"sha256\": \"63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973\",\n    \"bytes\": 121183059,\n    \"hash_seconds\": 0.38445578794926405\n  }\n}",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_full_20260915/raster_results.json": "[\n  {\n    \"rn\": 1,\n    \"chrom\": \"Chr1\",\n    \"start0\": 1715,\n    \"end0\": 32435,\n    \"split\": \"train\",\n    \"is_rc\": false,\n    \"member_count\": 92,\n    \"sequence_sha256\": \"99e4f24d526a9cd98d08347ad6160370054e496fef5624d6c80ae8eb16d9fe4e\",\n    \"shape\": [\n      30720,\n      8\n    ],\n    \"dtype\": \"float16\",\n    \"n_bases\": 0,\n    \"nonzero_by_channel\": [\n      2511,\n      3188,\n      2544,\n      5,\n      5,\n      18,\n      17,\n      30720\n    ],\n    \"raster_seconds\": 1.9260608879849315,\n    \"N_mask_allN_fraction0_sourceoff_RC_checks\": \"PASS\"\n  },\n  {\n    \"rn\": 2,\n    \"chrom\": \"Chr1\",\n    \"start0\": 1715,\n    \"end0\": 32435,\n    \"split\": \"train\",\n    \"is_rc\": true,\n    \"member_count\": 92,\n    \"sequence_sha256\": \"b977c4e571b32eff569a9b8984ed80ae4c4ce8aa421996fe2379001408548768\",\n    \"shape\": [\n      30720,\n      8\n    ],\n    \"dtype\": \"float16\",\n    \"n_bases\": 0,\n    \"nonzero_by_channel\": [\n      3188,\n      2511,\n      2544,\n      18,\n      17,\n      5,\n      5,\n      30720\n    ],\n    \"raster_seconds\": 0.34161877539008856,\n    \"N_mask_allN_fraction0_sourceoff_RC_checks\": \"PASS\"\n  },\n  {\n    \"rn\": 166,\n    \"chrom\": \"Chr1\",\n    \"start0\": 3073715,\n    \"end0\": 3104435,\n    \"split\": \"valid\",\n    \"is_rc\": false,\n    \"member_count\": 211,\n    \"sequence_sha256\": \"53ed9168f7bd4a7368232d3dcd3eea94c2ff762128978245c187741e0128cf78\",\n    \"shape\": [\n      30720,\n      8\n    ],\n    \"dtype\": \"float16\",\n    \"n_bases\": 2861,\n    \"nonzero_by_channel\": [\n      3533,\n      2906,\n      6366,\n      10,\n      9,\n      6,\n      6,\n      27859\n    ],\n    \"raster_seconds\": 0.3083679545670748,\n    \"N_mask_allN_fraction0_sourceoff_RC_checks\": \"PASS\"\n  },\n  {\n    \"rn\": 167,\n    \"chrom\": \"Chr1\",\n    \"start0\": 3073715,\n    \"end0\": 3104435,\n    \"split\": \"valid\",\n    \"is_rc\": true,\n    \"member_count\": 211,\n    \"sequence_sha256\": \"888dbcf53b6dfd75127ec8db3ac337de9e6bf3afda6cf9f8aea5699a9112abeb\",\n    \"shape\": [\n      30720,\n      8\n    ],\n    \"dtype\": \"float16\",\n    \"n_bases\": 2861,\n    \"nonzero_by_channel\": [\n      2906,\n      3533,\n      6366,\n      6,\n      6,\n      10,\n      9,\n      27859\n    ],\n    \"raster_seconds\": 0.3065205905586481,\n    \"N_mask_allN_fraction0_sourceoff_RC_checks\": \"PASS\"\n  }\n]"
+  },
+  "scope": "stat_and_small_metadata_only_no_imports_no_db_reads"
+}

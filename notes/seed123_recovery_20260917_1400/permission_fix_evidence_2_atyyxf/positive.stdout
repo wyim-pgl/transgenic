@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "sbatch",
+    "--export=NIL",
+    "--no-requeue",
+    "--open-mode=append",
+    "--output=/tmp/tmpx7kqc1wn/positive-reservation/stdout",
+    "--error=/tmp/tmpx7kqc1wn/positive-reservation/stderr",
+    "/tmp/tmpx7kqc1wn/release/sample.sbatch",
+    "/tmp/tmpx7kqc1wn/release",
+    "b590ac673e6ddff70ddf80441b6d61c8c6e3ab3cb5638f6896a02fe014157bf8",
+    "/tmp/tmpx7kqc1wn/positive-reservation/worker"
+  ],
+  "batch_sha256": "7fe7c107e5796043393ee6eea52d8db96cf327877577cf1679c658425ef31f1e",
+  "contract": "Never modify release or reuse namespace/argv, including on submission failure. Controller must authorize one submission and record its result externally. No automatic submission, retry, cleanup or biological acceptance.",
+  "launcher_sha256": "0c4321cb199374907dc99680a9ad8fb2c01202e7e17a4c62f6573543dc0697ea",
+  "ledger_sha256": "b590ac673e6ddff70ddf80441b6d61c8c6e3ab3cb5638f6896a02fe014157bf8",
+  "namespace": "/tmp/tmpx7kqc1wn/positive-reservation",
+  "release": "/tmp/tmpx7kqc1wn/release",
+  "single_use": true,
+  "status": "PREPARED_NOT_SUBMITTED",
+  "stderr": "/tmp/tmpx7kqc1wn/positive-reservation/stderr",
+  "stdout": "/tmp/tmpx7kqc1wn/positive-reservation/stdout",
+  "worker_output": "/tmp/tmpx7kqc1wn/positive-reservation/worker"
+}
+REVIEW ONLY, NOT EXECUTED: sbatch --export=NIL --no-requeue --open-mode=append --output=/tmp/tmpx7kqc1wn/positive-reservation/stdout --error=/tmp/tmpx7kqc1wn/positive-reservation/stderr /tmp/tmpx7kqc1wn/release/sample.sbatch /tmp/tmpx7kqc1wn/release b590ac673e6ddff70ddf80441b6d61c8c6e3ab3cb5638f6896a02fe014157bf8 /tmp/tmpx7kqc1wn/positive-reservation/worker

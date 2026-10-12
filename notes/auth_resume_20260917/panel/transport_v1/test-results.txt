@@ -1,0 +1,13 @@
+test_implementation_exists (test_transport.TransportTests) ... ok
+test_inventory_and_pins (test_transport.TransportTests) ... ok
+test_launcher_is_preparation_only (test_transport.TransportTests) ... ok
+test_manifest_tampering (test_transport.TransportTests) ... ok
+test_mounts (test_transport.TransportTests) ... ok
+test_namespace_reuse_and_missing_receipt (test_transport.TransportTests) ... ok
+test_paths (test_transport.TransportTests) ... ok
+test_tree_tamper_extra_symlink_wal (test_transport.TransportTests) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 2.926s
+
+OK

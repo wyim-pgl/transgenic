@@ -1,0 +1,10 @@
+{"repo": "/work/nvme/bilv/wcyim/transgenic/repo_b6_c2diag_233574a_20261011", "diag_sha": "02f32d8b8dc64de4fd1a31d78537083cb67174f21da1ce3df50cfc6c4f51dc18", "draw_rows": 166, "draw_sha": "fc465c7da8873e5ea740aaf50b0af3ae35f67bcd30c37d2646eb86cbb84c764e"}
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

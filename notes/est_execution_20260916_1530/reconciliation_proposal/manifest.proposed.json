@@ -1,0 +1,548 @@
+{
+  "accounting": {
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/c1_reconciled/inputs/accounting.psv",
+    "sha256": "61120e921d3c8897e46608e02a8c46d9233812f71791c024a2626150bfbbb237"
+  },
+  "blastx_root": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx",
+  "entries": [
+    {
+      "jobids": [
+        "6163851"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/tmp",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/run.sbatch",
+      "wrapper_sha256": "8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a"
+    },
+    {
+      "jobids": [
+        "6163851"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/execution.lock",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/run.sbatch",
+      "wrapper_sha256": "8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a"
+    },
+    {
+      "jobids": [
+        "6163851"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/submission.lock",
+      "snapshot": {
+        "children": {
+          "jobid": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "4273809985647f442eeb1fda76f458575ec3324fbf8f612f32896c676ce87cf9",
+            "uid": 3092957
+          }
+        },
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/run.sbatch",
+      "wrapper_sha256": "8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a"
+    },
+    {
+      "jobids": [
+        "6164049_0",
+        "6164049_1",
+        "6164049_2",
+        "6164049_3",
+        "6164049_4",
+        "6164049_5",
+        "6164049_6",
+        "6164049_7"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/submission.lock",
+      "snapshot": {
+        "children": {
+          "jobid": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "90323ca27a9531d35f720ef40dfa8d502bad3bcd2032825315b7e6bc1bd8bafc",
+            "uid": 3092957
+          }
+        },
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch",
+      "wrapper_sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c"
+    },
+    {
+      "jobids": [
+        "6164049_0"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/tmp",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch",
+      "wrapper_sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c"
+    },
+    {
+      "jobids": [
+        "6164049_1"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/tmp",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch",
+      "wrapper_sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c"
+    },
+    {
+      "jobids": [
+        "6164049_2"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/tmp",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch",
+      "wrapper_sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c"
+    },
+    {
+      "jobids": [
+        "6164049_3"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/tmp",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch",
+      "wrapper_sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c"
+    },
+    {
+      "jobids": [
+        "6164049_4"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/tmp",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch",
+      "wrapper_sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c"
+    },
+    {
+      "jobids": [
+        "6164049_5"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/tmp",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch",
+      "wrapper_sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c"
+    },
+    {
+      "jobids": [
+        "6164049_6"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/tmp",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch",
+      "wrapper_sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c"
+    },
+    {
+      "jobids": [
+        "6164049_7"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/tmp",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch",
+      "wrapper_sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c"
+    },
+    {
+      "jobids": [
+        "6163397"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914",
+      "snapshot": {
+        "children": {
+          "accounting-bounded-check.txt": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "d1141f429ec98648b675be14063c294778e9a30302e48b9b9bcc2dd5d4ef1009",
+            "uid": 3092957
+          },
+          "batch.exitcode": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+            "uid": 3092957
+          },
+          "duplicate-check-correct-user.txt": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "87e43b2ad711cc8263aa918605428c609fca529c055c568d4943bdee8e04915b",
+            "uid": 3092957
+          },
+          "duplicate-check.txt": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "uid": 3092957
+          },
+          "execution.lock": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "uid": 3092957
+          },
+          "expected-sources.sha256": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "59608313b2e7415edc163cf594a07142fac3c6212ce27b057748cb96c94e3fc6",
+            "uid": 3092957
+          },
+          "independent_lineage_audit.json": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "6b9c6de8775ee8e6f2999e5f26d57e1d98822d1362edc8a2ede7d200602567d8",
+            "uid": 3092957
+          },
+          "jobid": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "90f550502245b36caae13a4d00132648a511ef9c68593b359978953fd45111fb",
+            "uid": 3092957
+          },
+          "lineage_ncbi.baseline.tsv": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5",
+            "uid": 3092957
+          },
+          "logs": {
+            "children": {
+              "slurm-6163397.err": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "uid": 3092957
+              },
+              "slurm-6163397.out": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "5ae1443fbf17c2691e3fe68aa1b4fcd6a2f4b0ccfd3f170b0cde1a664bccf4df",
+                "uid": 3092957
+              }
+            },
+            "gid": 3092957,
+            "kind": "directory",
+            "uid": 3092957
+          },
+          "orthodb": {
+            "children": {
+              "DONE": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7",
+                "uid": 3092957
+              },
+              "lineage.tsv": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5",
+                "uid": 3092957
+              },
+              "provenance.json": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "287b1ae5b5c0cb9f6a08271705ad559e61bc34db5cff01d2f332928521b18603",
+                "uid": 3092957
+              }
+            },
+            "gid": 3092957,
+            "kind": "directory",
+            "uid": 3092957
+          },
+          "prepare.sbatch": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318",
+            "uid": 3092957
+          },
+          "receipts": {
+            "children": {
+              "DB.sha256": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "525cac4abacfe26d3a71fd2e265a8bd8e17027d0d5b2bb854584dad8788615f8",
+                "uid": 3092957
+              },
+              "PROVENANCE.txt": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "f0a117206cb5b6a239b4cbf4864e228d6283f5c9439ec5df4939b45a0cc54715",
+                "uid": 3092957
+              },
+              "SOURCE_COMMIT.txt": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "8dee43f5b00fea8222cb58f8dd0c6667c2a8b23a2f1c9b959745b76bea9b69f8",
+                "uid": 3092957
+              },
+              "build_dbs.sh": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "c1662517f055e6eefc455d55a3b5b249910957b8191dce4a339f08053f5915af",
+                "uid": 3092957
+              },
+              "swissprot_viridiplantae_reviewed.fa.gz.sha256": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "2c11dd8a6b3c5c73870eebe732bda04573c031ee7f7c8ed7273ecfba1144f887",
+                "uid": 3092957
+              }
+            },
+            "gid": 3092957,
+            "kind": "directory",
+            "uid": 3092957
+          },
+          "reviewed-small-files.sha256": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "895d8e4ee3732c17ca8c88bb17f891198810ebdd968e1c7a7fb1ae22456b591e",
+            "uid": 3092957
+          },
+          "sbatch-receipt.json": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "f0fe948a41ff43e202e5aee48ba4dd5381271116f4fb17b123c202df00df240f",
+            "uid": 3092957
+          },
+          "source-hash-attestation.txt": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "57ae9a162a5bc1b54d8143c6e4f8983820dbcc007611721674aa1a51c54394cb",
+            "uid": 3092957
+          },
+          "submission.lock": {
+            "children": {},
+            "gid": 3092957,
+            "kind": "directory",
+            "uid": 3092957
+          },
+          "swissprot": {
+            "children": {
+              "DONE": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7",
+                "uid": 3092957
+              },
+              "lineage.tsv": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce",
+                "uid": 3092957
+              },
+              "provenance.json": {
+                "gid": 3092957,
+                "kind": "file",
+                "sha256": "72fb9a58792d2ad4df0c88cc384da74c9d6e22f12d244c2d7c3b4092f64f638e",
+                "uid": 3092957
+              }
+            },
+            "gid": 3092957,
+            "kind": "directory",
+            "uid": 3092957
+          },
+          "tmp": {
+            "children": {},
+            "gid": 3092957,
+            "kind": "directory",
+            "uid": 3092957
+          },
+          "xdg-cache": {
+            "children": {},
+            "gid": 3092957,
+            "kind": "directory",
+            "uid": 3092957
+          }
+        },
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch",
+      "wrapper_sha256": "dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318"
+    },
+    {
+      "jobids": [
+        "6163397"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/logs",
+      "snapshot": {
+        "children": {
+          "slurm-6163397.err": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "uid": 3092957
+          },
+          "slurm-6163397.out": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "5ae1443fbf17c2691e3fe68aa1b4fcd6a2f4b0ccfd3f170b0cde1a664bccf4df",
+            "uid": 3092957
+          }
+        },
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch",
+      "wrapper_sha256": "dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318"
+    },
+    {
+      "jobids": [
+        "6163397"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/receipts",
+      "snapshot": {
+        "children": {
+          "DB.sha256": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "525cac4abacfe26d3a71fd2e265a8bd8e17027d0d5b2bb854584dad8788615f8",
+            "uid": 3092957
+          },
+          "PROVENANCE.txt": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "f0a117206cb5b6a239b4cbf4864e228d6283f5c9439ec5df4939b45a0cc54715",
+            "uid": 3092957
+          },
+          "SOURCE_COMMIT.txt": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "8dee43f5b00fea8222cb58f8dd0c6667c2a8b23a2f1c9b959745b76bea9b69f8",
+            "uid": 3092957
+          },
+          "build_dbs.sh": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "c1662517f055e6eefc455d55a3b5b249910957b8191dce4a339f08053f5915af",
+            "uid": 3092957
+          },
+          "swissprot_viridiplantae_reviewed.fa.gz.sha256": {
+            "gid": 3092957,
+            "kind": "file",
+            "sha256": "2c11dd8a6b3c5c73870eebe732bda04573c031ee7f7c8ed7273ecfba1144f887",
+            "uid": 3092957
+          }
+        },
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch",
+      "wrapper_sha256": "dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318"
+    },
+    {
+      "jobids": [
+        "6163397"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/submission.lock",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch",
+      "wrapper_sha256": "dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318"
+    },
+    {
+      "jobids": [
+        "6163397"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/tmp",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch",
+      "wrapper_sha256": "dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318"
+    },
+    {
+      "jobids": [
+        "6163397"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/xdg-cache",
+      "snapshot": {
+        "children": {},
+        "gid": 3092957,
+        "kind": "directory",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch",
+      "wrapper_sha256": "dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318"
+    },
+    {
+      "jobids": [
+        "6163397"
+      ],
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/execution.lock",
+      "snapshot": {
+        "gid": 3092957,
+        "kind": "file",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "uid": 3092957
+      },
+      "wrapper": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch",
+      "wrapper_sha256": "dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318"
+    }
+  ],
+  "queue": {
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/c1_reconciled/inputs/queue.json",
+    "sha256": "19175f0b476f07e0fd5113542ad340b417ed79b505c5478fc40b0dd0d47182ae"
+  },
+  "schema": "est-c1-reconciliation-v1"
+}

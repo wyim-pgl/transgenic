@@ -1,0 +1,84 @@
+{
+  "captured_at": "2026-09-17T08:16:40.117346+00:00",
+  "scope": "post_outage_receipt_identity_link_not_fresh_remote_source_hash",
+  "reference_authority_and_file_identities_match": true,
+  "panel_sha256_matches": true,
+  "jobs": {
+    "panel": "6165628",
+    "panel_payload": "COMPLETED0:0",
+    "panel_extern": "OUT_OF_MEMORY0:125",
+    "ONT": "6165555",
+    "GPU": "3163986",
+    "GPU_last_observed": "PENDING Priority at 00:34 PDT"
+  },
+  "panel_array_validation": "PASS local actual50; controller rerun exit0",
+  "scientific_approval": false,
+  "full_ONT_alignment_authorized": false,
+  "evidence": [
+    {
+      "path": "notes/power_recovery_20260917/panel_result/copied/outputs/job-6165628/reference_identity.json",
+      "bytes": 657,
+      "sha256": "70aab612069cd6c646606cbf685ad53cf3b09532878ee46f459dad3495db4f81"
+    },
+    {
+      "path": "notes/wait_work_20260916/longread/result_review/results/SRR28341943/receipt.json",
+      "bytes": 14789,
+      "sha256": "b8c5c78776a83ca1c5b25731cbfdf1bfd9c554dd3863ab2431bd38435dd3dc33"
+    },
+    {
+      "path": "notes/wait_work_20260916/longread/source_pins.json",
+      "bytes": 1111,
+      "sha256": "38c56c608336ef3fdcb83eaa5eb35a355ddc77ea1e8aff8387160603bf88ce34"
+    },
+    {
+      "path": "notes/power_recovery_20260917/panel_arrays/copied/panel/manifest.json",
+      "bytes": 38854,
+      "sha256": "7528c9bff5a9a9b177b1ad333ad76525a1d02d3c4cde4e0550865ff12e0acc0e"
+    },
+    {
+      "path": "notes/power_recovery_20260917/panel_submission.txt",
+      "bytes": 1427,
+      "sha256": "7a5212de2bd732c66df937b1571baccaf899911f95cd60f999c2f36c735ea0d5"
+    },
+    {
+      "path": "notes/power_recovery_20260917/stage_verify.txt",
+      "bytes": 396,
+      "sha256": "530d83e636409aee04c5f3d33d52422e2c4bcc9c1267b2955410790fd0a31652"
+    },
+    {
+      "path": "notes/power_recovery_20260917/panel_review.md",
+      "bytes": 7442,
+      "sha256": "00ec62e50fa24b91579171cdef244b26ad6d162c0f64da1b3c6aff03bd5e9f49"
+    },
+    {
+      "path": "notes/power_recovery_20260917/panel_result/REVIEW.md",
+      "bytes": 6771,
+      "sha256": "1ccea4440cdf2817f5154eb056b0753b8a646de8f2aa933cc741b0c048b783f3"
+    },
+    {
+      "path": "notes/power_recovery_20260917/panel_result/terminal_accounting.txt",
+      "bytes": 386,
+      "sha256": "4a7661df3ba88f1e5024def5a0c1aaa2b70e71cc0efd539046e390ad81c65d5b"
+    },
+    {
+      "path": "notes/power_recovery_20260917/panel_arrays/REVIEW.md",
+      "bytes": 8084,
+      "sha256": "03700a46b6c1a221425f571914a685c32e8f085b717472822baf7e3fd6a38457"
+    },
+    {
+      "path": "notes/power_recovery_20260917/panel_arrays/validate.py",
+      "bytes": 13472,
+      "sha256": "7ac27f47c615195ca5faac9f275fa37cf017914e2eb94963625d6c4f4d501d4d"
+    },
+    {
+      "path": "notes/power_recovery_20260917/panel_arrays/controller_rerun.txt",
+      "bytes": 1917,
+      "sha256": "abfeebbce05ec7f5189556dd82daf0a87c78737e36876bd029b4f6db4342e2a2"
+    },
+    {
+      "path": "notes/power_recovery_20260917/gpu/RESULT.md",
+      "bytes": 4376,
+      "sha256": "c71486683da4a07b7e5329c8608c52c1b5b41ea697c1505609c89d565619348d"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+Read-only SSH observations; no comparison, installation, write, or job submission.
+
+Command 1:
+ssh -o BatchMode=yes -o ConnectTimeout=15 pronghorn 'p=/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare; date -u +%FT%TZ; hostname; if test -x "$p"; then readlink -f "$p"; stat -Lc "bytes=%s mode=%a" "$p"; "$p" --version; else printf "CANDIDATE_UNAVAILABLE\n"; fi'
+Output:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T01:45:08Z
+login-0
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare
+bytes=336328 mode=775
+gffcompare v0.12.6
+Exit: 0
+
+Command 2:
+ssh -o BatchMode=yes -o ConnectTimeout=15 pronghorn 'p=/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python; date -u +%FT%TZ; if test -x "$p"; then readlink -f "$p"; "$p" --version; else printf "PYTHON_UNAVAILABLE\n"; fi'
+Output:
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T01:47:50Z
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3.11
+Python 3.11.14
+Exit: 0
+
+Binary SHA256 intentionally deferred to compute execution (including large-binary safety).
+No broader filesystem search was necessary. Availability on login does not certify compute execution.

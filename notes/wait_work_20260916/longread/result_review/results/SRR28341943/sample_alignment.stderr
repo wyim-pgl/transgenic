@@ -1,0 +1,10 @@
+[M::mm_idx_gen::4.517*1.40] collected minimizers
+[M::mm_idx_gen::5.731*1.94] sorted minimizers
+[M::main::5.731*1.94] loaded/built the index for 7 target sequence(s)
+[M::mm_mapopt_update::6.166*1.87] mid_occ = 87
+[M::mm_idx_stat] kmer size: 14; skip: 5; is_hpc: 0; #seq: 7
+[M::mm_idx_stat::6.440*1.84] distinct minimizers: 20096618 (62.37% are singletons); average occurrences: 2.019; average spacing: 2.949; total length: 119667750
+[M::worker_pipeline::11.797*2.78] mapped 10000 sequences
+[M::main] Version: 2.28-r1209
+[M::main] CMD: /data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2 -t 4 -ax splice -k14 -G 200000 --secondary=no --cs=long /data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/sample.fa
+[M::main] Real time: 11.906 sec; CPU: 32.846 sec; Peak RSS: 1.732 GB

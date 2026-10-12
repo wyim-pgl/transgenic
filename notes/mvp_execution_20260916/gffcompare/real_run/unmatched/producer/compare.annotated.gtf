@@ -1,0 +1,3 @@
+smoke1	MVP	transcript	2001	2300	.	+	.	transcript_id "q"; gene_id "g"; xloc "XLOC_000001"; class_code "u"; tss_id "TSS1";
+smoke1	MVP	exon	2001	2100	.	+	.	transcript_id "q"; gene_id "g"; exon_number "1";
+smoke1	MVP	exon	2201	2300	.	+	.	transcript_id "q"; gene_id "g"; exon_number "2";

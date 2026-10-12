@@ -1,0 +1,19 @@
+{
+  "commit": "f6bef565f0bb432256b7e596a81b896afd2266c5",
+  "files": {
+    "/tmp/b6-p2-phase-1535433/revision/scripts/64_orthodb_filter.py": "32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302",
+    "/tmp/b6-p2-phase-1535433/revision/scripts/evidence/est_blastx.py": "5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291",
+    "/tmp/b6-p2-phase-1535433/revision/scripts/evidence/est_blastx_audit.py": "b4392729aaff73feb61e4ffef8df7b6ddc66235ec6aa1fd988babb0da46bebfb",
+    "/tmp/b6-p2-phase-1535433/revision/scripts/evidence/est_blastx_audit.sbatch": "5d122878c84e75d4b536a6c98413f03bb8ea5ec9f5a7892274d7a626449e8ad4"
+  },
+  "historical_wrapper_pins": {
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch": "dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/run.sbatch": "8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a"
+  },
+  "lineage_pins": {
+    "orthodb": "812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5",
+    "swissprot": "402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce"
+  },
+  "pilot_receipt_sha256": "f45de648f3491133890420fdb4a374299a55a169d199eaf4dc79c608e7ed7b23"
+}

@@ -1,0 +1,18 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+STAGING_PROCESS_DIAGNOSTIC
+63 0x4 0xaaab0c1e3340 0x1639 0x1 0xffffa322f000 0xaaab0c1e4959 0xffffd1eea640 0xffffa2e38438
+total 0
+lr-x------ 1 wcyim grp_202 64 Sep 17 19:53 0 -> pipe:[245335442]
+l-wx------ 1 wcyim grp_202 64 Sep 17 19:53 1 -> pipe:[245335443]
+l-wx------ 1 wcyim grp_202 64 Sep 17 19:53 2 -> pipe:[245335444]
+lr-x------ 1 wcyim grp_202 64 Sep 17 19:53 3 -> /work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_v6_control_20260917/release_v6.tar
+lr-x------ 1 wcyim grp_202 64 Sep 17 19:53 4 -> /work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v6_20260917/build_release.py
+rchar: 40669165
+wchar: 33052
+syscr: 36406
+syscw: 57
+read_bytes: 262144
+write_bytes: 0
+cancelled_write_bytes: 0

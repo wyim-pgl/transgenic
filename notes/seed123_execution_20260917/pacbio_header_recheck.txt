@@ -1,0 +1,87 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+{
+  "observed_at": "2026-09-17T11:29:32.844968-07:00",
+  "scope": "bounded first16KiB decompressed per file; not full product validation",
+  "records": [
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/pacbio/Athaliana_zhang2023_PRJNA911826/SRR22719002.fa.gz",
+      "exists": true,
+      "compressed_size": 382910131,
+      "prefix_characters": 16384,
+      "headers": [
+        ">SRR22719002.1 1/1",
+        ">SRR22719002.2 2/1",
+        ">SRR22719002.3 3/1",
+        ">SRR22719002.4 4/1",
+        ">SRR22719002.5 5/1"
+      ]
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/pacbio/Athaliana_zhang2023_PRJNA911826/SRR22719003.fa.gz",
+      "exists": true,
+      "compressed_size": 647887565,
+      "prefix_characters": 16384,
+      "headers": [
+        ">SRR22719003.1 1/1",
+        ">SRR22719003.2 2/1",
+        ">SRR22719003.3 3/1",
+        ">SRR22719003.4 4/1",
+        ">SRR22719003.5 5/1"
+      ]
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/pacbio/Athaliana_zhang2023_PRJNA911826/SRR22719004.fa.gz",
+      "exists": true,
+      "compressed_size": 255469456,
+      "prefix_characters": 16384,
+      "headers": [
+        ">SRR22719004.1 1/1",
+        ">SRR22719004.2 2/1",
+        ">SRR22719004.3 3/1",
+        ">SRR22719004.4 4/1",
+        ">SRR22719004.5 5/1"
+      ]
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/pacbio/Athaliana_zhang2023_PRJNA911826/SRR22719005.fa.gz",
+      "exists": true,
+      "compressed_size": 335459261,
+      "prefix_characters": 16384,
+      "headers": [
+        ">SRR22719005.1 1/1",
+        ">SRR22719005.2 2/1",
+        ">SRR22719005.3 3/1",
+        ">SRR22719005.4 4/1",
+        ">SRR22719005.5 5/1"
+      ]
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/pacbio/Athaliana_zhang2023_PRJNA911826/SRR22719006.fa.gz",
+      "exists": true,
+      "compressed_size": 368821813,
+      "prefix_characters": 16384,
+      "headers": [
+        ">SRR22719006.1 1/1",
+        ">SRR22719006.2 2/1",
+        ">SRR22719006.3 3/1",
+        ">SRR22719006.4 4/1",
+        ">SRR22719006.5 5/1"
+      ]
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/pacbio/Athaliana_zhang2023_PRJNA911826/SRR22719007.fa.gz",
+      "exists": true,
+      "compressed_size": 473089876,
+      "prefix_characters": 16384,
+      "headers": [
+        ">SRR22719007.1 1/1",
+        ">SRR22719007.2 2/1",
+        ">SRR22719007.3 3/1",
+        ">SRR22719007.4 4/1",
+        ">SRR22719007.5 5/1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "observed_at": "2026-10-09T12:53:26-05:00",
+  "source_commit": "233574ae6e8b4f0e35738556ecffff8a2f823680",
+  "quota": {
+    "project_id": 22169,
+    "pool": "ddn_ssd",
+    "used_kib": 414092376,
+    "soft_kib": 524288000,
+    "hard_kib": 576716800,
+    "remaining_bytes": 112840318976,
+    "minimum_preflight_bytes": 107374182400,
+    "filesystem_available_bytes": 296210501632
+  },
+  "smoke": {
+    "job_id": 3338555,
+    "latest_state_bytes": 5727678235,
+    "model_bytes": 2198495648,
+    "optimizer_bytes": 3529085419,
+    "global_step": 247,
+    "epoch": 0,
+    "micro_step": 5928
+  },
+  "b5": {
+    "epoch_14_bytes": 14123535700,
+    "latest_state_bytes": 5405123770,
+    "latest_global_step": 30819,
+    "latest_epoch_zero_based": 14
+  },
+  "source_sha256": {
+    "src/transgenic/training/b6_runtime.py": "f28f0494b35acfb9f80b43fd961df0e64acf0f03ff98d05e2a301b1d8945e589",
+    "train/train_HyenaTransgenic_B6.py": "8ae0839c51030261bef38930495d1bc12723fbe683772f2dfc7429eefbd30238",
+    "revision/scripts/b6/wp5_pilot.sbatch": "f97f4c1b821a78363a00cec03b091a23a2b3bb6bc3033fe0c0bc6d5b14071ded",
+    "configs/b6_400m_win_v3_wp5_pilot.json": "e4e7d123fbda29a36a39b3ad4ed7fe4c505767aaf7e1085fcf6c63f9a8800d41"
+  },
+  "queued_scripts_sha256_match": [
+    3345917,
+    3345919
+  ],
+  "last_queue_check": "2026-10-09T12:56:28-05:00",
+  "gpu_hours_remaining": 771,
+  "jobs": {
+    "3345917": "PENDING Priority",
+    "3345919": "PENDING Priority",
+    "3345918": "PENDING afterany:3345917",
+    "3345920": "PENDING afterany:3345919",
+    "3309786": "PENDING Priority; estimated 2026-10-10T15:20:23-05:00"
+  },
+  "note": "Values transcribed from read-only SSH tool output; storage_repro mocks an additional allocation, not an actual disk write."
+}

@@ -1,0 +1,68 @@
+test_candidate_manifest_exact_closure (test_candidate.CandidateTests) ... FAIL
+test_new_namespace_and_preserved_exclusions (test_candidate.CandidateTests) ... FAIL
+test_no_overwrite (test_candidate.CandidateTests) ... FAIL
+test_old_prepared_receipt_rejected (test_candidate.CandidateTests) ... FAIL
+test_prepare_profile_seed (test_candidate.CandidateTests) ... FAIL
+test_wrong_archive_pin_rejected (test_candidate.CandidateTests) ... FAIL
+test_wrong_manifest_pin_rejected (test_candidate.CandidateTests) ... FAIL
+
+======================================================================
+FAIL: test_candidate_manifest_exact_closure (test_candidate.CandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v1/test_candidate.py", line 16, in test_candidate_manifest_exact_closure
+    self.assertTrue(hasattr(b, 'candidate_payload'), 'missing candidate validator')
+AssertionError: False is not true : missing candidate validator
+
+======================================================================
+FAIL: test_new_namespace_and_preserved_exclusions (test_candidate.CandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v1/test_candidate.py", line 69, in test_new_namespace_and_preserved_exclusions
+    self.assertIn('staging/dev123_p1_release_20260917', text)
+AssertionError: 'staging/dev123_p1_release_20260917' not found in '#!/bin/bash\n#SBATCH --job-name=mvp8-final-p1-0916\n#SBATCH --account=bilv-dtai-gh\n#SBATCH --partition=ghx4\n#SBATCH --nodes=1\n#SBATCH --ntasks=1\n#SBATCH --gpus-per-node=4\n#SBATCH --cpus-per-task=64\n#SBATCH --exclusive\n#SBATCH --no-requeue\n#SBATCH --time=00:30:00\n#SBATCH --exclude=gh062,gh093,gh086\n#SBATCH --chdir=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final_p1_release\n#SBATCH --output=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-%j.out\n#SBATCH --error=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/final-p1-%j.err\nset -euo pipefail\numask 077\n# Controller refreshes B5 node exclusion immediately before submission; no worker submission.\n# Clear all inherited container injection and application overrides, not just one known key.\nfor name in $(compgen -e); do\n  case "$name" in\n    APPTAINER*|SINGULARITY*|TRANSGENIC*|HF_*|TRANSFORMERS*|PYTHON*|TORCH*|TRITON*|MVP_*|CUDA_VISIBLE_DEVICES)\n      unset "$name" ;;\n  esac\ndone\nunset LD_PRELOAD LD_LIBRARY_PATH BASH_ENV ENV\nexport PATH=/usr/bin:/bin:/sw/user/scripts\nexport PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1\nexport OMP_NUM_THREADS=8\n[[ ${SLURM_JOB_NUM_NODES:?} == 1 ]]\n[[ ${SLURM_GPUS_ON_NODE:?} == 4 ]]\n[[ ! -e S0_P1_STARTED ]]\n# Exclusive claim survives failures; never rerun this release automatically.\n(set -o noclobber; printf \'%s\\n\' "${SLURM_JOB_ID:?}" > S0_P1_STARTED)\n/usr/bin/sha256sum -c release.sha256\n/usr/bin/date -Is\n/usr/bin/hostname\n# 28m20s combined S0+P1 ceiling, 20s teardown, Slurm30m hard backstop.\n# No separate warmup and no TRAINING_DONE; any failure exits nonzero.\n/usr/bin/timeout --signal=TERM --kill-after=20s 1700s /usr/bin/python3 deploy.py host\n'
+
+======================================================================
+FAIL: test_no_overwrite (test_candidate.CandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v1/test_candidate.py", line 36, in test_no_overwrite
+    self.assertTrue(hasattr(b, 'build'), 'missing exclusive builder')
+AssertionError: False is not true : missing exclusive builder
+
+======================================================================
+FAIL: test_old_prepared_receipt_rejected (test_candidate.CandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v1/test_candidate.py", line 55, in test_old_prepared_receipt_rejected
+    self.assertTrue(hasattr(d, 'validate_prepared'), 'missing prepared profile guard')
+AssertionError: False is not true : missing prepared profile guard
+
+======================================================================
+FAIL: test_prepare_profile_seed (test_candidate.CandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v1/test_candidate.py", line 50, in test_prepare_profile_seed
+    self.assertIn('--profile', values)
+AssertionError: '--profile' not found in [None, None, 'prepare', '--db', '/corpus.db', '--evidence-db', '/mvp/inputs/evidence/fullc0lite.db', '--panel', None, '--sif', '/image.sif', '--config', None, '--init-from', None, '--acceptance-record', None, '--acceptance-sha256', None, '--inventory-record', None, '--receipts-record', None, '--seed', 1, None, '--output', None, '--manifest-output', None]
+
+======================================================================
+FAIL: test_wrong_archive_pin_rejected (test_candidate.CandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v1/test_candidate.py", line 24, in test_wrong_archive_pin_rejected
+    self.assertTrue(hasattr(b, 'candidate_payload'), 'missing candidate validator')
+AssertionError: False is not true : missing candidate validator
+
+======================================================================
+FAIL: test_wrong_manifest_pin_rejected (test_candidate.CandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v1/test_candidate.py", line 30, in test_wrong_manifest_pin_rejected
+    self.assertTrue(hasattr(b, 'candidate_payload'), 'missing candidate validator')
+AssertionError: False is not true : missing candidate validator
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.022s
+
+FAILED (failures=7)

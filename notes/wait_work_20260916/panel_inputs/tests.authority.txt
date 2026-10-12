@@ -1,0 +1,21 @@
+test_exact_original_objects_and_bytes (test_tools.AuthorityTests) ... ok
+test_missing_or_tampered_objects_fail (test_tools.AuthorityTests) ... test_parent_git_and_receipt_substitution_rejected (test_tools.AuthorityTests) ... ok
+
+======================================================================
+ERROR: test_missing_or_tampered_objects_fail (test_tools.AuthorityTests) (mutation='corrupt')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/wait_work_20260916/panel_inputs/test_tools.py", line 31, in test_missing_or_tampered_objects_fail
+    else: p.write_bytes(b'corrupt')
+  File "/home/wyim/miniconda3/lib/python3.8/pathlib.py", line 1245, in write_bytes
+    with self.open(mode='wb') as f:
+  File "/home/wyim/miniconda3/lib/python3.8/pathlib.py", line 1222, in open
+    return io.open(self, mode, buffering, encoding, errors, newline,
+  File "/home/wyim/miniconda3/lib/python3.8/pathlib.py", line 1078, in _opener
+    return self._accessor.open(self, flags, mode)
+PermissionError: [Errno 13] Permission denied: '/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/wait_work_20260916/panel_inputs/tmp0b56y591/root/.git/objects/d4/1b313a230ecde4b51f045a91e5ea39b00c40d9'
+
+----------------------------------------------------------------------
+Ran 3 tests in 10.235s
+
+FAILED (errors=1)

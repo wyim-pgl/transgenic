@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-10-09T13:19:29-05:00",
+  "probe_bytes": 1048576,
+  "device": 3290199710,
+  "project_id": 22169,
+  "source_pool": "ddn_ssd",
+  "after_rename_to_hdd_pool": "ddn_ssd",
+  "after_copy_to_hdd_pool": "ddn_hdd",
+  "sha256": "fbbab289f7f94b25736c58be46a994c441fd02552cc6022352e3d86d2fab7c83",
+  "hashes_equal": true,
+  "temporary_files_removed": true,
+  "hdd_quota_used_kib": 869569356,
+  "hdd_quota_soft_kib": 1048576000,
+  "candidate_epoch01_to08_bytes": 106360850299,
+  "production_checkpoint_mutations": false
+}

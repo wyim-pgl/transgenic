@@ -1,0 +1,262 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+22169 P /work/nvme/bilv
+22169 P /work/nvme/bilv/wcyim
+22169 P /work/hdd/bilv
+22169 P /work/hdd/bilv/wcyim
+ACCELERATE 1.15.0
+    def save_state(self, output_dir: str | None = None, safe_serialization: bool = True, **save_model_func_kwargs):
+        """
+        Saves the current states of the model, optimizer, scaler, RNG generators, and registered objects to a folder.
+
+        If a `ProjectConfiguration` was passed to the `Accelerator` object with `automatic_checkpoint_naming` enabled
+        then checkpoints will be saved to `self.project_dir/checkpoints`. If the number of current saves is greater
+        than `total_limit` then the oldest save is deleted. Each checkpoint is saved in separate folders named
+        `checkpoint_<iteration>`.
+
+        Otherwise they are just saved to `output_dir`.
+
+        <Tip>
+
+        Should only be used when wanting to save a checkpoint during training and restoring the state in the same
+        environment.
+
+        </Tip>
+
+        Args:
+            output_dir (`str` or `os.PathLike`):
+                The name of the folder to save all relevant weights and states.
+            safe_serialization (`bool`, *optional*, defaults to `True`):
+                Whether to save the model using `safetensors` or the traditional PyTorch way (that uses `pickle`).
+            save_model_func_kwargs (`dict`, *optional*):
+                Additional keyword arguments for saving model which can be passed to the underlying save function, such
+                as optional arguments for DeepSpeed's `save_checkpoint` function.
+
+        Example:
+
+        ```python
+        >>> from accelerate import Accelerator
+
+        >>> accelerator = Accelerator()
+        >>> model, optimizer, lr_scheduler = ...
+        >>> model, optimizer, lr_scheduler = accelerator.prepare(model, optimizer, lr_scheduler)
+        >>> accelerator.save_state(output_dir="my_checkpoint")
+        ```
+        """
+        if self.project_configuration.automatic_checkpoint_naming:
+            output_dir = os.path.join(self.project_dir, "checkpoints")
+        os.makedirs(output_dir, exist_ok=True)
+        if self.project_configuration.automatic_checkpoint_naming:
+            folders = [os.path.join(output_dir, folder) for folder in os.listdir(output_dir)]
+            if (
+                self.project_configuration.total_limit is not None
+                and (len(folders) + 1 > self.project_configuration.total_limit)
+                and self.is_main_process
+            ):
+
+                def _inner(folder):
+                    return list(map(int, re.findall(r"[\/]?([0-9]+)(?=[^\/]*$)", folder)))[0]
+
+                folders.sort(key=_inner)
+                logger.warning(
+                    f"Deleting {len(folders) + 1 - self.project_configuration.total_limit} checkpoints to make room for new checkpoint."
+                )
+                for folder in folders[: len(folders) + 1 - self.project_configuration.total_limit]:
+                    shutil.rmtree(folder)
+            output_dir = os.path.join(output_dir, f"checkpoint_{self.save_iteration}")
+            if os.path.exists(output_dir):
+                raise ValueError(
+                    f"Checkpoint directory {output_dir} ({self.save_iteration}) already exists. Please manually override `self.save_iteration` with what iteration to start with."
+                )
+            self.wait_for_everyone()
+        os.makedirs(output_dir, exist_ok=True)
+        logger.info(f"Saving current state to {output_dir}")
+
+        if self.distributed_type == DistributedType.XLA:
+            # Finish running the previous step before checkpointing
+            xm.mark_step()
+
+        # Save the models taking care of FSDP and DeepSpeed nuances
+        weights = []
+        for i, model in enumerate(self._models):
+            if self.distributed_type == DistributedType.FSDP:
+                logger.info("Saving FSDP model")
+                save_fsdp_model(self.state.fsdp_plugin, self, model, output_dir, i)
+                logger.info(f"FSDP Model saved to output dir {output_dir}")
+            elif self.distributed_type == DistributedType.DEEPSPEED:
+                logger.info("Saving DeepSpeed Model and Optimizer")
+                ckpt_id = f"{MODEL_NAME}" if i == 0 else f"{MODEL_NAME}_{i}"
+                model.save_checkpoint(output_dir, ckpt_id, **save_model_func_kwargs)
+                logger.info(f"DeepSpeed Model and Optimizer saved to output dir {os.path.join(output_dir, ckpt_id)}")
+            elif self.distributed_type == DistributedType.MEGATRON_LM:
+                logger.info("Saving Megatron-LM Model, Optimizer and Scheduler")
+                model.save_checkpoint(output_dir)
+                logger.info(f"Megatron-LM Model , Optimizer and Scheduler saved to output dir {output_dir}")
+            else:
+                weights.append(self.get_state_dict(model, unwrap=False))
+
+        # Save the optimizers taking care of FSDP and DeepSpeed nuances
+        optimizers = []
+        if self.distributed_type == DistributedType.FSDP:
+            for i, opt in enumerate(self._optimizers):
+                logger.info("Saving FSDP Optimizer")
+                save_fsdp_optimizer(self.state.fsdp_plugin, self, opt, self._models[i], output_dir, i)
+                logger.info(f"FSDP Optimizer saved to output dir {output_dir}")
+        elif self.distributed_type not in [DistributedType.DEEPSPEED, DistributedType.MEGATRON_LM]:
+            optimizers = self._optimizers
+
+        # Save the lr schedulers taking care of DeepSpeed nuances
+        schedulers = []
+        if self.distributed_type == DistributedType.DEEPSPEED:
+            for i, scheduler in enumerate(self._schedulers):
+                if isinstance(scheduler, DeepSpeedSchedulerWrapper):
+                    continue
+                schedulers.append(scheduler)
+        elif self.distributed_type not in [DistributedType.MEGATRON_LM]:
+            schedulers = self._schedulers
+
+        # Save the samplers of the dataloaders
+        dataloaders = self._dataloaders
+
+        # Call model loading hooks that might have been registered with
+        # accelerator.register_model_state_hook
+        for hook in self._save_model_state_pre_hook.values():
+            hook(self._models, weights, output_dir)
+
+        save_location = save_accelerator_state(
+            output_dir,
+            weights,
+            optimizers,
+            schedulers,
+            dataloaders,
+            self.state.process_index,
+            self.step,
+            self.scaler,
+            save_on_each_node=self.project_configuration.save_on_each_node,
+            safe_serialization=safe_serialization,
+        )
+        for i, obj in enumerate(self._custom_objects):
+            save_custom_state(obj, output_dir, i, save_on_each_node=self.project_configuration.save_on_each_node)
+        self.project_configuration.iteration += 1
+        return save_location
+
+def save_accelerator_state(
+    output_dir: str,
+    model_states: list[dict],
+    optimizers: list,
+    schedulers: list,
+    dataloaders: list,
+    process_index: int,
+    step: int,
+    scaler: Optional[GradScaler] = None,
+    save_on_each_node: bool = False,
+    safe_serialization: bool = True,
+) -> Path:
+    """
+    Saves the current states of the models, optimizers, scaler, and RNG generators to a given directory.
+
+    <Tip>
+
+    If `safe_serialization` is `True`, models will be saved with `safetensors` while the rest are saved using native
+    `pickle`.
+
+    </Tip>
+
+    Args:
+        output_dir (`str` or `os.PathLike`):
+            The name of the folder to save all relevant weights and states.
+        model_states (`List[torch.nn.Module]`):
+            A list of model states
+        optimizers (`List[torch.optim.Optimizer]`):
+            A list of optimizer instances
+        schedulers (`List[torch.optim.lr_scheduler._LRScheduler]`):
+            A list of learning rate schedulers
+        dataloaders (`List[torch.utils.data.DataLoader]`):
+            A list of dataloader instances to save their sampler states
+        process_index (`int`):
+            The current process index in the Accelerator state
+        step (`int`):
+            The current step in the internal step tracker
+        scaler (`torch.amp.GradScaler`, *optional*):
+            An optional gradient scaler instance to save;
+        save_on_each_node (`bool`, *optional*):
+            Whether to save on every node, or only the main node.
+        safe_serialization (`bool`, *optional*, defaults to `True`):
+            Whether to save the model using `safetensors` or the traditional PyTorch way (that uses `pickle`).
+    """
+    output_dir = Path(output_dir)
+    # Model states
+    for i, state in enumerate(model_states):
+        weights_name = WEIGHTS_NAME if not safe_serialization else SAFE_WEIGHTS_NAME
+        if i > 0:
+            weights_name = weights_name.replace(".", f"_{i}.")
+        output_model_file = output_dir.joinpath(weights_name)
+        save(state, output_model_file, save_on_each_node=save_on_each_node, safe_serialization=safe_serialization)
+        logger.info(f"Model weights saved in {output_model_file}")
+    # Optimizer states
+    for i, opt in enumerate(optimizers):
+        state = opt.state_dict()
+        optimizer_name = f"{OPTIMIZER_NAME}.bin" if i == 0 else f"{OPTIMIZER_NAME}_{i}.bin"
+        output_optimizer_file = output_dir.joinpath(optimizer_name)
+        save(state, output_optimizer_file, save_on_each_node=save_on_each_node, safe_serialization=False)
+        logger.info(f"Optimizer state saved in {output_optimizer_file}")
+    # Scheduler states
+    for i, scheduler in enumerate(schedulers):
+        state = scheduler.state_dict()
+        scheduler_name = f"{SCHEDULER_NAME}.bin" if i == 0 else f"{SCHEDULER_NAME}_{i}.bin"
+        output_scheduler_file = output_dir.joinpath(scheduler_name)
+        save(state, output_scheduler_file, save_on_each_node=save_on_each_node, safe_serialization=False)
+        logger.info(f"Scheduler state saved in {output_scheduler_file}")
+    # DataLoader states
+    for i, dataloader in enumerate(dataloaders):
+        sampler_name = f"{SAMPLER_NAME}.bin" if i == 0 else f"{SAMPLER_NAME}_{i}.bin"
+        output_sampler_file = output_dir.joinpath(sampler_name)
+        # Only save if we have our custom sampler
+        from .data_loader import IterableDatasetShard, SeedableRandomSampler
+
+        if isinstance(dataloader.dataset, IterableDatasetShard):
+            sampler = dataloader.get_sampler()
+            if isinstance(sampler, SeedableRandomSampler):
+                save(sampler, output_sampler_file, save_on_each_node=save_on_each_node, safe_serialization=False)
+        if getattr(dataloader, "use_stateful_dataloader", False):
+            dataloader_state_dict_name = "dl_state_dict.bin" if i == 0 else f"dl_state_dict_{i}.bin"
+            output_dataloader_state_dict_file = output_dir.joinpath(dataloader_state_dict_name)
+            state_dict = dataloader.state_dict()
+            torch.save(state_dict, output_dataloader_state_dict_file)
+        logger.info(f"Sampler state for dataloader {i} saved in {output_sampler_file}")
+
+    # GradScaler state
+    if scaler is not None:
+        state = scaler.state_dict()
+        output_scaler_file = output_dir.joinpath(SCALER_NAME)
+        torch.save(state, output_scaler_file)
+        logger.info(f"Gradient scaler state saved in {output_scaler_file}")
+    # Random number generator states
+    states = {}
+    states_name = f"{RNG_STATE_NAME}_{process_index}.pkl"
+    states["step"] = step
+    states["random_state"] = random.getstate()
+    states["numpy_random_seed"] = np.random.get_state()
+    states["torch_manual_seed"] = torch.get_rng_state()
+    if is_xpu_available():
+        states["torch_xpu_manual_seed"] = torch.xpu.get_rng_state_all()
+    if is_mlu_available():
+        states["torch_mlu_manual_seed"] = torch.mlu.get_rng_state_all()
+    elif is_sdaa_available():
+        states["torch_sdaa_manual_seed"] = torch.sdaa.get_rng_state_all()
+    elif is_musa_available():
+        states["torch_musa_manual_seed"] = torch.musa.get_rng_state_all()
+    if is_hpu_available():
+        states["torch_hpu_manual_seed"] = torch.hpu.get_rng_state_all()
+    if is_neuron_available():
+        states["torch_neuron_manual_seed"] = torch.neuron.get_rng_state_all()
+    if is_cuda_available():
+        states["torch_cuda_manual_seed"] = torch.cuda.get_rng_state_all()
+    if is_torch_xla_available():
+        states["xm_seed"] = xm.get_rng_state()
+    output_states_file = output_dir.joinpath(states_name)
+    torch.save(states, output_states_file)
+    logger.info(f"Random states saved in {output_states_file}")
+    return output_dir
+

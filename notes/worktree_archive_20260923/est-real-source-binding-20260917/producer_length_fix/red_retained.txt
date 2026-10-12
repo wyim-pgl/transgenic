@@ -1,0 +1,87 @@
+..FFFF                                                                   [100%]
+=================================== FAILURES ===================================
+________________ test_proof_retained_replay_no_original_access _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x796fb48d93d0>
+
+    def test_proof_retained_replay_no_original_access(monkeypatch):
+>       module = retained_api()
+
+tests/test_est_real_sample.py:475: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def retained_api():
+        path = Path(__file__).resolve().parents[1] / 'tasknotes/real_sample/replay_retained.py'
+>       assert path.exists(), 'retained replay not implemented'
+E       AssertionError: retained replay not implemented
+E       assert False
+E        +  where False = <bound method Path.exists of PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py')>()
+E        +    where <bound method Path.exists of PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py')> = PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py').exists
+
+tests/test_est_real_sample.py:464: AssertionError
+_______________ test_proof_retained_internal_identity_checks[id] _______________
+
+kind = 'id'
+
+    @pytest.mark.parametrize('kind', ['id', 'raw', 'sequence'])
+    def test_proof_retained_internal_identity_checks(kind):
+>       module = retained_api()
+
+tests/test_est_real_sample.py:503: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def retained_api():
+        path = Path(__file__).resolve().parents[1] / 'tasknotes/real_sample/replay_retained.py'
+>       assert path.exists(), 'retained replay not implemented'
+E       AssertionError: retained replay not implemented
+E       assert False
+E        +  where False = <bound method Path.exists of PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py')>()
+E        +    where <bound method Path.exists of PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py')> = PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py').exists
+
+tests/test_est_real_sample.py:464: AssertionError
+______________ test_proof_retained_internal_identity_checks[raw] _______________
+
+kind = 'raw'
+
+    @pytest.mark.parametrize('kind', ['id', 'raw', 'sequence'])
+    def test_proof_retained_internal_identity_checks(kind):
+>       module = retained_api()
+
+tests/test_est_real_sample.py:503: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def retained_api():
+        path = Path(__file__).resolve().parents[1] / 'tasknotes/real_sample/replay_retained.py'
+>       assert path.exists(), 'retained replay not implemented'
+E       AssertionError: retained replay not implemented
+E       assert False
+E        +  where False = <bound method Path.exists of PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py')>()
+E        +    where <bound method Path.exists of PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py')> = PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py').exists
+
+tests/test_est_real_sample.py:464: AssertionError
+____________ test_proof_retained_internal_identity_checks[sequence] ____________
+
+kind = 'sequence'
+
+    @pytest.mark.parametrize('kind', ['id', 'raw', 'sequence'])
+    def test_proof_retained_internal_identity_checks(kind):
+>       module = retained_api()
+
+tests/test_est_real_sample.py:503: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def retained_api():
+        path = Path(__file__).resolve().parents[1] / 'tasknotes/real_sample/replay_retained.py'
+>       assert path.exists(), 'retained replay not implemented'
+E       AssertionError: retained replay not implemented
+E       assert False
+E        +  where False = <bound method Path.exists of PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py')>()
+E        +    where <bound method Path.exists of PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py')> = PosixPath('/tmp/est-real-source-binding-20260917/tasknotes/real_sample/replay_retained.py').exists
+
+tests/test_est_real_sample.py:464: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_est_real_sample.py::test_proof_retained_replay_no_original_access
+FAILED tests/test_est_real_sample.py::test_proof_retained_internal_identity_checks[id]
+FAILED tests/test_est_real_sample.py::test_proof_retained_internal_identity_checks[raw]
+FAILED tests/test_est_real_sample.py::test_proof_retained_internal_identity_checks[sequence]
+4 failed, 2 passed, 58 deselected in 0.33s

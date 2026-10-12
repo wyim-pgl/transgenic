@@ -1,0 +1,18 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+source-f1ee718.sha256: OK
+SOURCE_OK=217
+[master 9ad97de] snapshot fix from b6-integration f1ee7185caf706e59c144ee800cb7f3c6a7b1e83
+ 4 files changed, 36 insertions(+), 2 deletions(-)
+9ad97de801aa36f21452bc24a2663b2b0504b459 snapshot fix from b6-integration f1ee7185caf706e59c144ee800cb7f3c6a7b1e83
+3207863       COMPLETED      0:0   00:06:07 
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1023              1499  leakage-controlled ...
+SBATCH_RC=0
+UNSPLIT_BENCH_SUBMISSION_RESULT 3208285
+
+UNSPLIT_BENCH_SUBMISSION_ERROR 

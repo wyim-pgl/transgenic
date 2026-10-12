@@ -1,0 +1,163 @@
+Raw capture 9 -- v8 rebuild, I/O floor measurement, staging and verification.
+Author: Won <wyim@unr.edu>. Times PDT (remote CDT - 2h).
+
+================ ACCOUNTS_SHA RE-MEASUREMENT (highest-risk item, done early) ====
+2026-09-21 09:23:03 PDT, host gh-login03.delta.ncsa.illinois.edu
+44302f2e6bd0773e1acd87c521947e3dac4ca9c581e9c79b7433489f22be35f5  /sw/user/scripts/accounts
+  size 8705 | mode 755 | owner svcdeltaswmgt | mtime 1754432439 (2025-08-05)
+pin at admission.py:23:
+44302f2e6bd0773e1acd87c521947e3dac4ca9c581e9c79b7433489f22be35f5
+=> MATCH. Second independent measurement (first at 09:18 PDT). The site has not
+   changed the script; the balance gate that produced the 1068 figure holds.
+
+================ I/O FLOOR MEASUREMENT (read-only, bounded) =====================
+Filesystem: /work/nvme/bilv/wcyim/transgenic -> type=lustre, bsize=4096
+
+sha256 throughput, single bounded pass over the 1.07 GB evidence DB:
+  sha256sum .../final-p1-job-3163986/inputs/evidence/fullc0lite.db
+  -> ed2d0eef2b205626db0983ab9f029f84c30514babc77c330bdb250b2fdfe3d0d
+     (also re-confirms the PINS['evidence'] value)
+  elapsed_s = 2.671161313
+  1068773376 B / 2.671161313 s = 400.1 MB/s
+
+Raw sequential read, 4 GiB of the corpus to /dev/null:
+  dd if=.../db/b5_full_a40_v1.db of=/dev/null bs=8M count=512
+  4294967296 bytes copied, 0.817883 s, 5.3 GB/s
+  elapsed_s = .824752710
+
+=> The binding constraint is sha256 CPU throughput (~400 MB/s), not Lustre
+   bandwidth (~5.3 GB/s). Write throughput was NOT measured: writing outside the
+   authorized namespaces is not permitted, so the write term below is estimated.
+
+---------------- Hashing volume inside the 1700 s outer budget -----------------
+Enumerated from the code, not assumed:
+
+  deploy.py:324-327  pinned(SIF)        11,120,398,336 B
+  deploy.py:324-327  pinned(CORPUS)     23,534,252,032 B
+  deploy.py:324-327  pinned(EVIDENCE)    1,068,773,376 B
+  deploy.py:97       pinned(source)      1,068,773,376 B   } recover_evidence
+  deploy.py:106      pinned(destination) 1,068,773,376 B   } 3 further full
+  deploy.py:107      pinned(source)      1,068,773,376 B   } sha256 passes
+  deploy.py:200,202  HF cache <= 2 GB, 3 sha passes  ~6,000,000,000 B
+  stage_checkpoint + deploy.py:372-392  checkpoint <= 2.2 GB, ~3 passes
+                                                    ~6,600,000,000 B
+                                        ------------------------------
+  TOTAL sha256 bytes                    ~51,529,000,000 B  (51.53 GB)
+
+Non-hash copy traffic: evidence 1.069 GB + HF 2.0 GB + checkpoint 2.2 GB
+  = 5.269 GB read and 5.269 GB written.
+
+---------------- Budget arithmetic ---------------------------------------------
+  outer budget (p1.sbatch:45)                        1700 s
+  probe (deploy.py:523, run_bounded --timeout-seconds) 900 s
+                                                     ------
+  available for staging + hashing                     800 s
+
+  sha256 time   = 51.529 GB / 400.1 MB/s            =  128.8 s
+  copy reads    =  5.269 GB / 5.3 GB/s              =    1.0 s
+  copy writes   =  5.269 GB / 500 MB/s (ESTIMATED)  =   10.5 s
+                                                     ------
+  measured/estimated staging I/O                    ~ 140.3 s
+  generous allowance for container start, quota
+  probes, small-file work, serialization            -> <= 300 s
+
+  HEADROOM: 800 - 140 = 660 s   (at the generous 300 s: 500 s spare)
+
+  Break-even: staging must finish within 800 s, i.e. sustained sha256 of
+    51.529 GB / 800 s = 64.4 MB/s
+  Measured 400.1 MB/s = 6.2x margin.
+  Even at one quarter of the measured rate (100 MB/s): 515 s < 800 s. Still fits.
+
+  Dominant term: SIF + corpus = 34.65 GB = 87 s of the 128.8 s. These two are
+  read-only pinned identity checks of files that never move.
+
+CAVEATS, stated rather than buried:
+  - Measured on the LOGIN node gh-login03, not on a ghx4 compute node. Same
+    Lustre filesystem; compute-node CPU is at least comparable, but this is an
+    indication, not a compute-node measurement.
+  - coreutils sha256sum vs Python hashlib: both OpenSSL-backed, comparable, not
+    identical.
+  - Write throughput estimated, not measured (see above).
+  - Lustre performance varies with cluster load; the 5.3 GB/s dd figure may
+    include client-side cache.
+  The conclusion survives all of these: the margin is 6.2x, and the budget still
+  closes at a quarter of the measured rate.
+
+================ V8 BUILD =======================================================
+Build dir: notes/auth_resume_20260917/gpu/deployment_v6  (v4, v5 untouched)
+All six files that build() copies from HERE were rebound BEFORE the build ran.
+  python3 build_release.py
+  Release: .../deployment_v6/release_v8
+  release.json       f716d55256269c58da4f38028ea2660dfe6dc96db656651ea1a37f2761a58055
+  release.sha256     f56f3a29df50568792031d76ed9919ac2a5daef2c5340659836fcc7e1afa88c7
+  operator-pins.json 45bd57640d7c55ee7ce7b1f20ab48b58729f5e58b880c4608813b99356d28c72
+
+F4 check -- authorization.example.json vs regenerated admission.example():
+  IDENTICAL
+  namespace field: .../staging/dev123_p1_release_v8_20260921
+
+Test suite: python3 -m unittest discover -s . -p 'test_*.py'
+  Ran 47 tests in 11.772s
+  OK
+
+Transport: release_v8.tar, 14 members
+  90d904824f02447de2a77e11d90919ef8d4dac646f6eb25ae9a90bdd7f020dfd
+(built with the recipe previously validated by byte-exact reproduction of
+ release_v6.tar = 26c1dc0a...27628a)
+
+Machine-stamped fields written into release.json by build_release.py itself:
+  profile = 'development-single'      seed = 123
+  run_role = 'mvp_finetune'           scope = 'S0_P1_DIAGNOSTIC_ONLY'
+  node_hours_max = 0.5                gpu_hours_max = 2
+  measured = False                    runtime_ready = False
+  training_authorized = False
+  review_status = 'PENDING_INDEPENDENT_NEW_PACKAGE_REVIEW'
+
+================ V8 STAGING, 2026-09-21 09:25 PDT ===============================
+  CREATED_ABSENT_VERIFIED   (namespace did not exist before mkdir -m 700)
+  transport=90d904824f02447de2a77e11d90919ef8d4dac646f6eb25ae9a90bdd7f020dfd
+  STAGED_OK                 (extract, rm .transport.tar, chmod 700/444)
+
+Verification (separate invocation, re-read from disk):
+  files=14  symlinks=0  hidden=0  owner_writable=0  non0444=0
+
+admission.py|f31bf313692b59fcc8ece9363fad9123e48dba129ea51039a725ae95589907d0|27611|444
+authorization.example.json|1241804620118affb65ee09d3eeff29973f5a04d67dae9842949f679efcabca2|2608|444
+build_release.py|948acf4ea35bb279c65bc7fa4b63dac6d068ecc329b1a00ec4d6a08b760893e7|5688|444
+code.candidate.tar|da161088fb401dbe87382685c1b5faadc17c7255d4a89f705fe1126ecc5bcec7|1873920|444
+controller_execution_scope.json|e8b05fa4f25a820ef0f568e4390d60001c720087352b68113d23bfd0da8adbf6|3332|444
+deploy.py|8cc70ce9e1a20fda8dbc24ddd2f4005a171ef400879da90d8a22c5bf47403ab9|29149|444
+notes/b6_mvp_candidate_inventories_20260915.json|9f79019679bfdd25b0a2bdac7cae63d01fa6d874be03fa3ef3f81cfd0a880a98|859299|444
+notes/b6_mvp_candidate_receipts_20260915.json|73204a4ed98624b1567a5eb26fd6b2bbafbb597e0bd4b807685e8c703c807bac|11786|444
+notes/b6_mvp_technical_candidate_20260915.json|faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e|9832|444
+operator-pins.json|45bd57640d7c55ee7ce7b1f20ab48b58729f5e58b880c4608813b99356d28c72|11828|444
+p1.sbatch|efe2cc04b74b0914eaa8699c5f80fbee3ace0a690a8de46330aa4c3692a291f2|2010|444
+release.json|f716d55256269c58da4f38028ea2660dfe6dc96db656651ea1a37f2761a58055|25219|444
+release.sha256|f56f3a29df50568792031d76ed9919ac2a5daef2c5340659836fcc7e1afa88c7|1181|444
+source-manifest.json|4eb7476aa36e77ed8967bc5d6ea73f005deb078b5a5e9b9491976f3d4c79eb0a|12174|444
+
+All 14 remote hashes equal the locally computed build outputs.
+Ledger: 13 OK, no_failures.
+
+Binding, on the staged tree:
+  admission.py:22 NAMESPACE = '.../staging/dev123_p1_release_v8_20260921'
+  p1.sbatch:2  --job-name=dev123-p1-v8-0921
+  p1.sbatch:13 --chdir=.../staging/dev123_p1_release_v8_20260921
+  residual v6/v7 tokens: admission.py:0, deploy.py:0, p1.sbatch:0,
+    controller_execution_scope.json:0, authorization.example.json:0,
+    build_release.py:0
+
+================ PRESERVED TREES ===============================================
+v6: 13 files; release.sha256 still 0 bytes, mode 660, inode 522420016499497508
+v7: 14 files; release.json still d65684a69ec06bcf7018fe3c0fbaa0526c7e350da4f84630fbb26199f76cfd83
+v6 unchanged. CORRECTION: v7 is NOT the original 08:36 tree -- its contents were
+deleted and replaced at 09:12 PDT under the then-live overwrite authorization.
+The v7 path now holds the v7-bound rebuild. See V7_V8_STATE_OF_RECORD.md.
+
+staging/ now holds, side by side:
+  dev123_p1_release_v6_20260917   (I/O-stall AND binding-defect evidence)
+  dev123_p1_release_v7_20260921   (v7-bound rebuild; NOT the defect evidence)
+  dev123_p1_release_v8_20260921   (current candidate)
+  dev123_p1_v6_control_20260917, dev123_p1_controller_authorization_v6.json
+
+===SQUEUE=== 3149358-3149363 PENDING. No job submitted.

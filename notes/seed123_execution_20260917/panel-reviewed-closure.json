@@ -1,0 +1,67 @@
+[
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/revision/scripts/mvp/mvp_panel_compatibility.py",
+    "sha256": "ffc67337496cae5c2b3cdcf3bfb708bac3d7d74f09ec96f4b618fc5c3e0a0aa2",
+    "size": 11297
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/revision/scripts/mvp/mvp_verify_panel_inputs.py",
+    "sha256": "8478a39077dcb7d94f65218f719b7e9380757f44a3c799dcc6dedf933b621bae",
+    "size": 6217
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/revision/scripts/mvp/mvp_prepare_panel_inputs.py",
+    "sha256": "3f7ae796f142c8e41221c79d9ea088b2d2c2c66a430f5b08c645df517c37e8ac",
+    "size": 9262
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/src/transgenic/evidence/mvp_tracks.py",
+    "sha256": "80a27c1909f41041c50af8d719856bbea914b80b804c6b6a4e07b715718922c6",
+    "size": 4801
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/src/transgenic/evidence/mvp_windows.py",
+    "sha256": "7583e0886418c606b0f0fd5d34440553390e1064d233f5e2ad7200603d1a4775",
+    "size": 10149
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/src/transgenic/training/mvp_cli.py",
+    "sha256": "29ec1682fdd5dbb8a02049f57c107e5e5d12d9851d9b2df38db6f5841d11a8e5",
+    "size": 12766
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/src/transgenic/training/mvp_cli_runtime.py",
+    "sha256": "a34d11559ee38eee2a240d0ab720660cddec038eb46410c31d159ba96b078bf7",
+    "size": 38236
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/revision/scripts/mvp/mvp_produce_counts.py",
+    "sha256": "bde70591e6fc89a3c1e7190c262b7a2804d5deedc1df36563cd3ea140b25ab40",
+    "size": 44923
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/src/transgenic/evidence/mvp_decode.py",
+    "sha256": "4b05e3737200d8ace7c19dd581dcc612c7b0abe2a42df8a07bb1bc80ec226201",
+    "size": 10466
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/src/transgenic/training/mvp_runtime.py",
+    "sha256": "e359896b54160015a0929d4a2708b1c21641a0cbb3cc04b4e18e438135db871d",
+    "size": 16207
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/src/transgenic/training/mvp_profiles.py",
+    "sha256": "77348d6ded60596023f6b29a15e94c1eda9b16b476173bf2f9908f0805685968",
+    "size": 654
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/revision/scripts/mvp/mvp_decode_panel.py",
+    "sha256": "57d29a5526848bc147596dc4cd358f06e8f17966b38c2caaf2039c98ee0c5dfc",
+    "size": 12538
+  },
+  {
+    "path": "/tmp/mvp-seed123-integration-20260917/revision/scripts/mvp/mvp_decode_runtime.py",
+    "sha256": "99bd46202a23cffb0cb8f02167f14e86000407e2347949ff7d648d1d1916ff99",
+    "size": 13737
+  }
+]

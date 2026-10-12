@@ -1,0 +1,1 @@
+{"epoch": 0, "step": 5280, "global_step": 220, "pending_micro": 0, "stopper": {"best": null, "best_epoch": null, "bad_epochs": 0, "patience": 3}, "arm": "C2", "seed": 123, "stop_after_updates": 4099, "identity_sha256": "aaf6dcfc6133ad82057b582bfc9a834f0ce5b9ed76d6556e0633db381358d89f"}

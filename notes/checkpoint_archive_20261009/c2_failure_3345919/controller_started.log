@@ -1,0 +1,10 @@
+{"pid": 3276938, "poll": null, "state": {"jobs": [], "observed_job_state": "RUNNING", "phase": "waiting", "pid": 3276938, "recovery_job": 3361386, "source_commit": "d7b1a37", "started_unix": 1791750201.5162792, "updated_unix": 1791750201.5263274}}
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

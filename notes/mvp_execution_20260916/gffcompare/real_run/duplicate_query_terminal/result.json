@@ -1,0 +1,4 @@
+{
+  "error": "predicted duplicate isoform structures: author multiplicity policy needed",
+  "error_type": "ValueError"
+}

@@ -1,0 +1,8 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+/data/gpfs/home/wyim/b6-src-d929ba2.tar.gz: OK
+=== container tests (pyarrow available)
+...........................                                              [100%]
+27 passed in 44.29s
+6172286

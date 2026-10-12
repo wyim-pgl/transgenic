@@ -1,0 +1,81 @@
+{
+  "job": 3361666,
+  "status": "comparison_failed",
+  "all_three_training_phases_exited_normally": true,
+  "policy_models_equal": true,
+  "policy_states_equal": {
+    "optimizer.bin": true,
+    "random_states_0.pkl": true,
+    "random_states_1.pkl": true,
+    "random_states_2.pkl": true,
+    "random_states_3.pkl": true,
+    "scheduler.bin": true
+  },
+  "resume_different_model_tensors": 609,
+  "resume_states_equal": {
+    "optimizer.bin": false,
+    "random_states_0.pkl": true,
+    "random_states_1.pkl": true,
+    "random_states_2.pkl": true,
+    "random_states_3.pkl": true,
+    "scheduler.bin": true
+  },
+  "per_rank": {
+    "0": {
+      "counts": {
+        "A": 240,
+        "B": 480,
+        "C": 240
+      },
+      "restored_rng": [
+        true,
+        true,
+        true
+      ],
+      "first_loss_diff": 5042,
+      "all_inputs_and_rng_equal": true
+    },
+    "1": {
+      "counts": {
+        "A": 240,
+        "B": 480,
+        "C": 240
+      },
+      "restored_rng": [
+        true,
+        true,
+        true
+      ],
+      "first_loss_diff": 5042,
+      "all_inputs_and_rng_equal": true
+    },
+    "2": {
+      "counts": {
+        "A": 240,
+        "B": 480,
+        "C": 240
+      },
+      "restored_rng": [
+        true,
+        true,
+        true
+      ],
+      "first_loss_diff": 5041,
+      "all_inputs_and_rng_equal": true
+    },
+    "3": {
+      "counts": {
+        "A": 240,
+        "B": 480,
+        "C": 240
+      },
+      "restored_rng": [
+        true,
+        true,
+        true
+      ],
+      "first_loss_diff": 5041,
+      "all_inputs_and_rng_equal": true
+    }
+  }
+}

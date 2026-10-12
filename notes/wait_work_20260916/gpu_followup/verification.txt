@@ -1,0 +1,51 @@
+$ python3 -m unittest discover -s notes/wait_work_20260916/gpu_followup -p test_followup.py -v
+test_bad_done (test_followup.Gates) ... ok
+test_binding_mismatch (test_followup.Gates) ... ok
+test_budget (test_followup.Gates) ... ok
+test_build_bound_step0_command (test_followup.Gates) ... ok
+test_build_refuses_modified_tooling (test_followup.Gates) ... ok
+test_build_refuses_p1_missing (test_followup.Gates) ... ok
+test_cpu_boolean_proxy (test_followup.Gates) ... ok
+test_empty_source_binding (test_followup.Gates) ... ok
+test_exit_failure (test_followup.Gates) ... ok
+test_expired (test_followup.Gates) ... ok
+test_failed (test_followup.Gates) ... ok
+test_insufficient (test_followup.Gates) ... ok
+test_missing_done (test_followup.Gates) ... ok
+test_missing_p1 (test_followup.Gates) ... ok
+test_nan_budget (test_followup.Gates) ... ok
+test_pending_reserved_p1 (test_followup.Gates) ... ok
+test_real_wrapper_shape (test_followup.Gates) ... ok
+test_source_binding_mismatch (test_followup.Gates) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.293s
+
+OK
+STRUCTURAL PLAN ONLY; native validation and fresh --execute output still required
+
+exit=0
+
+$ python3 notes/wait_work_20260916/gpu_followup/followup.py --help
+usage: followup.py [-h] --inputs INPUTS --mode
+                   {real_hyena_step0_three_tiers,generation_cache_parity,bf16_compile,four_rank_smoke,resource_budget}
+                   --output OUTPUT [--execute]
+
+Fail-closed, single-mode post-P1 command builder/runner. Never submits Slurm
+jobs. Run planning against actual small S0/P1 files; execute ONLY in the
+original container namespace on compute. Local structural checks are not CUDA
+PASS. The controller supplies paths, current complete accounting and wall
+caps.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --inputs INPUTS       actual controller JSON described in PLAN.md
+  --mode {real_hyena_step0_three_tiers,generation_cache_parity,bf16_compile,four_rank_smoke,resource_budget}
+  --output OUTPUT       fresh absolute path, stable through decode
+  --execute             compute/container only; never sbatch
+
+exit=0
+
+$ bash -n notes/wait_work_20260916/gpu_followup/followup.sbatch
+
+exit=0

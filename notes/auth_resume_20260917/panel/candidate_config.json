@@ -1,0 +1,53 @@
+{
+  "budget_request": {
+    "approved": false,
+    "cpus": 4,
+    "gpus": 0,
+    "max_cpu_hours": 4,
+    "memory_gib": 16,
+    "requeue": false,
+    "wall_minutes": 60
+  },
+  "consumer_root": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/source",
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "",
+    "HF_HUB_OFFLINE": "1",
+    "MKL_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TRANSFORMERS_OFFLINE": "1"
+  },
+  "namespace": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917",
+  "receipt": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/output/compatibility.json",
+  "request": {
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/request.json",
+    "sha256": "c5cc29ecea746375ebb4d5388d38fa2bb8db0d5c42088ac67bc47b4caa7da9a9",
+    "size": 1264
+  },
+  "runtime": {
+    "duckdb": "1.5.5",
+    "image_architecture": "aarch64",
+    "numpy": null,
+    "python": null,
+    "sif": "/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif",
+    "sif_sha256": "1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6",
+    "sif_size": 11120398336,
+    "torch": "2.14.0a0+4fdf77b940.nv26.08",
+    "versions_status": "DuckDB/Torch from prior build record; Python/NumPy await intended consumer metadata"
+  },
+  "status": "BLOCKED_NOT_FOR_SUBMISSION",
+  "wrapper_argv": [
+    "python",
+    "-B",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/source/revision/scripts/mvp/mvp_verify_pinned_panel.py",
+    "--input",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/request.json",
+    "--expected-sha256",
+    "c5cc29ecea746375ebb4d5388d38fa2bb8db0d5c42088ac67bc47b4caa7da9a9",
+    "--expected-size",
+    "1264",
+    "--out",
+    "/data/gpfs/assoc/pgl/data/Transgenic/evidence/seed123_panel_compat_auth_resume_20260917/output/compatibility.json"
+  ]
+}

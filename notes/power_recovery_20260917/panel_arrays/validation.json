@@ -1,0 +1,1334 @@
+{
+  "status": "PASS_LOCAL_ACTUAL50_PUBLICATION_NUMERICAL_SCOPE",
+  "scientific_approval": false,
+  "externOOM": "unresolved; unrelated scheduler-step finding",
+  "python": "3.8.20",
+  "numpy": "1.24.3",
+  "transferred_files": 152,
+  "transferred_bytes": 29309109,
+  "artifact_hashes_verified": 150,
+  "marker_manifest_linkage": true,
+  "whole_reference_sequence_equality_verified": false,
+  "source_DB_selection_completeness_verified": false,
+  "source_inputs_freshness_verified": false,
+  "seed_independence": "manifest assertion; one shared array per locus, not three independently sampled runs",
+  "provenance_numerical_equality_loci": 50,
+  "selected_molecule_sum_over_windows": 3443,
+  "distinct_molecule_ids_across_copied_windows": 3354,
+  "biological_nonzero_sums": [
+    34789,
+    52639,
+    71107,
+    138,
+    140,
+    193,
+    204
+  ],
+  "availability_nonzero_sum": 1536000,
+  "negative_checks": [
+    {
+      "case": "byte_hash",
+      "rejected_by": "artifact bytes/hash"
+    },
+    {
+      "case": "dtype",
+      "rejected_by": "track dtype/shape"
+    },
+    {
+      "case": "shape",
+      "rejected_by": "track dtype/shape"
+    },
+    {
+      "case": "nan",
+      "rejected_by": "finite nonnegative"
+    },
+    {
+      "case": "availability",
+      "rejected_by": "N mask/availability"
+    },
+    {
+      "case": "orientation",
+      "rejected_by": "FASTA header/orientation"
+    },
+    {
+      "case": "sequence",
+      "rejected_by": "sequence digest"
+    },
+    {
+      "case": "duplicate",
+      "rejected_by": "molecule count/uniqueness/order"
+    },
+    {
+      "case": "boundary",
+      "rejected_by": "block boundary/identity"
+    },
+    {
+      "case": "policy",
+      "rejected_by": "heldout selection policy"
+    },
+    {
+      "case": "value",
+      "rejected_by": "provenance numerical reconstruction"
+    },
+    {
+      "case": "count",
+      "rejected_by": "support counts"
+    }
+  ],
+  "files_sha256": {
+    "00.fa": "dde3b04e48353fc66d00acd4c257086643f09a69b3871df2a34f27b8d25a835f",
+    "00.jsonl": "299072963daf84d768694fd6149c451165d2c6c781ee8335cb15f92f5e960523",
+    "00.npy": "60b12e8194a4698f125912324d16e8ee0012685286e21574371c0e8ebd95af23",
+    "01.fa": "0d1da97e27d6c05d1fa0d33dfc8724a463e10229df10b69199cb67d03cf5e118",
+    "01.jsonl": "31fbc14d6a58ce25d0f89b8950594ad8ecf86c96d0a5be4faa6bbd71e8b7b0f6",
+    "01.npy": "fc636de30b6c2a3864708050320815976ebeb00e43ac48bf8e833814093bef79",
+    "02.fa": "2ec8bf9f1f32bb3a6529f1b96d58db384d238b9a3e3d4cb722048d9ee2598247",
+    "02.jsonl": "5037755ffeff111ac09ed04d58f155a710a3489fe64952e302b609ea3b9048b8",
+    "02.npy": "11c629317a0c11a2b60aac05b14b244fb789174ebaebed0b5a71aa22bfb8593a",
+    "03.fa": "a54762325e31a3239cfc6cf7a0e370d8daafc3c5172b42f145912e0d910549e8",
+    "03.jsonl": "4b8a2be13701499e19acc8609bb950783395f6639402809fca82950a4f964dd3",
+    "03.npy": "e3b7ca4748bb1e2bb23e7f36691ea847a60d6ac572e9e225ae42d98eff646be7",
+    "04.fa": "1338b702a73fa0afbef333f3e6d184976db1f006e6e9e2570d043c5478ade94b",
+    "04.jsonl": "5e1bfc99a496e007b3df324a33e346b58d9ff39f188796e3379a0886c64cc9f0",
+    "04.npy": "0708818f447e88b3e3c1d16ee5fa2a53c309e2a56e7a1b6d91ace0313bed47bf",
+    "05.fa": "fa7312b467b1f88a1c55ac6fe1ce8f29b050f4d5a4d28ee366f77a366beb9dc6",
+    "05.jsonl": "d9026466c9ecb3178ce9b3bb233a7bcdc48fbfeede359367f8023410a28ac285",
+    "05.npy": "a0067895b35187c0fe8990d8455da433d69726adf721bd1b202c0b81706547c3",
+    "06.fa": "45b51c657e2f91fb504ad149966e716d9bcec586d9dec8cc665db3dff515464c",
+    "06.jsonl": "86bca1fa6d2280ad337101bad20a6f374ba7f93213c1218b99dc0f79d2756960",
+    "06.npy": "52e95960b8edd0f6f903f9271a08120ba33f1f3aa80992e2798b5e22817a2bbc",
+    "07.fa": "0e298ede8416dc52681d7fa7c504ce2876219b336865b5bb8365d49d79ad2a30",
+    "07.jsonl": "72ac20095c0500e2756c6704785fccab7639bf4a97f6b551a3c2de6afe64dc77",
+    "07.npy": "4e192f9a58ea5a5d787c2d5e70f1b24cea8caf635f94b0032420b28ea04f0767",
+    "08.fa": "a3e5f3ab8ed9383be000f51638e79ba59cf3d90ee836b21b93a50a774d5f6c14",
+    "08.jsonl": "04883237f539e4cac8daa89ea6ac2ee3a7ec79087de93a5b6b260be0cc5e6fa1",
+    "08.npy": "6b31c11eeb831ff68c7d411765a7d1a7781b27dbcfc333582b602b688b8f3e55",
+    "09.fa": "0e91d09248342b913ba4ae128d58f466b47f3de73aaece2ca1259555e5512c1c",
+    "09.jsonl": "695bc2a465168900a3174996cfde93ecf94af01cc1b64aab3cb815e430046992",
+    "09.npy": "e64002bc11198024d1b12c5ff5f092c1af8e2d7bb5c647709fdc35309e0b1267",
+    "10.fa": "925200ea9d3829d5ccc2b2b1b2446f24e189128947c0ae4d93abed1e8c37d94f",
+    "10.jsonl": "7aeb0a3406a651cfffc71fbbd6dc1ce31eb9d1a4f643ae32823d29b1afb828c4",
+    "10.npy": "e63fa7a7fef077cd89f85473cb13f05b8033236096f83c5c229a69dea40e9b23",
+    "11.fa": "00a71d2cceff2cc6dffdd6d0351fe52732b448a1dc1bb8d26718539089217010",
+    "11.jsonl": "3a85b928795f03bcdfe4e34a31959a03b22f33d019943103b163407aa97e6e52",
+    "11.npy": "4cbed491e0d4eed05a289eabb240c7c765e6e614c937958737d16b97598cdf64",
+    "12.fa": "8c94e23f0a0060890df92ec826315f2d3034623619ec2088be2a96a754413a45",
+    "12.jsonl": "64d6b5975ab294045966b4d68d7c46aef209a8f689baab331e88bac3ac1a6f28",
+    "12.npy": "7c1ed62143381df2885ec47e7fd01ed10e09fb00a83642b18c8636602d05fed2",
+    "13.fa": "9dfb3200c6d079e51c68177a192d73d728f44180edf70dddd2a5ebfca67184d8",
+    "13.jsonl": "55e452d0c33be9f604699ca6f830ca95362e3ae9cd29481ccfc8eaee0ccb3017",
+    "13.npy": "d560e55e8a92db670ed690ce0a236d971b66898dbfe059797dc2b764b818e882",
+    "14.fa": "ac510a268259d9d551edcd7650f5e3f31149fe3eb54272fcb9975a15c52a0d69",
+    "14.jsonl": "22d8d5d708de58f4aa3e7f945d2ecd3d34469327152f46e2b4acefff4ff7f9de",
+    "14.npy": "9de62faeee8a656d74b42691df9b2f8912f7c2aa2aeef9cf2e24a443ac5184b1",
+    "15.fa": "42878de5a00a19d7d0a6268b368169a7b7caa475a7fd9ff865f3112547c3d9a7",
+    "15.jsonl": "064e314aea3221566fbc2037d1c334d81d327bd25d96c4126bd02864a976b25b",
+    "15.npy": "78fbee84a2cf53f0d22d66bc57c2e20862a54166291652a7bb6e7b7859c8e7dd",
+    "16.fa": "c130e487598e347d23581ab58d6fa503ae1b48ae2fe6dd72fe15a13fdc87dced",
+    "16.jsonl": "f11d74552c3032cb83fad683c50116b2a13f397ed49f2f5a214c653f7751be6b",
+    "16.npy": "8eee1c68c559820d6cbe740cecd4165b77512cc782969623b3759f8507df2730",
+    "17.fa": "444a625a8d681cb54a1e0eef07e806fb120c39fac5f44f54913d68f5b8a5261c",
+    "17.jsonl": "7b19f05b0b055912abdd4813879f6c4492aa17625ddb2b9e36a97dde433c51e2",
+    "17.npy": "f3017da6df8c83e387cf70ea70ffa5bd5935503c38bd4f7287e7e4f0787a92ef",
+    "18.fa": "c75b53e303b0f68c16e4a011e5fc0e8bdb051baa8b03ae9153d4b644fa7b6ada",
+    "18.jsonl": "083b4e291646e93475daea183e4c5e9f8a6e4bbde81263c2e7b3e504ce92388c",
+    "18.npy": "993a620fcfc87590076647a07d1bcd9a5be18cb5021d6c69be565437c6393afc",
+    "19.fa": "c9bc539d5e52b0c68cc67c3e6d69112caf8d2cd8f31e5e5275f78619e5ea9572",
+    "19.jsonl": "46a5648a502a9abcb73f27a41cc5d413c071fe15cb34d29a5ef8c5158c60b8af",
+    "19.npy": "c0b2309082a0ef6e933598fcb6f67a51a608283af6192f789ccb2b8be15f1dc1",
+    "20.fa": "bc28355ad56e3032c9c4054263f9a375ff1d02042590891bf0f8242c780a67e8",
+    "20.jsonl": "71da4de52375b405168c619d513eb336809fca8434da4f3cf60c55346d13d193",
+    "20.npy": "3bbe019ef735c7f3ee12c61669a8231a3bb8050d7beb1aadbe9da82f0b2bc90d",
+    "21.fa": "85fd7b30a473dc277344ec38adad186ae44e9dfcbbe30695b6770d21338cf7c8",
+    "21.jsonl": "efb0bf49b58b1e03bd36895c12d076d48c1bfd315a6051d712d51dce8efcb90e",
+    "21.npy": "be6c3436ce70e72f49223c053501a7a4fc7547298e82618a27cfc6ddc71e30bc",
+    "22.fa": "6a7d634199ef3268c14393f9886303c9d54aaee461bcc13b7990f3ad416c16c7",
+    "22.jsonl": "8be7d868e6523a79d3554d904508277a93b795dc9bec271af69f969c7032559b",
+    "22.npy": "4c6754ccce5884ac74c6bbf021fd168ddd14273d9a280bc33ba6d45ad6adc8f6",
+    "23.fa": "232fc2df7dc718071b48ac7589d0f8c115831c718795523223979e238f48ec31",
+    "23.jsonl": "29381f55c396dd642bbf1c9388caaa29ad50b929f961790bf9d927fb7bab6cbe",
+    "23.npy": "7a02be2724116374a95cc282ad5027bcf984d7dea1eab08e32a32542e246fbad",
+    "24.fa": "cbd3e5a6c335ab438354072fc4c04c8475e4868b6a790ab8a2d689e53e406d34",
+    "24.jsonl": "f7a2df1b19598ba8e75cfa9ca522e37834969a7fe0430ce66966fe9f7a47b194",
+    "24.npy": "7ea29e5402439fa438acbe71871d77de03412ec37109becaed128ac170440886",
+    "25.fa": "465048eb389e23a6026094de61f2b0c87a39e3469c65255abe65491f14db54bb",
+    "25.jsonl": "1a15ca1551828064264cb1aef88fb09ce50e42acce71a4d2bd15b22a457bc2c4",
+    "25.npy": "3e23e1c8c187ce634ac24cde66e52b62b011b14454522cd39fd287bbb6063ecc",
+    "26.fa": "1d50a0e5d09cad22ddfbd4391e5382e34c708bf26238409d4c63cc8a63890760",
+    "26.jsonl": "5cfc603d575b43ea955f259a1b9a9781fc9e304f1d45d8a107089b5c6c972a23",
+    "26.npy": "4f9eaebed5f3d2b3e9dc44146942a0ff78378576f07f8efb8e98d7398e0a9890",
+    "27.fa": "517b50666930d4bca49819a3c77a4ca488b83b1c5df34b12d73ca3be3017f5f2",
+    "27.jsonl": "c83cb58aa83bad14bd125f3b59847696a4d4eec7eb850c9494c2537864925a50",
+    "27.npy": "6a18135f33a72db16073ab8c467d3f13a07a8c9a649414ee67114fa8aed7c3b7",
+    "28.fa": "227d70f247cc80316e11cd724fa6dcec83b6b57b167465ee972bb51cd21f45b4",
+    "28.jsonl": "6dac9ea7268b34c6570c47d69fc96e3befcbbbbf8919dcb401600f083128e4e8",
+    "28.npy": "f2315f61bf47f4b79b25f461b1e8c57c17fcad30f96cd98a395c45b25a8925d8",
+    "29.fa": "020020f0683ac1619d904dd8c36e26446268711448949b4ee1ba19d4e40c3b82",
+    "29.jsonl": "33219083efaf51fce0f8e6a0b55f3bde8fc21d53c2b510aecff069e450c23ca1",
+    "29.npy": "f97e8c013625b40bbcfe5fd990be4b50642e76fa6736d92f76a1658c098177b1",
+    "30.fa": "17b16ba22b75828e524b7ef25127ff52289b25437e0f2c7e96bc8fe228f821c0",
+    "30.jsonl": "135821e05182b09753fe2a09a392d3e2ec9f939451a06889602acbcf7a535b18",
+    "30.npy": "12a84afd39b3073c4e00b8e638cd8e3c44086766c5f81731093d7575c37d6da9",
+    "31.fa": "e148ca48ba04f87144e2f17c3a3a1d38195a9323b6aaeaba063396abc00e5995",
+    "31.jsonl": "2b156e6ac8f94eba155dfc57f6f39a6121384219a0b0e0a72dde5a95e41c5eec",
+    "31.npy": "df1c36857dfc50bd5f79b83df07f6cc28426bc0e13413c517583bbe0c243a090",
+    "32.fa": "ffbd6e5396c42753b752b37237bf10f33f771212c3aec1fc0e4608e0988bb227",
+    "32.jsonl": "9bca2f3d3e219fbf9e5de39b71e0dda04e59225296060df02bc38a4e8ff5a170",
+    "32.npy": "b46017833a5018a5dcd1e81f081707f6544b846a4035f58147f1947c03545373",
+    "33.fa": "57d49f6bb109cb61bd28bbf748497d6749fc7d1a44f9135640525217afd26e1b",
+    "33.jsonl": "b567649060b49538b31b8bf7bca52946939a56c591ec9664aa73f6516d93c48d",
+    "33.npy": "381a395ac1b6b7e9633037b9081815d7e89bdc8ee2ec5e8802f5c5415599d7b5",
+    "34.fa": "05982acfaec2798613673856e5ff7a85c696bc6fd9c0455382e977b9f2a033c9",
+    "34.jsonl": "072c392b0422445d6a4a7849f43f3e1a8eddd45790f57d388a583465888dda4a",
+    "34.npy": "4105438196ed6edb79837b3e62f51c6821b0d06ce770b4c555387b424c5ca799",
+    "35.fa": "abd8623274e91a07f6258f3434921775141fcfc16209d8910131e1e3721fd74a",
+    "35.jsonl": "5d82462003ccc39ed0661b861de278989ca9e9bd8b783e925f9948a2bc1494db",
+    "35.npy": "3f93f4550a42899bf99b2dbeb1796ec33810a7f2f49677ecb621f74268efd7a0",
+    "36.fa": "34a407c8f713c860e34e37a8ce8ccde453913ad0114d9246e1034a53a152c898",
+    "36.jsonl": "60e4802047f7c6ddaa496ac2bf70736b83e0a8ad1c939cff153d71bf8a58fc80",
+    "36.npy": "fdce09ac51156a52be6446e3bfd950c652898a845a0af4a2bc1c7798d247946e",
+    "37.fa": "d4bc0fe6d5485d1b9a527fc6cca5bc881a6c2d219acaebea5cc84e20aa6c4c82",
+    "37.jsonl": "f889cf80783a6f0a49be41ce0d859f3e46741659414d05a4919afbfb752e8d72",
+    "37.npy": "c6c2fa96821457fb466006ba59d22edcf7a47e3000d00a41ef5ffb90f7585b9e",
+    "38.fa": "9a23019ed5c98a64a4ba5a34aba9cda4097c8950a722b501718448bdbbda1119",
+    "38.jsonl": "574f3b4cd37883a2a8829d5b8d89d60776fc06aaad02da30af02bc1eb8e4493d",
+    "38.npy": "4e9a28792e9bad2140a9654674da4db8319e1762c664700df9fbbb3b5a62dd25",
+    "39.fa": "abe25ed958aa626a730ae40f7ed4472cf47e2372bb1e50d1da4476766b9063bb",
+    "39.jsonl": "fc3b74b2a05963335700ea7c77cc29764c9e18820c6c279120d2a9a39b0f22a8",
+    "39.npy": "a1abb6c20b1f075c01babad96e7b3369a1cab65179f2b833cf82dda30bb90efd",
+    "40.fa": "87aa6ea110161c803aca1a2a85409ff91c99497d7e280c5c538b40231f3a557f",
+    "40.jsonl": "becee23f1f051cbd79973ef2ae3b0ef45f3da98c867929ceca19078c9669abd5",
+    "40.npy": "6c71fe6c022e8604a4db3370a092efa45cfc1a9a94cec5e39a294f43c3dda8fe",
+    "41.fa": "7e1cd68bc2283874f780e1ef4f4c90378b28dc01643f78e0e140ae21f55ed85a",
+    "41.jsonl": "82ca7f811aaf073c4f3927385ed54a233db55738386237a48396f60e8b606a84",
+    "41.npy": "504377d86cb024e6c3d81647e89c3d1cc36ff579b16a45827559432d6dad2526",
+    "42.fa": "c63a2291df4824a0df73a33bf8b080b273296dd8d633daf6959aebe908819001",
+    "42.jsonl": "8b89fd484d6a1a63ba282ffa49540ad2253f5d24fae3d56fd6827094687476d3",
+    "42.npy": "08b78bff3c9b123dc9fba8804b1fb16ab3ab6a2114eef7ce6e783459a8eb5f62",
+    "43.fa": "e39f315b062bc5d27321580451fb9cc86069dce770073d3c2b073ca8cdca7af7",
+    "43.jsonl": "48404a217cc0eaa9c77018d1a6157760da9fc9617fd39179f6b557688bf2efd8",
+    "43.npy": "5c420c1eca05350b8a103e80e4f0eaf4b55dd4cd178104ffd4c7b69b468e25ea",
+    "44.fa": "895a3c59cc8c1fba4482b2ffa99c8fac10d6b1277203a4d4a02a93f10dae7259",
+    "44.jsonl": "4c231e0b713a394c67bd9584cff06ec266a2b7d13a499b429b2cccc02afcdf8e",
+    "44.npy": "aa98467fd805fdac9ae4d4d92ee127e62a02e7f8031285afe89588e58a9e5c10",
+    "45.fa": "d68aa56c324aac39b8ac84907853337da9bc9f019bfb721af21967ed469830d1",
+    "45.jsonl": "8cbb260d1223d6d4fec1efbb3d39190f5e197647d0f2f8bffc50e01532508817",
+    "45.npy": "53c02b2758b6cd98c2801b79621568231d60288d79f6334373192acd3f6013c2",
+    "46.fa": "98832e4f3fb631b59aa1f719f5864b4e1cc146723e35a6fea3391dad8fb039ba",
+    "46.jsonl": "a5b8f4c4362def15b8720028f4ca66e0db9d276639f7c81e7e25a4822581a445",
+    "46.npy": "9dfd6cc179b9924b01a9e8f3dae6225427de8d480e76eceaf3ecf4856bcbce87",
+    "47.fa": "49e51375a4fa71fe6d935df0f1ea2eaf125fde8c26e5bca3d9de5a80e2572034",
+    "47.jsonl": "ec02ea258ac3c286be306f06e7afa3e22c498ab7292513ee78823d95527893ae",
+    "47.npy": "ebe46f3ee1babfb02a72d49bbc2f8bcdbe2df2856d48bfe2bd80d6549611872d",
+    "48.fa": "18202ee621bdcfacfab5f64f43943c7d491b3f511804decefbb1e91c3af9bd62",
+    "48.jsonl": "0d58dc09109bbda1b07a07e405eeb6b84b6628b22b4b610376880782166a949b",
+    "48.npy": "8776407c47fa98fb0f9d595e8fee98c2e9e545abc86ac67707f90c56e24bfc5c",
+    "49.fa": "850d317ddb3db63616909fa35b340996bf62ce10bb0d2406b18c0b97212486d0",
+    "49.jsonl": "fa9fd14cd149ad26cdb34e0e97c7ef89fee520650e1a7bc6b136509697600a0d",
+    "49.npy": "f7c34dbcb58969483bd85d4c461c694fee5bff0e5c7c27db8a6760ee1161f692",
+    "COMPLETE": "600be19cd4deef9c84be302f0716ac77e8a3429ee70bda4be7ff20dbefe3c7eb",
+    "manifest.json": "7528c9bff5a9a9b177b1ad333ad76525a1d02d3c4cde4e0550865ff12e0acc0e"
+  },
+  "loci": [
+    {
+      "gene_id": "Ath014705",
+      "window": [
+        "Chr3",
+        11907526,
+        11938246
+      ],
+      "selected_molecules": 22,
+      "biological_nonzero": [
+        750,
+        809,
+        1127,
+        7,
+        7,
+        4,
+        4
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.9462890625
+    },
+    {
+      "gene_id": "Ath022311",
+      "window": [
+        "Chr5",
+        4190251,
+        4220971
+      ],
+      "selected_molecules": 71,
+      "biological_nonzero": [
+        0,
+        833,
+        1587,
+        0,
+        0,
+        2,
+        2
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 4.0078125
+    },
+    {
+      "gene_id": "Ath003484",
+      "window": [
+        "Chr1",
+        11961570,
+        11992290
+      ],
+      "selected_molecules": 11,
+      "biological_nonzero": [
+        0,
+        2024,
+        331,
+        0,
+        0,
+        6,
+        7
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.38671875
+    },
+    {
+      "gene_id": "Ath012743",
+      "window": [
+        "Chr3",
+        3905150,
+        3935870
+      ],
+      "selected_molecules": 178,
+      "biological_nonzero": [
+        2060,
+        891,
+        2034,
+        7,
+        7,
+        2,
+        2
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 4.3828125
+    },
+    {
+      "gene_id": "Ath024852",
+      "window": [
+        "Chr5",
+        17687666,
+        17718386
+      ],
+      "selected_molecules": 20,
+      "biological_nonzero": [
+        381,
+        1018,
+        1264,
+        1,
+        1,
+        4,
+        4
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.609375
+    },
+    {
+      "gene_id": "Ath009257",
+      "window": [
+        "Chr2",
+        11461088,
+        11491808
+      ],
+      "selected_molecules": 127,
+      "biological_nonzero": [
+        0,
+        6009,
+        3580,
+        0,
+        0,
+        28,
+        28
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.134765625
+    },
+    {
+      "gene_id": "Ath009348",
+      "window": [
+        "Chr2",
+        11807872,
+        11838592
+      ],
+      "selected_molecules": 7,
+      "biological_nonzero": [
+        1014,
+        0,
+        336,
+        4,
+        4,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.7919921875
+    },
+    {
+      "gene_id": "Ath009959",
+      "window": [
+        "Chr2",
+        14158696,
+        14189416
+      ],
+      "selected_molecules": 69,
+      "biological_nonzero": [
+        1142,
+        0,
+        1431,
+        4,
+        4,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.33203125
+    },
+    {
+      "gene_id": "Ath026375",
+      "window": [
+        "Chr5",
+        23434962,
+        23465682
+      ],
+      "selected_molecules": 51,
+      "biological_nonzero": [
+        0,
+        2072,
+        1445,
+        0,
+        0,
+        9,
+        10
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.708984375
+    },
+    {
+      "gene_id": "Ath025827",
+      "window": [
+        "Chr5",
+        21449849,
+        21480569
+      ],
+      "selected_molecules": 294,
+      "biological_nonzero": [
+        2153,
+        0,
+        1235,
+        11,
+        11,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 4.859375
+    },
+    {
+      "gene_id": "Ath020477",
+      "window": [
+        "Chr4",
+        16389682,
+        16420402
+      ],
+      "selected_molecules": 43,
+      "biological_nonzero": [
+        770,
+        1159,
+        815,
+        3,
+        3,
+        7,
+        8
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.7734375
+    },
+    {
+      "gene_id": "Ath017922",
+      "window": [
+        "Chr4",
+        6849746,
+        6880466
+      ],
+      "selected_molecules": 111,
+      "biological_nonzero": [
+        1140,
+        1463,
+        1927,
+        3,
+        3,
+        9,
+        10
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.611328125
+    },
+    {
+      "gene_id": "Ath007771",
+      "window": [
+        "Chr2",
+        2912199,
+        2942919
+      ],
+      "selected_molecules": 77,
+      "biological_nonzero": [
+        2736,
+        0,
+        1911,
+        16,
+        16,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.49609375
+    },
+    {
+      "gene_id": "Ath015840",
+      "window": [
+        "Chr3",
+        19554636,
+        19585356
+      ],
+      "selected_molecules": 144,
+      "biological_nonzero": [
+        963,
+        0,
+        1234,
+        2,
+        2,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 4.05859375
+    },
+    {
+      "gene_id": "Ath019860",
+      "window": [
+        "Chr4",
+        14124298,
+        14155018
+      ],
+      "selected_molecules": 43,
+      "biological_nonzero": [
+        810,
+        1456,
+        2388,
+        3,
+        3,
+        7,
+        7
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.564453125
+    },
+    {
+      "gene_id": "Ath022532",
+      "window": [
+        "Chr5",
+        4972949,
+        5003669
+      ],
+      "selected_molecules": 25,
+      "biological_nonzero": [
+        0,
+        0,
+        1505,
+        0,
+        0,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.638671875
+    },
+    {
+      "gene_id": "Ath003322",
+      "window": [
+        "Chr1",
+        11232776,
+        11263496
+      ],
+      "selected_molecules": 19,
+      "biological_nonzero": [
+        0,
+        1794,
+        784,
+        0,
+        0,
+        6,
+        8
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.7919921875
+    },
+    {
+      "gene_id": "Ath014393",
+      "window": [
+        "Chr3",
+        9965220,
+        9995940
+      ],
+      "selected_molecules": 113,
+      "biological_nonzero": [
+        0,
+        1282,
+        1365,
+        0,
+        0,
+        2,
+        2
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.970703125
+    },
+    {
+      "gene_id": "Ath012721",
+      "window": [
+        "Chr3",
+        3837572,
+        3868292
+      ],
+      "selected_molecules": 84,
+      "biological_nonzero": [
+        1178,
+        1776,
+        1298,
+        6,
+        7,
+        4,
+        4
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.2578125
+    },
+    {
+      "gene_id": "Ath016828",
+      "window": [
+        "Chr3",
+        23002006,
+        23032726
+      ],
+      "selected_molecules": 29,
+      "biological_nonzero": [
+        0,
+        842,
+        1496,
+        0,
+        0,
+        1,
+        1
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.890625
+    },
+    {
+      "gene_id": "Ath010464",
+      "window": [
+        "Chr2",
+        15965887,
+        15996607
+      ],
+      "selected_molecules": 295,
+      "biological_nonzero": [
+        2629,
+        382,
+        1995,
+        10,
+        10,
+        2,
+        3
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 4.69140625
+    },
+    {
+      "gene_id": "Ath007951",
+      "window": [
+        "Chr2",
+        5615194,
+        5645914
+      ],
+      "selected_molecules": 19,
+      "biological_nonzero": [
+        0,
+        0,
+        1591,
+        0,
+        0,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.833984375
+    },
+    {
+      "gene_id": "Ath013802",
+      "window": [
+        "Chr3",
+        7658697,
+        7689417
+      ],
+      "selected_molecules": 45,
+      "biological_nonzero": [
+        1237,
+        1039,
+        1530,
+        3,
+        3,
+        2,
+        2
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.294921875
+    },
+    {
+      "gene_id": "Ath021609",
+      "window": [
+        "Chr5",
+        1737573,
+        1768293
+      ],
+      "selected_molecules": 26,
+      "biological_nonzero": [
+        0,
+        1607,
+        1391,
+        0,
+        0,
+        2,
+        3
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.080078125
+    },
+    {
+      "gene_id": "Ath022030",
+      "window": [
+        "Chr5",
+        3156553,
+        3187273
+      ],
+      "selected_molecules": 19,
+      "biological_nonzero": [
+        0,
+        2163,
+        1275,
+        0,
+        0,
+        5,
+        5
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.609375
+    },
+    {
+      "gene_id": "Ath011580",
+      "window": [
+        "Chr3",
+        110247,
+        140967
+      ],
+      "selected_molecules": 6,
+      "biological_nonzero": [
+        0,
+        1144,
+        0,
+        0,
+        0,
+        8,
+        8
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.609375
+    },
+    {
+      "gene_id": "Ath013395",
+      "window": [
+        "Chr3",
+        6166496,
+        6197216
+      ],
+      "selected_molecules": 53,
+      "biological_nonzero": [
+        1276,
+        0,
+        1439,
+        1,
+        1,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.177734375
+    },
+    {
+      "gene_id": "Ath008415",
+      "window": [
+        "Chr2",
+        8175013,
+        8205733
+      ],
+      "selected_molecules": 22,
+      "biological_nonzero": [
+        0,
+        1965,
+        687,
+        0,
+        0,
+        8,
+        8
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.9462890625
+    },
+    {
+      "gene_id": "Ath013822",
+      "window": [
+        "Chr3",
+        7720035,
+        7750755
+      ],
+      "selected_molecules": 5,
+      "biological_nonzero": [
+        732,
+        0,
+        1401,
+        1,
+        1,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.0986328125
+    },
+    {
+      "gene_id": "Ath004930",
+      "window": [
+        "Chr1",
+        21174588,
+        21205308
+      ],
+      "selected_molecules": 4,
+      "biological_nonzero": [
+        338,
+        0,
+        102,
+        1,
+        1,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.38671875
+    },
+    {
+      "gene_id": "Ath004546",
+      "window": [
+        "Chr1",
+        19742863,
+        19773583
+      ],
+      "selected_molecules": 21,
+      "biological_nonzero": [
+        0,
+        2454,
+        1277,
+        0,
+        0,
+        6,
+        7
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.7919921875
+    },
+    {
+      "gene_id": "Ath022752",
+      "window": [
+        "Chr5",
+        5736342,
+        5767062
+      ],
+      "selected_molecules": 11,
+      "biological_nonzero": [
+        1502,
+        0,
+        209,
+        11,
+        11,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.302734375
+    },
+    {
+      "gene_id": "Ath004211",
+      "window": [
+        "Chr1",
+        18396505,
+        18427225
+      ],
+      "selected_molecules": 95,
+      "biological_nonzero": [
+        0,
+        458,
+        2016,
+        0,
+        0,
+        1,
+        1
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.044921875
+    },
+    {
+      "gene_id": "Ath011917",
+      "window": [
+        "Chr3",
+        1153661,
+        1184381
+      ],
+      "selected_molecules": 12,
+      "biological_nonzero": [
+        1079,
+        0,
+        558,
+        3,
+        3,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.197265625
+    },
+    {
+      "gene_id": "Ath011910",
+      "window": [
+        "Chr3",
+        1134710,
+        1165430
+      ],
+      "selected_molecules": 95,
+      "biological_nonzero": [
+        0,
+        3211,
+        1527,
+        0,
+        0,
+        16,
+        15
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.63671875
+    },
+    {
+      "gene_id": "Ath002779",
+      "window": [
+        "Chr1",
+        8982954,
+        9013674
+      ],
+      "selected_molecules": 10,
+      "biological_nonzero": [
+        0,
+        1820,
+        297,
+        0,
+        0,
+        4,
+        4
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.609375
+    },
+    {
+      "gene_id": "Ath017267",
+      "window": [
+        "Chr4",
+        1103125,
+        1133845
+      ],
+      "selected_molecules": 11,
+      "biological_nonzero": [
+        394,
+        0,
+        1756,
+        1,
+        0,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.080078125
+    },
+    {
+      "gene_id": "Ath017735",
+      "window": [
+        "Chr4",
+        6024306,
+        6055026
+      ],
+      "selected_molecules": 40,
+      "biological_nonzero": [
+        1060,
+        1285,
+        1201,
+        4,
+        4,
+        3,
+        3
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.890625
+    },
+    {
+      "gene_id": "Ath008157",
+      "window": [
+        "Chr2",
+        7113161,
+        7143881
+      ],
+      "selected_molecules": 9,
+      "biological_nonzero": [
+        84,
+        2022,
+        210,
+        0,
+        1,
+        11,
+        11
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.609375
+    },
+    {
+      "gene_id": "Ath003963",
+      "window": [
+        "Chr1",
+        17317871,
+        17348591
+      ],
+      "selected_molecules": 3,
+      "biological_nonzero": [
+        0,
+        543,
+        107,
+        0,
+        0,
+        1,
+        1
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.0986328125
+    },
+    {
+      "gene_id": "Ath019415",
+      "window": [
+        "Chr4",
+        12666714,
+        12697434
+      ],
+      "selected_molecules": 33,
+      "biological_nonzero": [
+        879,
+        711,
+        3004,
+        4,
+        4,
+        3,
+        3
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.080078125
+    },
+    {
+      "gene_id": "Ath023888",
+      "window": [
+        "Chr5",
+        12544778,
+        12575498
+      ],
+      "selected_molecules": 18,
+      "biological_nonzero": [
+        1358,
+        0,
+        807,
+        3,
+        3,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.564453125
+    },
+    {
+      "gene_id": "Ath018030",
+      "window": [
+        "Chr4",
+        7303289,
+        7334009
+      ],
+      "selected_molecules": 35,
+      "biological_nonzero": [
+        0,
+        569,
+        1861,
+        0,
+        0,
+        1,
+        1
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.9453125
+    },
+    {
+      "gene_id": "Ath016370",
+      "window": [
+        "Chr3",
+        21405671,
+        21436391
+      ],
+      "selected_molecules": 223,
+      "biological_nonzero": [
+        0,
+        1786,
+        4514,
+        0,
+        0,
+        6,
+        6
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 4.3046875
+    },
+    {
+      "gene_id": "Ath022253",
+      "window": [
+        "Chr5",
+        3955356,
+        3986076
+      ],
+      "selected_molecules": 62,
+      "biological_nonzero": [
+        0,
+        878,
+        2362,
+        0,
+        0,
+        3,
+        3
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.638671875
+    },
+    {
+      "gene_id": "Ath009907",
+      "window": [
+        "Chr2",
+        13989273,
+        14019993
+      ],
+      "selected_molecules": 398,
+      "biological_nonzero": [
+        2090,
+        930,
+        2428,
+        7,
+        7,
+        4,
+        6
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 4.26171875
+    },
+    {
+      "gene_id": "Ath017205",
+      "window": [
+        "Chr4",
+        858553,
+        889273
+      ],
+      "selected_molecules": 36,
+      "biological_nonzero": [
+        952,
+        841,
+        1116,
+        7,
+        8,
+        1,
+        1
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 2.7734375
+    },
+    {
+      "gene_id": "Ath010198",
+      "window": [
+        "Chr2",
+        14986050,
+        15016770
+      ],
+      "selected_molecules": 11,
+      "biological_nonzero": [
+        1995,
+        0,
+        533,
+        8,
+        8,
+        0,
+        0
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 1.38671875
+    },
+    {
+      "gene_id": "Ath020143",
+      "window": [
+        "Chr4",
+        15164978,
+        15195698
+      ],
+      "selected_molecules": 43,
+      "biological_nonzero": [
+        626,
+        774,
+        2050,
+        4,
+        4,
+        2,
+        2
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.091796875
+    },
+    {
+      "gene_id": "Ath017916",
+      "window": [
+        "Chr4",
+        6823493,
+        6854213
+      ],
+      "selected_molecules": 245,
+      "biological_nonzero": [
+        1461,
+        2629,
+        2770,
+        3,
+        3,
+        13,
+        14
+      ],
+      "availability_nonzero": 30720,
+      "masked_N": 0,
+      "min": 0.0,
+      "max": 3.828125
+    }
+  ]
+}

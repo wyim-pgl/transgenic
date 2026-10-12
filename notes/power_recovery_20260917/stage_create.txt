@@ -1,0 +1,4 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+exclusive staging created /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_reference_map_20260916

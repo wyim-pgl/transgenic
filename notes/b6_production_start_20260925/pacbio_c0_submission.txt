@@ -1,0 +1,10 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+8f3868bbfedf70d651686b6810689a4f860823d424351bf2a5bd42b0c95734f0  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/pacbio_c0.sbatch
+SUBMIT Vvinifera 6172281 mem=200G time=2-00:00:00 duckdb=64GB cpus=16
+SUBMIT Ptrichocarpa 6172282 mem=200G time=4-00:00:00 duckdb=64GB cpus=16
+SUBMIT Sbicolor 6172283 mem=200G time=7-00:00:00 duckdb=64GB cpus=16
+6172283|b6_pb_c0_Sbicolor|PENDING|(Resources)
+6172282|b6_pb_c0_Ptrichocarpa|PENDING|(Resources)
+6172281|b6_pb_c0_Vvinifera|PENDING|(Resources)

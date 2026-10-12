@@ -1,0 +1,17 @@
+**APPROVE_WITH_FIXES** — H3 and the freeze-path HIGH are fixed. M8 remains partially addressed. No new CRITICAL/HIGH established.
+
+| Item | Status | Evidence |
+|---|---|---|
+| **H3: smaller-model benchmark certification** | **FIXED** | [runtime:259](/tmp/b6-wp4-trainer/src/transgenic/training/b6_runtime.py:259) refuses frozen architecture drift. [runtime:243](/tmp/b6-wp4-trainer/src/transgenic/training/b6_runtime.py:243) checks constructed decoder/chain-block counts and evidence projection; [bench:184](/tmp/b6-wp4-trainer/revision/scripts/b6/bench_memory_129k.py:184) supplies the architecture digest to the gate. All 17 configuration-drift probes were refused. A structural probe retaining frozen configuration but containing one decoder layer returned `NOT_A_GATE_RUN`. |
+| **Freeze-dict / freeze-path HIGH** | **FIXED** | [trainer:536](/tmp/b6-wp4-trainer/train/train_HyenaTransgenic_B6.py:536) passes `paths["freeze"]` directly and validates the returned record digest. WP3 [bindings:349](/tmp/b6-wp3-tracks/src/transgenic/evidence/b6_bindings.py:349) requires a path and [bindings:402](/tmp/b6-wp3-tracks/src/transgenic/evidence/b6_bindings.py:402) hashes its bytes into provenance. The actual-verifier probe passed and rejected a parsed freeze dictionary. |
+| **M8: WP3-fixture CP4 coverage** | **PARTIALLY — MEDIUM** | [integration:176](/tmp/b6-wp4-trainer/revision/scripts/b6/integration_4rank.py:176) now invokes the real verifier; subsequent code checks DNA/tracks/chains RC and trains through WP3’s dataset/collator. However, [integration:210](/tmp/b6-wp4-trainer/revision/scripts/b6/integration_4rank.py:210) explicitly leaves label RC untested because fixture labels are placeholders. The [launcher:44](/tmp/b6-wp4-trainer/revision/scripts/b6/integration_4rank.sbatch:44) still selects synthetic data implicitly. |
+
+**Requested regression checks:**
+
+- **Architecture bypass:** No supported configuration/CLI route to a smaller model with a passing digest was found. The optional chain-attention dropout override is also represented in the digest; changing it produced `NOT_A_GATE_RUN`.
+- **Resume verification:** Production [main:567](/tmp/b6-wp4-trainer/train/train_HyenaTransgenic_B6.py:567) unconditionally re-verifies inputs before model construction or checkpoint loading. Probes confirmed this for fresh runs, `--resume auto`, and explicit resume paths. The CP4 driver instead reuses its original record across simulated links ([integration:249](/tmp/b6-wp4-trainer/revision/scripts/b6/integration_4rank.py:249)); this remains a coverage gap, not a demonstrated production HIGH.
+- **WP3 record contract:** Compatible with the current verifier. A fresh real record matched the existing stored resume identity, including tuple-to-list normalization. Edited coverage, freeze provenance, and an added record field were rejected; resealing changed freeze provenance still caused resume refusal.
+
+Finish M8 by adding meaningful fixture-label RC coverage, re-verifying each simulated link, and configuring the fixture launcher with reachable checkpoint counts. Merely adding `--data wp3-fixtures` to current launch defaults is insufficient: the five training rows and two-epoch budget cannot reach the configured stop/pilot updates.
+
+Verification was read-only: source inspection, actual WP3 verification against existing fixture artifacts, and in-memory probes. Full training, DDP, and GPU acceptance were not rerun; the writer’s two-CPU-rank fixture PASS does not complete four-rank GPU acceptance.

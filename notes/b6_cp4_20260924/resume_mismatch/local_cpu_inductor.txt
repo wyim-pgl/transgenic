@@ -1,0 +1,230 @@
+START inductor /tmp/tmp583o9e8x
+No CUDA runtime is found, using CUDA_HOME='/usr/local/cuda'
+C0924 19:38:42.934000 1035967 site-packages/torch/_inductor/scheduler.py:1059] [5/0] Error in codegen for ComputedBuffer(name='buf367', layout=FixedLayout('cpu', torch.float32, size=[1, 16, 12], stride=[192, 12, 1]), data=Pointwise(device=device(type='cpu'), dtype=torch.float32, inner_fn=<function make_pointwise.<locals>.inner.<locals>.inner_fn at 0x73ec34f88040>, ranges=[1, 16, 12]))
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0] failed to eagerly compile backwards for dynamic, suppressing in case backwards not needed
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0] Traceback (most recent call last):
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py", line 768, in aot_dispatch_autograd
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     compiled_bw_func = aot_config.bw_compiler(
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]                        ^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_functorch/aot_autograd.py", line 489, in __call__
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return self.compiler_fn(gm, example_inputs)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_dynamo/backends/common.py", line 54, in _wrapped_bw_compiler
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return disable(disable(bw_compiler_fn)(*args, **kwargs))
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_dynamo/eval_frame.py", line 745, in _fn
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return fn(*args, **kwargs)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_utils_internal.py", line 95, in wrapper_function
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return function(*args, **kwargs)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/compile_fx.py", line 1808, in bw_compiler
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return inner_compile(
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/compile_fx.py", line 569, in compile_fx_inner
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return wrap_compiler_debug(_compile_fx_inner, compiler_name="inductor")(
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_dynamo/repro/after_aot.py", line 102, in debug_wrapper
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     inner_compiled_fn = compiler_fn(gm, example_inputs)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/compile_fx.py", line 685, in _compile_fx_inner
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     mb_compiled_graph = fx_codegen_and_compile(
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]                         ^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/compile_fx.py", line 1129, in fx_codegen_and_compile
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return scheme.codegen_and_compile(gm, example_inputs, inputs_to_check, graph_kwargs)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/compile_fx.py", line 1044, in codegen_and_compile
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     compiled_fn = graph.compile_to_module().call
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/graph.py", line 2027, in compile_to_module
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return self._compile_to_module()
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/graph.py", line 2033, in _compile_to_module
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     self.codegen_with_cpp_wrapper() if self.cpp_wrapper else self.codegen()
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]                                                              ^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/graph.py", line 1968, in codegen
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     self.scheduler.codegen()
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/scheduler.py", line 3477, in codegen
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return self._codegen()
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/scheduler.py", line 3554, in _codegen
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     self.get_backend(device).codegen_node(node)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 4777, in codegen_node
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     self.codegen_outer_loop_node(node)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 4764, in codegen_outer_loop_node
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     cpp_kernel_proxy.codegen_nodes(_nodes)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 4044, in codegen_nodes
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     self.codegen_functions(fn_list, var_sizes_list)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 3859, in codegen_functions
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     scalar_kernel = codegen_kernel(CppKernel)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 3836, in codegen_kernel
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     run(kernel)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 3848, in run
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     fn(vars, reduction_vars)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 4025, in fn
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return node.codegen(index_vars)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/scheduler.py", line 1057, in codegen
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     self._body(*index_vars)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/loop_body.py", line 404, in __call__
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     result = self.root_block()
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]              ^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/loop_body.py", line 638, in __call__
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return InterpreterShim(graph, submodules).run(V.get_ops_handler())
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/loop_body.py", line 60, in run
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return super().run(*args, **kwargs)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/fx/interpreter.py", line 167, in run
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     self.env[node] = self.run_node(node)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]                      ^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/loop_body.py", line 56, in run_node
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return super().run_node(n)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/fx/interpreter.py", line 230, in run_node
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return getattr(self, n.op)(n.target, args, kwargs)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/fx/interpreter.py", line 334, in call_method
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return getattr(self_obj, target)(*args_tail, **kwargs)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/sizevars.py", line 915, in load
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     return self._inner.load(name, self._simplify(index))
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/common.py", line 1977, in load
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     out = self.load(name, index)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]           ^^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 1973, in load
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     var = self.args.input(name)
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]           ^^^^^^^^^^^^^^^^^^^^^
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]   File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/common.py", line 1140, in input
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0]     assert name not in V.graph.removed_buffers, name
+W0924 19:38:42.943000 1035967 site-packages/torch/_functorch/_aot_autograd/jit_compile_runtime_wrappers.py:785] [5/0] AssertionError: buf361
+C0924 19:39:11.071000 1035967 site-packages/torch/_inductor/scheduler.py:1059] [5/0] Error in codegen for ComputedBuffer(name='buf367', layout=FixedLayout('cpu', torch.float32, size=[1, 16, 12], stride=[192, 12, 1]), data=Pointwise(device=device(type='cpu'), dtype=torch.float32, inner_fn=<function make_pointwise.<locals>.inner.<locals>.inner_fn at 0x73ec275dc540>, ranges=[1, 16, 12]))
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/b6_cp4_20260924/resume_mismatch/reproduce_cpu.py", line 22, in <module>
+    result = test.train_arm(spec, n_rows=6)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/b6-integration/tests/test_b6_trainer.py", line 72, in train_arm
+    return trainer.run_b6(spec, model or self.build(), train_ds, eval_ds, collate_fn=syn.synthetic_collate,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/b6-integration/train/train_HyenaTransgenic_B6.py", line 449, in run_b6
+    result = train_loop()
+             ^^^^^^^^^^^^
+  File "/tmp/b6-integration/train/train_HyenaTransgenic_B6.py", line 415, in train_loop
+    acc.backward(out.loss / per_rank_acc)
+  File "/tmp/claude-1000/-mnt-f-scratch-develop-Transgenic-transgenic-local/1a00e258-5d2a-4bd8-a5a4-61423fb2e076/scratchpad/b6venv/lib/python3.12/site-packages/accelerate/accelerator.py", line 2734, in backward
+    loss.backward(**kwargs)
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_tensor.py", line 626, in backward
+    torch.autograd.backward(
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/autograd/graph.py", line 823, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/autograd/function.py", line 307, in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 1710, in backward
+    return impl_fn()
+           ^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 1700, in impl_fn
+    out = CompiledFunction._backward_impl(ctx, all_args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 2037, in _backward_impl
+    CompiledFunction.compiled_bw = aot_config.bw_compiler(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_functorch/aot_autograd.py", line 489, in __call__
+    return self.compiler_fn(gm, example_inputs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_dynamo/backends/common.py", line 54, in _wrapped_bw_compiler
+    return disable(disable(bw_compiler_fn)(*args, **kwargs))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_dynamo/eval_frame.py", line 745, in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_utils_internal.py", line 95, in wrapper_function
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/compile_fx.py", line 1808, in bw_compiler
+    return inner_compile(
+           ^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/compile_fx.py", line 569, in compile_fx_inner
+    return wrap_compiler_debug(_compile_fx_inner, compiler_name="inductor")(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_dynamo/repro/after_aot.py", line 102, in debug_wrapper
+    inner_compiled_fn = compiler_fn(gm, example_inputs)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/compile_fx.py", line 685, in _compile_fx_inner
+    mb_compiled_graph = fx_codegen_and_compile(
+                        ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/compile_fx.py", line 1129, in fx_codegen_and_compile
+    return scheme.codegen_and_compile(gm, example_inputs, inputs_to_check, graph_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/compile_fx.py", line 1044, in codegen_and_compile
+    compiled_fn = graph.compile_to_module().call
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/graph.py", line 2027, in compile_to_module
+    return self._compile_to_module()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/graph.py", line 2033, in _compile_to_module
+    self.codegen_with_cpp_wrapper() if self.cpp_wrapper else self.codegen()
+                                                             ^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/graph.py", line 1968, in codegen
+    self.scheduler.codegen()
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/scheduler.py", line 3477, in codegen
+    return self._codegen()
+           ^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/scheduler.py", line 3554, in _codegen
+    self.get_backend(device).codegen_node(node)
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 4777, in codegen_node
+    self.codegen_outer_loop_node(node)
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 4764, in codegen_outer_loop_node
+    cpp_kernel_proxy.codegen_nodes(_nodes)
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 4044, in codegen_nodes
+    self.codegen_functions(fn_list, var_sizes_list)
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 3859, in codegen_functions
+    scalar_kernel = codegen_kernel(CppKernel)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 3836, in codegen_kernel
+    run(kernel)
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 3848, in run
+    fn(vars, reduction_vars)
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 4025, in fn
+    return node.codegen(index_vars)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/scheduler.py", line 1057, in codegen
+    self._body(*index_vars)
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/loop_body.py", line 404, in __call__
+    result = self.root_block()
+             ^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/loop_body.py", line 638, in __call__
+    return InterpreterShim(graph, submodules).run(V.get_ops_handler())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/loop_body.py", line 60, in run
+    return super().run(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/fx/interpreter.py", line 167, in run
+    self.env[node] = self.run_node(node)
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/loop_body.py", line 56, in run_node
+    return super().run_node(n)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/fx/interpreter.py", line 230, in run_node
+    return getattr(self, n.op)(n.target, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/fx/interpreter.py", line 334, in call_method
+    return getattr(self_obj, target)(*args_tail, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/sizevars.py", line 915, in load
+    return self._inner.load(name, self._simplify(index))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/common.py", line 1977, in load
+    out = self.load(name, index)
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/cpp.py", line 1973, in load
+    var = self.args.input(name)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wyim/miniconda3/envs/pdb/lib/python3.12/site-packages/torch/_inductor/codegen/common.py", line 1140, in input
+    assert name not in V.graph.removed_buffers, name
+AssertionError: buf361

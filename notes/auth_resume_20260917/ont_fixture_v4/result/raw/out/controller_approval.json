@@ -1,0 +1,39 @@
+{
+  "aggregate_hard_limit_bytes": null,
+  "aggregate_review_limit_bytes": 268435456,
+  "automatic_retry": false,
+  "containment_scope": "Only reviewed site-v1 hierarchy permitted. Actual job PID, four-CPU affinity, hierarchical 4GiB RAM and combined memsw are verified before alignment; unknown layout refuses. Terminal batch/extern and reaping remain acceptance checks.",
+  "controller_decision": "One separately reviewed corrected attempt after inherited-limit failure. Explicitly enforce and record the same 4MiB limits inside the allocated task. Original failure and externOOM retained. No automatic retry or broader scope.",
+  "cpus": 4,
+  "extern_oom_resolved": false,
+  "final_acceptance": "Require verified fixed oracle and declared seams, final stdout/receipt/marker identities, no FAILED, source/input/runtime preservation, output and scheduler log logical/allocated sizes within reviewed threshold, and clean terminal job/batch/extern accounting. Any unexplained extern OOM rejects clean fixture acceptance; retain workload diagnostics separately.",
+  "full_ont_authorized": false,
+  "manifest_sha256": "13da604041044f3ce0192b2049d644a603b9bbef8d14d38c70fedc07ae92d3b9",
+  "memory_mib": 4096,
+  "output": "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out",
+  "output_policy": "finite_fixture_soft_aggregate",
+  "per_file_hard_limit_bytes": 4194304,
+  "prior_failed_allocated_cpu_seconds": 8,
+  "prior_failed_job": "6165962",
+  "review_references": [
+    "ont_fixture_v2/review_v2/INDEPENDENT_REVIEW.md",
+    "ont_fixture_v3/RESTRICTION_REVIEW.md",
+    "ont_fixture_v3/CONTROLLER_PLAN.md",
+    "ont_fixture_v2/controller_runtime_ownership.txt",
+    "ont_fixture_v4/REVIEW.md",
+    "ont_fixture_v4/FILE_LIMIT_FIX.md"
+  ],
+  "runtime_closure_approved": true,
+  "runtime_closure_sha256": "17028c5096c789ec7d198c489d08eec8cbc0224ec1ebd492115a475d9ee243ce",
+  "runtime_trust_policy": "Trust wyim-owned p-wyim-only-group installation and ordinary site administrators. No installation, upgrade or environment edits by this workflow during the attempt. Compute must compare the pinned closure; controller must rehash enumerated runtime files after work. Not malicious-same-UID resistance.",
+  "scheduler_cgroup_reviewed": true,
+  "scheduler_logs": [
+    "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/stdout",
+    "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/stderr"
+  ],
+  "scientific_acceptance": false,
+  "scope": "TEST_ONLY_REAL_TOOL_FIXTURE",
+  "training_eligible": false,
+  "transport_sha256": "1b6be45fd19103e2b9fc53746853ff1da9f0223ca3d07046a5a0c68bc72ed5f5",
+  "wall_seconds": 360
+}

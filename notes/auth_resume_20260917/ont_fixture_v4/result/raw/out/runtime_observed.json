@@ -1,0 +1,62 @@
+{
+  "tools": {
+    "minimap2": {
+      "actual_sha256": "8a561f2c29f5a250eeecb6915100d23194dd38a41bb230d0b6afe69f78d5adf4",
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2",
+      "sha256": "8a561f2c29f5a250eeecb6915100d23194dd38a41bb230d0b6afe69f78d5adf4",
+      "version": "2.28-r1209",
+      "version_args": [
+        "--version"
+      ]
+    },
+    "python": {
+      "actual_sha256": "eaf04015fc8a4d06fe01aab44ba359df02b5e2bdf7c350222d7a69ddfc9cac9e",
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python3.11",
+      "sha256": "eaf04015fc8a4d06fe01aab44ba359df02b5e2bdf7c350222d7a69ddfc9cac9e",
+      "version": "Python 3.11.14",
+      "version_args": [
+        "--version"
+      ]
+    },
+    "samtools": {
+      "actual_sha256": "c1d24b1c06254c9817cb62398d066b428af7bb5fba3917ed6e026a82c193f187",
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/samtools",
+      "sha256": "c1d24b1c06254c9817cb62398d066b428af7bb5fba3917ed6e026a82c193f187",
+      "version": "samtools 1.3.1",
+      "version_args": [
+        "--version"
+      ]
+    },
+    "seqkit": {
+      "actual_sha256": "fe5cbb4495559819220e7e64ded7e7ef26388fbccd17e83377571d75d58f308a",
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/seqkit",
+      "sha256": "fe5cbb4495559819220e7e64ded7e7ef26388fbccd17e83377571d75d58f308a",
+      "version": "seqkit v2.13.0",
+      "version_args": [
+        "version"
+      ]
+    }
+  },
+  "versions": {
+    "minimap2": {
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "2.28-r1209\n"
+    },
+    "python": {
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "Python 3.11.14\n"
+    },
+    "samtools": {
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "samtools 1.3.1\nUsing htslib 1.3.1\nCopyright (C) 2016 Genome Research Ltd.\n"
+    },
+    "seqkit": {
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "seqkit v2.13.0\n"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "binary": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare",
+  "binary_resolved": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare",
+  "binary_sha256": "a440e1533611a40a51cf2b5b35a2e15ec6b885660dd35f6b531e0d65601a963a",
+  "harness_sha256": "3c022e41fa2759a33d8fee76452a55eca5ff2b226527a37fddecbba79c6098d1",
+  "producer_sha256": "bf7c8284804ee0a12c359a1fbe8f140bfc0f222abb522d6d7b7b4d3a691b417b",
+  "python": "3.11.14 | packaged by conda-forge | (main, Jan 26 2026, 23:48:32) [GCC 14.3.0]"
+}

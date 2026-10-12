@@ -1,0 +1,22 @@
+REPRO: different pinned commands/engine provenance, identical search/HSP IDs; report manifests differ
+.FREPRO: leader exited, stdout-holding child survives timeout cleanup (reviewer kills it)
+.......usage: __main__.py [-h] --manifest MANIFEST --sha SHA --out OUT
+__main__.py: error: manifest size/hash mismatch
+.
+=================================== FAILURES ===================================
+__________________________ test_reproduce_stderr_loss __________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1265/test_reproduce_stderr_loss0')
+
+    def test_reproduce_stderr_loss(tmp_path):
+        m = f.fixture(tmp_path)
+        r, _ = execute(m, tmp_path / 'out', 'import sys;sys.stderr.write("UNIQUE_BAM_CORRUPTION_DIAGNOSTIC\\n");sys.exit(7)')
+        assert r['status'] == 'FAILED' and 'nonzero exit: 7' in r['error']
+>       assert not any(b'UNIQUE_BAM_CORRUPTION_DIAGNOSTIC' in p.read_bytes() for p in (tmp_path / 'out').iterdir())
+E       assert not True
+E        +  where True = any(<generator object test_reproduce_stderr_loss.<locals>.<genexpr> at 0x7b41b774de50>)
+
+/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_sample_review_evidence/test_adversarial.py:61: AssertionError
+=========================== short test summary info ============================
+FAILED ../../mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_sample_review_evidence/test_adversarial.py::test_reproduce_stderr_loss
+1 failed, 9 passed in 12.36s

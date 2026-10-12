@@ -1,0 +1,313 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T21:50:38-0700
+JobID|State|ExitCode|Elapsed|MaxRSS
+6165555|COMPLETED|0:0|00:02:28|
+6165555.batch|COMPLETED|0:0|00:02:28|51000K
+6165555.extern|OUT_OF_MEMORY|0:125|00:02:28|1480K
+6165556|FAILED|127:0|00:00:00|
+6165556.batch|FAILED|127:0|00:00:00|1496K
+6165556.extern|OUT_OF_MEMORY|0:125|00:00:00|1480K
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/slurm-6165555.out ===
+1199,
+      "no_ts_tag": 15,
+      "read_sense": 2679,
+      "records": 10129,
+      "secondary_or_supplementary": 129,
+      "unmapped": 171,
+      "unspliced": 3180,
+      "valid_for_orientation": 5008
+    },
+    "dataset": "ont/Athaliana_FLIC_PRJNA1087576",
+    "eligible": 5025,
+    "fraction": 0.534944089456869,
+    "genes_dropped_opposite_strand": 2652,
+    "min_eligible": 1000,
+    "min_mapq": 20,
+    "motif_annotation_agreement": 0.9966169154228856,
+    "motif_annotation_note": "P(motif-inferred genomic transcript strand == annotated strand). A consistency check on the alignment and the annotation, NOT the -uf gate: it is ~0.995 for stranded and unstranded libraries alike (A39).",
+    "protocol": "B1 \u00a73.3 item 2 as corrected by A39 (v1.29): -uf is gated on sense_read_fraction, the read's orientation relative to the transcript. The literal reading, motif_annotation_agreement, is retained as a diagnostic.",
+    "qualifying_genes": 18838,
+    "read_sense": 2679,
+    "reason": "sense_read_fraction 0.5349 < 0.95, unstranded (~0.5); -uf would assert an orientation this library does not have",
+    "run": "SRR28341943",
+    "sense_read_fraction": 0.534944089456869,
+    "sense_read_note": "P(read genomic strand == annotated strand), over alignments whose motif call agrees with the annotation. This is the proposition -uf asserts. ~0.5 unstranded; ~1.0 stranded sense; ~0.0 stranded antisense. THIS is the gate (A39).",
+    "species": "Athaliana",
+    "status": "FAIL",
+    "threshold": 0.95,
+    "use_uf": false,
+    "valid_for_orientation": 5008,
+    "wilson95": [
+      0.521108,
+      0.548726
+    ]
+  },
+  "inputs": [
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz",
+      "size": 1915883586,
+      "sha256": "11a79eb12ac43ae09c6fe1e64febfe1629c2111ee799a979aabcd526f78cf3ef"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+      "size": 121183059,
+      "sha256": "63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+      "size": 60503119,
+      "sha256": "529510b60756c9a1ae5a590ec4097fd4b9773649c29e6a5543553118bb042c38"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/protocols/b6_panels_v1.tsv",
+      "size": 166414,
+      "sha256": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/authority.tsv",
+      "size": 2533,
+      "sha256": "3ca7a3b9a5793f62d25f503c93cfd7167eb17f7c5b90de7830e6a8777117f783"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/gate.py",
+      "size": 14946,
+      "sha256": "0b5be5e4863a348f0fb35a946e6d989980428483a72055e4d3f12492b7f7a17f"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/source_pins.json",
+      "size": 1111,
+      "sha256": "38c56c608336ef3fdcb83eaa5eb35a355ddc77ea1e8aff8387160603bf88ce34"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.longread_v1.tsv",
+      "size": 62511,
+      "sha256": "288390b0e75a07845159f93f6a07c0033e4980b9dfe862dc2d982cac1704e348"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/scripts/mvp/mvp_align_panel_longreads.py",
+      "size": 11367,
+      "sha256": "fcf5be4412a25c399df9b9ea1f9637a1e9a733b336794a2244a6c8e9ce19564b"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/scripts/mvp/mvp_junction_table.py",
+      "size": 9320,
+      "sha256": "8e8006bd181732b826a09f36b830a84ea218caf725912a0d43d5b9df3ab9afc8"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/scripts/mvp/mvp_score.py",
+      "size": 8996,
+      "sha256": "8efec8fe80f28f5f48002b3e4b1987c4ca8d2e78c9a425c0a59fb37bc6744997"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/scripts/67_orientation_audit.py",
+      "size": 15526,
+      "sha256": "4a719d4331f4f162c7ca6da506b4c3cfc6423d20b6220c9e7cd42ba4be5e33a3"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/scripts/68_sample_fasta.py",
+      "size": 2592,
+      "sha256": "a40acd41ec8706e575d9387112f1823404fe8b24e0412a48b5bbc39ee13ba4f4"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/scripts/59_evidence_support.py",
+      "size": 45948,
+      "sha256": "06f1bdc9a3af511e6de7434430f191d6b272d244ce7a44303d1c87dd29be25f4"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/src/transgenic/evidence/mvp_windows.py",
+      "size": 10149,
+      "sha256": "7583e0886418c606b0f0fd5d34440553390e1064d233f5e2ad7200603d1a4775"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/src/transgenic/evidence/mvp_bootstrap.py",
+      "size": 14571,
+      "sha256": "a5dbb899eb7ae592e8622a66acdf20c14f019a8904e36923839be2213075109e"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/protocols/b6_panels_v1.tsv",
+      "size": 166414,
+      "sha256": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2",
+      "size": 1091040,
+      "sha256": "8a561f2c29f5a250eeecb6915100d23194dd38a41bb230d0b6afe69f78d5adf4"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/samtools",
+      "size": 4138381,
+      "sha256": "c1d24b1c06254c9817cb62398d066b428af7bb5fba3917ed6e026a82c193f187"
+    },
+    {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/seqkit",
+      "size": 21582057,
+      "sha256": "fe5cbb4495559819220e7e64ded7e7ef26388fbccd17e83377571d75d58f308a"
+    }
+  ],
+  "commands": [
+    {
+      "stage": "version_minimap2",
+      "argv": [
+        "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "version_minimap2.stdout",
+      "stderr": "version_minimap2.stderr"
+    },
+    {
+      "stage": "version_samtools",
+      "argv": [
+        "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/samtools",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "version_samtools.stdout",
+      "stderr": "version_samtools.stderr"
+    },
+    {
+      "stage": "version_seqkit",
+      "argv": [
+        "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/seqkit",
+        "version"
+      ],
+      "exit_code": 0,
+      "stdout": "version_seqkit.stdout",
+      "stderr": "version_seqkit.stderr"
+    },
+    {
+      "stage": "sample",
+      "argv": [
+        "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python",
+        "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/scripts/68_sample_fasta.py",
+        "--fasta",
+        "/data/gpfs/assoc/pgl/data/Transgenic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz",
+        "--out",
+        "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/sample.fa",
+        "--n",
+        "10000",
+        "--md5",
+        "d802a86ae1673909ee21a0cd663c99ac"
+      ],
+      "exit_code": 0,
+      "stdout": "sample.stdout",
+      "stderr": "sample.stderr"
+    },
+    {
+      "stage": "sample_alignment",
+      "argv": [
+        "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2",
+        "-t",
+        "4",
+        "-ax",
+        "splice",
+        "-k14",
+        "-G",
+        "200000",
+        "--secondary=no",
+        "--cs=long",
+        "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+        "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/sample.fa"
+      ],
+      "exit_code": 0,
+      "stdout": "sample_alignment.stdout",
+      "stderr": "sample_alignment.stderr"
+    },
+    {
+      "stage": "orientation_audit",
+      "argv": [
+        "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python",
+        "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/frozen/revision/scripts/67_orientation_audit.py",
+        "--sam",
+        "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/sample_alignment.stdout",
+        "--gff",
+        "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+        "--out",
+        "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/results/SRR28341943/orientation/audit.json",
+        "--run",
+        "SRR28341943",
+        "--species",
+        "Athaliana",
+        "--dataset",
+        "ont/Athaliana_FLIC_PRJNA1087576"
+      ],
+      "exit_code": 0,
+      "stdout": "orientation_audit.stdout",
+      "stderr": "orientation_audit.stderr"
+    }
+  ],
+  "outputs": {
+    "commands.json": {
+      "size": 2951,
+      "sha256": "38053afbfee582a7ffa5cad0663b0f0e11c15cd40968f709e00915f1d26339b1"
+    },
+    "orientation/DONE": {
+      "size": 195,
+      "sha256": "4c0b5a789a26572b6c4b53f3edf884ea0ff00b596527fa8f2fa6b69170e63192"
+    },
+    "orientation/audit.json": {
+      "size": 1690,
+      "sha256": "b378842e206d4f8f2eccf9dab6bbb7ab505aa82809728a72a9932c7665b47f35"
+    },
+    "orientation_audit.stderr": {
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "orientation_audit.stdout": {
+      "size": 1691,
+      "sha256": "8e01749935b49d6e985947f41a87684ffc060efb0b1f173512ac16cb02ba04f3"
+    },
+    "sample.fa": {
+      "size": 8538965,
+      "sha256": "2b58c23f0be696961dfdb1dfcfba82698abfa75f7abb722f5b820c1492c9f860"
+    },
+    "sample.stderr": {
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "sample.stdout": {
+      "size": 147,
+      "sha256": "9cdcb041f74c1cece3f780c7d853d0e5207118ca418cb9a9bc32632611bc9ed5"
+    },
+    "sample_alignment.stderr": {
+      "size": 908,
+      "sha256": "3d2e1d359e3ff81a93f99b175015f7421fa0ccfc7812f78e5b9be26eee349b0e"
+    },
+    "sample_alignment.stdout": {
+      "size": 20228425,
+      "sha256": "a63df40dc70d6918e5b2df18a5dbd9de1d878762fbfcd563fc44207fb3a2ecbb"
+    },
+    "version_minimap2.stderr": {
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "version_minimap2.stdout": {
+      "size": 11,
+      "sha256": "f7ede1aec5fb82a1b4ee63e36a05676dc1bf8ce065178cf6023b67ac289bef89"
+    },
+    "version_samtools.stderr": {
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "version_samtools.stdout": {
+      "size": 74,
+      "sha256": "832fc3bf93acb30a23d0f39409a2856cc0017461ccde03dca5d8d19d02aa6a67"
+    },
+    "version_seqkit.stderr": {
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "version_seqkit.stdout": {
+      "size": 15,
+      "sha256": "d5d4d8746f65299463da2966cb98a3fb61fc8d9e9361a7983079f5c54c32dc19"
+    }
+  },
+  "job": "6165555",
+  "host": "cpu-50",
+  "wall_seconds": 108.40214534010738
+}
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_ont_orientation_20260916_pilot/release/slurm-6165555.err ===

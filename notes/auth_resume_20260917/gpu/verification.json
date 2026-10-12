@@ -1,0 +1,8 @@
+{
+  "source_still_matches": true,
+  "candidate_ledger": true,
+  "archive_exact": true,
+  "no_em_dash": true,
+  "recipe_syntax": true,
+  "handshake": true
+}

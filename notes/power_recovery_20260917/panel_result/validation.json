@@ -1,0 +1,40 @@
+{
+  "status": "PASS_SMALL_FILE_SCOPE_ONLY",
+  "mapping_bijection": 50,
+  "geometry_and_windows": 50,
+  "restricted_gff_genes": 50,
+  "restricted_gff_transcripts": 52,
+  "duplicate_ambiguous_loci": 0,
+  "array_stats_verified": 50,
+  "array_hashes_independently_verified": 0,
+  "sequence_provenance_hashes_independently_verified": 0,
+  "selected_molecule_count_sum_over_windows": 3443,
+  "selected_molecule_count_range": [
+    3,
+    398
+  ],
+  "zero_biological_support_loci": 0,
+  "biological_nonzero_sums": [
+    34789,
+    52639,
+    71107,
+    138,
+    140,
+    193,
+    204
+  ],
+  "availability_nonzero_sum": 1536000,
+  "hashes": {
+    "cpu_runtime.json": "1be342c5f69681c67b62c2bd8e6685e725a3dc2c10b68d77be2fb13d582e2644",
+    "git_authority.json": "0d913d71994c3146db6922e1a5e80125329fa3e4c624945a089921cc60e38e28",
+    "OBSERVATIONS_COMPLETE.json": "acfe378a02c3a499c301a535f73e80db8072bcea69dade025272b7ca4002c93f",
+    "panel_counts.json": "e245caf8741ef607db9f89271412340e5af72030d36acf5cc803e21a68e1bf1d",
+    "reference.panel.gff3": "33e98f9ed71c18a3905ece1c58c9f7a6591f28e16f5d3a96a0cb0a63634f2d28",
+    "reference_compatibility.json": "9ac63bf3d88c7161e82a73eff89048fd4faa4fbf765dff98f2f5cd881e46498d",
+    "reference_identity.json": "70aab612069cd6c646606cbf685ad53cf3b09532878ee46f459dad3495db4f81",
+    "request.json": "90872e0c4e01706947b80020af8d4319a72949701088e51ff6b3b7bd5768d01f",
+    "source_identity.json": "a56c54a84046226b928e24c7e6c1d234275527754f20912eb29ad53d1f746ffd",
+    "panel/COMPLETE": "600be19cd4deef9c84be302f0716ac77e8a3429ee70bda4be7ff20dbefe3c7eb",
+    "panel/manifest.json": "7528c9bff5a9a9b177b1ad333ad76525a1d02d3c4cde4e0550865ff12e0acc0e"
+  }
+}

@@ -1,0 +1,196 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+/usr/bin/python
+/apps/singularity/3.6.1/bin/singularity
+total 7.0M
+drwxrwxr-x 23 wyim p-wyim 8.0K Sep 14 17:31 .
+drwxrwxr-x 24 wyim p-wyim  28K Sep 17 16:02 ..
+drwxr-xr-x  2 wyim p-wyim 4.0K Sep  1 14:09 073026
+-rw-r--r--  1 wyim p-wyim  823 Sep  6 07:00 a40_pytest.6150132.log
+-rw-r--r--  1 wyim p-wyim  17K Sep  6 07:15 a40_test_hardening.py.pending
+-rw-r--r--  1 wyim p-wyim 7.3K Sep  3 12:34 ath_ont_candidates_20260903.md
+-rw-r--r--  1 wyim p-wyim 115K Sep  3 12:13 ath_ont_runs_20260903.tsv
+drwxr-xr-x  2 wyim p-wyim 4.0K Aug  4 22:01 .claude
+-rw-r--r--  1 wyim p-wyim  33K Sep  3 12:45 codex_ath_ont_review_20260903.md
+-rwxr-xr-x  1 wyim p-wyim 8.0K Sep  1 17:22 codex_brainstorm_est.md
+-rw-r--r--  1 wyim p-wyim  22K Sep  1 17:25 codex_candidate_pool_20260901.md
+-rw-r--r--  1 wyim p-wyim  34K Sep  1 17:22 codex_est_brainstorm_20260901.md
+-rw-r--r--  1 wyim p-wyim  32K Sep  1 20:44 codex_fulllength_20260901.md
+-rw-r--r--  1 wyim p-wyim  37K Sep  1 23:05 codex_full_review_20260902.md
+-rw-r--r--  1 wyim p-wyim  37K Sep  1 19:48 codex_gsf_pipeline_20260901.md
+-rw-r--r--  1 wyim p-wyim  43K Sep  3 00:38 codex_merge50_20260903.md
+-rw-r--r--  1 wyim p-wyim  26K Sep  1 15:15 codex_methods_20260901.md
+-rw-r--r--  1 wyim p-wyim  36K Sep  1 15:15 codex_pc_audit_20260901.md
+-rw-r--r--  1 wyim p-wyim  34K Sep  1 15:15 codex_review_20260901.md
+-rw-r--r--  1 wyim p-wyim 2.2K Sep  1 15:15 codex_review_20260901_verified.md
+-rw-r--r--  1 wyim p-wyim 4.0K Sep  1 15:45 codex_review_v2_items_20260901.md
+-rw-r--r--  1 wyim p-wyim  25K Sep  1 15:52 codex_review_v3_proposals_20260901.md
+-rw-r--r--  1 wyim p-wyim  13K Jul 28 02:50 cover_letter.docx
+-rw-r--r--  1 wyim p-wyim 4.4K Jul 28 02:27 cover_letter.md
+-rw-r--r--  1 wyim p-wyim  13K Aug 10 15:22 critic_report_20260810.md
+drwxr-xr-x  3 wyim p-wyim 4.0K Aug  5 14:04 docs
+-rw-r--r--  1 wyim p-wyim 3.0K Aug  4 18:06 email_jlomas_figS4_provenance.md
+drwxr-xr-x 37 wyim p-wyim 8.0K Sep 23 17:21 evidence
+-rw-r--r--  1 wyim p-wyim  14K Jul 29 11:27 FIG3_FINDINGS.docx
+-rw-r--r--  1 wyim p-wyim  15K Jul 29 12:29 FIG4_LOCUS_FORENSICS.docx
+drwxrwxr-x  2 wyim p-wyim 4.0K Sep  1 23:17 genomes
+drwxr-xr-x  2 wyim p-wyim 4.0K Sep 10 09:25 .handoff_bak
+-rw-r--r--  1 wyim p-wyim  39K Aug 17 13:36 integrity_report_20260817.docx
+-rw-r--r--  1 wyim p-wyim  55K Aug 17 13:36 integrity_report_20260817.md
+-rw-r--r--  1 wyim p-wyim  25K Sep 10 11:16 intent.md
+-rw-r--r--  1 wyim p-wyim  14K Sep  8 08:28 intent.md.bak-20260908
+-rw-r--r--  1 wyim p-wyim  912 Sep  2 00:00 issue_numbers.json
+drwxr-xr-x  2 wyim p-wyim 4.0K Jul 29 06:53 issues
+-rw-r--r--  1 wyim p-wyim  49K Sep  2 00:00 issues_20260902.json
+-rw-r--r--  1 wyim p-wyim 7.4K Sep  2 16:18 kimi_a30_review_20260902.md
+-rw-r--r--  1 wyim p-wyim  29K Sep  3 01:19 kimi_merge50_20260903.md
+-rw-r--r--  1 wyim p-wyim  44K Jul 24 19:24 manuscript.md
+-rw-r--r--  1 wyim p-wyim  33K Jul 27 05:28 manuscript_v2.docx
+-rw-r--r--  1 wyim p-wyim  76K Sep  1 13:17 manuscript_v2.md
+-rw-r--r--  1 wyim p-wyim  51K Sep  1 14:10 manuscript_v3_plant_communications.docx
+-rw-r--r--  1 wyim p-wyim 108K Sep  1 14:10 manuscript_v3_plant_communications.md
+-rw-r--r--  1 wyim p-wyim  18K Sep  2 10:33 MASTER_PLAN_PC_20260901.md
+-rw-r--r--  1 wyim p-wyim 114K Aug 17 13:36 peer_review_report_20260817.docx
+-rw-r--r--  1 wyim p-wyim 231K Aug 17 13:36 peer_review_report_20260817.md
+drwxr-xr-x  6 wyim p-wyim 4.0K Aug 17 20:05 polishing_benchmark
+-rw-r--r--  1 wyim p-wyim  14K Aug  9 21:48 prompt_transfer_manuscript_insert.md
+-rw-r--r--  1 wyim p-wyim    0 Sep  2 16:39 proteome_extract_gpu_20260902.log
+-rwxr-xr-x  1 wyim p-wyim 4.7K Jul 29 02:14 publish_revision_to_github.sh
+drwxr-xr-x  3 wyim p-wyim 4.0K Aug  5 15:41 .pytest_cache
+-rw-r--r--  1 wyim p-wyim 397K Sep 10 11:16 quarantine.md
+-rw-r--r--  1 wyim p-wyim 368K Sep  7 18:41 quarantine.md.bak-20260907
+-rw-r--r--  1 wyim p-wyim  25K Jul 28 02:15 reference_restyle_report.txt
+-rw-r--r--  1 wyim p-wyim  17K Aug  4 21:48 references_plant_communications.md
+-rw-r--r--  1 wyim p-wyim  23K Sep  1 13:54 response_to_reviewers.docx
+-rw-r--r--  1 wyim p-wyim  30K Sep  1 13:54 response_to_reviewers.md
+-rw-r--r--  1 wyim p-wyim  18K Jul 29 11:40 resume.docx
+-rw-r--r--  1 wyim p-wyim 126K Sep 10 11:16 resume.md
+-rw-r--r--  1 wyim p-wyim  47K Sep  5 22:10 resume.md.autolog-bak
+-rw-r--r--  1 wyim p-wyim 259K Sep  1 12:18 resume.md.bak-20260901
+-rw-r--r--  1 wyim p-wyim 287K Sep  1 20:47 resume.md.bak-20260902
+-rw-r--r--  1 wyim p-wyim 290K Sep  2 10:46 resume.md.bak-20260902-1514
+-rw-r--r--  1 wyim p-wyim 288K Sep  3 01:12 resume.md.bak-20260903-0110
+-rw-r--r--  1 wyim p-wyim  29K Sep  3 13:38 resume.md.bak-20260903-1340
+-rw-r--r--  1 wyim p-wyim 354K Sep  3 00:14 resume.md.bak-20260903-preclear
+-rw-r--r--  1 wyim p-wyim 307K Sep  3 11:36 resume.md.bak-20260903-preruleout
+-rw-r--r--  1 wyim p-wyim  50K Sep  7 18:37 resume.md.bak-20260907
+-rw-r--r--  1 wyim p-wyim  54K Sep  8 08:27 resume.md.bak-20260908
+drwxr-xr-x  3 wyim p-wyim 4.0K Sep  7 19:04 RETIRED_DO_NOT_USE
+-rw-r--r--  1 wyim p-wyim  15K Jul 24 19:25 review.md
+-rw-r--r--  1 wyim p-wyim  15K Jul 26 03:21 revision_edit_guide.md
+-rw-r--r--  1 wyim p-wyim  11K Jul 26 03:05 revision_gap_analysis.md
+drwxrwxr-x  3 wyim p-wyim 4.0K Jan 26  2026 revision_old
+drwxr-xr-x  3 wyim p-wyim 4.0K Sep  3 01:34 scratch_merge
+drwxrwxr-x  7 wyim p-wyim 4.0K Sep  8 15:24 staging_HFmodels
+-rw-r--r--  1 wyim p-wyim  26K Aug  4 18:26 submission_checklist.docx
+-rw-r--r--  1 wyim p-wyim  29K Aug  4 18:26 submission_checklist.md
+drwxr-xr-x  2 wyim p-wyim 4.0K Sep  1 23:52 supplementary
+-rw-r--r--  1 wyim p-wyim 2.7K Aug  6 12:21 supplementary_table_legends_superseded.md
+-rw-r--r--  1 wyim p-wyim  15K Aug 10 13:08 supplementary_tables.docx
+-rw-r--r--  1 wyim p-wyim 8.1K Aug 10 13:08 supplementary_tables.md
+drwxr-xr-x  3 wyim p-wyim 4.0K Sep 14 17:31 tmp
+-rw-r--r--  1 wyim p-wyim  57K Sep 10 11:16 todo.md
+-rw-r--r--  1 wyim p-wyim  32K Sep  8 08:21 todo.md.bak-20260908
+drwxr-xr-x 11 wyim p-wyim 4.0K Sep  7 19:15 training_input
+-rw-r--r--  1 wyim p-wyim    0 Sep  2 16:35 transfer_gpu_genomes_20260902.log
+-rw-r--r--  1 wyim p-wyim 1.3K Sep  2 16:35 transfer_gpu_genomes.list
+drwxrwxr-x 21 wyim p-wyim 4.0K Sep  3 15:38 transgenic
+drwxrwxr-x 21 wyim p-wyim 4.0K Aug  6 18:56 transgenic_comparison
+drwxrwxr-x  4 wyim p-wyim 4.0K Jul 24 19:18 transgenic_logs
+drwxr-xr-x  5 wyim p-wyim 4.0K Jul 29 02:05 .venv-ssh
+drwxr-xr-x  7 wyim p-wyim 4.0K Sep 15 13:29 worktrees
+total 1.9M
+drwxr-xr-x 37 wyim p-wyim 8.0K Sep 23 17:21 .
+drwxrwxr-x 23 wyim p-wyim 8.0K Sep 14 17:31 ..
+-rw-r--r--  1 wyim p-wyim    0 Sep  3 12:55 ath_queue.log
+-rw-r--r--  1 wyim p-wyim    0 Sep  3 12:55 ath_queue.out
+-rw-r--r--  1 wyim p-wyim 2.1K Sep  3 12:54 ath_queue.tsv
+-rw-r--r--  1 wyim p-wyim    0 Sep  3 17:05 ath_retry_20260903.log
+-rw-r--r--  1 wyim p-wyim  490 Sep  3 17:05 ath_retry_20260903.tsv
+-rw-r--r--  1 wyim p-wyim  596 Sep  4 00:07 ath_retry_loop.log
+-rw-r--r--  1 wyim p-wyim    0 Sep  3 17:23 ath_retry_loop_r1.log
+-rw-r--r--  1 wyim p-wyim   32 Sep  3 23:00 ath_retry_loop_r2.log
+-rw-r--r--  1 wyim p-wyim   62 Sep  3 23:58 ath_retry_loop_r3.log
+lrwxrwxrwx  1 wyim p-wyim   91 Sep  3 23:51 ath_retry_loop.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/ath_retry_loop.sh
+drwxr-xr-x 12 wyim p-wyim 8.0K Sep 23 09:38 audit_align_v1
+drwxr-xr-x  9 wyim p-wyim 4.0K Sep 23 20:00 cage_v1
+-rw-r--r--  1 wyim p-wyim  457 Sep  3 13:23 DATASET_ROLES.est_v1.summary.json
+-rw-r--r--  1 wyim p-wyim 3.2K Sep  3 13:23 DATASET_ROLES.est_v1.tsv
+-rw-r--r--  1 wyim p-wyim  87K Sep 23 10:10 DATASET_ROLES.longread_v1.tsv
+-rw-r--r--  1 wyim p-wyim  62K Sep  4 13:27 DATASET_ROLES.longread_v1.tsv.bak-20260922-issue60
+-rw-r--r--  1 wyim p-wyim  85K Sep 22 13:56 DATASET_ROLES.longread_v1.tsv.bak-20260923-exclusions
+-rw-r--r--  1 wyim p-wyim  603 Sep  3 13:12 DATASET_ROLES.summary.json
+-rw-r--r--  1 wyim p-wyim  65K Sep  4 00:24 DATASET_ROLES.tsv
+-rw-r--r--  1 wyim p-wyim  54K Sep  3 16:27 DATASET_ROLES.tsv.bak-20260903-issue66
+drwxr-xr-x 14 wyim p-wyim 4.0K Sep 14 08:12 est
+drwxr-xr-x 12 wyim p-wyim 4.0K Sep  4 14:06 est_align
+drwxr-xr-x 12 wyim p-wyim 4.0K Sep  4 14:15 est_align_min121
+lrwxrwxrwx  1 wyim p-wyim   90 Sep  3 23:51 est_align.sbatch -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/est_align.sbatch
+drwxr-xr-x  5 wyim p-wyim 4.0K Sep 15 13:01 est_blastx
+drwxr-xr-x  7 wyim p-wyim 4.0K Sep 14 17:39 est_blastx_fixture
+drwxr-xr-x  5 wyim p-wyim 4.0K Sep 16 19:06 est_followup_20260916_1530
+drwxr-xr-x  3 wyim p-wyim 4.0K Sep 16 15:59 est_followup_20260916_1541
+drwx------  4 wyim p-wyim 4.0K Sep 17 14:40 est_real_sample_recovery_20260917_1438
+-rw-r--r--  1 wyim p-wyim  72K Sep  2 17:07 INPUT_INVENTORY_20260902_all.tsv
+-rw-r--r--  1 wyim p-wyim  31K Sep  2 17:07 INPUT_INVENTORY_20260902.md
+-rw-r--r--  1 wyim p-wyim  51K Sep  2 17:07 INPUT_INVENTORY_20260902.tsv
+-rw-r--r--  1 wyim p-wyim  82K Sep  3 00:21 INPUT_INVENTORY_20260903_all.tsv
+-rw-r--r--  1 wyim p-wyim  34K Sep  3 00:21 INPUT_INVENTORY_20260903.md
+-rw-r--r--  1 wyim p-wyim  60K Sep  3 00:21 INPUT_INVENTORY_20260903.tsv
+-rw-r--r--  1 wyim p-wyim  17K Sep  2 17:04 INPUT_INVENTORY_gpu_20260902.tsv
+lrwxrwxrwx  1 wyim p-wyim   95 Sep  3 23:51 longread_after_est.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/longread_after_est.sh
+drwxr-xr-x 11 wyim p-wyim 4.0K Sep 22 14:41 longread_align_v1
+lrwxrwxrwx  1 wyim p-wyim   91 Sep  3 23:51 longread_fetch.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/longread_fetch.sh
+-rwxr-xr-x  1 wyim p-wyim 2.4K Sep  2 00:05 longread_fetch.sh.bak-20260902
+-rwxr-xr-x  1 wyim p-wyim 3.9K Sep  3 16:01 longread_fetch.sh.bak-20260903-issue65
+-rwxr-xr-x  1 wyim p-wyim 4.9K Sep  3 17:57 longread_fetch.sh.bak-20260903-resume
+-rw-r--r--  1 wyim p-wyim  665 Sep  4 00:07 longread.log
+lrwxrwxrwx  1 wyim p-wyim   93 Sep  3 23:51 longread_run_all.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/longread_run_all.sh
+-rw-r--r--  1 wyim p-wyim 6.9K Sep 22 14:03 longread_runs_pacbio_v1.tsv
+-rw-r--r--  1 wyim p-wyim  18K Sep  4 14:16 longread_runs_v1.tsv
+-rw-r--r--  1 wyim p-wyim  16K Sep  2 17:06 make_input_inventory.py
+drwx------  5 wyim p-wyim 4.0K Sep 16 21:50 mvp50_input_audit_20260916
+drwx------  5 wyim p-wyim 4.0K Sep 16 22:01 mvp50_input_audit_20260916_bindfix1
+drwxr-xr-x  6 wyim p-wyim 4.0K Sep 17 00:40 mvp50_reference_map_20260916
+drwxr-xr-x  5 wyim p-wyim 4.0K Sep 15 16:47 mvp_full_20260915
+drwx------  3 wyim p-wyim 4.0K Sep 16 18:55 mvp_gffcompare_smoke_20260916
+drwx------  4 wyim p-wyim 4.0K Sep 16 21:40 mvp_ont_orientation_20260916_pilot
+drwxr-xr-x  2 wyim p-wyim 4.0K Sep 14 17:38 mvp_preflight_20260914
+drwxr-xr-x 11 wyim p-wyim 8.0K Sep 22 19:09 mvp_scoring_20260916
+drwxr-xr-x  3 wyim p-wyim 4.0K Sep 22 19:08 mvp_scoring_20260916_failed
+drwxr-xr-x  4 wyim p-wyim 4.0K Sep 22 18:58 mvp_scoring_release_ccs23_20260922
+drwxr-xr-x  4 wyim p-wyim 4.0K Sep 22 19:09 mvp_scoring_release_v2_20260922
+drwxr-xr-x  4 wyim p-wyim 4.0K Sep 15 13:32 mvp_smoke_20260915
+drwxr-xr-x  4 wyim p-wyim 4.0K Sep 15 13:39 mvp_smoke_20260915_retry01
+drwxr-xr-x  4 wyim p-wyim 4.0K Sep 15 13:59 mvp_smoke_20260915_retry02
+-rw-r--r--  1 wyim p-wyim    0 Sep  3 11:41 nip_pool_retry.out
+drwxr-xr-x  6 wyim p-wyim 4.0K Sep  5 16:17 ont
+-rw-r--r--  1 wyim p-wyim    0 Sep  3 11:53 ont_parallel.log
+-rw-r--r--  1 wyim p-wyim    0 Sep  3 11:56 ont_parallel.out
+lrwxrwxrwx  1 wyim p-wyim   89 Sep  3 23:51 ont_parallel.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/ont_parallel.sh
+-rw-r--r--  1 wyim p-wyim 1.5K Sep  3 11:52 ont_parallel.tsv
+drwxr-xr-x 10 wyim p-wyim 4.0K Sep  5 01:22 orientation_audit_v1
+drwxr-xr-x  7 wyim p-wyim 4.0K Sep  2 05:51 pacbio
+drwxr-xr-x  4 wyim p-wyim 4.0K Sep 14 11:22 protein
+drwxr-xr-x 13 wyim p-wyim 8.0K Sep  8 17:44 protein_alignments
+lrwxrwxrwx  1 wyim p-wyim   94 Sep  7 20:25 protein_align.sbatch -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/protein_align.sbatch
+-rw-r--r--  1 wyim p-wyim  19K Sep  1 17:07 PROTOCOL_B1_frozen_v1.md
+-rw-r--r--  1 wyim p-wyim 3.7K Sep  1 22:32 PROVENANCE_est.tsv
+drwxr-xr-x  2 wyim p-wyim 4.0K Sep  2 17:41 qc
+lrwxrwxrwx  1 wyim p-wyim   88 Sep  3 23:51 queue_fetch.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/queue_fetch.sh
+lrwxrwxrwx  1 wyim p-wyim  104 Sep  3 23:51 rerun_training_after_finish.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/rerun_training_after_finish.sh
+drwxr-xr-x  5 wyim p-wyim 4.0K Sep  4 13:12 RETIRED_DO_NOT_USE
+-rw-r--r--  1 wyim p-wyim 2.0K Sep  4 13:23 retrim_a37.log
+lrwxrwxrwx  1 wyim p-wyim   87 Sep  4 12:34 retrim_a37.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/retrim_a37.sh
+-rw-r--r--  1 wyim p-wyim  573 Sep  8 14:38 rsync_bundle.log
+-rw-r--r--  1 wyim p-wyim  574 Sep  8 14:59 rsync_gb10.log
+drwxr-xr-x  2 wyim p-wyim 4.0K Sep  2 17:52 splits
+-rw-r--r--  1 wyim p-wyim 199K Sep  2 17:24 swissprot_hard_masked_genes_20260902.tsv
+drwxr-xr-x  4 wyim p-wyim 4.0K Sep  4 00:20 training
+-rw-r--r--  1 wyim p-wyim   96 Sep  3 09:58 training_nohup.out
+-rw-r--r--  1 wyim p-wyim  208 Sep  3 07:06 training_ont_missing.out
+lrwxrwxrwx  1 wyim p-wyim   93 Sep  3 23:51 training_run_all.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/training_run_all.sh
+lrwxrwxrwx  1 wyim p-wyim  101 Sep  3 23:51 training_run_ont_missing.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/training_run_ont_missing.sh
+drwxr-xr-x  2 wyim p-wyim 4.0K Sep  3 14:20 univec
+lrwxrwxrwx  1 wyim p-wyim   94 Sep  3 23:51 update_provenance.sh -> /data/gpfs/assoc/pgl/data/Transgenic/transgenic/revision/scripts/evidence/update_provenance.sh

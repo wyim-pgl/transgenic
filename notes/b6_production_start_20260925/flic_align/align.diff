@@ -1,0 +1,123 @@
+--- /tmp/b6-integration/revision/scripts/evidence/longread_align.sbatch	2026-09-24 09:13:43.521181941 -0700
++++ flic_longread_align.sbatch	2026-09-25 23:23:37.075212800 -0700
+@@ -1,12 +1,21 @@
+ #!/usr/bin/env bash
+-#SBATCH --job-name=lr_align
++#SBATCH --job-name=flic_lr_align
+ #SBATCH --account=cpu-s1-pgl-0
+ #SBATCH --partition=cpu-s1-pgl-0
+ #SBATCH --cpus-per-task=32
+ #SBATCH --mem=96G
+ #SBATCH --time=1-00:00:00
+ #SBATCH --output=/data/gpfs/assoc/pgl/data/Transgenic/evidence/longread_align_v1/logs/%x_%A_%a.out
+-#SBATCH --array=0-128%3
++#SBATCH --array=0-2
++#
++# FLIC SEPARATE DRIVER (author decision 2026-09-25). A copy of revision/scripts/evidence/
++# longread_align.sbatch (md5 73446f9bacb7ad3b235b2dfe5b478272) that differs ONLY in which runs it
++# accepts: exactly SRR28341943/44/45 of ont/Athaliana_FLIC_PRJNA1087576, each with exactly one
++# DATASET_ROLES row, b1_validation_only. Commands, -uf gate, key, DONE and PROVENANCE layout are the
++# production script's; the central PROVENANCE.tsv scope is longread_validation_evidence (these runs
++# are not training evidence). The audit it reads must come from flic_orientation_audit.sbatch, and it
++# never writes into an output directory it did not create (.driver sentinel, exit 7).
++# Submit with --dependency=aftercorr:<flic_orient_audit job id> so task i waits for audit task i.
+ #
+ # ONT long-read -> genome spliced alignment. Protocol B1 §4 (frozen command) + §3.3 + A18.3.
+ #
+@@ -48,18 +57,27 @@
+ PY=/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python
+ MANIFEST=$ROOT/transgenic/data/manifests/b5_species_v1.tsv
+ ROLES=$ROOT/evidence/DATASET_ROLES.longread_v1.tsv
+-RUNS=$ROOT/evidence/longread_runs_v1.tsv
++DRIVER="driver=flic_separate (author decision 2026-09-25)"
++FLIC_DS=ont/Athaliana_FLIC_PRJNA1087576
++FLIC_RUNS=(SRR28341943 SRR28341944 SRR28341945)
+ AUDITROOT=$ROOT/evidence/orientation_audit_v1
+ OUTROOT=$ROOT/evidence/longread_align_v1
+ THREADS=${SLURM_CPUS_PER_TASK:-32}
+ 
+-read -r SP DS RUN FA < <(awk -F'\t' -v i="$((SLURM_ARRAY_TASK_ID + 1))" 'NR==i' "$RUNS")
+-[ -n "${RUN:-}" ] || { echo "REFUSED: no run at index $SLURM_ARRAY_TASK_ID in $RUNS" >&2; exit 2; }
++case "${SLURM_ARRAY_TASK_ID:-}" in
++  0|1|2) ;;
++  *) echo "REFUSED: array index '${SLURM_ARRAY_TASK_ID:-}' is not 0-2 (the 3 FLIC runs)" >&2; exit 2;;
++esac
++SP=Athaliana; DS=$FLIC_DS; RUN=${FLIC_RUNS[$SLURM_ARRAY_TASK_ID]}; FA=evidence/$DS/$RUN.fa.gz
+ FA=$ROOT/$FA
+ DSBASE=$(basename "$DS")
+ OUT=$OUTROOT/$SP/$DSBASE/$RUN
+ AUDIT=$AUDITROOT/$SP/$DSBASE/$RUN
++if [ -e "$OUT" ] && [ "$(cat "$OUT/.driver" 2>/dev/null)" != "$DRIVER" ]; then
++  echo "REFUSED: $OUT exists and was not created by this driver; will not overwrite" >&2; exit 7
++fi
+ mkdir -p "$OUT" "$OUTROOT/logs"
++[ -e "$OUT/.driver" ] || printf '%s\n' "$DRIVER" > "$OUT/.driver"
+ BAM=$OUT/$RUN.bam
+ PAF=$OUT/$RUN.paf.gz
+ PROV=$OUT/PROVENANCE.txt
+@@ -67,8 +85,11 @@
+ 
+ # --- Gate 1: A18.3 role, by RUN IDENTITY (three Cui 2020 runs exist under two paths; the copy
+ #     under training/ont/ is the `excluded` duplicate, so a path lookup drops training evidence) ---
+-n_eli=$(awk -F'\t' -v r="$RUN" '$2==r && $12=="c2_training_eligible"' "$ROLES" | wc -l)
+-[ "$n_eli" -eq 1 ] || { echo "REFUSED: $RUN has $n_eli c2_training_eligible rows, expected exactly 1" >&2; exit 2; }
++# FLIC: exactly one row for the run in total, and it is b1_validation_only for this dataset/species.
++n_val=$(awk -F'\t' -v d="$DS" -v r="$RUN" -v s="$SP" '$1==d && $2==r && $3==s && $12=="b1_validation_only"' "$ROLES" | wc -l)
++n_all=$(awk -F'\t' -v r="$RUN" '$2==r' "$ROLES" | wc -l)
++{ [ "$n_val" -eq 1 ] && [ "$n_all" -eq 1 ]; } \
++  || { echo "REFUSED: $RUN has $n_val b1_validation_only rows and $n_all rows in total, expected exactly 1 and 1" >&2; exit 2; }
+ 
+ REF=$(awk -F'\t' -v s="$SP" '$1==s{print $4}' "$MANIFEST")
+ GFF=$(awk -F'\t' -v s="$SP" '$1==s{print $6}' "$MANIFEST")
+@@ -89,6 +110,8 @@
+ # --- Gate 3: §3.3 item 2 verdict. No audit, no alignment. ---
+ [ -s "$AUDIT/DONE" ] && [ -s "$AUDIT/audit.json" ] \
+   || { echo "REFUSED: $RUN has no §3.3 orientation audit at $AUDIT" >&2; exit 5; }
++[ "$(cat "$AUDIT/.driver" 2>/dev/null)" = "$DRIVER" ] \
++  || { echo "REFUSED: $RUN audit at $AUDIT was not written by flic_orientation_audit.sbatch" >&2; exit 5; }
+ # The audit's key names the data it measured AND the scorer that measured it (A39). This driver
+ # checks the data part - it must be the objects we are about to align - and records the scorer,
+ # but does not pin a scorer md5: that would couple the aligner to a version number instead of to a
+@@ -200,7 +223,7 @@
+   echo "run            $RUN"
+   echo "species        $SP"
+   echo "dataset        $DS"
+-  echo "role           c2_training_eligible   (by run identity in $(basename "$ROLES"), md5 $(md5sum "$ROLES" | cut -d' ' -f1))"
++  echo "role           b1_validation_only   (by run identity in $(basename "$ROLES"), md5 $(md5sum "$ROLES" | cut -d' ' -f1))"
+   echo "reads          $FA"
+   echo "reads_md5      $FA_MD5"
+   echo "reference      $REF"
+@@ -216,6 +239,7 @@
+   echo "minimap2       $("$BIN"/minimap2 --version)"
+   echo "samtools       $("$BIN"/samtools --version | head -1)"
+   echo "command        $CMD"
++  echo "$DRIVER"
+   echo "started        $START"
+   echo "finished       $(date -Is)"
+   echo "wall_seconds   $SECONDS"
+@@ -235,14 +259,14 @@
+   [ -s "$PROVTSV" ] || printf "date\tscope\tspecies\tinput\tinput_md5\treference\treference_md5\ttool\tcommand\toutput\toutput_md5\tnote\n" > "$PROVTSV"
+   # A task that was killed after appending and before writing DONE will run again. Without this
+   # the central table grows a second row for the same run and key, and nothing says which is live.
+-  if grep -qF "	longread_training_evidence	" "$PROVTSV" 2>/dev/null \
++  if grep -qF "	longread_validation_evidence	" "$PROVTSV" 2>/dev/null \
+      && grep -qF "run $RUN; " "$PROVTSV" 2>/dev/null; then
+     grep -vF "run $RUN; " "$PROVTSV" > "$PROVTSV.tmp" && mv "$PROVTSV.tmp" "$PROVTSV"
+   fi
+-  printf "%s\tlongread_training_evidence\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
++  printf "%s\tlongread_validation_evidence\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+     "$(date -Is)" "$SP" "$FA" "$FA_MD5" "$REF" "$REF_MD5" "$("$BIN"/minimap2 --version)" "$CMD" \
+     "$BAM;$PAF" "$(md5sum "$BAM" | cut -d' ' -f1);$(md5sum "$PAF" | cut -d' ' -f1)" \
+-    "run $RUN; $UFNOTE agreement $FRAC -> ${UF:-no -uf}; audit md5 $AUDIT_MD5; UMI unknown, counts are reads" \
++    "run $RUN; $UFNOTE agreement $FRAC -> ${UF:-no -uf}; audit md5 $AUDIT_MD5; UMI unknown, counts are reads; role b1_validation_only; $DRIVER" \
+     >> "$PROVTSV"
+ } 9>"$PROVTSV.lock" || { echo "REFUSED: could not append central provenance for $RUN" >&2; exit 4; }
+ grep -qF "run $RUN; " "$PROVTSV" || { echo "REFUSED: central provenance row for $RUN is not present after the append" >&2; exit 4; }
+@@ -254,6 +278,7 @@
+   printf 'audit_status=%s\n' "$STATUS"
+   printf 'bam_md5=%s\n' "$(md5sum "$BAM" | cut -d' ' -f1)"
+   printf 'paf_md5=%s\n' "$(md5sum "$PAF" | cut -d' ' -f1)"
++  printf '%s\n' "$DRIVER"
+   printf 'completed=%s\n' "$(date -Is)"
+ } > "$DONE.tmp" || { echo "REFUSED: could not write the completion marker for $RUN" >&2; exit 4; }
+ mv "$DONE.tmp" "$DONE" || { echo "REFUSED: could not install the completion marker for $RUN" >&2; exit 4; }

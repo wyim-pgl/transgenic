@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_deployment/prepare_controller.py", line 100, in <module>
+    main()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_deployment/prepare_controller.py", line 93, in main
+    receipt = prepare(args.release, args.ledger_sha, args.launcher_sha, args.batch_sha,
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_deployment/prepare_controller.py", line 53, in prepare
+    raise FileExistsError(str(namespace))
+FileExistsError: /mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_evidence/single-use-reservation

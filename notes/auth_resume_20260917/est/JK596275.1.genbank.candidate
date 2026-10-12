@@ -1,0 +1,67 @@
+LOCUS       JK596275                 648 bp    mRNA    linear   EST 06-OCT-2011
+DEFINITION  CFGZ9178.g1 CFGZ Setaria italica Yugu1 floral spike Setaria italica
+            cDNA clone CFGZ9178 3', mRNA sequence.
+ACCESSION   JK596275
+VERSION     JK596275.1
+DBLINK      BioSample: SAMN00736318
+KEYWORDS    EST.
+SOURCE      Setaria italica (foxtail millet)
+  ORGANISM  Setaria italica
+            Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;
+            Spermatophyta; Magnoliopsida; Liliopsida; Poales; Poaceae; PACMAD
+            clade; Panicoideae; Panicodae; Paniceae; Cenchrinae; Setaria.
+REFERENCE   1  (bases 1 to 648)
+  AUTHORS   Bennetzen,J., Devos,K. and Percifield,R.
+  TITLE     DOE Joint Genome Institute Setaria italica EST project
+  JOURNAL   Unpublished
+COMMENT     Contact: Lindquist,E.A.
+            DOE Joint Genome Institute
+            2800 Mitchell Drive, Walnut Creek, CA 94598, USA
+            Tel: 925 296 5600
+            Fax: 925 296 5710
+            Email: cdna@jgi-psf.org
+            cDNA Library Preparation: DOE Joint Genome Institute:
+            http://www.jgi.doe.gov cDNA Library Arrayed by: DOE Joint Genome
+            Institute: http://www.jgi.doe.gov DNA Sequencing: DOE Joint Genome
+            Institute http://www.jgi.doe.gov Clone Distribution: For inquiries
+            regarding access to clones: Jeff Bennetzen (Maize@uga.edu)
+            Plate: CFGZ 0093  row: D  column: 16.
+FEATURES             Location/Qualifiers
+     source          1..648
+                     /organism="Setaria italica"
+                     /mol_type="mRNA"
+                     /strain="Yugu1"
+                     /db_xref="taxon:4555"
+                     /clone="CFGZ9178"
+                     /tissue_type="floral spike"
+                     /clone_lib="SAMN00736318 CFGZ Setaria italica Yugu1 floral
+                     spike"
+                     /lab_host="DH10B TonA"
+                     /note="Vector: pDNR-LIB; Site_1: SfiI (A); Site_2: SfiI
+                     (B); The library was made from oligo(dT)-primed cDNA and
+                     cloned into vector pDNR-LIB (Clontech Laboratories, Inc.,
+                     Mountain View, CA) using the SMART system (BD Biosciences,
+                     San Jose, CA). To generate the first strand, polyA RNA was
+                     primed with an oligo(dT) primer
+                     (5'-ATTCTAGAGGCCGAGGCGGCCGACATG(T)30 VN-3', where V = A,
+                     G, or C). The second strand was synthesized by PCR using
+                     primer 5'-AAGCAGTGGTATCAACGCAGAGTGGCCATTACGGCCGGG-3'
+                     followed by digestion of the SfiI sites. cDNA was size
+                     selected >2kb using 1.1% agarose gel electrophoresis, then
+                     ligated into pDNR-LIB. Library is normalized. Library was
+                     created and sequencing performed by the DOE Joint Genome
+                     Institute (Walnut Creek, CA)."
+ORIGIN      
+        1 attgagtaaa aagttatctc tttcatccaa ataaaaatgc tccaactgtt attccatatt
+       61 gtacataata ggattatagg aatgtcattt acagtcattt ccgatcacta ggcaccccta
+      121 tatttagcaa aaagggaaaa agaaaccgca taataacgat ggcgcgctac cgtctcttcc
+      181 cttcccatca taataataag agaacaacaa caaataaata cattcgcata taggccagtg
+      241 agggagtgag tccctcccgg tagtatcaca caagattttg ccggagcagt ggctgcacct
+      301 caccaccgga gtcagcagca ttcccgtcct gtgccttcca taagttaatg aagaagccat
+      361 cctgctttag acgctgctgc tctgacttgg gagtcgaaat ggaatcggcc gagtcccctg
+      421 atgcccgtga tgccagcttc aatgcacttg aagatgaatt atgcacatgc tgtaggcata
+      481 cttgcatggc atcatgcact cgcacgaagc accacccatc acctatcaag tcaatgatgc
+      541 ctgatctaga cagcagcagg cgcacctgcc ggtttgggtt cgctatggca atctgaatat
+      601 gacgtgcttt gtattcttgg tgcaagtctt taagagcttg aacagcac
+//
+

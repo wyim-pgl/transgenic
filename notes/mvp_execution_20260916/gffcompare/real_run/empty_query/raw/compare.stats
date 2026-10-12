@@ -1,0 +1,11 @@
+# gffcompare v0.12.6 | Command line was:
+#/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare -r /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/empty_query/reference.gtf -o /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/empty_query/raw/compare /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/empty_query/predicted.gtf
+#
+
+#= Summary for dataset: /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/empty_query/predicted.gtf 
+#     Query mRNAs :       0 in       0 loci  (0 multi-exon transcripts)
+#            (0 multi-transcript loci, ~-nan transcripts per locus)
+# Reference mRNAs :       1 in       1 loci  (1 multi-exon)
+
+ Total union super-loci across all input datasets: 0 
+0 out of 0 consensus transcripts written in /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp_gffcompare_smoke_20260916/run/empty_query/raw/compare.annotated.gtf (0 discarded as redundant)

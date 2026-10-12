@@ -1,0 +1,23 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T16:32:05-0700
+
+Number of files: 1 (reg: 1)
+Number of created files: 1 (reg: 1)
+Number of deleted files: 0
+Number of regular files transferred: 1
+Total file size: 1,068,773,376 bytes
+Total transferred file size: 1,068,773,376 bytes
+Literal data: 1,068,773,376 bytes
+Matched data: 0 bytes
+File list size: 0
+File list generation time: 0.001 seconds
+File list transfer time: 0.000 seconds
+Total bytes sent: 1,069,034,398
+Total bytes received: 35
+
+sent 1,069,034,398 bytes  received 35 bytes  41,922,918.94 bytes/sec
+total size is 1,068,773,376  speedup is 1.00
+/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/evidence/fullc0lite.db 1068773376 bytes 2026-09-15 18:47:32.000000000 -0500
+2026-09-16T16:32:32-0700

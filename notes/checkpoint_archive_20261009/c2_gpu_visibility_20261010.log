@@ -1,0 +1,18 @@
+CUDA_VISIBLE_DEVICES=0,1,2
+GPU 0: NVIDIA GH200 120GB (UUID: GPU-2b570a44-18e2-6316-35f9-d6fc4b60b32a)
+GPU 1: NVIDIA GH200 120GB (UUID: GPU-6e95f486-4224-1fe4-bba2-c6c5ef04553f)
+GPU 2: NVIDIA GH200 120GB (UUID: GPU-c9c5a8bd-abd9-0189-27f5-e0f709accf3c)
+0, GPU-2b570a44-18e2-6316-35f9-d6fc4b60b32a, 39533 MiB, 100 %
+1, GPU-6e95f486-4224-1fe4-bba2-c6c5ef04553f, 39649 MiB, 100 %
+2, GPU-c9c5a8bd-abd9-0189-27f5-e0f709accf3c, 39295 MiB, 100 %
+1217585, GPU-2b570a44-18e2-6316-35f9-d6fc4b60b32a, 39524 MiB
+1217586, GPU-6e95f486-4224-1fe4-bba2-c6c5ef04553f, 39640 MiB
+1217587, GPU-c9c5a8bd-abd9-0189-27f5-e0f709accf3c, 39286 MiB
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

@@ -1,0 +1,705 @@
+{
+  "utc": "2026-09-17T23:04:16.171273Z",
+  "records": [
+    {
+      "action": "list",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx",
+      "size": 4096,
+      "mtime_ns": 1789502484982743000,
+      "entries": [
+        {
+          "name": "preflight_20260914",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "remaining8_20260915",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "sitalica_pilot_20260914",
+          "size": 4096,
+          "directory": true
+        }
+      ]
+    },
+    {
+      "action": "list",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica",
+      "size": 4096,
+      "mtime_ns": 1788470508690707000,
+      "entries": [
+        {
+          "name": "COUNT",
+          "size": 6,
+          "directory": false
+        },
+        {
+          "name": "DONE",
+          "size": 0,
+          "directory": false
+        },
+        {
+          "name": "REPAIRED",
+          "size": 84,
+          "directory": false
+        },
+        {
+          "name": "TOTAL",
+          "size": 6,
+          "directory": false
+        },
+        {
+          "name": "esearch.xml",
+          "size": 755,
+          "directory": false
+        },
+        {
+          "name": "esearch_repair.xml",
+          "size": 755,
+          "directory": false
+        },
+        {
+          "name": "est.fa.gz",
+          "size": 15232163,
+          "directory": false
+        },
+        {
+          "name": "est.fa.gz.md5",
+          "size": 44,
+          "directory": false
+        },
+        {
+          "name": "est.fa.gz.orig",
+          "size": 13225906,
+          "directory": false
+        },
+        {
+          "name": "log",
+          "size": 1250,
+          "directory": false
+        },
+        {
+          "name": "querykey",
+          "size": 2,
+          "directory": false
+        },
+        {
+          "name": "repair.fa.gz",
+          "size": 2125,
+          "directory": false
+        },
+        {
+          "name": "retstart",
+          "size": 6,
+          "directory": false
+        },
+        {
+          "name": "rmdup.err",
+          "size": 40,
+          "directory": false
+        },
+        {
+          "name": "univec",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "webenv",
+          "size": 30,
+          "directory": false
+        }
+      ]
+    },
+    {
+      "action": "list",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Athaliana",
+      "size": 4096,
+      "mtime_ns": 1788470623071588000,
+      "entries": [
+        {
+          "name": "COUNT",
+          "size": 8,
+          "directory": false
+        },
+        {
+          "name": "DONE",
+          "size": 0,
+          "directory": false
+        },
+        {
+          "name": "REPAIRED",
+          "size": 108,
+          "directory": false
+        },
+        {
+          "name": "TOTAL",
+          "size": 8,
+          "directory": false
+        },
+        {
+          "name": "esearch.xml",
+          "size": 758,
+          "directory": false
+        },
+        {
+          "name": "esearch_repair.xml",
+          "size": 758,
+          "directory": false
+        },
+        {
+          "name": "est.fa.gz",
+          "size": 149700308,
+          "directory": false
+        },
+        {
+          "name": "est.fa.gz.md5",
+          "size": 44,
+          "directory": false
+        },
+        {
+          "name": "est.fa.gz.orig",
+          "size": 119136673,
+          "directory": false
+        },
+        {
+          "name": "log",
+          "size": 9048,
+          "directory": false
+        },
+        {
+          "name": "querykey",
+          "size": 2,
+          "directory": false
+        },
+        {
+          "name": "repair.fa.gz",
+          "size": 875356,
+          "directory": false
+        },
+        {
+          "name": "retstart",
+          "size": 8,
+          "directory": false
+        },
+        {
+          "name": "rmdup.err",
+          "size": 43,
+          "directory": false
+        },
+        {
+          "name": "univec",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "webenv",
+          "size": 30,
+          "directory": false
+        }
+      ]
+    },
+    {
+      "action": "list",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica",
+      "size": 4096,
+      "mtime_ns": 1788977096401852000,
+      "entries": [
+        {
+          "name": ".index.lock",
+          "size": 0,
+          "directory": false
+        },
+        {
+          "name": "DONE",
+          "size": 220,
+          "directory": false
+        },
+        {
+          "name": "PROVENANCE.txt",
+          "size": 1995,
+          "directory": false
+        },
+        {
+          "name": "Sitalica.mpi",
+          "size": 1122836803,
+          "directory": false
+        },
+        {
+          "name": "Sitalica.protein.gff.gz",
+          "size": 9647215761,
+          "directory": false
+        },
+        {
+          "name": "accept",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "accept_v1_ambiguous_leak",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "chunks",
+          "size": 8192,
+          "directory": true
+        },
+        {
+          "name": "miniprot.err",
+          "size": 10180,
+          "directory": false
+        },
+        {
+          "name": "miniprot.index.err",
+          "size": 690,
+          "directory": false
+        }
+      ]
+    },
+    {
+      "action": "list",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence",
+      "size": 8192,
+      "mtime_ns": 1789681162828161000,
+      "entries": [
+        {
+          "name": "DATASET_ROLES.est_v1.summary.json",
+          "size": 457,
+          "directory": false
+        },
+        {
+          "name": "DATASET_ROLES.est_v1.tsv",
+          "size": 3252,
+          "directory": false
+        },
+        {
+          "name": "DATASET_ROLES.longread_v1.tsv",
+          "size": 62511,
+          "directory": false
+        },
+        {
+          "name": "DATASET_ROLES.summary.json",
+          "size": 603,
+          "directory": false
+        },
+        {
+          "name": "DATASET_ROLES.tsv",
+          "size": 66129,
+          "directory": false
+        },
+        {
+          "name": "DATASET_ROLES.tsv.bak-20260903-issue66",
+          "size": 54823,
+          "directory": false
+        },
+        {
+          "name": "INPUT_INVENTORY_20260902.md",
+          "size": 31396,
+          "directory": false
+        },
+        {
+          "name": "INPUT_INVENTORY_20260902.tsv",
+          "size": 51263,
+          "directory": false
+        },
+        {
+          "name": "INPUT_INVENTORY_20260902_all.tsv",
+          "size": 73703,
+          "directory": false
+        },
+        {
+          "name": "INPUT_INVENTORY_20260903.md",
+          "size": 34166,
+          "directory": false
+        },
+        {
+          "name": "INPUT_INVENTORY_20260903.tsv",
+          "size": 60684,
+          "directory": false
+        },
+        {
+          "name": "INPUT_INVENTORY_20260903_all.tsv",
+          "size": 83394,
+          "directory": false
+        },
+        {
+          "name": "INPUT_INVENTORY_gpu_20260902.tsv",
+          "size": 16582,
+          "directory": false
+        },
+        {
+          "name": "PROTOCOL_B1_frozen_v1.md",
+          "size": 18589,
+          "directory": false
+        },
+        {
+          "name": "PROVENANCE_est.tsv",
+          "size": 3736,
+          "directory": false
+        },
+        {
+          "name": "RETIRED_DO_NOT_USE",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "ath_queue.log",
+          "size": 0,
+          "directory": false
+        },
+        {
+          "name": "ath_queue.out",
+          "size": 0,
+          "directory": false
+        },
+        {
+          "name": "ath_queue.tsv",
+          "size": 2139,
+          "directory": false
+        },
+        {
+          "name": "ath_retry_20260903.log",
+          "size": 0,
+          "directory": false
+        },
+        {
+          "name": "ath_retry_20260903.tsv",
+          "size": 490,
+          "directory": false
+        },
+        {
+          "name": "ath_retry_loop.log",
+          "size": 596,
+          "directory": false
+        },
+        {
+          "name": "ath_retry_loop.sh",
+          "size": 91,
+          "directory": false
+        },
+        {
+          "name": "ath_retry_loop_r1.log",
+          "size": 0,
+          "directory": false
+        },
+        {
+          "name": "ath_retry_loop_r2.log",
+          "size": 32,
+          "directory": false
+        },
+        {
+          "name": "ath_retry_loop_r3.log",
+          "size": 62,
+          "directory": false
+        },
+        {
+          "name": "est",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "est_align",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "est_align.sbatch",
+          "size": 90,
+          "directory": false
+        },
+        {
+          "name": "est_align_min121",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "est_blastx",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "est_blastx_fixture",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "est_followup_20260916_1530",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "est_followup_20260916_1541",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "est_real_sample_recovery_20260917_1438",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "longread.log",
+          "size": 665,
+          "directory": false
+        },
+        {
+          "name": "longread_after_est.sh",
+          "size": 95,
+          "directory": false
+        },
+        {
+          "name": "longread_align_v1",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "longread_fetch.sh",
+          "size": 91,
+          "directory": false
+        },
+        {
+          "name": "longread_fetch.sh.bak-20260902",
+          "size": 2446,
+          "directory": false
+        },
+        {
+          "name": "longread_fetch.sh.bak-20260903-issue65",
+          "size": 3972,
+          "directory": false
+        },
+        {
+          "name": "longread_fetch.sh.bak-20260903-resume",
+          "size": 4987,
+          "directory": false
+        },
+        {
+          "name": "longread_run_all.sh",
+          "size": 93,
+          "directory": false
+        },
+        {
+          "name": "longread_runs_v1.tsv",
+          "size": 17988,
+          "directory": false
+        },
+        {
+          "name": "make_input_inventory.py",
+          "size": 16054,
+          "directory": false
+        },
+        {
+          "name": "mvp50_input_audit_20260916",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "mvp50_input_audit_20260916_bindfix1",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "mvp50_reference_map_20260916",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "mvp_full_20260915",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "mvp_gffcompare_smoke_20260916",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "mvp_ont_orientation_20260916_pilot",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "mvp_preflight_20260914",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "mvp_smoke_20260915",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "mvp_smoke_20260915_retry01",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "mvp_smoke_20260915_retry02",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "nip_pool_retry.out",
+          "size": 0,
+          "directory": false
+        },
+        {
+          "name": "ont",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "ont_parallel.log",
+          "size": 0,
+          "directory": false
+        },
+        {
+          "name": "ont_parallel.out",
+          "size": 0,
+          "directory": false
+        },
+        {
+          "name": "ont_parallel.sh",
+          "size": 89,
+          "directory": false
+        },
+        {
+          "name": "ont_parallel.tsv",
+          "size": 1528,
+          "directory": false
+        },
+        {
+          "name": "orientation_audit_v1",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "pacbio",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "protein",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "protein_align.sbatch",
+          "size": 94,
+          "directory": false
+        },
+        {
+          "name": "protein_alignments",
+          "size": 8192,
+          "directory": true
+        },
+        {
+          "name": "qc",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "queue_fetch.sh",
+          "size": 88,
+          "directory": false
+        },
+        {
+          "name": "rerun_training_after_finish.sh",
+          "size": 104,
+          "directory": false
+        },
+        {
+          "name": "retrim_a37.log",
+          "size": 1984,
+          "directory": false
+        },
+        {
+          "name": "retrim_a37.sh",
+          "size": 87,
+          "directory": false
+        },
+        {
+          "name": "rsync_bundle.log",
+          "size": 573,
+          "directory": false
+        },
+        {
+          "name": "rsync_gb10.log",
+          "size": 574,
+          "directory": false
+        },
+        {
+          "name": "splits",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "swissprot_hard_masked_genes_20260902.tsv",
+          "size": 202801,
+          "directory": false
+        },
+        {
+          "name": "training",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "training_nohup.out",
+          "size": 96,
+          "directory": false
+        },
+        {
+          "name": "training_ont_missing.out",
+          "size": 208,
+          "directory": false
+        },
+        {
+          "name": "training_run_all.sh",
+          "size": 93,
+          "directory": false
+        },
+        {
+          "name": "training_run_ont_missing.sh",
+          "size": 101,
+          "directory": false
+        },
+        {
+          "name": "univec",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "update_provenance.sh",
+          "size": 94,
+          "directory": false
+        }
+      ]
+    },
+    {
+      "action": "read",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv",
+      "size": 3252,
+      "mtime_ns": 1788467023863359000,
+      "sha256": "946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2",
+      "text": "dataset\trun\tspecies\tgenotype_stratum\tinstrument\tdata_type\texpected_files\texpected_reads\tsource_checksum\tsource_checksum_authority\tlocal_fa_md5\trole\tbasis\tnote\nest/Slycopersicum\test.fa.gz\tSlycopersicum\tunknown\tGenBank_EST\tEST\t1\t301030\t\tnone\t7fa0193a8b23950df04b9a1459b271b0\tb1_validation_only\tA14: EST of the training species is training evidence; test-species EST is validation only\tnot stated; GenBank efetch publishes no per-batch checksum\nest/Zmays\test.fa.gz\tZmays\tunknown\tGenBank_EST\tEST\t1\t2019959\t\tnone\t39666be2971826122a671873fadff581\tb1_validation_only\tA14: EST of the training species is training evidence; test-species EST is validation only\tnot stated; GenBank efetch publishes no per-batch checksum\nest/Athaliana\test.fa.gz\tAthaliana\treference\tGenBank_EST\tEST\t1\t1529700\t\tnone\t3d87af2e533b1f97f066a889204f4289\tc2_training_eligible\tA14: EST of the training species is training evidence; test-species EST is validation only\tGenBank gbdiv_est, predominantly Col-0; not resolvable per accession; GenBank efetch publishes no per-batch checksum\nest/Bdistachyon\test.fa.gz\tBdistachyon\tunknown\tGenBank_EST\tEST\t1\t206255\t\tnone\t2cababa206f8e719876b6baaccb32141\tc2_training_eligible\tA14: EST of the training species is training evidence; test-species EST is validation only\tnot stated; GenBank efetch publishes no per-batch checksum\nest/Gmax\test.fa.gz\tGmax\tunknown\tGenBank_EST\tEST\t1\t1461724\t\tnone\t6076177af598f4a2a9d808a5d704dc4b\tc2_training_eligible\tA14: EST of the training species is training evidence; test-species EST is validation only\tnot stated; GenBank efetch publishes no per-batch checksum\nest/Osativa\test.fa.gz\tOsativa\tunknown\tGenBank_EST\tEST\t1\t1255251\t\tnone\t44df407bdda732fdf2fadbc509b5f92c\tc2_training_eligible\tA14: EST of the training species is training evidence; test-species EST is validation only\tnot stated; GenBank efetch publishes no per-batch checksum\nest/Ppatens\test.fa.gz\tPpatens\tunknown\tGenBank_EST\tEST\t1\t382587\t\tnone\t90bb6791d7d2c4a2208d12d8e08d2a01\tc2_training_eligible\tA14: EST of the training species is training evidence; test-species EST is validation only\tnot stated; GenBank efetch publishes no per-batch checksum\nest/Ptrichocarpa\test.fa.gz\tPtrichocarpa\tunknown\tGenBank_EST\tEST\t1\t89943\t\tnone\t0e09ea7d065a93a8703e51523c99b8f2\tc2_training_eligible\tA14: EST of the training species is training evidence; test-species EST is validation only\tnot stated; GenBank efetch publishes no per-batch checksum\nest/Sbicolor\test.fa.gz\tSbicolor\tunknown\tGenBank_EST\tEST\t1\t209835\t\tnone\t9f19ce9f511477b5b4488c4f8892638d\tc2_training_eligible\tA14: EST of the training species is training evidence; test-species EST is validation only\tnot stated; GenBank efetch publishes no per-batch checksum\nest/Sitalica\test.fa.gz\tSitalica\tunknown\tGenBank_EST\tEST\t1\t66027\t\tnone\t4b0f262bc3a0a72f9e290035ac3c67ff\tc2_training_eligible\tA14: EST of the training species is training evidence; test-species EST is validation only\tnot stated; GenBank efetch publishes no per-batch checksum\nest/Vvinifera\test.fa.gz\tVvinifera\tunknown\tGenBank_EST\tEST\t1\t446853\t\tnone\tf4fd8bfd7a4dda1057369880ba36f7fc\tc2_training_eligible\tA14: EST of the training species is training evidence; test-species EST is validation only\tnot stated; GenBank efetch publishes no per-batch checksum\n"
+    },
+    {
+      "action": "read",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/PROVENANCE_est.tsv",
+      "size": 3736,
+      "mtime_ns": 1788327179319570715,
+      "sha256": "c9b68c9b3747f854392d4c064c072cbb4d2dc17b77d134acb9c97e4983c76a2d",
+      "text": "date\tsource\tspecies\ttaxid\tquery\tcount_at_download\trecords_on_disk\tmd5\tstatus\tnote\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tZmays\t4577\ttxid4577[Organism] AND gbdiv_est[PROP]\t2019959\t2019959\t39666be2971826122a671873fadff581\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tAthaliana\t3702\ttxid3702[Organism] AND gbdiv_est[PROP]\t1529700\t1529700\t3d87af2e533b1f97f066a889204f4289\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tGmax\t3847\ttxid3847[Organism] AND gbdiv_est[PROP]\t1461724\t1461724\t6076177af598f4a2a9d808a5d704dc4b\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tPtrichocarpa\t3694\ttxid3694[Organism] AND gbdiv_est[PROP]\t89943\t89943\t0e09ea7d065a93a8703e51523c99b8f2\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tBdistachyon\t15368\ttxid15368[Organism] AND gbdiv_est[PROP]\t206255\t206255\t2cababa206f8e719876b6baaccb32141\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tSitalica\t4555\ttxid4555[Organism] AND gbdiv_est[PROP]\t66027\t66027\t4b0f262bc3a0a72f9e290035ac3c67ff\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tOsativa\t4530\ttxid4530[Organism] AND gbdiv_est[PROP]\t1255251\t1255251\t44df407bdda732fdf2fadbc509b5f92c\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tSbicolor\t4558\ttxid4558[Organism] AND gbdiv_est[PROP]\t209835\t209835\t9f19ce9f511477b5b4488c4f8892638d\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tVvinifera\t29760\ttxid29760[Organism] AND gbdiv_est[PROP]\t446853\t446853\tf4fd8bfd7a4dda1057369880ba36f7fc\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tPpatens\t3218\ttxid3218[Organism] AND gbdiv_est[PROP]\t382587\t382587\t90bb6791d7d2c4a2208d12d8e08d2a01\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n2026-09-01\tNCBI nuccore (former dbEST; nucest merged into nuccore)\tSlycopersicum\t4081\ttxid4081[Organism] AND gbdiv_est[PROP]\t301030\t301030\t7fa0193a8b23950df04b9a1459b271b0\trepaired,complete\test_fetch.sh + est_repair.sh (NCBI efetch retmax=10000 drops index+9999 per batch; truncated batches re-fetched); original kept as est.fa.gz.orig\n"
+    },
+    {
+      "action": "read",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/PROVENANCE.txt",
+      "size": 1995,
+      "mtime_ns": 1788933363053127218,
+      "sha256": "811dc4e5ba0c78029f43b0df96e030f4bdb0afcc2862e08aa7cb2336a5001a24",
+      "text": "species          Sitalica\nscope            protein_training_evidence (A19.2, issue #45)\nreference        /data/gpfs/assoc/pgl/data/Transgenic/genomes/Sitalica_312_v2.fa\nreference_md5    d8f77d532d8c87f314f6175146fa6728\nprotein_resource /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz\nprotein_md5      453cb32b02e0799950d7d5f4de5f62ac   (protocol section 1, A19.1 stage-2 filtered)\nprotein_seqs     12115085   (filter_summary.json sequences_out, 408 taxa)\nminiprot         0.18-r281\nparams           --gff --outs=0.97 -N 20   (A19.2, frozen)\nchunked          6 chunks, /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/chunks_v1/MANIFEST.tsv\nchunk_reason     miniprot memory is unbounded in the query set; array 6150892 lost two\n                 species to OUT_OF_MEMORY at 64 GB. lh3/miniprot#68 is the same signature\n                 upstream and is closed with no fix.\nchunk_equivalence measured before use, job 6152995: 1x100k, a re-run of 1x100k and 2x50k\n                 concatenated are identical at the GFF and acceptance levels once the\n                 run-local MP ids are dropped. See pilot/split_equiv/REPORT.txt.\nid_renumbering   chunk ids restart at 1; merged ids are 1..13302148, contiguous and unique.\ngff              /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/Sitalica.protein.gff.gz\ngff_md5          0e17de830f3458c81b25b3366320ec77\nmrna_records     13302148\nmerged           2026-09-08T22:56:03-0700\nacceptance       NOT APPLIED HERE. A19.2 identity >= 30 %, coverage >= 70 %, no frameshift,\n                 canonical introns <= 200 kb and mapping_ambiguous flagging run as a separate\n                 pass over this GFF, so the judgement can be revised without realigning.\nrun_location     pronghorn. A19 and #45 say Delta; author decision 2026-09-07. Input is the\n                 section 1 frozen object by md5, so location cannot change the input.\n                 Log in protocol section 12.\n"
+    }
+  ],
+  "read_bytes": 8983
+}

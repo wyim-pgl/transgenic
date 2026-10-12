@@ -1,0 +1,51 @@
+EFFFF
+======================================================================
+ERROR: test_host_python36_api (test_recovery.RecoveryTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/test_recovery.py", line 88, in test_host_python36_api
+    a.query(Path(tmp), 'compat', ['/bin/printf', 'ok'])
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/admission.py", line 139, in query
+    fresh([r])
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/admission.py", line 111, in fresh
+    need(r.get('exit_code') == 0 and not r.get('timed_out') and
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/admission.py", line 30, in need
+    raise ValueError(message)
+ValueError: failed/incomplete observation
+
+======================================================================
+FAIL: test_known_resume_directories_only (test_recovery.RecoveryTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/test_recovery.py", line 16, in test_known_resume_directories_only
+    self.assertTrue(hasattr(d, 'checkpoint_inventory'))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_recovery_authority_is_explicit_and_quota_fits (test_recovery.RecoveryTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/test_recovery.py", line 94, in test_recovery_authority_is_explicit_and_quota_fits
+    self.assertIn('terminal_recovery_reference',auth)
+AssertionError: 'terminal_recovery_reference' not found in {'schema': 3, 'approved': False, 'issued_at_unix': None, 'release_json_sha256': None, 'transport_sha256': None, 'ledger_sha256': None, 'controller_reference': None, 'review_reference': None, 'cancellation_history_reference': None, 'staging_reference': None, 'reservation_identity': None, 'scope': 'S0_P1_DIAGNOSTIC_ONLY', 'profile': 'development-single', 'seed': 123, 'run_role': 'mvp_finetune', 'training_authorized': False, 'followup_authorized': False, 'namespace': '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v3_20260917', 'cluster': 'delta-gh', 'owner': 'wcyim', 'uid': 97434, 'account': 'bilv-dtai-gh', 'one_attempt': True, 'nodes': 1, 'gpus': 4, 'cpus': 64, 'exclusive': True, 'seconds_max': 1800, 'node_hours_max': 0.5, 'gpu_hours_max': 2, 'cumulative_node_hours_max': 5, 'cumulative_gpu_hours_max': 20, 'requeue': False, 'restart': False, 'resume': False, 'automatic_retry': False, 'serialized_through_terminal_reconciliation': True, 'campaign_start_local': '2026-09-16T00:00:00', 'timezone': 'America/Chicago', 'registered_prior_ids': ['3163545', '3163986'], 'b5_registered_ids': ['3131537', '3131538', '3149356', '3149357', '3149358', '3149359', '3149360', '3149361', '3149362', '3149363'], 'other_reservations': [{'identity': 'panel-candidate-not-submitted', 'job_id': None, 'node_hours': 1, 'gpu_hours': 4, 'submitted': False}], 'b5_policy': 'full_maximum_wall_times_allocated_or_requested_gpu_for_all_outstanding', 'diagnostic_account_reserve_gpu_hours': 20, 'operational_margin_gpu_hours': 20, 'excluded_nodes': ['gh062', 'gh093']}
+
+======================================================================
+FAIL: test_recovery_copy_preserves_source_and_refuses_overwrite (test_recovery.RecoveryTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/test_recovery.py", line 35, in test_recovery_copy_preserves_source_and_refuses_overwrite
+    self.assertTrue(hasattr(d, 'recover_evidence'))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_true_failed_history_and_exclusive_cpu_capacity (test_recovery.RecoveryTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v3/test_recovery.py", line 66, in test_true_failed_history_and_exclusive_cpu_capacity
+    self.assertTrue(hasattr(a, 'node_capacity'))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.012s
+
+FAILED (failures=4, errors=1)

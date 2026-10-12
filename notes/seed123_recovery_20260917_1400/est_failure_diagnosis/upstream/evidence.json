@@ -1,0 +1,33 @@
+{
+  "archive_url": "https://github.com/bbuchfink/diamond/archive/v2.1.24.tar.gz",
+  "archive_sha256": "4879c27a8fc96d84793c3239a314cc3ff78f3b26ee6a3f228cddab6338bc0990",
+  "archive_bytes": 1148266,
+  "download_limits": {"seconds": 60, "bytes": 67108864, "https_only": true},
+  "extraction": "Only selected regular members, no tar extractall; relative paths without traversal; source bytes unchanged; no upstream code executed.",
+  "source_root": "diamond-2.1.24/src/",
+  "selected_files_sha256": {
+    "align/align.cpp": "f085b68f6d5a020fefd032fc397dc0bf46b8c7fb1bcfba690135d47ebf43112c",
+    "align/legacy/banded_swipe_pipeline.cpp": "59ee2c96a9ce8c8ab7dcab7cc18a5d296ef51683315f8ff4733412b22c0bbafd",
+    "align/legacy/query_mapper.cpp": "4d8aafd2ae2fb344a6e4a3efd92b4b93babbf9ca3a972c83cac42b548feb4efc",
+    "align/output.cpp": "c41555b987806611dc41b900782588f2b16a2974786d2c10a8cee338398daddf",
+    "basic/hssp.cpp": "2d0c03a25a027e3aadbfa484389be2904ec471444257678b073b59b6918d0289",
+    "basic/match.h": "54a158bac891472ce527246e2aa4c788abdbb8018842d58e33d37f9e857f7b77",
+    "basic/packed_transcript.h": "0f6a37b831c22159482a821c62007252e349346fa5912572118d116e48a9dbd9",
+    "basic/value.h": "8f821767142af5db6d789781004f82aaa26fee8278f375b397b19024cea303aa",
+    "data/frequent_seeds.cpp": "72f44b7506e8672419d69b95d06fda039a8a2a04061d40a4533e3f8f53f666ff",
+    "dp/swipe/banded_3frame_swipe.cpp": "cdb683502c74ffc4702407f212019972777e38f5a36687b5c7b5b36017ce25dc",
+    "masking/masking.cpp": "e59bfd7aba755b5d3efb3e003ae6468cf7efb705baaf95122b7145e31e11a0cf",
+    "masking/tantan.cpp": "a433816a55cdc8ded9d08faa164712348efdecaecb2a6cf110f51b3da3d8b65c",
+    "output/blast_tab_format.cpp": "b97f648e8f6706af12d76332088ff2f9fb30d8a2680fe4393fae0d7383c3fee7",
+    "output/join_blocks.cpp": "e2e97bf3f691f1bef2fd2b281872607b3ccda0c330d006969ed66975eaf7cc81",
+    "output/output.h": "73604811657eabc684237d0854ec76e3272476d8427d0222c70d4d9c7aec0381",
+    "output/output_format.cpp": "21e5b20dcd830eda57592ba897b18fc374e17eff1c3867d8067a7bc0151b0f89",
+    "run/config.cpp": "b0ed6e811eafe496d300366df6348f493607e3747fc09cf8aa5f0b8b747d070f",
+    "run/double_indexed.cpp": "13c970a7eb98a3559eb9b4cf2a348442fef6f0b6cc0f5c26b87cb98dd76154b3"
+  },
+  "local_provenance": {
+    "producer_small_logs.txt": {"sha256": "a2603ed662e0e05410bdb78edb86df4891297ff46a0a64ca1677f9fce3815740", "embedded_records_verified": 5},
+    "producer_recipe.txt": {"sha256": "0644d8138dec21b4baf757607931315abdb3ec344ed07b155adc9d1aa90b75e9", "embedded_records_verified": 5}
+  },
+  "verification": "Archive pin, every selected source byte and all embedded provenance hashes verified locally. Static investigation only."
+}

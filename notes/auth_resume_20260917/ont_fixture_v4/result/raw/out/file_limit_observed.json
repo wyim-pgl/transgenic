@@ -1,0 +1,11 @@
+{
+  "after": [
+    4194304,
+    4194304
+  ],
+  "before": [
+    4194304,
+    -1
+  ],
+  "enforcement": "inside allocated Python task"
+}

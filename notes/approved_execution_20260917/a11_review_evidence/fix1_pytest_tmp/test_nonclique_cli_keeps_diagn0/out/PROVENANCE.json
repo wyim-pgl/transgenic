@@ -1,0 +1,56 @@
+{
+  "chain_reading_decision": {
+    "date": "2026-09-05",
+    "primary_declared_before_real_addition_scoring": true,
+    "who": "author"
+  },
+  "chain_readings": {
+    "chain_support_single_read": "primary",
+    "chain_support_threshold": "sensitivity"
+  },
+  "incomplete_work": [
+    "disk-backed read indexing for production scale",
+    "manifest-wide expected-run reconciliation and frozen-reference identity binding",
+    "per-species A4 attestation, P4 seed/sample verification, P5 +9-nt decoy correspondence",
+    "A37 per-length-bin callability/junction/intron-count/gene-length tables",
+    "S12 P2 alternative recall and retained-match counts; A7 MAPQ10/placement sensitivities",
+    "C0 accession aliases, clone/library conflicts, source-molecule provenance, S12d completeness"
+  ],
+  "inputs_sha256": {
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_nonclique_cli_keeps_diagn0/additions.json": "f6923c583b808b15232e30c22e9e85f0329a09c1e025517b12c3c40f031a5070",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_nonclique_cli_keeps_diagn0/config.json": "e264199f5c7f74a9e18575840136bcfb14117662a22f3e68a5bc1021e3ec4123",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_nonclique_cli_keeps_diagn0/meta.json": "6e84053ccc769412437dcdb85fb3e6b3f3fa9c0c89f1a3fc916aa6a5b54d900c",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_nonclique_cli_keeps_diagn0/ref.fa": "370d073b77d489def2de0a60b99624b4455f2490f30d2d1bcb9af7d9e639b1eb",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_nonclique_cli_keeps_diagn0/roles.tsv": "c19ca9958ea4fc9093e545c155b6eb01ad688724c5156dc66d75fd9af8b6e079",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/approved_execution_20260917/a11_review_evidence/fix1_pytest_tmp/test_nonclique_cli_keeps_diagn0/run.sam": "c08e7893a0c0e217f8931803e38e41a59d6db6db22a75eb2b634589f393e6da4",
+    "/tmp/est-approved-contract-20260917/revision/scripts/59_evidence_support.py": "06f1bdc9a3af511e6de7434430f191d6b272d244ce7a44303d1c87dd29be25f4"
+  },
+  "outputs_sha256": {
+    "PCR_diagnostic_additions.csv": "64e6a8d45a4b666ec85575158d752c6cdc9ac616aac45c40e1c31a45f4f861d8",
+    "PCR_diagnostic_runs.csv": "87c126aa554757491f1bc45a228e6597a7ba8e3306a72cabb2cb3d0473ece42e"
+  },
+  "pcr_diagnostic": {
+    "candidate_equivalence_groups": 1,
+    "counting_rule": "Global same-library candidates; counted once per run containing a member and once per same-strand overlapping addition. Counts across runs/additions are not additive.",
+    "non_clique_groups": 1,
+    "per_addition": [
+      {
+        "addition_id": "add1",
+        "candidate_equivalence_groups": 1,
+        "non_clique_groups": 1
+      }
+    ],
+    "per_run": [
+      {
+        "arm": "primary",
+        "candidate_equivalence_groups": 1,
+        "dataset": "dataset",
+        "non_clique_groups": 1,
+        "run": "run1"
+      }
+    ]
+  },
+  "purpose": "synthetic",
+  "reason": "A16 non-transitive 10-nt PCR equivalence",
+  "status": "scoring_refused"
+}

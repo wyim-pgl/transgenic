@@ -1,0 +1,15 @@
+fixture.py: OK
+runtime.json: OK
+fixture.sbatch: OK
+package/frozen/revision/protocols/b6_panels_v1.tsv: OK
+package/frozen/revision/scripts/59_evidence_support.py: OK
+package/frozen/revision/scripts/67_orientation_audit.py: OK
+package/frozen/revision/scripts/68_sample_fasta.py: OK
+package/frozen/revision/scripts/mvp/mvp_align_panel_longreads.py: OK
+package/frozen/revision/scripts/mvp/mvp_junction_table.py: OK
+package/frozen/revision/scripts/mvp/mvp_score.py: OK
+package/frozen/src/transgenic/evidence/mvp_bootstrap.py: OK
+package/frozen/src/transgenic/evidence/mvp_windows.py: OK
+package/gate.py: OK
+package/source_pins.json: OK
+package/wrapper.py: OK

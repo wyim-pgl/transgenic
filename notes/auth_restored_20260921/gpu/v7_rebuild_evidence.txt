@@ -1,0 +1,132 @@
+Raw capture 8 -- v7 rebuild, transport, tests and remote replacement.
+Author: Won <wyim@unr.edu>. Times PDT (remote CDT - 2h).
+
+===LIVE NODE STATE (exclusion refresh basis), 2026-09-21 09:05 PDT===
+sinfo -p ghx4 -N -h -o '%T' | sort | uniq -c
+     39 allocated
+     43 mixed
+     66 mixed-
+      2 reserved
+Unavailable (down/drain/draining/drained/fail/maint/unknown/inval): NONE
+Not-responding or flagged nodes: NONE
+Old exclusions probed directly: gh[062,093]|mixed-|none   (healthy, reason "none")
+squeue -u wcyim -t RUNNING: (empty -- no B5 job is currently placed)
+Other accounts' reservations (not schedulable by us anyway):
+  ncsa_test  gh[001-002]
+  nairr-3777 gh[011,042,047,055,058,083,089,128]
+  sup-29923  gh[109,113-115,117]
+=> No live health or occupancy basis exists to ADD any exclusion.
+=> gh062,gh093 RETAINED unchanged; see V7_REBUILD.md for the reasoning.
+
+===BUILD===
+cwd: notes/auth_resume_20260917/gpu/deployment_v5   (new dir; deployment_v4 untouched)
+python3 --version -> Python 3.8.20
+python3 build_release.py
+  Release: .../deployment_v5/release_v7
+  release.json     d65684a69ec06bcf7018fe3c0fbaa0526c7e350da4f84630fbb26199f76cfd83
+  release.sha256   902c9bd6f6299b215b32c4c44c421efc9d6788e8f5a62d914b614067f7648d9f
+  operator-pins.json 45bd57640d7c55ee7ce7b1f20ab48b58729f5e58b880c4608813b99356d28c72
+release_v7/ contains exactly 14 files, no __pycache__, no symlinks.
+
+===TEST SUITE===
+python3 -m unittest discover -s . -p 'test_*.py'
+  Ran 47 tests in 24.780s
+  OK
+(First run reported 41: test_recovery.py had not been copied, and
+ test_field_alias.py needed the scontrol-job-3163986.txt fixture. Both were
+ added, and 41 + 6 = 47 reconciles exactly with the recorded v6 suite size.)
+
+Test-logic diff v4 vs v5, with the v6/v7 tokens normalised on both sides:
+  test_admission_cases.py  no difference
+  test_candidate.py        no difference
+  test_capture.py          no difference
+  test_deploy.py           no difference
+  test_field_alias.py      no difference
+  test_queued_gate.py      no difference
+=> the only test changes are the namespace rebindings. No assertion was
+   relaxed, deleted or rewritten to obtain a pass.
+
+===TRANSPORT RECIPE VALIDATION===
+Before building the v7 transport, the recipe (PAX_FORMAT, mtime=0, mode 0444,
+uid=gid=0, empty uname/gname, sorted member names, __pycache__ excluded) was
+run against the UNCHANGED deployment_v4/release_v6 tree:
+  14 members
+  26c1dc0a233a95ab86977813e68310eccfce91b081de3a63586cfd7b9427628a
+  expected (pinned v6 transport):
+  26c1dc0a233a95ab86977813e68310eccfce91b081de3a63586cfd7b9427628a
+=> byte-exact reproduction. The builder is identical to the controller's
+   original method, so the v7 transport is comparable to the v6 one.
+
+===V7 TRANSPORT===
+release_v7.tar  2887680 bytes
+  73123b3fe0f27e15aa024805c271e54b6ef834d08802a43549342cfcf8da3d16
+tar tvf head: -r--r--r-- 0/0 ... 1969-12-31 16:00 admission.py   (0444, epoch 0)
+
+===REMOTE TRANSFER + REPLACEMENT, 2026-09-21 09:11-09:12 PDT===
+Transport streamed into the v7 namespace as .transport.tar; hash re-verified
+ON THE REMOTE HOST before use:
+  73123b3fe0f27e15aa024805c271e54b6ef834d08802a43549342cfcf8da3d16  (matches)
+  2887680 bytes
+Replacement script guards: target path suffix asserted to be
+dev123_p1_release_v7_20260921 or abort; transport hash re-checked or abort.
+  remaining_after_delete=1      (only .transport.tar survived the delete)
+  REPLACE_DONE                   (extract, rm .transport.tar, chmod 700/444)
+Every write was inside the v7 namespace. Nothing outside it was created,
+modified or removed.
+
+===V7 POST-REPLACEMENT VERIFICATION, 2026-09-21 09:12:39 PDT===
+regular_files=14  symlinks=0  hidden_or_extra=0  owner_writable=0
+non_0444: (none)
+
+path|sha256|size|mode
+admission.py|49b289ba8034649898260235e25eeb0195ad3874edbb97ab10bef7950137f8b8|27611|444
+authorization.example.json|a8a097acf904fe07178881d1fe12ce26f10bc23ab479c5683852e63590ce5bf5|2608|444
+build_release.py|aef33dfc01e349732d8076b06e98f8e901f058cf5eeadbf613d0a7333e8c7c85|5688|444
+code.candidate.tar|da161088fb401dbe87382685c1b5faadc17c7255d4a89f705fe1126ecc5bcec7|1873920|444
+controller_execution_scope.json|165c32eccb74af0d2f407e3b9e3308dd1549b2199fcbec8afc9c94e7fb45fb22|3332|444
+deploy.py|0fd10399abfac8e35ff14512bc228aad06e4021fda5be554360d1810a9f6964c|29149|444
+notes/b6_mvp_candidate_inventories_20260915.json|9f79019679bfdd25b0a2bdac7cae63d01fa6d874be03fa3ef3f81cfd0a880a98|859299|444
+notes/b6_mvp_candidate_receipts_20260915.json|73204a4ed98624b1567a5eb26fd6b2bbafbb597e0bd4b807685e8c703c807bac|11786|444
+notes/b6_mvp_technical_candidate_20260915.json|faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e|9832|444
+operator-pins.json|45bd57640d7c55ee7ce7b1f20ab48b58729f5e58b880c4608813b99356d28c72|11828|444
+p1.sbatch|6ec497c19b57e5cb531c3d265aa256dbf80375e23bb05d0586a724cd8d057f3d|2010|444
+release.json|d65684a69ec06bcf7018fe3c0fbaa0526c7e350da4f84630fbb26199f76cfd83|25219|444
+release.sha256|902c9bd6f6299b215b32c4c44c421efc9d6788e8f5a62d914b614067f7648d9f|1181|444
+source-manifest.json|4eb7476aa36e77ed8967bc5d6ea73f005deb078b5a5e9b9491976f3d4c79eb0a|12174|444
+
+Every remote hash equals the hash I computed locally on the build output.
+
+ledger_lines=13 ; sha256sum -c release.sha256 -> 13 OK, no_failures
+
+===BINDING CHECK (the defect that blocked v6)===
+admission.py:22 NAMESPACE = '.../staging/dev123_p1_release_v7_20260921'
+p1.sbatch:2  --job-name=dev123-p1-v7-0921
+p1.sbatch:12 --exclude=gh062,gh093
+p1.sbatch:13 --chdir=.../staging/dev123_p1_release_v7_20260921
+p1.sbatch:14 --output=.../staging/dev123-p1-v7-%j.out
+p1.sbatch:15 --error=.../staging/dev123-p1-v7-%j.err
+Count of residual v6 tokens, per file:
+  admission.py:0  p1.sbatch:0  controller_execution_scope.json:0
+  authorization.example.json:0  deploy.py:0
+=> zero v6 references remain in the staged package.
+
+===V6 FULL RE-CHECK AFTER THE REPLACEMENT===
+admission.py|6f75c8113ff37376b3c62d4ae6f9a52d58d9ebbbbef76151a49b92119f467fa4|27611|444|522420016499497495
+authorization.example.json|25e75757eca9baed93522d73cb22cae9e0acfa0338ac5ef561b760e4dc4fec1f|2608|444|522420016499497496
+build_release.py|06d5cab84d436de615ca681b69760c1b22eaab7f3ae9fd3339d1bc536f154049|5688|444|522420016499497497
+code.candidate.tar|da161088fb401dbe87382685c1b5faadc17c7255d4a89f705fe1126ecc5bcec7|1873920|444|522420016499497498
+controller_execution_scope.json|5566677068d0b22a9f1db7d0683c650e5bcc26f13d84c421aac1b8b7eb9c68aa|3332|444|522420016499497499
+deploy.py|3eba7fa940c31f37f3bc7ea3d9229b8723fde62749d850759b1d062e587e1543|29149|444|522420016499497500
+notes/b6_mvp_candidate_inventories_20260915.json|9f79019679bfdd25b0a2bdac7cae63d01fa6d874be03fa3ef3f81cfd0a880a98|859299|444|522420016499497502
+notes/b6_mvp_candidate_receipts_20260915.json|73204a4ed98624b1567a5eb26fd6b2bbafbb597e0bd4b807685e8c703c807bac|11786|444|522420016499497503
+notes/b6_mvp_technical_candidate_20260915.json|faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e|9832|444|522420016499497504
+operator-pins.json|45bd57640d7c55ee7ce7b1f20ab48b58729f5e58b880c4608813b99356d28c72|11828|444|522420016499497505
+p1.sbatch|f3b4dd15f3c589b7d329c311e537451a7ba087486c3d89cb74ce10a82288901a|2010|444|522420016499497506
+release.json|64a547b8ba5f54e87c1985f278564a9ea9fc7c8f3af07f6b6afe3bdf17f4f7d4|25219|444|522420016499497507
+release.sha256|e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855|0|660|522420016499497508
+Identical to v6_integrity_recheck.txt in every field, inodes included, with
+release.sha256 still 0 bytes at 0660. v6 untouched.
+
+===SQUEUE=== (09:12 PDT)
+3149358 PENDING (Priority); 3149359-3149363 PENDING (Dependency)
+No job submitted. No MVP diagnostic job queued or running.

@@ -1,0 +1,55 @@
+366:         # check for mix reduction orders
+367:         if not cls.has_mix_reduction_orders(node1, node2):
+368:             return False
+369: 
+370:         # check common buffer accesses
+371:         common_reads = MixOrderReduction.get_common_read(node1, node2)
+372:         if len(common_reads) == 0:
+373:             return False
+374: 
+375:         if cls.is_contiguous_node(node1):
+376:             contiguous_node, other_node = node1, node2
+377:         elif cls.is_contiguous_node(node2):
+378:             contiguous_node, other_node = node2, node1
+379:         else:
+380:             return False
+381: 
+382:         g1 = cls.get_numel_rnumel(contiguous_node)
+383:         nrow, ncol = g1
+384: 
+385:         # in non strict mode, we will skip the non-critical checks
+386:         if not config.triton.mix_order_reduction_non_strict_mode:
+387:             # the fused version has worse perf than non-fused version for
+388:             # small workload. When a workload is small enough, data can be
+389:             # fully cached by L2
+390:             size_thres = 5 * 2**20
+391: 
+392:             # Call evaluate_expr rather than statically_known_geq since nrow can
+393:             # have dynamic shape in real models.
+394:             # Don't use hint directly since hint can be non-representative.
+395:             if not V.graph.sizevars.evaluate_expr(
+396:                 sympy.Ge(nrow * ncol, size_thres),
+397:                 size_oblivious=True,
+398:                 fallback_value=False,
+399:             ):
+400:                 return False
+401: 
+402:             # We require more more row than columns since
+403:             # 1, we prefer doing persistent reduction for each row
+404:             # 2, we will split the reduction across the rows
+405:             if not V.graph.sizevars.evaluate_expr(
+406:                 sympy.Ge(nrow, ncol * 2),
+407:                 size_oblivious=True,
+408:                 fallback_value=False,
+409:             ):
+410:                 return False
+411: 
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

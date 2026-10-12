@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+"""Trusted controller preparation only. Never imports release code or submits jobs.
+
+Review/pin THIS helper independently. Supply hashes from the external review,
+not values obtained by executing a launcher in the release. A prepared namespace
+is single-use even if submission fails. Never modify the release after review,
+never rerun printed argv, never retry or remove a failed reservation. Slurm opens
+the two pre-reserved empty logs in append mode, including batch startup failures.
+The private shared-filesystem namespace must remain accessible to the job owner.
+This is not protection against a malicious same-user writer or administrator.
+"""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import shlex
+import stat
+
+
+def require(ok, message):
+    if not ok:
+        raise ValueError(message)
+
+
+def absolute(path):
+    path = Path(path)
+    require(path.is_absolute() and '..' not in path.parts and '%' not in str(path),
+            'absolute literal path required (no parent traversal or Slurm percent expansion)')
+    for part in (path, *path.parents):
+        require(not part.is_symlink(), 'symlink refused: ' + str(part))
+    return path
+
+
+def pinned(path, expected):
+    info = path.stat()
+    require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_size <= 8 * 1024**2,
+            'small single-link regular file required: ' + str(path))
+    with path.open('rb') as stream:
+        data = stream.read(8 * 1024**2 + 1)
+    require(len(data) <= 8 * 1024**2 and hashlib.sha256(data).hexdigest() == expected,
+            'independent SHA mismatch: ' + str(path))
+    return data
+
+
+def require_private(path, mode):
+    info = path.stat()
+    require(info.st_uid == os.getuid() and stat.S_IMODE(info.st_mode) == mode,
+            'private owner/mode not established: ' + str(path))
+
+
+def prepare(release, ledger_sha, launcher_sha, batch_sha, namespace, stdout, stderr):
+    release, namespace, stdout, stderr = map(absolute, (release, namespace, stdout, stderr))
+    require(release != namespace and release not in namespace.parents, 'namespace must be outside release')
+    require(stdout.parent == stderr.parent == namespace and stdout != stderr,
+            'distinct streams must be directly inside the fresh namespace')
+    require(not {stdout.name, stderr.name} & {'worker', 'preparation.json'}, 'reserved stream name')
+    if namespace.exists():
+        raise FileExistsError(str(namespace))
+    # No import, exec, subprocess or launcher --verify-only bootstrap here.
+    ledger = json.loads(pinned(absolute(release / 'ledger.json'), ledger_sha))
+    require(ledger.get('schema') == 1, 'ledger schema mismatch')
+    for name, expected in (('run_compute.py', launcher_sha), ('sample.sbatch', batch_sha)):
+        require(ledger['files'][name] == expected, 'caller pin differs from trusted ledger: ' + name)
+        pinned(absolute(release / name), expected)
+    namespace.mkdir(mode=0o700, exist_ok=False)
+    # Anything failing after mkdir is deliberately retained, without cleanup.
+    require_private(namespace, 0o700)
+    for path in (stdout, stderr):
+        fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        os.close(fd)
+        require_private(path, 0o600)
+    worker = namespace / 'worker'
+    argv = ['sbatch', '--export=NIL', '--no-requeue', '--open-mode=append',
+            '--output=' + str(stdout), '--error=' + str(stderr),
+            str(release / 'sample.sbatch'), str(release), ledger_sha, str(worker)]
+    receipt = dict(status='PREPARED_NOT_SUBMITTED', single_use=True, namespace=str(namespace),
+                   release=str(release), ledger_sha256=ledger_sha, launcher_sha256=launcher_sha,
+                   batch_sha256=batch_sha, stdout=str(stdout), stderr=str(stderr),
+                   worker_output=str(worker), argv=argv,
+                   contract='Never modify release or reuse namespace/argv, including on submission failure. '
+                            'Controller must authorize one submission and record its result externally. '
+                            'No automatic submission, retry, cleanup or biological acceptance.')
+    with (namespace / 'preparation.json').open('x') as stream:
+        os.chmod(stream.name, 0o600)
+        require_private(Path(stream.name), 0o600)
+        json.dump(receipt, stream, sort_keys=True, indent=2)
+        stream.write('\n'); stream.flush(); os.fsync(stream.fileno())
+    fd = os.open(str(namespace), os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    return receipt
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ('release', 'ledger-sha', 'launcher-sha', 'batch-sha', 'namespace', 'stdout', 'stderr'):
+        parser.add_argument('--' + name, required=True)
+    args = parser.parse_args()
+    receipt = prepare(args.release, args.ledger_sha, args.launcher_sha, args.batch_sha,
+                      args.namespace, args.stdout, args.stderr)
+    print(json.dumps(receipt, sort_keys=True, indent=2))
+    print('REVIEW ONLY, NOT EXECUTED: ' + shlex.join(receipt['argv']))
+
+
+if __name__ == '__main__':
+    main()

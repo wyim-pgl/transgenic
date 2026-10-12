@@ -1,0 +1,11 @@
+test_closure_and_pins (__main__.FixtureTests) ... ok
+test_deterministic_inputs_and_fixed_oracle (__main__.FixtureTests) ... ok
+test_junction_cli_help_bootstrap (__main__.FixtureTests) ... ok
+test_real_frozen_cli_preflight_and_panel_seam (__main__.FixtureTests) ... ok
+test_stub_pipeline_and_real_postflight_NOT_real_tool_evidence (__main__.FixtureTests) ... ok
+test_wrong_junctions_rejected (__main__.FixtureTests) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 19.568s
+
+OK

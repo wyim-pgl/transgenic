@@ -1,0 +1,19 @@
+PROV Athaliana {"miniprot": {"version": "0.18-r281"}, "diamond": {"version": "2.1.24.178"}, "samtools": {"version": "samtools 1.3.1"}}
+PROV Bdistachyon {"miniprot": {"version": "0.18-r281"}, "diamond": {"version": "2.1.24.178"}, "samtools": {"version": "samtools 1.3.1"}}
+PROV Gmax {"miniprot": {"version": "0.18-r281"}, "diamond": {"version": "2.1.24.178"}, "samtools": {"version": "samtools 1.3.1"}}
+PROV Osativa {"miniprot": {"version": "0.18-r281"}, "diamond": {"version": "2.1.24.178"}, "samtools": {"version": "samtools 1.3.1"}}
+PROV Ppatens {"miniprot": {"version": "0.18-r281"}, "diamond": {"version": "2.1.24.178"}, "samtools": {"version": "samtools 1.3.1"}}
+PROV Ptrichocarpa {"miniprot": {"version": "0.18-r281"}, "diamond": {"version": "2.1.24.178"}, "samtools": {"version": "samtools 1.3.1"}}
+PROV Sbicolor {"miniprot": {"version": "0.18-r281"}, "diamond": {"version": "2.1.24.178"}, "samtools": {"version": "samtools 1.3.1"}}
+PROV Sitalica {"miniprot": {"version": "0.18-r281"}, "diamond": {"version": "2.1.24.178"}, "samtools": {"version": "samtools 1.3.1"}}
+PROV Vvinifera {"miniprot": {"version": "0.18-r281"}, "diamond": {"version": "2.1.24.178"}, "samtools": {"version": "samtools 1.3.1"}}
+cad2ecd152c8ca405f4e3d53b03273a3cc11c8500af9f025cf9b4f1ec89ece0f  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/protein_c0.sbatch
+SUBMIT Sitalica 6172579 afterok:6172570
+SUBMIT Athaliana 6172580 afterok:6172571
+SUBMIT Bdistachyon 6172581 afterok:6172572
+SUBMIT Gmax 6172582 afterok:6172573
+SUBMIT Osativa 6172583 afterok:6172574
+SUBMIT Ppatens 6172584 afterok:6172575
+SUBMIT Ptrichocarpa 6172585 afterok:6172576
+SUBMIT Sbicolor 6172586 afterok:6172577
+SUBMIT Vvinifera 6172587 afterok:6172578

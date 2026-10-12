@@ -1,0 +1,15 @@
+W1011 13:39:03.664000 1329240 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 13:39:03.710000 1329240 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+SHAPE_PROBE_RESULT [{"rn": 91492, "replay_row": 1, "label_len": 33, "input_shape": [1, 30720], "sha_match": true}, {"rn": 104126, "replay_row": 2, "label_len": 560, "input_shape": [1, 30720], "sha_match": true}, {"rn": 146698, "replay_row": 3, "label_len": 80, "input_shape": [1, 129024], "sha_match": true}, {"rn": 243815, "replay_row": 4, "label_len": 267, "input_shape": [1, 129024], "sha_match": true}, {"rn": 221086, "replay_row": 5, "label_len": 3, "input_shape": [1, 30720], "sha_match": true}, {"rn": 10405, "replay_row": 6, "label_len": 1352, "input_shape": [1, 129024], "sha_match": true}, {"rn": 117991, "replay_row": 7, "label_len": 1011, "input_shape": [1, 61440], "sha_match": true}, {"rn": 64780, "replay_row": 8, "label_len": 18, "input_shape": [1, 30720], "sha_match": true}, {"rn": 17102, "replay_row": 159, "label_len": 426, "input_shape": [1, 30720], "sha_match": true}, {"rn": 48760, "replay_row": 160, "label_len": 525, "input_shape": [1, 30720], "sha_match": true}, {"rn": 64661, "replay_row": 161, "label_len": 1281, "input_shape": [1, 129024], "sha_match": true}, {"rn": 202511, "replay_row": 162, "label_len": 283, "input_shape": [1, 30720], "sha_match": true}, {"rn": 186397, "replay_row": 163, "label_len": 346, "input_shape": [1, 61440], "sha_match": true}, {"rn": 151192, "replay_row": 164, "label_len": 839, "input_shape": [1, 129024], "sha_match": true}, {"rn": 144599, "replay_row": 165, "label_len": 70, "input_shape": [1, 30720], "sha_match": true}, {"rn": 6195, "replay_row": 166, "label_len": 3924, "input_shape": [1, 129024], "sha_match": true}]
+INFO:    Cleanup error: while stopping driver for /var/lib/apptainer/mnt/session/final: fuse-overlayfs exited: fuse: reading device: Software caused connection abort
+
+PROBE_RC 0
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

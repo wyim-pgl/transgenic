@@ -1,0 +1,11 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-25T03:03:40-05:00
+3208285       COMPLETED      0:0   00:03:17 
+3210279       COMPLETED      0:0   00:06:31 
+3210585       COMPLETED      0:0   00:07:22 
+SOURCE_OK=220 BAD=0
+1f66b93a7d77b41cc69501082e544a102917f26f14663e0d06e135ea583f6211  /work/nvme/bilv/wcyim/transgenic/runs/b6_bench/mem129k-3208285.json
+62da85b2efc8d01a41bdb737523fcdce49d75987a5f833684f1bf844fd3e92e4  /work/hdd/bilv/wcyim/transgenic/runs/b6_int4/run_3210279/report.json
+2f59a73b3c3e59a0a679f155c1d8a6a537d83188bf98d10a873ac99943c56118  /work/hdd/bilv/wcyim/transgenic/runs/b6_int4/run_3210585/report.json

@@ -1,0 +1,22 @@
+--- 9603-template
++++ staged/run_panel_cpu.py
+@@ -12,8 +12,8 @@
+ import time
+ import authority
+ 
+-SOURCE_COMMIT='b660bf1e7dc48287ca34a0d6e3aeb53d45f599b6'
+-SOURCE_PIN='555c3618e792dbed06bfc2c392b99efe79fd16853e8c92abe252a5b34cbd0c44'
++SOURCE_COMMIT='9603e20fd4870a9f5b3d5f68e2df8ba0f8a49558'
++SOURCE_PIN='ad3e5a7aacbc5d71c3a59d9b1b6f6fd0afeff12efab10b7ed123f734e767380e'
+ ACCEPTANCE='faab8387cbbe87812c7f3faf5412d19004874a5cc439f5a3d182e2c976a5b51e'
+ COMPANIONS={'notes/b6_mvp_technical_candidate_20260915.json':ACCEPTANCE,
+  'notes/b6_mvp_candidate_inventories_20260915.json':'9f79019679bfdd25b0a2bdac7cae63d01fa6d874be03fa3ef3f81cfd0a880a98',
+@@ -29,7 +29,7 @@
+     return h.hexdigest()
+ 
+ def verify_source(root):
+-    if sha(root/'source_pins.json')!='7b6e1ed4bbf635c7b25b47b2564453d9b176f6a21f858c87c95e270f5bee0689': raise ValueError('reviewed release inventory identity differs')
++    if sha(root/'source_pins.json')!='5570f32378928ccd627494652988a0ec8cda3c657cff5d63e0c496ec8c97010b': raise ValueError('reviewed release inventory identity differs')
+     pins=json.loads((root/'source_pins.json').read_text())
+     if pins['commit']!=SOURCE_COMMIT: raise ValueError('source commit differs')
+     for name,expected in {**pins['source_files'],**COMPANIONS}.items():

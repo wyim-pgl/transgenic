@@ -1,0 +1,115 @@
+NOW 2026-10-12T01:05:06.668853
+3309786 b5-seed PENDING 0:00 (Priority)
+3309790 b5-seed PENDING 0:00 (Dependency)
+3309789 b5-seed PENDING 0:00 (Dependency)
+3309788 b5-seed PENDING 0:00 (Dependency)
+3309787 b5-seed PENDING 0:00 (Dependency)
+3345920 b6-wp5-pilot PENDING 0:00 (JobHeldUser)
+3345918 b6-wp5-pilot PENDING 0:00 (JobHeldUser)
+3345917 b6-wp5-pilot PENDING 0:00 (JobHeldUser)
+
+
+JobID|State|ExitCode|Elapsed|Start|End|NodeList
+3361666|FAILED|2:0|01:05:41|2026-10-11T17:05:47|2026-10-11T18:11:28|gh086
+3361666.batch|FAILED|2:0|01:05:41|2026-10-11T17:05:47|2026-10-11T18:11:28|gh086
+3361666.extern|COMPLETED|0:0|01:05:41|2026-10-11T17:05:47|2026-10-11T18:11:28|gh086
+
+
+BATCH_TAIL train/train_HyenaTransgenic_RTX4090.py: OK
+train/train_NTSegment.py: OK
+train/train_NTT5Transgenic.py: OK
+train/train_NTTransgenic.py: OK
+{"filesystem_available_bytes": 389154234368, "pool": "ddn_ssd", "project_id": 22169, "quota_remaining_bytes": 205784051712, "required_bytes": 107374182400, "results_dir": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2"}
+VERIFY_START 2026-10-11T17:05:53-05:00
+PHASE_START A 2026-10-11T17:18:10-05:00
+PHASE_FINISHED A 2026-10-11T17:33:44-05:00
+PHASE_START B 2026-10-11T17:33:44-05:00
+PHASE_FINISHED B 2026-10-11T17:52:29-05:00
+PHASE_START C 2026-10-11T17:52:40-05:00
+PHASE_FINISHED C 2026-10-11T18:11:05-05:00
+
+verify.log W1011 17:06:12.925000 2944745 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 17:06:12.978000 2944745 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+VERIFIED_INPUT_AND_ORDER 56d4849e7118616ea50420f07c07557280aa6758d651e3ad68ef381433a1982b
+
+A.log /usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+{"global_step": 210, "epoch": 0, "loss": 3.256150245666504, "lr": 4.657351962741185e-06, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)
+
+
+
+[rank0]:[W1011 17:33:41.209315541 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+
+B.log {"global_step": 210, "epoch": 0, "loss": 3.256150245666504, "lr": 4.657351962741185e-06, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+{"global_step": 220, "epoch": 0, "loss": 3.7511062622070312, "lr": 4.879130627633622e-06, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+exiting for the job chain (no TRAINING_DONE)
+exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)
+exiting for the job chain (no TRAINING_DONE)
+
+[rank0]:[W1011 17:52:26.711923199 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+
+C.log /usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+{"global_step": 220, "epoch": 0, "loss": 3.750955104827881, "lr": 4.879130627633622e-06, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)
+
+
+
+[rank0]:[W1011 18:11:00.107994055 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+
+comparison.json         5051,
+        5052
+      ],
+      "rng_after": [],
+      "rng_before": [],
+      "shapes": []
+    }
+  }
+}
+
+META A {"epoch": 0, "step": 5040, "global_step": 210, "pending_micro": 0, "stopper": {"best": null, "best_epoch": null, "bad_epochs": 0, "patience": 3}, "arm": "C2", "seed": 123, "stop_after_updates": 4099, "identity_sha256": "60c3357d70e0d5316a2562e09bc47c2ef1a2c23f5ae6356bea034b8eb40aadd9"}
+TRACE A 0 forwards 240 last_micro 5040 restored [True] finished [{'global_step': 210, 'history': [], 'preempted': True}]
+TRACE A 1 forwards 240 last_micro 5040 restored [True] finished [{'global_step': 210, 'history': [], 'preempted': True}]
+TRACE A 2 forwards 240 last_micro 5040 restored [True] finished [{'global_step': 210, 'history': [], 'preempted': True}]
+TRACE A 3 forwards 240 last_micro 5040 restored [True] finished [{'global_step': 210, 'history': [], 'preempted': True}]
+META B210 {"epoch": 0, "step": 5040, "global_step": 210, "pending_micro": 0, "stopper": {"best": null, "best_epoch": null, "bad_epochs": 0, "patience": 3}, "arm": "C2", "seed": 123, "stop_after_updates": 4099, "identity_sha256": "aaf6dcfc6133ad82057b582bfc9a834f0ce5b9ed76d6556e0633db381358d89f"}
+META B {"epoch": 0, "step": 5280, "global_step": 220, "pending_micro": 0, "stopper": {"best": null, "best_epoch": null, "bad_epochs": 0, "patience": 3}, "arm": "C2", "seed": 123, "stop_after_updates": 4099, "identity_sha256": "aaf6dcfc6133ad82057b582bfc9a834f0ce5b9ed76d6556e0633db381358d89f"}
+TRACE B 0 forwards 480 last_micro 5280 restored [True] finished [{'global_step': 220, 'history': [], 'preempted': True}]
+TRACE B 1 forwards 480 last_micro 5280 restored [True] finished [{'global_step': 220, 'history': [], 'preempted': True}]
+TRACE B 2 forwards 480 last_micro 5280 restored [True] finished [{'global_step': 220, 'history': [], 'preempted': True}]
+TRACE B 3 forwards 480 last_micro 5280 restored [True] finished [{'global_step': 220, 'history': [], 'preempted': True}]
+META C {"epoch": 0, "step": 5280, "global_step": 220, "pending_micro": 0, "stopper": {"best": null, "best_epoch": null, "bad_epochs": 0, "patience": 3}, "arm": "C2", "seed": 123, "stop_after_updates": 4099, "identity_sha256": "aaf6dcfc6133ad82057b582bfc9a834f0ce5b9ed76d6556e0633db381358d89f"}
+TRACE C 0 forwards 240 last_micro 5280 restored [True] finished [{'global_step': 220, 'history': [], 'preempted': True}]
+TRACE C 1 forwards 240 last_micro 5280 restored [True] finished [{'global_step': 220, 'history': [], 'preempted': True}]
+TRACE C 2 forwards 240 last_micro 5280 restored [True] finished [{'global_step': 220, 'history': [], 'preempted': True}]
+TRACE C 3 forwards 240 last_micro 5280 restored [True] finished [{'global_step': 220, 'history': [], 'preempted': True}]
+CONTINUATION {
+  "jobs": [],
+  "observed_job_state": "FAILED",
+  "phase": "blocked_determinism",
+  "pid": 3276938,
+  "recovery_job": 3361386,
+  "source_commit": "d7b1a37",
+  "started_unix": 1791750201.5162792,
+  "updated_unix": 1791752992.2966356,
+  "controller_stopped": true,
+  "error": "Unresolved real four-rank resume loss mismatch at update210; frozen protocol determinism gate must be cleared before promotion/submission",
+  "diagnostic_job": 3361666,
+  "recovery_stopped_at_update": 256,
+  "recovery_trainer_exit": "normal_preempted",
+  "recovery_batch_failure": "intentional minimum400 postcondition"
+}
+CONTROLLER_EXISTS False
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

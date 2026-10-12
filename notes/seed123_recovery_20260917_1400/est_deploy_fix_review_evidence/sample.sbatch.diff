@@ -1,0 +1,46 @@
+--- backup/sample.sbatch
++++ current/sample.sbatch
+@@ -8,7 +8,9 @@
+ #SBATCH --no-requeue
+ #SBATCH --signal=B:TERM@60
+ #SBATCH --export=NIL
+-# Controller supplies account, partition and NEW exclusive stdout/stderr locations.
++# Only the reviewed prepare_controller.py argv is authorized: explicit distinct
++# --output/--error, --open-mode=append, fresh private single-use namespace.
++# Logs are reserved before Slurm starts this script. Never reuse or retry argv.
+ # Submit with --export=NIL (not NONE, which may reconstruct a login environment).
+ set -euo pipefail
+ umask 077
+@@ -28,11 +30,26 @@
+   /data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3.11 \
+   -I -B "$release/run_compute.py" "$release" "$sha" "$out" &
+ pid=$!
+-# Do not exec: TERM is forwarded to the worker's own cleanup/report handler;
+-# interrupted wait is followed by another wait so the Slurm shell remains alive.
+-trap 'kill -TERM "$pid" 2>/dev/null || true' TERM INT
++# Forward only the first interruption so repeated TERM cannot tear down the
++# worker's scoped cleanup. Independent USR1 at 40s stops interruptible cleanup
++# or postchecks, leaving 20s of the Slurm grace for the launcher receipt.
++watchdog=
++interrupted=0
++interrupt() {
++  (( interrupted == 0 )) || return 0
++  interrupted=1
++  kill -TERM "$pid" 2>/dev/null || true
++  ( sleep 40; kill -USR1 "$pid" 2>/dev/null || true ) &
++  watchdog=$!
++}
++trap interrupt TERM INT
+ set +e
+-wait "$pid"
+-rc=$?
+-if kill -0 "$pid" 2>/dev/null; then wait "$pid"; rc=$?; fi
++while true; do
++  wait "$pid"
++  rc=$?
++  kill -0 "$pid" 2>/dev/null || break
++done
++if [[ -n $watchdog ]]; then kill "$watchdog" 2>/dev/null || true; fi
++# A graceful worker exit does not turn an interrupted allocation into success.
++if (( interrupted != 0 && rc == 0 )); then rc=1; fi
+ exit "$rc"

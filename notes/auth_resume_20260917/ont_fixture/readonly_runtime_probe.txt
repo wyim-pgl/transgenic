@@ -1,0 +1,24 @@
+Read-only SSH probe, exit 0. No install, write, scheduler submission, alignment or canonical input scan.
+Command shape: ssh -o BatchMode=yes -o ConnectTimeout=15 pronghorn '<date -Is; hostname; readlink -f and sha256sum on three executables and sylvan Python; version flags; Python -I -B sys.version/sys.executable>'
+Observed stdout:
+2026-09-17T16:03:40-0700
+login-0
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2
+8a561f2c29f5a250eeecb6915100d23194dd38a41bb230d0b6afe69f78d5adf4
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/samtools
+c1d24b1c06254c9817cb62398d066b428af7bb5fba3917ed6e026a82c193f187
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/seqkit
+fe5cbb4495559819220e7e64ded7e7ef26388fbccd17e83377571d75d58f308a
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python3.11
+eaf04015fc8a4d06fe01aab44ba359df02b5e2bdf7c350222d7a69ddfc9cac9e
+2.28-r1209
+samtools 1.3.1
+Using htslib 1.3.1
+Copyright (C) 2016 Genome Research Ltd.
+seqkit v2.13.0
+3.11.14 | packaged by conda-forge | (main, Oct 22 2025, 22:46:25) [GCC 14.3.0]
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python
+
+Login stderr loaded default-environment and its normal module requirements.
+The Python entry is a symlink to the resolved python3.11 path; candidate pins/uses that resolved path.
+Binary hashes and version flags are not certification of linked libraries, Python stdlib/site configuration, Slurm cgroups, or runtime immutability.

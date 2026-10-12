@@ -1,0 +1,15 @@
+test_actual_all_cases_read_only_and_exact_paths (__main__.RecoveryTests) ... ok
+test_changed_result_rejected_not_replaced (__main__.RecoveryTests) ... ok
+test_extra_map_rejected_no_wildcard_selection (__main__.RecoveryTests) ... ok
+test_missing_maps_rejected (__main__.RecoveryTests) ... ok
+test_mutated_maps_rejected (__main__.RecoveryTests) ... ok
+test_old_raw_glob_misses_actual_query_sibling_maps (__main__.RecoveryTests) ... ok
+test_relocated_map_is_not_searched_for (__main__.RecoveryTests) ... ok
+test_rewritten_manifest_cannot_authorize_mutation (__main__.RecoveryTests) ... ok
+test_symlink_map_rejected_even_with_same_bytes (__main__.RecoveryTests) ... ok
+test_wrong_or_relative_origin_rejected (__main__.RecoveryTests) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 22.888s
+
+OK

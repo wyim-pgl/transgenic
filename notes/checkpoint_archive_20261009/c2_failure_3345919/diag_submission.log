@@ -1,0 +1,22 @@
+LIVE_QUEUE
+3309786|b5-seed|PENDING|ghx4
+3345917|b6-wp5-pilot|PENDING|ghx4
+3345918|b6-wp5-pilot|PENDING|ghx4
+3309790|b5-seed|PENDING|ghx4
+3309789|b5-seed|PENDING|ghx4
+3309788|b5-seed|PENDING|ghx4
+3309787|b5-seed|PENDING|ghx4
+3345920|b6-wp5-pilot|PENDING|ghx4
+
+SUBMITTED 3360834
+JobId=3360834 JobName=c2-recompile-diag UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=1960 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Priority Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=01:00:00 TimeMin=N/A SubmitTime=2026-10-11T13:40:09 EligibleTime=2026-10-11T13:40:09 AccrueTime=Unknown StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-11T13:40:09 Scheduler=Main Partition=ghx4-interactive AllocNode:Sid=gh-login03:1355255 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1-1 NumCPUs=16 NumTasks=1 CPUs/Task=16 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=16,mem=113560M,node=1,billing=2000,gres/gpu=1 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=16 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/repo_b6_c2diag_233574a_20261011/replay_c2.sbatch SubmitLine=sbatch --parsable /work/nvme/bilv/wcyim/transgenic/repo_b6_c2diag_233574a_20261011/replay_c2.sbatch WorkDir=/u/wcyim StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/b6_prep_20260925/logs/c2-recompile-3360834.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:1 TresPerTask=cpu=16
+
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

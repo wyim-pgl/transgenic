@@ -1,0 +1,5 @@
+accession	qlen	action	kept	categories
+keep121	121	keep	1-121	
+keep120	120	keep	1-120	
+keep100	100	keep	1-100	
+drop92_454	92	drop		

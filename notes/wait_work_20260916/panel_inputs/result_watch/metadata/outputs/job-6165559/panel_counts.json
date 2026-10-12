@@ -1,0 +1,1013 @@
+{
+  "duplicate_ambiguous_loci": 0,
+  "loci": [
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        750,
+        809,
+        1127,
+        7,
+        7,
+        4,
+        4
+      ],
+      "gene_id": "Ath014705",
+      "selected_molecule_count": 22,
+      "window": [
+        "Chr3",
+        11907526,
+        11938246
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        833,
+        1587,
+        0,
+        0,
+        2,
+        2
+      ],
+      "gene_id": "Ath022311",
+      "selected_molecule_count": 71,
+      "window": [
+        "Chr5",
+        4190251,
+        4220971
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        2024,
+        331,
+        0,
+        0,
+        6,
+        7
+      ],
+      "gene_id": "Ath003484",
+      "selected_molecule_count": 11,
+      "window": [
+        "Chr1",
+        11961570,
+        11992290
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        2060,
+        891,
+        2034,
+        7,
+        7,
+        2,
+        2
+      ],
+      "gene_id": "Ath012743",
+      "selected_molecule_count": 178,
+      "window": [
+        "Chr3",
+        3905150,
+        3935870
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        381,
+        1018,
+        1264,
+        1,
+        1,
+        4,
+        4
+      ],
+      "gene_id": "Ath024852",
+      "selected_molecule_count": 20,
+      "window": [
+        "Chr5",
+        17687666,
+        17718386
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        6009,
+        3580,
+        0,
+        0,
+        28,
+        28
+      ],
+      "gene_id": "Ath009257",
+      "selected_molecule_count": 127,
+      "window": [
+        "Chr2",
+        11461088,
+        11491808
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1014,
+        0,
+        336,
+        4,
+        4,
+        0,
+        0
+      ],
+      "gene_id": "Ath009348",
+      "selected_molecule_count": 7,
+      "window": [
+        "Chr2",
+        11807872,
+        11838592
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1142,
+        0,
+        1431,
+        4,
+        4,
+        0,
+        0
+      ],
+      "gene_id": "Ath009959",
+      "selected_molecule_count": 69,
+      "window": [
+        "Chr2",
+        14158696,
+        14189416
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        2072,
+        1445,
+        0,
+        0,
+        9,
+        10
+      ],
+      "gene_id": "Ath026375",
+      "selected_molecule_count": 51,
+      "window": [
+        "Chr5",
+        23434962,
+        23465682
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        2153,
+        0,
+        1235,
+        11,
+        11,
+        0,
+        0
+      ],
+      "gene_id": "Ath025827",
+      "selected_molecule_count": 294,
+      "window": [
+        "Chr5",
+        21449849,
+        21480569
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        770,
+        1159,
+        815,
+        3,
+        3,
+        7,
+        8
+      ],
+      "gene_id": "Ath020477",
+      "selected_molecule_count": 43,
+      "window": [
+        "Chr4",
+        16389682,
+        16420402
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1140,
+        1463,
+        1927,
+        3,
+        3,
+        9,
+        10
+      ],
+      "gene_id": "Ath017922",
+      "selected_molecule_count": 111,
+      "window": [
+        "Chr4",
+        6849746,
+        6880466
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        2736,
+        0,
+        1911,
+        16,
+        16,
+        0,
+        0
+      ],
+      "gene_id": "Ath007771",
+      "selected_molecule_count": 77,
+      "window": [
+        "Chr2",
+        2912199,
+        2942919
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        963,
+        0,
+        1234,
+        2,
+        2,
+        0,
+        0
+      ],
+      "gene_id": "Ath015840",
+      "selected_molecule_count": 144,
+      "window": [
+        "Chr3",
+        19554636,
+        19585356
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        810,
+        1456,
+        2388,
+        3,
+        3,
+        7,
+        7
+      ],
+      "gene_id": "Ath019860",
+      "selected_molecule_count": 43,
+      "window": [
+        "Chr4",
+        14124298,
+        14155018
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        0,
+        1505,
+        0,
+        0,
+        0,
+        0
+      ],
+      "gene_id": "Ath022532",
+      "selected_molecule_count": 25,
+      "window": [
+        "Chr5",
+        4972949,
+        5003669
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        1794,
+        784,
+        0,
+        0,
+        6,
+        8
+      ],
+      "gene_id": "Ath003322",
+      "selected_molecule_count": 19,
+      "window": [
+        "Chr1",
+        11232776,
+        11263496
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        1282,
+        1365,
+        0,
+        0,
+        2,
+        2
+      ],
+      "gene_id": "Ath014393",
+      "selected_molecule_count": 113,
+      "window": [
+        "Chr3",
+        9965220,
+        9995940
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1178,
+        1776,
+        1298,
+        6,
+        7,
+        4,
+        4
+      ],
+      "gene_id": "Ath012721",
+      "selected_molecule_count": 84,
+      "window": [
+        "Chr3",
+        3837572,
+        3868292
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        842,
+        1496,
+        0,
+        0,
+        1,
+        1
+      ],
+      "gene_id": "Ath016828",
+      "selected_molecule_count": 29,
+      "window": [
+        "Chr3",
+        23002006,
+        23032726
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        2629,
+        382,
+        1995,
+        10,
+        10,
+        2,
+        3
+      ],
+      "gene_id": "Ath010464",
+      "selected_molecule_count": 295,
+      "window": [
+        "Chr2",
+        15965887,
+        15996607
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        0,
+        1591,
+        0,
+        0,
+        0,
+        0
+      ],
+      "gene_id": "Ath007951",
+      "selected_molecule_count": 19,
+      "window": [
+        "Chr2",
+        5615194,
+        5645914
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1237,
+        1039,
+        1530,
+        3,
+        3,
+        2,
+        2
+      ],
+      "gene_id": "Ath013802",
+      "selected_molecule_count": 45,
+      "window": [
+        "Chr3",
+        7658697,
+        7689417
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        1607,
+        1391,
+        0,
+        0,
+        2,
+        3
+      ],
+      "gene_id": "Ath021609",
+      "selected_molecule_count": 26,
+      "window": [
+        "Chr5",
+        1737573,
+        1768293
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        2163,
+        1275,
+        0,
+        0,
+        5,
+        5
+      ],
+      "gene_id": "Ath022030",
+      "selected_molecule_count": 19,
+      "window": [
+        "Chr5",
+        3156553,
+        3187273
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        1144,
+        0,
+        0,
+        0,
+        8,
+        8
+      ],
+      "gene_id": "Ath011580",
+      "selected_molecule_count": 6,
+      "window": [
+        "Chr3",
+        110247,
+        140967
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1276,
+        0,
+        1439,
+        1,
+        1,
+        0,
+        0
+      ],
+      "gene_id": "Ath013395",
+      "selected_molecule_count": 53,
+      "window": [
+        "Chr3",
+        6166496,
+        6197216
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        1965,
+        687,
+        0,
+        0,
+        8,
+        8
+      ],
+      "gene_id": "Ath008415",
+      "selected_molecule_count": 22,
+      "window": [
+        "Chr2",
+        8175013,
+        8205733
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        732,
+        0,
+        1401,
+        1,
+        1,
+        0,
+        0
+      ],
+      "gene_id": "Ath013822",
+      "selected_molecule_count": 5,
+      "window": [
+        "Chr3",
+        7720035,
+        7750755
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        338,
+        0,
+        102,
+        1,
+        1,
+        0,
+        0
+      ],
+      "gene_id": "Ath004930",
+      "selected_molecule_count": 4,
+      "window": [
+        "Chr1",
+        21174588,
+        21205308
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        2454,
+        1277,
+        0,
+        0,
+        6,
+        7
+      ],
+      "gene_id": "Ath004546",
+      "selected_molecule_count": 21,
+      "window": [
+        "Chr1",
+        19742863,
+        19773583
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1502,
+        0,
+        209,
+        11,
+        11,
+        0,
+        0
+      ],
+      "gene_id": "Ath022752",
+      "selected_molecule_count": 11,
+      "window": [
+        "Chr5",
+        5736342,
+        5767062
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        458,
+        2016,
+        0,
+        0,
+        1,
+        1
+      ],
+      "gene_id": "Ath004211",
+      "selected_molecule_count": 95,
+      "window": [
+        "Chr1",
+        18396505,
+        18427225
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1079,
+        0,
+        558,
+        3,
+        3,
+        0,
+        0
+      ],
+      "gene_id": "Ath011917",
+      "selected_molecule_count": 12,
+      "window": [
+        "Chr3",
+        1153661,
+        1184381
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        3211,
+        1527,
+        0,
+        0,
+        16,
+        15
+      ],
+      "gene_id": "Ath011910",
+      "selected_molecule_count": 95,
+      "window": [
+        "Chr3",
+        1134710,
+        1165430
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        1820,
+        297,
+        0,
+        0,
+        4,
+        4
+      ],
+      "gene_id": "Ath002779",
+      "selected_molecule_count": 10,
+      "window": [
+        "Chr1",
+        8982954,
+        9013674
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        394,
+        0,
+        1756,
+        1,
+        0,
+        0,
+        0
+      ],
+      "gene_id": "Ath017267",
+      "selected_molecule_count": 11,
+      "window": [
+        "Chr4",
+        1103125,
+        1133845
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1060,
+        1285,
+        1201,
+        4,
+        4,
+        3,
+        3
+      ],
+      "gene_id": "Ath017735",
+      "selected_molecule_count": 40,
+      "window": [
+        "Chr4",
+        6024306,
+        6055026
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        84,
+        2022,
+        210,
+        0,
+        1,
+        11,
+        11
+      ],
+      "gene_id": "Ath008157",
+      "selected_molecule_count": 9,
+      "window": [
+        "Chr2",
+        7113161,
+        7143881
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        543,
+        107,
+        0,
+        0,
+        1,
+        1
+      ],
+      "gene_id": "Ath003963",
+      "selected_molecule_count": 3,
+      "window": [
+        "Chr1",
+        17317871,
+        17348591
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        879,
+        711,
+        3004,
+        4,
+        4,
+        3,
+        3
+      ],
+      "gene_id": "Ath019415",
+      "selected_molecule_count": 33,
+      "window": [
+        "Chr4",
+        12666714,
+        12697434
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1358,
+        0,
+        807,
+        3,
+        3,
+        0,
+        0
+      ],
+      "gene_id": "Ath023888",
+      "selected_molecule_count": 18,
+      "window": [
+        "Chr5",
+        12544778,
+        12575498
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        569,
+        1861,
+        0,
+        0,
+        1,
+        1
+      ],
+      "gene_id": "Ath018030",
+      "selected_molecule_count": 35,
+      "window": [
+        "Chr4",
+        7303289,
+        7334009
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        1786,
+        4514,
+        0,
+        0,
+        6,
+        6
+      ],
+      "gene_id": "Ath016370",
+      "selected_molecule_count": 223,
+      "window": [
+        "Chr3",
+        21405671,
+        21436391
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        0,
+        878,
+        2362,
+        0,
+        0,
+        3,
+        3
+      ],
+      "gene_id": "Ath022253",
+      "selected_molecule_count": 62,
+      "window": [
+        "Chr5",
+        3955356,
+        3986076
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        2090,
+        930,
+        2428,
+        7,
+        7,
+        4,
+        6
+      ],
+      "gene_id": "Ath009907",
+      "selected_molecule_count": 398,
+      "window": [
+        "Chr2",
+        13989273,
+        14019993
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        952,
+        841,
+        1116,
+        7,
+        8,
+        1,
+        1
+      ],
+      "gene_id": "Ath017205",
+      "selected_molecule_count": 36,
+      "window": [
+        "Chr4",
+        858553,
+        889273
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1995,
+        0,
+        533,
+        8,
+        8,
+        0,
+        0
+      ],
+      "gene_id": "Ath010198",
+      "selected_molecule_count": 11,
+      "window": [
+        "Chr2",
+        14986050,
+        15016770
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        626,
+        774,
+        2050,
+        4,
+        4,
+        2,
+        2
+      ],
+      "gene_id": "Ath020143",
+      "selected_molecule_count": 43,
+      "window": [
+        "Chr4",
+        15164978,
+        15195698
+      ],
+      "zero_biological_support": false
+    },
+    {
+      "availability_nonzero": 30720,
+      "biological_nonzero_per_channel": [
+        1461,
+        2629,
+        2770,
+        3,
+        3,
+        13,
+        14
+      ],
+      "gene_id": "Ath017916",
+      "selected_molecule_count": 245,
+      "window": [
+        "Chr4",
+        6823493,
+        6854213
+      ],
+      "zero_biological_support": false
+    }
+  ],
+  "manifest_sha256": "3c31b90522dc8a1393480218f878b6c4e44e4339e211e69173f25005286c63ca",
+  "population": "excluded_heldout",
+  "reference_compatible_loci": 0,
+  "reference_report_sha256": "ebd6a22a7eb9b7d6c33a29ace3bfe05963635c96e8531b02a075de8a4c1f03e2",
+  "rn": null,
+  "scientific_verdict": null,
+  "scope": "raw_EST_input_counts_only",
+  "training_eligible": false
+}

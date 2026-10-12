@@ -1,0 +1,52 @@
+{
+  "provenance_id": "gpu_runtime_v1",
+  "purpose": "A46 rule 9 runtime record for the DeltaAI training container: library versions and compile policy, read out of the SIF itself.",
+  "measured_on": "2026-09-21",
+  "measured_host": "gh-login03.delta.ncsa.illinois.edu (DeltaAI login node, reached 2-hop via pronghorn)",
+  "measured_by": "read-only: sha256sum on the SIF, then `apptainer exec <sif> python3` importing each module",
+  "cost": "login-node only; no job submitted, no GPU time consumed",
+  "container": {
+    "path": "/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif",
+    "base_image": "NGC pytorch:26.08-py3",
+    "size_bytes": 11120398336,
+    "mtime": "2026-09-09 12:45",
+    "sha256_measured": "1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6",
+    "sha256_recorded_in_A44": "1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6",
+    "sha256_match": true,
+    "hash_wall_time": "28.4 s"
+  },
+  "libraries_inside_the_container": {
+    "python": "3.12.3",
+    "torch": "2.14.0a0+4fdf77b940.nv26.08",
+    "transformers": "4.57.6",
+    "accelerate": "1.15.0",
+    "numpy": "2.1.0",
+    "safetensors": "0.8.0",
+    "huggingface_hub": "0.36.2",
+    "datasets": "5.0.1",
+    "duckdb": "1.5.5",
+    "pysam": "ABSENT (ModuleNotFoundError)"
+  },
+  "cuda": {
+    "torch_cuda_version": "13.4",
+    "cudnn": 92500
+  },
+  "compile_policy": {
+    "inductor_available": true,
+    "torch._dynamo.config.suppress_errors": false,
+    "torch._dynamo.config.cache_size_limit": 8,
+    "reading": "suppress_errors=false means Dynamo raises on a compile failure rather than silently degrading to eager, which is the direction A46 rule 9 requires. It does NOT close rule 9's other half: the trainer itself must raise, and train_HyenaTransgenic.py line 317 currently only warns. That is a code gap, unchanged by this measurement."
+  },
+  "cross_checks": {
+    "A44_triple": "A44 (:923) records torch 2.14.0a0+4fdf77b940.nv26.08, transformers 4.57.6, accelerate 1.15.0. All three match the values read out of the container here, by a different method on a different day.",
+    "sif_size_vs_budget": "11,120,398,336 B agrees with the 11.12 GB SIF term in the 51.53 GB hashing budget enumerated for the 1700 s external-timeout analysis."
+  },
+  "notes": {
+    "apptainer": "/usr/bin/apptainer and /usr/bin/singularity are on PATH on the login node; no module load is needed. A42's 'no apptainer module' note means there is no environment module, not that the binary is unavailable.",
+    "pysam": "pysam is NOT in the container. mvp_build_c0lite.py depends on pysam, so that step must run where pysam exists -- pronghorn's transgenic-revision env has pysam 0.23.3 -- not inside this SIF.",
+    "duckdb": "duckdb 1.5.5 inside the container is the same version as the working install on pgl-gpu."
+  },
+  "not_measured": {
+    "seed123_container": "transgenic-ngc.sif (NGC 25.06, torch 2.8.0a0, sha256 3b242b339f59a8f8...) was not re-hashed in this pass; seed 123 runs on that image per A44/A45."
+  }
+}

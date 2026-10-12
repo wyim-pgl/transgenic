@@ -1,0 +1,10 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+{
+  "epoch_05/eval.json": "{\n \"epoch\": 5,\n \"eval_loss\": 0.6394507884979248,\n \"train_loss\": 0.6142173409461975,\n \"finished_at\": \"2026-09-16T11:14:22\",\n \"global_step\": 10355,\n \"is_best\": true,\n \"stopper\": {\n  \"best\": 0.6394507884979248,\n  \"best_epoch\": 5,\n  \"bad_epochs\": 0,\n  \"patience\": 3\n }\n}",
+  "latest_state/meta.json": "{\n  \"best_eval_score\": 0.6394507884979248,\n  \"epoch\": 5,\n  \"global_step\": 10600,\n  \"seed\": 123,\n  \"step\": 5865,\n  \"stopper\": {\n    \"bad_epochs\": 0,\n    \"best\": 0.6394507884979248,\n    \"best_epoch\": 5,\n    \"patience\": 3\n  }\n}",
+  "runtime_identity.txt": "sif=transgenic-ngc-26.08.sif\nsif_sha256=1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6\nrepo=8f049eb3ba72ba7541076fe9fc8f6019b90c0f7f\ngpus=4\ncpus=64\ntorch=2.14.0a0+4fdf77b940.nv26.08\ncheckpointing=nonreentrant\ncompile=on\n",
+  "TRAINING_DONE": null,
+  "TRAINING_FAILED": null
+}

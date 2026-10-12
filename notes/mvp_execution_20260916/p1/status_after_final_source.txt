@@ -1,0 +1,14 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T20:08:45-0700
+JobID|State|ExitCode|Elapsed|MaxRSS
+6165525|RUNNING|0:0|01:01:18|
+6165525.batch|RUNNING|0:0|01:01:18|
+6165525.extern|RUNNING|0:0|01:01:18|
+2026-09-16T22:08:46-05:00
+             JOBID                           NAME     STATE       TIME NODELIST(REASON)
+           3163545                   mvp8-p1-0916   PENDING       0:00 (Priority)
+JobID|State|ExitCode|Elapsed|MaxRSS
+3163545|PENDING|0:0|00:00:00|
+/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/evidence/fullc0lite.db 1068773376

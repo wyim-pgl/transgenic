@@ -1,0 +1,12 @@
+$ ssh -o BatchMode=yes pronghorn '/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python -B -c \'from pathlib import Path; import hashlib,os; p=Path("/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/fixture/logs/slurm-6165460.out"); print("SCHEDULER_BOUND_LOG",p,"bytes",p.stat().st_size); assert p.stat().st_size<100000; d=p.read_bytes(); print("SHA256",hashlib.sha256(d).hexdigest()); print(d.decode()); r=Path("/data/gpfs/assoc/pgl/data/Transgenic"); print("NAMESPACE_EXISTS",(r/"evidence/est_followup_20260916_1530").exists()); print("C1_SUBDIR_EXISTS",os.path.lexists(r/"evidence/est_followup_20260916_1530/c1")); print("C1_SNAPSHOT_EXISTS",os.path.lexists(r/"worktrees/est_followup_20260916_1530"))\''
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+SCHEDULER_BOUND_LOG /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530/fixture/logs/slurm-6165460.out bytes 0
+SHA256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+NAMESPACE_EXISTS True
+C1_SUBDIR_EXISTS False
+C1_SNAPSHOT_EXISTS False
+
+LOCAL_SSH_EXIT=0

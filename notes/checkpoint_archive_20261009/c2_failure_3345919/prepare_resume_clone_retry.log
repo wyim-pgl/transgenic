@@ -1,0 +1,11 @@
+{"filesystem_available_bytes": 396151533568, "pool": "ddn_ssd", "project_id": 22169, "quota_remaining_bytes": 212781350912, "required_bytes": 107374182400, "results_dir": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2"}
+CLONE_VERIFIED {"target": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2_recovery_20261011", "global_step": 200, "copied_files": 18, "copied_bytes": 5729291593, "draw_logs": {"rank00.tsv": {"original_rows": 4800, "committed_rows": 4800, "committed_prefix_sha256": "f6c2eecc10921cf621479e005db1361e61dfc8e81d5aa8c5b6ca676c84650de5", "failed_tail_rows": 0}, "rank01.tsv": {"original_rows": 4800, "committed_rows": 4800, "committed_prefix_sha256": "ff893d0ba22c901d7e4f7e76934d5a041e884584205d2f7224d3abe3c6590ce5", "failed_tail_rows": 0}, "rank02.tsv": {"original_rows": 4800, "committed_rows": 4800, "committed_prefix_sha256": "8926cd9db4a34d5fb1d0f825d836e37bf052f3eacb94bcfeef367d99bbf6dfd3", "failed_tail_rows": 0}, "rank03.tsv": {"original_rows": 6718, "committed_rows": 4800, "committed_prefix_sha256": "d7a298d40fb53375a5fcfdc652592134856a40228de874f88528ddbad3fb2ca9", "failed_tail_rows": 1918}}}
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

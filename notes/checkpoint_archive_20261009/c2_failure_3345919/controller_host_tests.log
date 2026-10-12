@@ -1,0 +1,24 @@
+continue_c2.py 384ef910c1cce2e5aafd7aaf70456714c133f8bc48f65219afc4cd6d85b7c729
+test_continue_c2.py 738e9c9d4c9abcc15409d39099e3c5f9b80695a363b4bbc24a3f8e0ace4c17ab
+HOST_TEST_RC 0
+....{"phase": "waiting", "jobs": [], "updated_unix": 1791749880.1781843}
+{"phase": "validated", "jobs": [], "updated_unix": 1791749880.244969}
+{"phase": "retire_intent", "jobs": [], "updated_unix": 1791749880.245727}
+{"phase": "retired_obsolete_job", "jobs": [], "updated_unix": 1791749880.2944658}
+{"phase": "promotion_intent", "jobs": [], "updated_unix": 1791749880.295187}
+{"phase": "error", "jobs": [], "updated_unix": 1791749880.295677}
+OSError: injected second rename failure
+..
+----------------------------------------------------------------------
+Ran 6 tests in 0.982s
+
+OK
+
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

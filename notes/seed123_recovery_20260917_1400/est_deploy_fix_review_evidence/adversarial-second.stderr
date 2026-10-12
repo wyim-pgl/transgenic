@@ -1,0 +1,13 @@
+test_binding_deadline (__main__.Independent) ... ok
+test_binding_term (__main__.Independent) ... ok
+test_helper_link_and_namespace_guards (__main__.Independent) ... ok
+test_pending_term (__main__.Independent) ... ok
+test_pending_usr1 (__main__.Independent) ... ok
+test_result_usr1 (__main__.Independent) ... ok
+test_start_term (__main__.Independent) ... ok
+test_verification_usr1 (__main__.Independent) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 17.394s
+
+OK

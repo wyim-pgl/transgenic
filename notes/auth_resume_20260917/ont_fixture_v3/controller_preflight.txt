@@ -1,0 +1,20 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T16:53:34-0700
+HOME=/data/gpfs/home/wyim
+             JOBID                         NAME      STATE       TIME   CPUS   MIN_MEMORY NODELIST(REASON)
+           6147940             syl_an_Ahy_A_ODB    PENDING       0:00      2           8G (JobHeldUser)
+           6147612                 syl_an_Ahy_A    PENDING       0:00      2           8G (JobHeldUser)
+           6147349                 syl_an_Ahy_B    PENDING       0:00      2           8G (JobHeldUser)
+           6146937                 syl_an_Ahy_B    PENDING       0:00      2           8G (JobHeldUser)
+           6165672   agat_clean_final.Ahy_A_ODB    RUNNING   11:09:09      2         220G cpu-51
+           6165685 syl_recovery_observer_202609    RUNNING    6:12:02      2         512M cpu-50
+           6156540          syl_watch_other_20m    RUNNING 7-05:02:32      2         512M cpu-50
+           6165938 aggregate_CombineGeneModels_    STOPPED    1:24:33      4          16G cpu-50
+           6165885    syl_Spe_geta_posttraining    STOPPED    1:25:59      2           8G cpu-50
+Filesystem      Size  Used Avail Use% Mounted on
+pronghorn-0      50G   39G   12G  77% /data/gpfs
+Filesystem         Inodes     IUsed      IFree IUse% Mounted on
+pronghorn-0    2280059648 405923813 1874135835   18% /data/gpfs
+/data/gpfs/home/wyim|wyim|p-wyim|700|directory

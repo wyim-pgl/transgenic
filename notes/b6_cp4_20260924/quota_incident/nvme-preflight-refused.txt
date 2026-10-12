@@ -1,0 +1,7 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+Traceback (most recent call last):
+  File "<stdin>", line 58, in <module>
+  File "<stdin>", line 49, in check_storage
+RuntimeError: insufficient CP4 storage: quota_remaining=0, filesystem_available=1021919965184, required=107374182400

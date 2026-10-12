@@ -1,0 +1,1506 @@
+{
+  "utc": "2026-09-17T23:05:13.965838Z",
+  "records": [
+    {
+      "action": "list",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa",
+      "size": 4096,
+      "mtime_ns": 1789512828622543000,
+      "entries": [
+        {
+          "name": "batch.exitcode",
+          "size": 2,
+          "directory": false
+        },
+        {
+          "name": "orthodb",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "orthodb.time.txt",
+          "size": 1972,
+          "directory": false
+        },
+        {
+          "name": "query.sha256",
+          "size": 153,
+          "directory": false
+        },
+        {
+          "name": "swissprot",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "swissprot.time.txt",
+          "size": 1981,
+          "directory": false
+        },
+        {
+          "name": "tmp",
+          "size": 4096,
+          "directory": true
+        }
+      ]
+    },
+    {
+      "action": "read",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/inputs.json",
+      "size": 3405,
+      "mtime_ns": 1789502485577614000,
+      "sha256": "0078f99fc16f8970ab87618c101bfc299a95405eca40567220fcfae7b0c98e8a",
+      "text": "[\n  {\n    \"species\": \"Athaliana\",\n    \"query\": \"/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Athaliana/univec/est.univec.fa.gz\",\n    \"query_md5\": \"d1aa1abf703b35285c8a3d0317067759\",\n    \"summary_sha256\": \"c9e24d5104e7c23400514cad2c0f92af66459b923770e54cb1d8c24aba1986ef\",\n    \"records\": 1046825,\n    \"receipt_sha256\": \"c4ca3ec9364b74b81d1c6ad302aa034939e276ef29bf33354bbf82e0f54cfbe2\",\n    \"compressed_bytes\": 94274908\n  },\n  {\n    \"species\": \"Bdistachyon\",\n    \"query\": \"/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Bdistachyon/univec/est.univec.fa.gz\",\n    \"query_md5\": \"919b8603ef29fe987d295f7bed509f11\",\n    \"summary_sha256\": \"4e0964466d74a04d06ca307b605bc5973160d27bfd018386a675636add5792fa\",\n    \"records\": 206123,\n    \"receipt_sha256\": \"5f6560ee1f73913ea0a29dc2ca39f9b3af8c6820f115c26108b4cc48b08bcfc5\",\n    \"compressed_bytes\": 38742876\n  },\n  {\n    \"species\": \"Gmax\",\n    \"query\": \"/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Gmax/univec/est.univec.fa.gz\",\n    \"query_md5\": \"7fc184d1d5a4d0b43db0326041ef8924\",\n    \"summary_sha256\": \"01bba0ff066028869e79b79d716fb1dd5680547afc817d20c56ec25b1ebc02d2\",\n    \"records\": 1374461,\n    \"receipt_sha256\": \"0674c4b45a980f79956fc76ddec9b38f560f86bdf796d39cfa5f52b35d295eb0\",\n    \"compressed_bytes\": 156963917\n  },\n  {\n    \"species\": \"Osativa\",\n    \"query\": \"/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Osativa/univec/est.univec.fa.gz\",\n    \"query_md5\": \"3713830283ebfdfabf52419afa73424b\",\n    \"summary_sha256\": \"ef6014c18c91ff2974cd273cc0db91288c1f2fda5fb228e293bd20c86729ed6f\",\n    \"records\": 1244141,\n    \"receipt_sha256\": \"b8d12efc6df4e43fc2087d8c0c2ae155e3a143684498b40dca9acc41cf1fbb05\",\n    \"compressed_bytes\": 184186502\n  },\n  {\n    \"species\": \"Ppatens\",\n    \"query\": \"/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Ppatens/univec/est.univec.fa.gz\",\n    \"query_md5\": \"736a51d6cea6c3414e335a16cbe79cf9\",\n    \"summary_sha256\": \"f936183239dd4c5f8279e071ff6607172be24c12213556e109be229627ac4a64\",\n    \"records\": 381809,\n    \"receipt_sha256\": \"37b1725642f6f4c2044f86fb4d5e49852951780b347d8821955c72ed9e527bbf\",\n    \"compressed_bytes\": 76165096\n  },\n  {\n    \"species\": \"Ptrichocarpa\",\n    \"query\": \"/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Ptrichocarpa/univec/est.univec.fa.gz\",\n    \"query_md5\": \"6c566f04b0942d3ed8d79b6288e4a7bb\",\n    \"summary_sha256\": \"782801ef39cfbbc118fb2f2dee95e3fb48a54c121229494090f7599ae40aaa41\",\n    \"records\": 89450,\n    \"receipt_sha256\": \"19fd6653e4f0a251d9063e978ab16ff3c6397d23dcd60c30a1bac971e83176d7\",\n    \"compressed_bytes\": 16001996\n  },\n  {\n    \"species\": \"Sbicolor\",\n    \"query\": \"/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sbicolor/univec/est.univec.fa.gz\",\n    \"query_md5\": \"981725cca627ab0a63671ec8a5f58c1e\",\n    \"summary_sha256\": \"267903fda3e022f41f6771807eadb90eb265f25c76189e89f0c0c7651ee8af5f\",\n    \"records\": 209441,\n    \"receipt_sha256\": \"6a9de8caf07c3538cbb5380b15653f60fa6b3e03da1d0b267144d5f3f112f29d\",\n    \"compressed_bytes\": 35225025\n  },\n  {\n    \"species\": \"Vvinifera\",\n    \"query\": \"/data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Vvinifera/univec/est.univec.fa.gz\",\n    \"query_md5\": \"bf17046a9de5694fb62df95278c19e22\",\n    \"summary_sha256\": \"4873129adee923672eda50576ea6b973b00d3f62cf30051f4b19a9347b2f4239\",\n    \"records\": 450180,\n    \"receipt_sha256\": \"6c56422a245ba459111393444b768baf30a85630abb8492101de5260dfbb443f\",\n    \"compressed_bytes\": 82678033\n  }\n]\n"
+    },
+    {
+      "action": "read",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch",
+      "size": 3549,
+      "mtime_ns": 1789502485258124000,
+      "sha256": "4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c",
+      "text": "#!/usr/bin/env bash\n#SBATCH --job-name=b6_blastx_remaining8\n#SBATCH --account=cpu-s1-pgl-0\n#SBATCH --partition=cpu-s1-pgl-0\n#SBATCH --cpus-per-task=16\n#SBATCH --mem=64G\n#SBATCH --time=12:00:00\n#SBATCH --array=0-7%2\n#SBATCH --no-requeue\nset -euo pipefail\nR=/data/gpfs/assoc/pgl/data/Transgenic\nW=$R/worktrees/b6-est-blastx-950cf4c\nBASE=$R/evidence/est_blastx/remaining8_20260915\nL=$R/evidence/est_blastx/preflight_20260914\nPY=/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python\nDIAMOND=/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond\nexport PYTHONDONTWRITEBYTECODE=1\nexport OMP_NUM_THREADS=16\n[[ \"${SLURM_ARRAY_TASK_ID:-}\" =~ ^[0-7]$ ]] || exit 2\ncd \"$BASE\"\nsha256sum -c inputs.sha256\nSP=$(\"$PY\" -c 'import json,sys; r=json.load(open(sys.argv[1])); assert len(r)==8; print(r[int(sys.argv[2])][\"species\"])' \"$BASE/inputs.json\" \"$SLURM_ARRAY_TASK_ID\")\ncase \"$SP\" in Athaliana|Bdistachyon|Gmax|Osativa|Ppatens|Ptrichocarpa|Sbicolor|Vvinifera) ;; *) exit 2;; esac\nD=$BASE/$SP\nmkdir \"$D\"\ntrap 'rc=$?; printf \"%s\\n\" \"$rc\" > \"$D/batch.exitcode\"' EXIT\nmkdir \"$D/tmp\"\nprintf '%s\\n' '5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291  '\"$W/revision/scripts/evidence/est_blastx.py\" '32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302  '\"$W/revision/scripts/64_orthodb_filter.py\" '0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d  '\"$DIAMOND\" | sha256sum -c -\nQ=$R/evidence/est/$SP/univec/est.univec.fa.gz\nQSHA=$(\"$PY\" - \"$BASE/inputs.json\" \"$SLURM_ARRAY_TASK_ID\" <<'PY'\nimport hashlib,json,sys\nfrom pathlib import Path\nrow=json.loads(Path(sys.argv[1]).read_text())[int(sys.argv[2])]\nq=Path(row['query']); md5=hashlib.md5(); sha=hashlib.sha256()\nwith q.open('rb') as f:\n for b in iter(lambda:f.read(8<<20),b''):md5.update(b);sha.update(b)\nassert md5.hexdigest()==row['query_md5'],'A37 primary EST MD5 mismatch'\ns=q.parent/'summary.json'\nassert hashlib.sha256(s.read_bytes()).hexdigest()==row['summary_sha256']\nassert json.loads(s.read_text())['records_out']==row['records']\np=Path('/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align')/row['species']/'PROVENANCE.txt'\nassert hashlib.sha256(p.read_bytes()).hexdigest()==row['receipt_sha256'],'A37 receipt changed'\nprint(sha.hexdigest())\nPY\n)\nprintf '%s  %s\\n' \"$QSHA\" \"$Q\" > \"$D/query.sha256\"\nCOMMON=(--species \"$SP\" --query \"$Q\" --query-sha256 \"$QSHA\" --roles \"$R/evidence/DATASET_ROLES.est_v1.tsv\" --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond \"$DIAMOND\" --threads 16 --tmpdir \"$D/tmp\")\n/usr/bin/time -v -o \"$D/swissprot.time.txt\" \"$PY\" \"$W/revision/scripts/evidence/est_blastx.py\" run \"${COMMON[@]}\" \\\n --source-kind swissprot --source \"$R/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz\" --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 \\\n --lineage \"$L/swissprot/lineage.tsv\" --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir \"$D/swissprot\"\n/usr/bin/time -v -o \"$D/orthodb.time.txt\" \"$PY\" \"$W/revision/scripts/evidence/est_blastx.py\" run \"${COMMON[@]}\" \\\n --source-kind orthodb --source \"$R/evidence/protein/odb12_Viridiplantae.filtered.fa.gz\" --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f \\\n --lineage \"$L/orthodb/lineage.tsv\" --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir \"$D/orthodb\"\nprintf '%s: Swiss-Prot and OrthoDB raw searches finished; acceptance/phase projection remain downstream.\\n' \"$SP\"\n"
+    },
+    {
+      "action": "read",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/chunks/chunk0.err",
+      "size": 26343,
+      "mtime_ns": 1788925086709764947,
+      "sha256": "447905c7267b23278532f9a620ddc08b6caaa3389f1941bf99be4cec85d1b67f",
+      "text": "[M::mp_idx_restore@0.531*0.81] loaded the index\n[M::mp_idx_print_stat] 2372213 distinct k-mers; mean occ of infrequent k-mers: 89.82; 5 frequent k-mers accounting for 133320 occurrences\n[M::worker_pipeline::39.185*30.10] mapped 4555 sequences\n[M::worker_pipeline::79.451*30.67] mapped 4553 sequences\n[M::worker_pipeline::113.865*30.80] mapped 4545 sequences\n[M::worker_pipeline::148.873*30.86] mapped 4474 sequences\n[M::worker_pipeline::185.096*30.95] mapped 4493 sequences\n[M::worker_pipeline::223.514*30.87] mapped 4524 sequences\n[M::worker_pipeline::262.256*30.55] mapped 4388 sequences\n[M::worker_pipeline::304.608*30.44] mapped 4383 sequences\n[M::worker_pipeline::342.175*30.47] mapped 4439 sequences\n[M::worker_pipeline::380.272*30.49] mapped 4348 sequences\n[M::worker_pipeline::422.668*30.52] mapped 4432 sequences\n[M::worker_pipeline::436.290*30.42] mapped 4685 sequences\n[M::worker_pipeline::448.864*30.41] mapped 4796 sequences\n[M::worker_pipeline::464.838*30.39] mapped 4967 sequences\n[M::worker_pipeline::475.105*30.39] mapped 4579 sequences\n[M::worker_pipeline::486.962*30.28] mapped 4581 sequences\n[M::worker_pipeline::503.396*30.06] mapped 4709 sequences\n[M::worker_pipeline::519.264*29.97] mapped 4663 sequences\n[M::worker_pipeline::532.121*30.00] mapped 4566 sequences\n[M::worker_pipeline::544.501*30.00] mapped 4482 sequences\n[M::worker_pipeline::560.996*29.93] mapped 4562 sequences\n[M::worker_pipeline::572.723*29.93] mapped 4692 sequences\n[M::worker_pipeline::589.468*29.81] mapped 4729 sequences\n[M::worker_pipeline::616.635*29.86] mapped 4490 sequences\n[M::worker_pipeline::650.464*29.93] mapped 4243 sequences\n[M::worker_pipeline::688.532*30.00] mapped 4290 sequences\n[M::worker_pipeline::725.718*30.03] mapped 4324 sequences\n[M::worker_pipeline::760.487*30.06] mapped 4379 sequences\n[M::worker_pipeline::797.821*30.13] mapped 4637 sequences\n[M::worker_pipeline::832.370*30.18] mapped 4672 sequences\n[M::worker_pipeline::867.869*30.22] mapped 4610 sequences\n[M::worker_pipeline::903.862*30.25] mapped 4489 sequences\n[M::worker_pipeline::940.183*30.28] mapped 4634 sequences\n[M::worker_pipeline::983.013*30.33] mapped 4543 sequences\n[M::worker_pipeline::1025.905*30.36] mapped 4518 sequences\n[M::worker_pipeline::1081.359*30.36] mapped 4311 sequences\n[M::worker_pipeline::1138.525*30.40] mapped 4315 sequences\n[M::worker_pipeline::1191.214*30.44] mapped 4351 sequences\n[M::worker_pipeline::1224.194*30.46] mapped 4671 sequences\n[M::worker_pipeline::1238.728*30.46] mapped 5004 sequences\n[M::worker_pipeline::1254.547*30.47] mapped 5112 sequences\n[M::worker_pipeline::1269.007*30.47] mapped 4965 sequences\n[M::worker_pipeline::1284.289*30.47] mapped 5056 sequences\n[M::worker_pipeline::1301.387*30.49] mapped 5042 sequences\n[M::worker_pipeline::1316.433*30.50] mapped 5003 sequences\n[M::worker_pipeline::1345.000*30.50] mapped 5376 sequences\n[M::worker_pipeline::1381.721*30.52] mapped 5100 sequences\n[M::worker_pipeline::1418.110*30.54] mapped 4985 sequences\n[M::worker_pipeline::1454.986*30.56] mapped 5115 sequences\n[M::worker_pipeline::1491.451*30.59] mapped 4924 sequences\n[M::worker_pipeline::1526.054*30.61] mapped 5038 sequences\n[M::worker_pipeline::1554.515*30.62] mapped 3764 sequences\n[M::worker_pipeline::1580.503*30.62] mapped 3360 sequences\n[M::worker_pipeline::1606.290*30.62] mapped 3451 sequences\n[M::worker_pipeline::1636.418*30.60] mapped 3931 sequences\n[M::worker_pipeline::1672.874*30.62] mapped 5121 sequences\n[M::worker_pipeline::1710.633*30.61] mapped 5035 sequences\n[M::worker_pipeline::1746.733*30.62] mapped 5152 sequences\n[M::worker_pipeline::1781.134*30.63] mapped 5030 sequences\n[M::worker_pipeline::1818.250*30.64] mapped 5134 sequences\n[M::worker_pipeline::1853.801*30.65] mapped 5073 sequences\n[M::worker_pipeline::1891.358*30.65] mapped 5199 sequences\n[M::worker_pipeline::1928.027*30.67] mapped 5116 sequences\n[M::worker_pipeline::1964.842*30.68] mapped 5059 sequences\n[M::worker_pipeline::2001.346*30.69] mapped 5171 sequences\n[M::worker_pipeline::2038.672*30.69] mapped 5190 sequences\n[M::worker_pipeline::2075.535*30.70] mapped 5080 sequences\n[M::worker_pipeline::2111.131*30.71] mapped 4582 sequences\n[M::worker_pipeline::2145.803*30.72] mapped 4516 sequences\n[M::worker_pipeline::2180.570*30.73] mapped 4482 sequences\n[M::worker_pipeline::2216.244*30.71] mapped 4629 sequences\n[M::worker_pipeline::2252.159*30.71] mapped 4561 sequences\n[M::worker_pipeline::2286.325*30.71] mapped 4706 sequences\n[M::worker_pipeline::2318.672*30.72] mapped 4742 sequences\n[M::worker_pipeline::2351.252*30.72] mapped 4328 sequences\n[M::worker_pipeline::2384.204*30.72] mapped 4270 sequences\n[M::worker_pipeline::2422.110*30.72] mapped 4375 sequences\n[M::worker_pipeline::2456.732*30.73] mapped 4457 sequences\n[M::worker_pipeline::2490.344*30.72] mapped 4857 sequences\n[M::worker_pipeline::2520.057*30.73] mapped 4765 sequences\n[M::worker_pipeline::2551.829*30.73] mapped 4734 sequences\n[M::worker_pipeline::2589.432*30.72] mapped 5007 sequences\n[M::worker_pipeline::2630.504*30.72] mapped 4900 sequences\n[M::worker_pipeline::2670.133*30.72] mapped 4871 sequences\n[M::worker_pipeline::2709.639*30.72] mapped 4951 sequences\n[M::worker_pipeline::2747.138*30.73] mapped 4714 sequences\n[M::worker_pipeline::2786.150*30.73] mapped 4808 sequences\n[M::worker_pipeline::2825.616*30.73] mapped 4923 sequences\n[M::worker_pipeline::2861.571*30.74] mapped 4871 sequences\n[M::worker_pipeline::2900.771*30.75] mapped 4967 sequences\n[M::worker_pipeline::2932.140*30.75] mapped 4598 sequences\n[M::worker_pipeline::2961.967*30.76] mapped 4583 sequences\n[M::worker_pipeline::2991.363*30.76] mapped 4546 sequences\n[M::worker_pipeline::3021.347*30.76] mapped 4608 sequences\n[M::worker_pipeline::3052.223*30.77] mapped 4593 sequences\n[M::worker_pipeline::3071.601*30.77] mapped 5094 sequences\n[M::worker_pipeline::3086.817*30.77] mapped 5452 sequences\n[M::worker_pipeline::3101.118*30.77] mapped 5153 sequences\n[M::worker_pipeline::3117.665*30.78] mapped 5219 sequences\n[M::worker_pipeline::3136.095*30.77] mapped 5364 sequences\n[M::worker_pipeline::3156.063*30.77] mapped 4960 sequences\n[M::worker_pipeline::3175.229*30.77] mapped 4428 sequences\n[M::worker_pipeline::3195.446*30.76] mapped 4506 sequences\n[M::worker_pipeline::3214.006*30.76] mapped 4593 sequences\n[M::worker_pipeline::3235.089*30.75] mapped 4453 sequences\n[M::worker_pipeline::3256.051*30.75] mapped 4473 sequences\n[M::worker_pipeline::3276.975*30.75] mapped 4471 sequences\n[M::worker_pipeline::3313.423*30.76] mapped 4724 sequences\n[M::worker_pipeline::3353.827*30.77] mapped 5014 sequences\n[M::worker_pipeline::3392.724*30.77] mapped 4719 sequences\n[M::worker_pipeline::3430.208*30.76] mapped 4688 sequences\n[M::worker_pipeline::3468.567*30.77] mapped 4739 sequences\n[M::worker_pipeline::3511.205*30.76] mapped 5080 sequences\n[M::worker_pipeline::3551.478*30.76] mapped 5123 sequences\n[M::worker_pipeline::3592.056*30.77] mapped 5144 sequences\n[M::worker_pipeline::3631.720*30.77] mapped 5150 sequences\n[M::worker_pipeline::3677.468*30.77] mapped 5062 sequences\n[M::worker_pipeline::3716.308*30.77] mapped 5305 sequences\n[M::worker_pipeline::3748.374*30.77] mapped 5096 sequences\n[M::worker_pipeline::3769.230*30.74] mapped 4523 sequences\n[M::worker_pipeline::3787.527*30.74] mapped 4364 sequences\n[M::worker_pipeline::3807.154*30.73] mapped 4184 sequences\n[M::worker_pipeline::3833.217*30.72] mapped 3235 sequences\n[M::worker_pipeline::3856.720*30.71] mapped 3242 sequences\n[M::worker_pipeline::3879.991*30.71] mapped 3453 sequences\n[M::worker_pipeline::3922.174*30.72] mapped 4709 sequences\n[M::worker_pipeline::3963.579*30.72] mapped 4522 sequences\n[M::worker_pipeline::4001.004*30.72] mapped 4551 sequences\n[M::worker_pipeline::4038.330*30.72] mapped 4493 sequences\n[M::worker_pipeline::4078.122*30.72] mapped 4499 sequences\n[M::worker_pipeline::4115.872*30.72] mapped 4546 sequences\n[M::worker_pipeline::4159.215*30.72] mapped 4641 sequences\n[M::worker_pipeline::4191.492*30.72] mapped 4429 sequences\n[M::worker_pipeline::4223.493*30.73] mapped 4450 sequences\n[M::worker_pipeline::4255.974*30.73] mapped 4365 sequences\n[M::worker_pipeline::4291.565*30.73] mapped 4505 sequences\n[M::worker_pipeline::4323.669*30.73] mapped 4324 sequences\n[M::worker_pipeline::4357.199*30.73] mapped 4435 sequences\n[M::worker_pipeline::4386.336*30.74] mapped 4468 sequences\n[M::worker_pipeline::4416.810*30.74] mapped 4487 sequences\n[M::worker_pipeline::4454.404*30.74] mapped 4478 sequences\n[M::worker_pipeline::4486.263*30.75] mapped 4507 sequences\n[M::worker_pipeline::4519.421*30.75] mapped 4436 sequences\n[M::worker_pipeline::4554.867*30.75] mapped 4387 sequences\n[M::worker_pipeline::4605.648*30.75] mapped 4998 sequences\n[M::worker_pipeline::4672.212*30.76] mapped 4976 sequences\n[M::worker_pipeline::4739.497*30.77] mapped 4811 sequences\n[M::worker_pipeline::4805.241*30.77] mapped 4990 sequences\n[M::worker_pipeline::4873.996*30.78] mapped 4889 sequences\n[M::worker_pipeline::4941.658*30.78] mapped 4945 sequences\n[M::worker_pipeline::5010.657*30.79] mapped 4969 sequences\n[M::worker_pipeline::5052.893*30.79] mapped 5057 sequences\n[M::worker_pipeline::5088.594*30.79] mapped 4936 sequences\n[M::worker_pipeline::5122.279*30.79] mapped 5077 sequences\n[M::worker_pipeline::5157.612*30.79] mapped 5053 sequences\n[M::worker_pipeline::5191.976*30.80] mapped 5001 sequences\n[M::worker_pipeline::5225.902*30.80] mapped 5083 sequences\n[M::worker_pipeline::5263.522*30.80] mapped 5239 sequences\n[M::worker_pipeline::5297.323*30.80] mapped 5122 sequences\n[M::worker_pipeline::5331.617*30.81] mapped 4905 sequences\n[M::worker_pipeline::5364.275*30.81] mapped 4981 sequences\n[M::worker_pipeline::5389.162*30.81] mapped 4247 sequences\n[M::worker_pipeline::5412.292*30.81] mapped 4239 sequences\n[M::worker_pipeline::5447.222*30.81] mapped 4066 sequences\n[M::worker_pipeline::5486.675*30.80] mapped 4217 sequences\n[M::worker_pipeline::5523.980*30.79] mapped 4110 sequences\n[M::worker_pipeline::5568.436*30.77] mapped 4246 sequences\n[M::worker_pipeline::5620.362*30.76] mapped 4267 sequences\n[M::worker_pipeline::5688.185*30.64] mapped 4305 sequences\n[M::worker_pipeline::5758.388*30.53] mapped 4305 sequences\n[M::worker_pipeline::5816.863*30.46] mapped 4249 sequences\n[M::worker_pipeline::5866.173*30.44] mapped 4277 sequences\n[M::worker_pipeline::5903.915*30.45] mapped 4463 sequences\n[M::worker_pipeline::5936.030*30.45] mapped 4498 sequences\n[M::worker_pipeline::5968.499*30.45] mapped 4508 sequences\n[M::worker_pipeline::6000.040*30.46] mapped 4604 sequences\n[M::worker_pipeline::6038.942*30.46] mapped 4596 sequences\n[M::worker_pipeline::6072.789*30.46] mapped 4573 sequences\n[M::worker_pipeline::6110.804*30.46] mapped 4594 sequences\n[M::worker_pipeline::6144.108*30.47] mapped 3983 sequences\n[M::worker_pipeline::6177.888*30.47] mapped 3918 sequences\n[M::worker_pipeline::6212.710*30.47] mapped 4058 sequences\n[M::worker_pipeline::6247.349*30.47] mapped 3999 sequences\n[M::worker_pipeline::6281.053*30.47] mapped 4440 sequences\n[M::worker_pipeline::6312.079*30.47] mapped 5955 sequences\n[M::worker_pipeline::6349.660*30.48] mapped 4456 sequences\n[M::worker_pipeline::6388.738*30.48] mapped 4446 sequences\n[M::worker_pipeline::6427.005*30.49] mapped 4472 sequences\n[M::worker_pipeline::6467.520*30.48] mapped 4430 sequences\n[M::worker_pipeline::6510.404*30.48] mapped 4509 sequences\n[M::worker_pipeline::6551.203*30.48] mapped 4666 sequences\n[M::worker_pipeline::6590.176*30.49] mapped 4447 sequences\n[M::worker_pipeline::6628.948*30.49] mapped 4531 sequences\n[M::worker_pipeline::6667.173*30.50] mapped 4606 sequences\n[M::worker_pipeline::6709.577*30.50] mapped 4622 sequences\n[M::worker_pipeline::6750.142*30.50] mapped 4562 sequences\n[M::worker_pipeline::6785.418*30.50] mapped 4622 sequences\n[M::worker_pipeline::6824.641*30.50] mapped 4403 sequences\n[M::worker_pipeline::6863.872*30.50] mapped 4509 sequences\n[M::worker_pipeline::6902.432*30.50] mapped 4552 sequences\n[M::worker_pipeline::6942.803*30.50] mapped 4386 sequences\n[M::worker_pipeline::6984.900*30.51] mapped 4565 sequences\n[M::worker_pipeline::7026.581*30.50] mapped 4438 sequences\n[M::worker_pipeline::7064.466*30.50] mapped 4581 sequences\n[M::worker_pipeline::7100.290*30.50] mapped 4538 sequences\n[M::worker_pipeline::7133.761*30.51] mapped 4666 sequences\n[M::worker_pipeline::7163.815*30.51] mapped 4635 sequences\n[M::worker_pipeline::7194.516*30.52] mapped 4657 sequences\n[M::worker_pipeline::7225.975*30.52] mapped 4701 sequences\n[M::worker_pipeline::7261.100*30.52] mapped 5516 sequences\n[M::worker_pipeline::7295.068*30.53] mapped 4240 sequences\n[M::worker_pipeline::7330.197*30.53] mapped 4359 sequences\n[M::worker_pipeline::7362.616*30.53] mapped 4250 sequences\n[M::worker_pipeline::7398.242*30.53] mapped 4609 sequences\n[M::worker_pipeline::7437.734*30.53] mapped 5568 sequences\n[M::worker_pipeline::7481.068*30.53] mapped 5568 sequences\n[M::worker_pipeline::7521.843*30.53] mapped 5539 sequences\n[M::worker_pipeline::7565.383*30.53] mapped 5401 sequences\n[M::worker_pipeline::7606.864*30.53] mapped 5277 sequences\n[M::worker_pipeline::7648.242*30.54] mapped 5696 sequences\n[M::worker_pipeline::7691.967*30.54] mapped 5159 sequences\n[M::worker_pipeline::7738.123*30.54] mapped 4421 sequences\n[M::worker_pipeline::7786.128*30.54] mapped 4300 sequences\n[M::worker_pipeline::7837.906*30.54] mapped 4283 sequences\n[M::worker_pipeline::7893.440*30.54] mapped 4304 sequences\n[M::worker_pipeline::7941.950*30.54] mapped 4427 sequences\n[M::worker_pipeline::7986.402*30.54] mapped 4262 sequences\n[M::worker_pipeline::8043.737*30.54] mapped 4243 sequences\n[M::worker_pipeline::8095.777*30.54] mapped 4361 sequences\n[M::worker_pipeline::8149.329*30.54] mapped 4175 sequences\n[M::worker_pipeline::8198.627*30.55] mapped 4494 sequences\n[M::worker_pipeline::8246.325*30.55] mapped 4390 sequences\n[M::worker_pipeline::8286.425*30.55] mapped 4477 sequences\n[M::worker_pipeline::8329.883*30.55] mapped 4430 sequences\n[M::worker_pipeline::8368.736*30.56] mapped 4284 sequences\n[M::worker_pipeline::8411.980*30.56] mapped 4338 sequences\n[M::worker_pipeline::8444.430*30.56] mapped 4391 sequences\n[M::worker_pipeline::8473.622*30.56] mapped 4495 sequences\n[M::worker_pipeline::8505.932*30.57] mapped 4533 sequences\n[M::worker_pipeline::8538.206*30.56] mapped 4433 sequences\n[M::worker_pipeline::8566.295*30.57] mapped 4837 sequences\n[M::worker_pipeline::8602.149*30.57] mapped 4419 sequences\n[M::worker_pipeline::8637.824*30.57] mapped 4533 sequences\n[M::worker_pipeline::8673.301*30.57] mapped 4396 sequences\n[M::worker_pipeline::8711.473*30.58] mapped 4468 sequences\n[M::worker_pipeline::8746.450*30.58] mapped 4551 sequences\n[M::worker_pipeline::8782.132*30.58] mapped 4472 sequences\n[M::worker_pipeline::8819.392*30.58] mapped 4630 sequences\n[M::worker_pipeline::8857.859*30.59] mapped 4345 sequences\n[M::worker_pipeline::8895.949*30.59] mapped 4281 sequences\n[M::worker_pipeline::8934.831*30.59] mapped 4319 sequences\n[M::worker_pipeline::8975.550*30.59] mapped 4342 sequences\n[M::worker_pipeline::9010.027*30.59] mapped 4607 sequences\n[M::worker_pipeline::9036.687*30.59] mapped 4703 sequences\n[M::worker_pipeline::9068.063*30.59] mapped 4524 sequences\n[M::worker_pipeline::9096.917*30.59] mapped 4687 sequences\n[M::worker_pipeline::9125.332*30.59] mapped 4812 sequences\n[M::worker_pipeline::9156.459*30.59] mapped 5385 sequences\n[M::worker_pipeline::9190.759*30.59] mapped 4315 sequences\n[M::worker_pipeline::9223.132*30.59] mapped 4353 sequences\n[M::worker_pipeline::9253.528*30.59] mapped 4367 sequences\n[M::worker_pipeline::9288.094*30.59] mapped 4303 sequences\n[M::worker_pipeline::9320.287*30.60] mapped 4388 sequences\n[M::worker_pipeline::9356.788*30.59] mapped 4468 sequences\n[M::worker_pipeline::9388.993*30.59] mapped 4393 sequences\n[M::worker_pipeline::9421.363*30.59] mapped 5283 sequences\n[M::worker_pipeline::9450.829*30.58] mapped 5278 sequences\n[M::worker_pipeline::9484.791*30.58] mapped 4000 sequences\n[M::worker_pipeline::9516.498*30.59] mapped 4066 sequences\n[M::worker_pipeline::9539.365*30.59] mapped 4237 sequences\n[M::worker_pipeline::9549.808*30.58] mapped 4645 sequences\n[M::worker_pipeline::9558.390*30.58] mapped 4705 sequences\n[M::worker_pipeline::9568.600*30.58] mapped 4804 sequences\n[M::worker_pipeline::9577.474*30.58] mapped 4786 sequences\n[M::worker_pipeline::9589.028*30.58] mapped 4707 sequences\n[M::worker_pipeline::9609.270*30.58] mapped 4575 sequences\n[M::worker_pipeline::9642.885*30.58] mapped 4427 sequences\n[M::worker_pipeline::9678.939*30.59] mapped 4573 sequences\n[M::worker_pipeline::9713.163*30.59] mapped 4562 sequences\n[M::worker_pipeline::9749.196*30.59] mapped 4557 sequences\n[M::worker_pipeline::9781.755*30.59] mapped 4560 sequences\n[M::worker_pipeline::9815.589*30.59] mapped 4654 sequences\n[M::worker_pipeline::9850.487*30.60] mapped 4574 sequences\n[M::worker_pipeline::9902.732*30.59] mapped 4626 sequences\n[M::worker_pipeline::9957.532*30.59] mapped 4695 sequences\n[M::worker_pipeline::10015.892*30.59] mapped 4491 sequences\n[M::worker_pipeline::10070.912*30.59] mapped 4707 sequences\n[M::worker_pipeline::10134.009*30.59] mapped 4589 sequences\n[M::worker_pipeline::10189.719*30.59] mapped 4670 sequences\n[M::worker_pipeline::10259.537*30.57] mapped 4550 sequences\n[M::worker_pipeline::10323.207*30.57] mapped 4653 sequences\n[M::worker_pipeline::10395.676*30.58] mapped 4347 sequences\n[M::worker_pipeline::10458.603*30.58] mapped 4843 sequences\n[M::worker_pipeline::10476.120*30.58] mapped 4694 sequences\n[M::worker_pipeline::10494.285*30.58] mapped 4698 sequences\n[M::worker_pipeline::10515.875*30.58] mapped 4563 sequences\n[M::worker_pipeline::10541.153*30.57] mapped 4618 sequences\n[M::worker_pipeline::10577.962*30.58] mapped 4543 sequences\n[M::worker_pipeline::10621.581*30.58] mapped 4424 sequences\n[M::worker_pipeline::10669.115*30.58] mapped 4372 sequences\n[M::worker_pipeline::10703.957*30.58] mapped 4527 sequences\n[M::worker_pipeline::10746.303*30.58] mapped 4550 sequences\n[M::worker_pipeline::10793.279*30.58] mapped 5826 sequences\n[M::worker_pipeline::10848.813*30.59] mapped 6147 sequences\n[M::worker_pipeline::10907.212*30.59] mapped 6216 sequences\n[M::worker_pipeline::10960.355*30.60] mapped 6024 sequences\n[M::worker_pipeline::11015.861*30.60] mapped 6078 sequences\n[M::worker_pipeline::11069.404*30.61] mapped 6036 sequences\n[M::worker_pipeline::11120.571*30.61] mapped 5991 sequences\n[M::worker_pipeline::11168.202*30.61] mapped 5885 sequences\n[M::worker_pipeline::11201.897*30.61] mapped 4912 sequences\n[M::worker_pipeline::11233.327*30.62] mapped 4629 sequences\n[M::worker_pipeline::11268.774*30.62] mapped 4701 sequences\n[M::worker_pipeline::11307.052*30.62] mapped 4691 sequences\n[M::worker_pipeline::11341.847*30.62] mapped 4669 sequences\n[M::worker_pipeline::11363.148*30.62] mapped 4837 sequences\n[M::worker_pipeline::11374.707*30.62] mapped 4508 sequences\n[M::worker_pipeline::11385.581*30.62] mapped 4598 sequences\n[M::worker_pipeline::11404.838*30.61] mapped 4411 sequences\n[M::worker_pipeline::11420.240*30.61] mapped 4562 sequences\n[M::worker_pipeline::11435.987*30.61] mapped 4644 sequences\n[M::worker_pipeline::11456.290*30.61] mapped 4835 sequences\n[M::worker_pipeline::11491.627*30.61] mapped 4870 sequences\n[M::worker_pipeline::11525.571*30.61] mapped 4946 sequences\n[M::worker_pipeline::11561.734*30.61] mapped 4971 sequences\n[M::worker_pipeline::11595.486*30.62] mapped 4918 sequences\n[M::worker_pipeline::11629.962*30.62] mapped 4918 sequences\n[M::worker_pipeline::11668.429*30.62] mapped 5325 sequences\n[M::worker_pipeline::11705.464*30.62] mapped 5471 sequences\n[M::worker_pipeline::11744.088*30.62] mapped 5492 sequences\n[M::worker_pipeline::11782.754*30.62] mapped 5434 sequences\n[M::worker_pipeline::11819.718*30.62] mapped 5401 sequences\n[M::worker_pipeline::11858.011*30.62] mapped 4697 sequences\n[M::worker_pipeline::11895.522*30.63] mapped 4672 sequences\n[M::worker_pipeline::11931.762*30.63] mapped 4664 sequences\n[M::worker_pipeline::11969.456*30.63] mapped 4640 sequences\n[M::worker_pipeline::12007.504*30.63] mapped 4892 sequences\n[M::worker_pipeline::12046.147*30.63] mapped 5190 sequences\n[M::worker_pipeline::12084.893*30.63] mapped 4462 sequences\n[M::worker_pipeline::12125.677*30.63] mapped 4198 sequences\n[M::worker_pipeline::12164.234*30.63] mapped 4242 sequences\n[M::worker_pipeline::12203.715*30.63] mapped 4146 sequences\n[M::worker_pipeline::12237.128*30.63] mapped 4585 sequences\n[M::worker_pipeline::12271.184*30.63] mapped 4742 sequences\n[M::worker_pipeline::12301.904*30.63] mapped 4620 sequences\n[M::worker_pipeline::12334.362*30.63] mapped 4742 sequences\n[M::worker_pipeline::12368.592*30.63] mapped 4611 sequences\n[M::worker_pipeline::12399.149*30.63] mapped 4615 sequences\n[M::worker_pipeline::12428.937*30.63] mapped 4600 sequences\n[M::worker_pipeline::12461.986*30.63] mapped 4758 sequences\n[M::worker_pipeline::12495.067*30.63] mapped 4954 sequences\n[M::worker_pipeline::12527.644*30.63] mapped 4901 sequences\n[M::worker_pipeline::12559.400*30.63] mapped 4963 sequences\n[M::worker_pipeline::12585.913*30.63] mapped 6064 sequences\n[M::worker_pipeline::12622.641*30.62] mapped 3503 sequences\n[M::worker_pipeline::12649.458*30.62] mapped 3650 sequences\n[M::worker_pipeline::12682.296*30.62] mapped 4621 sequences\n[M::worker_pipeline::12717.571*30.62] mapped 4407 sequences\n[M::worker_pipeline::12753.856*30.61] mapped 4479 sequences\n[M::worker_pipeline::12788.179*30.62] mapped 4579 sequences\n[M::worker_pipeline::12823.780*30.62] mapped 4446 sequences\n[M::worker_pipeline::12858.028*30.62] mapped 4493 sequences\n[M::worker_pipeline::12892.830*30.62] mapped 4366 sequences\n[M::worker_pipeline::12928.754*30.62] mapped 4391 sequences\n[M::worker_pipeline::12961.948*30.61] mapped 3449 sequences\n[M::worker_pipeline::12997.954*30.61] mapped 3630 sequences\n[M::worker_pipeline::13031.574*30.61] mapped 3376 sequences\n[M::worker_pipeline::13066.198*30.61] mapped 4644 sequences\n[M::worker_pipeline::13105.579*30.60] mapped 5026 sequences\n[M::worker_pipeline::13140.954*30.61] mapped 5218 sequences\n[M::worker_pipeline::13178.139*30.61] mapped 5169 sequences\n[M::worker_pipeline::13213.277*30.61] mapped 5120 sequences\n[M::worker_pipeline::13248.369*30.61] mapped 5110 sequences\n[M::worker_pipeline::13282.920*30.61] mapped 5034 sequences\n[M::worker_pipeline::13321.839*30.61] mapped 5166 sequences\n[M::worker_pipeline::13364.136*30.61] mapped 5125 sequences\n[M::worker_pipeline::13400.904*30.61] mapped 4784 sequences\n[M::worker_pipeline::13434.743*30.61] mapped 4728 sequences\n[M::worker_pipeline::13464.905*30.61] mapped 4776 sequences\n[M::worker_pipeline::13498.576*30.62] mapped 4728 sequences\n[M::worker_pipeline::13531.264*30.62] mapped 4810 sequences\n[M::worker_pipeline::13564.803*30.62] mapped 4759 sequences\n[M::worker_pipeline::13596.461*30.62] mapped 4818 sequences\n[M::worker_pipeline::13633.889*30.62] mapped 4847 sequences\n[M::worker_pipeline::13670.845*30.62] mapped 4611 sequences\n[M::worker_pipeline::13712.879*30.62] mapped 4601 sequences\n[M::worker_pipeline::13754.299*30.62] mapped 4400 sequences\n[M::worker_pipeline::13791.014*30.62] mapped 4665 sequences\n[M::worker_pipeline::13828.442*30.63] mapped 4636 sequences\n[M::worker_pipeline::13872.662*30.62] mapped 4742 sequences\n[M::worker_pipeline::13919.830*30.63] mapped 4950 sequences\n[M::worker_pipeline::13966.645*30.63] mapped 5041 sequences\n[M::worker_pipeline::14015.689*30.63] mapped 4959 sequences\n[M::worker_pipeline::14064.799*30.63] mapped 5064 sequences\n[M::worker_pipeline::14114.678*30.63] mapped 5164 sequences\n[M::worker_pipeline::14162.065*30.63] mapped 5109 sequences\n[M::worker_pipeline::14209.555*30.63] mapped 5101 sequences\n[M::worker_pipeline::14249.641*30.63] mapped 4856 sequences\n[M::worker_pipeline::14280.771*30.63] mapped 4255 sequences\n[M::worker_pipeline::14314.208*30.63] mapped 4530 sequences\n[M::worker_pipeline::14345.984*30.63] mapped 4667 sequences\n[M::worker_pipeline::14374.762*30.63] mapped 4996 sequences\n[M::worker_pipeline::14403.797*30.64] mapped 5193 sequences\n[M::worker_pipeline::14436.438*30.63] mapped 4943 sequences\n[M::worker_pipeline::14473.326*30.64] mapped 4416 sequences\n[M::worker_pipeline::14512.300*30.64] mapped 4604 sequences\n[M::worker_pipeline::14550.890*30.64] mapped 4526 sequences\n[M::worker_pipeline::14588.463*30.64] mapped 4506 sequences\n[M::worker_pipeline::14627.111*30.64] mapped 4369 sequences\n[M::worker_pipeline::14662.696*30.64] mapped 4584 sequences\n[M::worker_pipeline::14676.155*30.64] mapped 4438 sequences\n[M::worker_pipeline::14693.120*30.64] mapped 4279 sequences\n[M::worker_pipeline::14715.814*30.64] mapped 4129 sequences\n[M::worker_pipeline::14735.506*30.64] mapped 4371 sequences\n[M::worker_pipeline::14758.154*30.63] mapped 4315 sequences\n[M::worker_pipeline::14772.747*30.63] mapped 4413 sequences\n[M::worker_pipeline::14786.183*30.63] mapped 4375 sequences\n[M::worker_pipeline::14802.974*30.63] mapped 4260 sequences\n[M::worker_pipeline::14822.588*30.63] mapped 4386 sequences\n[M::worker_pipeline::14846.108*30.63] mapped 4222 sequences\n[M::worker_pipeline::14865.526*30.63] mapped 4374 sequences\n[M::worker_pipeline::14878.498*30.63] mapped 4404 sequences\n[M::worker_pipeline::14893.713*30.63] mapped 4273 sequences\n[M::worker_pipeline::14917.231*30.63] mapped 4123 sequences\n[M::worker_pipeline::14934.838*30.63] mapped 4394 sequences\n[M::worker_pipeline::14955.713*30.63] mapped 4333 sequences\n[M::worker_pipeline::14979.429*30.63] mapped 3466 sequences\n[M::worker_pipeline::15007.108*30.62] mapped 3003 sequences\n[M::worker_pipeline::15035.013*30.62] mapped 3051 sequences\n[M::worker_pipeline::15061.904*30.62] mapped 2960 sequences\n[M::worker_pipeline::15096.220*30.63] mapped 4096 sequences\n[M::worker_pipeline::15135.604*30.63] mapped 4334 sequences\n[M::worker_pipeline::15174.704*30.63] mapped 4369 sequences\n[M::worker_pipeline::15208.324*30.63] mapped 4328 sequences\n[M::worker_pipeline::15235.339*30.63] mapped 3423 sequences\n[M::main] Version: 0.18-r281\n[M::main] CMD: /data/gpfs/assoc/pgl/bin/conda/conda_envs/busco5/bin/miniprot -t 32 --gff --outs=0.97 -N 20 /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/Sitalica.mpi /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/chunks_v1/chunk0.faa.gz\n[M::main] Real time: 15235.343 sec; CPU: 466630.509 sec; Peak RSS: 28.280 GB\n"
+    },
+    {
+      "action": "read",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/chunks/chunk0.DONE",
+      "size": 358,
+      "mtime_ns": 1788925165552519443,
+      "sha256": "bd24eca780d7d5396dc663846715c7a25bfb2a6bcd17546dcb0bdc962537beae",
+      "text": "species=Sitalica\nchunk=0\nchunk_seqs=2019181\nref_md5=d8f77d532d8c87f314f6175146fa6728\nchunk_md5=e8c6980e0ca2611a7e6c721a49253299\nparams=--gff --outs=0.97 -N 20\ngff_md5=82e8d874980be4b80bb5aa0c9e159ba5\nmrna_records=2294876\nminiprot=0.18-r281\nstarted=2026-09-08T16:24:11-0700\ncompleted=2026-09-08T20:39:25-0700\nwall_seconds=15314\nslurm_job=6153195_42 on cpu-39\n"
+    },
+    {
+      "action": "read",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/accept/ACCEPT_DONE",
+      "size": 246,
+      "mtime_ns": 1788977096399455898,
+      "sha256": "374564f16a4846b79d834060cd9c8f85810c039dae1f7888f86bb6dd094ebd1e",
+      "text": "species=Sitalica\ngff_md5=0e17de830f3458c81b25b3366320ec77\nsummary_md5=629a5322715b7278eba2931dfc15ccaa\nalignments=13302148\naccepted=10384117\nstarted=2026-09-09T10:51:35-0700\ncompleted=2026-09-09T11:04:56-0700\nwall_seconds=801\nslurm_job=6156132_7\n"
+    },
+    {
+      "action": "read",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/accept/Sitalica.summary.json",
+      "size": 874,
+      "mtime_ns": 1788977093093982000,
+      "sha256": "323a9c0818d9161b94435ff3fb977ddf13e2909ec17e00b5ef09c8493c039696",
+      "text": "{\n \"accepted\": 10384117,\n \"accepted_fraction\": 0.7806346012689078,\n \"alignments\": 13302148,\n \"ambiguous_alignments_excluded\": 427602,\n \"ambiguous_blocks_excluded\": 959285,\n \"ambiguous_fraction\": 0.014849764113285827,\n \"ambiguous_introns_excluded\": 531683,\n \"coverage_intervals\": 3849406,\n \"gff\": \"/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/Sitalica.protein.gff.gz\",\n \"introns_supported_by_2plus_organisms\": 394374,\n \"mapping_ambiguous\": 141087,\n \"proteins\": 9500959,\n \"rejected_by_reason\": {\n  \"coverage\": 1415231,\n  \"frameshift\": 1327052,\n  \"identity\": 291690,\n  \"intron_too_long\": 930,\n  \"noncanonical_intron\": 288233\n },\n \"species\": \"Sitalica\",\n \"support_excludes_mapping_ambiguous\": true,\n \"support_version\": 2,\n \"thresholds\": {\n  \"canonical\": [\n   \"gc-ag\",\n   \"gt-ag\"\n  ],\n  \"coverage\": 0.7,\n  \"identity\": 0.3,\n  \"max_intron\": 200000\n }\n}"
+    },
+    {
+      "action": "list",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/pilot",
+      "size": 4096,
+      "mtime_ns": 1788883935347913000,
+      "entries": [
+        {
+          "name": "Athaliana.mpi",
+          "size": 326112134,
+          "directory": false
+        },
+        {
+          "name": "Athaliana_100000.gff",
+          "size": 201753103,
+          "directory": false
+        },
+        {
+          "name": "Athaliana_100000.time",
+          "size": 2839,
+          "directory": false
+        },
+        {
+          "name": "Gmax.mpi",
+          "size": 2140596753,
+          "directory": false
+        },
+        {
+          "name": "Gmax_100000.gff",
+          "size": 329481692,
+          "directory": false
+        },
+        {
+          "name": "Gmax_100000.time",
+          "size": 2843,
+          "directory": false
+        },
+        {
+          "name": "accept",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "split_equiv",
+          "size": 4096,
+          "directory": true
+        },
+        {
+          "name": "split_equiv.sbatch",
+          "size": 5138,
+          "directory": false
+        },
+        {
+          "name": "subset_100000.faa",
+          "size": 47362506,
+          "directory": false
+        }
+      ]
+    },
+    {
+      "action": "list",
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/busco5/conda-meta",
+      "size": 32768,
+      "mtime_ns": 1764872765478052000,
+      "entries": [
+        {
+          "name": "_libgcc_mutex-0.1-conda_forge.json",
+          "size": 1129,
+          "directory": false
+        },
+        {
+          "name": "_openmp_mutex-4.5-2_gnu.json",
+          "size": 1500,
+          "directory": false
+        },
+        {
+          "name": "_r-mutex-1.0.1-anacondar_1.json",
+          "size": 1124,
+          "directory": false
+        },
+        {
+          "name": "_x86_64-microarch-level-3-3_x86_64_v3.json",
+          "size": 1235,
+          "directory": false
+        },
+        {
+          "name": "alsa-lib-1.2.14-hb9d3cd8_0.json",
+          "size": 56143,
+          "directory": false
+        },
+        {
+          "name": "augustus-3.5.0-pl5321h57ba348_8.json",
+          "size": 715159,
+          "directory": false
+        },
+        {
+          "name": "bamtools-2.5.3-he132191_0.json",
+          "size": 11902,
+          "directory": false
+        },
+        {
+          "name": "bbmap-39.52-he5f24ec_0.json",
+          "size": 1570883,
+          "directory": false
+        },
+        {
+          "name": "binutils_impl_linux-64-2.45-default_hfdba357_104.json",
+          "size": 85288,
+          "directory": false
+        },
+        {
+          "name": "biopython-1.86-py311h49ec1c0_0.json",
+          "size": 457721,
+          "directory": false
+        },
+        {
+          "name": "blast-2.17.0-h66d330f_0.json",
+          "size": 61352,
+          "directory": false
+        },
+        {
+          "name": "boost-cpp-1.85.0-h3c6214e_4.json",
+          "size": 1322,
+          "directory": false
+        },
+        {
+          "name": "brotli-python-1.2.0-py311h66f275b_1.json",
+          "size": 6489,
+          "directory": false
+        },
+        {
+          "name": "busco-5.8.3-pyhdfd78af_1.json",
+          "size": 26895,
+          "directory": false
+        },
+        {
+          "name": "bwidget-1.10.1-ha770c72_1.json",
+          "size": 34877,
+          "directory": false
+        },
+        {
+          "name": "bzip2-1.0.8-hda65f42_8.json",
+          "size": 9620,
+          "directory": false
+        },
+        {
+          "name": "c-ares-1.34.5-hb9d3cd8_0.json",
+          "size": 71343,
+          "directory": false
+        },
+        {
+          "name": "ca-certificates-2025.11.12-hbd8a1cb_0.json",
+          "size": 1877,
+          "directory": false
+        },
+        {
+          "name": "cairo-1.18.4-h3394656_0.json",
+          "size": 20468,
+          "directory": false
+        },
+        {
+          "name": "cdbtools-0.99-h077b44d_12.json",
+          "size": 1953,
+          "directory": false
+        },
+        {
+          "name": "certifi-2025.11.12-pyhd8ed1ab_0.json",
+          "size": 7911,
+          "directory": false
+        },
+        {
+          "name": "cffi-2.0.0-py311h03d9500_1.json",
+          "size": 24997,
+          "directory": false
+        },
+        {
+          "name": "charset-normalizer-3.4.4-pyhd8ed1ab_0.json",
+          "size": 15074,
+          "directory": false
+        },
+        {
+          "name": "clustalw-2.1-h9948957_12.json",
+          "size": 1858,
+          "directory": false
+        },
+        {
+          "name": "curl-8.17.0-h4e3cde8_0.json",
+          "size": 1759,
+          "directory": false
+        },
+        {
+          "name": "dendropy-5.0.8-pyhdfd78af_1.json",
+          "size": 95169,
+          "directory": false
+        },
+        {
+          "name": "diamond-2.1.16-h13889ed_0.json",
+          "size": 1699,
+          "directory": false
+        },
+        {
+          "name": "dnspython-2.8.0-pyhcf101f3_0.json",
+          "size": 109512,
+          "directory": false
+        },
+        {
+          "name": "entrez-direct-24.0-he881be0_0.json",
+          "size": 57184,
+          "directory": false
+        },
+        {
+          "name": "fasttree-2.2.0-h7b50bb2_1.json",
+          "size": 2349,
+          "directory": false
+        },
+        {
+          "name": "font-ttf-dejavu-sans-mono-2.37-hab24e00_0.json",
+          "size": 1654,
+          "directory": false
+        },
+        {
+          "name": "font-ttf-inconsolata-3.000-h77eed37_0.json",
+          "size": 2045,
+          "directory": false
+        },
+        {
+          "name": "font-ttf-source-code-pro-2.038-h77eed37_0.json",
+          "size": 7014,
+          "directory": false
+        },
+        {
+          "name": "font-ttf-ubuntu-0.83-h77eed37_3.json",
+          "size": 6670,
+          "directory": false
+        },
+        {
+          "name": "fontconfig-2.15.0-h7e30c49_1.json",
+          "size": 34939,
+          "directory": false
+        },
+        {
+          "name": "fonts-conda-ecosystem-1-0.json",
+          "size": 1179,
+          "directory": false
+        },
+        {
+          "name": "fonts-conda-forge-1-hc364b38_1.json",
+          "size": 1248,
+          "directory": false
+        },
+        {
+          "name": "freetype-2.14.1-ha770c72_0.json",
+          "size": 26323,
+          "directory": false
+        },
+        {
+          "name": "fribidi-1.0.16-hb03c661_0.json",
+          "size": 12079,
+          "directory": false
+        },
+        {
+          "name": "gawk-5.3.1-hcd3d067_0.json",
+          "size": 40229,
+          "directory": false
+        },
+        {
+          "name": "gcc_impl_linux-64-15.2.0-h6f0f26c_15.json",
+          "size": 384418,
+          "directory": false
+        },
+        {
+          "name": "gfortran_impl_linux-64-15.2.0-h281d09f_15.json",
+          "size": 6176,
+          "directory": false
+        },
+        {
+          "name": "giflib-5.2.2-hd590300_0.json",
+          "size": 10226,
+          "directory": false
+        },
+        {
+          "name": "gmp-6.3.0-hac33072_2.json",
+          "size": 5791,
+          "directory": false
+        },
+        {
+          "name": "graphite2-1.3.14-hecca717_2.json",
+          "size": 5033,
+          "directory": false
+        },
+        {
+          "name": "gsl-2.7-he838d99_0.json",
+          "size": 116124,
+          "directory": false
+        },
+        {
+          "name": "gxx_impl_linux-64-15.2.0-hda75c37_15.json",
+          "size": 4773,
+          "directory": false
+        },
+        {
+          "name": "h2-4.3.0-pyhcf101f3_0.json",
+          "size": 25270,
+          "directory": false
+        },
+        {
+          "name": "harfbuzz-12.2.0-h15599e2_0.json",
+          "size": 30339,
+          "directory": false
+        },
+        {
+          "name": "history",
+          "size": 20776,
+          "directory": false
+        },
+        {
+          "name": "hmmer-3.4-hb6cb901_4.json",
+          "size": 251137,
+          "directory": false
+        },
+        {
+          "name": "hpack-4.1.0-pyhd8ed1ab_0.json",
+          "size": 10819,
+          "directory": false
+        },
+        {
+          "name": "htslib-1.22.1-h566b1c6_0.json",
+          "size": 21184,
+          "directory": false
+        },
+        {
+          "name": "hyperframe-6.1.0-pyhd8ed1ab_0.json",
+          "size": 8209,
+          "directory": false
+        },
+        {
+          "name": "icu-75.1-he02047a_0.json",
+          "size": 102469,
+          "directory": false
+        },
+        {
+          "name": "idna-3.11-pyhd8ed1ab_0.json",
+          "size": 10235,
+          "directory": false
+        },
+        {
+          "name": "jsoncpp-1.9.6-hf42df4d_1.json",
+          "size": 10039,
+          "directory": false
+        },
+        {
+          "name": "kernel-headers_linux-64-3.10.0-he073ed8_18.json",
+          "size": 367647,
+          "directory": false
+        },
+        {
+          "name": "keyutils-1.6.3-hb9d3cd8_0.json",
+          "size": 24582,
+          "directory": false
+        },
+        {
+          "name": "krb5-1.21.3-h659f571_0.json",
+          "size": 62495,
+          "directory": false
+        },
+        {
+          "name": "lcms2-2.17-h717163a_0.json",
+          "size": 7196,
+          "directory": false
+        },
+        {
+          "name": "ld_impl_linux-64-2.45-default_hbd61a6d_104.json",
+          "size": 2072,
+          "directory": false
+        },
+        {
+          "name": "lerc-4.0.0-h0aef613_1.json",
+          "size": 3042,
+          "directory": false
+        },
+        {
+          "name": "libamd-3.3.3-haaf9dc3_7100102.json",
+          "size": 4742,
+          "directory": false
+        },
+        {
+          "name": "libasprintf-0.25.1-h3f43e3d_1.json",
+          "size": 2023,
+          "directory": false
+        },
+        {
+          "name": "libblas-3.11.0-4_h4a7cf45_openblas.json",
+          "size": 2021,
+          "directory": false
+        },
+        {
+          "name": "libboost-1.85.0-h0ccab89_4.json",
+          "size": 30881,
+          "directory": false
+        },
+        {
+          "name": "libboost-devel-1.85.0-h00ab1b0_4.json",
+          "size": 65567,
+          "directory": false
+        },
+        {
+          "name": "libboost-headers-1.85.0-ha770c72_4.json",
+          "size": 6980222,
+          "directory": false
+        },
+        {
+          "name": "libbtf-2.3.2-h32481e8_7100102.json",
+          "size": 4691,
+          "directory": false
+        },
+        {
+          "name": "libcamd-3.3.3-h32481e8_7100102.json",
+          "size": 4718,
+          "directory": false
+        },
+        {
+          "name": "libcblas-3.11.0-4_h0358290_openblas.json",
+          "size": 1934,
+          "directory": false
+        },
+        {
+          "name": "libccolamd-3.3.4-h32481e8_7100102.json",
+          "size": 4814,
+          "directory": false
+        },
+        {
+          "name": "libcholmod-5.3.1-h59ddab4_7100102.json",
+          "size": 5129,
+          "directory": false
+        },
+        {
+          "name": "libcolamd-3.3.4-h32481e8_7100102.json",
+          "size": 4781,
+          "directory": false
+        },
+        {
+          "name": "libcups-2.3.3-hb8b1518_5.json",
+          "size": 47365,
+          "directory": false
+        },
+        {
+          "name": "libcurl-8.17.0-h4e3cde8_0.json",
+          "size": 7849,
+          "directory": false
+        },
+        {
+          "name": "libcxsparse-4.4.1-h32481e8_7100102.json",
+          "size": 4872,
+          "directory": false
+        },
+        {
+          "name": "libdeflate-1.25-h17f619e_0.json",
+          "size": 5194,
+          "directory": false
+        },
+        {
+          "name": "libedit-3.1.20250104-pl5321h7949ede_0.json",
+          "size": 16826,
+          "directory": false
+        },
+        {
+          "name": "libev-4.33-hd590300_2.json",
+          "size": 3236,
+          "directory": false
+        },
+        {
+          "name": "libexpat-2.7.3-hecca717_0.json",
+          "size": 1913,
+          "directory": false
+        },
+        {
+          "name": "libffi-3.5.2-h9ec8514_0.json",
+          "size": 5627,
+          "directory": false
+        },
+        {
+          "name": "libfreetype-2.14.1-ha770c72_0.json",
+          "size": 1176,
+          "directory": false
+        },
+        {
+          "name": "libfreetype6-2.14.1-h73754d4_0.json",
+          "size": 2017,
+          "directory": false
+        },
+        {
+          "name": "libgcc-15.2.0-he0feb66_15.json",
+          "size": 6205,
+          "directory": false
+        },
+        {
+          "name": "libgcc-devel_linux-64-15.2.0-hcc6f6b0_115.json",
+          "size": 7957,
+          "directory": false
+        },
+        {
+          "name": "libgcc-ng-15.2.0-h69a702a_15.json",
+          "size": 1193,
+          "directory": false
+        },
+        {
+          "name": "libgettextpo-0.25.1-h3f43e3d_1.json",
+          "size": 2043,
+          "directory": false
+        },
+        {
+          "name": "libgfortran-15.2.0-h69a702a_15.json",
+          "size": 1255,
+          "directory": false
+        },
+        {
+          "name": "libgfortran-ng-15.2.0-h69a702a_15.json",
+          "size": 1228,
+          "directory": false
+        },
+        {
+          "name": "libgfortran5-15.2.0-h68bc16d_15.json",
+          "size": 2723,
+          "directory": false
+        },
+        {
+          "name": "libglib-2.86.2-h6548e54_1.json",
+          "size": 59453,
+          "directory": false
+        },
+        {
+          "name": "libgomp-15.2.0-he0feb66_15.json",
+          "size": 2330,
+          "directory": false
+        },
+        {
+          "name": "libiconv-1.18-h3b78370_2.json",
+          "size": 22044,
+          "directory": false
+        },
+        {
+          "name": "libidn2-2.3.8-hfac485b_1.json",
+          "size": 3307,
+          "directory": false
+        },
+        {
+          "name": "libjpeg-turbo-3.1.2-hb03c661_0.json",
+          "size": 17262,
+          "directory": false
+        },
+        {
+          "name": "libklu-2.3.5-hf24d653_7100102.json",
+          "size": 8662,
+          "directory": false
+        },
+        {
+          "name": "liblapack-3.11.0-4_h47877c9_openblas.json",
+          "size": 1943,
+          "directory": false
+        },
+        {
+          "name": "libldl-3.3.2-h32481e8_7100102.json",
+          "size": 4690,
+          "directory": false
+        },
+        {
+          "name": "liblzma-5.8.1-hb9d3cd8_2.json",
+          "size": 1965,
+          "directory": false
+        },
+        {
+          "name": "liblzma-devel-5.8.1-hb9d3cd8_2.json",
+          "size": 78130,
+          "directory": false
+        },
+        {
+          "name": "libnghttp2-1.67.0-had1ee68_0.json",
+          "size": 4712,
+          "directory": false
+        },
+        {
+          "name": "libnsl-2.0.1-hb9d3cd8_1.json",
+          "size": 5285,
+          "directory": false
+        },
+        {
+          "name": "libopenblas-0.3.30-pthreads_h94d23a6_4.json",
+          "size": 2074,
+          "directory": false
+        },
+        {
+          "name": "libopenssl-static-3.6.0-hb03c661_0.json",
+          "size": 2059,
+          "directory": false
+        },
+        {
+          "name": "libparu-1.0.0-h17147ab_7100102.json",
+          "size": 4851,
+          "directory": false
+        },
+        {
+          "name": "libpng-1.6.51-h421ea60_0.json",
+          "size": 8451,
+          "directory": false
+        },
+        {
+          "name": "librbio-4.3.4-h32481e8_7100102.json",
+          "size": 4722,
+          "directory": false
+        },
+        {
+          "name": "libsanitizer-15.2.0-h90f66d4_15.json",
+          "size": 6110,
+          "directory": false
+        },
+        {
+          "name": "libspex-3.2.3-had10066_7100102.json",
+          "size": 7108,
+          "directory": false
+        },
+        {
+          "name": "libspqr-4.3.4-h852d39f_7100102.json",
+          "size": 5742,
+          "directory": false
+        },
+        {
+          "name": "libsqlite-3.51.1-h0c1763c_0.json",
+          "size": 3372,
+          "directory": false
+        },
+        {
+          "name": "libssh2-1.11.1-hcf80075_0.json",
+          "size": 89387,
+          "directory": false
+        },
+        {
+          "name": "libstdcxx-15.2.0-h934c35e_15.json",
+          "size": 2709,
+          "directory": false
+        },
+        {
+          "name": "libstdcxx-devel_linux-64-15.2.0-hd446a21_115.json",
+          "size": 424151,
+          "directory": false
+        },
+        {
+          "name": "libstdcxx-ng-15.2.0-hdf11a46_15.json",
+          "size": 1214,
+          "directory": false
+        },
+        {
+          "name": "libsuitesparseconfig-7.10.1-h92d6892_7100102.json",
+          "size": 8260,
+          "directory": false
+        },
+        {
+          "name": "libtiff-4.7.1-h9d88235_1.json",
+          "size": 12367,
+          "directory": false
+        },
+        {
+          "name": "libumfpack-6.3.5-heb53515_7100102.json",
+          "size": 4925,
+          "directory": false
+        },
+        {
+          "name": "libunistring-0.9.10-h7f98852_0.json",
+          "size": 20743,
+          "directory": false
+        },
+        {
+          "name": "libuuid-2.41.2-h5347b49_1.json",
+          "size": 3280,
+          "directory": false
+        },
+        {
+          "name": "libwebp-base-1.6.0-hd42ef1d_0.json",
+          "size": 12996,
+          "directory": false
+        },
+        {
+          "name": "libxcb-1.17.0-h8a09558_0.json",
+          "size": 49328,
+          "directory": false
+        },
+        {
+          "name": "libxcrypt-4.4.36-hd590300_1.json",
+          "size": 7244,
+          "directory": false
+        },
+        {
+          "name": "libzlib-1.3.1-hb9d3cd8_2.json",
+          "size": 1893,
+          "directory": false
+        },
+        {
+          "name": "lp_solve-5.5.2.11-hd590300_0.json",
+          "size": 13028,
+          "directory": false
+        },
+        {
+          "name": "mafft-7.526-h4bc722e_0.json",
+          "size": 22140,
+          "directory": false
+        },
+        {
+          "name": "make-4.4.1-hb9d3cd8_2.json",
+          "size": 16419,
+          "directory": false
+        },
+        {
+          "name": "metaeuk-7.bba0d80-pl5321hd6d6fdc_2.json",
+          "size": 1817,
+          "directory": false
+        },
+        {
+          "name": "metis-5.1.0-hd0bcaf9_1007.json",
+          "size": 4199,
+          "directory": false
+        },
+        {
+          "name": "miniprot-0.18-h577a1d6_0.json",
+          "size": 1964,
+          "directory": false
+        },
+        {
+          "name": "mpfr-4.2.1-h90cbb55_3.json",
+          "size": 9316,
+          "directory": false
+        },
+        {
+          "name": "mpi-1.0-openmpi.json",
+          "size": 1040,
+          "directory": false
+        },
+        {
+          "name": "muscle-3.8.1551-h9948957_9.json",
+          "size": 1548,
+          "directory": false
+        },
+        {
+          "name": "mysql-connector-c-6.1.11-h659d440_1008.json",
+          "size": 29555,
+          "directory": false
+        },
+        {
+          "name": "ncbi-vdb-3.3.0-h9948957_0.json",
+          "size": 208058,
+          "directory": false
+        },
+        {
+          "name": "ncurses-6.5-h2d0b736_3.json",
+          "size": 1090166,
+          "directory": false
+        },
+        {
+          "name": "numpy-2.3.5-py311h2e04523_0.json",
+          "size": 743905,
+          "directory": false
+        },
+        {
+          "name": "openjdk-25.0.1-h5755bd7_0.json",
+          "size": 153844,
+          "directory": false
+        },
+        {
+          "name": "openmpi-4.1.6-hc5af2df_101.json",
+          "size": 438703,
+          "directory": false
+        },
+        {
+          "name": "openssl-3.6.0-h26f9b46_0.json",
+          "size": 64382,
+          "directory": false
+        },
+        {
+          "name": "pandas-2.3.3-py311hed34c8f_2.json",
+          "size": 1487263,
+          "directory": false
+        },
+        {
+          "name": "pango-1.56.4-hadf4263_0.json",
+          "size": 27159,
+          "directory": false
+        },
+        {
+          "name": "pasta-1.9.3-py311hefa8cab_0.json",
+          "size": 44191,
+          "directory": false
+        },
+        {
+          "name": "pcre-8.45-h9c3ff4c_0.json",
+          "size": 9859,
+          "directory": false
+        },
+        {
+          "name": "pcre2-10.47-haa7fec5_0.json",
+          "size": 102444,
+          "directory": false
+        },
+        {
+          "name": "perl-5.32.1-7_hd590300_perl5.json",
+          "size": 1028511,
+          "directory": false
+        },
+        {
+          "name": "perl-app-cpanminus-1.7048-pl5321hd8ed1ab_0.json",
+          "size": 3746,
+          "directory": false
+        },
+        {
+          "name": "perl-archive-tar-3.04-pl5321hdfd78af_0.json",
+          "size": 3057,
+          "directory": false
+        },
+        {
+          "name": "perl-carp-1.50-pl5321hd8ed1ab_0.json",
+          "size": 2163,
+          "directory": false
+        },
+        {
+          "name": "perl-class-method-modifiers-2.13-pl5321ha770c72_0.json",
+          "size": 2716,
+          "directory": false
+        },
+        {
+          "name": "perl-common-sense-3.75-pl5321hd8ed1ab_0.json",
+          "size": 2549,
+          "directory": false
+        },
+        {
+          "name": "perl-compress-raw-bzip2-2.214-pl5321hda65f42_0.json",
+          "size": 2323,
+          "directory": false
+        },
+        {
+          "name": "perl-compress-raw-zlib-2.214-pl5321h4dac143_0.json",
+          "size": 2312,
+          "directory": false
+        },
+        {
+          "name": "perl-constant-1.33-pl5321hd8ed1ab_0.json",
+          "size": 1719,
+          "directory": false
+        },
+        {
+          "name": "perl-dbi-1.647-pl5321hb03c661_0.json",
+          "size": 51931,
+          "directory": false
+        },
+        {
+          "name": "perl-encode-3.21-pl5321hb9d3cd8_1.json",
+          "size": 20657,
+          "directory": false
+        },
+        {
+          "name": "perl-exporter-5.74-pl5321hd8ed1ab_0.json",
+          "size": 2144,
+          "directory": false
+        },
+        {
+          "name": "perl-exporter-tiny-1.002002-pl5321hd8ed1ab_0.json",
+          "size": 6562,
+          "directory": false
+        },
+        {
+          "name": "perl-extutils-makemaker-7.70-pl5321hd8ed1ab_0.json",
+          "size": 16524,
+          "directory": false
+        },
+        {
+          "name": "perl-file-path-2.18-pl5321hd8ed1ab_0.json",
+          "size": 1752,
+          "directory": false
+        },
+        {
+          "name": "perl-file-temp-0.2304-pl5321hd8ed1ab_0.json",
+          "size": 1859,
+          "directory": false
+        },
+        {
+          "name": "perl-file-which-1.24-pl5321hd8ed1ab_0.json",
+          "size": 2127,
+          "directory": false
+        },
+        {
+          "name": "perl-inc-latest-0.500-pl5321ha770c72_0.json",
+          "size": 3351,
+          "directory": false
+        },
+        {
+          "name": "perl-io-compress-2.214-pl5321h503566f_0.json",
+          "size": 14492,
+          "directory": false
+        },
+        {
+          "name": "perl-io-zlib-1.15-pl5321hdfd78af_1.json",
+          "size": 2110,
+          "directory": false
+        },
+        {
+          "name": "perl-json-4.10-pl5321hdfd78af_1.json",
+          "size": 5907,
+          "directory": false
+        },
+        {
+          "name": "perl-json-xs-4.04-pl5321h9948957_0.json",
+          "size": 4624,
+          "directory": false
+        },
+        {
+          "name": "perl-list-moreutils-0.430-pl5321hdfd78af_0.json",
+          "size": 4343,
+          "directory": false
+        },
+        {
+          "name": "perl-list-moreutils-xs-0.430-pl5321h7b50bb2_5.json",
+          "size": 3073,
+          "directory": false
+        },
+        {
+          "name": "perl-module-build-0.4234-pl5321ha770c72_1.json",
+          "size": 21125,
+          "directory": false
+        },
+        {
+          "name": "perl-moo-2.005004-pl5321ha770c72_0.json",
+          "size": 8546,
+          "directory": false
+        },
+        {
+          "name": "perl-parallel-forkmanager-2.04-pl5321hdfd78af_0.json",
+          "size": 3606,
+          "directory": false
+        },
+        {
+          "name": "perl-parent-0.243-pl5321hd8ed1ab_0.json",
+          "size": 1704,
+          "directory": false
+        },
+        {
+          "name": "perl-pathtools-3.75-pl5321hb9d3cd8_2.json",
+          "size": 6580,
+          "directory": false
+        },
+        {
+          "name": "perl-role-tiny-2.002004-pl5321ha770c72_0.json",
+          "size": 3373,
+          "directory": false
+        },
+        {
+          "name": "perl-scalar-list-utils-1.70-pl5321hb03c661_0.json",
+          "size": 4404,
+          "directory": false
+        },
+        {
+          "name": "perl-storable-3.15-pl5321hb9d3cd8_2.json",
+          "size": 2224,
+          "directory": false
+        },
+        {
+          "name": "perl-sub-quote-2.006006-pl5321ha770c72_0.json",
+          "size": 3387,
+          "directory": false
+        },
+        {
+          "name": "perl-test-fatal-0.016-pl5321ha770c72_0.json",
+          "size": 2572,
+          "directory": false
+        },
+        {
+          "name": "perl-try-tiny-0.31-pl5321ha770c72_0.json",
+          "size": 2506,
+          "directory": false
+        },
+        {
+          "name": "perl-types-serialiser-1.01-pl5321hdfd78af_0.json",
+          "size": 3455,
+          "directory": false
+        },
+        {
+          "name": "perl-yaml-1.30-pl5321hdfd78af_0.json",
+          "size": 15497,
+          "directory": false
+        },
+        {
+          "name": "pip-25.3-pyh8b19718_0.json",
+          "size": 337146,
+          "directory": false
+        },
+        {
+          "name": "pixman-0.46.4-h54a6638_1.json",
+          "size": 3762,
+          "directory": false
+        },
+        {
+          "name": "pplacer-1.1.alpha19-h9ee0642_2.json",
+          "size": 2281,
+          "directory": false
+        },
+        {
+          "name": "prank-170427-h9948957_1.json",
+          "size": 1563,
+          "directory": false
+        },
+        {
+          "name": "prodigal-2.6.3-h577a1d6_11.json",
+          "size": 1598,
+          "directory": false
+        },
+        {
+          "name": "pthread-stubs-0.4-hb9d3cd8_1002.json",
+          "size": 1649,
+          "directory": false
+        },
+        {
+          "name": "pycparser-2.22-pyh29332c3_1.json",
+          "size": 80614,
+          "directory": false
+        },
+        {
+          "name": "pymongo-4.15.5-py311h1ddb823_0.json",
+          "size": 146687,
+          "directory": false
+        },
+        {
+          "name": "pysocks-1.7.1-pyha55dd90_7.json",
+          "size": 6277,
+          "directory": false
+        },
+        {
+          "name": "python-3.11.14-hd63d673_2_cpython.json",
+          "size": 940516,
+          "directory": false
+        },
+        {
+          "name": "python-dateutil-2.9.0.post0-pyhe01879c_2.json",
+          "size": 18999,
+          "directory": false
+        },
+        {
+          "name": "python-tzdata-2025.2-pyhd8ed1ab_0.json",
+          "size": 302393,
+          "directory": false
+        },
+        {
+          "name": "python_abi-3.11-8_cp311.json",
+          "size": 1175,
+          "directory": false
+        },
+        {
+          "name": "pytz-2025.2-pyhd8ed1ab_0.json",
+          "size": 287773,
+          "directory": false
+        },
+        {
+          "name": "r-base-4.5.2-h835929b_2.json",
+          "size": 528733,
+          "directory": false
+        },
+        {
+          "name": "r-cli-3.6.5-r45h3697838_1.json",
+          "size": 27158,
+          "directory": false
+        },
+        {
+          "name": "r-colorspace-2.1_2-r45h54b55ab_0.json",
+          "size": 69964,
+          "directory": false
+        },
+        {
+          "name": "r-farver-2.1.2-r45h3697838_2.json",
+          "size": 13963,
+          "directory": false
+        },
+        {
+          "name": "r-ggplot2-4.0.1-r45h785f33e_0.json",
+          "size": 26028,
+          "directory": false
+        },
+        {
+          "name": "r-glue-1.8.0-r45h54b55ab_1.json",
+          "size": 16478,
+          "directory": false
+        },
+        {
+          "name": "r-gtable-0.3.6-r45hc72bb7e_1.json",
+          "size": 18083,
+          "directory": false
+        },
+        {
+          "name": "r-isoband-0.2.7-r45h3697838_4.json",
+          "size": 15627,
+          "directory": false
+        },
+        {
+          "name": "r-labeling-0.4.3-r45hc72bb7e_2.json",
+          "size": 9595,
+          "directory": false
+        },
+        {
+          "name": "r-lifecycle-1.0.4-r45hc72bb7e_2.json",
+          "size": 19939,
+          "directory": false
+        },
+        {
+          "name": "r-munsell-0.5.1-r45hc72bb7e_2.json",
+          "size": 13474,
+          "directory": false
+        },
+        {
+          "name": "r-r6-2.6.1-r45hc72bb7e_1.json",
+          "size": 10504,
+          "directory": false
+        },
+        {
+          "name": "r-rcolorbrewer-1.1_3-r45h785f33e_4.json",
+          "size": 9829,
+          "directory": false
+        },
+        {
+          "name": "r-rlang-1.1.6-r45h3697838_1.json",
+          "size": 15773,
+          "directory": false
+        },
+        {
+          "name": "r-s7-0.2.1-r45h54b55ab_0.json",
+          "size": 19712,
+          "directory": false
+        },
+        {
+          "name": "r-scales-1.4.0-r45hc72bb7e_1.json",
+          "size": 17867,
+          "directory": false
+        },
+        {
+          "name": "r-vctrs-0.6.5-r45h3697838_2.json",
+          "size": 24752,
+          "directory": false
+        },
+        {
+          "name": "r-viridislite-0.4.2-r45hc72bb7e_3.json",
+          "size": 11939,
+          "directory": false
+        },
+        {
+          "name": "r-withr-3.0.2-r45hc72bb7e_1.json",
+          "size": 16969,
+          "directory": false
+        },
+        {
+          "name": "raxml-8.2.13-h7b50bb2_3.json",
+          "size": 3465,
+          "directory": false
+        },
+        {
+          "name": "readline-8.2-h8c095d6_2.json",
+          "size": 10284,
+          "directory": false
+        },
+        {
+          "name": "requests-2.32.5-pyhd8ed1ab_0.json",
+          "size": 17729,
+          "directory": false
+        },
+        {
+          "name": "samtools-1.22.1-h96c455f_0.json",
+          "size": 27289,
+          "directory": false
+        },
+        {
+          "name": "sed-4.9-h6688a6e_0.json",
+          "size": 18933,
+          "directory": false
+        },
+        {
+          "name": "sepp-4.5.6-py311haab0aaa_1.json",
+          "size": 28408,
+          "directory": false
+        },
+        {
+          "name": "seqtk-1.5-h577a1d6_1.json",
+          "size": 1543,
+          "directory": false
+        },
+        {
+          "name": "setuptools-80.9.0-pyhff2d567_0.json",
+          "size": 355702,
+          "directory": false
+        },
+        {
+          "name": "six-1.17.0-pyhe01879c_1.json",
+          "size": 5459,
+          "directory": false
+        },
+        {
+          "name": "sniffio-1.3.1-pyhd8ed1ab_2.json",
+          "size": 9844,
+          "directory": false
+        },
+        {
+          "name": "sqlite-3.51.1-hbc0de68_0.json",
+          "size": 1682,
+          "directory": false
+        },
+        {
+          "name": "suitesparse-7.10.1-ha0f6916_7100102.json",
+          "size": 2378,
+          "directory": false
+        },
+        {
+          "name": "sysroot_linux-64-2.17-h0157908_18.json",
+          "size": 646621,
+          "directory": false
+        },
+        {
+          "name": "tar-1.35-h3b78370_0.json",
+          "size": 20520,
+          "directory": false
+        },
+        {
+          "name": "tk-8.6.13-noxft_ha0e22de_103.json",
+          "size": 207016,
+          "directory": false
+        },
+        {
+          "name": "tktable-2.10-h8d826fa_7.json",
+          "size": 4026,
+          "directory": false
+        },
+        {
+          "name": "tzdata-2025b-h78e105d_0.json",
+          "size": 246305,
+          "directory": false
+        },
+        {
+          "name": "ucsc-fatotwobit-482-hdc0a859_0.json",
+          "size": 1835,
+          "directory": false
+        },
+        {
+          "name": "ucsc-twobitinfo-482-hdc0a859_0.json",
+          "size": 1835,
+          "directory": false
+        },
+        {
+          "name": "urllib3-2.5.0-pyhd8ed1ab_0.json",
+          "size": 31542,
+          "directory": false
+        },
+        {
+          "name": "wget-1.21.4-hda4d442_0.json",
+          "size": 36778,
+          "directory": false
+        },
+        {
+          "name": "wheel-0.45.1-pyhd8ed1ab_1.json",
+          "size": 25960,
+          "directory": false
+        },
+        {
+          "name": "xorg-libice-1.1.2-hb9d3cd8_0.json",
+          "size": 4931,
+          "directory": false
+        },
+        {
+          "name": "xorg-libsm-1.2.6-he73a12e_0.json",
+          "size": 3787,
+          "directory": false
+        },
+        {
+          "name": "xorg-libx11-1.8.12-h4f16b4b_0.json",
+          "size": 88249,
+          "directory": false
+        },
+        {
+          "name": "xorg-libxau-1.0.12-hb03c661_1.json",
+          "size": 2947,
+          "directory": false
+        },
+        {
+          "name": "xorg-libxdmcp-1.1.5-hb03c661_1.json",
+          "size": 2969,
+          "directory": false
+        },
+        {
+          "name": "xorg-libxext-1.3.6-hb9d3cd8_0.json",
+          "size": 9125,
+          "directory": false
+        },
+        {
+          "name": "xorg-libxfixes-6.0.2-hb03c661_0.json",
+          "size": 3046,
+          "directory": false
+        },
+        {
+          "name": "xorg-libxi-1.8.2-hb9d3cd8_0.json",
+          "size": 3483,
+          "directory": false
+        },
+        {
+          "name": "xorg-libxrandr-1.5.4-hb9d3cd8_0.json",
+          "size": 3132,
+          "directory": false
+        },
+        {
+          "name": "xorg-libxrender-0.9.12-hb9d3cd8_0.json",
+          "size": 3069,
+          "directory": false
+        },
+        {
+          "name": "xorg-libxt-1.3.1-hb9d3cd8_0.json",
+          "size": 24313,
+          "directory": false
+        },
+        {
+          "name": "xorg-libxtst-1.2.5-hb9d3cd8_3.json",
+          "size": 4320,
+          "directory": false
+        },
+        {
+          "name": "xz-5.8.1-hbcc6ac9_2.json",
+          "size": 1325,
+          "directory": false
+        },
+        {
+          "name": "xz-gpl-tools-5.8.1-hbcc6ac9_2.json",
+          "size": 10477,
+          "directory": false
+        },
+        {
+          "name": "xz-tools-5.8.1-hb9d3cd8_2.json",
+          "size": 7449,
+          "directory": false
+        },
+        {
+          "name": "zlib-1.3.1-hb9d3cd8_2.json",
+          "size": 3005,
+          "directory": false
+        },
+        {
+          "name": "zstandard-0.25.0-py311haee01d2_1.json",
+          "size": 7623,
+          "directory": false
+        },
+        {
+          "name": "zstd-1.5.7-hb78ec9c_6.json",
+          "size": 7692,
+          "directory": false
+        }
+      ]
+    },
+    {
+      "action": "list",
+      "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Sitalica",
+      "size": 4096,
+      "mtime_ns": 1788555962951508000,
+      "entries": [
+        {
+          "name": "DONE",
+          "size": 183,
+          "directory": false
+        },
+        {
+          "name": "PROVENANCE.txt",
+          "size": 2065,
+          "directory": false
+        },
+        {
+          "name": "Sitalica.est.bam",
+          "size": 18714842,
+          "directory": false
+        },
+        {
+          "name": "Sitalica.est.bam.bai",
+          "size": 328056,
+          "directory": false
+        },
+        {
+          "name": "Sitalica.est.paf.gz",
+          "size": 14655244,
+          "directory": false
+        },
+        {
+          "name": "contig_alias.tsv",
+          "size": 14952,
+          "directory": false
+        },
+        {
+          "name": "flagstat.txt",
+          "size": 384,
+          "directory": false
+        },
+        {
+          "name": "minimap2.err",
+          "size": 885,
+          "directory": false
+        },
+        {
+          "name": "minimap2.paf.err",
+          "size": 884,
+          "directory": false
+        },
+        {
+          "name": "samtools.err",
+          "size": 0,
+          "directory": false
+        }
+      ]
+    }
+  ],
+  "read_bytes": 34775
+}

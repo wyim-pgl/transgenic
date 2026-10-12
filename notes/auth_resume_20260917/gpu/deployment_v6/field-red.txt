@@ -1,0 +1,93 @@
+test_aliases_are_ambiguous_even_when_equal (test_field_alias.FieldAliasTests) ... test_changed_normalized_value_rejected_in_final_snapshot (test_field_alias.FieldAliasTests) ... FAIL
+test_exact_retained_line_normalizes (test_field_alias.FieldAliasTests) ... FAIL
+test_only_observed_alias_and_no_default (test_field_alias.FieldAliasTests) ... FAIL
+test_raw_format_full_admission (test_field_alias.FieldAliasTests) ... ERROR
+
+======================================================================
+ERROR: test_raw_format_full_admission (test_field_alias.FieldAliasTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/test_field_alias.py", line 46, in test_raw_format_full_admission
+    cases.LivePathTests().run_live(observations)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/test_admission_cases.py", line 149, in run_live
+    try: result=a.live(root,auth,current)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/admission.py", line 446, in live
+    decision = reconcile(a, current, jobs, rows, time.time(), capacity)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/admission.py", line 326, in reconcile
+    node = allocation(jobs[current], current, now, capacity)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/admission.py", line 300, in allocation
+    need(j.get('JobId') == current and j.get('UserId') == 'wcyim(97434)' and
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/admission.py", line 31, in need
+    raise ValueError(message)
+ValueError: actual allocation identity/geometry/restart/namespace mismatch
+
+======================================================================
+FAIL: test_aliases_are_ambiguous_even_when_equal (test_field_alias.FieldAliasTests) (first='CPUs/Task', value='64')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/test_field_alias.py", line 43, in test_aliases_are_ambiguous_even_when_equal
+    a.fields(first+'=64 '+second+'='+value)
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_aliases_are_ambiguous_even_when_equal (test_field_alias.FieldAliasTests) (first='CPUs/Task', value='32')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/test_field_alias.py", line 43, in test_aliases_are_ambiguous_even_when_equal
+    a.fields(first+'=64 '+second+'='+value)
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_aliases_are_ambiguous_even_when_equal (test_field_alias.FieldAliasTests) (first='CPUsPerTask', value='64')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/test_field_alias.py", line 43, in test_aliases_are_ambiguous_even_when_equal
+    a.fields(first+'=64 '+second+'='+value)
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_aliases_are_ambiguous_even_when_equal (test_field_alias.FieldAliasTests) (first='CPUsPerTask', value='32')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/test_field_alias.py", line 43, in test_aliases_are_ambiguous_even_when_equal
+    a.fields(first+'=64 '+second+'='+value)
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_changed_normalized_value_rejected_in_final_snapshot (test_field_alias.FieldAliasTests)
+----------------------------------------------------------------------
+ValueError: actual allocation identity/geometry/restart/namespace mismatch
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/test_field_alias.py", line 56, in test_changed_normalized_value_rejected_in_final_snapshot
+    cases.LivePathTests().run_live(changed)
+AssertionError: "allocation changed during admission" does not match "actual allocation identity/geometry/restart/namespace mismatch"
+
+======================================================================
+FAIL: test_exact_retained_line_normalizes (test_field_alias.FieldAliasTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/test_field_alias.py", line 35, in test_exact_retained_line_normalizes
+    self.assertEqual(parsed.get('CPUsPerTask'), '64')
+AssertionError: None != '64'
+
+======================================================================
+FAIL: test_only_observed_alias_and_no_default (test_field_alias.FieldAliasTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v4/test_field_alias.py", line 60, in test_only_observed_alias_and_no_default
+    self.assertEqual(a.fields('CPUs/Task=32'), {'CPUsPerTask': '32'})
+AssertionError: {'CPUs/Task': '32'} != {'CPUsPerTask': '32'}
+- {'CPUs/Task': '32'}
+?       ^
+
++ {'CPUsPerTask': '32'}
+?       ^^^
+
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.521s
+
+FAILED (failures=7, errors=1)

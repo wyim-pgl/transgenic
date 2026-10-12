@@ -1,0 +1,44 @@
+test_different_soft_limit_is_set_inside_task (test_file_limit.FileLimit) ... ok
+test_insufficient_hard_limit_refuses_without_claiming_success (test_file_limit.FileLimit) ... ok
+test_unlimited_inheritance_is_lowered_and_recorded (test_file_limit.FileLimit) ... ok
+test_clean_launch_environment_preserves_slurm_and_ignores_bash_env (test_amendments.Amendments) ... ok
+test_policy_rejects_hard_quota_and_wrong_budget (test_amendments.Amendments) ... ok
+test_publication_threshold_counts_own_files (test_amendments.Amendments) ... ok
+test_python39_refused_before_allocation (test_amendments.Amendments) ... ok
+test_run_guard_and_failure_after_publication_keep_driver_outputs (test_amendments.Amendments) ... ERROR
+test_runtime_inventory_and_cgroup_fail_closed (test_amendments.Amendments) ... ok
+test_signal_bridge_executes_real_wrapper_child_cleanup (test_amendments.Amendments) ... ok
+test_start_filesystem_metadata (test_amendments.Amendments) ... ok
+test_startup_limit_exact (test_amendments.Amendments) ... ok
+test_term_and_int_raise_and_restore (test_amendments.Amendments) ... ok
+test_unreviewed_v2_hierarchy_rejected_before_workload (test_amendments.Amendments) ... ok
+test_v1_cgroup_requires_job_hierarchy_memory_and_swap (test_amendments.Amendments) ... ok
+test_closure_and_pins (test_fixture.FixtureTests) ... ok
+test_deterministic_inputs_and_fixed_oracle (test_fixture.FixtureTests) ... ok
+test_junction_cli_help_bootstrap (test_fixture.FixtureTests) ... ok
+test_real_frozen_cli_preflight_and_panel_seam (test_fixture.FixtureTests) ... ok
+test_stub_pipeline_and_real_postflight_NOT_real_tool_evidence (test_fixture.FixtureTests) ... ok
+test_wrong_junctions_rejected (test_fixture.FixtureTests) ... ok
+
+======================================================================
+ERROR: test_run_guard_and_failure_after_publication_keep_driver_outputs (test_amendments.Amendments)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture_v4/test_amendments.py", line 184, in test_run_guard_and_failure_after_publication_keep_driver_outputs
+    with self.assertRaisesRegex(ValueError,'policy mismatch'): f.run(HERE/'package',rejected)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture_v4/fixture.py", line 281, in run
+    file_limit = enforce_startup_file_limit()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/ont_fixture_v4/fixture.py", line 269, in enforce_startup_file_limit
+    print(json.dumps({'file_limit_before': before}), file=sys.stderr, flush=True)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1114, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1118, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/usr/lib/python3.10/unittest/mock.py", line 1173, in _execute_mock_call
+    raise effect
+BrokenPipeError: final stdout failure
+
+----------------------------------------------------------------------
+Ran 21 tests in 9.597s
+
+FAILED (errors=1)

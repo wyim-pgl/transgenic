@@ -1,0 +1,42 @@
+{
+  "0": {
+    "cold_loss": 3.522496223449707,
+    "cold_reproduced": true,
+    "logits_equal": true,
+    "loss_equal": true,
+    "primed_loss": 3.522496223449707,
+    "reset_loss": 3.522496223449707,
+    "reset_matches_cold": true,
+    "warm_reproduced": true
+  },
+  "1": {
+    "cold_loss": 3.366504669189453,
+    "cold_reproduced": true,
+    "logits_equal": true,
+    "loss_equal": true,
+    "primed_loss": 3.366504669189453,
+    "reset_loss": 3.366504669189453,
+    "reset_matches_cold": true,
+    "warm_reproduced": true
+  },
+  "2": {
+    "cold_loss": 3.4423773288726807,
+    "cold_reproduced": true,
+    "logits_equal": false,
+    "loss_equal": false,
+    "primed_loss": 3.4435665607452393,
+    "reset_loss": 3.4423773288726807,
+    "reset_matches_cold": true,
+    "warm_reproduced": true
+  },
+  "3": {
+    "cold_loss": 3.4890518188476562,
+    "cold_reproduced": true,
+    "logits_equal": false,
+    "loss_equal": false,
+    "primed_loss": 3.48885440826416,
+    "reset_loss": 3.4890518188476562,
+    "reset_matches_cold": true,
+    "warm_reproduced": true
+  }
+}

@@ -1,0 +1,3 @@
+r0	0	chr1	51	60	50M100N50M100N50M	*	0	0	*	*	cs:Z::50~gt100ag:50~gt100ag:50	AS:i:150	ts:A:+
+r1	0	chr1	60	60	41M100N50M100N59M	*	0	0	*	*	cs:Z::41~gt100ag:50~gt100ag:59	AS:i:150	ts:A:+
+r2	0	chr1	69	60	32M100N50M100N68M	*	0	0	*	*	cs:Z::32~gt100ag:50~gt100ag:68	AS:i:150	ts:A:+

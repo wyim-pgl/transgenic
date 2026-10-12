@@ -1,0 +1,8 @@
+ M .gitignore
+?? .ignore
+?? .testdeps/
+?? revision/scripts/evidence/est_blastx_audit.py
+?? revision/scripts/evidence/est_blastx_audit.sbatch
+?? revision/scripts/evidence/est_phase_accept.py
+?? revision/scripts/evidence/est_phase_accept_fixture.py
+?? revision/scripts/evidence/est_phase_accept_fixture.sbatch

@@ -1,0 +1,262 @@
+--- v2/admission.py
++++ v5/admission.py
+@@ -10,6 +10,7 @@
+ from pathlib import Path
+ import re
+ import signal
++import selectors
+ import subprocess
+ import time
+ 
+@@ -18,11 +19,11 @@
+ UID = 97434
+ CLUSTER = 'delta-gh'
+ START = '2026-09-16T00:00:00'
+-NAMESPACE = '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v3_20260917'
++NAMESPACE = '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v5_20260917'
+ ACCOUNTS_SHA = '44302f2e6bd0773e1acd87c521947e3dac4ca9c581e9c79b7433489f22be35f5'
+ TERMINAL = {'COMPLETED', 'FAILED', 'CANCELLED', 'TIMEOUT', 'OUT_OF_MEMORY', 'NODE_FAIL', 'BOOT_FAIL', 'DEADLINE', 'PREEMPTED', 'REVOKED'}
+-FIELDS = 'JobIDRaw,JobName%100,User,UID,Account,Partition,State%40,ElapsedRaw,AllocNodes,AllocCPUS,AllocTRES%200,ReqTRES%200,TimelimitRaw,Submit,Start,End,NodeList%100'
+-KEYS = 'id name user uid account partition state elapsed nodes cpus alloc req limit submit start end placement'.split()
++FIELDS = 'JobIDRaw,JobName%100,User,UID,Account,Partition,State%40,ElapsedRaw,AllocNodes,AllocCPUS,AllocTRES%200,ReqTRES%200,TimelimitRaw,Submit,Start,End,NodeList%100,ExitCode'
++KEYS = 'id name user uid account partition state elapsed nodes cpus alloc req limit submit start end placement exit'.split()
+ 
+ 
+ def need(ok, message):
+@@ -36,10 +37,18 @@
+ 
+ def example():
+     """Executable schema template, deliberately NOT approved and with no true facts."""
+-    return dict(schema=3, approved=False, issued_at_unix=None,
++    return dict(schema=4, approved=False, issued_at_unix=None,
+         release_json_sha256=None, transport_sha256=None, ledger_sha256=None,
+-        controller_reference=None, review_reference=None, cancellation_history_reference=None,
++        controller_reference=None, review_reference=None, terminal_recovery_reference=None,
+         staging_reference=None, reservation_identity=None,
++        attempt_basis='REVIEWED_3163986_FAILURE_RECOVERY_NOT_AUTOMATIC_RETRY',
++        evidence_recovery=dict(source='/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/inputs/evidence/fullc0lite.db',
++            bytes=1068773376, sha256='ed2d0eef2b205626db0983ab9f029f84c30514babc77c330bdb250b2fdfe3d0d',
++            owner=97434, read_only=True, preserve_source=True),
++        terminal_history={'3163986': dict(state='FAILED', exit_code='1:0', elapsed_seconds=51,
++            nodes=1, gpus=4, allocated_cpus=288, requested_cpus=64,
++            node_hours=51/3600, gpu_hours=204/3600),
++            '3163545': dict(state='CANCELLED', exit_code='0:0', elapsed_seconds=0)}, 
+         scope='S0_P1_DIAGNOSTIC_ONLY', profile='development-single', seed=123,
+         run_role='mvp_finetune', training_authorized=False, followup_authorized=False,
+         namespace=NAMESPACE, cluster=CLUSTER, owner=USER, uid=UID, account=ACCOUNT,
+@@ -62,7 +71,7 @@
+     template = example()
+     variable = {'approved', 'issued_at_unix', 'release_json_sha256', 'transport_sha256',
+                 'ledger_sha256', 'controller_reference', 'review_reference',
+-                'cancellation_history_reference', 'staging_reference', 'reservation_identity',
++                'terminal_recovery_reference', 'staging_reference', 'reservation_identity',
+                 'registered_prior_ids', 'b5_registered_ids', 'other_reservations'}
+     need(set(a) == set(template), 'unknown/missing authorization fields')
+     for k in set(template) - variable:
+@@ -73,7 +82,7 @@
+                        ('ledger_sha256', ledger_sha)]:
+         need(isinstance(value, str) and re.fullmatch('[a-f0-9]{64}', value) and a[key] == value,
+              'external release identity: '+key)
+-    for k in ('controller_reference', 'review_reference', 'cancellation_history_reference',
++    for k in ('controller_reference', 'review_reference', 'terminal_recovery_reference',
+               'staging_reference', 'reservation_identity'):
+         need(isinstance(a[k], str) and a[k].strip(), 'controller provenance missing: '+k)
+     ids = a['registered_prior_ids']
+@@ -113,31 +122,68 @@
+ 
+ 
+ def query(control, label, argv, timeout=15):
+-    """One process group per query. Timeout kills script descendants as well."""
++    """Bounded binary capture, Python 3.6. Any capture failure kills and reaps."""
++    limit = 16 * 1024 * 1024
+     r = dict(command=argv, start_monotonic=time.monotonic(), start_unix=time.time(),
+-             timed_out=False, stdout='', stderr='', exit_code=None)
++             timed_out=False, stdout='', stderr='', exit_code=None, aggregate_limit_bytes=limit)
+     p = None
++    captured = {'stdout': bytearray(), 'stderr': bytearray()}
++    total = 0
+     try:
+-        p = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
++        p = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+             start_new_session=True, env={'PATH':'/usr/bin:/bin', 'LC_ALL':'C', 'TZ':'America/Chicago',
+                                          'HOME':os.environ.get('HOME', '/u/wcyim')})
+-        try:
+-            r['stdout'], r['stderr'] = p.communicate(timeout=timeout)
+-        except subprocess.TimeoutExpired:
+-            r['timed_out'] = True
+-            os.killpg(p.pid, signal.SIGKILL)
+-            r['stdout'], r['stderr'] = p.communicate(timeout=2)
++        deadline = r['start_monotonic'] + timeout
++        with selectors.DefaultSelector() as selector:
++            for name, stream in (('stdout', p.stdout), ('stderr', p.stderr)):
++                selector.register(stream, selectors.EVENT_READ, name)
++            while selector.get_map():
++                remaining = deadline - time.monotonic()
++                if remaining <= 0:
++                    raise subprocess.TimeoutExpired(argv, timeout)
++                for key, _ in selector.select(remaining):
++                    block = os.read(key.fd, min(65536, limit - total + 1))
++                    if not block:
++                        selector.unregister(key.fileobj)
++                        continue
++                    room = limit - total
++                    captured[key.data].extend(block[:room])
++                    total += min(len(block), room)
++                    need(len(block) <= room, 'aggregate output exceeds reviewed byte bound')
++            p.wait(timeout=max(0, deadline - time.monotonic()))
++        for name in captured:
++            r[name] = captured[name].decode('utf-8')  # malformed text is not admitted
+         r['exit_code'] = p.returncode
+-    except Exception as e:
++    except BaseException as e:
+         r['error'] = repr(e)
++        r['timed_out'] = isinstance(e, subprocess.TimeoutExpired)
++        if p is not None:
++            try:
++                os.killpg(p.pid, signal.SIGKILL)
++            except ProcessLookupError:
++                pass
++            except Exception as cleanup:
++                r['kill_error'] = repr(cleanup)
++            try:
++                p.wait(timeout=2)
++            except Exception as cleanup:
++                r['reap_error'] = repr(cleanup)
++            r['exit_code'] = p.returncode
++        # Bounded prefixes are evidence only, never an admissible truncated response.
++        for name in captured:
++            r[name] = captured[name].decode('utf-8', errors='replace')
+     finally:
+-        r.update(end_monotonic=time.monotonic(), end_unix=time.time())
++        if p is not None:
++            for stream in (p.stdout, p.stderr):
++                if stream is not None:
++                    stream.close()
++        r.update(end_monotonic=time.monotonic(), end_unix=time.time(), captured_bytes=total)
+         r['stdout_sha256'] = hashlib.sha256(r['stdout'].encode()).hexdigest()
+         r['stderr_sha256'] = hashlib.sha256(r['stderr'].encode()).hexdigest()
+         with (control/(label+'.json')).open('x') as f:
+             json.dump(r, f, sort_keys=True, allow_nan=False); f.write('\n')
++    need('error' not in r, 'query capture failed: '+r.get('error', ''))
+     fresh([r])
+-    need(len(r['stdout']) <= 16*1024*1024, 'query output exceeds reviewed bound')
+     return r
+ 
+ 
+@@ -224,7 +270,7 @@
+     if optional and text in ('Unknown', 'None', 'N/A'):
+         return None
+     need(re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d', text), 'unknown accounting timestamp')
+-    # Single-threaded host wrapper, Python 3.8 compatible. No guessed fixed UTC offset.
++    # Single-threaded host wrapper, Python 3.6 compatible. No guessed fixed UTC offset.
+     previous = os.environ.get('TZ')
+     try:
+         os.environ['TZ'] = 'America/Chicago'; time.tzset()
+@@ -241,18 +287,33 @@
+     return value
+ 
+ 
+-def allocation(j, current, now):
++def node_capacity(text, node):
++    need(len(text.splitlines()) == 1, 'ambiguous node capacity response')
++    record = fields(text.strip())
++    need(record.get('NodeName') == node and re.fullmatch(r'gh\d{3}', node), 'node capacity identity')
++    capacity = integer(record.get('CPUTot', ''))
++    need(capacity >= 64, 'node capacity too small')
++    return record
++
++
++def allocation(j, current, now, capacity=None):
+     need(j.get('JobId') == current and j.get('UserId') == 'wcyim(97434)' and
+          j.get('Account') == ACCOUNT and j.get('QOS') == ACCOUNT and j.get('Partition') == 'ghx4' and
+          j.get('JobState') == 'RUNNING' and j.get('OverSubscribe') == 'NO' and
+-         j.get('NumNodes') == '1' and j.get('NumCPUs') == '64' and
++         j.get('NumNodes') == '1' and j.get('CPUsPerTask') == '64' and j.get('NumTasks') == '1' and
+          j.get('Requeue') == '0' and j.get('Restarts') == '0' and
+          j.get('Command') == NAMESPACE+'/p1.sbatch' and j.get('WorkDir') == NAMESPACE,
+          'actual allocation identity/geometry/restart/namespace mismatch')
+     need(0 < seconds(j.get('TimeLimit', '')) <= 1800, 'actual time limit')
+     need(0 <= seconds(j.get('RunTime', '')) <= 1800, 'elapsed allocation')
+     t = tres(j.get('AllocTRES', ''))
+-    need(gpu(t) == 4 and t.get('node') == '1' and t.get('cpu') == '64', 'allocated TRES mismatch')
++    req = tres(j.get('ReqTRES', ''))
++    need(gpu(req) == 4 and req.get('node') == '1' and req.get('cpu') == '64', 'requested TRES mismatch')
++    cpus = integer(j.get('NumCPUs', ''))
++    need(gpu(t) == 4 and t.get('node') == '1' and t.get('cpu') == str(cpus), 'allocated TRES mismatch')
++    need(cpus == 64 or capacity is not None and capacity.get('NodeName') == j.get('NodeList') and
++         cpus == integer(capacity.get('CPUTot', '')) and cpus >= 64,
++         'allocated CPUs not requested count or trusted exclusive node capacity')
+     node = j.get('NodeList', '')
+     need(re.fullmatch(r'gh\d{3}', node) and node not in {'gh062', 'gh093'}, 'placement/exclusion mismatch')
+     need(j.get('ExcNodeList') in ('gh[062,093]', 'gh062,gh093'), 'exclusion policy changed')
+@@ -260,9 +321,9 @@
+     return node
+ 
+ 
+-def reconcile(a, current, jobs, rows, now):
++def reconcile(a, current, jobs, rows, now, capacity=None):
+     need(current in jobs and current in rows, 'current allocation missing/lagging')
+-    node = allocation(jobs[current], current, now)
++    node = allocation(jobs[current], current, now, capacity)
+     known = set(a['registered_prior_ids'])
+     need(current not in known and known <= set(rows), 'registered old history missing')
+     b5 = []; spent = []
+@@ -292,7 +353,9 @@
+         timestamp(r['end'], now, optional=r['state'] not in TERMINAL)
+         elapsed = integer(r['elapsed']); alloc = tres(r['alloc'])
+         if ident == current:
+-            need(r['state'] == 'RUNNING' and gpu(alloc) == 4 and r['nodes'] == '1' and r['cpus'] == '64',
++            need(r['state'] == 'RUNNING' and gpu(alloc) == 4 and r['nodes'] == '1' and
++                 r['cpus'] == jobs[current]['NumCPUs'] and alloc.get('cpu') == r['cpus'] and
++                 tres(r['req']).get('cpu') == '64',
+                  'current accounting disagrees')
+             continue  # Full 0.5/2 reservation below already includes startup elapsed.
+         if r['name'] == 'b5-seed':
+@@ -305,8 +368,15 @@
+         need(ident in known and r['state'] in TERMINAL, 'unknown or active MVP diagnostic allocation')
+         need(ident not in jobs or jobs[ident].get('JobState') == r['state'], 'old live/accounting conflict')
+         if ident == '3163986':
+-            need(r['state'] == 'CANCELLED' and elapsed == 0 and not alloc and r['cpus'] == '0',
+-                 'old3163986 not confirmed zero-allocation CANCELLED')
++            need(r['state'] == 'FAILED' and r.get('exit') == '1:0' and elapsed == 51 and
++                 r['nodes'] == '1' and r['cpus'] == '288' and alloc.get('cpu') == '288' and
++                 alloc.get('node') == '1' and gpu(alloc) == 4 and
++                 tres(r['req']).get('cpu') == '64' and r['partition'] == 'ghx4' and
++                 r['placement'] == 'gh077' and r['start'] == '2026-09-17T18:47:46' and
++                 r['end'] == '2026-09-17T18:48:37', 'old3163986 not exact reviewed terminal failure')
++        if ident == '3163545':
++            need(r['state'] == 'CANCELLED' and r.get('exit') == '0:0' and elapsed == 0 and
++                 not alloc and r['cpus'] == '0' and r['nodes'] == '0', 'old3163545 not cancelled zero')
+         if elapsed:
+             ng = gpu(alloc); nn = integer(alloc.get('node', ''))
+             need(nn > 0 and nn == integer(r['nodes']), 'allocation node accounting mismatch')
+@@ -370,7 +440,10 @@
+             jobs[ident] = fields(raw.strip())
+         raw = q('campaign', ['/usr/bin/sacct', '-nPX', '--duplicates', '-u', USER, '-S', START, '--format='+FIELDS])
+         rows = accounting(raw)
+-        decision = reconcile(a, current, jobs, rows, time.time())
++        node = jobs[current].get('NodeList', '')
++        need(re.fullmatch(r'gh\d{3}', node), 'invalid current node')
++        capacity = node_capacity(q('node-capacity', ['/usr/bin/scontrol', '-o', 'show', 'node', node]), node)
++        decision = reconcile(a, current, jobs, rows, time.time(), capacity)
+         factor = q('qos-factor', ['/usr/bin/sacctmgr', '-nP', 'show', 'qos', 'where', 'name='+ACCOUNT,
+                                   'format=Name,UsageFactor,Flags'])
+         need(factor.strip() == ACCOUNT+'|1.000000|NoDecay,UsageFactorSafe',
+@@ -388,7 +461,7 @@
+         decision['operational_reserve_gpu_hours'] = reserve(max(0, bal-1), decision['b5_max_gpu_hours'])
+         # Second observations are race checks, never retries after a failed command.
+         stable = ('JobId', 'UserId', 'Account', 'QOS', 'Partition', 'JobState', 'NumNodes',
+-                  'NumCPUs', 'TimeLimit', 'Requeue', 'Restarts', 'Command', 'WorkDir',
++                  'NumCPUs', 'CPUsPerTask', 'NumTasks', 'TimeLimit', 'Requeue', 'Restarts', 'Command', 'WorkDir',
+                   'NodeList', 'AllocTRES', 'ReqTRES', 'OverSubscribe', 'ExcNodeList', 'StartTime')
+         for ident, before_job in jobs.items():
+             after_job = fields(q('job-final-'+ident, ['/usr/bin/scontrol', '-o', 'show', 'job', ident]).strip())
+@@ -399,6 +472,8 @@
+         for ident, row in after.items():
+             if ident != current and row[4] not in TERMINAL:
+                 need(decision['node'] not in expand_nodes(row[5]), 'another allocation shares node')
++        final_capacity = node_capacity(q('node-capacity-final', ['/usr/bin/scontrol', '-o', 'show', 'node', node]), node)
++        need(capacity['CPUTot'] == final_capacity['CPUTot'], 'node capacity changed during admission')
+         fresh(records)
+         decision.update(admitted=True, decided_at_unix=time.time(), decided_at_monotonic=time.monotonic(),
+                         reservation_identity=a['reservation_identity'],

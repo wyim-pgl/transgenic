@@ -1,0 +1,14 @@
+total 23281425
+drwxr-xr-x  2 wyim p-wyim        4096 Sep 27 17:13 .
+drwxr-xr-x 24 wyim p-wyim        8192 Sep 27 14:51 ..
+-rw-r--r--  1 wyim p-wyim 23838339072 Sep 27 17:08 b5_full_b6_v1.db
+-rw-r--r--  1 wyim p-wyim      616921 Sep 27 17:13 freeze.json
+-rw-r--r--  1 wyim p-wyim      230569 Sep 26 16:07 measure.json
+-rw-r--r--  1 wyim p-wyim      805084 Sep 27 14:38 measure_v2.json
+{"n_pilot": 4099, "out_sha256": "6583b1b202c4c5b93b88f893e6c15f267a5ec54f0c2db675b29466071f15111c", "row_set_policy": "drop_event_tiles_with_rc_twins", "rows_dropped": 2230, "rows_repaired": 48114, "train_rows": 196774}
+6173268.batch|38336708K|02:22:21
+['argv', 'b6_dna_repair_rows', 'b6_label_drop_rows', 'base', 'base_row_counts', 'base_sha256', 'code_sha256', 'content_sha256', 'corpus_version', 'counts', 'declared_differences', 'duckdb_version', 'events', 'geometry', 'grandfathered', 'inputs', 'interval_manifest_sha256', 'interval_manifests', 'measured_counts', 'n_pilot', 'out', 'out_sha256', 'row_counts', 'row_set_drop', 'row_set_policy', 'rows_repaired', 'rule_id', 'seed', 'species_flags', 'species_inputs', 'species_qc', 'train_rows']
+n_pilot {'effective_batch': 96, 'epochs': 2, 'formula': 'floor(train_rows * epochs / effective_batch)', 'train_rows': 196774, 'train_rows_predicate': "split = 'train' AND gff IS NOT NULL AND COALESCE(train_weight, 1.0) > 0", 'value': 4099}
+train_rows 196774
+out_sha 6583b1b202c4c5b93b88f893e6c15f267a5ec54f0c2db675b29466071f15111c
+manifests {'Athaliana': '../intervals/Athaliana.intervals_v2.jsonl', 'Bdistachyon': '../intervals/Bdistachyon.intervals_v2.jsonl', 'Gmax': '../intervals/Gmax.intervals_v2.jsonl', 'Osativa': '../intervals/Osativa.intervals_v2.jsonl', 'Ppatens': '../intervals/Ppatens.intervals_v2.jsonl', 'Ptrichocarpa': '../intervals/Ptrichocarpa.intervals_v2.jsonl', 'Sbicolor': '../intervals/Sbicolor.intervals_v2.jsonl', 'Sitalica': '../intervals/Sitalica.intervals_v2.jsonl', 'Vvinifera': '../intervals/Vvinifera.intervals_v2.jsonl'}

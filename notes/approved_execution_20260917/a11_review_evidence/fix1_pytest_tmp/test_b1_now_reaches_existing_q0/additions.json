@@ -1,0 +1,1 @@
+[{"addition_id": "add1", "locus_id": "gene1", "species": "synthetic", "assembly": "fixture", "contig": "chr1", "strand": "+", "cds_start": 51, "cds_end": 400, "locus_start": 1, "locus_end": 500, "introns": [[101, 200], [251, 350]], "novel_introns": [[251, 350]], "novelty": "junction-novel", "filter_pass": true, "exact_cds_match": false, "control": "addition"}]

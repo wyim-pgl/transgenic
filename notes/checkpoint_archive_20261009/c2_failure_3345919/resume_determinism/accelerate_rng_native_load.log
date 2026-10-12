@@ -1,0 +1,40 @@
+def load(f, map_location=None, **kwargs):
+    """
+    Compatible drop-in replacement of `torch.load()` which allows for `weights_only` to be used if `torch` version is
+    2.4.0 or higher. Otherwise will ignore the kwarg.
+
+    Will also add (and then remove) an exception for numpy arrays
+
+    Args:
+        f:
+            The file (or file-like object) to use to load the data
+        map_location:
+            a function, `torch.device`, string or a dict specifying how to remap storage locations
+        **kwargs:
+            Additional keyword arguments to pass to `torch.load()`.
+    """
+    try:
+        if is_weights_only_available():
+            old_safe_globals = torch.serialization.get_safe_globals()
+            if "weights_only" not in kwargs:
+                kwargs["weights_only"] = True
+            torch.serialization.add_safe_globals(TORCH_SAFE_GLOBALS)
+        else:
+            kwargs.pop("weights_only", None)
+        loaded_obj = torch.load(f, map_location=map_location, **kwargs)
+    finally:
+        if is_weights_only_available():
+            torch.serialization.clear_safe_globals()
+            if old_safe_globals:
+                torch.serialization.add_safe_globals(old_safe_globals)
+    return loaded_obj
+
+ACCELERATE_NATIVE_LOAD_PASS ['step', 'random_state', 'numpy_random_seed', 'torch_manual_seed', 'torch_cuda_manual_seed']
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

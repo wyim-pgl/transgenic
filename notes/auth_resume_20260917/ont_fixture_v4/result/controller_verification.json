@@ -1,0 +1,594 @@
+{
+  "verified": true,
+  "technical_workload_pass": true,
+  "clean_F4_accepted": false,
+  "blocker": "6165965.extern OUT_OF_MEMORY 0:125",
+  "capture_time": "2026-09-17T17:17:26.367899-07:00",
+  "file_limit": {
+    "after": [
+      4194304,
+      4194304
+    ],
+    "before": [
+      4194304,
+      -1
+    ],
+    "enforcement": "inside allocated Python task"
+  },
+  "pins": {
+    "release/MANIFEST.sha256": "13da604041044f3ce0192b2049d644a603b9bbef8d14d38c70fedc07ae92d3b9",
+    "controller_approval.json": "981023667e3dc0b18a44ae62f6b8b6694dc177d84f19e5989bf26a713d804da5",
+    "release/runtime_evidence/expected_closure.json": "17028c5096c789ec7d198c489d08eec8cbc0224ec1ebd492115a475d9ee243ce"
+  },
+  "manifest_entries": 17,
+  "runtime_file_records": 417,
+  "unique_runtime_paths": 180,
+  "runtime_parent_paths": 43,
+  "compute_closure_exact_match": true,
+  "bam_records": [
+    {
+      "name": "positive_0",
+      "flag": 0,
+      "reference": "fixture_chr",
+      "pos0": 20000,
+      "cigar": "500M200N500M"
+    },
+    {
+      "name": "positive_1",
+      "flag": 0,
+      "reference": "fixture_chr",
+      "pos0": 20000,
+      "cigar": "500M200N500M"
+    },
+    {
+      "name": "positive_2",
+      "flag": 0,
+      "reference": "fixture_chr",
+      "pos0": 20000,
+      "cigar": "500M200N500M"
+    },
+    {
+      "name": "below_threshold_0",
+      "flag": 0,
+      "reference": "fixture_chr",
+      "pos0": 30000,
+      "cigar": "500M200N500M"
+    },
+    {
+      "name": "below_threshold_1",
+      "flag": 0,
+      "reference": "fixture_chr",
+      "pos0": 30000,
+      "cigar": "500M200N500M"
+    },
+    {
+      "name": "unspliced",
+      "flag": 0,
+      "reference": "fixture_chr",
+      "pos0": 40000,
+      "cigar": "1000M"
+    }
+  ],
+  "junction_support_names": {
+    "('fixture_chr', 20500, 20699)": [
+      "positive_0",
+      "positive_1",
+      "positive_2"
+    ],
+    "('fixture_chr', 30500, 30699)": [
+      "below_threshold_0",
+      "below_threshold_1"
+    ]
+  },
+  "selected_names": [
+    "below_threshold_0",
+    "below_threshold_1",
+    "positive_0",
+    "positive_1",
+    "positive_2",
+    "unspliced"
+  ],
+  "excluded_names": [
+    "outside"
+  ],
+  "nested_exit_codes": [
+    0,
+    0,
+    4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "seams": [
+    "synthetic enum-labelled role/input root, not canonical authority",
+    "explicit fixture panel hash; overlapping 50 test loci, not canonical panel",
+    "junction bootstrap actual argv recorded separately",
+    "synthetic reference binding, not Git92"
+  ],
+  "affinity_limitation": "Four-CPU assertion completed in pinned code; actual affinity CPU list was not persisted. CPU_IDs 10-13 are scheduler evidence only.",
+  "cgroup_limitation": "Actual membership/hierarchical limits saved; launcher PID not separately persisted; no post-run reaping inspection.",
+  "receipt_sha256": "b4101cf9e0b3cf9a8361978d244aa40d2c14a8facc553246dd28e651e774f7c4",
+  "logical_bytes_including_directories": 1224735,
+  "allocated_bytes_including_directories": 1791488,
+  "regular_file_logical_bytes": 1187871,
+  "regular_file_allocated_bytes": 1782272,
+  "raw_wire_bytes": 3030485,
+  "retrieved_file_bytes": 2189617,
+  "max_retrieved_file_bytes": 997375,
+  "output_inventory": [
+    {
+      "allocated": 1024,
+      "gid": 3092957,
+      "logical": 4096,
+      "mode": "0o700",
+      "path": "out",
+      "type": "directory",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 37,
+      "mode": "0o600",
+      "path": "stderr",
+      "sha256": "772b4d97ad83f511b3d21bf6cb6afa30b2d1fea44fe7d1406609f74126a1d80e",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 16315,
+      "mode": "0o600",
+      "path": "stdout",
+      "sha256": "fddc1e58795273613b96aa3bd45b0e7ea17b1e444d8dd2a766bd1247df4ffc9f",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 65,
+      "mode": "0o644",
+      "path": "out/COMPLETE",
+      "sha256": "507639ba72cb7211fb9b7c9dd2f666cb72024aa249caabaa801abf4c1fb7754d",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 5241,
+      "mode": "0o644",
+      "path": "out/cgroup_observed.json",
+      "sha256": "b7f0a21f6e535d32f4c86789bd63bddf39032d0607f657a15a49a35bbb5366b8",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 2597,
+      "mode": "0o644",
+      "path": "out/controller_approval.json",
+      "sha256": "981023667e3dc0b18a44ae62f6b8b6694dc177d84f19e5989bf26a713d804da5",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 0,
+      "gid": 3092957,
+      "logical": 0,
+      "mode": "0o644",
+      "path": "out/driver.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 5456,
+      "mode": "0o644",
+      "path": "out/driver.stdout",
+      "sha256": "10929a57996dd6b3899cb6b309c02fa233612ffdec4e926a21bba8c7c8809545",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 134,
+      "mode": "0o644",
+      "path": "out/file_limit_observed.json",
+      "sha256": "a5dca3d2b54b09cb95a86f12f5fd64fbedbc83b8d846ade53d93be227011378b",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 1319,
+      "mode": "0o644",
+      "path": "out/filesystem_start.json",
+      "sha256": "2b96735f218e9f0c14efa19cd47365c80c58abdb2aac86e05ca157f61c60fffc",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 1269,
+      "mode": "0o644",
+      "path": "out/launch_environment.json",
+      "sha256": "39276f40a55f9cda41a516fb1f0e7a2691eb452b071a8141fb06750bf4aa6a91",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 7240,
+      "mode": "0o644",
+      "path": "out/nested_execution.jsonl",
+      "sha256": "9bec36f63b7bd79ae0e87fd7eec39af6abebf8c0c20a8b88767f67553a301c0e",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 16814,
+      "mode": "0o644",
+      "path": "out/receipt.json",
+      "sha256": "b4101cf9e0b3cf9a8361978d244aa40d2c14a8facc553246dd28e651e774f7c4",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 1048576,
+      "gid": 3092957,
+      "logical": 997375,
+      "mode": "0o644",
+      "path": "out/runtime_closure_observed.json",
+      "sha256": "17028c5096c789ec7d198c489d08eec8cbc0224ec1ebd492115a475d9ee243ce",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 1976,
+      "mode": "0o644",
+      "path": "out/runtime_observed.json",
+      "sha256": "c2826547b866d4f3e0b1599f5a8d0f0c61a2cc86ce6e1025d82a50e5dfa37952",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 1024,
+      "gid": 3092957,
+      "logical": 4096,
+      "mode": "0o700",
+      "path": "out/synthetic",
+      "type": "directory",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 129,
+      "mode": "0o644",
+      "path": "out/synthetic/authority.json",
+      "sha256": "7900096dc7b5901d8361e4564f851200c758f4a81843dffcd1801b7225fd742b",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 1024,
+      "gid": 3092957,
+      "logical": 4096,
+      "mode": "0o755",
+      "path": "out/synthetic/evidence",
+      "type": "directory",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 663,
+      "mode": "0o644",
+      "path": "out/synthetic/expected.json",
+      "sha256": "7e6efb88ad101d324e51eacd173c8d8117a0ded169860f89761ec5dbb028d1da",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 1024,
+      "gid": 3092957,
+      "logical": 4096,
+      "mode": "0o755",
+      "path": "out/synthetic/genomes",
+      "type": "directory",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 3819,
+      "mode": "0o644",
+      "path": "out/synthetic/panel.tsv",
+      "sha256": "8e45fc1818473b9dad1dd7a496d6918ff72eb63857057cd3873853123d9e97a8",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 417,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/DATASET_ROLES.longread_v1.tsv",
+      "sha256": "90c605131c3dec92565181e275ee7d5159b617ca299eecd62f58c287cffb0618",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 1024,
+      "gid": 3092957,
+      "logical": 4096,
+      "mode": "0o755",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916",
+      "type": "directory",
+      "uid": 3092957
+    },
+    {
+      "allocated": 1024,
+      "gid": 3092957,
+      "logical": 4096,
+      "mode": "0o755",
+      "path": "out/synthetic/evidence/ont",
+      "type": "directory",
+      "uid": 3092957
+    },
+    {
+      "allocated": 1024,
+      "gid": 3092957,
+      "logical": 4096,
+      "mode": "0o755",
+      "path": "out/synthetic/evidence/ont/Athaliana_FLIC_PRJNA1087576",
+      "type": "directory",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 1480,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/ont/Athaliana_FLIC_PRJNA1087576/SRR28341943.fa.gz",
+      "sha256": "bbd206b72dd104efdc3139af3f733cd77bac93a6524652689dc622119725ec3a",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 1024,
+      "gid": 3092957,
+      "logical": 4096,
+      "mode": "0o755",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943",
+      "type": "directory",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 5455,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/alignment.json",
+      "sha256": "dab764ff3b6b66135f8e277af5ad52e6e5d9924e091bf162295777daabeea837",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 3003,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/commands.json",
+      "sha256": "da1e7581388b3061fc567a73221c56af61576ff2a1f28591cf7e90023b4f24e3",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 2557,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/commands.stderr",
+      "sha256": "88add9b2b6d9528e42743251e34611f2d1c828bd536e5b0a0d7c2ef9b02c6ff7",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 685,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/junctions.qc.json",
+      "sha256": "bf25873448d2b089a4a94c722951f9b5bc745d15531015fff3d9d5589da38f2b",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 136,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/junctions.tsv",
+      "sha256": "1a476c069aa49da69c99c4217f346721bf94b7032263b20dbd9d796bc680aef3",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 1024,
+      "gid": 3092957,
+      "logical": 4096,
+      "mode": "0o755",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation",
+      "type": "directory",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 2839,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel.bam",
+      "sha256": "0ed68b7dff64f169fa0927b12a92a0b150567d1332692fd48f4c6c26306a5c87",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 144,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel.bam.bai",
+      "sha256": "d98e3fbbaee75352c391a81ee4fd81d409b8a7a6c773fa99c32a1455254f39fd",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 13332,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel.sam",
+      "sha256": "e69a52210045fc7f8694b2e6fcc01a7bdb78df666fa7aeaa1c48e20d2c208f6a",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 6187,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel_reads.fa",
+      "sha256": "fee2107decbbb4ae6718fae0343dcfe37eed8d5cdc17daa18501c40c4a28ccff",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 79,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel_reads.txt",
+      "sha256": "3a788c46fd34cce7476f07d159dbd0b4fdd86449ac70de0c7f7aa3056bd41e00",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 825,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/pass1.paf",
+      "sha256": "ee23e77ad80f1b53d30b808c2421f076f50964fa0489a8b6d3bd596b8e620270",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 195,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation/DONE",
+      "sha256": "ddaf576c0c4cc107d53373e78bab7dae5a701fa437fad51f93e1226e70398e19",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 1454,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation/audit.json",
+      "sha256": "fefe39485257819cee03b631f29b5f5077266b511500ca604cb83fc0b68ed2fb",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 0,
+      "gid": 3092957,
+      "logical": 0,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation/audit.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 1455,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation/audit.stdout",
+      "sha256": "33d1bfe88292ea10f48c245f34f472eef22603ba5225e2c897549c019ba15ea6",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 7101,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation/sample.fa",
+      "sha256": "9bba02033c53c878ade7946bf10338a06cb7eefb8b0f593e1ddeab64271964d1",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 135,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation/sample.json",
+      "sha256": "c2ad7ba5e3a8adf366bf16fcb99febb81185731341456d291fe3005d6c4bacaf",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 15471,
+      "mode": "0o644",
+      "path": "out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/orientation/sample.sam",
+      "sha256": "034993b62a24e1450964dda3ae2f825d3585457b39d4fa6912321a87afc8f4be",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 65536,
+      "gid": 3092957,
+      "logical": 64028,
+      "mode": "0o644",
+      "path": "out/synthetic/genomes/fixture.fa",
+      "sha256": "ca0754793f46f12c7175ce519a8bf8bf809cbcbe2a89d0ee81d54f4a45be6d16",
+      "type": "file",
+      "uid": 3092957
+    },
+    {
+      "allocated": 512,
+      "gid": 3092957,
+      "logical": 444,
+      "mode": "0o644",
+      "path": "out/synthetic/genomes/fixture.gff3",
+      "sha256": "a7181c9e7f237ab829866dbf521ae0f0f76ff48c5f7f428781ebe7519e4e86b8",
+      "type": "file",
+      "uid": 3092957
+    }
+  ]
+}

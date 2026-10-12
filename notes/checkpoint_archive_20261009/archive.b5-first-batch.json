@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "targets": [
+    {
+      "name": "hdd-b5",
+      "transport": "local",
+      "source_kind": "run",
+      "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+      "destination_root": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive",
+      "storage": {
+        "kind": "lustre",
+        "required_pool": "ddn_hdd",
+        "required_project": 22169,
+        "mount": "/work/hdd/bilv"
+      },
+      "min_age_seconds": 300,
+      "min_free_bytes": 53687091200,
+      "max_bytes": 17179869184,
+      "max_checkpoints": 1,
+      "rate_limit_bytes": 16777216,
+      "max_epoch": 8
+    },
+    {
+      "name": "pronghorn-b5",
+      "transport": "ssh-pull",
+      "source_kind": "run",
+      "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+      "destination_root": "/data/gpfs/assoc/pgl/data/Transgenic/archives/checkpoint_archive",
+      "storage": {
+        "kind": "local"
+      },
+      "min_age_seconds": 300,
+      "min_free_bytes": 1099511627776,
+      "max_bytes": 17179869184,
+      "max_checkpoints": 1,
+      "rate_limit_bytes": 16777216,
+      "remote": {
+        "host": "dtai",
+        "python": "/usr/bin/python3",
+        "helper": "/work/nvme/bilv/wcyim/transgenic/ops/checkpoint_archive/3b4eb0d/revision/scripts/b6/checkpoint_archive_cli.py",
+        "connect_timeout": 10,
+        "timeout": 7200
+      },
+      "rsync_timeout": 120,
+      "max_epoch": 8
+    }
+  ]
+}

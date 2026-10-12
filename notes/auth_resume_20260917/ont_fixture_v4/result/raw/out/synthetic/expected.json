@@ -1,0 +1,37 @@
+{
+  "absent_decoy": [
+    20509,
+    20708
+  ],
+  "orientation_status": "UNRESOLVED",
+  "read_records": 7,
+  "rows": [
+    {
+      "chrom": "fixture_chr",
+      "intron_end0": 20699,
+      "intron_start0": 20500,
+      "n_HiFi": 0,
+      "n_ONT": 3,
+      "supported": true,
+      "tx_strand": "+"
+    },
+    {
+      "chrom": "fixture_chr",
+      "intron_end0": 30699,
+      "intron_start0": 30500,
+      "n_HiFi": 0,
+      "n_ONT": 2,
+      "supported": false,
+      "tx_strand": "+"
+    }
+  ],
+  "selected_names": [
+    "below_threshold_0",
+    "below_threshold_1",
+    "positive_0",
+    "positive_1",
+    "positive_2",
+    "unspliced"
+  ],
+  "use_uf": false
+}

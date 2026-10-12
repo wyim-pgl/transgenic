@@ -1,0 +1,25 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+{
+  "time": "2026-09-17T17:14:54.545002-07:00",
+  "argv": [
+    "/cm/shared/apps/slurm/20.11.7/bin/sbatch",
+    "--parsable",
+    "--no-requeue",
+    "--open-mode=append",
+    "--chdir=/data/gpfs/home/wyim/ont_f4_fix_20260917_1714",
+    "--output=/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/stdout",
+    "--error=/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/stderr",
+    "--export=RELEASE=/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/release,OUT=/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out,MANIFEST_SHA256=13da604041044f3ce0192b2049d644a603b9bbef8d14d38c70fedc07ae92d3b9,ONT_FIXTURE_APPROVAL=/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/controller_approval.json,ONT_FIXTURE_APPROVAL_SHA256=981023667e3dc0b18a44ae62f6b8b6694dc177d84f19e5989bf26a713d804da5,SLURM_EXPORT_ENV=ALL",
+    "/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/release/fixture.sbatch"
+  ],
+  "queue": "6147940|syl_an_Ahy_A_ODB|PENDING\n6147612|syl_an_Ahy_A|PENDING\n6147349|syl_an_Ahy_B|PENDING\n6146937|syl_an_Ahy_B|PENDING\n6165672|agat_clean_final.Ahy_A_ODB|RUNNING\n6165685|syl_recovery_observer_20260917|RUNNING\n6156540|syl_watch_other_20m|RUNNING\n6165938|aggregate_CombineGeneModels_step6.Spe_A_ODB|STOPPED\n6165885|syl_Spe_geta_posttraining|STOPPED\n",
+  "manifest_sha256": "13da604041044f3ce0192b2049d644a603b9bbef8d14d38c70fedc07ae92d3b9",
+  "remote_payloads_verified": 17,
+  "automatic_retry": false,
+  "prior_failed_job_preserved": "6165962",
+  "returncode": 0,
+  "stdout": "6165965\n",
+  "stderr": ""
+}

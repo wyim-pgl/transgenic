@@ -1,0 +1,18 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T11:28:05-0700
+lrwxrwxrwx 1 wyim p-wyim     10 Jan 29  2026 /data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python -> python3.11
+-rwxrwxr-x 1 wyim p-wyim 791016 Jan 29  2026 /data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/samtools
+lrwxrwxrwx 1 wyim p-wyim     10 Aug 20 16:33 /data/gpfs/home/wyim/micromamba/envs/signalp6/bin/python -> python3.10
+Python 3.11.14
+/usr/bin/timeout
+             JOBID                             NAME      STATE         TIME               NODELIST(REASON)
+           6147940                 syl_an_Ahy_A_ODB    PENDING         0:00                  (JobHeldUser)
+           6147612                     syl_an_Ahy_A    PENDING         0:00                  (JobHeldUser)
+           6147349                     syl_an_Ahy_B    PENDING         0:00                  (JobHeldUser)
+           6146937                     syl_an_Ahy_B    PENDING         0:00                  (JobHeldUser)
+           6165672       agat_clean_final.Ahy_A_ODB    RUNNING      5:43:40                         cpu-51
+           6165685   syl_recovery_observer_20260917    RUNNING        46:33                         cpu-50
+           6146936                 syl_an_Ahy_A_ODB    RUNNING  13-20:14:21                         cpu-50
+           6156540              syl_watch_other_20m    RUNNING   6-23:37:03                         cpu-50

@@ -1,0 +1,33 @@
+...............................................FFF.                      [100%]
+=================================== FAILURES ===================================
+______ test_download_dataset_must_not_be_promoted_to_a_biological_library ______
+
+    def test_download_dataset_must_not_be_promoted_to_a_biological_library():
+        m = api()
+>       with pytest.raises(ValueError, match='download dataset'):
+E       Failed: DID NOT RAISE ValueError
+
+revision/scripts/tests/test_est_molecule_closure.py:312: Failed
+__________ test_canonical_alias_target_must_not_be_a_download_dataset __________
+
+    def test_canonical_alias_target_must_not_be_a_download_dataset():
+        m = api()
+>       with pytest.raises(ValueError, match='download dataset'):
+E       Failed: DID NOT RAISE ValueError
+
+revision/scripts/tests/test_est_molecule_closure.py:318: Failed
+___ test_unknown_bioproject_marker_blocks_identity_without_claiming_absence ____
+
+    def test_unknown_bioproject_marker_blocks_identity_without_claiming_absence():
+        m = api()
+        assert run(m, [member(m)])['diagnostic_ready'] is True
+        r = run(m, [member(m, bioproject='unknown')])
+>       assert 'unresolved_identity:a' in r['blockers']
+E       AssertionError: assert 'unresolved_identity:a' in ()
+
+revision/scripts/tests/test_est_molecule_closure.py:326: AssertionError
+=========================== short test summary info ============================
+FAILED revision/scripts/tests/test_est_molecule_closure.py::test_download_dataset_must_not_be_promoted_to_a_biological_library
+FAILED revision/scripts/tests/test_est_molecule_closure.py::test_canonical_alias_target_must_not_be_a_download_dataset
+FAILED revision/scripts/tests/test_est_molecule_closure.py::test_unknown_bioproject_marker_blocks_identity_without_claiming_absence
+3 failed, 48 passed in 0.49s

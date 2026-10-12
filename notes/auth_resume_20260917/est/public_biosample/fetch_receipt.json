@@ -1,0 +1,45 @@
+{
+  "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=biosample&id=SAMN00736318,SAMN00736317,SAMN00168307&retmode=xml",
+  "requested_ids": [
+    "SAMN00736318",
+    "SAMN00736317",
+    "SAMN00168307"
+  ],
+  "started_utc": "2026-09-18T00:57:59.238031+00:00",
+  "command": [
+    "curl",
+    "--disable",
+    "--proto",
+    "=https",
+    "--max-time",
+    "30",
+    "--connect-timeout",
+    "5",
+    "--max-filesize",
+    "1048576",
+    "--silent",
+    "--show-error",
+    "--dump-header",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/est/public_biosample/headers.raw",
+    "--output",
+    "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/est/public_biosample/biosample.raw.xml",
+    "--write-out",
+    "%{json}",
+    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=biosample&id=SAMN00736318,SAMN00736317,SAMN00168307&retmode=xml"
+  ],
+  "attempts": 1,
+  "retries": 0,
+  "redirects_followed": false,
+  "ended_utc": "2026-09-18T00:58:04.295999+00:00",
+  "curl_exit": 28,
+  "biosample.raw.xml": {
+    "exists": false,
+    "bytes": 0,
+    "sha256": null
+  },
+  "headers.raw": {
+    "exists": true,
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

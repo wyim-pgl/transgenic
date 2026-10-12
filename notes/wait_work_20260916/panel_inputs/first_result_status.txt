@@ -1,0 +1,8 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916/slurm-6165556.out ===
+
+=== /data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916/slurm-6165556.err ===
+FATAL:   while parsing bind path: while getting bind path: rw is not a valid bind option

@@ -1,0 +1,14 @@
+test_new_namespace_and_preserved_exclusions (test_candidate.CandidateTests) ... FAIL
+
+======================================================================
+FAIL: test_new_namespace_and_preserved_exclusions (test_candidate.CandidateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/auth_resume_20260917/gpu/deployment_v1/test_candidate.py", line 89, in test_new_namespace_and_preserved_exclusions
+    self.assertIn('#SBATCH --exclude=gh062,gh093\n', text)
+AssertionError: '#SBATCH --exclude=gh062,gh093\n' not found in '#!/bin/bash\n#SBATCH --job-name=dev123-p1-0917\n#SBATCH --account=bilv-dtai-gh\n#SBATCH --partition=ghx4\n#SBATCH --nodes=1\n#SBATCH --ntasks=1\n#SBATCH --gpus-per-node=4\n#SBATCH --cpus-per-task=64\n#SBATCH --exclusive\n#SBATCH --no-requeue\n#SBATCH --time=00:30:00\n#SBATCH --exclude=gh062,gh093,gh086\n#SBATCH --chdir=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_20260917\n#SBATCH --output=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-%j.out\n#SBATCH --error=/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123-p1-%j.err\nset -euo pipefail\numask 077\n# Controller refreshes B5 node exclusion immediately before submission; no worker submission.\n# Clear all inherited container injection and application overrides, not just one known key.\nfor name in $(compgen -e); do\n  case "$name" in\n    APPTAINER*|SINGULARITY*|TRANSGENIC*|HF_*|TRANSFORMERS*|PYTHON*|TORCH*|TRITON*|MVP_*|CUDA_VISIBLE_DEVICES)\n      unset "$name" ;;\n  esac\ndone\nunset LD_PRELOAD LD_LIBRARY_PATH BASH_ENV ENV\nexport PATH=/usr/bin:/bin:/sw/user/scripts\nexport PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1\nexport OMP_NUM_THREADS=8\n[[ ${SLURM_JOB_NUM_NODES:?} == 1 ]]\n[[ ${SLURM_GPUS_ON_NODE:?} == 4 ]]\n# Independent controller receipt is mandatory; this package does not create one.\n[[ ${DEPLOY_CONTROLLER_GATE_SHA256:-} =~ ^[0-9a-f]{64}$ ]]\n[[ ! -e S0_P1_STARTED ]]\n# Exclusive claim survives failures; never rerun this release automatically.\n(set -o noclobber; printf \'%s\\n\' "${SLURM_JOB_ID:?}" > S0_P1_STARTED)\n/usr/bin/sha256sum -c release.sha256\n/usr/bin/date -Is\n/usr/bin/hostname\n# 28m20s combined S0+P1 ceiling, 20s teardown, Slurm30m hard backstop.\n# No separate warmup and no TRAINING_DONE; any failure exits nonzero.\n/usr/bin/timeout --signal=TERM --kill-after=20s 1700s /usr/bin/python3 deploy.py host\n'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.011s
+
+FAILED (failures=1)

@@ -1,0 +1,26 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+sheet sha e21425e1eeaa60ac87648464b684f61fabe06c848ec8d0de4da448d54695b029 in_inputs False
+SP Athaliana {'b1_validation_only': 3, 'c2_training_eligible': 35, 'excluded': 4} NOT_READY 6
+    ('Athaliana_FLIC_PRJNA1087576', 'SRR28341943', 'b1_validation_only', ['primary'])
+    ('Athaliana_FLIC_PRJNA1087576', 'SRR28341944', 'b1_validation_only', ['primary'])
+    ('Athaliana_FLIC_PRJNA1087576', 'SRR28341945', 'b1_validation_only', ['primary'])
+    ('Athaliana_cui2020_PRJNA594286', 'SRR10611193', 'c2_training_eligible', ['primary', 'audit', 'sheet_mismatch'])
+    ('Athaliana_cui2020_PRJNA594286', 'SRR10611194', 'c2_training_eligible', ['primary', 'audit', 'sheet_mismatch'])
+    ('Athaliana_cui2020_PRJNA594286', 'SRR10611195', 'c2_training_eligible', ['primary', 'audit', 'sheet_mismatch'])
+SP Gmax {'c2_training_eligible': 27} NOT_READY 0
+SP Osativa {'c2_training_eligible': 28, 'excluded': 1} NOT_READY 0
+SP Ppatens {'c2_training_eligible': 7} NOT_READY 0
+SP Ptrichocarpa {'c2_training_eligible': 8, 'excluded': 3} NOT_READY 0
+SP Sitalica {'c2_training_eligible': 9} NOT_READY 0
+SP Slycopersicum {'b1_validation_only': 1} NOT_READY 1
+    ('Slycopersicum_heinz_PRJEB37834', 'ERR4039883', 'b1_validation_only', ['primary'])
+SP Vvinifera {'c2_training_eligible': 11} NOT_READY 0
+SP Zmays {'b1_validation_only': 6} NOT_READY 6
+    ('Zmays_roottip_PRJNA822071', 'SRR18571905', 'b1_validation_only', ['primary'])
+    ('Zmays_roottip_PRJNA822071', 'SRR18571906', 'b1_validation_only', ['primary'])
+    ('Zmays_roottip_PRJNA822071', 'SRR18571907', 'b1_validation_only', ['primary'])
+    ('Zmays_roottip_PRJNA822071', 'SRR18571911', 'b1_validation_only', ['primary'])
+    ('Zmays_roottip_PRJNA822071', 'SRR18571914', 'b1_validation_only', ['primary'])
+    ('Zmays_roottip_PRJNA822071', 'SRR18571915', 'b1_validation_only', ['primary'])

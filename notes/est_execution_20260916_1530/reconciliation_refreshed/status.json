@@ -1,0 +1,45 @@
+{
+  "baseline_final": [
+    {
+      "Elapsed": "03:00:24",
+      "End": "2026-09-16T18:47:29",
+      "ExitCode": "1:0",
+      "JobID": "6165461",
+      "MaxRSS": "",
+      "Start": "2026-09-16T15:47:05",
+      "State": "FAILED"
+    },
+    {
+      "Elapsed": "03:00:24",
+      "End": "2026-09-16T18:47:29",
+      "ExitCode": "1:0",
+      "JobID": "6165461.batch",
+      "MaxRSS": "1549756K",
+      "Start": "2026-09-16T15:47:05",
+      "State": "FAILED"
+    },
+    {
+      "Elapsed": "03:00:24",
+      "End": "2026-09-16T18:47:29",
+      "ExitCode": "0:125",
+      "JobID": "6165461.extern",
+      "MaxRSS": "1480K",
+      "Start": "2026-09-16T15:47:05",
+      "State": "OUT_OF_MEMORY"
+    }
+  ],
+  "checks": "exact old static equality, recursive UID/GID/listings/hash/bytes, bindings, committed pins, accounting, verbatim queue-only validator, bash -n; NOT operational full auditor PASS",
+  "destination_absent": true,
+  "entries": 19,
+  "historical_rows": 30,
+  "manifest_sha256": "c8b03a35bcf527b70d69fa4c11eb0ab2d90da1da3dd0b487d4dd85c6bfe00a2e",
+  "mvp_6165521_present": false,
+  "queue_captured_at": "2026-09-17T01:57:58.018983+00:00",
+  "queue_rows": 68,
+  "queue_validation": "PASS at local verification time; remote startup must revalidate age",
+  "receipt_bytes": 489199,
+  "receipts": 32,
+  "static_equal": true,
+  "status": "LOCAL PROPOSAL; independent review and staging authorization pending",
+  "wrapper_sha256": "763d655c2043b20bbe9882411589f6542112c8a65018e7eda638042a04080933"
+}

@@ -1,0 +1,19 @@
+test_bad_pin (__main__.Boundary.test_bad_pin) ... ok
+test_mutated_recursive_output_rejected_by_existing_gate (__main__.Boundary.test_mutated_recursive_output_rejected_by_existing_gate) ... ok
+test_no_reuse (__main__.Boundary.test_no_reuse) ... ok
+test_nonzero_child_not_complete (__main__.Boundary.test_nonzero_child_not_complete) ... ok
+test_receipt_scope_and_mutation (__main__.Boundary.test_receipt_scope_and_mutation) ... ok
+test_slurm_environment_alone_insufficient (__main__.Boundary.test_slurm_environment_alone_insufficient) ... ok
+test_success_real_child (__main__.Boundary.test_success_real_child) ... ok
+test_timeout_retains_logs_and_status (__main__.Boundary.test_timeout_retains_logs_and_status) ... ok
+test_actual_nested_helper_import_layout_clean_environment (__main__.SyntheticExecute.test_actual_nested_helper_import_layout_clean_environment) ... ok
+test_closure_rejects_extras_missing_files_and_redirects (__main__.SyntheticExecute.test_closure_rejects_extras_missing_files_and_redirects) ... ok
+test_execute_failure_and_postflight_mutations (__main__.SyntheticExecute.test_execute_failure_and_postflight_mutations) ... ok
+test_execute_synthetic_happy_path (__main__.SyntheticExecute.test_execute_synthetic_happy_path) ... ok
+test_unlisted_imports_rejected_before_gate_import_or_marker (__main__.SyntheticExecute.test_unlisted_imports_rejected_before_gate_import_or_marker) ... ok
+test_unsupported_interpreter_rejected_before_any_path_access (__main__.SyntheticExecute.test_unsupported_interpreter_rejected_before_any_path_access) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 16.644s
+
+OK

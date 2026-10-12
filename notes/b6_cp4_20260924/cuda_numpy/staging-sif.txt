@@ -1,0 +1,12 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+/work/nvme/bilv/wcyim/b6-device-fix-20260924.tar.gz: OK
+source-a48579d.sha256: OK
+SOURCE_OK=217
+....ss..........sssss..........                                          [100%]
+24 passed, 7 skipped in 3.76s
+[master 6446692] snapshot fix from b6-integration a48579d240e1912d39974a5af6a7a78cd529433b
+ 2 files changed, 52 insertions(+), 3 deletions(-)
+ create mode 100644 tests/test_b6_batch_device.py
+6446692c34c7fd72f993452197c9cbc5e3ba9bd6 snapshot fix from b6-integration a48579d240e1912d39974a5af6a7a78cd529433b

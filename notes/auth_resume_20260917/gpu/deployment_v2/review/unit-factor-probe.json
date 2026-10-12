@@ -1,0 +1,16 @@
+{
+  "command": [
+    "ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "pronghorn",
+    "ssh -o BatchMode=yes -o ConnectTimeout=10 dtai 'timeout 15s /bin/bash -c '\"'\"'/usr/bin/sacctmgr -nP show qos where name=bilv-dtai-gh format=Name,UsageFactor,Flags; /usr/bin/squeue -h -u wcyim -t all -o '\"'\"'\"'\"'\"'\"'\"'\"'%i|%j|%u|%a|%T|%N'\"'\"'\"'\"'\"'\"'\"'\"''\"'\"''"
+  ],
+  "start": 1789688984.9792743,
+  "end": 1789688986.4485576,
+  "exit": 0,
+  "stdout": "bilv-dtai-gh|1.000000|NoDecay,UsageFactorSafe\n3163986|mvp8-final-p1-0916|wcyim|bilv-dtai-gh|FAILED|gh077\n3149356|b5-seed|wcyim|bilv-dtai-gh|PENDING|\n3149363|b5-seed|wcyim|bilv-dtai-gh|PENDING|\n3149362|b5-seed|wcyim|bilv-dtai-gh|PENDING|\n3149361|b5-seed|wcyim|bilv-dtai-gh|PENDING|\n3149360|b5-seed|wcyim|bilv-dtai-gh|PENDING|\n3149359|b5-seed|wcyim|bilv-dtai-gh|PENDING|\n3149358|b5-seed|wcyim|bilv-dtai-gh|PENDING|\n3149357|b5-seed|wcyim|bilv-dtai-gh|PENDING|\n",
+  "stderr": "Loading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+}

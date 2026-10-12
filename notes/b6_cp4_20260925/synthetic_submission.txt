@@ -1,0 +1,17 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+b6-source-filestore.sha256: OK
+SOURCE_OK=220
+/work/hdd/bilv/wcyim/transgenic/run_hdd_cp4.sh: OK
+3210279       COMPLETED      0:0   00:06:31 
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1022              1499  leakage-controlled ...
+{"filesystem_available_bytes": 977998413824, "pool": "ddn_hdd", "project_id": 22169, "quota_remaining_bytes": 1029809115136, "required_bytes": 107374182400, "results_dir": "/work/hdd/bilv/wcyim/transgenic/runs/b6_int4"}
+SBATCH_RC=0
+CP4_SYNTHETIC_SUBMISSION_RESULT 3210585
+
+CP4_SYNTHETIC_SUBMISSION_ERROR 

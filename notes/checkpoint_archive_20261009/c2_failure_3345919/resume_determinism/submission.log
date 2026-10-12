@@ -1,0 +1,26 @@
+3309786 b5-seed PENDING
+3309790 b5-seed PENDING
+3309789 b5-seed PENDING
+3309788 b5-seed PENDING
+3309787 b5-seed PENDING
+3345920 b6-wp5-pilot PENDING
+3345918 b6-wp5-pilot PENDING
+3345917 b6-wp5-pilot PENDING
+
+SUBMISSION {"phase": "submitted", "time": 1791752801.1814766, "script": "/work/nvme/bilv/wcyim/transgenic/ops/c2_resume_determinism_20261011/v2/probe.sbatch", "returncode": 0, "stdout": "3361666\n", "stderr": "", "job_id": 3361666}
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+test_clone_preserves_original_and_only_committed_draws (__main__.ProbeTests.test_clone_preserves_original_and_only_committed_draws) ... ok
+test_complete_comparison_detects_resume_weight_and_input_differences (__main__.ProbeTests.test_complete_comparison_detects_resume_weight_and_input_differences) ... ok
+test_tensor_digest_preserves_bits_dtype_and_is_order_independent (__main__.ProbeTests.test_tensor_digest_preserves_bits_dtype_and_is_order_independent) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.192s
+
+OK

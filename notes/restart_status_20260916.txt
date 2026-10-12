@@ -1,0 +1,47 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+Wed Sep 16 10:41:31 PDT 2026
+JOBID NAME STATE TIME NODELIST(REASON)
+                 JobID              State ExitCode    Elapsed     MaxRSS 
+---------------------- ------------------ -------- ---------- ---------- 
+             6164049_0          COMPLETED      0:0   01:03:56            
+       6164049_0.batch          COMPLETED      0:0   01:03:56   9914480K 
+      6164049_0.extern      OUT_OF_MEMORY    0:125   01:03:56      1480K 
+             6164049_1          COMPLETED      0:0   00:33:41            
+       6164049_1.batch          COMPLETED      0:0   00:33:41   8125840K 
+      6164049_1.extern      OUT_OF_MEMORY    0:125   00:33:41      1288K 
+             6164049_2          COMPLETED      0:0   01:20:44            
+       6164049_2.batch          COMPLETED      0:0   01:20:44  10509728K 
+      6164049_2.extern      OUT_OF_MEMORY    0:125   01:20:44      1480K 
+             6164049_3          COMPLETED      0:0   01:23:18            
+       6164049_3.batch          COMPLETED      0:0   01:23:18  11881092K 
+      6164049_3.extern      OUT_OF_MEMORY    0:125   01:23:18      1480K 
+             6164049_4          COMPLETED      0:0   00:46:55            
+       6164049_4.batch          COMPLETED      0:0   00:46:55   8738992K 
+      6164049_4.extern      OUT_OF_MEMORY    0:125   00:46:55      6360K 
+             6164049_5          COMPLETED      0:0   00:25:08            
+       6164049_5.batch          COMPLETED      0:0   00:25:08   8561880K 
+      6164049_5.extern      OUT_OF_MEMORY    0:125   00:25:08      1480K 
+             6164049_6          COMPLETED      0:0   00:35:49            
+       6164049_6.batch          COMPLETED      0:0   00:35:49   7951672K 
+      6164049_6.extern      OUT_OF_MEMORY    0:125   00:35:49      1480K 
+             6164049_7          COMPLETED      0:0   01:00:05            
+       6164049_7.batch          COMPLETED      0:0   01:00:05   8941560K 
+      6164049_7.extern      OUT_OF_MEMORY    0:125   01:00:05      1480K 
+               6164118          COMPLETED      0:0   02:22:10            
+         6164118.batch          COMPLETED      0:0   02:22:10   1266852K 
+        6164118.extern      OUT_OF_MEMORY    0:125   02:22:10      1480K 
+Wed Sep 16 10:41:32 AM PDT 2026
+3149363 b5-seed PENDING 0:00 (Dependency)
+3149362 b5-seed PENDING 0:00 (Dependency)
+3149361 b5-seed PENDING 0:00 (Dependency)
+3149360 b5-seed PENDING 0:00 (Dependency)
+3149359 b5-seed PENDING 0:00 (Dependency)
+3149358 b5-seed PENDING 0:00 (Dependency)
+3149357 b5-seed PENDING 0:00 (Dependency)
+3149356 b5-seed PENDING 0:00 (Dependency)
+3131538 b5-seed PENDING 0:00 (Dependency)
+3131537 b5-seed RUNNING 4:39:42 gh086
+8f049eb3ba72ba7541076fe9fc8f6019b90c0f7f
+/work/nvme/bilv/wcyim/transgenic/runs/seed123/epoch_05

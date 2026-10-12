@@ -1,0 +1,9 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+468e7ddc43b372d4adef0555beac8c9bc7c86e615a96703274dd2f4937e7dc3b  est_metadata.sbatch
+946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2  inputs/DATASET_ROLES.est_v1.tsv
+SBATCH_RC=0
+EST_METADATA_SUBMISSION_RESULT 6172149
+
+EST_METADATA_SUBMISSION_ERROR 

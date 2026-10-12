@@ -1,0 +1,15 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+source-f1ee718.sha256: OK
+SOURCE_OK=217
+3208285       COMPLETED      0:0   00:03:17 
+Project Summary for User 'wcyim':
+
+Account                        Balance(Hours)   Deposited(Hours)  Project
+----------------------------  ----------------  ----------------  ----------------------
+bilv-dtai-gh                              1023              1499  leakage-controlled ...
+SBATCH_RC=0
+CP4_UNSPLIT_WP3_SUBMISSION_RESULT 3208442
+
+CP4_UNSPLIT_WP3_SUBMISSION_ERROR 

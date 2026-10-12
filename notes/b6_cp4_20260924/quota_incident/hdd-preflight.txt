@@ -1,0 +1,4 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+{"filesystem_available_bytes": 1021919965184, "pool": "ddn_hdd", "project_id": 22169, "quota_remaining_bytes": 1073730666496, "required_bytes": 107374182400, "results_dir": "/work/hdd/bilv/wcyim/transgenic/runs/b6_int4"}

@@ -1,0 +1,1390 @@
+$ ssh -o BatchMode=yes pronghorn '/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python -B -c \'import os, pathlib, pwd, grp, hashlib, json, datetime\nr=pathlib.Path(\'"\'"\'/data/gpfs/assoc/pgl/data/Transgenic\'"\'"\')\nb=r/\'"\'"\'evidence/est_blastx\'"\'"\'\nprint(\'"\'"\'NOW\'"\'"\',datetime.datetime.now().isoformat())\nfor root,dirs,files in os.walk(str(b),followlinks=False):\n p=pathlib.Path(root); depth=len(p.relative_to(b).parts)\n if depth>4: dirs[:]=[]; continue\n for name in sorted(dirs+files):\n  q=p/name; s=q.lstat()\n  print(\'"\'"\'STAT\'"\'"\',str(q.relative_to(b)),s.st_size,oct(s.st_mode),pwd.getpwuid(s.st_uid).pw_name,grp.getgrgid(s.st_gid).gr_name,datetime.datetime.fromtimestamp(s.st_mtime).isoformat())\n  small=(name.endswith((\'"\'"\'.out\'"\'"\',\'"\'"\'.err\'"\'"\',\'"\'"\'.sbatch\'"\'"\',\'"\'"\'.time.txt\'"\'"\')) or name in (\'"\'"\'batch.exitcode\'"\'"\',\'"\'"\'DONE\'"\'"\',\'"\'"\'FAILED\'"\'"\',\'"\'"\'query.sha256\'"\'"\',\'"\'"\'inputs.sha256\'"\'"\'))\n  if q.is_file() and not q.is_symlink() and small and s.st_size<100000:\n   data=q.read_bytes(); print(\'"\'"\'SMALL_SHA256\'"\'"\',q,hashlib.sha256(data).hexdigest()); print(\'"\'"\'TEXT_BEGIN\'"\'"\',q); print(data.decode(\'"\'"\'utf8\'"\'"\',errors=\'"\'"\'replace\'"\'"\')); print(\'"\'"\'TEXT_END\'"\'"\')\n  elif q.is_file() and name==\'"\'"\'blastx.log\'"\'"\' and s.st_size<1000000:\n   data=q.read_bytes(); lines=data.decode(errors=\'"\'"\'replace\'"\'"\').splitlines(); print(\'"\'"\'LOG_SHA256\'"\'"\',q,hashlib.sha256(data).hexdigest(),\'"\'"\'LINES\'"\'"\',len(lines)); print(\'"\'"\'LOG_FINAL\'"\'"\',lines[-12:]); print(\'"\'"\'LOG_ERROR_MATCHES\'"\'"\',[(i+1,x) for i,x in enumerate(lines) if any(w in x.lower() for w in [\'"\'"\'oom\'"\'"\',\'"\'"\'killed\'"\'"\',\'"\'"\'error\'"\'"\',\'"\'"\'slurmstepd\'"\'"\',\'"\'"\'signal\'"\'"\'])])\nprint(\'"\'"\'DESTINATIONS\'"\'"\')\nfor p in [r/\'"\'"\'worktrees/est_followup_20260916_1530\'"\'"\',r/\'"\'"\'evidence/est_followup_20260916_1530\'"\'"\']:\n print(str(p),\'"\'"\'lexists\'"\'"\',os.path.lexists(str(p)))\n\''
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+NOW 2026-09-16T15:34:08.813437
+STAT preflight_20260914 4096 0o40755 wyim p-wyim 2026-09-14T17:56:04.288226
+STAT remaining8_20260915 4096 0o40755 wyim p-wyim 2026-09-15T15:53:49.229940
+STAT sitalica_pilot_20260914 4096 0o40755 wyim p-wyim 2026-09-15T09:41:41.798577
+STAT sitalica_pilot_20260914/batch.exitcode 2 0o100644 wyim p-wyim 2026-09-15T09:41:41.798705
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/batch.exitcode 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/batch.exitcode
+0
+
+TEXT_END
+STAT sitalica_pilot_20260914/execution.lock 4096 0o40755 wyim p-wyim 2026-09-15T09:19:48.524684
+STAT sitalica_pilot_20260914/orthodb 4096 0o40755 wyim p-wyim 2026-09-15T09:41:41.782096
+STAT sitalica_pilot_20260914/orthodb.time.txt 1945 0o100644 wyim p-wyim 2026-09-15T09:41:41.797105
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb.time.txt 635921f4c88806cc4a1f67d903688d770c20984cd2c014a69699d7a76d4e357f
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Sitalica --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/univec/est.univec.fa.gz --query-sha256 1a2941f1210210eabfcb37f374c9ec166f0f9afb9d57b88c7e600520446e9e63 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/tmp --source-kind orthodb --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/lineage.tsv --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb"
+	User time (seconds): 7788.99
+	System time (seconds): 40.92
+	Percent of CPU this job got: 603%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 21:36.53
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 8672508
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 5871578
+	Voluntary context switches: 103480
+	Involuntary context switches: 145018
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT sitalica_pilot_20260914/query.sha256 149 0o100644 wyim p-wyim 2026-09-15T09:19:48.796999
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/query.sha256 6c4a0c82b01d655e7e857b9c223ac10ad655e9179a80aeea11acaab64cd718fe
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/query.sha256
+1a2941f1210210eabfcb37f374c9ec166f0f9afb9d57b88c7e600520446e9e63  /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/univec/est.univec.fa.gz
+
+TEXT_END
+STAT sitalica_pilot_20260914/run.sbatch 3103 0o100755 wyim p-wyim 2026-09-15T09:19:46.907459
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/run.sbatch 8e8f501ebaa0cbd15ee8d61aef127f5cb7ee3fdc3a070d3c7d18923440de2f4a
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/run.sbatch
+#!/usr/bin/env bash
+#SBATCH --job-name=b6_blastx_Sitalica
+#SBATCH --account=cpu-s1-pgl-0
+#SBATCH --partition=cpu-s1-pgl-0
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64G
+#SBATCH --time=12:00:00
+#SBATCH --no-requeue
+set -euo pipefail
+R=/data/gpfs/assoc/pgl/data/Transgenic
+W=$R/worktrees/b6-est-blastx-950cf4c
+D=$R/evidence/est_blastx/sitalica_pilot_20260914
+L=$R/evidence/est_blastx/preflight_20260914
+PY=/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python
+DIAMOND=/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond
+Q=$R/evidence/est/Sitalica/univec/est.univec.fa.gz
+ROLES=$R/evidence/DATASET_ROLES.est_v1.tsv
+export PYTHONDONTWRITEBYTECODE=1
+export OMP_NUM_THREADS=16
+mkdir "$D/execution.lock"
+trap 'rc=$?; printf "%s\n" "$rc" > "$D/batch.exitcode"' EXIT
+mkdir "$D/tmp"
+printf '%s\n' '5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291  '"$W/revision/scripts/evidence/est_blastx.py" '32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302  '"$W/revision/scripts/64_orthodb_filter.py" '0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d  '"$DIAMOND" | sha256sum -c -
+# Bind the SHA256 used by the launcher to the independently recorded A37 primary MD5,
+# not the stale min121 UniVec PROVENANCE.txt. Alignment receipt6148523_7 is authority.
+QSHA=$("$PY" - "$Q" <<'PY'
+import hashlib,json,sys
+from pathlib import Path
+q=Path(sys.argv[1]); md5=hashlib.md5(); sha=hashlib.sha256()
+with q.open('rb') as f:
+ for b in iter(lambda:f.read(8<<20),b''):md5.update(b);sha.update(b)
+assert md5.hexdigest()=='0b33e9eb0719df2c35a468fd623c5d4d','A37 primary EST MD5 mismatch'
+s=q.parent/'summary.json'
+assert hashlib.sha256(s.read_bytes()).hexdigest()=='fb6c410fe1c31ff8bcdd04c2151ba11885e7e51425df9f35d7f1b1c120201349'
+assert json.loads(s.read_text())['records_out']==66040
+print(sha.hexdigest())
+PY
+)
+printf '%s  %s\n' "$QSHA" "$Q" > "$D/query.sha256"
+COMMON=(--species Sitalica --query "$Q" --query-sha256 "$QSHA" --roles "$ROLES" --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond "$DIAMOND" --threads 16 --tmpdir "$D/tmp")
+/usr/bin/time -v -o "$D/swissprot.time.txt" "$PY" "$W/revision/scripts/evidence/est_blastx.py" run "${COMMON[@]}" \
+ --source-kind swissprot --source "$R/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz" --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 \
+ --lineage "$L/swissprot/lineage.tsv" --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir "$D/swissprot"
+/usr/bin/time -v -o "$D/orthodb.time.txt" "$PY" "$W/revision/scripts/evidence/est_blastx.py" run "${COMMON[@]}" \
+ --source-kind orthodb --source "$R/evidence/protein/odb12_Viridiplantae.filtered.fa.gz" --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f \
+ --lineage "$L/orthodb/lineage.tsv" --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir "$D/orthodb"
+printf 'Both source searches finished; raw HSPs require downstream acceptance and phase projection.\n'
+
+TEXT_END
+STAT sitalica_pilot_20260914/slurm-6163851.err 0 0o100644 wyim p-wyim 2026-09-15T09:19:48.498728
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/slurm-6163851.err e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/slurm-6163851.err
+
+TEXT_END
+STAT sitalica_pilot_20260914/slurm-6163851.out 390 0o100644 wyim p-wyim 2026-09-15T09:41:41.797647
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/slurm-6163851.out 0c53be4dba8cb3a37690885027a1003bb1c3a48ad30ab6ccae7fa175acb5bd76
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/slurm-6163851.out
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+Both source searches finished; raw HSPs require downstream acceptance and phase projection.
+
+TEXT_END
+STAT sitalica_pilot_20260914/submission.lock 4096 0o40755 wyim p-wyim 2026-09-15T09:19:47.338521
+STAT sitalica_pilot_20260914/swissprot 4096 0o40755 wyim p-wyim 2026-09-15T09:20:05.232398
+STAT sitalica_pilot_20260914/swissprot.time.txt 1954 0o100644 wyim p-wyim 2026-09-15T09:20:05.249415
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot.time.txt a867188471da82d70538203ca96c0e256985b2d641bb1a0ea0816d3099c3bf78
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Sitalica --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sitalica/univec/est.univec.fa.gz --query-sha256 1a2941f1210210eabfcb37f374c9ec166f0f9afb9d57b88c7e600520446e9e63 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/tmp --source-kind swissprot --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/lineage.tsv --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot"
+	User time (seconds): 133.54
+	System time (seconds): 0.84
+	Percent of CPU this job got: 816%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:16.45
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 444404
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 80661
+	Voluntary context switches: 20711
+	Involuntary context switches: 2544
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT sitalica_pilot_20260914/tmp 4096 0o40755 wyim p-wyim 2026-09-15T09:41:31.370254
+STAT sitalica_pilot_20260914/orthodb/DONE 45 0o100644 wyim p-wyim 2026-09-15T09:41:41.782203
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT sitalica_pilot_20260914/orthodb/blastx.log 9848 0o100644 wyim p-wyim 2026-09-15T09:41:07.448575
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/orthodb/blastx.log 71270bcd86379a3e657bc1171d0f12df4e9abf36a362868fcc6ebe4e1369bd63 LINES 233
+LOG_FINAL ['Deallocating buffers...  [0s]', 'Joining output blocks... Joining output blocks...  [2.46s]', ' [2.589s]', 'Deallocating queries...  [0.001s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0s]', 'Closing the output file...  [0.013s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 442.512s', 'Reported 1371252 pairwise alignments, 1371252 HSPs.', '56557 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT sitalica_pilot_20260914/orthodb/commands.json 1381 0o100644 wyim p-wyim 2026-09-15T09:31:57.857916
+STAT sitalica_pilot_20260914/orthodb/makedb.log 1679 0o100644 wyim p-wyim 2026-09-15T09:33:44.918148
+STAT sitalica_pilot_20260914/orthodb/orthodb.dmnd 5740904567 0o100644 wyim p-wyim 2026-09-15T09:33:44.910915
+STAT sitalica_pilot_20260914/orthodb/orthodb.filtered.fa 5547417703 0o100644 wyim p-wyim 2026-09-15T09:31:30.958331
+STAT sitalica_pilot_20260914/orthodb/orthodb.raw13.tsv 166877275 0o100644 wyim p-wyim 2026-09-15T09:41:07.447424
+STAT sitalica_pilot_20260914/orthodb/provenance.json 31920 0o100644 wyim p-wyim 2026-09-15T09:41:41.781898
+STAT sitalica_pilot_20260914/swissprot/DONE 45 0o100644 wyim p-wyim 2026-09-15T09:20:05.232544
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT sitalica_pilot_20260914/swissprot/blastx.log 4150 0o100644 wyim p-wyim 2026-09-15T09:20:03.691198
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/sitalica_pilot_20260914/swissprot/blastx.log 2b1a67f22a70c23d17291971f337eade06034b93ca81cceb53be2b971b7c0338 LINES 95
+LOG_FINAL ['Deallocating reference...  [0s]', 'Loading reference sequences...  [0s]', 'Deallocating buffers...  [0s]', 'Deallocating queries...  [0s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0s]', 'Closing the output file...  [0.025s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 9.283s', 'Reported 290009 pairwise alignments, 290009 HSPs.', '38018 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT sitalica_pilot_20260914/swissprot/commands.json 1397 0o100644 wyim p-wyim 2026-09-15T09:19:53.991435
+STAT sitalica_pilot_20260914/swissprot/makedb.log 1059 0o100644 wyim p-wyim 2026-09-15T09:19:54.389632
+STAT sitalica_pilot_20260914/swissprot/provenance.json 142541 0o100644 wyim p-wyim 2026-09-15T09:20:05.232161
+STAT sitalica_pilot_20260914/swissprot/swissprot.dmnd 21589919 0o100644 wyim p-wyim 2026-09-15T09:19:54.389297
+STAT sitalica_pilot_20260914/swissprot/swissprot.filtered.fa 20916159 0o100644 wyim p-wyim 2026-09-15T09:19:53.889357
+STAT sitalica_pilot_20260914/swissprot/swissprot.raw13.tsv 60378317 0o100644 wyim p-wyim 2026-09-15T09:20:03.690307
+STAT sitalica_pilot_20260914/submission.lock/jobid 8 0o100644 wyim p-wyim 2026-09-15T09:19:47.385716
+STAT remaining8_20260915/Athaliana 4096 0o40755 wyim p-wyim 2026-09-15T14:05:22.752040
+STAT remaining8_20260915/Bdistachyon 4096 0o40755 wyim p-wyim 2026-09-15T13:35:07.151812
+STAT remaining8_20260915/Gmax 4096 0o40755 wyim p-wyim 2026-09-15T14:55:51.468729
+STAT remaining8_20260915/Osativa 4096 0o40755 wyim p-wyim 2026-09-15T15:28:40.118786
+STAT remaining8_20260915/Ppatens 4096 0o40755 wyim p-wyim 2026-09-15T15:42:46.662647
+STAT remaining8_20260915/Ptrichocarpa 4096 0o40755 wyim p-wyim 2026-09-15T15:53:48.622543
+STAT remaining8_20260915/Sbicolor 4096 0o40755 wyim p-wyim 2026-09-15T16:18:35.023683
+STAT remaining8_20260915/Vvinifera 4096 0o40755 wyim p-wyim 2026-09-15T16:53:53.293331
+STAT remaining8_20260915/inputs.json 3405 0o100755 wyim p-wyim 2026-09-15T13:01:25.577614
+STAT remaining8_20260915/inputs.sha256 78 0o100644 wyim p-wyim 2026-09-15T13:01:25.905000
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/inputs.sha256 cf301416d9f483eb6177c1ba26ff9e2403e9000f8a43708d7131508d469cc56f
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/inputs.sha256
+0078f99fc16f8970ab87618c101bfc299a95405eca40567220fcfae7b0c98e8a  inputs.json
+
+TEXT_END
+STAT remaining8_20260915/logs 4096 0o40755 wyim p-wyim 2026-09-15T15:53:49.172295
+STAT remaining8_20260915/run.sbatch 3549 0o100755 wyim p-wyim 2026-09-15T13:01:25.258124
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch 4cdad18b443c13ad564be640859419e86def7fb255fe82cabe797888913fdd7c
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch
+#!/usr/bin/env bash
+#SBATCH --job-name=b6_blastx_remaining8
+#SBATCH --account=cpu-s1-pgl-0
+#SBATCH --partition=cpu-s1-pgl-0
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64G
+#SBATCH --time=12:00:00
+#SBATCH --array=0-7%2
+#SBATCH --no-requeue
+set -euo pipefail
+R=/data/gpfs/assoc/pgl/data/Transgenic
+W=$R/worktrees/b6-est-blastx-950cf4c
+BASE=$R/evidence/est_blastx/remaining8_20260915
+L=$R/evidence/est_blastx/preflight_20260914
+PY=/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python
+DIAMOND=/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond
+export PYTHONDONTWRITEBYTECODE=1
+export OMP_NUM_THREADS=16
+[[ "${SLURM_ARRAY_TASK_ID:-}" =~ ^[0-7]$ ]] || exit 2
+cd "$BASE"
+sha256sum -c inputs.sha256
+SP=$("$PY" -c 'import json,sys; r=json.load(open(sys.argv[1])); assert len(r)==8; print(r[int(sys.argv[2])]["species"])' "$BASE/inputs.json" "$SLURM_ARRAY_TASK_ID")
+case "$SP" in Athaliana|Bdistachyon|Gmax|Osativa|Ppatens|Ptrichocarpa|Sbicolor|Vvinifera) ;; *) exit 2;; esac
+D=$BASE/$SP
+mkdir "$D"
+trap 'rc=$?; printf "%s\n" "$rc" > "$D/batch.exitcode"' EXIT
+mkdir "$D/tmp"
+printf '%s\n' '5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291  '"$W/revision/scripts/evidence/est_blastx.py" '32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302  '"$W/revision/scripts/64_orthodb_filter.py" '0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d  '"$DIAMOND" | sha256sum -c -
+Q=$R/evidence/est/$SP/univec/est.univec.fa.gz
+QSHA=$("$PY" - "$BASE/inputs.json" "$SLURM_ARRAY_TASK_ID" <<'PY'
+import hashlib,json,sys
+from pathlib import Path
+row=json.loads(Path(sys.argv[1]).read_text())[int(sys.argv[2])]
+q=Path(row['query']); md5=hashlib.md5(); sha=hashlib.sha256()
+with q.open('rb') as f:
+ for b in iter(lambda:f.read(8<<20),b''):md5.update(b);sha.update(b)
+assert md5.hexdigest()==row['query_md5'],'A37 primary EST MD5 mismatch'
+s=q.parent/'summary.json'
+assert hashlib.sha256(s.read_bytes()).hexdigest()==row['summary_sha256']
+assert json.loads(s.read_text())['records_out']==row['records']
+p=Path('/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align')/row['species']/'PROVENANCE.txt'
+assert hashlib.sha256(p.read_bytes()).hexdigest()==row['receipt_sha256'],'A37 receipt changed'
+print(sha.hexdigest())
+PY
+)
+printf '%s  %s\n' "$QSHA" "$Q" > "$D/query.sha256"
+COMMON=(--species "$SP" --query "$Q" --query-sha256 "$QSHA" --roles "$R/evidence/DATASET_ROLES.est_v1.tsv" --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond "$DIAMOND" --threads 16 --tmpdir "$D/tmp")
+/usr/bin/time -v -o "$D/swissprot.time.txt" "$PY" "$W/revision/scripts/evidence/est_blastx.py" run "${COMMON[@]}" \
+ --source-kind swissprot --source "$R/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz" --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 \
+ --lineage "$L/swissprot/lineage.tsv" --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir "$D/swissprot"
+/usr/bin/time -v -o "$D/orthodb.time.txt" "$PY" "$W/revision/scripts/evidence/est_blastx.py" run "${COMMON[@]}" \
+ --source-kind orthodb --source "$R/evidence/protein/odb12_Viridiplantae.filtered.fa.gz" --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f \
+ --lineage "$L/orthodb/lineage.tsv" --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir "$D/orthodb"
+printf '%s: Swiss-Prot and OrthoDB raw searches finished; acceptance/phase projection remain downstream.\n' "$SP"
+
+TEXT_END
+STAT remaining8_20260915/submission.lock 4096 0o40755 wyim p-wyim 2026-09-15T13:01:26.052383
+STAT remaining8_20260915/logs/6164049_0.err 0 0o100644 wyim p-wyim 2026-09-15T13:01:27.479458
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_0.err e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_0.err
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_0.out 418 0o100644 wyim p-wyim 2026-09-15T14:05:22.751153
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_0.out e0e200ea4b8a1f57488b07573f612d1948a20db7d3825ef8724093f8c2ea2e37
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_0.out
+inputs.json: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+Athaliana: Swiss-Prot and OrthoDB raw searches finished; acceptance/phase projection remain downstream.
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_1.err 0 0o100644 wyim p-wyim 2026-09-15T13:01:27.478958
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_1.err e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_1.err
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_1.out 420 0o100644 wyim p-wyim 2026-09-15T13:35:07.151145
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_1.out a985c82ac938c1a4c2696d260c5683dd932c40910354a556b3f034b1f7f8125a
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_1.out
+inputs.json: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+Bdistachyon: Swiss-Prot and OrthoDB raw searches finished; acceptance/phase projection remain downstream.
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_2.err 0 0o100644 wyim p-wyim 2026-09-15T13:35:07.754303
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_2.err e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_2.err
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_2.out 413 0o100644 wyim p-wyim 2026-09-15T14:55:51.468048
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_2.out 54051a91978510a9c1e5ed6a467af0d230f71c2e0e24d0302774da4da70acbe5
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_2.out
+inputs.json: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+Gmax: Swiss-Prot and OrthoDB raw searches finished; acceptance/phase projection remain downstream.
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_3.err 0 0o100644 wyim p-wyim 2026-09-15T14:05:23.403027
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_3.err e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_3.err
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_3.out 416 0o100644 wyim p-wyim 2026-09-15T15:28:40.115543
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_3.out 25e4232e59e048a32a619198fade5da9f24876f9228b331789eb28a574764242
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_3.out
+inputs.json: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+Osativa: Swiss-Prot and OrthoDB raw searches finished; acceptance/phase projection remain downstream.
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_4.err 0 0o100644 wyim p-wyim 2026-09-15T14:55:52.175873
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_4.err e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_4.err
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_4.out 416 0o100644 wyim p-wyim 2026-09-15T15:42:46.661317
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_4.out 6ad6b61af9dc25b0fe4b6070b87fc8af8ec9dbb13867c80d6d7c9738368eb1c0
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_4.out
+inputs.json: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+Ppatens: Swiss-Prot and OrthoDB raw searches finished; acceptance/phase projection remain downstream.
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_5.err 0 0o100644 wyim p-wyim 2026-09-15T15:28:40.767420
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_5.err e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_5.err
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_5.out 421 0o100644 wyim p-wyim 2026-09-15T15:53:48.622258
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_5.out d0cbcfcf443b38b579831312b36cf35d03f29de6d023de399c7854c069da13a6
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_5.out
+inputs.json: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+Ptrichocarpa: Swiss-Prot and OrthoDB raw searches finished; acceptance/phase projection remain downstream.
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_6.err 0 0o100644 wyim p-wyim 2026-09-15T15:42:47.303000
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_6.err e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_6.err
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_6.out 417 0o100644 wyim p-wyim 2026-09-15T16:18:35.019324
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_6.out cdcc77adf4fd044e6222f575d52e805c2675ba3c8b5d197d3c9765a100a195e1
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_6.out
+inputs.json: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+Sbicolor: Swiss-Prot and OrthoDB raw searches finished; acceptance/phase projection remain downstream.
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_7.err 0 0o100644 wyim p-wyim 2026-09-15T15:53:49.172339
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_7.err e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_7.err
+
+TEXT_END
+STAT remaining8_20260915/logs/6164049_7.out 418 0o100644 wyim p-wyim 2026-09-15T16:53:53.290664
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_7.out 4f3b6c4008c629257d18d9556f9d72c8ed93afed7c3a92ad78a536df0b26002c
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/logs/6164049_7.out
+inputs.json: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond: OK
+Vvinifera: Swiss-Prot and OrthoDB raw searches finished; acceptance/phase projection remain downstream.
+
+TEXT_END
+STAT remaining8_20260915/Athaliana/batch.exitcode 2 0o100644 wyim p-wyim 2026-09-15T14:05:22.752263
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/batch.exitcode 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/batch.exitcode
+0
+
+TEXT_END
+STAT remaining8_20260915/Athaliana/orthodb 4096 0o40755 wyim p-wyim 2026-09-15T14:05:22.733700
+STAT remaining8_20260915/Athaliana/orthodb.time.txt 1964 0o100644 wyim p-wyim 2026-09-15T14:05:22.750415
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/orthodb.time.txt a0dadf9d280b077c55d614d0db289b17efe324a6adb0dfc760b4453100298d68
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/orthodb.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Athaliana --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Athaliana/univec/est.univec.fa.gz --query-sha256 ec4fd16a2fc7b128d7fe89489d8da4be6a17fe3ccd01a3b955f930e813d75d57 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/tmp --source-kind orthodb --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/lineage.tsv --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/orthodb"
+	User time (seconds): 43414.17
+	System time (seconds): 120.83
+	Percent of CPU this job got: 1172%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:01:51
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 10392028
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 13112124
+	Voluntary context switches: 657931
+	Involuntary context switches: 1623755
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Athaliana/query.sha256 150 0o100644 wyim p-wyim 2026-09-15T13:01:28.213215
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/query.sha256 48d90cd15bd2baf733c2f8512be60167bb729dd89e64229842b9f812494839d5
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/query.sha256
+ec4fd16a2fc7b128d7fe89489d8da4be6a17fe3ccd01a3b955f930e813d75d57  /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Athaliana/univec/est.univec.fa.gz
+
+TEXT_END
+STAT remaining8_20260915/Athaliana/swissprot 4096 0o40755 wyim p-wyim 2026-09-15T13:03:31.086836
+STAT remaining8_20260915/Athaliana/swissprot.time.txt 1972 0o100644 wyim p-wyim 2026-09-15T13:03:31.104387
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/swissprot.time.txt f5eb256258a8de0125b2869d2f31d2ffc867014a5c7cadf36b73a2f0c560a958
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/swissprot.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Athaliana --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Athaliana/univec/est.univec.fa.gz --query-sha256 ec4fd16a2fc7b128d7fe89489d8da4be6a17fe3ccd01a3b955f930e813d75d57 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/tmp --source-kind swissprot --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/lineage.tsv --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/swissprot"
+	User time (seconds): 1131.84
+	System time (seconds): 3.66
+	Percent of CPU this job got: 924%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:02.88
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2783556
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 319185
+	Voluntary context switches: 31126
+	Involuntary context switches: 25330
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Athaliana/tmp 4096 0o40755 wyim p-wyim 2026-09-15T14:05:12.330564
+STAT remaining8_20260915/Athaliana/orthodb/DONE 45 0o100644 wyim p-wyim 2026-09-15T14:05:22.733854
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/orthodb/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/orthodb/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Athaliana/orthodb/blastx.log 9888 0o100644 wyim p-wyim 2026-09-15T14:03:34.232624
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/orthodb/blastx.log a8f6d0be88b845f54e852958ad155872c4d006af253b6d37f02dc8ca29082d8e LINES 233
+LOG_FINAL ['Deallocating buffers...  [0s]', 'Joining output blocks... Joining output blocks...  [22.579s]', ' [23.716s]', 'Deallocating queries...  [0.005s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0s]', 'Closing the output file...  [0.021s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 2738.06s', 'Reported 20071843 pairwise alignments, 20071843 HSPs.', '842502 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Athaliana/orthodb/commands.json 1412 0o100644 wyim p-wyim 2026-09-15T13:16:08.508047
+STAT remaining8_20260915/Athaliana/orthodb/makedb.log 1682 0o100644 wyim p-wyim 2026-09-15T13:17:56.156574
+STAT remaining8_20260915/Athaliana/orthodb/orthodb.dmnd 5751160176 0o100644 wyim p-wyim 2026-09-15T13:17:56.139889
+STAT remaining8_20260915/Athaliana/orthodb/orthodb.filtered.fa 5557318704 0o100644 wyim p-wyim 2026-09-15T13:15:39.834053
+STAT remaining8_20260915/Athaliana/orthodb/orthodb.raw13.tsv 2124268585 0o100644 wyim p-wyim 2026-09-15T14:03:34.231395
+STAT remaining8_20260915/Athaliana/orthodb/provenance.json 31926 0o100644 wyim p-wyim 2026-09-15T14:05:22.733496
+STAT remaining8_20260915/Athaliana/swissprot/DONE 45 0o100644 wyim p-wyim 2026-09-15T13:03:31.086950
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/swissprot/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/swissprot/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Athaliana/swissprot/blastx.log 4179 0o100644 wyim p-wyim 2026-09-15T13:03:11.529754
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Athaliana/swissprot/blastx.log c8fc46e9c64356e049b556c2eeccf2e77099612d500a6151c53f46f07e79c35b LINES 95
+LOG_FINAL ['Deallocating reference...  [0s]', 'Loading reference sequences...  [0s]', 'Deallocating buffers...  [0s]', 'Deallocating queries...  [0.003s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0.001s]', 'Closing the output file...  [0.023s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 79.047s', 'Reported 4672257 pairwise alignments, 4672257 HSPs.', '431407 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Athaliana/swissprot/commands.json 1428 0o100644 wyim p-wyim 2026-09-15T13:01:52.189427
+STAT remaining8_20260915/Athaliana/swissprot/makedb.log 1060 0o100644 wyim p-wyim 2026-09-15T13:01:52.464354
+STAT remaining8_20260915/Athaliana/swissprot/provenance.json 142549 0o100644 wyim p-wyim 2026-09-15T13:03:31.086440
+STAT remaining8_20260915/Athaliana/swissprot/swissprot.dmnd 12041704 0o100644 wyim p-wyim 2026-09-15T13:01:52.463492
+STAT remaining8_20260915/Athaliana/swissprot/swissprot.filtered.fa 11630632 0o100644 wyim p-wyim 2026-09-15T13:01:52.112567
+STAT remaining8_20260915/Athaliana/swissprot/swissprot.raw13.tsv 661360755 0o100644 wyim p-wyim 2026-09-15T13:03:11.528976
+STAT remaining8_20260915/Bdistachyon/batch.exitcode 2 0o100644 wyim p-wyim 2026-09-15T13:35:07.151976
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/batch.exitcode 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/batch.exitcode
+0
+
+TEXT_END
+STAT remaining8_20260915/Bdistachyon/orthodb 4096 0o40755 wyim p-wyim 2026-09-15T13:35:07.134184
+STAT remaining8_20260915/Bdistachyon/orthodb.time.txt 1969 0o100644 wyim p-wyim 2026-09-15T13:35:07.150499
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/orthodb.time.txt e32fe1e70aacebb27b8f769ccd91f0bc1ced1c345485124c746e87d093bd8e3a
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/orthodb.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Bdistachyon --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Bdistachyon/univec/est.univec.fa.gz --query-sha256 404dfa25a1a86b55060fc4988c47a297b2c35f9d19ede781ab4ae799ac511d40 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/tmp --source-kind orthodb --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/lineage.tsv --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/orthodb"
+	User time (seconds): 18261.64
+	System time (seconds): 58.92
+	Percent of CPU this job got: 931%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 32:47.51
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 9178548
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 10552756
+	Voluntary context switches: 269360
+	Involuntary context switches: 135867
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Bdistachyon/query.sha256 152 0o100644 wyim p-wyim 2026-09-15T13:01:27.921335
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/query.sha256 6537c447ea24ec6319f63b362db5a564860beb00b8e219e16172add1dfe3ddab
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/query.sha256
+404dfa25a1a86b55060fc4988c47a297b2c35f9d19ede781ab4ae799ac511d40  /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Bdistachyon/univec/est.univec.fa.gz
+
+TEXT_END
+STAT remaining8_20260915/Bdistachyon/swissprot 4096 0o40755 wyim p-wyim 2026-09-15T13:02:19.615664
+STAT remaining8_20260915/Bdistachyon/swissprot.time.txt 1978 0o100644 wyim p-wyim 2026-09-15T13:02:19.632716
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/swissprot.time.txt 264447f42c4d78cdc02593e1caad4d43c340959705808a8fbabe9cb51ccb5148
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/swissprot.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Bdistachyon --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Bdistachyon/univec/est.univec.fa.gz --query-sha256 404dfa25a1a86b55060fc4988c47a297b2c35f9d19ede781ab4ae799ac511d40 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/tmp --source-kind swissprot --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/lineage.tsv --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/swissprot"
+	User time (seconds): 513.23
+	System time (seconds): 1.68
+	Percent of CPU this job got: 995%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:51.70
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1123476
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 174504
+	Voluntary context switches: 21940
+	Involuntary context switches: 2227
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Bdistachyon/tmp 4096 0o40755 wyim p-wyim 2026-09-15T13:34:57.476937
+STAT remaining8_20260915/Bdistachyon/orthodb/DONE 45 0o100644 wyim p-wyim 2026-09-15T13:35:07.134293
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/orthodb/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/orthodb/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Bdistachyon/orthodb/blastx.log 9872 0o100644 wyim p-wyim 2026-09-15T13:34:22.228535
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/orthodb/blastx.log e3a0fbbb588b69930a31cd45eea47f999517a6050f9240691bde2f20b8ef676a LINES 233
+LOG_FINAL ['Deallocating buffers...  [0s]', 'Joining output blocks... Joining output blocks...  [7.846s]', ' [8.039s]', 'Deallocating queries...  [0.004s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0s]', 'Closing the output file...  [0.021s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 1120.56s', 'Reported 4518360 pairwise alignments, 4518360 HSPs.', '183946 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Bdistachyon/orthodb/commands.json 1424 0o100644 wyim p-wyim 2026-09-15T13:13:58.409609
+STAT remaining8_20260915/Bdistachyon/orthodb/makedb.log 1681 0o100644 wyim p-wyim 2026-09-15T13:15:41.644168
+STAT remaining8_20260915/Bdistachyon/orthodb/orthodb.dmnd 5741690851 0o100644 wyim p-wyim 2026-09-15T13:15:41.621595
+STAT remaining8_20260915/Bdistachyon/orthodb/orthodb.filtered.fa 5548171187 0o100644 wyim p-wyim 2026-09-15T13:13:32.853498
+STAT remaining8_20260915/Bdistachyon/orthodb/orthodb.raw13.tsv 598056385 0o100644 wyim p-wyim 2026-09-15T13:34:22.226999
+STAT remaining8_20260915/Bdistachyon/orthodb/provenance.json 31929 0o100644 wyim p-wyim 2026-09-15T13:35:07.134006
+STAT remaining8_20260915/Bdistachyon/swissprot/DONE 45 0o100644 wyim p-wyim 2026-09-15T13:02:19.615822
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/swissprot/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/swissprot/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Bdistachyon/swissprot/blastx.log 4183 0o100644 wyim p-wyim 2026-09-15T13:02:13.122706
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Bdistachyon/swissprot/blastx.log b176517f6889fac7f82531f74bc6ebd39295b3d0a43fd6221f6d367355ec64bc LINES 95
+LOG_FINAL ['Deallocating reference...  [0s]', 'Loading reference sequences...  [0s]', 'Deallocating buffers...  [0s]', 'Deallocating queries...  [0.003s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0.001s]', 'Closing the output file...  [0.001s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 35.574s', 'Reported 1363835 pairwise alignments, 1363835 HSPs.', '137448 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Bdistachyon/swissprot/commands.json 1440 0o100644 wyim p-wyim 2026-09-15T13:01:37.155293
+STAT remaining8_20260915/Bdistachyon/swissprot/makedb.log 1062 0o100644 wyim p-wyim 2026-09-15T13:01:37.531345
+STAT remaining8_20260915/Bdistachyon/swissprot/provenance.json 142550 0o100644 wyim p-wyim 2026-09-15T13:02:19.614740
+STAT remaining8_20260915/Bdistachyon/swissprot/swissprot.dmnd 21573087 0o100644 wyim p-wyim 2026-09-15T13:01:37.531054
+STAT remaining8_20260915/Bdistachyon/swissprot/swissprot.filtered.fa 20900015 0o100644 wyim p-wyim 2026-09-15T13:01:37.057304
+STAT remaining8_20260915/Bdistachyon/swissprot/swissprot.raw13.tsv 271139705 0o100644 wyim p-wyim 2026-09-15T13:02:13.121495
+STAT remaining8_20260915/Sbicolor/batch.exitcode 2 0o100644 wyim p-wyim 2026-09-15T16:18:35.023870
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/batch.exitcode 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/batch.exitcode
+0
+
+TEXT_END
+STAT remaining8_20260915/Sbicolor/orthodb 4096 0o40755 wyim p-wyim 2026-09-15T16:18:35.003034
+STAT remaining8_20260915/Sbicolor/orthodb.time.txt 1957 0o100644 wyim p-wyim 2026-09-15T16:18:35.019052
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/orthodb.time.txt 4de95b407606df67f46a4dc15ba8a9c3f74af81d19b97dee33a026ef43da499c
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/orthodb.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Sbicolor --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sbicolor/univec/est.univec.fa.gz --query-sha256 53a591002747ed587bfaeb7c803100adf114161f68f07661d28e44921414b664 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/tmp --source-kind orthodb --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/lineage.tsv --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/orthodb"
+	User time (seconds): 19846.20
+	System time (seconds): 61.09
+	Percent of CPU this job got: 952%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 34:50.73
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 9108896
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 10466733
+	Voluntary context switches: 303369
+	Involuntary context switches: 155057
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Sbicolor/query.sha256 149 0o100644 wyim p-wyim 2026-09-15T15:42:47.641998
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/query.sha256 992ccb75e2ade89b9c02d5bc60d16fb61ed948256e7c1fb997131a038ead661a
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/query.sha256
+53a591002747ed587bfaeb7c803100adf114161f68f07661d28e44921414b664  /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sbicolor/univec/est.univec.fa.gz
+
+TEXT_END
+STAT remaining8_20260915/Sbicolor/swissprot 4096 0o40755 wyim p-wyim 2026-09-15T15:43:44.263723
+STAT remaining8_20260915/Sbicolor/swissprot.time.txt 1967 0o100644 wyim p-wyim 2026-09-15T15:43:44.278559
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/swissprot.time.txt 64958a4e7f2284830e204d448fb3afe1b82f8e2a9413cc50ee33c1fe416c0b62
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/swissprot.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Sbicolor --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Sbicolor/univec/est.univec.fa.gz --query-sha256 53a591002747ed587bfaeb7c803100adf114161f68f07661d28e44921414b664 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/tmp --source-kind swissprot --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/lineage.tsv --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/swissprot"
+	User time (seconds): 603.51
+	System time (seconds): 1.69
+	Percent of CPU this job got: 1068%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:56.63
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1071704
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 196583
+	Voluntary context switches: 21845
+	Involuntary context switches: 1953
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Sbicolor/tmp 4096 0o40755 wyim p-wyim 2026-09-15T16:18:25.408746
+STAT remaining8_20260915/Sbicolor/orthodb/DONE 45 0o100644 wyim p-wyim 2026-09-15T16:18:35.003146
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/orthodb/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/orthodb/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Sbicolor/orthodb/blastx.log 9868 0o100644 wyim p-wyim 2026-09-15T16:17:50.842590
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/orthodb/blastx.log b158805d25ee3c286953e33588b53fd83026a4ce0d5b559bdb29c86c6d64fea3 LINES 233
+LOG_FINAL ['Deallocating buffers...  [0s]', 'Joining output blocks... Joining output blocks...  [7.57s]', ' [7.804s]', 'Deallocating queries...  [0.004s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0s]', 'Closing the output file...  [0.009s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 1246.98s', 'Reported 4402714 pairwise alignments, 4402714 HSPs.', '183315 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Sbicolor/orthodb/commands.json 1406 0o100644 wyim p-wyim 2026-09-15T15:55:20.758800
+STAT remaining8_20260915/Sbicolor/orthodb/makedb.log 1680 0o100644 wyim p-wyim 2026-09-15T15:57:03.843985
+STAT remaining8_20260915/Sbicolor/orthodb/orthodb.dmnd 5741043971 0o100644 wyim p-wyim 2026-09-15T15:57:03.842390
+STAT remaining8_20260915/Sbicolor/orthodb/orthodb.filtered.fa 5547528579 0o100644 wyim p-wyim 2026-09-15T15:54:54.637715
+STAT remaining8_20260915/Sbicolor/orthodb/orthodb.raw13.tsv 558207201 0o100644 wyim p-wyim 2026-09-15T16:17:50.841130
+STAT remaining8_20260915/Sbicolor/orthodb/provenance.json 31922 0o100644 wyim p-wyim 2026-09-15T16:18:35.002856
+STAT remaining8_20260915/Sbicolor/swissprot/DONE 45 0o100644 wyim p-wyim 2026-09-15T15:43:44.263846
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/swissprot/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/swissprot/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Sbicolor/swissprot/blastx.log 4172 0o100644 wyim p-wyim 2026-09-15T15:43:36.881905
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Sbicolor/swissprot/blastx.log 0c343f275333a56465fba45f8665553f5eacb1c1edad49cf94ffdefbee32b389 LINES 95
+LOG_FINAL ['Deallocating reference...  [0s]', 'Loading reference sequences...  [0s]', 'Deallocating buffers...  [0s]', 'Deallocating queries...  [0.002s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0.001s]', 'Closing the output file...  [0.017s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 40.047s', 'Reported 1625119 pairwise alignments, 1625119 HSPs.', '139090 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Sbicolor/swissprot/commands.json 1422 0o100644 wyim p-wyim 2026-09-15T15:42:56.438257
+STAT remaining8_20260915/Sbicolor/swissprot/makedb.log 1064 0o100644 wyim p-wyim 2026-09-15T15:42:56.816978
+STAT remaining8_20260915/Sbicolor/swissprot/provenance.json 142543 0o100644 wyim p-wyim 2026-09-15T15:43:44.263530
+STAT remaining8_20260915/Sbicolor/swissprot/swissprot.dmnd 21511919 0o100644 wyim p-wyim 2026-09-15T15:42:56.816532
+STAT remaining8_20260915/Sbicolor/swissprot/swissprot.filtered.fa 20840991 0o100644 wyim p-wyim 2026-09-15T15:42:56.340865
+STAT remaining8_20260915/Sbicolor/swissprot/swissprot.raw13.tsv 313779761 0o100644 wyim p-wyim 2026-09-15T15:43:36.881033
+STAT remaining8_20260915/Osativa/batch.exitcode 2 0o100644 wyim p-wyim 2026-09-15T15:28:40.119009
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/batch.exitcode 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/batch.exitcode
+0
+
+TEXT_END
+STAT remaining8_20260915/Osativa/orthodb 4096 0o40755 wyim p-wyim 2026-09-15T15:28:40.097543
+STAT remaining8_20260915/Osativa/orthodb.time.txt 1956 0o100644 wyim p-wyim 2026-09-15T15:28:40.115251
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/orthodb.time.txt 26e16135b6e42c1d566b629c9fcf7b428e7e12ace0cf1853d99afe898135beca
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/orthodb.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Osativa --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Osativa/univec/est.univec.fa.gz --query-sha256 cd98566cc2e6f5b369effeeef72f20a8a9a910f2795436bb979ea92a68f9441e --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/tmp --source-kind orthodb --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/lineage.tsv --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/orthodb"
+	User time (seconds): 59700.54
+	System time (seconds): 162.30
+	Percent of CPU this job got: 1247%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:19:59
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 11860016
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 16743338
+	Voluntary context switches: 814281
+	Involuntary context switches: 3361780
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Osativa/query.sha256 148 0o100644 wyim p-wyim 2026-09-15T14:05:24.475811
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/query.sha256 cbf6c1eef249b912e313ec59acfff643fac00fafc2b82b2246acfe17044bc965
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/query.sha256
+cd98566cc2e6f5b369effeeef72f20a8a9a910f2795436bb979ea92a68f9441e  /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Osativa/univec/est.univec.fa.gz
+
+TEXT_END
+STAT remaining8_20260915/Osativa/swissprot 4096 0o40755 wyim p-wyim 2026-09-15T14:08:40.530408
+STAT remaining8_20260915/Osativa/swissprot.time.txt 1964 0o100644 wyim p-wyim 2026-09-15T14:08:40.546711
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/swissprot.time.txt 04f200817fbe7c46bdd3d2167adeffd6dda41c98375b4edec4ae04d0efc58d64
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/swissprot.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Osativa --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Osativa/univec/est.univec.fa.gz --query-sha256 cd98566cc2e6f5b369effeeef72f20a8a9a910f2795436bb979ea92a68f9441e --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/tmp --source-kind swissprot --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/lineage.tsv --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/swissprot"
+	User time (seconds): 1909.39
+	System time (seconds): 6.39
+	Percent of CPU this job got: 977%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 3:16.06
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4579504
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 884220
+	Voluntary context switches: 32373
+	Involuntary context switches: 56757
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Osativa/tmp 4096 0o40755 wyim p-wyim 2026-09-15T15:28:29.271526
+STAT remaining8_20260915/Osativa/orthodb/DONE 45 0o100644 wyim p-wyim 2026-09-15T15:28:40.097664
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/orthodb/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/orthodb/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Osativa/orthodb/blastx.log 9882 0o100644 wyim p-wyim 2026-09-15T15:26:39.658669
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/orthodb/blastx.log 3b961198f76ea63497aa90e3c8e602a59e853c507925ffbd9982242cd382ef12 LINES 233
+LOG_FINAL ['Deallocating buffers...  [0s]', 'Joining output blocks... Joining output blocks...  [26.609s]', ' [27.801s]', 'Deallocating queries...  [0.009s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0s]', 'Closing the output file...  [0.043s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 3803.68s', 'Reported 22058626 pairwise alignments, 22058626 HSPs.', '959752 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Osativa/orthodb/commands.json 1400 0o100644 wyim p-wyim 2026-09-15T14:21:29.142810
+STAT remaining8_20260915/Osativa/orthodb/makedb.log 1681 0o100644 wyim p-wyim 2026-09-15T14:23:15.960352
+STAT remaining8_20260915/Osativa/orthodb/orthodb.dmnd 5681190444 0o100644 wyim p-wyim 2026-09-15T14:23:15.940464
+STAT remaining8_20260915/Osativa/orthodb/orthodb.filtered.fa 5489607724 0o100644 wyim p-wyim 2026-09-15T14:21:01.023942
+STAT remaining8_20260915/Osativa/orthodb/orthodb.raw13.tsv 2683663121 0o100644 wyim p-wyim 2026-09-15T15:26:39.657140
+STAT remaining8_20260915/Osativa/orthodb/provenance.json 31904 0o100644 wyim p-wyim 2026-09-15T15:28:40.097334
+STAT remaining8_20260915/Osativa/swissprot/DONE 45 0o100644 wyim p-wyim 2026-09-15T14:08:40.530561
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/swissprot/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/swissprot/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Osativa/swissprot/blastx.log 4181 0o100644 wyim p-wyim 2026-09-15T14:08:13.504753
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Osativa/swissprot/blastx.log b32acddcbe7a94f76ae0341bde915a50234ce24c0b41a9f1f6baa53e1d838309 LINES 95
+LOG_FINAL ['Deallocating reference...  [0s]', 'Loading reference sequences...  [0s]', 'Deallocating buffers...  [0s]', 'Deallocating queries...  [0.007s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0.001s]', 'Closing the output file...  [0.001s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 130.877s', 'Reported 5964282 pairwise alignments, 5964282 HSPs.', '625636 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Osativa/swissprot/commands.json 1416 0o100644 wyim p-wyim 2026-09-15T14:06:02.273680
+STAT remaining8_20260915/Osativa/swissprot/makedb.log 1055 0o100644 wyim p-wyim 2026-09-15T14:06:02.609740
+STAT remaining8_20260915/Osativa/swissprot/provenance.json 142540 0o100644 wyim p-wyim 2026-09-15T14:08:40.529728
+STAT remaining8_20260915/Osativa/swissprot/swissprot.dmnd 18584104 0o100644 wyim p-wyim 2026-09-15T14:06:02.609426
+STAT remaining8_20260915/Osativa/swissprot/swissprot.filtered.fa 17992872 0o100644 wyim p-wyim 2026-09-15T14:06:02.178215
+STAT remaining8_20260915/Osativa/swissprot/swissprot.raw13.tsv 1010476053 0o100644 wyim p-wyim 2026-09-15T14:08:13.504026
+STAT remaining8_20260915/Ppatens/batch.exitcode 2 0o100644 wyim p-wyim 2026-09-15T15:42:46.662818
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/batch.exitcode 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/batch.exitcode
+0
+
+TEXT_END
+STAT remaining8_20260915/Ppatens/orthodb 4096 0o40755 wyim p-wyim 2026-09-15T15:42:46.645145
+STAT remaining8_20260915/Ppatens/orthodb.time.txt 1954 0o100644 wyim p-wyim 2026-09-15T15:42:46.661062
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/orthodb.time.txt b8ce6b98fb3cdadbd1a9308f4867c5af1d043793255e9ebc85e4daec030eeb0e
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/orthodb.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Ppatens --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Ppatens/univec/est.univec.fa.gz --query-sha256 4fa3b45656a7962feb80110fc701927d1c68373f75b5bf386f11bef1c6d01d27 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/tmp --source-kind orthodb --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/lineage.tsv --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/orthodb"
+	User time (seconds): 29162.52
+	System time (seconds): 70.58
+	Percent of CPU this job got: 1075%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 45:16.87
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 9831352
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 11722078
+	Voluntary context switches: 386146
+	Involuntary context switches: 212171
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Ppatens/query.sha256 148 0o100644 wyim p-wyim 2026-09-15T14:55:52.702052
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/query.sha256 fbb04098454ba1301d747baf2be637800250e74c79f2915c37802e211fef24e8
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/query.sha256
+4fa3b45656a7962feb80110fc701927d1c68373f75b5bf386f11bef1c6d01d27  /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Ppatens/univec/est.univec.fa.gz
+
+TEXT_END
+STAT remaining8_20260915/Ppatens/swissprot 4096 0o40755 wyim p-wyim 2026-09-15T14:57:29.765756
+STAT remaining8_20260915/Ppatens/swissprot.time.txt 1964 0o100644 wyim p-wyim 2026-09-15T14:57:29.780121
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/swissprot.time.txt 90c86659004188e155ae6d7563c08ea83e889b930da3c9e7037016a4b2995872
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/swissprot.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Ppatens --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Ppatens/univec/est.univec.fa.gz --query-sha256 4fa3b45656a7962feb80110fc701927d1c68373f75b5bf386f11bef1c6d01d27 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/tmp --source-kind swissprot --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/lineage.tsv --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/swissprot"
+	User time (seconds): 1029.31
+	System time (seconds): 2.55
+	Percent of CPU this job got: 1062%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:37.07
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2049152
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 306902
+	Voluntary context switches: 23487
+	Involuntary context switches: 2635
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Ppatens/tmp 4096 0o40755 wyim p-wyim 2026-09-15T15:42:37.004490
+STAT remaining8_20260915/Ppatens/orthodb/DONE 45 0o100644 wyim p-wyim 2026-09-15T15:42:46.645257
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/orthodb/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/orthodb/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Ppatens/orthodb/blastx.log 9881 0o100644 wyim p-wyim 2026-09-15T15:41:50.670386
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/orthodb/blastx.log bb4a0c1e40780d47656673736492b9e58c3ef71a0320d8ff2e6f43346ac3b9bc LINES 233
+LOG_FINAL ['Deallocating buffers...  [0s]', 'Joining output blocks... Joining output blocks...  [12.876s]', ' [13.15s]', 'Deallocating queries...  [0.004s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0s]', 'Closing the output file...  [0.003s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 1844.87s', 'Reported 6923738 pairwise alignments, 6923738 HSPs.', '312330 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Ppatens/orthodb/commands.json 1400 0o100644 wyim p-wyim 2026-09-15T15:09:21.932140
+STAT remaining8_20260915/Ppatens/orthodb/makedb.log 1679 0o100644 wyim p-wyim 2026-09-15T15:11:05.784540
+STAT remaining8_20260915/Ppatens/orthodb/orthodb.dmnd 5741731150 0o100644 wyim p-wyim 2026-09-15T15:11:05.771944
+STAT remaining8_20260915/Ppatens/orthodb/orthodb.filtered.fa 5548159150 0o100644 wyim p-wyim 2026-09-15T15:08:55.919930
+STAT remaining8_20260915/Ppatens/orthodb/orthodb.raw13.tsv 1280436063 0o100644 wyim p-wyim 2026-09-15T15:41:50.669429
+STAT remaining8_20260915/Ppatens/orthodb/provenance.json 31920 0o100644 wyim p-wyim 2026-09-15T15:42:46.644966
+STAT remaining8_20260915/Ppatens/swissprot/DONE 45 0o100644 wyim p-wyim 2026-09-15T14:57:29.765939
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/swissprot/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/swissprot/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Ppatens/swissprot/blastx.log 4180 0o100644 wyim p-wyim 2026-09-15T14:57:18.121067
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ppatens/swissprot/blastx.log a59795e2b6a32b7b44a5829b9a38086fbb9e88279ab7cf220707ae1be3c5d5cf LINES 95
+LOG_FINAL ['Deallocating reference...  [0.001s]', 'Loading reference sequences...  [0s]', 'Deallocating buffers...  [0s]', 'Deallocating queries...  [0.002s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0.001s]', 'Closing the output file...  [0s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 68.974s', 'Reported 2533444 pairwise alignments, 2533444 HSPs.', '225102 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Ppatens/swissprot/commands.json 1416 0o100644 wyim p-wyim 2026-09-15T14:56:08.731026
+STAT remaining8_20260915/Ppatens/swissprot/makedb.log 1062 0o100644 wyim p-wyim 2026-09-15T14:56:09.129695
+STAT remaining8_20260915/Ppatens/swissprot/provenance.json 142541 0o100644 wyim p-wyim 2026-09-15T14:57:29.765128
+STAT remaining8_20260915/Ppatens/swissprot/swissprot.dmnd 21514616 0o100644 wyim p-wyim 2026-09-15T14:56:09.129297
+STAT remaining8_20260915/Ppatens/swissprot/swissprot.filtered.fa 20843304 0o100644 wyim p-wyim 2026-09-15T14:56:08.631815
+STAT remaining8_20260915/Ppatens/swissprot/swissprot.raw13.tsv 538365522 0o100644 wyim p-wyim 2026-09-15T14:57:18.120432
+STAT remaining8_20260915/submission.lock/jobid 8 0o100644 wyim p-wyim 2026-09-15T13:01:26.092176
+STAT remaining8_20260915/Ptrichocarpa/batch.exitcode 2 0o100644 wyim p-wyim 2026-09-15T15:53:48.622732
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/batch.exitcode 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/batch.exitcode
+0
+
+TEXT_END
+STAT remaining8_20260915/Ptrichocarpa/orthodb 4096 0o40755 wyim p-wyim 2026-09-15T15:53:48.604837
+STAT remaining8_20260915/Ptrichocarpa/orthodb.time.txt 1972 0o100644 wyim p-wyim 2026-09-15T15:53:48.621954
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb.time.txt e3e4138240e256c028291b33411ae3ea93d52817a4ecee101b3f399816d226d4
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Ptrichocarpa --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Ptrichocarpa/univec/est.univec.fa.gz --query-sha256 2fe8f9214c64679f2ad567c1005ae9d643fa767dc577fd737f4e252118d259ee --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/tmp --source-kind orthodb --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/lineage.tsv --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb"
+	User time (seconds): 10552.07
+	System time (seconds): 49.85
+	Percent of CPU this job got: 715%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 24:42.56
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 8719496
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6861987
+	Voluntary context switches: 120917
+	Involuntary context switches: 366384
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Ptrichocarpa/query.sha256 153 0o100644 wyim p-wyim 2026-09-15T15:28:41.032959
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/query.sha256 1504adf113854887334e17b1faecdc54ff74e9714f7d3bfc798c35b4e091d904
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/query.sha256
+2fe8f9214c64679f2ad567c1005ae9d643fa767dc577fd737f4e252118d259ee  /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Ptrichocarpa/univec/est.univec.fa.gz
+
+TEXT_END
+STAT remaining8_20260915/Ptrichocarpa/swissprot 4096 0o40755 wyim p-wyim 2026-09-15T15:29:06.040879
+STAT remaining8_20260915/Ptrichocarpa/swissprot.time.txt 1981 0o100644 wyim p-wyim 2026-09-15T15:29:06.056219
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot.time.txt 135b15cd3140a96a8f7258e4e821c6bf4e8342b732ca532dc8540597a3b91d4d
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Ptrichocarpa --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Ptrichocarpa/univec/est.univec.fa.gz --query-sha256 2fe8f9214c64679f2ad567c1005ae9d643fa767dc577fd737f4e252118d259ee --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/tmp --source-kind swissprot --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/lineage.tsv --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot"
+	User time (seconds): 237.30
+	System time (seconds): 1.13
+	Percent of CPU this job got: 952%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:25.02
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 546780
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 85353
+	Voluntary context switches: 21159
+	Involuntary context switches: 11543
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Ptrichocarpa/tmp 4096 0o40755 wyim p-wyim 2026-09-15T15:53:38.453806
+STAT remaining8_20260915/Ptrichocarpa/orthodb/DONE 45 0o100644 wyim p-wyim 2026-09-15T15:53:48.605047
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Ptrichocarpa/orthodb/blastx.log 9859 0o100644 wyim p-wyim 2026-09-15T15:53:12.347184
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/orthodb/blastx.log cb6242eae1345defc689285da7f0995fde919beee14a1403f6c0962840212b8a LINES 233
+LOG_FINAL ['Deallocating buffers...  [0s]', 'Joining output blocks... Joining output blocks...  [4.037s]', ' [4.208s]', 'Deallocating queries...  [0.005s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0s]', 'Closing the output file...  [0.022s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 597.254s', 'Reported 1905270 pairwise alignments, 1905270 HSPs.', '79354 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Ptrichocarpa/orthodb/commands.json 1430 0o100644 wyim p-wyim 2026-09-15T15:41:27.153099
+STAT remaining8_20260915/Ptrichocarpa/orthodb/makedb.log 1686 0o100644 wyim p-wyim 2026-09-15T15:43:15.073568
+STAT remaining8_20260915/Ptrichocarpa/orthodb/orthodb.dmnd 5740244321 0o100644 wyim p-wyim 2026-09-15T15:43:15.064122
+STAT remaining8_20260915/Ptrichocarpa/orthodb/orthodb.filtered.fa 5546743361 0o100644 wyim p-wyim 2026-09-15T15:40:59.225427
+STAT remaining8_20260915/Ptrichocarpa/orthodb/orthodb.raw13.tsv 234047656 0o100644 wyim p-wyim 2026-09-15T15:53:12.346139
+STAT remaining8_20260915/Ptrichocarpa/orthodb/provenance.json 31929 0o100644 wyim p-wyim 2026-09-15T15:53:48.604172
+STAT remaining8_20260915/Ptrichocarpa/swissprot/DONE 45 0o100644 wyim p-wyim 2026-09-15T15:29:06.040993
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Ptrichocarpa/swissprot/blastx.log 4178 0o100644 wyim p-wyim 2026-09-15T15:29:03.135000
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa/swissprot/blastx.log f8b4c45390f37d4c61a179d8616610d8cd6900d6cd57d81a647d31987dd7c510 LINES 95
+LOG_FINAL ['Deallocating reference...  [0s]', 'Loading reference sequences...  [0s]', 'Deallocating buffers...  [0s]', 'Deallocating queries...  [0.002s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0.001s]', 'Closing the output file...  [0.019s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 15.819s', 'Reported 587346 pairwise alignments, 587346 HSPs.', '57445 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Ptrichocarpa/swissprot/commands.json 1446 0o100644 wyim p-wyim 2026-09-15T15:28:46.911869
+STAT remaining8_20260915/Ptrichocarpa/swissprot/makedb.log 1064 0o100644 wyim p-wyim 2026-09-15T15:28:47.297616
+STAT remaining8_20260915/Ptrichocarpa/swissprot/provenance.json 142550 0o100644 wyim p-wyim 2026-09-15T15:29:06.040651
+STAT remaining8_20260915/Ptrichocarpa/swissprot/swissprot.dmnd 21522797 0o100644 wyim p-wyim 2026-09-15T15:28:47.297364
+STAT remaining8_20260915/Ptrichocarpa/swissprot/swissprot.filtered.fa 20851277 0o100644 wyim p-wyim 2026-09-15T15:28:46.805009
+STAT remaining8_20260915/Ptrichocarpa/swissprot/swissprot.raw13.tsv 116081449 0o100644 wyim p-wyim 2026-09-15T15:29:03.134237
+STAT remaining8_20260915/Vvinifera/batch.exitcode 2 0o100644 wyim p-wyim 2026-09-15T16:53:53.293503
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/batch.exitcode 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/batch.exitcode
+0
+
+TEXT_END
+STAT remaining8_20260915/Vvinifera/orthodb 4096 0o40755 wyim p-wyim 2026-09-15T16:53:53.274395
+STAT remaining8_20260915/Vvinifera/orthodb.time.txt 1964 0o100644 wyim p-wyim 2026-09-15T16:53:53.290372
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/orthodb.time.txt 54ef56b41f888951a149a4fe54b7422a4a169544b6c85760a085b25aecd23bb8
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/orthodb.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Vvinifera --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Vvinifera/univec/est.univec.fa.gz --query-sha256 f54df453e144a90554df88ed6edfe7344d944e7c98b499dd06d2bcc13b062a70 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/tmp --source-kind orthodb --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/lineage.tsv --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/orthodb"
+	User time (seconds): 40510.19
+	System time (seconds): 100.71
+	Percent of CPU this job got: 1170%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 57:50.13
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 10035764
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 8882612
+	Voluntary context switches: 505515
+	Involuntary context switches: 1146077
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Vvinifera/query.sha256 150 0o100644 wyim p-wyim 2026-09-15T15:53:49.756134
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/query.sha256 2ef5e8c2f37eb58105e0b70d928812459772c4a4a97a930e7fd80729cc0f6bcc
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/query.sha256
+f54df453e144a90554df88ed6edfe7344d944e7c98b499dd06d2bcc13b062a70  /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Vvinifera/univec/est.univec.fa.gz
+
+TEXT_END
+STAT remaining8_20260915/Vvinifera/swissprot 4096 0o40755 wyim p-wyim 2026-09-15T15:56:03.133068
+STAT remaining8_20260915/Vvinifera/swissprot.time.txt 1973 0o100644 wyim p-wyim 2026-09-15T15:56:03.148573
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/swissprot.time.txt 7265504b322877890f7c44a9b5b27158bc8dd2e8f8dc706ecdd5fc4e6823317c
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/swissprot.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Vvinifera --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Vvinifera/univec/est.univec.fa.gz --query-sha256 f54df453e144a90554df88ed6edfe7344d944e7c98b499dd06d2bcc13b062a70 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/tmp --source-kind swissprot --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/lineage.tsv --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/swissprot"
+	User time (seconds): 1453.02
+	System time (seconds): 4.30
+	Percent of CPU this job got: 1092%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:13.39
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2255472
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 457252
+	Voluntary context switches: 25772
+	Involuntary context switches: 54394
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Vvinifera/tmp 4096 0o40755 wyim p-wyim 2026-09-15T16:53:43.009114
+STAT remaining8_20260915/Vvinifera/orthodb/DONE 45 0o100644 wyim p-wyim 2026-09-15T16:53:53.274523
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/orthodb/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/orthodb/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Vvinifera/orthodb/blastx.log 9881 0o100644 wyim p-wyim 2026-09-15T16:52:45.451892
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/orthodb/blastx.log b727845bcae9b7814a93c8d0c379dbeff9a35316f7c5b461f2079684e6077fc3 LINES 233
+LOG_FINAL ['Deallocating buffers...  [0s]', 'Joining output blocks... Joining output blocks...  [14.516s]', ' [14.785s]', 'Deallocating queries...  [0.004s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0s]', 'Closing the output file...  [0.029s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 2548.72s', 'Reported 9275327 pairwise alignments, 9275327 HSPs.', '382713 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Vvinifera/orthodb/commands.json 1412 0o100644 wyim p-wyim 2026-09-15T16:08:28.887301
+STAT remaining8_20260915/Vvinifera/orthodb/makedb.log 1682 0o100644 wyim p-wyim 2026-09-15T16:10:16.710855
+STAT remaining8_20260915/Vvinifera/orthodb/orthodb.dmnd 5732084230 0o100644 wyim p-wyim 2026-09-15T16:10:16.705781
+STAT remaining8_20260915/Vvinifera/orthodb/orthodb.filtered.fa 5538909254 0o100644 wyim p-wyim 2026-09-15T16:08:00.197018
+STAT remaining8_20260915/Vvinifera/orthodb/orthodb.raw13.tsv 1407770926 0o100644 wyim p-wyim 2026-09-15T16:52:45.451013
+STAT remaining8_20260915/Vvinifera/orthodb/provenance.json 31926 0o100644 wyim p-wyim 2026-09-15T16:53:53.274216
+STAT remaining8_20260915/Vvinifera/swissprot/DONE 45 0o100644 wyim p-wyim 2026-09-15T15:56:03.133227
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/swissprot/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/swissprot/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Vvinifera/swissprot/blastx.log 4181 0o100644 wyim p-wyim 2026-09-15T15:55:45.372464
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Vvinifera/swissprot/blastx.log e31c20c8a0cc25b63c4cd914c9860fd01898cc6e3060998b272985c10d57f858 LINES 95
+LOG_FINAL ['Deallocating reference...  [0s]', 'Loading reference sequences...  [0s]', 'Deallocating buffers...  [0s]', 'Deallocating queries...  [0.003s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0.001s]', 'Closing the output file...  [0.007s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 96.793s', 'Reported 3601162 pairwise alignments, 3601162 HSPs.', '304511 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Vvinifera/swissprot/commands.json 1428 0o100644 wyim p-wyim 2026-09-15T15:54:08.155676
+STAT remaining8_20260915/Vvinifera/swissprot/makedb.log 1065 0o100644 wyim p-wyim 2026-09-15T15:54:08.560040
+STAT remaining8_20260915/Vvinifera/swissprot/provenance.json 142548 0o100644 wyim p-wyim 2026-09-15T15:56:03.132283
+STAT remaining8_20260915/Vvinifera/swissprot/swissprot.dmnd 21510230 0o100644 wyim p-wyim 2026-09-15T15:54:08.559747
+STAT remaining8_20260915/Vvinifera/swissprot/swissprot.filtered.fa 20839414 0o100644 wyim p-wyim 2026-09-15T15:54:08.053784
+STAT remaining8_20260915/Vvinifera/swissprot/swissprot.raw13.tsv 758217523 0o100644 wyim p-wyim 2026-09-15T15:55:45.371711
+STAT remaining8_20260915/Gmax/batch.exitcode 2 0o100644 wyim p-wyim 2026-09-15T14:55:51.468944
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/batch.exitcode 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/batch.exitcode
+0
+
+TEXT_END
+STAT remaining8_20260915/Gmax/orthodb 4096 0o40755 wyim p-wyim 2026-09-15T14:55:51.450894
+STAT remaining8_20260915/Gmax/orthodb.time.txt 1943 0o100644 wyim p-wyim 2026-09-15T14:55:51.467702
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/orthodb.time.txt 91c967f9dc9ffdf04817981a815451210aaa82f7da9f464c8be19578bb0c2502
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/orthodb.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Gmax --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Gmax/univec/est.univec.fa.gz --query-sha256 ec63f72d7a1c7805ec80178f3f880456e80d0b1f08560444d35696a79c16cdd4 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/tmp --source-kind orthodb --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/odb12_Viridiplantae.filtered.fa.gz --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/lineage.tsv --lineage-sha256 812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5 --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/orthodb"
+	User time (seconds): 58512.35
+	System time (seconds): 129.47
+	Percent of CPU this job got: 1260%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:17:31
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 10982028
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 16362682
+	Voluntary context switches: 831396
+	Involuntary context switches: 491178
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Gmax/query.sha256 145 0o100644 wyim p-wyim 2026-09-15T13:35:08.697850
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/query.sha256 7669b0dee132a1d12610fb2eab848399afdd43ba18b1a7c28607d1f29a164cc0
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/query.sha256
+ec63f72d7a1c7805ec80178f3f880456e80d0b1f08560444d35696a79c16cdd4  /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Gmax/univec/est.univec.fa.gz
+
+TEXT_END
+STAT remaining8_20260915/Gmax/swissprot 4096 0o40755 wyim p-wyim 2026-09-15T13:38:19.661954
+STAT remaining8_20260915/Gmax/swissprot.time.txt 1952 0o100644 wyim p-wyim 2026-09-15T13:38:19.677839
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/swissprot.time.txt 9e14b0e72f5a435d5df500c99b6409583c6d7c98152b64bbd480ef2e4269c8a6
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/swissprot.time.txt
+	Command being timed: "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py run --species Gmax --query /data/gpfs/assoc/pgl/data/Transgenic/evidence/est/Gmax/univec/est.univec.fa.gz --query-sha256 ec63f72d7a1c7805ec80178f3f880456e80d0b1f08560444d35696a79c16cdd4 --roles /data/gpfs/assoc/pgl/data/Transgenic/evidence/DATASET_ROLES.est_v1.tsv --roles-sha256 946eeeff0ac3f7c2747cdb2ff144e0eced4578a5df5d4f6f18aaf6c6e53f3ef2 --diamond /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond --threads 16 --tmpdir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/tmp --source-kind swissprot --source /data/gpfs/assoc/pgl/data/Transgenic/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 --lineage /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/lineage.tsv --lineage-sha256 402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce --out-dir /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/swissprot"
+	User time (seconds): 1913.99
+	System time (seconds): 6.07
+	Percent of CPU this job got: 1005%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 3:10.97
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3530960
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 858897
+	Voluntary context switches: 35429
+	Involuntary context switches: 5507
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+TEXT_END
+STAT remaining8_20260915/Gmax/tmp 4096 0o40755 wyim p-wyim 2026-09-15T14:55:41.378918
+STAT remaining8_20260915/Gmax/orthodb/DONE 45 0o100644 wyim p-wyim 2026-09-15T14:55:51.451006
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/orthodb/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/orthodb/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Gmax/orthodb/blastx.log 9881 0o100644 wyim p-wyim 2026-09-15T14:53:57.625473
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/orthodb/blastx.log d1b69990728d60cf5b8538159e724201f970b8511ba673279f80f73a1fc14a0c LINES 233
+LOG_FINAL ['Deallocating buffers...  [0s]', 'Joining output blocks... Joining output blocks...  [25.327s]', ' [26.484s]', 'Deallocating queries...  [0.008s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0s]', 'Closing the output file...  [0.014s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 3710.21s', 'Reported 22401265 pairwise alignments, 22401265 HSPs.', '939797 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Gmax/orthodb/commands.json 1382 0o100644 wyim p-wyim 2026-09-15T13:50:23.617415
+STAT remaining8_20260915/Gmax/orthodb/makedb.log 1675 0o100644 wyim p-wyim 2026-09-15T13:52:07.398895
+STAT remaining8_20260915/Gmax/orthodb/orthodb.dmnd 5735383016 0o100644 wyim p-wyim 2026-09-15T13:52:07.385458
+STAT remaining8_20260915/Gmax/orthodb/orthodb.filtered.fa 5542101512 0o100644 wyim p-wyim 2026-09-15T13:49:57.715251
+STAT remaining8_20260915/Gmax/orthodb/orthodb.raw13.tsv 2518182482 0o100644 wyim p-wyim 2026-09-15T14:53:57.624144
+STAT remaining8_20260915/Gmax/orthodb/provenance.json 31917 0o100644 wyim p-wyim 2026-09-15T14:55:51.450688
+STAT remaining8_20260915/Gmax/swissprot/DONE 45 0o100644 wyim p-wyim 2026-09-15T13:38:19.662194
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/swissprot/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/swissprot/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT remaining8_20260915/Gmax/swissprot/blastx.log 4171 0o100644 wyim p-wyim 2026-09-15T13:37:49.182485
+LOG_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Gmax/swissprot/blastx.log ff1b4c2658d4e68bb200912912eb1efb2b36829410342c59fb98e080b3f6534f LINES 95
+LOG_FINAL ['Deallocating reference...  [0s]', 'Loading reference sequences...  [0s]', 'Deallocating buffers...  [0s]', 'Deallocating queries...  [0.007s]', 'Loading query sequences...  [0s]', 'Closing the input file...  [0.001s]', 'Closing the output file...  [0.022s]', 'Closing the database...  [0s]', 'Cleaning up...  [0s]', 'Total time = 129.877s', 'Reported 6825751 pairwise alignments, 6825751 HSPs.', '690330 queries aligned.']
+LOG_ERROR_MATCHES []
+STAT remaining8_20260915/Gmax/swissprot/commands.json 1398 0o100644 wyim p-wyim 2026-09-15T13:35:38.913132
+STAT remaining8_20260915/Gmax/swissprot/makedb.log 1055 0o100644 wyim p-wyim 2026-09-15T13:35:39.287414
+STAT remaining8_20260915/Gmax/swissprot/provenance.json 142539 0o100644 wyim p-wyim 2026-09-15T13:38:19.661014
+STAT remaining8_20260915/Gmax/swissprot/swissprot.dmnd 21392110 0o100644 wyim p-wyim 2026-09-15T13:35:39.287179
+STAT remaining8_20260915/Gmax/swissprot/swissprot.filtered.fa 20725326 0o100644 wyim p-wyim 2026-09-15T13:35:38.815181
+STAT remaining8_20260915/Gmax/swissprot/swissprot.raw13.tsv 1131621469 0o100644 wyim p-wyim 2026-09-15T13:37:49.181776
+STAT preflight_20260914/accounting-bounded-check.txt 223 0o100644 wyim p-wyim 2026-09-14T17:48:58.380628
+STAT preflight_20260914/batch.exitcode 2 0o100644 wyim p-wyim 2026-09-14T17:56:04.288332
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/batch.exitcode 9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/batch.exitcode
+0
+
+TEXT_END
+STAT preflight_20260914/duplicate-check-correct-user.txt 820 0o100644 wyim p-wyim 2026-09-14T17:48:58.263999
+STAT preflight_20260914/duplicate-check.txt 0 0o100644 wyim p-wyim 2026-09-14T17:47:45.954876
+STAT preflight_20260914/execution.lock 0 0o100644 wyim p-wyim 2026-09-14T17:47:47.274660
+STAT preflight_20260914/expected-sources.sha256 322 0o100644 wyim p-wyim 2026-09-14T17:47:45.964059
+STAT preflight_20260914/independent_lineage_audit.json 1946 0o100644 wyim p-wyim 2026-09-14T17:56:04.247403
+STAT preflight_20260914/jobid 8 0o100644 wyim p-wyim 2026-09-14T17:47:46.036837
+STAT preflight_20260914/lineage_ncbi.baseline.tsv 52988 0o100644 wyim p-wyim 2026-09-02T16:56:51
+STAT preflight_20260914/logs 4096 0o40755 wyim p-wyim 2026-09-14T17:47:47.245327
+STAT preflight_20260914/orthodb 4096 0o40755 wyim p-wyim 2026-09-14T17:53:54.433634
+STAT preflight_20260914/prepare.sbatch 5088 0o100644 wyim p-wyim 2026-09-14T17:47:45.964950
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch dfe295d76d9f4f15a5b153e6dcd4fb1e9fbd658aa1a6d59539c92bb8c33bf318
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/prepare.sbatch
+#!/bin/bash
+#SBATCH --job-name=b6-lineage-preflight-20260914
+#SBATCH --account=cpu-s1-pgl-0
+#SBATCH --partition=cpu-s1-pgl-0
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=01:00:00
+#SBATCH --no-requeue
+#SBATCH --output=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/logs/slurm-%j.out
+#SBATCH --error=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/logs/slurm-%j.err
+#SBATCH --chdir=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914
+set -euo pipefail
+D=/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914
+R=/data/gpfs/assoc/pgl/data/Transgenic
+PY=/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python
+W=$R/worktrees/b6-est-blastx-950cf4c
+export TMPDIR=$D/tmp XDG_CACHE_HOME=$D/xdg-cache PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=4
+exec 9>"$D/execution.lock"
+flock -n 9
+set -o noclobber
+finish() { rc=$?; printf "%s\n" "$rc" > "$D/batch.exitcode"; }
+trap finish EXIT
+printf "jobid=%s host=%s started=%s\n" "$SLURM_JOB_ID" "$(hostname)" "$(date -Is)"
+sha256sum --check "$D/reviewed-small-files.sha256"
+sha256sum --check "$D/expected-sources.sha256" > "$D/source-hash-attestation.txt"
+"$PY" "$W/revision/scripts/evidence/est_blastx.py" prepare-lineage --source-kind orthodb --source "$R/evidence/protein/odb12_Viridiplantae.filtered.fa.gz" --source-sha256 fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f --cache "$D/lineage_ncbi.baseline.tsv" --fetch-missing --out-dir "$D/orthodb"
+"$PY" "$W/revision/scripts/evidence/est_blastx.py" prepare-lineage --source-kind swissprot --source "$R/evidence/protein/diamond/swissprot_viridiplantae_reviewed.fa.gz" --source-sha256 8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9 --cache "$D/lineage_ncbi.baseline.tsv" --fetch-missing --out-dir "$D/swissprot"
+"$PY" -c 'from pathlib import Path
+import collections,gzip,hashlib,json,re
+D=Path("/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914")
+def load(p):
+    out={}
+    lines=p.read_text().splitlines()
+    assert lines[0]=="taxid\tlineage"
+    for line in lines[1:]:
+        a,b=line.split("\t")
+        t=int(a); chain=[int(x) for x in b.split(";")]
+        assert t not in out and all(x>0 for x in chain)
+        out[t]=chain
+    return out
+base=load(D/"lineage_ncbi.baseline.tsv")
+report={}
+for kind in ("orthodb","swissprot"):
+    p=D/kind; prov=json.loads((p/"provenance.json").read_text()); cache=load(p/"lineage.tsv")
+    seen=collections.Counter()
+    with gzip.open(prov["source"],"rt") as f:
+        for line in f:
+            if line.startswith(">"):
+                if kind=="orthodb":
+                    m=re.match(r"^>([0-9]+)_",line); assert m,line
+                    t=int(m.group(1))
+                else:
+                    ids=re.findall(r"(?:^|\s)OX=([^\s]+)",line)
+                    assert len(ids)==1 and ids[0].isdigit(),line
+                    t=int(ids[0])
+                assert t>0
+                seen[t]+=1
+    assert dict(seen)=={int(k):v for k,v in prov["observed_taxids"].items()}
+    failures=[]; overlaps=0; conflicts=[]
+    for t in sorted(seen):
+        c=cache.get(t,[])
+        if not c or c[0]!=t or c[-1] not in (1,131567) or len(c)!=len(set(c)) or 33090 not in c:
+            failures.append(t); continue
+        for i,a in enumerate(c[1:],1):
+            if a in cache:
+                overlaps+=1
+                if cache[a]!=c[i:]:conflicts.append({"taxid":t,"ancestor":a,"cached":cache[a],"expected_suffix":c[i:]})
+    h=hashlib.sha256((p/"lineage.tsv").read_bytes()).hexdigest()
+    assert h==prov["lineage_sha256"]
+    initial=set(seen)&set(base); fetched=set(seen)-set(base)
+    changed=[t for t in initial if base[t]!=cache.get(t)]
+    report[kind]={"source_sha256":prov["source_sha256"],"lineage_sha256":h,"sequences":sum(seen.values()),"observed_taxids":len(seen),"cached_observed_taxids":len(initial),"newly_resolved_observed_taxids":len(fetched&set(cache)),"unresolved_observed_taxids":sorted(fetched-set(cache)),"candidate_cache_rows":len(cache),"new_cache_keys":len(set(cache)-set(base)),"baseline_observed_changed":changed,"structural_failures":failures,"cached_ancestor_suffix_checks":overlaps,"cached_ancestor_conflicts":conflicts,"structural_ready":not(failures or conflicts or changed),"complete_ancestry_and_merged_id_authority":"NOT independently proven: TSV has ordered ancestor chains but no authoritative parent edges or explicit merged-ID metadata; checks validate every observed ID, self, terminal root/cellular, Viridiplantae and all available cached-ancestor suffixes. No live refresh of existing baseline rows was authorized/performed."}
+with (D/"independent_lineage_audit.json").open("x") as f:json.dump(report,f,indent=2,sort_keys=True);f.write("\n")
+print(json.dumps(report,indent=2,sort_keys=True))
+assert all(v["structural_ready"] for v in report.values()),"independent cached-chain audit failed"
+'
+sha256sum --check "$D/reviewed-small-files.sha256"
+printf "finished=%s\n" "$(date -Is)"
+
+TEXT_END
+STAT preflight_20260914/receipts 4096 0o40755 wyim p-wyim 2026-09-14T17:43:59.555225
+STAT preflight_20260914/reviewed-small-files.sha256 516 0o100644 wyim p-wyim 2026-09-14T17:47:45.963183
+STAT preflight_20260914/sbatch-receipt.json 62 0o100644 wyim p-wyim 2026-09-14T17:47:46.035778
+STAT preflight_20260914/source-hash-attestation.txt 198 0o100644 wyim p-wyim 2026-09-14T17:47:57.798981
+STAT preflight_20260914/submission.lock 4096 0o40755 wyim p-wyim 2026-09-14T17:47:45.953840
+STAT preflight_20260914/swissprot 4096 0o40755 wyim p-wyim 2026-09-14T17:54:21.306672
+STAT preflight_20260914/tmp 4096 0o40755 wyim p-wyim 2026-09-14T17:43:59.548399
+STAT preflight_20260914/xdg-cache 4096 0o40755 wyim p-wyim 2026-09-14T17:43:59.550235
+STAT preflight_20260914/logs/slurm-6163397.err 0 0o100644 wyim p-wyim 2026-09-14T17:47:47.245396
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/logs/slurm-6163397.err e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/logs/slurm-6163397.err
+
+TEXT_END
+STAT preflight_20260914/logs/slurm-6163397.out 2699 0o100644 wyim p-wyim 2026-09-14T17:56:04.287516
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/logs/slurm-6163397.out 5ae1443fbf17c2691e3fe68aa1b4fcd6a2f4b0ccfd3f170b0cde1a664bccf4df
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/logs/slurm-6163397.out
+jobid=6163397 host=cpu-50 started=2026-09-14T17:47:47-0700
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/lineage_ncbi.baseline.tsv: OK
+{
+  "orthodb": {
+    "baseline_observed_changed": [],
+    "cached_ancestor_conflicts": [],
+    "cached_ancestor_suffix_checks": 18,
+    "cached_observed_taxids": 408,
+    "candidate_cache_rows": 412,
+    "complete_ancestry_and_merged_id_authority": "NOT independently proven: TSV has ordered ancestor chains but no authoritative parent edges or explicit merged-ID metadata; checks validate every observed ID, self, terminal root/cellular, Viridiplantae and all available cached-ancestor suffixes. No live refresh of existing baseline rows was authorized/performed.",
+    "lineage_sha256": "812449ea6b4c8d21b095efeb1767bd23e6622d07e781768d84b718c0bf2c71d5",
+    "new_cache_keys": 0,
+    "newly_resolved_observed_taxids": 0,
+    "observed_taxids": 408,
+    "sequences": 12115085,
+    "source_sha256": "fa0795b60ea8460f0f8956ca91ec64914d96e6689dd8441d0be98ce448e1c25f",
+    "structural_failures": [],
+    "structural_ready": true,
+    "unresolved_observed_taxids": []
+  },
+  "swissprot": {
+    "baseline_observed_changed": [],
+    "cached_ancestor_conflicts": [],
+    "cached_ancestor_suffix_checks": 56,
+    "cached_observed_taxids": 193,
+    "candidate_cache_rows": 2427,
+    "complete_ancestry_and_merged_id_authority": "NOT independently proven: TSV has ordered ancestor chains but no authoritative parent edges or explicit merged-ID metadata; checks validate every observed ID, self, terminal root/cellular, Viridiplantae and all available cached-ancestor suffixes. No live refresh of existing baseline rows was authorized/performed.",
+    "lineage_sha256": "402bca970569cc2c0192ba185c12c8fcaed99ecafd71f46a5e19f4f2789615ce",
+    "new_cache_keys": 2015,
+    "newly_resolved_observed_taxids": 2015,
+    "observed_taxids": 2208,
+    "sequences": 42106,
+    "source_sha256": "8d66a18e2ad350fd640f1fb97a180a8091c544efd33351e5f451bb03e11379c9",
+    "structural_failures": [],
+    "structural_ready": true,
+    "unresolved_observed_taxids": []
+  }
+}
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py: OK
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/lineage_ncbi.baseline.tsv: OK
+finished=2026-09-14T17:56:04-0700
+
+TEXT_END
+STAT preflight_20260914/orthodb/DONE 45 0o100644 wyim p-wyim 2026-09-14T17:53:54.433755
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/orthodb/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT preflight_20260914/orthodb/lineage.tsv 52988 0o100644 wyim p-wyim 2026-09-14T17:53:44.439736
+STAT preflight_20260914/orthodb/provenance.json 8762 0o100644 wyim p-wyim 2026-09-14T17:53:54.432878
+STAT preflight_20260914/receipts/DB.sha256 359 0o100644 wyim p-wyim 2026-09-14T17:43:59.552518
+STAT preflight_20260914/receipts/PROVENANCE.txt 684 0o100644 wyim p-wyim 2026-09-14T17:43:59.551479
+STAT preflight_20260914/receipts/SOURCE_COMMIT.txt 8 0o100644 wyim p-wyim 2026-09-14T17:43:59.555624
+STAT preflight_20260914/receipts/build_dbs.sh 1839 0o100644 wyim p-wyim 2026-09-14T17:43:59.553602
+STAT preflight_20260914/receipts/swissprot_viridiplantae_reviewed.fa.gz.sha256 105 0o100644 wyim p-wyim 2026-09-14T17:43:59.554644
+STAT preflight_20260914/swissprot/DONE 45 0o100644 wyim p-wyim 2026-09-14T17:54:21.306844
+SMALL_SHA256 /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/DONE 953fe4e4cdb41dd7ea8c964f3919ddb26efe2445cc8551987039e9db2ca125a7
+TEXT_BEGIN /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/preflight_20260914/swissprot/DONE
+Outputs and QC complete; see provenance.json
+
+TEXT_END
+STAT preflight_20260914/swissprot/lineage.tsv 316260 0o100644 wyim p-wyim 2026-09-14T17:54:21.248854
+STAT preflight_20260914/swissprot/provenance.json 36174 0o100644 wyim p-wyim 2026-09-14T17:54:21.306375
+DESTINATIONS
+/data/gpfs/assoc/pgl/data/Transgenic/worktrees/est_followup_20260916_1530 lexists False
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_followup_20260916_1530 lexists False
+
+LOCAL_SSH_EXIT=0

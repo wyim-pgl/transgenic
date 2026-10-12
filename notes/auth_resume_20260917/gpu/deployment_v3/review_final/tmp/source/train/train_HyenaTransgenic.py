@@ -1,0 +1,824 @@
+#!/usr/bin/env python
+"""
+Train HyenaTransgenic: a seq2seq model with HyenaDNA encoder + Longformer decoder.
+
+Input:  DNA sequences (tokenized by HyenaDNA's character-level tokenizer)
+Output: Gene Structure Format (GSF) annotations (tokenized by GFFTokenizer)
+
+The model learns to predict gene isoform annotations from raw genomic DNA.
+Training data is stored in DuckDB and loaded via isoformDataHyena.
+"""
+import os
+
+# --- Environment variables (must be set BEFORE importing torch) ---
+os.environ['HF_HOME'] = './HFmodels'                       # HuggingFace model cache directory
+os.environ.setdefault('PYTORCH_CUDA_ALLOC_CONF',           # Use CUDA async memory allocator
+                       'backend:cudaMallocAsync')           # Reduces alloc/dealloc overhead vs native
+
+import torch, gc, time, sys, math, json, argparse, glob, signal, shutil
+import torch._dynamo                                        # config flag is set in train(); importing there would make `torch` a local
+
+# Weights & Biases is optional: a benchmark or an offline run passes --no-wandb, and the ACCESS/DeltaAI
+# container does not ship it. Importing it at module load made `--no-wandb` fail with ModuleNotFoundError.
+wandb = None
+
+
+def _wandb():
+    global wandb
+    if wandb is None:
+        import wandb as _w
+        wandb = _w
+    return wandb
+from transgenic.training.b5_runtime import (load_b5_config, model_kwargs, accumulation_steps as _acc_steps, EarlyStopper,
+                                             CheckpointLayout, split_row_numbers, parse_args as _b5_parse_args, benchmark_summary,
+                                             epoch_batches, resolve_checkpointing)
+from tqdm import tqdm
+# 8-bit optimizers are the RTX 4090 path, not B5 (protocol: B5 uses plain AdamW; deploy/deltaai/transgenic.def
+# deliberately does not install bitsandbytes). An unconditional import here killed every container job at
+# this line on the GB10 test bed before a single row was read. Optional import; the 8-bit branch checks it.
+try:
+    import bitsandbytes as bnb                              # Provides 8-bit quantized optimizers
+except ImportError:                                         # B5 images do not ship it and do not need it
+    bnb = None
+from torch.nn.utils import clip_grad_norm_                  # Prevents gradient explosion
+from transformers import get_linear_schedule_with_warmup    # LR: warmup then linear decay to 0
+from accelerate import Accelerator                          # Handles mixed precision + multi-GPU
+from accelerate.utils import DataLoaderConfiguration, DistributedDataParallelKwargs
+from safetensors.torch import save_model                    # Fast, safe model serialization format
+
+# --- Project imports ---
+from transgenic.datasets.datasets import isoformDataHyena, makeDataLoader, hyena_collate_fn
+from transgenic.model.modeling_HyenaTransgenic import transgenicForConditionalGeneration
+from transgenic.model.configuration_transgenic import HyenaTransgenicConfig
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _count_parameters(model: torch.nn.Module) -> int:
+    """Return total number of parameters in the model."""
+    return sum(p.numel() for p in model.parameters())
+
+
+def _write_json(path: str, obj: dict):
+    """Write a dict to a JSON file atomically (used for checkpoint metadata and run_config.json).
+
+    Written to a per-process temporary file and renamed into place, so a concurrent reader -- another DDP rank
+    checking run_config.json -- sees either no file or a complete one, never a half-written one (job 3116413).
+    """
+    tmp = f"{path}.{os.getpid()}.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(obj, f, indent=2, sort_keys=True)
+    os.replace(tmp, path)
+
+
+def _read_json(path: str) -> dict:
+    """Read a JSON file and return as dict (used to restore checkpoint metadata)."""
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _pending_grads_path(ckpt_dir: str, rank: int) -> str:
+    return os.path.join(ckpt_dir, "pending_grads", f"rank{rank}.safetensors")
+
+
+def _save_pending_grads(model, ckpt_dir: str, rank: int) -> int:
+    """Write this rank's parameter gradients (the unfinished accumulation window) under ckpt_dir; return the count.
+
+    An epoch ends inside an accumulation window whenever the number of training rows per rank is not a multiple
+    of the per-rank accumulation (A40: 198,828 rows -> 12 pending micro-batches on 1 GPU, 3 per rank on 4 GPUs).
+    Uninterrupted training carries those gradients into the next epoch; accelerator.save_state saves model and
+    optimizer state but not .grad, so a resume from the epoch checkpoint lost them and shifted every later update
+    boundary (Codex review 2026-09-10). Each rank writes its own file: under DDP the gradients are already
+    all-reduced, so the files are identical copies, and the per-rank layout stays correct if that ever changes.
+    """
+    from safetensors.torch import save_file
+    grads = {name: p.grad.detach().to("cpu").contiguous() for name, p in model.named_parameters() if p.grad is not None}
+    os.makedirs(os.path.dirname(_pending_grads_path(ckpt_dir, rank)), exist_ok=True)
+    save_file(grads, _pending_grads_path(ckpt_dir, rank))
+    return len(grads)
+
+
+def _load_pending_grads(model, ckpt_dir: str, rank: int) -> int:
+    """Restore this rank's pending gradients written by _save_pending_grads; return the count (0 if none)."""
+    from safetensors.torch import load_file
+    path = _pending_grads_path(ckpt_dir, rank)
+    if not os.path.exists(path):
+        return 0
+    grads = load_file(path)
+    n = 0
+    for name, p in model.named_parameters():
+        if name in grads:
+            p.grad = grads[name].to(device=p.device, dtype=p.dtype)
+            n += 1
+    return n
+
+
+def _find_latest_checkpoint(checkpoint_path: str) -> str | None:
+    """Find the most recent Accelerate checkpoint by global_step in meta.json.
+
+    Searches for directories matching ``accelerate_*`` inside *checkpoint_path*,
+    reads each ``meta.json``, and returns the directory with the highest
+    ``global_step``.  Falls back to the most-recently-modified directory if
+    no ``meta.json`` is found.
+    """
+    dirs = [d for d in glob.glob(os.path.join(checkpoint_path, "accelerate_*")) if os.path.isdir(d)]
+    if not dirs:
+        return None
+    best, best_step = None, -1
+    for d in dirs:
+        meta = os.path.join(d, "meta.json")
+        if os.path.exists(meta):
+            try:
+                step = int(_read_json(meta).get("global_step", 0))
+                if step > best_step:
+                    best_step = step
+                    best = d
+            except Exception:
+                pass
+    if best is None:
+        dirs.sort(key=os.path.getmtime)
+        best = dirs[-1]
+    return best
+
+
+# ---------------------------------------------------------------------------
+# Training
+# ---------------------------------------------------------------------------
+
+def train(
+    train_ds,                                   # Training dataset (torch Dataset or Subset)
+    eval_ds,                                    # Evaluation dataset
+    lr,                                         # Peak learning rate (after warmup)
+    num_epochs,                                 # Total number of training epochs
+    schedule_lr,                                # Whether to use LR scheduler (warmup + decay)
+    do_eval,                                    # Whether to run evaluation after each epoch
+    batch_size,                                 # Mini-batch size per forward pass
+    max_grad_norm=1.0,                          # Max gradient norm for clipping
+    checkpoint_path="checkpoints/",             # Directory for saving checkpoints
+    output_dir="saved_models/",                 # Directory for final model output
+    accumulation_steps=16,                      # Gradient accumulation steps
+                                                # Effective batch size = batch_size * accumulation_steps
+    num_workers=8,                              # Number of DataLoader workers
+    notes="",                                   # Experiment notes logged to wandb
+    encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",  # Pretrained encoder to load
+    resume_from_checkpoint: str | None = None,  # Path to Accelerate checkpoint (or "auto")
+    save_every_epoch: bool = True,              # Save full resumable checkpoint every epoch
+    save_every_n_steps: int = 5000,             # Save full checkpoint every N optimizer steps
+    unlink=False,                               # If True, don't share weights between enc/dec
+    log_wandb=True,                             # Enable Weights & Biases logging
+    b5_config: dict | None = None,              # frozen recipe (configs/b5_400m_v1.json); None = legacy wide run
+    seed: int = 234,                            # shuffling/init seed (B5: the run seed)
+    patience: int = 3,                          # best-validation early stopping (B5)
+    run_dir: str | None = None,                 # B5 checkpoint layout root (epoch_NN/, best, TRAINING_DONE)
+    benchmark_steps: int = 0,                   # >0: time N optimizer steps, print JSON, exit
+):
+    """
+    Main training function.
+
+    Uses Accelerate for mixed precision (bf16), gradient accumulation,
+    and 8-bit AdamW optimizer to reduce memory footprint.
+    Supports resuming from Accelerate checkpoints.
+    """
+    os.makedirs(checkpoint_path, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
+
+    # ---- Initialize wandb for experiment tracking ----
+    if log_wandb:
+        _wandb().init(
+            entity="transgenic-paper",
+            project="transgenic",
+            config={
+                "learning_rate": lr,
+                "schedule_lr": schedule_lr,
+                "architecture": "Hyena",
+                "dataset": "10G_static6144_addExtra200_addRCIsoOnly_clean",
+                "epochs": num_epochs,
+                "max_grad_norm": max_grad_norm,
+                "accumulation_steps": accumulation_steps,
+                "batch_size": batch_size,
+                "optimizer": "AdamW8bit",
+                "checkpoints": checkpoint_path,
+                "outputs": output_dir,
+                "notes": notes,
+            },
+        )
+
+    print(f"Training transgenic with Hyena. {checkpoint_path=} {output_dir=}", file=sys.stderr)
+
+    # ---- Device and precision setup ----
+    torch.set_float32_matmul_precision('high')  # Enable TF32 on tensor cores (3x faster matmul)
+    torch.backends.cudnn.benchmark = True       # cuDNN auto-tuner: picks fastest conv algorithm
+
+    # A28 / #59: permutation must depend on the run seed and epoch, not the
+    # mid-epoch RNG state restored by load_state. manual_seed below seeds the sampler at prepare.
+    # find_unused_parameters: the model has parameters that receive no gradient (indices 295-320, 503-528,
+    # 609-612 on every rank in the first 4-GPU bench, job 3116415); without this, DDP raises "Expected to have
+    # finished reduction in the prior iteration" at the second step. The 1-GPU path never sees this.
+    accelerator = Accelerator(mixed_precision="bf16", kwargs_handlers=[DistributedDataParallelKwargs(find_unused_parameters=True)], dataloader_config=DataLoaderConfiguration(
+        use_seedable_sampler=True))
+    # The recipe's effective batch (96) is batch_size x accumulation_steps ACROSS all ranks. Every DDP rank runs
+    # its own accumulation loop, so the per-rank count is divided by the world size; without this, N GPUs
+    # trained at effective batch 96 x N (seen on the first 4-GPU bench, 2026-09-08). One GPU is unchanged.
+    world_size = accelerator.num_processes
+    if world_size > 1:
+        if accumulation_steps % world_size:
+            raise ValueError(f"accumulation_steps {accumulation_steps} is not divisible by the world size {world_size}")
+        accumulation_steps //= world_size
+        print(f"DDP world size {world_size}: per-rank accumulation {accumulation_steps}, effective batch unchanged", file=sys.stderr)
+    device = accelerator.device                        # no loss scaling needed, native on Ampere+
+    if torch.cuda.is_available():
+        gpu_props = torch.cuda.get_device_properties(0)
+        print(f"Using: {device} ({gpu_props.name}, {gpu_props.total_memory / 1e9:.0f}GB)", file=sys.stderr)
+    else:
+        print(f"Using: {device} (no CUDA device)", file=sys.stderr)
+
+    # ---- DataLoaders ----
+    torch.manual_seed(seed)                     # Seed for reproducible data shuffling / init
+    torch.cuda.manual_seed_all(seed)            # Seed all GPUs for reproducibility
+    layout = CheckpointLayout(run_dir) if run_dir else None
+    stopper = EarlyStopper(patience=patience)
+    dl_kwargs = dict(
+        shuffle=True,                           # Shuffle training data each epoch
+        batch_size=batch_size,
+        pin_memory=True,                        # Pin CPU memory for faster DMA to GPU
+        num_workers=num_workers,                # Parallel data loading workers
+        collate_fn=hyena_collate_fn,            # Pads variable-length sequences in a batch
+        persistent_workers=True,                # Keep workers alive between epochs
+    )                                           # (avoids re-creating DuckDB connections)
+    train_dl = makeDataLoader(train_ds, **dl_kwargs)
+    eval_dl = makeDataLoader(eval_ds, **dl_kwargs)
+
+    # ---- Model configuration (wide variant: ~1.17B params) ----
+    # Roughly 3x params vs base model: (1152/768)^2 * (16/12) ~ 3.0
+    d_model, layers, heads = 1152, 16, 8        # Hidden dim, num layers, attention heads (legacy wide run)
+    if b5_config is not None:
+        kw = model_kwargs(b5_config)
+        kw.update(unlink=unlink)
+        config = HyenaTransgenicConfig(**kw)
+        print(f"B5 recipe: {b5_config.get('name')} encoder {kw['encoder_d_model']}x{kw['encoder_layers']} decoder {kw['decoder_d_model']}x{kw['decoder_layers']}", file=sys.stderr)
+    else:
+        print("WARNING: no --config given; building the legacy 1.17B wide configuration (not the B5 recipe)", file=sys.stderr)
+    config = config if b5_config is not None else HyenaTransgenicConfig(
+        d_model=d_model,                        # Model hidden dimension
+        encoder_layers=layers,                  # Number of HyenaDNA encoder layers
+        decoder_layers=layers,                  # Number of Longformer decoder layers
+        encoder_n_layer=layers,                 # Hyena operator internal layers
+        encoder_ffn_dim=d_model * 4,            # Feed-forward hidden dim (standard 4x expansion)
+        decoder_ffn_dim=d_model * 4,
+        attention_window=[1024] * layers,       # Longformer sliding window size (tokens per side)
+        dropout=0.1,                            # Dropout rate for regularization
+        encoder_attention_heads=heads,
+        decoder_attention_heads=heads,
+        encoder_model=encoder_model,            # Load pretrained HyenaDNA weights into encoder
+        unlink=unlink,                          # Whether to unlink encoder/decoder embeddings
+    )
+    model = transgenicForConditionalGeneration(config)  # Instantiate the full seq2seq model
+    print(f"Model params: {_count_parameters(model):,}", file=sys.stderr)
+
+    # Gradient checkpointing: non-reentrant by default (the form DDP accepts and torch.compile can partition;
+    # same recompute, same numerics). TRANSGENIC_CKPT_REENTRANT=1 restores the old form on 1 GPU only;
+    # TRANSGENIC_NO_GRAD_CKPT=1 is the compile-bisection switch and never a recipe setting (peak memory is
+    # already 101 of 120 GB with checkpointing; 129 kb OOMs without it). See resolve_checkpointing.
+    if os.environ.get("TRANSGENIC_CKPT_NONREENTRANT"):
+        print("TRANSGENIC_CKPT_NONREENTRANT is now the default and is ignored", file=sys.stderr)
+    _ckpt = resolve_checkpointing(os.environ, world_size)
+    if _ckpt == "nonreentrant":
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+        print("gradient checkpointing: non-reentrant (default)", file=sys.stderr)
+    elif _ckpt == "reentrant":
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": True})
+        print("gradient checkpointing: reentrant (TRANSGENIC_CKPT_REENTRANT, 1 GPU only)", file=sys.stderr)
+    else:
+        print("EXPERIMENT: gradient checkpointing DISABLED (TRANSGENIC_NO_GRAD_CKPT)", file=sys.stderr)
+    model.to(device)                            # during backward instead of storing them
+    model.train()                               # Set model to training mode (enables dropout etc.)
+
+    # ---- torch.compile (set TRANSGENIC_NO_COMPILE=1 to disable) ----
+    # Uses Inductor backend for kernel fusion: fuses multiple ops into single GPU kernels,
+    # reducing memory bandwidth overhead and kernel launch latency.
+    # NOTE: Does not work on GB10 (SM shared memory too small: 101KB < 180KB needed by Triton)
+    #       Works on 4090, A100, H100, and other GPUs with >= 164KB shared memory per SM.
+    if not os.environ.get("TRANSGENIC_NO_COMPILE"):
+        try:
+            # TRANSGENIC_COMPILE_SCOPE selects what is compiled: model (default, whole graph) | decoder | encoder
+            # | none. Sub-module scopes exist to bisect the partitioner assertion; the default is unchanged.
+            _scope = os.environ.get("TRANSGENIC_COMPILE_SCOPE", "model")
+            if _scope == "model":
+                model = torch.compile(model)    # Lazy compilation: compiles on first forward pass
+            elif _scope == "decoder":
+                model.transgenic.decoder = torch.compile(model.transgenic.decoder)
+            elif _scope == "encoder":
+                model.transgenic.encoder = torch.compile(model.transgenic.encoder)
+            elif _scope != "none":
+                raise ValueError(f"TRANSGENIC_COMPILE_SCOPE={_scope!r}; expected model|decoder|encoder|none")
+            print(f"torch.compile scope: {_scope}", file=sys.stderr)
+            # torch.compile() itself never fails here; Inductor/Triton fail at the FIRST FORWARD, outside this
+            # try. suppress_errors turns that into a logged fallback to eager instead of a dead job
+            # (measured: "libcuda.so cannot found!" killed a container run at step 0 on the GB10 test bed).
+            torch._dynamo.config.suppress_errors = True
+            print("torch.compile (inductor) enabled; compile errors fall back to eager.", file=sys.stderr)
+        except Exception as e:
+            print(f"Warning: torch.compile failed, continuing eager: {e}", file=sys.stderr)
+
+    # ---- Optimizer ----
+    # 8-bit AdamW: quantizes optimizer states (momentum, variance) from fp32 to int8,
+    # reducing optimizer memory from ~8 bytes/param to ~2 bytes/param (~75% savings).
+    if b5_config is not None and b5_config.get("optimizer", "AdamW") == "AdamW":
+        optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=float(b5_config.get("weight_decay", 0.02)))
+    else:
+        if bnb is None:
+            raise RuntimeError("this recipe asks for the 8-bit optimizer but bitsandbytes is not installed; "
+                               "B5 recipes set optimizer=AdamW and never reach this branch")
+        optimizer = bnb.optim.AdamW8bit(
+            model.parameters(),
+            lr=lr,                                  # Peak learning rate
+            weight_decay=0.02,                      # L2 regularization (decoupled from LR in AdamW)
+        )
+    optimizer.zero_grad(set_to_none=True)       # Release grad memory instead of zeroing (faster)
+
+    # ---- Learning rate scheduler ----
+    # Linear warmup for first 5% of steps (stabilizes early training),
+    # then linear decay to 0 over remaining steps.
+    steps_per_epoch = max(1, math.ceil(len(train_dl) / accumulation_steps))  # Optimizer steps/epoch
+    t_total = steps_per_epoch * num_epochs      # Total optimizer steps across all epochs
+    lr_scheduler = None
+    if schedule_lr:
+        warmup_steps = int(t_total * 0.05)      # 5% of total steps for warmup
+        lr_scheduler = get_linear_schedule_with_warmup(
+            optimizer=optimizer,
+            num_warmup_steps=warmup_steps,      # LR ramps from 0 to `lr` over these steps
+            num_training_steps=t_total,         # LR decays from `lr` to 0 over remaining steps
+        )
+        print(f"LR schedule: {warmup_steps} warmup steps, {t_total} total steps", file=sys.stderr)
+
+    # ---- Accelerate prepare ----
+    # Wraps model, optimizer, dataloaders, and scheduler for:
+    #   - Automatic mixed precision (bf16 forward, fp32 optimizer)
+    #   - Distributed training (if multiple GPUs available)
+    #   - Gradient accumulation handling
+    if lr_scheduler is None:
+        model, optimizer, train_dl, eval_dl = accelerator.prepare(
+            model, optimizer, train_dl, eval_dl)
+    else:
+        model, optimizer, train_dl, eval_dl, lr_scheduler = accelerator.prepare(
+            model, optimizer, train_dl, eval_dl, lr_scheduler)
+
+    # ---- Resume from checkpoint ----
+    start_epoch = 0
+    resume_step = 0                             # Micro-batch step to resume from (within start_epoch)
+    pending_micro = 0                           # micro-batches of the unfinished accumulation window (epoch checkpoint)
+    global_step = 0                             # Total optimizer steps completed so far
+    if resume_from_checkpoint is not None:
+        state_dir = resume_from_checkpoint
+        if os.path.isdir(os.path.join(resume_from_checkpoint, "accelerate_state")):   # B5 epoch directory
+            state_dir = os.path.join(resume_from_checkpoint, "accelerate_state")
+            if layout is not None and layout.read_state() and layout.read_state().get("stopper"):
+                stopper.load_state(layout.read_state()["stopper"])
+        accelerator.load_state(state_dir)       # Restores model, optimizer, scheduler, RNG
+        meta_path = os.path.join(resume_from_checkpoint, "meta.json")
+        if os.path.exists(meta_path):
+            meta = _read_json(meta_path)
+            start_epoch = int(meta.get("epoch", meta.get("next_epoch", 0)))
+            resume_step = int(meta.get("step", 0))
+            global_step = int(meta.get("global_step", 0))
+            pending_micro = int(meta.get("pending_micro", 0))
+            if pending_micro:
+                n_restored = _load_pending_grads(accelerator.unwrap_model(model), resume_from_checkpoint, accelerator.process_index)
+                if n_restored == 0:
+                    raise RuntimeError(f"{resume_from_checkpoint} declares {pending_micro} pending micro-batches but has no "
+                                       f"pending_grads for rank {accelerator.process_index}; refusing to resume with a shifted "
+                                       "accumulation window")
+                print(f"restored {pending_micro} pending micro-batch(es) of gradients ({n_restored} tensors) from {resume_from_checkpoint}", file=sys.stderr)
+        print(f"Resumed from {resume_from_checkpoint}; epoch={start_epoch}, step={resume_step}, global_step={global_step}", file=sys.stderr)
+
+    # Checkpoint directory ownership under DDP. Every rank used to run the same rmtree / makedirs / rename on one
+    # shared directory (Codex review 2026-09-09): the second rank's makedirs raised FileExistsError, or its rmtree
+    # deleted files the first rank was still writing. Rank 0 now owns the directory and the metadata;
+    # accelerator.save_state is still called on EVERY rank, because Accelerate writes the per-process RNG state
+    # (random_states_<rank>.pkl) from each process and only the weights from the main one. The barriers make the
+    # tmp directory exist before anyone saves, make every rank's files exist before the rename, and keep a rank
+    # from starting the next step while the publish is in flight. On one GPU each barrier is a no-op and the
+    # sequence of filesystem operations is the one the 1-GPU seed already ran.
+    is_main = accelerator.is_main_process
+    barrier = accelerator.wait_for_everyone
+
+    def _save_state(epoch: int, step: int, global_step: int, best_score):
+        """Save full Accelerate state (model + optimizer + scheduler + RNG) for resuming."""
+        ckpt_dir = os.path.join(checkpoint_path, f"accelerate_epoch{epoch}_step{global_step}")
+        if is_main:
+            os.makedirs(ckpt_dir, exist_ok=True)
+        barrier()
+        accelerator.save_state(ckpt_dir)        # Saves everything needed to resume training (all ranks)
+        barrier()
+        if is_main:
+            _write_json(os.path.join(ckpt_dir, "meta.json"), {
+                "epoch": epoch,                     # Epoch to resume from
+                "step": step,                       # Micro-batch step to resume from within epoch
+                "global_step": global_step,         # Total optimizer steps completed so far
+                "best_eval_score": None if best_score is None else float(best_score),
+            })
+        barrier()
+
+    def _save_best(score_name, score_val):
+        """Save only model weights (safetensors) when a new best score is achieved (legacy layout)."""
+        if is_main:
+            save_model(accelerator.unwrap_model(model),  # unwrap removes Accelerate wrapper
+                       f"{checkpoint_path}/model.safetensors")
+            print(f"New best model saved with {score_name}={score_val}", file=sys.stderr)
+        barrier()
+
+    def _save_epoch_b5(epoch_1based: int, eval_loss, train_loss, is_best: bool, global_step: int):
+        """B5 layout: epoch_NN.tmp -> epoch_NN with model.safetensors, accelerate_state/, eval.json; best symlink."""
+        tmp = layout.epoch_dir(epoch_1based) + ".tmp"
+        pending = micro_done % accumulation_steps                # unfinished accumulation window at the epoch end
+        if is_main:
+            layout.begin_epoch(epoch_1based)                      # rmtree + makedirs of the .tmp dir
+            save_model(accelerator.unwrap_model(model), os.path.join(tmp, "model.safetensors"))
+        barrier()
+        accelerator.save_state(os.path.join(tmp, "accelerate_state"))   # all ranks
+        if pending:
+            n = _save_pending_grads(accelerator.unwrap_model(model), tmp, accelerator.process_index)   # all ranks
+            print(f"epoch {epoch_1based}: {pending} pending micro-batch(es) carried over; {n} gradient tensors saved for rank {accelerator.process_index}", file=sys.stderr)
+        barrier()
+        if is_main:
+            _write_json(os.path.join(tmp, "meta.json"), {"epoch": epoch_1based, "step": 0, "global_step": global_step,
+                                                         "best_eval_score": stopper.best, "seed": seed, "pending_micro": pending})
+            layout.finish_epoch(epoch_1based, eval_loss, train_loss, extra={"global_step": global_step, "is_best": is_best,
+                                "stopper": stopper.state()}, is_best=is_best)
+            layout.write_state({"epoch": epoch_1based, "global_step": global_step, "stopper": stopper.state(), "seed": seed})
+            if os.path.isdir(layout.latest_state_dir()):
+                shutil.rmtree(layout.latest_state_dir(), ignore_errors=True)   # the epoch dir supersedes any mid-epoch state
+        barrier()
+
+    def _save_latest_b5(epoch0: int, step: int, global_step: int):
+        """Mid-epoch resumable state (A28): <run>/latest_state.tmp -> latest_state (atomic)."""
+        tmp = layout.latest_state_dir() + ".tmp"
+        if is_main:
+            shutil.rmtree(tmp, ignore_errors=True)
+            os.makedirs(tmp)
+        barrier()
+        accelerator.save_state(os.path.join(tmp, "accelerate_state"))   # all ranks
+        barrier()
+        if is_main:
+            _write_json(os.path.join(tmp, "meta.json"), {"epoch": epoch0, "step": step, "global_step": global_step,
+                                                         "best_eval_score": stopper.best, "seed": seed, "stopper": stopper.state()})
+            # Publish by renames only: the previous checkpoint is never deleted before the new one is in place
+            # (Codex 2026-09-10: rmtree-then-rename left only latest_state.tmp, which resume ignores, when a
+            # kill landed in between; resume_dir also accepts latest_state.prev while this window is open).
+            final, prev = layout.latest_state_dir(), layout.latest_state_dir() + ".prev"
+            shutil.rmtree(prev, ignore_errors=True)
+            if os.path.isdir(final):
+                os.rename(final, prev)
+            os.rename(tmp, final)
+            shutil.rmtree(prev, ignore_errors=True)
+            print(f"latest_state saved at epoch {epoch0} step {step} global_step {global_step}", file=sys.stderr)
+        barrier()
+
+    _stop_requested = {"flag": False}
+
+    def _on_signal(signum, frame):
+        _stop_requested["flag"] = True
+        print(f"signal {signum} received: will save latest_state at the next optimizer step and exit", file=sys.stderr)
+
+    if layout is not None:
+        signal.signal(signal.SIGUSR1, _on_signal)
+        signal.signal(signal.SIGTERM, _on_signal)
+
+    # ========================================================================
+    # Training loop
+    # ========================================================================
+    best_eval_score = None
+    try:
+        _max_seqlen = int((b5_config or {}).get("max_encoder_seqlen", 49152))
+        micro_done = pending_micro     # completed micro-batches (drives the optimizer step, A35); carries across
+                                       # epochs, and across an epoch-checkpoint resume via pending_micro
+        epoch_micro = 0                # micro-batches forwarded in the current epoch (train-loss average)
+        batch_skipped = 0              # legacy path only; the frozen recipe raises instead
+        _bench_sec, _bench_tok, _bench_tokens, _bench_t0 = [], [], 0, time.perf_counter()
+        if benchmark_steps and torch.cuda.is_available():
+            torch.cuda.reset_peak_memory_stats()
+        for epoch in range(start_epoch, num_epochs):
+            total_loss = 0                      # Accumulated loss for epoch-level metrics
+            epoch_micro = 0
+
+            skip = resume_step if epoch == start_epoch else 0
+            for step, batch in tqdm(epoch_batches(train_dl, epoch, skip),
+                                    total=len(train_dl), initial=skip, miniters=10):
+
+                # Transfer tensors to GPU asynchronously (overlaps with computation)
+                # Requires pin_memory=True in DataLoader to be effective
+                ii = batch[0].to(device, non_blocking=True)    # input_ids: DNA sequence tokens
+                am = batch[1].to(device, non_blocking=True)    # attention_mask: 1=real, 0=padding
+                lab = batch[2].to(device, non_blocking=True)   # labels: GSF annotation tokens
+
+                # OOM guard. Under a frozen recipe the cap is the recipe's own max_encoder_seqlen
+                # (49,152 for sym6144-v1, 129,024 for tier6144-v2 / tile6144-v3), so a legal tile is never
+                # rejected; without a recipe the legacy heuristic is kept.
+                if layout is not None:
+                    if ii.shape[1] > _max_seqlen:
+                        raise RuntimeError(f"B5: window {ii.shape[1]} nt exceeds the recipe's max_encoder_seqlen {_max_seqlen}")
+                elif ii.shape[0] * ii.shape[1] > 100_000:
+                    continue
+
+                try:
+                    # Forward pass: encoder processes DNA, decoder generates GSF tokens
+                    outputs = model(input_ids=ii, attention_mask=am, labels=lab, return_dict=True)
+
+                    # Detach loss from computation graph for logging (saves memory)
+                    total_loss += outputs.loss.detach().float()
+
+                    # Gradient accumulation: divide loss by number of accumulation steps
+                    # so that gradients are averaged across the effective batch.
+                    # Effective batch size = batch_size (16) * accumulation_steps (16) = 256
+                    accelerator.backward(outputs.loss / accumulation_steps)
+
+                    # Only update weights every `accumulation_steps` *completed* mini-batches. Keying off the
+                    # DataLoader index would let a skipped batch shift the effective batch size silently (A35).
+                    _bench_tokens += int(lab.numel())
+                    micro_done += 1
+                    epoch_micro += 1
+                    if micro_done % accumulation_steps == 0:
+                        global_step += 1
+                        # Clip gradients to prevent explosion (common in transformer training)
+                        clip_grad_norm_(model.parameters(), max_grad_norm)
+
+                        optimizer.step()                        # Update model weights
+
+                        if lr_scheduler is not None:
+                            lr_scheduler.step()                 # Advance learning rate schedule
+
+                        # --- Logging to wandb ---
+                        if log_wandb:
+                            wandb_log = {
+                                "epoch": epoch,
+                                "step": step,
+                                "global_step": global_step,
+                                "loss": outputs.loss.detach().float() * accumulation_steps,  # Undo the division
+                                "mean_loss": total_loss / (step + 1),  # Running average loss
+                            }
+                            if lr_scheduler is not None:
+                                wandb_log["lr"] = lr_scheduler.get_last_lr()[0]  # Current learning rate
+
+                            # Log per-parameter gradient norms every 10 optimizer steps.
+                            # This is expensive (iterates all params) so we don't do it every step.
+                            if global_step % 10 == 0:
+                                for name, param in model.named_parameters():
+                                    if param.grad is not None and param.requires_grad:
+                                        wandb_log[f"{name}_grad_norm"] = param.grad.norm().detach().item()
+                            _wandb().log(wandb_log)
+
+                        # Release gradient memory (faster than filling with zeros)
+                        optimizer.zero_grad(set_to_none=True)
+
+                        # --- #18 benchmark: time N optimizer steps, print JSON, exit ---
+                        if benchmark_steps:
+                            if torch.cuda.is_available():
+                                torch.cuda.synchronize()
+                            now = time.perf_counter()
+                            _bench_sec.append(now - _bench_t0)
+                            _bench_tok.append(_bench_tokens)
+                            _bench_t0, _bench_tokens = now, 0
+                            if len(_bench_sec) >= benchmark_steps:
+                                peak = torch.cuda.max_memory_allocated() / 1e9 if torch.cuda.is_available() else None
+                                summary = benchmark_summary(_bench_sec, _bench_tok, len(train_data),
+                                                            batch_size * accumulation_steps * world_size, peak_mem_gb=peak)
+                                summary.update({"window_nt": int(ii.shape[1]), "batch_size": batch_size,
+                                                "accumulation_steps": accumulation_steps, "world_size": world_size, "rows_in_split": len(train_data),
+                                                "device": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"})
+                                print(json.dumps(summary), flush=True)
+                                return summary
+
+                        # Save full resumable checkpoint every save_every_n_steps optimizer steps
+                        if layout is not None:
+                            # The stop flag is process-local: each rank receives its own USR1 at its own moment. Combine
+                            # it across ranks at this optimizer boundary so every rank saves and returns together or
+                            # none does; a signal that lands on one rank after this point is picked up at the next
+                            # boundary (Codex review 2026-09-09). On one GPU the decision is the local flag.
+                            stop_now = bool(_stop_requested["flag"])
+                            if world_size > 1:
+                                stop_now = bool(accelerator.reduce(torch.tensor(int(stop_now), device=device),
+                                                                   reduction="max").item())
+                            if (save_every_n_steps and global_step % save_every_n_steps == 0) or stop_now:
+                                _save_latest_b5(epoch, step + 1, global_step)
+                            if stop_now:
+                                print("exiting cleanly for the job chain (no TRAINING_DONE marker)", file=sys.stderr)
+                                if log_wandb:
+                                    _wandb().finish()
+                                return {"preempted": True, "epoch": epoch, "global_step": global_step}
+                        elif save_every_n_steps and global_step % save_every_n_steps == 0:
+                            _save_state(epoch, step + 1, global_step, best_eval_score)
+                            print(f"Checkpoint saved at epoch {epoch}, step {step+1}, global_step {global_step}", file=sys.stderr)
+
+                    del outputs                                 # Free GPU memory from output tensors
+
+                except torch.cuda.OutOfMemoryError as e:
+                    # Protocol A35. Under a frozen recipe a failing batch stops the run: silently skipping it
+                    # removes training data from a pre-registered study (measured 2026-09-02: the 129,024-nt tier
+                    # skipped 1,093 of 1,103 batches on a 24 GB card while the loss curve looked healthy), and it
+                    # also corrupts the accumulation group and the epoch-loss denominator. The legacy path keeps
+                    # the old skip so published behaviour is unchanged.
+                    # Only CUDA OOM is caught here. Every other exception propagates on both paths: the old
+                    # `except Exception` hid model and data bugs as well (Codex and Kimi both flagged it).
+                    where = batch[3] if len(batch) > 3 else "<unknown>"
+                    shapes = f"input {tuple(ii.shape)} labels {tuple(lab.shape)}"
+                    if torch.cuda.is_available():
+                        mem = (f"allocated {torch.cuda.memory_allocated()/1e9:.2f} GB, "
+                               f"reserved {torch.cuda.memory_reserved()/1e9:.2f} GB, "
+                               f"peak {torch.cuda.max_memory_allocated()/1e9:.2f} GB")
+                    else:
+                        mem = "no CUDA"
+                    optimizer.zero_grad(set_to_none=True)       # Clear optimizer gradient state
+                    model.zero_grad(set_to_none=True)           # Clear model gradient buffers
+                    torch.cuda.empty_cache()                    # Return cached GPU memory to allocator
+                    gc.collect()                                # Force Python garbage collection
+                    if layout is not None:
+                        batch_skipped += 1
+                        raise RuntimeError(
+                            f"B5 batch failed at epoch {epoch} step {step} (CUDA OOM): "
+                            f"{where}; {shapes}; {mem}. Skipping it would drop training data from a pre-registered run "
+                            f"(protocol A35). Resume from the last checkpoint on a GPU that fits this tier."
+                        ) from e
+                    print(f"Error in batch: {where}, {e}", file=sys.stderr)
+                    batch_skipped += 1
+                    continue
+
+            # ---- End of epoch: compute metrics ----
+            # epoch_micro, not micro_done: micro_done carries across epochs (and is what the accumulation keys on),
+            # so dividing by it under-reported the train loss from the second epoch on (seed 123's epoch>=2
+            # train_epoch_loss lines are reported / epoch_index too small; the validation loss was never affected).
+            seen = max(1, epoch_micro)                         # batches actually forwarded this epoch (A35)
+            if world_size > 1:
+                # Each rank forwarded a different shard; without this the no-eval best-model decision below
+                # branched into a collective on some ranks only (Codex review 2026-09-09). One GPU: unchanged.
+                total_loss = accelerator.reduce(torch.as_tensor(total_loss, dtype=torch.float32, device=device), reduction="sum")
+                seen = accelerator.reduce(torch.tensor(float(seen), device=device), reduction="sum")
+            train_epoch_loss = total_loss / seen                # Average loss over the batches actually seen
+            train_ppl = torch.exp(train_epoch_loss)             # Perplexity = exp(loss)
+
+            if do_eval:
+                # Evaluation loop (no gradient computation needed)
+                eval_loss = torch.zeros((), dtype=torch.float32, device=device)
+                for batch in tqdm(eval_dl, miniters=10, disable=not is_main):
+                    with torch.no_grad():                       # Disable autograd (saves memory + speed)
+                        outputs = model(
+                            input_ids=batch[0].to(device, non_blocking=True),
+                            attention_mask=batch[1].to(device, non_blocking=True),
+                            labels=batch[2].to(device, non_blocking=True),
+                            return_dict=True,
+                        )
+                    eval_loss += outputs.loss.detach().float()
+
+                # The prepared eval loader is sharded across ranks, so the per-rank sum over the per-rank length
+                # was a different number on every rank, and each rank then made its own best/stop decision
+                # (Codex review 2026-09-09: divergent early stopping, collective hang). Sum the loss and the batch
+                # count across ranks and divide once, so every rank sees the same value. On one GPU this is the
+                # old mean exactly. Accelerate's even_batches padding can repeat at most world_size-1 validation
+                # rows at the tail of the shard; those repeats are in both the numerator and the denominator.
+                eval_loss_sum = accelerator.reduce(eval_loss, reduction="sum")
+                eval_batches = accelerator.reduce(torch.tensor(float(len(eval_dl)), device=device), reduction="sum")
+                eval_epoch_loss = eval_loss_sum / eval_batches
+                eval_ppl = torch.exp(eval_epoch_loss)
+                if is_main:
+                    print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}, {eval_ppl=}, {eval_epoch_loss=}", file=sys.stderr)
+
+                if log_wandb and is_main:
+                    _wandb().log({"epoch_train_ppl": train_ppl, "epoch_train_loss": train_epoch_loss,
+                               "epoch_eval_ppl": eval_ppl, "epoch_eval_loss": eval_epoch_loss})
+
+                # Save model if eval loss improved (best model selection). Every rank runs the same update on the
+                # same reduced value and reaches the same collective save; only the main process writes.
+                if layout is not None:
+                    is_best, should_stop = stopper.update(epoch + 1, float(eval_epoch_loss))
+                    best_eval_score = stopper.best
+                    _save_epoch_b5(epoch + 1, float(eval_epoch_loss), float(train_epoch_loss), is_best, global_step)
+                    if is_best and is_main:
+                        print(f"New best validation loss {float(eval_epoch_loss):.6f} at epoch {epoch + 1}", file=sys.stderr)
+                    if should_stop:
+                        if is_main:
+                            print(f"Early stopping: no improvement for {patience} epochs (best epoch {stopper.best_epoch})", file=sys.stderr)
+                            layout.mark_done()
+                        break
+                elif best_eval_score is None or eval_epoch_loss < best_eval_score:
+                    best_eval_score = eval_epoch_loss
+                    _save_best("eval_epoch_loss", eval_epoch_loss)
+            else:
+                # No eval: track best based on training loss instead
+                if is_main:
+                    print(f"{epoch=}: {train_ppl=}, {train_epoch_loss=}", file=sys.stderr)
+                if best_eval_score is None or train_epoch_loss < best_eval_score:
+                    best_eval_score = train_epoch_loss
+                    _save_best("train_epoch_loss", train_epoch_loss)
+
+            # Save full resumable checkpoint at every epoch boundary
+            if save_every_epoch and layout is None:
+                _save_state(epoch + 1, 0, global_step, best_eval_score)
+
+            # Free GPU memory between epochs (helps with fragmentation)
+            torch.cuda.empty_cache()
+            gc.collect()
+            total_loss = 0                      # Reset for next epoch
+        if layout is not None and is_main:
+            layout.mark_done()
+
+    except KeyboardInterrupt:
+        # Graceful shutdown: save checkpoint with epoch+step so training can resume mid-epoch.
+        # Under DDP the interrupt is rank-local, and _save_state is a collective: a save from one rank while the
+        # others are in backward or another barrier hangs the job instead of ending it (Codex review 2026-09-09).
+        # Multi-GPU runs keep the last published checkpoint and exit; USR1/SIGTERM remain the clean stop path.
+        if world_size > 1:
+            print("KeyboardInterrupt on a DDP rank: not saving (collective); last published checkpoint stands", file=sys.stderr)
+            raise
+        print("KeyboardInterrupt: saving resume checkpoint...", file=sys.stderr)
+        _save_state(
+            epoch=epoch if 'epoch' in locals() else 0,
+            step=step + 1 if 'step' in locals() else 0,
+            global_step=global_step,
+            best_score=best_eval_score,
+        )
+        raise                                   # Re-raise so the process exits with correct code
+
+    if log_wandb:
+        _wandb().finish()                       # Finalize wandb run (upload remaining data)
+
+
+# ---------------------------------------------------------------------------
+# Main: dataset loading and training invocation
+# ---------------------------------------------------------------------------
+
+if __name__ == '__main__':
+    args = _b5_parse_args()
+    if args.config:
+        # ------------------------------------------------------------------ B5 path (issue #17)
+        cfg = load_b5_config(args.config)
+        acc = args.accumulation_steps or _acc_steps(cfg, args.batch_size)
+        max_epochs = args.max_epochs or int(cfg["max_epochs"])
+        patience = args.patience or int(cfg.get("patience", 3))
+        # membership comes from the frozen split column; the query also refuses excluded species and NULL splits
+        split_row_numbers(args.db, "train"); split_row_numbers(args.db, "valid")
+        vv = cfg.get("gff_vocab_version", "v2")
+        wl = args.benchmark_tier if args.benchmark_steps else None   # #18: per-tier throughput
+        # strict=True (A35): under the frozen recipe a row that cannot be read, is empty, or tokenises to
+        # zero length stops the run instead of being replaced by a randomly chosen different row.
+        train_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="train", gff_vocab_version=vv, window_len=wl, strict=True)
+        eval_data = isoformDataHyena(args.db, mode="train", encoder_model=cfg["encoder_model"], global_attention=False, split="valid", gff_vocab_version=vv, window_len=wl, strict=True)
+        print(f"B5 split sizes: train={len(train_data)} valid={len(eval_data)} seed={args.seed} acc={acc} max_epochs={max_epochs} patience={patience}", file=sys.stderr)
+        layout = CheckpointLayout(args.output_dir)
+        run_cfg = {"config": args.config, "recipe": cfg, "db": os.path.abspath(args.db), "seed": args.seed, "batch_size": args.batch_size,
+                   "accumulation_steps": acc, "max_epochs": max_epochs, "patience": patience}
+        layout.check_run_config(run_cfg)          # A28: the chain never changes recipe/db/seed silently
+        resume_ckpt = layout.resume_dir(args.resume)
+        if args.resume and resume_ckpt:
+            print(f"Resuming from {resume_ckpt}", file=sys.stderr)
+        # Only the first local process writes the run record; the write itself is atomic (see _write_json).
+        if int(os.environ.get("LOCAL_RANK", "0")) == 0 and not os.path.exists(os.path.join(args.output_dir, "run_config.json")):
+            _write_json(os.path.join(args.output_dir, "run_config.json"), run_cfg)
+        train(
+            train_data, eval_data,
+            lr=float(cfg["lr"]), num_epochs=max_epochs, schedule_lr=True, do_eval=True,
+            batch_size=args.batch_size, accumulation_steps=acc, num_workers=args.num_workers,
+            checkpoint_path=args.output_dir, output_dir=args.output_dir, max_grad_norm=1,
+            notes=f"B5 {cfg.get('name')} seed {args.seed}", encoder_model=cfg["encoder_model"],
+            resume_from_checkpoint=resume_ckpt, save_every_epoch=True, save_every_n_steps=args.save_every_n_steps,
+            unlink=False, log_wandb=not args.no_wandb,
+            b5_config=cfg, seed=args.seed, patience=patience, run_dir=args.output_dir, benchmark_steps=args.benchmark_steps,
+        )
+        sys.exit(0)
+    # ---------------------------------------------------------------------- legacy wide run (unchanged behaviour)
+    resume_ckpt = None
+    if args.resume:
+        if args.resume == "auto":
+            resume_ckpt = _find_latest_checkpoint(args.checkpoint_path)
+            if resume_ckpt:
+                print(f"Auto-detected checkpoint: {resume_ckpt}", file=sys.stderr)
+            else:
+                print("No checkpoint found for auto-resume; starting fresh.", file=sys.stderr)
+        else:
+            resume_ckpt = args.resume
+    print("WARNING: legacy row-level random_split after RC augmentation (twin leakage); B5 runs must pass --config", file=sys.stderr)
+    torch.manual_seed(123)                      # Seed for reproducible train/eval/test split
+    ds = isoformDataHyena(
+        args.db,
+        mode="train",                           # Training mode: returns (input_ids, attn_mask, labels)
+        encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",  # Tokenizer for DNA sequences
+        global_attention=False,                  # No global attention tokens (use sliding window only)
+        exclude_prefix="Zm",                    # Exclude Zea mays (maize) genes for held-out testing
+    )
+    total = len(ds)
+    train_size = int(total * 0.75)
+    eval_size = int(total * 0.10)
+    test_size = total - train_size - eval_size  # Remainder goes to test (avoids off-by-one)
+    train_data, eval_data, _ = torch.utils.data.random_split(
+        ds, [train_size, eval_size, test_size]  # _ = test set (not used during training)
+    )
+    train(
+        train_data, eval_data,
+        lr=5e-5, num_epochs=10, schedule_lr=True, do_eval=True,
+        batch_size=args.batch_size, accumulation_steps=args.accumulation_steps or 16, num_workers=args.num_workers,
+        checkpoint_path=args.checkpoint_path, output_dir="saved_models_HyenaWide/", max_grad_norm=1,
+        notes="HyenaTransgenic wide (d_model=1152, 16 layers, 8 heads)",
+        encoder_model="LongSafari/hyenadna-large-1m-seqlen-hf",
+        resume_from_checkpoint=resume_ckpt, save_every_n_steps=args.save_every_n_steps or 5000,
+        unlink=False, log_wandb=not args.no_wandb,
+    )

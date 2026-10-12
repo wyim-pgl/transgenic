@@ -1,0 +1,45 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+release.sha256: OK
+code.tar: OK
+deploy.py: OK
+p1.sbatch: OK
+notes/b6_mvp_technical_candidate_20260915.json: OK
+notes/b6_mvp_candidate_inventories_20260915.json: OK
+notes/b6_mvp_candidate_receipts_20260915.json: OK
+release.json: OK
+2026-09-16T20:15:26-05:00
+             JOBID                             NAME     STATE       TIME  NODES NODELIST(REASON)
+           3131538                          b5-seed   PENDING       0:00      1 (Priority)
+           3149363                          b5-seed   PENDING       0:00      1 (Dependency)
+           3149362                          b5-seed   PENDING       0:00      1 (Dependency)
+           3149361                          b5-seed   PENDING       0:00      1 (Dependency)
+           3149360                          b5-seed   PENDING       0:00      1 (Dependency)
+           3149359                          b5-seed   PENDING       0:00      1 (Dependency)
+           3149358                          b5-seed   PENDING       0:00      1 (Dependency)
+           3149357                          b5-seed   PENDING       0:00      1 (Dependency)
+           3149356                          b5-seed   PENDING       0:00      1 (Dependency)
+Quota usage for user wcyim:
+-----------------------------------------------------------------------------------------------
+|        Directory Path        |  User   |  User   |  User   |   User   |   User   |   User   |
+|                              |  Block  |  Soft   |  Hard   |   File   |   Soft   |   Hard   |
+|                              |  Used   |  Quota  |  Limit  |   Used   |   Quota  |   Limit  |
+-----------------------------------------------------------------------------------------------
+| /u/wcyim                     | 12168K  | 102400M | 103G    | 332      | 750k     | 760k     |
+-----------------------------------------------------------------------------------------------
+
+Quota usage for allocations user wcyim is a member of:
+--------------------------------------------------------------------------------------------------------------
+|        Directory Path        | Allocation | Allocation | Allocation | Allocation | Allocation | Allocation |
+|                              |   Block    |    Soft    |    Hard    |    File    |    Soft    |    Hard    |
+|                              |   Used     |    Quota   |    Limit   |    Used    |    Quota   |    Limit   |
+--------------------------------------------------------------------------------------------------------------
+| /projects/bilv               | 8k         | 500G       | 550G       | 2          | 850000     | 935000     |
+--------------------------------------------------------------------------------------------------------------
+| /work/nvme/bilv              | 350G       | 500G       | 550G       | 4492       | 2550000    | 2805000    |
+--------------------------------------------------------------------------------------------------------------
+| /work/hdd/bilv               | 3.746M     | 1000G      | 1.074T     | 4492       | 2550000    | 2805000    |
+--------------------------------------------------------------------------------------------------------------
+exclude=gh062,gh086,gh093
+submitted=3163545

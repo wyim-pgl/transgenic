@@ -1,0 +1,24 @@
+test_candidate_manifest_exact_closure (test_candidate.CandidateTests) ... ok
+test_controller_gate_rejects_unreviewed_stale_overbudget_old_receipts (test_candidate.CandidateTests) ... ok
+test_new_namespace_and_preserved_exclusions (test_candidate.CandidateTests) ... ok
+test_no_overwrite (test_candidate.CandidateTests) ... ok
+test_old_prepared_receipt_rejected (test_candidate.CandidateTests) ... ok
+test_prepare_profile_seed (test_candidate.CandidateTests) ... ok
+test_wrong_archive_pin_rejected (test_candidate.CandidateTests) ... ok
+test_wrong_manifest_pin_rejected (test_candidate.CandidateTests) ... ok
+test_actual_quota_format_conservative (test_deploy.DeploymentTests) ... ok
+test_archive_rejects_link_and_escape (test_deploy.DeploymentTests) ... ok
+test_cache_materializes_both_layouts_without_source_write (test_deploy.DeploymentTests) ... ok
+test_cache_rejects_escape (test_deploy.DeploymentTests) ... ok
+test_final_candidate_closure_and_operator_pins (test_deploy.DeploymentTests) ... ok
+test_host_per_job_mounts_and_collision (test_deploy.DeploymentTests) ... ok
+test_old_p1_unchanged (test_deploy.DeploymentTests) ... ok
+test_pair_identity_not_adjacent_rn_guess (test_deploy.DeploymentTests) ... ok
+test_quota_reserve_and_warning_fail_closed (test_deploy.DeploymentTests) ... ok
+test_release_exact_candidate_bytes_and_no_generated_trees (test_deploy.DeploymentTests) ... ok
+test_unknown_or_ambiguous_quota_fails (test_deploy.DeploymentTests) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 10.174s
+
+OK

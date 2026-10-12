@@ -1,0 +1,58 @@
+{
+  "host": "pronghorn login-0",
+  "observed_at": "2026-09-17T16:03:40-0700",
+  "operations": {
+    "sbatch": {
+      "path": "/cm/shared/apps/slurm/20.11.7/bin/sbatch",
+      "sha256": "1e8525f93ca1f8b11fe7bf5197812d1d254803f072c1b40b3e11fdee7cdd806f"
+    },
+    "scontrol": {
+      "path": "/cm/shared/apps/slurm/20.11.7/bin/scontrol",
+      "sha256": "e1f2a4a62d855348f311e35bb388320870e6e94b1b7fbfcd3a3892906af37f1b"
+    },
+    "srun": {
+      "path": "/cm/shared/apps/slurm/20.11.7/bin/srun",
+      "sha256": "bd97b85092388017ad4c57df92ee1cee769ae02d262fca0565e78eeffccac468"
+    },
+    "timeout": {
+      "path": "/usr/bin/timeout",
+      "sha256": "af44756c824135581517eb5a96a01e426da7a0acabfc41a610ef0cc1fbdace4b"
+    }
+  },
+  "probe_scope": "bounded metadata only: executable/library/import/site hashes and scheduler configuration; see runtime_evidence/login_observation.json; no alignment",
+  "runtime_closure_approved": false,
+  "tools": {
+    "minimap2": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/minimap2",
+      "sha256": "8a561f2c29f5a250eeecb6915100d23194dd38a41bb230d0b6afe69f78d5adf4",
+      "version": "2.28-r1209",
+      "version_args": [
+        "--version"
+      ]
+    },
+    "python": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/sylvan/bin/python3.11",
+      "sha256": "eaf04015fc8a4d06fe01aab44ba359df02b5e2bdf7c350222d7a69ddfc9cac9e",
+      "version": "Python 3.11.14",
+      "version_args": [
+        "--version"
+      ]
+    },
+    "samtools": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/samtools",
+      "sha256": "c1d24b1c06254c9817cb62398d066b428af7bb5fba3917ed6e026a82c193f187",
+      "version": "samtools 1.3.1",
+      "version_args": [
+        "--version"
+      ]
+    },
+    "seqkit": {
+      "path": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin/seqkit",
+      "sha256": "fe5cbb4495559819220e7e64ded7e7ef26388fbccd17e83377571d75d58f308a",
+      "version": "seqkit v2.13.0",
+      "version_args": [
+        "version"
+      ]
+    }
+  }
+}

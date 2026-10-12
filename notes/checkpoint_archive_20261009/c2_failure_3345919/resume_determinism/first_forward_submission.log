@@ -1,0 +1,18 @@
+QUEUE 3309786 b5-seed PENDING
+3309790 b5-seed PENDING
+3309789 b5-seed PENDING
+3309788 b5-seed PENDING
+3309787 b5-seed PENDING
+3345920 b6-wp5-pilot PENDING
+3345918 b6-wp5-pilot PENDING
+3345917 b6-wp5-pilot PENDING
+
+SUBMISSION {"phase": "submitted", "time": 1791786407.831865, "script": "/work/nvme/bilv/wcyim/transgenic/ops/c2_first_forward_20261012/first_forward.sbatch", "returncode": 0, "stdout": "3364480\n", "stderr": "", "job_id": 3364480}
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

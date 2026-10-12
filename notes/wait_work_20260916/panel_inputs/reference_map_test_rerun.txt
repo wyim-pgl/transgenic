@@ -1,0 +1,29 @@
+CPU fixture verification only; actual 50-locus mapping unverified.
+Archive: /tmp/mvp-reference-map-verify.7iBfgd
+Snapshot: 66f130d7abee262b2c3c840fc129ad8fd03ec29a
+Implementation: 9acd7dbb99304f193704ba6a174340cc540e4c68
+Python: 3.12.2 | packaged by conda-forge | (main, Feb 16 2024, 20:50:58) [GCC 12.3.0]
+Packages: {'pytest': '9.1.1', 'torch': '2.6.0', 'transformers': '4.46.3', 'duckdb': '1.5.5'}
+Environment: {'GIT_DIR': '/mnt/f/scratch/develop/Transgenic/transgenic_local/.git', 'GIT_WORK_TREE': '/tmp/mvp-reference-map-verify.7iBfgd', 'GIT_OPTIONAL_LOCKS': '0', 'OMP_NUM_THREADS': '1', 'MKL_NUM_THREADS': '1', 'CUDA_VISIBLE_DEVICES': '', 'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONPATH': 'src'}
+Archive tracked-blob verification: 747 checked; 0 mismatches/missing
+Command: /tmp/mvp-final-source-env/bin/python -m pytest -q -rs --durations=10 tests/test_mvp_reference_mapping.py tests/test_mvp_score_producer.py tests/test_mvp_score_producer_integration.py tests/test_mvp_decoder_integration.py tests/test_mvp_decoder_runtime.py tests/test_mvp_final_source_integration.py
+Outer timeout: 900 seconds; no inner deadline changes.
+Owned test process-group: 204488
+........................................................................ [ 72%]
+................s..........                                              [100%]
+============================= slowest 10 durations =============================
+74.84s call     tests/test_mvp_decoder_integration.py::test_full_publication_panel_decoder_counts
+19.67s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[wrong_authority]
+19.25s setup    tests/test_mvp_reference_mapping.py::test_no_alias_counter_geometry_or_empty_reference_fallback[empty]
+15.73s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[changed_jsonl]
+15.63s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[wrong_sequence]
+15.50s setup    tests/test_mvp_reference_mapping.py::test_bad_authoritative_mapping_rejected[UPDATE gene_key_map SET start0=273 WHERE gene_id='Ath000001']
+15.44s setup    tests/test_mvp_decoder_integration.py::test_full_publication_panel_decoder_counts
+14.97s setup    tests/test_mvp_reference_mapping.py::test_no_alias_counter_geometry_or_empty_reference_fallback[name]
+14.80s setup    tests/test_mvp_decoder_integration.py::test_panel_rejects_mutations[missing_marker]
+13.96s setup    tests/test_mvp_reference_mapping.py::test_bad_authoritative_mapping_rejected[UPDATE build_manifest SET gff_sha256='wrong']
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_mvp_decoder_runtime.py:188: pinned 4.57.6 not installed; CPU 4.46.3 test is not SIF validation
+98 passed, 1 skipped in 544.09s (0:09:04)
+Exit code: 0; outer_timeout=False; wall_seconds=545.74
+Owned process group cleanup: SIGKILL issued if group remained; root process reaped.

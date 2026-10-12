@@ -1,0 +1,901 @@
+{
+  "compatible_locus_count": 0,
+  "duplicate_ambiguous_locus_count": 0,
+  "duplicate_policy": "REPORT_ONLY_NO_DEDUP_NO_CHANGED_F1_POLICY",
+  "fasta_lengths": {
+    "Chr1": 30427671,
+    "Chr2": 19698289,
+    "Chr3": 23459830,
+    "Chr4": 18585056,
+    "Chr5": 26975502,
+    "ChrC": 154478,
+    "ChrM": 366924
+  },
+  "loci": [
+    {
+      "error": "reference missing panel gene Ath014705",
+      "error_type": "ValueError",
+      "gene_id": "Ath014705",
+      "panel_gene": [
+        "Chr3",
+        11921197,
+        11924574
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        11907526,
+        11938246
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath022311",
+      "error_type": "ValueError",
+      "gene_id": "Ath022311",
+      "panel_gene": [
+        "Chr5",
+        4204816,
+        4206405
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr5",
+        4190251,
+        4220971
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath003484",
+      "error_type": "ValueError",
+      "gene_id": "Ath003484",
+      "panel_gene": [
+        "Chr1",
+        11975339,
+        11978521
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr1",
+        11961570,
+        11992290
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath012743",
+      "error_type": "ValueError",
+      "gene_id": "Ath012743",
+      "panel_gene": [
+        "Chr3",
+        3919501,
+        3921519
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        3905150,
+        3935870
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath024852",
+      "error_type": "ValueError",
+      "gene_id": "Ath024852",
+      "panel_gene": [
+        "Chr5",
+        17702089,
+        17703963
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr5",
+        17687666,
+        17718386
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath009257",
+      "error_type": "ValueError",
+      "gene_id": "Ath009257",
+      "panel_gene": [
+        "Chr2",
+        11474951,
+        11477944
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr2",
+        11461088,
+        11491808
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath009348",
+      "error_type": "ValueError",
+      "gene_id": "Ath009348",
+      "panel_gene": [
+        "Chr2",
+        11822731,
+        11823732
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr2",
+        11807872,
+        11838592
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath009959",
+      "error_type": "ValueError",
+      "gene_id": "Ath009959",
+      "panel_gene": [
+        "Chr2",
+        14173578,
+        14174533
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr2",
+        14158696,
+        14189416
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath026375",
+      "error_type": "ValueError",
+      "gene_id": "Ath026375",
+      "panel_gene": [
+        "Chr5",
+        23449710,
+        23450933
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr5",
+        23434962,
+        23465682
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath025827",
+      "error_type": "ValueError",
+      "gene_id": "Ath025827",
+      "panel_gene": [
+        "Chr5",
+        21463537,
+        21466880
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr5",
+        21449849,
+        21480569
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath020477",
+      "error_type": "ValueError",
+      "gene_id": "Ath020477",
+      "panel_gene": [
+        "Chr4",
+        16403843,
+        16406240
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr4",
+        16389682,
+        16420402
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath017922",
+      "error_type": "ValueError",
+      "gene_id": "Ath017922",
+      "panel_gene": [
+        "Chr4",
+        6864096,
+        6866116
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr4",
+        6849746,
+        6880466
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath007771",
+      "error_type": "ValueError",
+      "gene_id": "Ath007771",
+      "panel_gene": [
+        "Chr2",
+        2924446,
+        2930672
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr2",
+        2912199,
+        2942919
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath015840",
+      "error_type": "ValueError",
+      "gene_id": "Ath015840",
+      "panel_gene": [
+        "Chr3",
+        19569310,
+        19570682
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        19554636,
+        19585356
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath019860",
+      "error_type": "ValueError",
+      "gene_id": "Ath019860",
+      "panel_gene": [
+        "Chr4",
+        14138358,
+        14140958
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr4",
+        14124298,
+        14155018
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath022532",
+      "error_type": "ValueError",
+      "gene_id": "Ath022532",
+      "panel_gene": [
+        "Chr5",
+        4987436,
+        4989182
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr5",
+        4972949,
+        5003669
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath003322",
+      "error_type": "ValueError",
+      "gene_id": "Ath003322",
+      "panel_gene": [
+        "Chr1",
+        11246913,
+        11249359
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr1",
+        11232776,
+        11263496
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath014393",
+      "error_type": "ValueError",
+      "gene_id": "Ath014393",
+      "panel_gene": [
+        "Chr3",
+        9979865,
+        9981295
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        9965220,
+        9995940
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath012721",
+      "error_type": "ValueError",
+      "gene_id": "Ath012721",
+      "panel_gene": [
+        "Chr3",
+        3852144,
+        3853720
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        3837572,
+        3868292
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath016828",
+      "error_type": "ValueError",
+      "gene_id": "Ath016828",
+      "panel_gene": [
+        "Chr3",
+        23016222,
+        23018509
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        23002006,
+        23032726
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath010464",
+      "error_type": "ValueError",
+      "gene_id": "Ath010464",
+      "panel_gene": [
+        "Chr2",
+        15980882,
+        15981612
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr2",
+        15965887,
+        15996607
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath007951",
+      "error_type": "ValueError",
+      "gene_id": "Ath007951",
+      "panel_gene": [
+        "Chr2",
+        5630000,
+        5631107
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr2",
+        5615194,
+        5645914
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath013802",
+      "error_type": "ValueError",
+      "gene_id": "Ath013802",
+      "panel_gene": [
+        "Chr3",
+        7673275,
+        7674839
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        7658697,
+        7689417
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath021609",
+      "error_type": "ValueError",
+      "gene_id": "Ath021609",
+      "panel_gene": [
+        "Chr5",
+        1751687,
+        1754178
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr5",
+        1737573,
+        1768293
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath022030",
+      "error_type": "ValueError",
+      "gene_id": "Ath022030",
+      "panel_gene": [
+        "Chr5",
+        3171298,
+        3172528
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr5",
+        3156553,
+        3187273
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath011580",
+      "error_type": "ValueError",
+      "gene_id": "Ath011580",
+      "panel_gene": [
+        "Chr3",
+        124378,
+        126835
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        110247,
+        140967
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath013395",
+      "error_type": "ValueError",
+      "gene_id": "Ath013395",
+      "panel_gene": [
+        "Chr3",
+        6180858,
+        6182854
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        6166496,
+        6197216
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath008415",
+      "error_type": "ValueError",
+      "gene_id": "Ath008415",
+      "panel_gene": [
+        "Chr2",
+        8188256,
+        8192489
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr2",
+        8175013,
+        8205733
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath013822",
+      "error_type": "ValueError",
+      "gene_id": "Ath013822",
+      "panel_gene": [
+        "Chr3",
+        7734395,
+        7736394
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        7720035,
+        7750755
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath004930",
+      "error_type": "ValueError",
+      "gene_id": "Ath004930",
+      "panel_gene": [
+        "Chr1",
+        21189721,
+        21190175
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr1",
+        21174588,
+        21205308
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath004546",
+      "error_type": "ValueError",
+      "gene_id": "Ath004546",
+      "panel_gene": [
+        "Chr1",
+        19756823,
+        19759623
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr1",
+        19742863,
+        19773583
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath022752",
+      "error_type": "ValueError",
+      "gene_id": "Ath022752",
+      "panel_gene": [
+        "Chr5",
+        5749761,
+        5753643
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr5",
+        5736342,
+        5767062
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath004211",
+      "error_type": "ValueError",
+      "gene_id": "Ath004211",
+      "panel_gene": [
+        "Chr1",
+        18410928,
+        18412801
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr1",
+        18396505,
+        18427225
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath011917",
+      "error_type": "ValueError",
+      "gene_id": "Ath011917",
+      "panel_gene": [
+        "Chr3",
+        1168836,
+        1169205
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        1153661,
+        1184381
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath011910",
+      "error_type": "ValueError",
+      "gene_id": "Ath011910",
+      "panel_gene": [
+        "Chr3",
+        1146799,
+        1153341
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        1134710,
+        1165430
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath002779",
+      "error_type": "ValueError",
+      "gene_id": "Ath002779",
+      "panel_gene": [
+        "Chr1",
+        8996767,
+        8999860
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr1",
+        8982954,
+        9013674
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath017267",
+      "error_type": "ValueError",
+      "gene_id": "Ath017267",
+      "panel_gene": [
+        "Chr4",
+        1117153,
+        1119817
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr4",
+        1103125,
+        1133845
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath017735",
+      "error_type": "ValueError",
+      "gene_id": "Ath017735",
+      "panel_gene": [
+        "Chr4",
+        6039117,
+        6040215
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr4",
+        6024306,
+        6055026
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath008157",
+      "error_type": "ValueError",
+      "gene_id": "Ath008157",
+      "panel_gene": [
+        "Chr2",
+        7126356,
+        7130685
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr2",
+        7113161,
+        7143881
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath003963",
+      "error_type": "ValueError",
+      "gene_id": "Ath003963",
+      "panel_gene": [
+        "Chr1",
+        17332055,
+        17334406
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr1",
+        17317871,
+        17348591
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath019415",
+      "error_type": "ValueError",
+      "gene_id": "Ath019415",
+      "panel_gene": [
+        "Chr4",
+        12679209,
+        12684939
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr4",
+        12666714,
+        12697434
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath023888",
+      "error_type": "ValueError",
+      "gene_id": "Ath023888",
+      "panel_gene": [
+        "Chr5",
+        12558255,
+        12562020
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr5",
+        12544778,
+        12575498
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath018030",
+      "error_type": "ValueError",
+      "gene_id": "Ath018030",
+      "panel_gene": [
+        "Chr4",
+        7317559,
+        7319739
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr4",
+        7303289,
+        7334009
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath016370",
+      "error_type": "ValueError",
+      "gene_id": "Ath016370",
+      "panel_gene": [
+        "Chr3",
+        21419516,
+        21422546
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr3",
+        21405671,
+        21436391
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath022253",
+      "error_type": "ValueError",
+      "gene_id": "Ath022253",
+      "panel_gene": [
+        "Chr5",
+        3970130,
+        3971301
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr5",
+        3955356,
+        3986076
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath009907",
+      "error_type": "ValueError",
+      "gene_id": "Ath009907",
+      "panel_gene": [
+        "Chr2",
+        14003249,
+        14006017
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr2",
+        13989273,
+        14019993
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath017205",
+      "error_type": "ValueError",
+      "gene_id": "Ath017205",
+      "panel_gene": [
+        "Chr4",
+        873053,
+        874772
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr4",
+        858553,
+        889273
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath010198",
+      "error_type": "ValueError",
+      "gene_id": "Ath010198",
+      "panel_gene": [
+        "Chr2",
+        14999753,
+        15003066
+      ],
+      "panel_strand": "+",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr2",
+        14986050,
+        15016770
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath020143",
+      "error_type": "ValueError",
+      "gene_id": "Ath020143",
+      "panel_gene": [
+        "Chr4",
+        15178924,
+        15181751
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr4",
+        15164978,
+        15195698
+      ]
+    },
+    {
+      "error": "reference missing panel gene Ath017916",
+      "error_type": "ValueError",
+      "gene_id": "Ath017916",
+      "panel_gene": [
+        "Chr4",
+        6837910,
+        6839795
+      ],
+      "panel_strand": "-",
+      "strict_parser_and_panel_geometry_ok": false,
+      "window": [
+        "Chr4",
+        6823493,
+        6854213
+      ]
+    }
+  ],
+  "n_loci": 50,
+  "panel": {
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/source/revision/protocols/b6_panels_v1.tsv",
+    "sha256": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243",
+    "size": 166414
+  },
+  "panel_strict_parser": {
+    "genes": 0,
+    "ok": true,
+    "transcripts": 0
+  },
+  "reference_identity": {
+    "commit": "92d8020ee79eeedd7f1d50167b1c8dc94700fb16",
+    "files": {
+      "fasta": {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.fa",
+        "sha256": "63d56962ccbbdcc974950e5ccdc3e1d3d37a665f7161f658edcd3d19e9c63973",
+        "size": 121183059
+      },
+      "gff": {
+        "path": "/data/gpfs/assoc/pgl/data/Transgenic/genomes/Athaliana_167_TAIR10.gene.clean.gff3",
+        "sha256": "529510b60756c9a1ae5a590ec4097fd4b9773649c29e6a5543553118bb042c38",
+        "size": 60503119
+      }
+    },
+    "manifest": "data/manifests/b5_species_v1.tsv",
+    "manifest_sha256": "3ca7a3b9a5793f62d25f503c93cfd7167eb17f7c5b90de7830e6a8777117f783"
+  },
+  "restricted_reference": {
+    "path": "/data/gpfs/assoc/pgl/data/Transgenic/evidence/mvp50_input_audit_20260916_bindfix1/outputs/job-6165559/reference.panel.gff3",
+    "sha256": "897007ceaf55680e4fa9d1d9e6ebac641ede633c0a9f2426db36ecbc66177df9",
+    "size": 16
+  },
+  "scientific_verdict": null,
+  "scope": "raw_reference_compatibility_observations_not_scoring"
+}

@@ -1,0 +1,18 @@
+test_tools (unittest.loader._FailedTest) ... ERROR
+
+======================================================================
+ERROR: test_tools (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_tools
+Traceback (most recent call last):
+  File "/home/wyim/miniconda3/lib/python3.8/unittest/loader.py", line 154, in loadTestsFromName
+    module = __import__(module_name)
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/wait_work_20260916/panel_inputs/test_tools.py", line 7, in <module>
+    import authority
+ModuleNotFoundError: No module named 'authority'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)

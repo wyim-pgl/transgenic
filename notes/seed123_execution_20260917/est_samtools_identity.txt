@@ -1,0 +1,9 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+samtools 1.21
+Using htslib 1.23
+Copyright (C) 2024 Genome Research Ltd.
+
+a579aed31a13841cc0950a487b59729355d0b9fbcc39293e0b90b960133217bc  /data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/samtools
+/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3.11

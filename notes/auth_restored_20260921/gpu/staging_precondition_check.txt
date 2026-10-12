@@ -1,0 +1,66 @@
+Raw capture 1 -- safety preconditions (read-only).
+Executed 2026-09-21 08:26 PDT from local -> pronghorn -> dtai, all commands timeout-bounded.
+Remote clock is CDT (-0500); PDT = CDT - 2h.
+
+===DATE===
+2026-09-21T10:26:50-05:00      (= 2026-09-21 08:26:50 PDT)
+===WHOAMI===
+wcyim
+===PID1944304===
+    PID STAT WCHAN      ELAPSED CMD
+PID_1944304_ABSENT
+===USER_PROCS=== (second call, 2026-09-21T10:27:15-05:00 / 08:27:15 PDT)
+ 787861 S    pipe_r       00:00 grep -iE python|stag
+(no python3 process owned by wcyim; the only hit is the grep itself)
+
+===RELEASE_LS===
+total 1964
+drwx------+ 3 wcyim grp_202    4096 2026-09-17 19:46:20.000000000 -0500 .
+drwxrwx---+ 8 wcyim grp_202    4096 2026-09-17 19:45:30.000000000 -0500 ..
+-r--r--r--+ 1 wcyim grp_202   27611 2026-09-17 19:46:20.000000000 -0500 admission.py
+-r--r--r--+ 1 wcyim grp_202    2608 2026-09-17 19:46:20.000000000 -0500 authorization.example.json
+-r--r--r--+ 1 wcyim grp_202    5688 2026-09-17 19:46:20.000000000 -0500 build_release.py
+-r--r--r--+ 1 wcyim grp_202 1873920 2026-09-17 19:46:20.000000000 -0500 code.candidate.tar
+-r--r--r--+ 1 wcyim grp_202    3332 2026-09-17 19:46:20.000000000 -0500 controller_execution_scope.json
+-r--r--r--+ 1 wcyim grp_202   29149 2026-09-17 19:46:20.000000000 -0500 deploy.py
+drwxrwx---+ 2 wcyim grp_202    4096 2026-09-17 19:46:20.000000000 -0500 notes
+-r--r--r--+ 1 wcyim grp_202   11828 2026-09-17 19:46:20.000000000 -0500 operator-pins.json
+-r--r--r--+ 1 wcyim grp_202    2010 2026-09-17 19:46:20.000000000 -0500 p1.sbatch
+-r--r--r--+ 1 wcyim grp_202   25219 2026-09-17 19:46:20.000000000 -0500 release.json
+-rw-rw----+ 1 wcyim grp_202       0 2026-09-17 19:46:20.000000000 -0500 release.sha256
+
+===NOTES_LS===
+-r--r--r--+ 1 wcyim grp_202 859299 2026-09-17 19:46:20.000000000 -0500 b6_mvp_candidate_inventories_20260915.json
+-r--r--r--+ 1 wcyim grp_202  11786 2026-09-17 19:46:20.000000000 -0500 b6_mvp_candidate_receipts_20260915.json
+-r--r--r--+ 1 wcyim grp_202   9832 2026-09-17 19:46:20.000000000 -0500 b6_mvp_technical_candidate_20260915.json
+
+===CONTROL_LS===
+drwx------+ 2 wcyim grp_202    4096 2026-09-17 19:45:29.000000000 -0500 .
+-rw-rw----+ 1 wcyim grp_202 2887680 2026-09-17 19:45:29.000000000 -0500 release_v6.tar
+-rw-rw----+ 1 wcyim grp_202     544 2026-09-17 19:45:14.000000000 -0500 reservation.json
+(no submission-attempt journal, no result file)
+
+===AUTHJSON===
+/work/nvme/.../staging/dev123_p1_controller_authorization_v6.json|2933|660|wcyim|1789692330
+
+===STAGING_TOP===
+drwxrwx---+ 8 wcyim grp_202 4096 2026-09-17 19:45:30 .
+-rw-rw----+ 1 wcyim grp_202 2933 2026-09-17 19:45:30 dev123_p1_controller_authorization_v6.json
+drwx------+ 3 wcyim grp_202 4096 2026-09-17 19:46:20 dev123_p1_release_v6_20260917
+drwx------+ 2 wcyim grp_202 4096 2026-09-17 19:45:29 dev123_p1_v6_control_20260917
+drwxrwx---+ 2 wcyim grp_202 4096 2026-09-17 18:48:22 evidence
+-rw-rw----+ 1 wcyim grp_202 3074 2026-09-17 18:48:37 final-p1-3163986.err
+-rw-rw----+ 1 wcyim grp_202 2213 2026-09-17 18:48:30 final-p1-3163986.out
+drwx------+ 3 wcyim grp_202 4096 2026-09-17 18:47:50 final_p1_release
+-rw-rw----+ 1 wcyim grp_202   55 2026-09-16 18:31:37 OWNER.txt
+drwx------+ 3 wcyim grp_202 4096 2026-09-16 20:15:28 p1_release
+drwxrwx---+ 2 wcyim grp_202 4096 2026-09-16 18:31:37 receipts
+
+===SQUEUE=== (2026-09-21 08:26 PDT)
+   3149358      b5-seed    PENDING       0:00           (Priority)
+   3149363      b5-seed    PENDING       0:00         (Dependency)
+   3149362      b5-seed    PENDING       0:00         (Dependency)
+   3149361      b5-seed    PENDING       0:00         (Dependency)
+   3149360      b5-seed    PENDING       0:00         (Dependency)
+   3149359      b5-seed    PENDING       0:00         (Dependency)
+(6 pending -- was 8 on 2026-09-17; see staging_slurm_state.txt)

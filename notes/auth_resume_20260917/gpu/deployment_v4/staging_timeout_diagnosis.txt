@@ -1,0 +1,11 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T19:52:54-05:00
+1944304 Is   cl_syn       03:22 python3 -
+3350993 S    -         01:53:01 sshd: wcyim@notty
+total 2824
+-rw-rw----+ 1 wcyim grp_202 2887680 Sep 17 19:45 release_v6.tar
+-rw-rw----+ 1 wcyim grp_202     544 Sep 17 19:45 reservation.json
+ls: cannot access '/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v6_20260917/source-manifest.json': No such file or directory
+-rw-rw----+ 1 wcyim grp_202 0 Sep 17 19:46 /work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v6_20260917/release.sha256

@@ -1,0 +1,150 @@
+[
+  {
+    "argv": [
+      "/home/wyim/miniconda3/bin/python3",
+      "-B",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_deployment/test_deployment.py",
+      "-v"
+    ],
+    "cwd": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence",
+    "returncode": 0,
+    "stderr": "synthetic.stderr",
+    "stdout": "synthetic.stdout",
+    "timeout": 40
+  },
+  {
+    "argv": [
+      "/bin/bash",
+      "-n",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_deployment/sample.sbatch"
+    ],
+    "cwd": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence",
+    "returncode": 0,
+    "stderr": "bash_syntax.stderr",
+    "stdout": "bash_syntax.stdout",
+    "timeout": 40
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "fca911e58fde44124b9359f9adc03a9d20059599:revision/scripts/evidence/est_hsp_contract.py"
+    ],
+    "cwd": "/tmp/est-real-source-binding-20260917",
+    "returncode": 0,
+    "stderr": "base_est_hsp_contract.stderr",
+    "stdout": "base_est_hsp_contract.stdout",
+    "timeout": 40
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "fca911e58fde44124b9359f9adc03a9d20059599:revision/scripts/evidence/est_hsp_expanded.py"
+    ],
+    "cwd": "/tmp/est-real-source-binding-20260917",
+    "returncode": 0,
+    "stderr": "base_est_hsp_expanded.stderr",
+    "stdout": "base_est_hsp_expanded.stdout",
+    "timeout": 40
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "fca911e58fde44124b9359f9adc03a9d20059599:revision/scripts/evidence/est_phase_accept.py"
+    ],
+    "cwd": "/tmp/est-real-source-binding-20260917",
+    "returncode": 0,
+    "stderr": "base_est_phase_accept.stderr",
+    "stdout": "base_est_phase_accept.stdout",
+    "timeout": 40
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "fca911e58fde44124b9359f9adc03a9d20059599:revision/scripts/evidence/est_phase_project.py"
+    ],
+    "cwd": "/tmp/est-real-source-binding-20260917",
+    "returncode": 0,
+    "stderr": "base_est_phase_project.stderr",
+    "stdout": "base_est_phase_project.stdout",
+    "timeout": 40
+  },
+  {
+    "argv": [
+      "/home/wyim/miniconda3/bin/python3",
+      "-I",
+      "-B",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_deployment/build_release.py",
+      "--root",
+      "/tmp/est-real-source-binding-20260917",
+      "--out",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/actual-source-release",
+      "--source-hashes",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/source-pins.json",
+      "--manifest",
+      "/tmp/est-real-source-binding-20260917/tasknotes/real_sample/sitalica.manifest.json",
+      "--manifest-sha",
+      "7d1af21faf7cf99c46120c07781d0af0ad1318a2c2aa12875fcfdd74b4e5f88c"
+    ],
+    "cwd": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence",
+    "returncode": 0,
+    "stderr": "build.stderr",
+    "stdout": "build.stdout",
+    "timeout": 40
+  },
+  {
+    "argv": [
+      "/home/wyim/miniconda3/bin/python3",
+      "-I",
+      "-B",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/actual-source-release/run_compute.py",
+      "--verify-only",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/actual-source-release",
+      "7f8b0c3028027db07ad3c1f0bedbaf912c21cf9338a921c13d7f7b74abefd01c"
+    ],
+    "cwd": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence",
+    "returncode": 0,
+    "stderr": "verify_only.stderr",
+    "stdout": "verify_only.stdout",
+    "timeout": 40
+  },
+  {
+    "argv": [
+      "/home/wyim/miniconda3/bin/python3",
+      "-I",
+      "-B",
+      "-c",
+      "import sys,importlib,json;sys.path.insert(0,sys.argv[1]);[importlib.import_module('evidence.'+n) for n in sys.argv[2:]];print(json.dumps({n:m.__file__ for n,m in sys.modules.items() if n=='evidence' or n.startswith('evidence.')},sort_keys=True))",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/actual-source-release/code",
+      "est_real_sample",
+      "est_hsp_contract",
+      "est_hsp_expanded",
+      "est_phase_accept",
+      "est_phase_project"
+    ],
+    "cwd": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence",
+    "returncode": 0,
+    "stderr": "actual_imports.stderr",
+    "stdout": "actual_imports.stdout",
+    "timeout": 40
+  },
+  {
+    "argv": [
+      "/home/wyim/miniconda3/bin/python3",
+      "-I",
+      "-B",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/actual-source-release/run_compute.py",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/actual-source-release",
+      "7f8b0c3028027db07ad3c1f0bedbaf912c21cf9338a921c13d7f7b74abefd01c",
+      "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence/must-not-create"
+    ],
+    "cwd": "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_review_evidence",
+    "returncode": 1,
+    "stderr": "no_allocation.stderr",
+    "stdout": "no_allocation.stdout",
+    "timeout": 40
+  }
+]

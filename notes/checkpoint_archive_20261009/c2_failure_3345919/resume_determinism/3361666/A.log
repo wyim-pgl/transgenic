@@ -1,0 +1,126 @@
+The following values were not passed to `accelerate launch` and had defaults used instead:
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+W1011 17:18:31.263000 2959087 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 17:18:31.263000 2959086 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 17:18:31.263000 2959085 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 17:18:31.263000 2959088 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 17:18:31.310000 2959086 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 17:18:31.310000 2959087 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 17:18:31.310000 2959085 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1011 17:18:31.310000 2959088 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+
+
+
+NCCL version 2.30.7+cuda13.3
+
+[2026-10-11 17:18:45] gh086:2959087:2959087 [2] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-11 17:18:45] gh086:2959088:2959088 [3] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-11 17:18:45] gh086:2959086:2959086 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-11 17:18:45] gh086:2959085:2959085 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-10-11 17:18:45] gh086:2959088:2959088 [3] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId
+[2026-10-11 17:18:45] gh086:2959087:2959087 [2] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId
+[2026-10-11 17:18:45] gh086:2959086:2959086 [1] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+
+[2026-10-11 17:18:45] gh086:2959085:2959085 [0] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+, logFunction) failed: 3
+
+[2026-10-11 17:18:45] gh086:2959085:2959085 [0] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-10-11 17:18:45] gh086:2959086:2959086 [1] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-10-11 17:18:45] gh086:2959087:2959087 [2] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-10-11 17:18:45] gh086:2959088:2959088 [3] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-10-11 17:18:45] gh086:2959085:2959085 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-11 17:18:45] gh086:2959086:2959086 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-11 17:18:45] gh086:2959088:2959088 [3] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-11 17:18:45] gh086:2959087:2959087 [2] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-10-11 17:18:45] gh086:2959085:2959085 [0] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-10-11 17:18:45] gh086:2959086:2959086 [1] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-10-11 17:18:45] gh086:2959088:2959088 [3] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-10-11 17:18:45] gh086:2959087:2959087 [2] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+, logFunction) failed: 3
+, logFunction) failed: 3
+resumed from /work/runs/c2_resume_determinism/3361666/A/latest_state: epoch 0 step 4800 global_step 200
+resumed from /work/runs/c2_resume_determinism/3361666/A/latest_state: epoch 0 step 4800 global_step 200
+resumed from /work/runs/c2_resume_determinism/3361666/A/latest_state: epoch 0 step 4800 global_step 200
+resumed from /work/runs/c2_resume_determinism/3361666/A/latest_state: epoch 0 step 4800 global_step 200
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+arm C2: evidence_channel=off budget=stop rule stop_after_updates=4099 schedule t_total=180378 warmup=9018 per-rank accumulation 24 world 4 GATED: memory bench passed
+arm C2: evidence_channel=off budget=stop rule stop_after_updates=4099 schedule t_total=180378 warmup=9018 per-rank accumulation 24 world 4 GATED: memory bench passedarm C2: evidence_channel=off budget=stop rule stop_after_updates=4099 schedule t_total=180378 warmup=9018 per-rank accumulation 24 world 4 GATED: memory bench passed
+
+arm C2: evidence_channel=off budget=stop rule stop_after_updates=4099 schedule t_total=180378 warmup=9018 per-rank accumulation 24 world 4 GATED: memory bench passed
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+[rank1]:V1011 17:22:16.289000 2959086 torch/_dynamo/guards.py:5481] [0/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank1]:V1011 17:22:16.289000 2959086 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     triggered by the following guard failure(s):
+[rank1]:V1011 17:22:16.289000 2959086 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 30720
+[rank2]:V1011 17:22:16.289000 2959087 torch/_dynamo/guards.py:5481] [0/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank2]:V1011 17:22:16.289000 2959087 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     triggered by the following guard failure(s):
+[rank2]:V1011 17:22:16.289000 2959087 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 129024, actual 30720
+[rank3]:V1011 17:22:16.289000 2959088 torch/_dynamo/guards.py:5481] [0/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank3]:V1011 17:22:16.289000 2959088 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     triggered by the following guard failure(s):
+[rank3]:V1011 17:22:16.289000 2959088 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 30720
+[rank0]:V1011 17:22:16.292000 2959085 torch/_dynamo/guards.py:5481] [0/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank0]:V1011 17:22:16.292000 2959085 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     triggered by the following guard failure(s):
+[rank0]:V1011 17:22:16.292000 2959085 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 129024
+[rank2]:V1011 17:24:19.247000 2959087 torch/_dynamo/guards.py:5481] [0/2] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank2]:V1011 17:24:19.247000 2959087 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank2]:V1011 17:24:19.247000 2959087 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 61440
+[rank2]:V1011 17:24:19.247000 2959087 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 129024, actual 61440
+[rank1]:V1011 17:26:19.527000 2959086 torch/_dynamo/guards.py:5481] [0/2] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank1]:V1011 17:26:19.527000 2959086 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank1]:V1011 17:26:19.527000 2959086 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 129024
+[rank1]:V1011 17:26:19.527000 2959086 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 129024
+[rank3]:V1011 17:26:19.527000 2959088 torch/_dynamo/guards.py:5481] [0/2] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank3]:V1011 17:26:19.527000 2959088 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank3]:V1011 17:26:19.527000 2959088 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 129024
+[rank3]:V1011 17:26:19.527000 2959088 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 129024
+[rank0]:V1011 17:28:23.856000 2959085 torch/_dynamo/guards.py:5481] [0/2] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank0]:V1011 17:28:23.856000 2959085 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     triggered by the following guard failure(s):
+[rank0]:V1011 17:28:23.856000 2959085 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 30720
+[rank0]:V1011 17:28:23.856000 2959085 torch/_dynamo/guards.py:5481] [0/2] [__recompiles]     - 0/1: tensor 'input_ids' size mismatch at index 1. expected 129024, actual 30720
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+{"global_step": 210, "epoch": 0, "loss": 3.256150245666504, "lr": 4.657351962741185e-06, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)
+
+
+
+[rank0]:[W1011 17:33:41.209315541 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())

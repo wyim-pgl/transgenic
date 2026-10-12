@@ -1,0 +1,12 @@
+[
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/Ptrichocarpa"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/inputs.json"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_blastx/remaining8_20260915/run.sbatch"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/chunks/chunk0.err"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/chunks/chunk0.DONE"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/accept/ACCEPT_DONE"],
+["read","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/Sitalica/accept/Sitalica.summary.json"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/protein_alignments/pilot"],
+["list","/data/gpfs/assoc/pgl/bin/conda/conda_envs/busco5/conda-meta"],
+["list","/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_align/Sitalica"]
+]

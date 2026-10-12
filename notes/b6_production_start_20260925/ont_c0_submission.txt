@@ -1,0 +1,7 @@
+e18b742c10707ef9888ee9758045a1670af77d59f3901b1582f1a62a96cc0670  /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/ont_c0.sbatch
+SUBMIT Osativa 6172409 mem=128G time=14-00:00:00 duckdb=64GB cpus=16
+SUBMIT Sitalica 6172410 mem=128G time=10-00:00:00 duckdb=64GB cpus=16
+SUBMIT Gmax 6172411 mem=128G time=10-00:00:00 duckdb=64GB cpus=16
+SUBMIT Vvinifera 6172412 mem=128G time=6-00:00:00 duckdb=64GB cpus=16
+SUBMIT Ptrichocarpa 6172413 mem=128G time=3-00:00:00 duckdb=64GB cpus=16
+SUBMIT Ppatens 6172414 mem=128G time=3-00:00:00 duckdb=64GB cpus=16

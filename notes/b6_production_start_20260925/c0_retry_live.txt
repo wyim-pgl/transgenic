@@ -1,0 +1,6 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-25T15:25:37-0700
+6172228|b6_si_est_c0a|RUNNING|2:29|cpu-48
+6172228|RUNNING|0:0

@@ -1,0 +1,100 @@
+{
+  "account": "bilv-dtai-gh",
+  "approved": false,
+  "attempt_basis": "REVIEWED_3163986_FAILURE_RECOVERY_NOT_AUTOMATIC_RETRY",
+  "automatic_retry": false,
+  "b5_policy": "full_maximum_wall_times_allocated_or_requested_gpu_for_all_outstanding",
+  "b5_registered_ids": [
+    "3131537",
+    "3131538",
+    "3149356",
+    "3149357",
+    "3149358",
+    "3149359",
+    "3149360",
+    "3149361",
+    "3149362",
+    "3149363"
+  ],
+  "campaign_start_local": "2026-09-16T00:00:00",
+  "cluster": "delta-gh",
+  "controller_reference": null,
+  "cpus": 64,
+  "cumulative_gpu_hours_max": 20,
+  "cumulative_node_hours_max": 5,
+  "diagnostic_account_reserve_gpu_hours": 20,
+  "evidence_recovery": {
+    "bytes": 1068773376,
+    "owner": 97434,
+    "preserve_source": true,
+    "read_only": true,
+    "sha256": "ed2d0eef2b205626db0983ab9f029f84c30514babc77c330bdb250b2fdfe3d0d",
+    "source": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/final-p1-job-3163986/inputs/evidence/fullc0lite.db"
+  },
+  "excluded_nodes": [
+    "gh062",
+    "gh093"
+  ],
+  "exclusive": true,
+  "followup_authorized": false,
+  "gpu_hours_max": 2,
+  "gpus": 4,
+  "issued_at_unix": null,
+  "ledger_sha256": null,
+  "namespace": "/work/nvme/bilv/wcyim/transgenic/mvp_est8_20260916_1545/staging/dev123_p1_release_v4_20260917",
+  "node_hours_max": 0.5,
+  "nodes": 1,
+  "one_attempt": true,
+  "operational_margin_gpu_hours": 20,
+  "other_reservations": [
+    {
+      "gpu_hours": 4,
+      "identity": "panel-candidate-not-submitted",
+      "job_id": null,
+      "node_hours": 1,
+      "submitted": false
+    }
+  ],
+  "owner": "wcyim",
+  "profile": "development-single",
+  "registered_prior_ids": [
+    "3163545",
+    "3163986"
+  ],
+  "release_json_sha256": null,
+  "requeue": false,
+  "reservation_identity": null,
+  "restart": false,
+  "resume": false,
+  "review_reference": null,
+  "run_role": "mvp_finetune",
+  "schema": 4,
+  "scope": "S0_P1_DIAGNOSTIC_ONLY",
+  "seconds_max": 1800,
+  "seed": 123,
+  "serialized_through_terminal_reconciliation": true,
+  "staging_reference": null,
+  "terminal_history": {
+    "3163545": {
+      "elapsed_seconds": 0,
+      "exit_code": "0:0",
+      "state": "CANCELLED"
+    },
+    "3163986": {
+      "allocated_cpus": 288,
+      "elapsed_seconds": 51,
+      "exit_code": "1:0",
+      "gpu_hours": 0.056666666666666664,
+      "gpus": 4,
+      "node_hours": 0.014166666666666666,
+      "nodes": 1,
+      "requested_cpus": 64,
+      "state": "FAILED"
+    }
+  },
+  "terminal_recovery_reference": null,
+  "timezone": "America/Chicago",
+  "training_authorized": false,
+  "transport_sha256": null,
+  "uid": 97434
+}

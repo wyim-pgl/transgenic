@@ -1,0 +1,2 @@
+raw_reads,accepted_reads,rejections,dataset,run,species,source,arm,annotation_independence,model_independent,uf
+3,3,{},dataset,run1,synthetic,ONT,primary,independent,True,False

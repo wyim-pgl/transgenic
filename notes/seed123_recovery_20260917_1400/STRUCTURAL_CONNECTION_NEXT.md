@@ -1,0 +1,9 @@
+# Structural connection: controller next-step decision
+
+Plan investigation 4599f012-f8be-493 identified the actual missing prerequisite: accepted full-run execution/table provenance. Current orientation_sample receipts cannot be consumed as full structural evidence. Existing `notes/wait_work_20260916/longread/gate.py:102-140` already validates a full ONT alignment against a controller outer receipt, including complete canonical reads, exact command linkage, reference/panel, orientation, junctions and QC. Controller read this implementation.
+
+Decision: first implement the missing bounded outer full-alignment wrapper, rather than introducing a speculative generic four-source acceptance envelope and claiming availability. New-only local preparation delegated to bf813ce6-cbc4-4d4 under `ont_full/`; old gate, frozen source and actual data remain unchanged. Explicit request/code/tool pins, fresh control and driver outputs, exclusive logs, process-group timeout/TERM, retained failure inventory and verified outer receipts are required. No remote execution or submission authorized by this implementation step. Real-tool fixture and deployment/resource review remain separate gates.
+
+The subsequent producer can reuse existing predicted_junctions/junction_counts after reference_counts. It should expose verified per-run/pooled descriptive results separately when incomplete, rather than add structural fields that accidentally imply complete whole-panel availability. HiFi2 OR ONT3 applies within source before union. Missing runs remain explicit. Existing pooled F1, bootstrap and decision=None remain unchanged.
+
+Complete structural promotion is blocked by absent accepted full-run/pooled receipts, unresolved named HiFi product identity, and missing approved per-locus availability certification. Other PacBio runs are not silent substitutes. This does not block local wrapper implementation or the independent EST deployment safeguards.

@@ -1,0 +1,25 @@
+local_time=2026-09-17T14:49:14.505333-07:00
+command=date -Is; squeue -h -j 6165875 -o '%i|%T|%M|%N'; sacct -j 6165875 --parsable2 --noheader --format=JobID,JobName,State,ExitCode,Elapsed,Start,End,NodeList,AllocCPUS,ReqMem,MaxRSS; stat -c '%n|%s|%F' /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/* /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker/control/* /data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker/sample/*
+returncode=0
+STDOUT
+2026-09-17T14:49:14-0700
+6165875|est-real-sample|COMPLETED|0:0|00:05:18|2026-09-17T14:40:30|2026-09-17T14:45:48|cpu-50|2|8Gn|
+6165875.batch|batch|COMPLETED|0:0|00:05:18|2026-09-17T14:40:30|2026-09-17T14:45:48|cpu-50|2|8Gn|26424K
+6165875.extern|extern|OUT_OF_MEMORY|0:125|00:05:18|2026-09-17T14:40:30|2026-09-17T14:45:48|cpu-50|2|8Gn|1480K
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/preparation.json|1826|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/stderr|0|regular empty file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/stdout|0|regular empty file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/submission_attempt.json|1255|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/submission_result.json|1315|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker|4096|directory
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker/control/result.json|11409|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker/control/start.json|1025|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker/control/verification.json|465|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker/sample/COMPLETE|65|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker/sample/diagnostics.jsonl|12557738|regular file
+/data/gpfs/assoc/pgl/data/Transgenic/evidence/est_real_sample_recovery_20260917_1438/run/worker/sample/report.json|12190|regular file
+
+STDERR
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

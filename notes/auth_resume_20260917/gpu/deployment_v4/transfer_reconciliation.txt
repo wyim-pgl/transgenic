@@ -1,0 +1,19 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T19:47:52-05:00
+total 1956
+-r--r--r--+ 1 wcyim grp_202   27611 Sep 17 19:46 admission.py
+-r--r--r--+ 1 wcyim grp_202    2608 Sep 17 19:46 authorization.example.json
+-r--r--r--+ 1 wcyim grp_202    5688 Sep 17 19:46 build_release.py
+-r--r--r--+ 1 wcyim grp_202 1873920 Sep 17 19:46 code.candidate.tar
+-r--r--r--+ 1 wcyim grp_202    3332 Sep 17 19:46 controller_execution_scope.json
+-r--r--r--+ 1 wcyim grp_202   29149 Sep 17 19:46 deploy.py
+drwxrwx---+ 2 wcyim grp_202    4096 Sep 17 19:46 notes
+-r--r--r--+ 1 wcyim grp_202   11828 Sep 17 19:46 operator-pins.json
+-r--r--r--+ 1 wcyim grp_202    2010 Sep 17 19:46 p1.sbatch
+-r--r--r--+ 1 wcyim grp_202   25219 Sep 17 19:46 release.json
+-rw-rw----+ 1 wcyim grp_202       0 Sep 17 19:46 release.sha256
+total 2824
+-rw-rw----+ 1 wcyim grp_202 2887680 Sep 17 19:45 release_v6.tar
+-rw-rw----+ 1 wcyim grp_202     544 Sep 17 19:45 reservation.json

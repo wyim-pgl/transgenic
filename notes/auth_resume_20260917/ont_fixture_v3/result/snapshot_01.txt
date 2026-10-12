@@ -1,0 +1,40 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-17T16:59:00-0700
+JobId=6165962 JobName=ont_f4_fixture
+   UserId=wyim(3092957) GroupId=p-wyim(3092957) MCS_label=N/A
+   Priority=95699 Nice=0 Account=cpu-s1-pgl-0 QOS=normal
+   JobState=FAILED Reason=NonZeroExitCode Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=1:0
+   DerivedExitCode=1:0
+   RunTime=00:00:02 TimeLimit=00:06:00 TimeMin=N/A
+   SubmitTime=2026-09-17T16:57:34 EligibleTime=2026-09-17T16:57:34
+   AccrueTime=2026-09-17T16:57:34
+   StartTime=2026-09-17T16:57:34 EndTime=2026-09-17T16:57:36 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-09-17T16:57:34
+   Partition=cpu-s1-pgl-0 AllocNode:Sid=login-0:20613
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=cpu-50
+   BatchHost=cpu-50
+   NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=4,mem=4G,node=1,billing=9
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   JOB_GRES=(null)
+     Nodes=cpu-50 CPU_IDs=10-13 Mem=4096 GRES=
+   MinCPUsNode=4 MinMemoryNode=4G MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/data/gpfs/home/wyim/ont_f4_20260917_1653/release/fixture.sbatch
+   WorkDir=/data/gpfs/home/wyim/ont_f4_20260917_1653
+   StdErr=/data/gpfs/home/wyim/ont_f4_20260917_1653/stderr
+   StdIn=/dev/null
+   StdOut=/data/gpfs/home/wyim/ont_f4_20260917_1653/stdout
+   Power=
+   NtasksPerTRES:0
+
+JobIDRaw|JobName|State|ExitCode|DerivedExitCode|Elapsed|Start|End|AllocCPUS|ReqMem|MaxRSS|MaxVMSize|NodeList|Reason
+6165962|ont_f4_fixture|FAILED|1:0|1:0|00:00:02|2026-09-17T16:57:34|2026-09-17T16:57:36|4|4194304Kn|||cpu-50|NonZeroExitCode
+6165962.batch|batch|FAILED|1:0||00:00:02|2026-09-17T16:57:34|2026-09-17T16:57:36|4|4194304Kn|1496K|163500K|cpu-50|
+6165962.extern|extern|OUT_OF_MEMORY|0:125||00:00:02|2026-09-17T16:57:34|2026-09-17T16:57:36|4|4194304Kn|1288K|163476K|cpu-50|
+6165962.0|timeout|FAILED|1:0||00:00:01|2026-09-17T16:57:35|2026-09-17T16:57:36|4|4194304Kn|1340K|298568K|cpu-50|

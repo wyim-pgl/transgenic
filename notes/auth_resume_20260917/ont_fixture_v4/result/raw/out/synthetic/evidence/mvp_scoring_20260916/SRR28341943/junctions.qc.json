@@ -1,0 +1,20 @@
+{
+ "counts_are": "reads (UMI status unknown; never molecules)",
+ "junctions": 2,
+ "panel_sha256": "8e45fc1818473b9dad1dd7a496d6918ff72eb63857057cd3873853123d9e97a8",
+ "panel_sha256_is_frozen": true,
+ "per_input": {
+  "ONT:/data/gpfs/home/wyim/ont_f4_fix_20260917_1714/out/synthetic/evidence/mvp_scoring_20260916/SRR28341943/panel.bam": {
+   "accepted_reads": 6,
+   "junctions_in_panel_windows": 5,
+   "raw_reads": 6
+  }
+ },
+ "restriction": "junction contained in a 30,720-nt panel evaluation window",
+ "scorer": "59_evidence_support.py (sha256 06f1bdc9a3af511e6de7434430f191d6b272d244ce7a44303d1c87dd29be25f4)",
+ "supported_junctions": 1,
+ "thresholds": {
+  "HiFi": 2,
+  "ONT": 3
+ }
+}

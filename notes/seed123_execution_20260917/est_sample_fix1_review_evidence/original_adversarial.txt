@@ -1,0 +1,45 @@
+F.F.......                                                               [100%]
+=================================== FAILURES ===================================
+_______________ test_reproduce_search_and_hsp_identity_collision _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1284/test_reproduce_search_and_hsp_0')
+
+    def test_reproduce_search_and_hsp_identity_collision(tmp_path):
+        m = f.fixture(tmp_path)
+        add_provenance(m, tmp_path, 'engine-A')
+        a, ar = execute(m, tmp_path / 'a')
+        add_provenance(m, tmp_path, 'engine-B')
+        b, br = execute(m, tmp_path / 'b')
+        assert a['status'] == b['status'] == 'COMPLETE'
+        assert a['canonical_manifest_sha256'] != b['canonical_manifest_sha256']
+        for kind in ('search', 'hsp'):
+>           assert [x['id'] for x in ar if x['type'] == kind] == [x['id'] for x in br if x['type'] == kind]
+E           AssertionError: assert ['d924ee4e438...79aa55e47b36'] == ['7ca70e1bd54...000ca58cfbe5']
+E             
+E             At index 0 diff: 'd924ee4e4384c0e174c4adafae390719001c5eb5bdb6f71523950eb95dc05c53' != '7ca70e1bd54e96848bb7dcbce76a2e0def462fa06219194c2c8cad4b67e24a16'
+E             Use -v to get more diff
+
+/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_sample_review_evidence/test_adversarial.py:52: AssertionError
+_____________ test_reproduce_exited_parent_descendant_cleanup_gap ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1284/test_reproduce_exited_parent_d0')
+
+    def test_reproduce_exited_parent_descendant_cleanup_gap(tmp_path):
+        m = f.fixture(tmp_path)
+        m['limits'] = {'seconds': 1}
+        pidfile = tmp_path / 'child.pid'
+        code = ('import subprocess,sys,pathlib; '
+                'p=subprocess.Popen([sys.executable,"-c","import time;time.sleep(20)"]); '
+                f'pathlib.Path({str(pidfile)!r}).write_text(str(p.pid))')
+        try:
+            r, _ = execute(m, tmp_path / 'out', code)
+            assert r['status'] == 'INCOMPLETE'
+            child = int(pidfile.read_text())
+>           os.kill(child, 0)
+E           ProcessLookupError: [Errno 3] No such process
+
+/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_sample_review_evidence/test_adversarial.py:76: ProcessLookupError
+=========================== short test summary info ============================
+FAILED ../../mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_sample_review_evidence/test_adversarial.py::test_reproduce_search_and_hsp_identity_collision
+FAILED ../../mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_execution_20260917/est_sample_review_evidence/test_adversarial.py::test_reproduce_exited_parent_descendant_cleanup_gap
+2 failed, 8 passed in 6.10s

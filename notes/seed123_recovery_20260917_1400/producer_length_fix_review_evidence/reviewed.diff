@@ -1,0 +1,486 @@
+--- backup/revision/scripts/evidence/est_hsp_contract.py
++++ revision/scripts/evidence/est_hsp_contract.py
+@@ -13,6 +13,7 @@
+ from .est_phase_accept import btop_tokens, parse_row
+ 
+ LENGTH_CONTRACT = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_GE30'
++MIDF_LENGTH_CONTRACT = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
+ SCOPE = 'DIAGNOSTIC_ONLY_NOT_PRODUCTION_TRAINING_OR_LINEAGE_A11_CERTIFICATION'
+ 
+ 
+@@ -28,19 +29,22 @@
+     return parsed
+ 
+ 
+-def classify_rich17(row, dna, protein, *, expected_identities=None):
+-    """Validate actual rich17 truth, then classify MID>=30 (F excluded).
++def classify_rich17(row, dna, protein, *, expected_identities=None, length_contract=LENGTH_CONTRACT):
++    """Validate truth and the explicit formula, then classify reported length >=30.
+ 
+-    Raises ValueError for invalid evidence, including positive col9 != MID.
++    A mathematical mode is NOT producer authority. Callers must prove the path.
++    The default remains strict MID. Raises ValueError for invalid evidence.
+     q0 is the first translated base in ORIGINAL screened query, zero-based;
+     bases are q0 + direction * [0,1,2]. c0=0 anchors this codon only, NOT a
+     projected phase inferred from qframe. Subject indices are zero-based.
+     Optional expected_identities checks supplied hashes, not source authority.
+     """
++    require(length_contract in (LENGTH_CONTRACT, MIDF_LENGTH_CONTRACT), 'unknown length contract')
+     _validate(row, dna, protein, 17)
+     result = interpret(row, dna, protein)
+-    require(result['metrics']['reported'] == result['metrics']['columns_excluding_F'],
+-            'reported length must equal M+I+D (frameshifts excluded)')
++    metric = 'columns_excluding_F' if length_contract == LENGTH_CONTRACT else 'columns_including_F'
++    require(result['metrics']['reported'] == result['metrics'][metric],
++            'reported length disagrees with length contract: ' + length_contract)
+     identities = {key: hashlib.sha256(text.encode('utf-8')).hexdigest() for key, text in
+                   (('raw_row_sha256', '\t'.join(row)), ('dna_sha256', dna), ('protein_sha256', protein))}
+     if expected_identities is not None:
+@@ -67,19 +71,20 @@
+                    length=1, direction=direction, effect='omitted' if shift['delta'] == 1 else 'reused')
+               for shift in result['shifts']]
+     accepted = int(row[8]) >= 30
+-    return dict(length_contract=LENGTH_CONTRACT, accepted_by_hsp_rule=accepted,
++    return dict(length_contract=length_contract, accepted_by_hsp_rule=accepted,
+                 diagnostic_disposition='HSP_RULE_ACCEPTED' if accepted else 'BELOW_HSP_LENGTH_30',
+                 scope=SCOPE, identities=identities, qseqid=row[0], sseqid=row[2],
+                 counts=result['counts'], codon_events=events, frameshifts=shifts)
+ 
+ 
+-def adapt_raw13(row, dna, protein):
++def adapt_raw13(row, dna, protein, *, length_contract=LENGTH_CONTRACT):
+     """Reconstruct diagnostic rich17 fields from actual residues, without engine.
+ 
+     Same caller ID-binding obligation as classify_rich17. Returned fields are
+     NOT production/training eligibility or lineage/A11 certification. Original
+     raw13 fields are preserved exactly; caller can retain their separate hash.
+     """
++    require(length_contract in (LENGTH_CONTRACT, MIDF_LENGTH_CONTRACT), 'unknown length contract')
+     parsed = _validate(row, dna, protein, 13)
+     oriented = dna if parsed['frame'] > 0 else rc(dna)
+     pos = parsed['qs']-1 if parsed['frame'] > 0 else len(dna)-parsed['qs']
+@@ -122,5 +127,5 @@
+                         ''.join(qg), ''.join(sg), ''.join(translated)]
+     # Gapped-string-driven replay cross-checks BTOP reconstruction; shared code
+     # and genetic code mean this is not independent biological validation.
+-    classify_rich17(rich, dna, protein)
++    classify_rich17(rich, dna, protein, length_contract=length_contract)
+     return rich
+--- backup/revision/scripts/evidence/est_real_sample.py
++++ revision/scripts/evidence/est_real_sample.py
+@@ -18,13 +18,76 @@
+ import sys
+ import time
+ 
+-from .est_hsp_contract import adapt_raw13, classify_rich17
++from .est_hsp_contract import adapt_raw13, classify_rich17, LENGTH_CONTRACT, MIDF_LENGTH_CONTRACT
+ from .est_phase_project import LABEL_CONVENTION, project_codons
+ from .est_phase_accept import btop_tokens
+ 
+ LIMITS = dict(read_bytes=40 * 1024**3, output_bytes=256 * 1024**2,
+               expanded_bases=1000000, line_bytes=1024**2, sequence_bytes=1024**2,
+               retained_bytes=32 * 1024**2, records=10000, seconds=1740)
++
++
++# Authority is compiled here, never supplied by an incoming record or manifest.
++PRODUCER_PATH_PROOF_SHA256 = 'a2843aa36a006730c1fd3fe02a34b76afd772f1e01328162f7c0f9af88a2b6a9'
++PRODUCER_PATH_PROOF_MAX_BYTES = 256 * 1024
++
++
++def resolve_producer_path(proof, search_preimage):
++    """Resolve only the exact reviewed registry, not a source label or row fit.
++
++    Embedded source/log/package attribution is immutable under the compiled pin.
++    This is not a reproducible-build attestation or scientific eligibility.
++    """
++    if (not isinstance(proof, bytes) or not 0 < len(proof) <= PRODUCER_PATH_PROOF_MAX_BYTES
++            or hashlib.sha256(proof).hexdigest() != PRODUCER_PATH_PROOF_SHA256):
++        raise ValueError('missing/invalid producer path proof bytes or compiled pin')
++    try:
++        registry = json.loads(proof)
++        if (set(registry) != {'schema', 'scope', 'archive_sha256', 'package_record', 'recipe', 'producers'}
++                or registry['schema'] != 'est-producer-path-registry-v1'
++                or len(registry['producers']) != 2):
++            raise ValueError('producer registry schema')
++        def evidence(record):
++            data = record['text'].encode('utf-8')
++            if (hashlib.sha256(data).hexdigest() != record['sha256']
++                    or ('size' in record and len(data) != record['size'])
++                    or not os.path.isabs(record['path'])):
++                raise ValueError('producer embedded evidence mismatch')
++        evidence(registry['package_record'])
++        for key in ('build.sh', 'meta.yaml'):
++            evidence(registry['recipe'][key])
++        if registry['archive_sha256'] not in registry['recipe']['meta.yaml']['text']:
++            raise ValueError('producer archive/recipe mismatch')
++        routes = {'diamond-2.1.24.178/legacy-direct': LENGTH_CONTRACT,
++                  'diamond-2.1.24.178/legacy-blocked-transcript-join': MIDF_LENGTH_CONTRACT}
++        matches, seen = [], set()
++        fields = {'species', 'arm', 'source', 'reference_sha256', 'query_sha256',
++                  'protein_sha256', 'raw_sha256', 'c1_provenance_sha256', 'c1_commands_sha256'}
++        for record in registry['producers']:
++            if set(record) != {'search_preimage', 'length_contract', 'provenance', 'commands', 'blastx_log', 'makedb_log'}:
++                raise ValueError('producer record schema')
++            pre = record['search_preimage']
++            if (set(pre) != fields or any(not isinstance(v, str) or not v for v in pre.values())
++                    or any(not re.fullmatch('[0-9a-f]{64}', pre[k]) for k in fields if k.endswith('_sha256'))):
++                raise ValueError('producer search schema')
++            identity = canonical(pre)
++            if identity in seen or record['length_contract'] not in routes:
++                raise ValueError('producer duplicate/conflicting/unknown path')
++            seen.add(identity)
++            for key in ('provenance', 'commands', 'blastx_log', 'makedb_log'):
++                evidence(record[key])
++            if any(pre['c1_' + k + '_sha256'] != record[k]['sha256'] for k in ('provenance', 'commands')):
++                raise ValueError('producer search/evidence mismatch')
++            if pre == search_preimage:
++                matches.append(dict(producer_record_sha256=hashlib.sha256(canonical(record)).hexdigest(),
++                                    producer_path_proof_sha256=PRODUCER_PATH_PROOF_SHA256,
++                                    producer_path=record['length_contract'],
++                                    length_contract=routes[record['length_contract']]))
++        if len(matches) != 1:
++            raise ValueError('producer search preimage not uniquely proven')
++        return matches[0]
++    except (KeyError, TypeError, AttributeError) as exc:
++        raise ValueError('producer registry schema') from exc
+ 
+ 
+ class Incomplete(RuntimeError):
+@@ -184,7 +247,7 @@
+     return found
+ 
+ 
+-def run(manifest, out, *, sam_command_for_test=None, manifest_receipt=None):
++def run(manifest, out, *, sam_command_for_test=None, manifest_receipt=None, producer_path_proof=None):
+     """Run on files, preserving partial diagnostics and FAILED/INCOMPLETE status.
+ 
+     Test hook is deliberately not manifest-configurable and is absent from CLI.
+@@ -314,6 +377,19 @@
+                     raise ValueError('receipt digest mismatch: ' + key)
+                 sources[key]['receipt_bound'] = True
+         scope = dict(species=manifest['species'], arm=manifest['arm'], reference_sha256=sources['reference']['sha256'])
++        # Both searches must resolve before selection or any row eligibility,
++        # even F=0. The old identity is retained, never reused for the new run.
++        search_ids, producer_paths = {}, {}
++        for search in searches:
++            key = search['raw']
++            pre = dict(scope, source=search['source'], raw_sha256=sources[key]['sha256'],
++                       protein_sha256=sources[search['protein']]['sha256'], query_sha256=sources['screened']['sha256'],
++                       c1_provenance_sha256=sources[search['c1_provenance']]['sha256'],
++                       c1_commands_sha256=sources[search['c1_commands']]['sha256'])
++            resolved = resolve_producer_path(producer_path_proof, pre)
++            producer_paths[key] = resolved
++            search_ids[key] = dict(bound_id('search', dict(pre, **resolved)), legacy_search=bound_id('search', pre))
++        report['producer_paths'] = producer_paths
+         producer = Path(__file__).with_name('est_hsp_contract.py')
+         producer_sha = hash_file({'path': str(producer)}, budget)['sha256']
+         report['producer_contract_sha256'] = producer_sha
+@@ -338,13 +414,9 @@
+         report['selection_prefix_sha256'] = prefix_sha.hexdigest()
+         report['selected_qnames'] = selected
+         report['selection_rule'] = 'first distinct exact QNAMEs in capped orthodb physical-line prefix; no outcome filtering'
+-        rows, targets, search_ids = {}, {}, {}
++        rows, targets = {}, {}
+         for search in searches:
+             key = search['raw']
+-            search_ids[key] = bound_id('search', dict(scope, source=search['source'], raw_sha256=sources[key]['sha256'],
+-                                                    protein_sha256=sources[search['protein']]['sha256'], query_sha256=sources['screened']['sha256'],
+-                                                    c1_provenance_sha256=sources[search['c1_provenance']]['sha256'],
+-                                                    c1_commands_sha256=sources[search['c1_commands']]['sha256']))
+             emit(dict(type='search', **search_ids[key], receipt=sources[key].get('receipt')))
+             rows[key], targets[key] = [], set()
+             count = 0
+@@ -460,8 +532,9 @@
+                     for token in btop_tokens(f[12]):
+                         occurrences = int(token)*3 if token.isdigit() else 1 if token[0] in '/\\' else 3
+                         budget.add('expanded_bases', occurrences)
+-                    rich = adapt_raw13(f, members[f[0]]['sequence'], proteins[key][f[2]]['sequence'])
+-                    replay = classify_rich17(rich, members[f[0]]['sequence'], proteins[key][f[2]]['sequence'])
++                    contract = producer_paths[key]['length_contract']
++                    rich = adapt_raw13(f, members[f[0]]['sequence'], proteins[key][f[2]]['sequence'], length_contract=contract)
++                    replay = classify_rich17(rich, members[f[0]]['sequence'], proteins[key][f[2]]['sequence'], length_contract=contract)
+                     diagnostic.update(replay=replay, rich17=rich, length_accepted=replay['accepted_by_hsp_rule'],
+                                       disposition=replay['diagnostic_disposition'])
+                     hsp = dict(id=hsp_id['id'], identity=members[f[0]]['identity'], frame=int(f[11]),
+@@ -585,6 +658,7 @@
+     parser.add_argument('--manifest', required=True)
+     parser.add_argument('--sha', required=True, help='SHA256 of exact manifest file bytes')
+     parser.add_argument('--out', required=True)
++    parser.add_argument('--producer-path-proof', required=True)
+     args = parser.parse_args(argv)
+     if not os.environ.get('SLURM_JOB_ID'):
+         parser.error('real-source CLI requires SLURM_JOB_ID; no login-node execution')
+@@ -592,7 +666,9 @@
+         data = stream.read(1024**2 + 1)
+     if len(data) > 1024**2 or hashlib.sha256(data).hexdigest() != args.sha:
+         parser.error('manifest size/hash mismatch')
+-    result = run(json.loads(data), args.out,
++    with open(args.producer_path_proof, 'rb') as stream:
++        proof = stream.read(PRODUCER_PATH_PROOF_MAX_BYTES + 1)
++    result = run(json.loads(data), args.out, producer_path_proof=proof,
+                  manifest_receipt=dict(path=str(Path(args.manifest).resolve()), sha256=args.sha))
+     return 0 if result['status'] == 'COMPLETE' else 1
+ 
+--- backup/tests/test_est_hsp_contract.py
++++ tests/test_est_hsp_contract.py
+@@ -117,6 +117,50 @@
+             function(row if function.__name__ == 'classify_rich17' else row[:13], dna, protein)
+ 
+ 
++@pytest.mark.parametrize('reported', [29, 30, 31])
++@pytest.mark.parametrize('reverse', [False, True])
++@pytest.mark.parametrize('shifts', ['/', '\\', '/\\'])
++def test_explicit_midf_formula_boundaries(reported, reverse, shifts):
++    n = reported - len(shifts)
++    row, dna, protein = fixture('K'*10 + shifts + 'K'*(n-10),
++                               'K'*10 + '-'*len(shifts) + 'K'*(n-10), reverse=reverse)
++    row[8] = str(reported)
++    mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
++    result = api().classify_rich17(row, dna, protein, length_contract=mode)
++    assert result['accepted_by_hsp_rule'] is (reported >= 30)
++    assert result['counts']['F'] == len(shifts)
++    assert api().adapt_raw13(row[:13], dna, protein, length_contract=mode) == row
++    with pytest.raises(ValueError):
++        api().classify_rich17(row, dna, protein)
++    row[8] = str(n)
++    with pytest.raises(ValueError):
++        api().adapt_raw13(row[:13], dna, protein, length_contract=mode)
++
++
++@pytest.mark.parametrize('reverse', [False, True])
++def test_midf_gaps_substitution_and_x_remain_exact(reverse):
++    row, dna, protein = fixture('K'*10+'\\'+'K'*10+'R'+'-'+'K'*8,
++                               'K'*10+'-'+'K'*10+'K'+'K'+'K'*7+'-', reverse=reverse)
++    row[8] = '31'
++    mode = 'DIAMOND_REPORTED_HSP_M_PLUS_I_PLUS_D_PLUS_F_GE30'
++    result = api().classify_rich17(row, dna, protein, length_contract=mode)
++    assert result['counts'] == {'M': 28, 'I': 1, 'D': 1, 'F': 1}
++    assert api().adapt_raw13(row[:13], dna, protein, length_contract=mode) == row
++    with pytest.raises(ValueError):
++        api().adapt_raw13(row[:13], dna, 'X'+protein[1:], length_contract=mode)
++    row[5] = str(int(row[5])+1)
++    with pytest.raises(ValueError):
++        api().classify_rich17(row, dna, protein, length_contract=mode)
++
++
++@pytest.mark.parametrize('mode', ['unknown', '', None])
++def test_unknown_length_mode_rejected_even_without_shifts(mode):
++    row, dna, protein = fixture('K'*30, 'K'*30)
++    for fn, fields in ((api().classify_rich17, row), (api().adapt_raw13, row[:13])):
++        with pytest.raises(ValueError, match='length contract'):
++            fn(fields, dna, protein, length_contract=mode)
++
++
+ def test_raw_equal_runs_checked_against_dna_and_source_hash():
+     row, dna, protein = fixture('K'*30, 'K'*30)
+     with pytest.raises(ValueError):
+--- backup/tests/test_est_real_sample.py
++++ tests/test_est_real_sample.py
+@@ -42,6 +42,101 @@
+                          for s in ('orthodb', 'swissprot')]}
+ 
+ 
++def proof(m):
++    def text_record(text):
++        return dict(path='/synthetic', text=text, sha256=hashlib.sha256(text.encode()).hexdigest())
++    producers = []
++    for s in m['searches']:
++        f = m['files']
++        pre = dict(species=m['species'], arm=m['arm'], source=s['source'],
++                   reference_sha256=f['reference']['sha256'], query_sha256=f['screened']['sha256'],
++                   raw_sha256=f[s['raw']]['sha256'], protein_sha256=f[s['protein']]['sha256'],
++                   c1_provenance_sha256=f[s['c1_provenance']]['sha256'],
++                   c1_commands_sha256=f[s['c1_commands']]['sha256'])
++        producers.append(dict(search_preimage=pre, length_contract='diamond-2.1.24.178/legacy-direct',
++                              provenance=text_record(Path(f[s['c1_provenance']]['path']).read_text()),
++                              commands=text_record(Path(f[s['c1_commands']]['path']).read_text()),
++                              blastx_log=text_record('synthetic direct'), makedb_log=text_record('synthetic')))
++    return api().canonical(dict(schema='est-producer-path-registry-v1', scope='synthetic only',
++                                archive_sha256='a'*64, package_record=text_record('{}'),
++                                recipe={'build.sh': text_record(''), 'meta.yaml': text_record('a'*64)},
++                                producers=producers))
++
++
++@pytest.fixture(autouse=True)
++def synthetic_proof_for_existing_tests(monkeypatch, request):
++    # Only old binder scenarios get an automatically pinned synthetic authority.
++    # New trust-boundary tests explicitly opt out and supply their own bytes.
++    if request.node.name.startswith('test_proof_'):
++        return
++    original = api().run
++    def invoke(m, out, **kw):
++        try:
++            data = proof(m)
++        except (KeyError, TypeError):
++            data = b'invalid manifest must fail before proof resolution'
++        monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
++        return original(m, out, producer_path_proof=data, **kw)
++    monkeypatch.setattr(api(), 'run', invoke)
++
++
++def test_proof_missing_f0_fails_before_selection(tmp_path):
++    r = run(fixture(tmp_path), tmp_path)
++    assert r['status'] == 'FAILED'
++    assert 'producer path proof' in r['error']
++    assert r['selected_qnames'] == []
++    assert not records(tmp_path)
++
++
++@pytest.mark.parametrize('change', ['query_sha256', 'protein_sha256', 'raw_sha256',
++                                   'c1_provenance_sha256', 'c1_commands_sha256', 'source', 'arm', 'species', 'reference_sha256'])
++def test_proof_exact_full_preimage(tmp_path, monkeypatch, change):
++    m = fixture(tmp_path)
++    data = proof(m)
++    monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
++    pre = json.loads(data)['producers'][0]['search_preimage']
++    assert api().resolve_producer_path(data, pre)['length_contract'].endswith('_D_GE30')
++    pre[change] += 'changed'
++    with pytest.raises(ValueError, match='producer'):
++        api().resolve_producer_path(data, pre)
++
++
++@pytest.mark.parametrize('change', ['truncated', 'altered', 'swapped', 'self_repinned_record'])
++def test_proof_compiled_pin_cannot_be_overridden(tmp_path, monkeypatch, change):
++    data = proof(fixture(tmp_path))
++    monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
++    value = json.loads(data)
++    pre = value['producers'][0]['search_preimage']
++    if change == 'truncated':
++        bad = data[:-1]
++    else:
++        if change == 'swapped':
++            value['producers'].reverse()
++        else:
++            value['producers'][0]['length_contract'] = 'diamond-2.1.24.178/legacy-blocked-transcript-join'
++            if change == 'self_repinned_record':
++                value['producers'][0]['sha256'] = hashlib.sha256(api().canonical(value['producers'][0])).hexdigest()
++        bad = api().canonical(value)
++    with pytest.raises(ValueError, match='producer path proof'):
++        api().resolve_producer_path(bad, pre)
++
++
++@pytest.mark.parametrize('kind', ['unknown', 'conflict', 'evidence'])
++def test_proof_schema_consistency(tmp_path, monkeypatch, kind):
++    value = json.loads(proof(fixture(tmp_path)))
++    pre = value['producers'][0]['search_preimage']
++    if kind == 'unknown':
++        value['producers'][0]['length_contract'] = 'DAA/view'
++    elif kind == 'conflict':
++        value['producers'][1] = value['producers'][0]
++    else:
++        value['producers'][0]['commands']['text'] += 'changed'
++    data = api().canonical(value)
++    monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest(), raising=False)
++    with pytest.raises(ValueError, match='producer'):
++        api().resolve_producer_path(data, pre)
++
++
+ def run(m, tmp_path, **kw):
+     command = [sys.executable, '-c', 'import shutil,sys; shutil.copyfileobj(open(sys.argv[1],"rb"),sys.stdout.buffer)', m['files']['bam']['path']]
+     return api().run(m, tmp_path / 'out', sam_command_for_test=command, **kw)
+@@ -243,7 +338,10 @@
+         a = [x['id'] for x in before if x['type'] == kind]
+         b = [x['id'] for x in after if x['type'] == kind]
+         assert a[0] != b[0]
+-        assert a[-1] == b[-1]  # untouched SwissProt contract
++        assert a[-1] != b[-1]  # new registry identity also binds the untouched search
++    old_search = [x for x in before if x['type'] == 'search'][-1]
++    new_search = [x for x in after if x['type'] == 'search'][-1]
++    assert old_search['legacy_search'] == new_search['legacy_search']
+     search = next(x for x in after if x['type'] == 'search')
+     assert search['preimage'][field + '_sha256'] == m['files'][key]['sha256']
+ 
+@@ -361,6 +459,93 @@
+     assert sum(p.stat().st_size for p in (tmp_path / 'out').iterdir()) <= r['resources']['limits']['output_bytes']
+ 
+ 
++@pytest.mark.parametrize('route,expected', [('legacy-direct', False), ('legacy-blocked-transcript-join', True)])
++def test_proof_mid29_f1_reported30_requires_proven_midf(tmp_path, monkeypatch, route, expected):
++    m = fixture(tmp_path, dna='A'*90, protein='K'*30)
++    row = 'q\t90\tp\t30\t1\t88\t1\t29\t30\t1e-9\t60\t1\t10\\-19\n'
++    for source in ('orthodb', 'swissprot'):
++        repin(m, source+'_raw', row)
++    value = json.loads(proof(m))
++    for record in value['producers']:
++        record['length_contract'] = 'diamond-2.1.24.178/' + route
++    data = api().canonical(value)
++    monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest())
++    result = run(m, tmp_path, producer_path_proof=data)
++    assert result['status'] == 'COMPLETE'
++    hsps = [r for r in records(tmp_path) if r['type'] == 'hsp']
++    assert len(hsps) == 2
++    assert all(h['length_accepted'] is (True if expected else None) for h in hsps)
++    assert all(h['reported_length_at_least_30'] for h in hsps)
++
++
++@pytest.mark.parametrize('key', ['screened', 'orthodb_protein', 'swissprot_raw', 'orthodb_provenance', 'swissprot_commands'])
++def test_proof_rebound_current_file_fails_before_row_scan(tmp_path, monkeypatch, key):
++    m = fixture(tmp_path)
++    data = proof(m)
++    monkeypatch.setattr(api(), 'PRODUCER_PATH_PROOF_SHA256', hashlib.sha256(data).hexdigest())
++    repin(m, key, Path(m['files'][key]['path']).read_text() + '\n')
++    def forbidden(*a, **kw):
++        raise AssertionError('selection/row scanning reached')
++    monkeypatch.setattr(api(), 'file_lines', forbidden)
++    result = run(m, tmp_path, producer_path_proof=data)
++    assert result['status'] == 'FAILED' and 'producer' in result['error']
++    assert result['selected_qnames'] == []
++    assert records(tmp_path) == []
++
++
++def retained_api():
++    path = Path(__file__).resolve().parents[1] / 'tasknotes/real_sample/replay_retained.py'
++    assert path.exists(), 'retained replay not implemented'
++    spec = importlib.util.spec_from_file_location('replay_retained', path)
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module
++
++
++RETAINED = Path('/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400')
++
++
++def test_proof_retained_replay_no_original_access(monkeypatch):
++    module = retained_api()
++    report = (RETAINED / 'est_result/raw/worker/sample/report.json').read_bytes()
++    diagnostics = (RETAINED / 'est_result/raw/worker/sample/diagnostics.jsonl').read_bytes()
++    data = (RETAINED / 'est_failure_diagnosis/producer_path_proof.json').read_bytes()
++    def forbidden(*args, **kwargs):
++        raise AssertionError('original input/subprocess/run access forbidden')
++    monkeypatch.setattr(api(), 'run', forbidden)
++    monkeypatch.setattr(api().subprocess, 'Popen', forbidden)
++    monkeypatch.setattr(api(), 'fasta', forbidden)
++    monkeypatch.setattr(api(), 'file_lines', forbidden)
++    monkeypatch.setattr('builtins.open', forbidden)
++    monkeypatch.setattr(Path, 'open', forbidden)
++    result = module.replay(report, diagnostics, data)
++    assert len(result['hsps']) == 462
++    assert len({h['parent_hsp_id'] for h in result['hsps']}) == 462
++    assert all(h['id'] != h['parent_hsp_id'] for h in result['hsps'])
++    assert not result['training_eligible'] and not result['full_c0']
++    assert result['a11_status'] == 'unassessable'
++    for h in result['hsps']:
++        assert h['producer_record_sha256']
++    with pytest.raises(ValueError, match='parent'):
++        module.replay(report + b' ', diagnostics, data)
++    with pytest.raises(ValueError, match='parent'):
++        module.replay(report, diagnostics[:-1], data)
++
++
++@pytest.mark.parametrize('kind', ['id', 'raw', 'sequence'])
++def test_proof_retained_internal_identity_checks(kind):
++    module = retained_api()
++    if kind == 'id':
++        with pytest.raises(ValueError, match='identity'):
++            module.verify_id(dict(api().bound_id('search', {'a': 1}), id='0'*64), 'search')
++    elif kind == 'raw':
++        with pytest.raises(ValueError, match='raw'):
++            module.decode(dict(bytes_base64=base64.b64encode(b'q').decode(), sha256='0'*64, ordinal=1))
++    else:
++        with pytest.raises(ValueError, match='sequence'):
++            module.verify_sequence(dict(sequence='ACGT', original_case_sequence='ACGT', sequence_sha256='0'*64))
++
++
+ def test_exclusive_output_and_domain_scope(tmp_path):
+     m = fixture(tmp_path)
+     run(m, tmp_path)

@@ -1,0 +1,200 @@
+FFFFFFFF                                                                 [100%]
+=================================== FAILURES ===================================
+_________ test_search_and_hsp_ids_bind_search_contract[c1_provenance] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1274/test_search_and_hsp_ids_bind_s0')
+field = 'c1_provenance'
+
+    @pytest.mark.parametrize('field', ['c1_provenance', 'c1_commands'])
+    def test_search_and_hsp_ids_bind_search_contract(tmp_path, field):
+        m = fixture(tmp_path)
+        assert run(m, tmp_path)['status'] == 'COMPLETE'
+        before = records(tmp_path)
+        key = m['searches'][0][field]
+        repin(m, key, json.dumps({'changed': field}))
+        second = tmp_path / 'second'
+        second.mkdir()
+        assert run(m, second)['status'] == 'COMPLETE'
+        after = records(second)
+        for kind in ('search', 'hsp'):
+            a = [x['id'] for x in before if x['type'] == kind]
+            b = [x['id'] for x in after if x['type'] == kind]
+>           assert a[0] != b[0]
+E           AssertionError: assert 'e31f9684cd5e50acf93f38e8ae7139ead4e391128d53efe6e32f1f1582a66389' != 'e31f9684cd5e50acf93f38e8ae7139ead4e391128d53efe6e32f1f1582a66389'
+
+tests/test_est_real_sample.py:245: AssertionError
+__________ test_search_and_hsp_ids_bind_search_contract[c1_commands] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1274/test_search_and_hsp_ids_bind_s1')
+field = 'c1_commands'
+
+    @pytest.mark.parametrize('field', ['c1_provenance', 'c1_commands'])
+    def test_search_and_hsp_ids_bind_search_contract(tmp_path, field):
+        m = fixture(tmp_path)
+        assert run(m, tmp_path)['status'] == 'COMPLETE'
+        before = records(tmp_path)
+        key = m['searches'][0][field]
+        repin(m, key, json.dumps({'changed': field}))
+        second = tmp_path / 'second'
+        second.mkdir()
+        assert run(m, second)['status'] == 'COMPLETE'
+        after = records(second)
+        for kind in ('search', 'hsp'):
+            a = [x['id'] for x in before if x['type'] == kind]
+            b = [x['id'] for x in after if x['type'] == kind]
+>           assert a[0] != b[0]
+E           AssertionError: assert 'e31f9684cd5e50acf93f38e8ae7139ead4e391128d53efe6e32f1f1582a66389' != 'e31f9684cd5e50acf93f38e8ae7139ead4e391128d53efe6e32f1f1582a66389'
+
+tests/test_est_real_sample.py:245: AssertionError
+_________ test_search_contract_requires_explicit_pinned_specs[missing] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1274/test_search_contract_requires_0')
+bad = 'missing'
+
+    @pytest.mark.parametrize('bad', ['missing', 'unknown', 'unpinned', 'malformed'])
+    def test_search_contract_requires_explicit_pinned_specs(tmp_path, bad):
+        m = fixture(tmp_path)
+        search = m['searches'][0]
+        if bad == 'missing':
+            del search['c1_commands']
+        elif bad == 'unknown':
+            search['c1_commands'] = 'absent'
+        elif bad == 'unpinned':
+            del m['files'][search['c1_commands']]['sha256']
+        else:
+            m['files'][search['c1_commands']] = []
+        r = run(m, tmp_path)
+>       assert r['status'] == 'FAILED'
+E       AssertionError: assert 'COMPLETE' == 'FAILED'
+E         
+E         - FAILED
+E         + COMPLETE
+
+tests/test_est_real_sample.py:264: AssertionError
+_________ test_search_contract_requires_explicit_pinned_specs[unknown] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1274/test_search_contract_requires_1')
+bad = 'unknown'
+
+    @pytest.mark.parametrize('bad', ['missing', 'unknown', 'unpinned', 'malformed'])
+    def test_search_contract_requires_explicit_pinned_specs(tmp_path, bad):
+        m = fixture(tmp_path)
+        search = m['searches'][0]
+        if bad == 'missing':
+            del search['c1_commands']
+        elif bad == 'unknown':
+            search['c1_commands'] = 'absent'
+        elif bad == 'unpinned':
+            del m['files'][search['c1_commands']]['sha256']
+        else:
+            m['files'][search['c1_commands']] = []
+        r = run(m, tmp_path)
+>       assert r['status'] == 'FAILED'
+E       AssertionError: assert 'COMPLETE' == 'FAILED'
+E         
+E         - FAILED
+E         + COMPLETE
+
+tests/test_est_real_sample.py:264: AssertionError
+________ test_search_contract_requires_explicit_pinned_specs[unpinned] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1274/test_search_contract_requires_2')
+bad = 'unpinned'
+
+    @pytest.mark.parametrize('bad', ['missing', 'unknown', 'unpinned', 'malformed'])
+    def test_search_contract_requires_explicit_pinned_specs(tmp_path, bad):
+        m = fixture(tmp_path)
+        search = m['searches'][0]
+        if bad == 'missing':
+            del search['c1_commands']
+        elif bad == 'unknown':
+            search['c1_commands'] = 'absent'
+        elif bad == 'unpinned':
+            del m['files'][search['c1_commands']]['sha256']
+        else:
+            m['files'][search['c1_commands']] = []
+        r = run(m, tmp_path)
+>       assert r['status'] == 'FAILED'
+E       AssertionError: assert 'COMPLETE' == 'FAILED'
+E         
+E         - FAILED
+E         + COMPLETE
+
+tests/test_est_real_sample.py:264: AssertionError
+________ test_search_contract_requires_explicit_pinned_specs[malformed] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1274/test_search_contract_requires_3')
+bad = 'malformed'
+
+    @pytest.mark.parametrize('bad', ['missing', 'unknown', 'unpinned', 'malformed'])
+    def test_search_contract_requires_explicit_pinned_specs(tmp_path, bad):
+        m = fixture(tmp_path)
+        search = m['searches'][0]
+        if bad == 'missing':
+            del search['c1_commands']
+        elif bad == 'unknown':
+            search['c1_commands'] = 'absent'
+        elif bad == 'unpinned':
+            del m['files'][search['c1_commands']]['sha256']
+        else:
+            m['files'][search['c1_commands']] = []
+        r = run(m, tmp_path)
+        assert r['status'] == 'FAILED'
+>       assert 'search contract' in r['error']
+E       AssertionError: assert 'search contract' in 'TypeError: list indices must be integers or slices, not str'
+
+tests/test_est_real_sample.py:265: AssertionError
+________________ test_abort_kills_descendant_after_leader_exit _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1274/test_abort_kills_descendant_af0')
+
+    def test_abort_kills_descendant_after_leader_exit(tmp_path):
+        m = fixture(tmp_path)
+        m['limits'] = {'seconds': 1}
+        pidfile = tmp_path / 'child.pid'
+        code = ('import subprocess,sys,pathlib; '
+                'p=subprocess.Popen([sys.executable,"-c","import time;time.sleep(10)"]); '
+                'pathlib.Path(sys.argv[1]).write_text(str(p.pid))')
+        try:
+            r = api().run(m, tmp_path / 'out',
+                          sam_command_for_test=[sys.executable, '-c', code, str(pidfile)])
+            assert r['status'] == 'INCOMPLETE'
+            child = int(pidfile.read_text())
+            deadline = time.monotonic() + 1
+            while time.monotonic() < deadline:
+                path = Path('/proc') / str(child) / 'stat'
+                if not path.exists() or path.read_text().split()[2] == 'Z':
+                    break
+                time.sleep(.01)
+            else:
+>               pytest.fail('stdout-holding descendant survived abort cleanup')
+E               Failed: stdout-holding descendant survived abort cleanup
+
+tests/test_est_real_sample.py:288: Failed
+________ test_reader_stderr_preserves_bounded_bytes_hash_and_returncode ________
+
+tmp_path = PosixPath('/tmp/pytest-of-wyim/pytest-1274/test_reader_stderr_preserves_b0')
+
+    def test_reader_stderr_preserves_bounded_bytes_hash_and_returncode(tmp_path):
+        m = fixture(tmp_path)
+        payload = b'UNIQUE_BAM_CORRUPTION_DIAGNOSTIC\n' + b'x' * 200000
+        # The full marker is NOT in the recorded command; only actual stderr can supply it.
+        code = ('import sys;sys.stderr.buffer.write(b"UNIQUE_BAM_" + '
+                'b"CORRUPTION_DIAGNOSTIC\\n" + b"x"*200000);sys.exit(7)')
+        r = api().run(m, tmp_path / 'out', sam_command_for_test=[sys.executable, '-c', code])
+        assert r['status'] == 'FAILED' and 'nonzero exit: 7' in r['error']
+>       stderr = r['sam_stderr']
+                 ^^^^^^^^^^^^^^^
+E       KeyError: 'sam_stderr'
+
+tests/test_est_real_sample.py:306: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_est_real_sample.py::test_search_and_hsp_ids_bind_search_contract[c1_provenance]
+FAILED tests/test_est_real_sample.py::test_search_and_hsp_ids_bind_search_contract[c1_commands]
+FAILED tests/test_est_real_sample.py::test_search_contract_requires_explicit_pinned_specs[missing]
+FAILED tests/test_est_real_sample.py::test_search_contract_requires_explicit_pinned_specs[unknown]
+FAILED tests/test_est_real_sample.py::test_search_contract_requires_explicit_pinned_specs[unpinned]
+FAILED tests/test_est_real_sample.py::test_search_contract_requires_explicit_pinned_specs[malformed]
+FAILED tests/test_est_real_sample.py::test_abort_kills_descendant_after_leader_exit
+FAILED tests/test_est_real_sample.py::test_reader_stderr_preserves_bounded_bytes_hash_and_returncode
+8 failed, 31 deselected in 8.02s

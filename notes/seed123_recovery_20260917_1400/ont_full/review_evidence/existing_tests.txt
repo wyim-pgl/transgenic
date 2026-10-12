@@ -1,0 +1,13 @@
+test_bad_pin (test_wrapper.Boundary) ... ok
+test_mutated_recursive_output_rejected_by_existing_gate (test_wrapper.Boundary) ... ok
+test_no_reuse (test_wrapper.Boundary) ... ok
+test_nonzero_child_not_complete (test_wrapper.Boundary) ... ok
+test_receipt_scope_and_mutation (test_wrapper.Boundary) ... ok
+test_slurm_environment_alone_insufficient (test_wrapper.Boundary) ... ok
+test_success_real_child (test_wrapper.Boundary) ... ok
+test_timeout_retains_logs_and_status (test_wrapper.Boundary) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.417s
+
+OK

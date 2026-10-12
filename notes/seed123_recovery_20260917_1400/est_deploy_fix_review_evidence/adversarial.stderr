@@ -1,0 +1,32 @@
+test_binding_deadline (__main__.Independent) ... FAIL
+test_binding_term (__main__.Independent) ... ok
+test_helper_link_and_namespace_guards (__main__.Independent) ... FAIL
+test_pending_term (__main__.Independent) ... ok
+test_pending_usr1 (__main__.Independent) ... ok
+test_result_usr1 (__main__.Independent) ... ok
+test_start_term (__main__.Independent) ... ok
+test_verification_usr1 (__main__.Independent) ... ok
+
+======================================================================
+FAIL: test_binding_deadline (__main__.Independent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_review_evidence/adversarial.py", line 67, in test_binding_deadline
+    self.assertEqual(result['postchecks']['binding'], 'FAIL'); self.assertTrue(result['deadline_expired'])
+AssertionError: 'SKIPPED_DEADLINE' != 'FAIL'
+- SKIPPED_DEADLINE
++ FAIL
+
+
+======================================================================
+FAIL: test_helper_link_and_namespace_guards (__main__.Independent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/seed123_recovery_20260917_1400/est_deploy_fix_review_evidence/adversarial.py", line 89, in test_helper_link_and_namespace_guards
+    self.assertEqual((ns/n).stat().st_mode & 0o777, 0o600)
+AssertionError: 511 != 384
+
+----------------------------------------------------------------------
+Ran 8 tests in 16.815s
+
+FAILED (failures=2)

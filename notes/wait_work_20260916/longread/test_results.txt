@@ -1,0 +1,16 @@
+test_actual_read_binding (test_gate.GateTests) ... ok
+test_failed_stdout_not_completion (test_gate.GateTests) ... ok
+test_inventory_missing_or_changed (test_gate.GateTests) ... ok
+test_missing_done (test_gate.GateTests) ... ok
+test_orientation_identity_and_md5 (test_gate.GateTests) ... ok
+test_real_frozen_orientation_scorer_fixture (test_gate.GateTests) ... ok
+test_sample_never_full_coverage (test_gate.GateTests) ... ok
+test_wrong_file_even_identical_bytes (test_gate.GateTests) ... ok
+test_wrong_md5 (test_gate.GateTests) ... ok
+test_wrong_reference (test_gate.GateTests) ... ok
+test_wrong_role (test_gate.GateTests) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 1.043s
+
+OK

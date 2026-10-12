@@ -1,0 +1,301 @@
+{
+  "architecture": "x86_64",
+  "effective_environment": {
+    "GOMAXPROCS": "4",
+    "HOME": "/tmp",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "OMP_NUM_THREADS": "4",
+    "PATH": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/RNASEQ_bch709/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "TMPDIR": "/tmp"
+  },
+  "host": "login-0",
+  "launcher_mode": "env -i Python -I -B",
+  "platform": "Linux-3.10.0-1160.31.1.el7.x86_64-x86_64-with-glibc2.17",
+  "scheduler_config_returncode": 0,
+  "scheduler_config_selected": [
+    "JobAcctGatherType       = jobacct_gather/linux",
+    "JobAcctGatherParams     = NoOverMemoryKill",
+    "KillWait                = 30 sec",
+    "ProctrackType           = proctrack/cgroup",
+    "SlurmdParameters        = (null)",
+    "TaskPlugin              = task/affinity,task/cgroup",
+    "UnkillableStepTimeout   = 60 sec"
+  ],
+  "scheduler_paths": {
+    "sbatch": {
+      "gid": 0,
+      "mode": "0o755",
+      "parents": [
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps/slurm/20.11.7/bin",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps/slurm/20.11.7",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps/slurm",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o555",
+          "path": "/",
+          "uid": 0
+        }
+      ],
+      "path": "/cm/shared/apps/slurm/current/bin/sbatch",
+      "resolved": "/cm/shared/apps/slurm/20.11.7/bin/sbatch",
+      "sha256": "1e8525f93ca1f8b11fe7bf5197812d1d254803f072c1b40b3e11fdee7cdd806f",
+      "size": 392576,
+      "symlink": null,
+      "uid": 0
+    },
+    "scontrol": {
+      "gid": 0,
+      "mode": "0o755",
+      "parents": [
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps/slurm/20.11.7/bin",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps/slurm/20.11.7",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps/slurm",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o555",
+          "path": "/",
+          "uid": 0
+        }
+      ],
+      "path": "/cm/shared/apps/slurm/current/bin/scontrol",
+      "resolved": "/cm/shared/apps/slurm/20.11.7/bin/scontrol",
+      "sha256": "e1f2a4a62d855348f311e35bb388320870e6e94b1b7fbfcd3a3892906af37f1b",
+      "size": 702464,
+      "symlink": null,
+      "uid": 0
+    },
+    "srun": {
+      "gid": 0,
+      "mode": "0o755",
+      "parents": [
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps/slurm/20.11.7/bin",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps/slurm/20.11.7",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps/slurm",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared/apps",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm/shared",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/cm",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o555",
+          "path": "/",
+          "uid": 0
+        }
+      ],
+      "path": "/cm/shared/apps/slurm/current/bin/srun",
+      "resolved": "/cm/shared/apps/slurm/20.11.7/bin/srun",
+      "sha256": "bd97b85092388017ad4c57df92ee1cee769ae02d262fca0565e78eeffccac468",
+      "size": 717072,
+      "symlink": null,
+      "uid": 0
+    },
+    "timeout": {
+      "gid": 0,
+      "mode": "0o755",
+      "parents": [
+        {
+          "gid": 0,
+          "mode": "0o555",
+          "path": "/usr/bin",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o755",
+          "path": "/usr",
+          "uid": 0
+        },
+        {
+          "gid": 0,
+          "mode": "0o555",
+          "path": "/",
+          "uid": 0
+        }
+      ],
+      "path": "/usr/bin/timeout",
+      "resolved": "/usr/bin/timeout",
+      "sha256": "af44756c824135581517eb5a96a01e426da7a0acabfc41a610ef0cc1fbdace4b",
+      "size": 54592,
+      "symlink": null,
+      "uid": 0
+    }
+  },
+  "site_cgroup_configuration": {
+    "/etc/slurm/cgroup.conf": {
+      "identity": {
+        "gid": 0,
+        "mode": "0o644",
+        "parents": [
+          {
+            "gid": 0,
+            "mode": "0o755",
+            "path": "/cm/shared/apps/slurm/var/etc/pronghorn",
+            "uid": 0
+          },
+          {
+            "gid": 0,
+            "mode": "0o755",
+            "path": "/cm/shared/apps/slurm/var/etc",
+            "uid": 0
+          },
+          {
+            "gid": 0,
+            "mode": "0o755",
+            "path": "/cm/shared/apps/slurm/var",
+            "uid": 0
+          },
+          {
+            "gid": 0,
+            "mode": "0o755",
+            "path": "/cm/shared/apps/slurm",
+            "uid": 0
+          },
+          {
+            "gid": 0,
+            "mode": "0o755",
+            "path": "/cm/shared/apps",
+            "uid": 0
+          },
+          {
+            "gid": 0,
+            "mode": "0o755",
+            "path": "/cm/shared",
+            "uid": 0
+          },
+          {
+            "gid": 0,
+            "mode": "0o755",
+            "path": "/cm",
+            "uid": 0
+          },
+          {
+            "gid": 0,
+            "mode": "0o555",
+            "path": "/",
+            "uid": 0
+          }
+        ],
+        "path": "/etc/slurm/cgroup.conf",
+        "resolved": "/cm/shared/apps/slurm/var/etc/pronghorn/cgroup.conf",
+        "sha256": "c4f4342d44291375a1850f04aee87c12602536220bc5f61bc0f60cf945b4936c",
+        "size": 465,
+        "symlink": "/cm/shared/apps/slurm/var/etc/pronghorn/cgroup.conf",
+        "uid": 0
+      },
+      "settings": [
+        "AllowedRamSpace=100",
+        "AllowedSwapSpace=0",
+        "CgroupMountpoint=\"/sys/fs/cgroup\"",
+        "CgroupAutomount=no",
+        "ConstrainCores=yes",
+        "ConstrainDevices=yes",
+        "ConstrainRAMSpace=yes",
+        "ConstrainSwapSpace=yes",
+        "MaxRAMPercent=100",
+        "MaxSwapPercent=100",
+        "MinRAMSpace=30",
+        "MemorySwappiness=0 # No swap available on CPU nodes",
+        "TaskAffinity=no"
+      ]
+    }
+  },
+  "utc": "2026-09-17T23:36:19.432727+00:00"
+}

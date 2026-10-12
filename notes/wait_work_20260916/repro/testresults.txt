@@ -1,0 +1,59 @@
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/wait_work_20260916/repro/preflight.py", line 52, in <module>
+    main()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/wait_work_20260916/repro/preflight.py", line 23, in main
+    assert p.is_file() and p.resolve().is_relative_to(HERE)
+AttributeError: 'PosixPath' object has no attribute 'is_relative_to'
+captured/mvp-final-source-full-cpu.log: OK
+captured/mvp-final-source-focused.log: OK
+captured/mvp-final-source-mvp-cpu.log: OK
+captured/mvp-final-source-mvp-cpu-retry.log: OK
+captured/mvp-final-env-check.log: OK
+captured/resume.md: OK
+captured/todo.md: OK
+captured/priority.md: OK
+captured/decoder.md: OK
+captured/est.md: OK
+captured/initial_live_status.txt: OK
+captured/final_source_report.md: OK
+captured/source_review.md: OK
+captured/deployment_review.md: OK
+captured/controller_scope.json: OK
+captured/initialization.json: OK
+captured/submission.txt: OK
+captured/cancellation.txt: OK
+captured/release.json: OK
+captured/release.sha256: OK
+captured/deploy.py: OK
+captured/code.tar: OK
+captured/exact_decode_panel.py: OK
+captured/exact_test_mvp_decode.py: OK
+captured/git_final_report.md: OK
+preflight_exit=1 hashcheck_exit=0 shell_exit=0
+Traceback (most recent call last):
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/wait_work_20260916/repro/preflight.py", line 52, in <module>
+    main()
+  File "/mnt/f/scratch/develop/Transgenic/transgenic_local/notes/wait_work_20260916/repro/preflight.py", line 35, in main
+    assert len(members)==100 and all(m.isfile() for m in members)
+AssertionError
+after_local_python_compatibility_fix_exit=1
+{
+  "status": "PASS_LOCAL_INTEGRITY_ONLY",
+  "captured_files": 25,
+  "archive_git_files": 100,
+  "component_files": 86,
+  "decoder_files": 13,
+  "remote_queries": 0,
+  "gpu_readiness": false
+}
+after_tar_directory_filter_fix_exit=0
+{
+  "status": "PASS_LOCAL_INTEGRITY_ONLY",
+  "captured_files": 25,
+  "archive_git_files": 100,
+  "component_files": 86,
+  "decoder_files": 13,
+  "remote_queries": 0,
+  "gpu_readiness": false
+}
+final_ledger_crosscheck_exit=0

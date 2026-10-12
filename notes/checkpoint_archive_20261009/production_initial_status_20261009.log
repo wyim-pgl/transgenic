@@ -1,0 +1,49 @@
+STATUS {
+  "code_commit": "3b4eb0dfe0e83463775ce8e1ab05fa2f62d1e20b",
+  "command": [
+    "/data/gpfs/assoc/pgl/data/Transgenic/.venv-ssh/bin/python",
+    "-u",
+    "/data/gpfs/assoc/pgl/data/Transgenic/ops/checkpoint_archive/3b4eb0d/revision/scripts/b6/checkpoint_archive_cli.py",
+    "--config",
+    "/data/gpfs/assoc/pgl/data/Transgenic/ops/checkpoint_archive/transfers/b5-first8-20261009/config.json",
+    "--target",
+    "pronghorn-b5",
+    "--apply",
+    "--remove-source",
+    "--watch",
+    "--cycles",
+    "8",
+    "--interval",
+    "300"
+  ],
+  "destination_root": "/data/gpfs/assoc/pgl/data/Transgenic/archives/checkpoint_archive",
+  "epochs": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "host": "login-0",
+  "pid": 20269,
+  "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+  "started_at": "2026-10-10T03:15:20.313842+00:00",
+  "state": "running"
+}
+
+RUNNER_LOG 
+TRANSFER_LOG {"pending": [], "plan": {"bytes": 14123514894, "candidates": [{"bytes": 14123514894, "epoch": 1, "name": "epoch_01"}], "protected": [13, 14], "refused": [], "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123", "version": 1}, "status": "planned", "target": "pronghorn-b5"}
+
+TRANSFER_STDERR 
+TMUX 0
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

@@ -1,0 +1,40 @@
+$ ssh -o BatchMode=yes pronghorn 'date -Is; /data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3 -B --version; sha256sum /data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3 /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py; sacct -j 6163851,6164049 -P --format=JobID,State,ExitCode'
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-16T15:36:39-0700
+Python 3.11.14
+74d2337199fe0880e01a38cd136c03f28de4383b833393657ce8420ce3c57415  /data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/python3
+0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d  /data/gpfs/assoc/pgl/bin/conda/conda_envs/evidencemodeler/bin/diamond
+5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291  /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/evidence/est_blastx.py
+32ea1a2e86a8c8d7cb33fa1fcc7d71842b9cdc71d072b5c13276611909d90302  /data/gpfs/assoc/pgl/data/Transgenic/worktrees/b6-est-blastx-950cf4c/revision/scripts/64_orthodb_filter.py
+JobID|State|ExitCode
+6163851|COMPLETED|0:0
+6163851.batch|COMPLETED|0:0
+6163851.extern|OUT_OF_MEMORY|0:125
+6164049_0|COMPLETED|0:0
+6164049_0.batch|COMPLETED|0:0
+6164049_0.extern|OUT_OF_MEMORY|0:125
+6164049_1|COMPLETED|0:0
+6164049_1.batch|COMPLETED|0:0
+6164049_1.extern|OUT_OF_MEMORY|0:125
+6164049_2|COMPLETED|0:0
+6164049_2.batch|COMPLETED|0:0
+6164049_2.extern|OUT_OF_MEMORY|0:125
+6164049_3|COMPLETED|0:0
+6164049_3.batch|COMPLETED|0:0
+6164049_3.extern|OUT_OF_MEMORY|0:125
+6164049_4|COMPLETED|0:0
+6164049_4.batch|COMPLETED|0:0
+6164049_4.extern|OUT_OF_MEMORY|0:125
+6164049_5|COMPLETED|0:0
+6164049_5.batch|COMPLETED|0:0
+6164049_5.extern|OUT_OF_MEMORY|0:125
+6164049_6|COMPLETED|0:0
+6164049_6.batch|COMPLETED|0:0
+6164049_6.extern|OUT_OF_MEMORY|0:125
+6164049_7|COMPLETED|0:0
+6164049_7.batch|COMPLETED|0:0
+6164049_7.extern|OUT_OF_MEMORY|0:125
+
+LOCAL_SSH_EXIT=0

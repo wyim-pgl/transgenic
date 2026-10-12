@@ -1,0 +1,11 @@
+--- v2/build_release.py
++++ v5/build_release.py
+@@ -95,7 +95,7 @@
+ 
+ 
+ if __name__ == '__main__':
+-    out = build(HERE.parent / 'candidate', HERE / 'release_v3')
++    out = build(HERE.parent / 'candidate', HERE / 'release_v5')
+     print('Release:', out)
+     for name in ('release.json', 'release.sha256', 'operator-pins.json'):
+         print(name, d.sha(out / name))

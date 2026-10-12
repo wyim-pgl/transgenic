@@ -1,5 +1,21 @@
 # quarantine.md — 저장소 격리소
 
+> **현재 정본(2026-10-12):** [.atl/quarantine.md](.atl/quarantine.md), [.atl/resume.md](.atl/resume.md), [RESTART_HANDOFF_20261012](notes/RESTART_HANDOFF_20261012.md). C2 컴파일 이력에 따른 재개 차이 원인 확인; 운영 수정은 아직 미구현. 아래는 역사 기록이다.
+
+> **재시작 포인터 — 2026-09-23 10:15 PDT:** 현재 상태는 [.atl/resume.md](.atl/resume.md)와 [RESTART_HANDOFF_20260923](notes/RESTART_HANDOFF_20260923.md)에 있다. A46은 승인됐고(09-22) A48이 추가됐으며, WP1 코드는 `/tmp/b6-wp1-20260922`에서 커밋 없이 개발 중이다. 새 재발 방지 항목은 [.atl/quarantine.md §1o](.atl/quarantine.md)에 있다. 아래의 09-16 포인터는 역사 기록이다.
+
+> **재시작 포인터 — 2026-09-16 10:41 PDT:** 현재 상태는 [.atl/resume.md](.atl/resume.md), 실행 목록은 [.atl/todo.md](.atl/todo.md), 새 재발 방지는 [.atl/quarantine.md §1n](.atl/quarantine.md), 상세 정본은 [RESTART_HANDOFF_20260916](notes/RESTART_HANDOFF_20260916.md). MVP 누적코드 f847cb8/153CPUtests·최종검토PASS; 실제GPU readiness는없음. 새3stream서브에이전트작업은저자승인됐으나아직시작하지않음. 아래저장소밖포인터·옛이슈수는역사이며현재지시가아니다.
+
+## B6 구현에서 폐기한 경로 (상세는 위 §1m)
+
+- DIAMOND `.dmnd --seqidlist` 및 top25 사후 동종 제거 대신, frozen lineage 기반 검색 전 종별 DB를 쓴다.
+- `getseq --no-parse-seqids`는2.1.24 미지원; getseq만 제거. exact build는 version+help로 함께 검증한다.
+- 모델 가닥은 FLAG+ts 합성; 증거 off의 원본 체크포인트 동일성은 step0에만 해당한다.
+- 샘플 DB/partial DB, CPU tiny-model 통과를 full-data/GPU 인증으로 쓰지 않는다.
+- 컨테이너 내부 time/사용자 패키지 경로를 호스트와 같다고 가정하지 않는다.
+
+---
+
 > 📌 **여기 있는 것은 전부 "끝난" 것이다.** 계획이 틀렸거나, 시도했는데 안 됐거나, 배제된 것.
 > **미해결 항목은 여기 두지 않는다** — 그건 저장소 밖 `Transgenic/todo.md`로 간다.
 > 다음 문제 해결 때 **false positive · 추가 피해 · 위협 분석**의 근거로 쓰려고 남긴다.
@@ -201,7 +217,19 @@ PRJDB12660 · PRJNA921723 — ZMW 이름 소실 또는 BAM 부재로 제외.
 `MODEL_RE`는 기기(Sequel II/IIe)를 맞게 통과시키지만 데이터 산물을 보지 않고, subreads 가드로 둔
 `MAX_READS=5000000`은 실제 세트가 24.8만–157.8만 리드라 발동하지 않는다. 검증 세트도 3개 중 2개가
 같은 상태이며 그중 `pacbio/Zmays_B73_ccs_PRJNA1470126`은 **디렉토리 이름이 ccs인데 내용은 subreads**다.
-**✅ 저자 결정 2026-09-03: 제외.** 51런 43 GB를 삭제하지 않고
+✏️ **번복 확정 2026-09-22 (A47.3, 저자결정 "원시 CCS 40런을 학습에 쓴다").** 49런(S. bicolor 34 원시 CCS · P. trichocarpa 6 원시 CCS · V. vinifera 9 FLNC급)을 `evidence/training/pacbio/`로 mv 복원, `c2_training_eligible`. baijiu SRR26636578·582는 **WGS 게놈 HiFi**라 격리 유지. 정본 매니페스트 동기화(백업 `.bak-20260922-issue60`). [기록](notes/a46_approval/A47_3_TRAINING_CCS_CENSUS_20260922.md)
+
+✏️ **재개 2026-09-22 — 이 판정은 틀렸다.** 격리된 `.fa.gz` **51개 전부**의 첫 리드 헤더가
+`{movie}/{zmw}/ccs`다(51/51, 0 예외). **subreads가 아니라 CCS다.** 판정 근거였던 URL의
+`_subreads`는 ENA가 NCBI 경유 런에 붙이는 일반 이름이며 산물을 말하지 않는다 — **A47.1이 이미
+A-CCS23·M-CCS26에 대해 정정한 바로 그 아티팩트**다. 아래 문단이 스스로 적은 단서도 같은 방향이었다:
+`MAX_READS=5000000` 가드가 안 터진 것은 실제 세트가 24.8만–157.8만 리드였기 때문인데,
+**그건 CCS 규모다**(Sequel II 8M ZMW subreads라면 10–40배여야 한다). 가드 미발동은 결함이 아니라
+데이터가 subreads가 아니라는 신호였다. 종별 S. bicolor 36 · V. vinifera 9 · P. trichocarpa 6.
+**복원 여부는 런별 기기(A14 Sequel II+ 요구) 확인과 저자 판단 뒤에 정한다. 격리 디렉터리는 그대로 둔다.**
+정본: [ISSUE60 재개](notes/a46_approval/ISSUE60_CCS_REOPEN_20260922.md).
+
+~~**✅ 저자 결정 2026-09-03: 제외.**~~ 51런 43 GB를 삭제하지 않고
 `evidence/RETIRED_DO_NOT_USE/training_pacbio_subreads_20260903/`로 경로 격리했다(그 디렉토리의
 `README.md`에 종·데이터셋별 내역과 되돌리는 법). `longread_fetch.sh`는 이제 `_subreads`가 들어간 URL을
 이름으로 거부한다 — `MODEL_RE`(기기)도 `MAX_READS`(리드 수)도 데이터 산물을 보지 않기 때문이다.
@@ -213,9 +241,48 @@ PRJDB12660 · PRJNA921723 — ZMW 이름 소실 또는 BAM 부재로 제외.
 A. thaliana 6 · G. max 27 · O. sativa 12(수집 중) · P. patens 수집 대기 · P. trichocarpa 11 ·
 S. italica 9 · V. vinifera 11.
 
-⚠️ 검증 세트의 PacBio 2건은 **이 결정에 포함되지 않았다**: `pacbio/Athaliana_zhang2023_PRJNA911826`은
-프로토콜이 "subreads.bam → ccs → FLNC"로 **변환을 전제**한 세트인데 변환이 아직 실행되지 않았고,
-`pacbio/Zmays_B73_ccs_PRJNA1470126`은 이름만 ccs다. 둘 다 별도 판단이 필요하다.
+✏️ **정정 + 종결 (2026-09-21, A47 / B1 v1.37).** 위 문단의 두 문장은 아래로 대체된다.
+
+**① 데이터셋 혼동 정정.** "subreads.bam → ccs → FLNC" 변환을 전제한 세트는
+`pacbio/Athaliana_zhang2023_PRJNA911826`(Zhang 2023)이 **아니라**
+**PRJEB77203 / ERR13994458**(Zhong 2025, A-HiFi, 제출파일 `Col_isoseq.subreads.bam`)이다.
+같은 혼동이 `.atl/archive/todo_before_20260916.md:569`("Zhang CCS conversion not executed")에도 있다.
+**"Zhang CCS 변환 미실행"을 근거로 변환 작업을 되살리지 말 것.**
+
+**② 저자 결정으로 종결 — 변환은 어느 세트에서도 실행하지 않는다.** 저자 지시(2026-09-21):
+"flnc가 다운 받을때 아니면 만들지 말고 그냥 eST 처럼 쓴다". 즉 `ccs`/`lima`/`isoseq refine` 실행 금지,
+FLNC가 공개 저장소에서 **직접 다운로드 가능할 때만** FLNC 자격, 그 외에는 EST급 서열증거로만 사용하고
+tier-1 구조검증 자격은 주지 않는다.
+
+**③ 아카이브 실측(2026-09-21).** ⚠️ **먼저 정정**: ENA fastq 경로의 `_subreads` 접미사는
+NCBI 경유(brokered) PacBio 런에 ENA가 붙이는 **일반 이름일 뿐 산물을 말해주지 않는다**
+(그런 런은 `submitted_ftp`/`submitted_format`이 비어 있다). 이 세션이 처음에 그 이름을 근거로
+A-CCS23·M-CCS26을 subreads로 판정했으나 **오판이었고 철회했다**. 판정 근거는 리드 센서스다.
+
+| 세트 | 런 | 리드 | 평균길이 | A15 기술 | 판정 |
+|---|---:|---:|---:|---|---|
+| A-CCS23 WT (SRR22719002-07) | 6 | 2,604,608 | 2,849 nt | ~2.9 M CCS-level | **CCS-level** (분자당 1리드). subreads라면 수천만 개여야 함 |
+| A-CCS23 전체 | 36 | 15,944,316 | 2,948 nt | — | 동일 |
+| M-CCS26 PRJNA1470126 | 3 | 2,260,021 | 2,408 nt | 2.26 M | **CCS**, 정확히 일치 |
+| M-KNX PRJNA1290227 | 4 | 57,320,590 | 1,723 nt | 57 M | **Revio HiFi(Kinnex)**. Revio는 HiFi만 출력. ENA에 **등재돼 있다**(A15의 "not on ENA"는 오기) |
+| A-HiFi ERR13994458 | 1 | 9,093,086 | 1,822 nt | — | **subreads**. 제출자 본인이 `Col_isoseq.subreads.bam`/`submitted_format=BAM`/32.96 GB로 명시 |
+
+세 프로젝트 모두 `result=analysis` 산물 0건. 조회 범위는 ENA + NCBI SRA runinfo.
+
+**④ 처분.** **A-HiFi(PRJEB77203)만** 재지정 대상이다 — 제출자 파일명·형식과 subreads급 리드 수라는
+ENA 생성 경로가 아닌 근거가 있다. 매니페스트에 행이 없고 신규 취득하지 않는다.
+**A-CCS23 6행·M-CCS26 3행은 `b1_validation_only`로 복원**했고 note에 측정값을 남겼다(오늘 한 재지정 철회).
+`pacbio/Zmays_B73_ccs_PRJNA1470126`의 디렉터리 이름 `ccs`는 **결국 맞다** — 위 D3의 "이름만 ccs"도 이
+측정으로 정정된다. M-KNX는 A15의 hybrid-stratum 처리 유지.
+대조군: **M-FLNC(Wang 2020, Zenodo 2611319)는 실제로 FLNC가 직접 다운로드되므로 FLNC 자격 유지.**
+
+**⑤ 저자 결정(2026-09-21) — 종결.** **FLNC 처리를 거치지 않은 CCS는 PacBio 구조증거 팔을 맡지 못한다.**
+A-CCS23·M-CCS26은 CCS이지 FLNC가 아니며(lima/refine 산물 미공개, 생산은 규칙1로 금지) 규칙2를 문자
+그대로 적용한다. A15 검증역할과 `b1_validation_only` 행은 유지하되 **접합·인트론체인·TSS/TES·UTR 경계·
+GSF 라벨을 지지하지 않고 `59_evidence_support.py`의 `THRESHOLDS`에 계상되지 않는다.**
+따라서 A. thaliana MVP 구조계약은 **ONT 단독 확정**이고(A-CCS23은 A-HiFi 대체 아님),
+`≥2 A-HiFi` 항은 계속 미충족이며 안전장치대로 **예정 STOP은 INCONCLUSIVE**로 내려간다.
+maize는 A46 결정2가 M-FLNC+root-tip ONT로 채점하므로 실질 영향 없음. M-KNX는 A15 hybrid-stratum 유지.
 
 ### D4 ❌ AtRTD3 자체 Iso-Seq(PRJNA755474) 제외 — 독립성 위반
 

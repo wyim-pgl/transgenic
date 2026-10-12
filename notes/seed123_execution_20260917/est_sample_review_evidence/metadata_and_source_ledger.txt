@@ -1,0 +1,16 @@
+orthodb {"diamond_sha256": "0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d", "diamond_version": "diamond version 2.1.24\ndiamond v2.1.24.178 (C) Max Planck Society for the Advancement of Science, Benjamin J. Buchfink, University of Tuebingen", "db_sha256": "1757bf2646cb535ee44b0f9e367819e26f7ec8a014d78ed6fe014bf9bf220e02", "raw_sha256": "b43d99c02b09e6fcd3348deb2f47ab906a1fb79caabfec0ca8831e192adb7504", "filtered_fasta_sha256": "895e123cb0a7ee523d6cb4695a30ca268f730dbafb354e20a7c3153280aca0cd", "launcher_sha256": "5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291"}
+swissprot {"diamond_sha256": "0fb259d705815d44f6c667a976fb71db00ec415afc3cba9938f088b90bfed07d", "diamond_version": "diamond version 2.1.24\ndiamond v2.1.24.178 (C) Max Planck Society for the Advancement of Science, Benjamin J. Buchfink, University of Tuebingen", "db_sha256": "09b6a743f7059949039c0354d45dc8420d3e48cb89372c1b92132ba7f619cc22", "raw_sha256": "103b9a820354c8f001d34a49442c17d67ce684b53cdcc74e729bdd43c9d27147", "filtered_fasta_sha256": "958abfc2a97fc09939c8daf8b7f2b973d727ba5086d26b9ad899d48ba3708ccf", "launcher_sha256": "5fa32fe8e2131aa469f9980b733eaab81eca5d778a72715119bea7b967d4e291"}
+manifest_file_sha256 7d1af21faf7cf99c46120c07781d0af0ad1318a2c2aa12875fcfdd74b4e5f88c
+capture_sha256 f814b5665f60421826eec838bd259f3728ec793d58e1c6ea4a3aa4870769b998
+ALL LOCAL CAPTURE BINDINGS MATCH; no remote bytes verified
+fcb8a4b2413f12dc5c5b0c4d55676cedeac21b3fcb26cf849c089657650a3954 revision/scripts/evidence/est_hsp_contract.py
+aaa8348b4e5d47d43c065857e3bb06509f63086a6d2c79f35f93e88bc211b3e4 revision/scripts/evidence/est_hsp_expanded.py
+0c6490c76d63463d945ee270f46a4ab8b96e929b57f4ac38dc52229f24c11ae3 revision/scripts/evidence/est_phase_accept.py
+6b977fabf3b3401e162e8d8b800d215d34dbe978f54b364429cb2056a60fec4b revision/scripts/evidence/est_phase_project.py
+3314a372aa4c752148aa95ab4bf9cc27be388eaf9d04e96d6476899efc84b190 revision/scripts/evidence/est_real_sample.py
+c028a661a865bc6c11f163cda61ccd3490ab12cd4e7ce3af6fd43eb12f6df7b0 tasknotes/real_sample/REPORT.md
+335a5322753ec95d673d28fda53e588ebb384b6702b9df6f6014aeaa8696dfbd tasknotes/real_sample/build_manifest.py
+eecd3138b01e9ac41f93c1259227385af6da2435ce409ddaf40b34b6f90b173e tasknotes/real_sample/compute_proposal.sbatch
+7d1af21faf7cf99c46120c07781d0af0ad1318a2c2aa12875fcfdd74b4e5f88c tasknotes/real_sample/sitalica.manifest.json
+639797fcbe48052bebaa2c830d7bfee9731358e0150c9964a4cc4fa8b1cef519 tests/test_est_real_sample.py
+This is review-time local inventory, NOT deployed package/runtime verification.

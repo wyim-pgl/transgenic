@@ -1,0 +1,26 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-25T14:55:05-05:00
+Disk quotas for prj 22169 (pid 22169):
+      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace
+ /work/nvme/bilv 421531872  524288000 576716800       -   18874        0       0       -
+Disk quotas for prj 22169 (pid 22169):
+      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace
+  /work/hdd/bilv 231525824  1048576000 1153433600       -   18874        0       0       -
+4.0K	/work/nvme/bilv/wcyim/transgenic/runs/b6_int4
+4.0K	/work/nvme/bilv/wcyim/transgenic/runs/b6_resume_diagnostic
+147G	/work/hdd/bilv/wcyim/transgenic/archives/b6_nvme_20260925
+POST_DELETE_ARCHIVE_UNCHANGED_AND_ALL_FOUR_SOURCES_ABSENT
+{
+ "archive": "/work/hdd/bilv/wcyim/transgenic/archives/b6_nvme_20260925/payload",
+ "roots": [
+  "b6_int4/run_3207149",
+  "b6_int4/run_3207331",
+  "b6_int4/run_3208442",
+  "b6_resume_diagnostic/job_3207863"
+ ]
+}
+PRESERVED_MEMORY_REPORT True
+PRESERVED_PASS_REPORT 3210279
+PRESERVED_PASS_REPORT 3210585

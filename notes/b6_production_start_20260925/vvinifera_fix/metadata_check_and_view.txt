@@ -1,0 +1,5 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+META reads 450180 missing_library NCBI-EST 175 rows {'other': 450005, 'NCBI-EST': 175} sha_ok True True
+VIEW /data/gpfs/assoc/pgl/data/Transgenic/evidence/b6_prepare_20260925/c0/Vvinifera_est_v1/align/Vvinifera

@@ -1,0 +1,186 @@
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities
+2026-09-25T00:31:21-05:00
+3208442|FAILED|1:0|00:05:12
+3208442.batch|FAILED|1:0|00:05:12
+3208442.extern|COMPLETED|0:0|00:05:12
+Filesystem                                                                                 Size  Used Avail Use% Mounted on
+172.28.87.150@tcp10:172.28.87.151@tcp10:172.28.87.152@tcp10:172.28.87.153@tcp10:/dltawork  1.5T  549G  952G  37% /work
+harbor-dt.delta.internal.ncsa.edu:/harbor/ncsa/deltaai/u                                   1.8P   58T  1.7P   4% /u
+/dev/nvme1n1                                                                               1.8T  166G  1.6T  10% /tmp
+Quota usage for user wcyim:
+-----------------------------------------------------------------------------------------------
+|        Directory Path        |  User   |  User   |  User   |   User   |   User   |   User   |
+|                              |  Block  |  Soft   |  Hard   |   File   |   Soft   |   Hard   |
+|                              |  Used   |  Quota  |  Limit  |   Used   |   Quota  |   Limit  |
+-----------------------------------------------------------------------------------------------
+| /u/wcyim                     | 12432K  | 102400M | 103G    | 353      | 750k     | 760k     |
+-----------------------------------------------------------------------------------------------
+
+Quota usage for allocations user wcyim is a member of:
+--------------------------------------------------------------------------------------------------------------
+|        Directory Path        | Allocation | Allocation | Allocation | Allocation | Allocation | Allocation |
+|                              |   Block    |    Soft    |    Hard    |    File    |    Soft    |    Hard    |
+|                              |   Used     |    Quota   |    Limit   |    Used    |    Quota   |    Limit   |
+--------------------------------------------------------------------------------------------------------------
+| /projects/bilv               | 8k         | 500G       | 550G       | 2          | 850000     | 935000     |
+--------------------------------------------------------------------------------------------------------------
+| /work/nvme/bilv              | 548.3G*    | 500G       | 550G       | 14239      | 2550000    | 2805000    |
+--------------------------------------------------------------------------------------------------------------
+| /work/hdd/bilv               | 10.63M     | 1000G      | 1.074T     | 14239      | 2550000    | 2805000    |
+--------------------------------------------------------------------------------------------------------------
+/usr/bin/lfs
+/sw/user/scripts/quota
+LOG /work/nvme/bilv/wcyim/transgenic/repo_b6_unsplit_20260924/b6-int4-3208442.out
+repo: /work/nvme/bilv/wcyim/transgenic/repo_b6_unsplit_20260924 @ 9ad97de snapshot fix from b6-integration f1ee7185caf706e59c144ee800cb7  image: /work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif
+The following values were not passed to `accelerate launch` and had defaults used instead:
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+[rank0]:W0925 00:26:11.084000 3611958 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank1]:W0925 00:26:11.084000 3611959 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank1]:W0925 00:26:11.129000 3611959 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank0]:W0925 00:26:11.129000 3611958 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+NCCL version 2.30.7+cuda13.3
+
+[2026-09-25 00:26:11] gh151:3611959:3611959 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-25 00:26:11] gh151:3611958:3611958 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-25 00:26:11] gh151:3611959:3611959 [1] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId
+[2026-09-25 00:26:11] gh151:3611958:3611958 [0] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+
+[2026-09-25 00:26:11] gh151:3611959:3611959 [1] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-25 00:26:11] gh151:3611958:3611958 [0] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-25 00:26:11] gh151:3611958:3611958 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-25 00:26:11] gh151:3611959:3611959 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-25 00:26:11] gh151:3611958:3611958 [0] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-09-25 00:26:11] gh151:3611959:3611959 [1] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet runarm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+{"epoch_end": 1, "arm": "B6", "data_order_first1000_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38", "evidence_channel": "on", "train": 6.031167348225911, "de_novo": 4.67405891418457, "evidence": 4.67405891418457}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+published /work/runs/b6_int4/run_3208442/straight/step_00003
+published /work/runs/b6_int4/run_3208442/straight/step_00003
+{"epoch_end": 2, "arm": "B6", "data_order_first1000_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4", "evidence_channel": "on", "train": 4.759981791178386, "de_novo": 3.483001947402954, "evidence": 3.483001947402954}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet runarm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+exiting for the job chain (no TRAINING_DONE)exiting for the job chain (no TRAINING_DONE)
+
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+resumed from /work/runs/b6_int4/run_3208442/resumed/latest_state: epoch 0 step 2 global_step 1
+resumed from /work/runs/b6_int4/run_3208442/resumed/latest_state: epoch 0 step 2 global_step 1
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet runarm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+
+{"epoch_end": 1, "arm": "B6", "data_order_first1000_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38", "evidence_channel": "on", "train": 5.422635555267334, "de_novo": 4.67405891418457, "evidence": 4.67405891418457}
+Traceback (most recent call last):
+  File "/work/repo/revision/scripts/b6/integration_4rank.py", line 319, in main
+    report["resumed"] = train("resumed", resume="auto")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/repo/revision/scripts/b6/integration_4rank.py", line 274, in train
+    return trainer.run_b6(spec, model_factory(args, cfg), train_ds, eval_ds, collate_fn=wp3["collate"],
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/repo/train/train_HyenaTransgenic_B6.py", line 450, in run_b6
+    result = train_loop()
+             ^^^^^^^^^^^^
+  File "/work/repo/train/train_HyenaTransgenic_B6.py", line 432, in train_loop
+    save_epoch(epoch + 1, gstep, micro_done, losses, is_best)
+  File "/work/repo/train/train_HyenaTransgenic_B6.py", line 265, in save_epoch
+    rt.save_weights_deterministic(_unwrap(acc, model), os.path.join(tmp, "model.safetensors"))
+  File "/work/repo/src/transgenic/training/b6_runtime.py", line 594, in save_weights_deterministic
+    save_file(tensors, path, metadata={"format": "pt"})
+  File "/usr/local/lib/python3.12/dist-packages/safetensors/torch.py", line 323, in save_file
+    serialize_file(
+safetensors._safetensors_rust.SafetensorError: Error while serializing: I/O error: Disk quota exceeded (os error 122)
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/work/repo/revision/scripts/b6/integration_4rank.py", line 372, in <module>
+[rank0]:     sys.exit(main())
+[rank0]:              ^^^^^^
+[rank0]:   File "/work/repo/revision/scripts/b6/integration_4rank.py", line 358, in main
+[rank0]:     all_parity = gather_object([dict(rank=acc.process_index, parity=parity)])
+[rank0]:                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/usr/local/lib/python3.12/dist-packages/accelerate/utils/operations.py", line 521, in gather_object
+[rank0]:     return _gpu_gather_object(object)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/usr/local/lib/python3.12/dist-packages/accelerate/utils/operations.py", line 500, in _gpu_gather_object
+[rank0]:     torch.distributed.all_gather_object(output_objects, object)
+[rank0]:   File "/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py", line 83, in wrapper
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/usr/local/lib/python3.12/dist-packages/torch/distributed/distributed_c10d.py", line 3821, in all_gather_object
+[rank0]:     input_tensor.resize_(max_object_size)
+[rank0]: torch.OutOfMemoryError: CUDA out of memory. Tried to allocate more than 1EB memory.
+[rank0]:[W925 00:30:16.574749710 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+W0925 00:30:17.900000 3610732 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 3611959 closing signal SIGTERM
+W0925 00:30:47.901000 3610732 torch/distributed/elastic/multiprocessing/api.py:1047] Unable to shutdown process 3611959 via 15, forcefully exiting via 9
+E0925 00:30:48.067000 3610732 torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: 1) local_rank: 0 (pid: 3611958) of binary: /usr/bin/python3
+Traceback (most recent call last):
+  File "/usr/local/bin/accelerate", line 6, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/usr/local/lib/python3.12/dist-packages/accelerate/commands/launch.py", line 1404, in launch_command
+    multi_gpu_launcher(args)
+  File "/usr/local/lib/python3.12/dist-packages/accelerate/commands/launch.py", line 1029, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/run.py", line 1019, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/launcher/api.py", line 386, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+revision/scripts/b6/integration_4rank.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-09-25_00:30:48
+  host      : gh151.hsn.cm.delta.internal.ncsa.edu
+  rank      : 1 (local_rank: 1)
+  exitcode  : -9 (pid: 3611959)  (SIGKILL)
+  error_file: <N/A>
+  traceback : Signal 9 (SIGKILL) received by PID 3611959
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-09-25_00:30:17
+  host      : gh151.hsn.cm.delta.internal.ncsa.edu
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 3611958) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+B6 4-rank integration: ERROR rc=1
+

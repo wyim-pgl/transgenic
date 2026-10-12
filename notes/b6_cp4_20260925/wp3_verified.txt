@@ -1,0 +1,227 @@
+REPORT {
+  "started": "2026-09-25T01:48:21",
+  "world_size": 2,
+  "args": {
+    "model": "real",
+    "data": "wp3-fixtures",
+    "config": "configs/b6_400m_win_v3.json",
+    "tier": 600,
+    "rows": 48,
+    "accumulation": 4,
+    "n_pilot": 3,
+    "stop_at": 1,
+    "backend": "inductor",
+    "mixed_precision": "bf16",
+    "gen_tokens": 12,
+    "nondeterministic": false,
+    "out": "/b6-results/run_3210279"
+  },
+  "wp3_pairs": [
+    {
+      "wid": "Athaliana:Chr1:0-600",
+      "fw": 1,
+      "rc": 2,
+      "tracks_nonzero": 2709,
+      "chain_elements": 7,
+      "label_genes": 1,
+      "label_fw": "100|five_prime_UTR1|110|+|.;110|CDS1|200|+|A;300|CDS2|390|+|A;390|three_prime_UTR1|400|+|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1",
+      "label_rc": "200|three_prime_UTR1|210|-|.;210|CDS2|300|-|A;400|CDS1|490|-|A;490|five_prime_UTR1|500|-|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1"
+    },
+    {
+      "wid": "Athaliana:Chr1:3000-3600",
+      "fw": 7,
+      "rc": 8,
+      "tracks_nonzero": 1800,
+      "chain_elements": 0,
+      "label_genes": 1,
+      "label_fw": "90|three_prime_UTR1|100|-|.;100|CDS2|200|-|A;300|CDS1|390|-|A;390|five_prime_UTR1|400|-|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1",
+      "label_rc": "200|five_prime_UTR1|210|+|.;210|CDS1|300|+|A;400|CDS2|500|+|A;500|three_prime_UTR1|510|+|.>five_prime_UTR1|CDS1|CDS2|three_prime_UTR1"
+    }
+  ],
+  "wp3_note": "label RC asserted: fixture labels are real v3 GSF (tests/b6_fixtures.tile_labels); each RC twin label == reverse_complement_v3(forward) both ways and its served tokens match",
+  "reachable_updates": 3,
+  "rc_pairs_checked": 2,
+  "straight": {
+    "done": true,
+    "global_step": 3,
+    "history": [
+      {
+        "epoch": 1,
+        "global_step": 1,
+        "data_order_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38",
+        "train": 6.031167348225911,
+        "de_novo": 4.67405891418457,
+        "evidence": 4.67405891418457
+      },
+      {
+        "epoch": 2,
+        "global_step": 3,
+        "data_order_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4",
+        "train": 4.759981791178386,
+        "de_novo": 3.483001947402954,
+        "evidence": 3.483001947402954
+      }
+    ],
+    "reason": "max epochs"
+  },
+  "preempted": {
+    "preempted": true,
+    "global_step": 1,
+    "history": []
+  },
+  "resumed": {
+    "done": true,
+    "global_step": 3,
+    "history": [
+      {
+        "epoch": 1,
+        "global_step": 1,
+        "data_order_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38",
+        "train": 5.422635555267334,
+        "de_novo": 4.67405891418457,
+        "evidence": 4.67405891418457
+      },
+      {
+        "epoch": 2,
+        "global_step": 3,
+        "data_order_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4",
+        "train": 4.759981791178386,
+        "de_novo": 3.483001947402954,
+        "evidence": 3.483001947402954
+      }
+    ],
+    "reason": "max epochs"
+  },
+  "link_record_sha256": [
+    "e1e536860bb41760edabeeab14ffb365946032c236f603cd379a917dc469050e",
+    "e1e536860bb41760edabeeab14ffb365946032c236f603cd379a917dc469050e",
+    "e1e536860bb41760edabeeab14ffb365946032c236f603cd379a917dc469050e"
+  ],
+  "resume_byte_identical": true,
+  "generation_row_kinds": [
+    "wp3_forward",
+    "wp3_rc"
+  ],
+  "generation": [
+    {
+      "rank": 0,
+      "parity": {
+        "beams1": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0014864206314086914
+        },
+        "beams2": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0017147064208984375
+        }
+      }
+    },
+    {
+      "rank": 1,
+      "parity": {
+        "beams1": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0014864206314086914
+        },
+        "beams2": {
+          "sequences_equal": true,
+          "max_score_diff": 0.0017147064208984375
+        }
+      }
+    }
+  ],
+  "failures": [],
+  "status": "PASS",
+  "finished": "2026-09-25T01:53:08"
+}
+IDENTITY straight {"accelerate": "1.15.0", "accumulation_steps": 4, "arm": "B6", "aug_seed": 20261037, "batch_size": 1, "binding.aug_seed": 20261037, "binding.aug_spec_id": "b6-aug-uniform-blake2b-v2", "binding.aug_spec_sha256": "42cc22a056a70c062fcfb6c60fbf41537c4906eb86be43d2d46d3137263bfdf7", "binding.base_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "binding.cache_manifest_sha256": "7f270e8be39eca3e659846a7c10fa9104a7e1ceec1b693e2fe40f226d426fb7a", "binding.chain_spec_sha256": "e7d35fdd7e61b10e8badb2c19f46c93de155076f33d5000fcac43879753f36ae", "binding.corpus_sha256": "ffb5b714bfaf80670e5a399ec1bc38c54ecbbab6554e7ee1ecd02d448d6e041e", "binding.coverage": [["Athaliana", "est"], ["Athaliana", "ont"], ["Athaliana", "pacbio"], ["Athaliana", "protein"]], "binding.draws": null, "binding.evidence_sha256": "0114d605e6f417f231a18e573cd4942a584c6a4f87fb35134f20a4e56f5477ad", "binding.evlabel": "absent", "binding.exhaustiveness": {"Athaliana": {"by_source": {"est": {"below_cap": 10000, "molecules": 10000}, "ont": {"below_cap": 10000, "molecules": 10000}, "pacbio": {"below_cap": 10000, "molecules": 10000}}}}, "binding.family": "training", "binding.interval_manifest_sha256": {"Athaliana": "ed6c681f82f3eebc3a02fc01280a889d36d5d5c7956592b4c306de8d78122565"}, "binding.provenance": {"c0:Athaliana/est.PROVENANCE.txt": "c28dc60ff1ca0a824bfe075dd5919f8003ffeae735ada9b68fbfe7f8a87a6f81", "c0:Athaliana/ont.PROVENANCE.txt": "aa781d9dbecfdd889485d4e3eb67aa8660159d5526a91c5885ecf11f7eb7732c", "c0:Athaliana/pacbio.PROVENANCE.txt": "106b1e764e9a213eb2dcc5f987371408a553db8d7de7049fac4482eb8d7c653e", "c0:Athaliana/protein.PROVENANCE.txt": "3ffbbdc99d35aa92774f391f3f15bc40fc6d0be083ad083ca37e027241d60481", "cache_manifest": "7f270e8be39eca3e659846a7c10fa9104a7e1ceec1b693e2fe40f226d426fb7a", "cache_manifest.sha256": "e387466e05a000e9b69152510571e8c389551b8153fb343f9a1da0195017c4a1", "evidence.sha256": "478af66badf5370e3cfc6f15b27341c687e7ed141f019658299bd81fbfcf9b7f", "freeze": "f45a63e2a06df0fee64ba25fec344cb201e71bf1eda84cde6dae5e6d63e39472", "interval_manifest:Athaliana": "ed6c681f82f3eebc3a02fc01280a889d36d5d5c7956592b4c306de8d78122565", "interval_manifest:Athaliana.sha256": "1b758f7f58644cb72adb62a343decd4ca9110a2b7f7241929745a26721e15aa6", "zero_list:eval_input/Athaliana": "2665f3d7f75d92a4f2982cb8d9fcecf321d0864312c50de5e85ecb7216fe9199", "zero_list:train_track/Athaliana": "14b71f917fb25b62acc62772d3e749fab1dd1412d049c0d5f657fde44f33a570", "zero_list:valid_track/Athaliana": "14b71f917fb25b62acc62772d3e749fab1dd1412d049c0d5f657fde44f33a570", "zero_qc:eval_input/Athaliana": "704b06cdf28f6795f28f788ba9083716d4a8a57bb16ac456463552af9ea9b9a6", "zero_qc:train_track/Athaliana": "ea812cc6d050186020b16ed6181c1693be05fd71d4ffe40baf6df8f96ba40997", "zero_qc:valid_track/Athaliana": "e15fe792f6d5783690d2242d2dc92c2f4ac5eb07435525c030ab32a6097b6ad5"}, "binding.record_sha256": "e1e536860bb41760edabeeab14ffb365946032c236f603cd379a917dc469050e", "binding.reference_sha256": {"Athaliana": "6294188fa4532385095499496de68dc6d044bee69dbe2675c5d2978255019e84"}, "binding.revalidated": {}, "binding.roles_sha256": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", "binding.track_spec_sha256": "eed2758079d61456aa5b588596059c264da26691f34a5e03adb67c0e2185a593", "binding.zero_lists": {"eval_input": {"Athaliana": {"qc_sha256": "704b06cdf28f6795f28f788ba9083716d4a8a57bb16ac456463552af9ea9b9a6", "tsv_sha256": "2665f3d7f75d92a4f2982cb8d9fcecf321d0864312c50de5e85ecb7216fe9199"}}, "train_track": {"Athaliana": {"qc_sha256": "ea812cc6d050186020b16ed6181c1693be05fd71d4ffe40baf6df8f96ba40997", "tsv_sha256": "14b71f917fb25b62acc62772d3e749fab1dd1412d049c0d5f657fde44f33a570"}}, "valid_track": {"Athaliana": {"qc_sha256": "e15fe792f6d5783690d2242d2dc92c2f4ac5eb07435525c030ab32a6097b6ad5", "tsv_sha256": "14b71f917fb25b62acc62772d3e749fab1dd1412d049c0d5f657fde44f33a570"}}}, "budget": "full", "channel_dropout_p": 0.5, "checkpointing": "nonreentrant", "compile_policy": "torch.compile backend=inductor; suppress_errors=False; optimize_ddp=False; fallback=failure", "data_order_policy": "B5 order; sha256 of the canonical first 1,000 rows per epoch (data_order.jsonl)", "deterministic": true, "draw_spec": {"aug_seed": 20261037, "aug_spec_id": "b6-aug-uniform-blake2b-v2", "aug_spec_sha256": "42cc22a056a70c062fcfb6c60fbf41537c4906eb86be43d2d46d3137263bfdf7", "channel_dropout_p": 0.5, "draws": null, "fractions": [0.01, 0.1, 0.5, 1.0], "withhold_library_rate": 0.1, "withhold_source_rate": 0.1}, "duckdb": "1.5.5", "effective_batch": 4, "init_policy": "A34 partial-load audit; torch.manual_seed(seed) before build", "init_weights_sha256": "4e13f7c0177615734f78913b032307ae4a5985892e1e3f1c413ba53199443921", "loss": "L_GSF", "max_epochs": 2, "memory_abort_bytes": 110000000000, "mixed_precision": "bf16", "model_version": "b6-chain-gated-xattn-v1", "n_pilot": 3, "patience": 3, "recipe_sha256": "7a224645755f6a05400bca4d8d539770790793e5eb72cf45ab10ccd74a2db58d", "seed": 123, "thinning_set": [0.01, 0.1, 0.5, 1.0], "torch": "2.14.0a0+4fdf77b940.nv26.08", "transformers": "4.57.6", "withhold_library_rate": 0.1, "withhold_source_rate": 0.1, "world_size": 2}
+IDENTITY resumed {"accelerate": "1.15.0", "accumulation_steps": 4, "arm": "B6", "aug_seed": 20261037, "batch_size": 1, "binding.aug_seed": 20261037, "binding.aug_spec_id": "b6-aug-uniform-blake2b-v2", "binding.aug_spec_sha256": "42cc22a056a70c062fcfb6c60fbf41537c4906eb86be43d2d46d3137263bfdf7", "binding.base_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "binding.cache_manifest_sha256": "7f270e8be39eca3e659846a7c10fa9104a7e1ceec1b693e2fe40f226d426fb7a", "binding.chain_spec_sha256": "e7d35fdd7e61b10e8badb2c19f46c93de155076f33d5000fcac43879753f36ae", "binding.corpus_sha256": "ffb5b714bfaf80670e5a399ec1bc38c54ecbbab6554e7ee1ecd02d448d6e041e", "binding.coverage": [["Athaliana", "est"], ["Athaliana", "ont"], ["Athaliana", "pacbio"], ["Athaliana", "protein"]], "binding.draws": null, "binding.evidence_sha256": "0114d605e6f417f231a18e573cd4942a584c6a4f87fb35134f20a4e56f5477ad", "binding.evlabel": "absent", "binding.exhaustiveness": {"Athaliana": {"by_source": {"est": {"below_cap": 10000, "molecules": 10000}, "ont": {"below_cap": 10000, "molecules": 10000}, "pacbio": {"below_cap": 10000, "molecules": 10000}}}}, "binding.family": "training", "binding.interval_manifest_sha256": {"Athaliana": "ed6c681f82f3eebc3a02fc01280a889d36d5d5c7956592b4c306de8d78122565"}, "binding.provenance": {"c0:Athaliana/est.PROVENANCE.txt": "c28dc60ff1ca0a824bfe075dd5919f8003ffeae735ada9b68fbfe7f8a87a6f81", "c0:Athaliana/ont.PROVENANCE.txt": "aa781d9dbecfdd889485d4e3eb67aa8660159d5526a91c5885ecf11f7eb7732c", "c0:Athaliana/pacbio.PROVENANCE.txt": "106b1e764e9a213eb2dcc5f987371408a553db8d7de7049fac4482eb8d7c653e", "c0:Athaliana/protein.PROVENANCE.txt": "3ffbbdc99d35aa92774f391f3f15bc40fc6d0be083ad083ca37e027241d60481", "cache_manifest": "7f270e8be39eca3e659846a7c10fa9104a7e1ceec1b693e2fe40f226d426fb7a", "cache_manifest.sha256": "e387466e05a000e9b69152510571e8c389551b8153fb343f9a1da0195017c4a1", "evidence.sha256": "478af66badf5370e3cfc6f15b27341c687e7ed141f019658299bd81fbfcf9b7f", "freeze": "f45a63e2a06df0fee64ba25fec344cb201e71bf1eda84cde6dae5e6d63e39472", "interval_manifest:Athaliana": "ed6c681f82f3eebc3a02fc01280a889d36d5d5c7956592b4c306de8d78122565", "interval_manifest:Athaliana.sha256": "1b758f7f58644cb72adb62a343decd4ca9110a2b7f7241929745a26721e15aa6", "zero_list:eval_input/Athaliana": "2665f3d7f75d92a4f2982cb8d9fcecf321d0864312c50de5e85ecb7216fe9199", "zero_list:train_track/Athaliana": "14b71f917fb25b62acc62772d3e749fab1dd1412d049c0d5f657fde44f33a570", "zero_list:valid_track/Athaliana": "14b71f917fb25b62acc62772d3e749fab1dd1412d049c0d5f657fde44f33a570", "zero_qc:eval_input/Athaliana": "704b06cdf28f6795f28f788ba9083716d4a8a57bb16ac456463552af9ea9b9a6", "zero_qc:train_track/Athaliana": "ea812cc6d050186020b16ed6181c1693be05fd71d4ffe40baf6df8f96ba40997", "zero_qc:valid_track/Athaliana": "e15fe792f6d5783690d2242d2dc92c2f4ac5eb07435525c030ab32a6097b6ad5"}, "binding.record_sha256": "e1e536860bb41760edabeeab14ffb365946032c236f603cd379a917dc469050e", "binding.reference_sha256": {"Athaliana": "6294188fa4532385095499496de68dc6d044bee69dbe2675c5d2978255019e84"}, "binding.revalidated": {}, "binding.roles_sha256": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", "binding.track_spec_sha256": "eed2758079d61456aa5b588596059c264da26691f34a5e03adb67c0e2185a593", "binding.zero_lists": {"eval_input": {"Athaliana": {"qc_sha256": "704b06cdf28f6795f28f788ba9083716d4a8a57bb16ac456463552af9ea9b9a6", "tsv_sha256": "2665f3d7f75d92a4f2982cb8d9fcecf321d0864312c50de5e85ecb7216fe9199"}}, "train_track": {"Athaliana": {"qc_sha256": "ea812cc6d050186020b16ed6181c1693be05fd71d4ffe40baf6df8f96ba40997", "tsv_sha256": "14b71f917fb25b62acc62772d3e749fab1dd1412d049c0d5f657fde44f33a570"}}, "valid_track": {"Athaliana": {"qc_sha256": "e15fe792f6d5783690d2242d2dc92c2f4ac5eb07435525c030ab32a6097b6ad5", "tsv_sha256": "14b71f917fb25b62acc62772d3e749fab1dd1412d049c0d5f657fde44f33a570"}}}, "budget": "full", "channel_dropout_p": 0.5, "checkpointing": "nonreentrant", "compile_policy": "torch.compile backend=inductor; suppress_errors=False; optimize_ddp=False; fallback=failure", "data_order_policy": "B5 order; sha256 of the canonical first 1,000 rows per epoch (data_order.jsonl)", "deterministic": true, "draw_spec": {"aug_seed": 20261037, "aug_spec_id": "b6-aug-uniform-blake2b-v2", "aug_spec_sha256": "42cc22a056a70c062fcfb6c60fbf41537c4906eb86be43d2d46d3137263bfdf7", "channel_dropout_p": 0.5, "draws": null, "fractions": [0.01, 0.1, 0.5, 1.0], "withhold_library_rate": 0.1, "withhold_source_rate": 0.1}, "duckdb": "1.5.5", "effective_batch": 4, "init_policy": "A34 partial-load audit; torch.manual_seed(seed) before build", "init_weights_sha256": "4e13f7c0177615734f78913b032307ae4a5985892e1e3f1c413ba53199443921", "loss": "L_GSF", "max_epochs": 2, "memory_abort_bytes": 110000000000, "mixed_precision": "bf16", "model_version": "b6-chain-gated-xattn-v1", "n_pilot": 3, "patience": 3, "recipe_sha256": "7a224645755f6a05400bca4d8d539770790793e5eb72cf45ab10ccd74a2db58d", "seed": 123, "thinning_set": [0.01, 0.1, 0.5, 1.0], "torch": "2.14.0a0+4fdf77b940.nv26.08", "transformers": "4.57.6", "withhold_library_rate": 0.1, "withhold_source_rate": 0.1, "world_size": 2}
+CHECKPOINT_HASHES ['05a396a95e5faac8f77ae9a41e86e16d19de6d38a2c0bd4d37969a14499270d0', '05a396a95e5faac8f77ae9a41e86e16d19de6d38a2c0bd4d37969a14499270d0']
+LOG {"filesystem_available_bytes": 1021166747648, "pool": "ddn_hdd", "project_id": 22169, "quota_remaining_bytes": 1072977448960, "required_bytes": 107374182400, "results_dir": "/work/hdd/bilv/wcyim/transgenic/runs/b6_int4"}
+.......                                                                  [100%]
+7 passed in 65.34s (0:01:05)
+repo: /work/hdd/bilv/wcyim/transgenic/repo_b6_filestore_20260924 @ e2a91b7 snapshot test fix from b6-integration 3511a5a3fe2eec1d3ef31835  image: /work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif
+{"filesystem_available_bytes": 1021166751744, "pool": "ddn_hdd", "project_id": 22169, "quota_remaining_bytes": 1072977453056, "required_bytes": 107374182400, "results_dir": "/work/hdd/bilv/wcyim/transgenic/runs/b6_int4"}
+The following values were not passed to `accelerate launch` and had defaults used instead:
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+[rank1]:W0925 01:48:24.892000 1112857 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank0]:W0925 01:48:24.892000 1112856 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank0]:W0925 01:48:24.936000 1112856 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+[rank1]:W0925 01:48:24.936000 1112857 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+NCCL version 2.30.7+cuda13.3
+
+[2026-09-25 01:48:27] gh106:1112856:1112856 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-25 01:48:27] gh106:1112857:1112857 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-25 01:48:27] gh106:1112856:1112856 [0] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId
+[2026-09-25 01:48:27] gh106:1112857:1112857 [1] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+
+[2026-09-25 01:48:27] gh106:1112856:1112856 [0] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-25 01:48:27] gh106:1112857:1112857 [1] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-09-25 01:48:27] gh106:1112856:1112856 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-09-25 01:48:27] gh106:1112857:1112857 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-09-25 01:48:27] gh106:1112856:1112856 [0] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-09-25 01:48:27] gh106:1112857:1112857 [1] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/_inductor/lowering.py:2714: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+{"epoch_end": 1, "arm": "B6", "data_order_first1000_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38", "evidence_channel": "on", "train": 6.031167348225911, "de_novo": 4.67405891418457, "evidence": 4.67405891418457}
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+published /b6-results/run_3210279/straight/step_00003
+published /b6-results/run_3210279/straight/step_00003
+{"epoch_end": 2, "arm": "B6", "data_order_first1000_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4", "evidence_channel": "on", "train": 4.759981791178386, "de_novo": 3.483001947402954, "evidence": 3.483001947402954}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet runarm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+exiting for the job chain (no TRAINING_DONE)
+exiting for the job chain (no TRAINING_DONE)
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+resumed from /b6-results/run_3210279/resumed/latest_state: epoch 0 step 2 global_step 1
+resumed from /b6-results/run_3210279/resumed/latest_state: epoch 0 step 2 global_step 1
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+arm B6: evidence_channel=on budget=stop rule per-rank accumulation 2 world 2 UNGATED: memory bench not yet run
+{"epoch_end": 1, "arm": "B6", "data_order_first1000_sha256": "c09a3250ab54a5e541cb3898b27822494eb6cc505ace267ebf8ca18f5be96b38", "evidence_channel": "on", "train": 5.422635555267334, "de_novo": 4.67405891418457, "evidence": 4.67405891418457}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+published /b6-results/run_3210279/resumed/step_00003
+published /b6-results/run_3210279/resumed/step_00003
+{"epoch_end": 2, "arm": "B6", "data_order_first1000_sha256": "b7c00e324aa10fe737b0f4c1fe061effbc0b4d98a0fbdc209a022d1f3fbad2a4", "evidence_channel": "on", "train": 4.759981791178386, "de_novo": 3.483001947402954, "evidence": 3.483001947402954}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+{"status": "PASS", "failures": []}
+[rank0]:[W925 01:53:10.502527545 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+B6 integration: PASS (/work/hdd/bilv/wcyim/transgenic/runs/b6_int4/run_3210279/report.json)
+
+CONTROLLER_WP3_CP4_VERIFIED

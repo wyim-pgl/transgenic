@@ -1,0 +1,5 @@
+accession	qlen	action	kept	categories
+A1	600	trim	41-600	terminal:strong:1-40:30
+B1	700	split	1-299;341-700	internal:strong:300-340:35
+C1	500	keep	1-500	
+D1	80	drop		
