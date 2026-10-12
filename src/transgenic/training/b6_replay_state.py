@@ -15,11 +15,8 @@ import torch
 @dataclass
 class _TensorState:
     original: torch.Tensor
+    data_view: torch.Tensor
     value: torch.Tensor
-    shape: tuple
-    stride: tuple
-    dtype: torch.dtype
-    device: torch.device
     requires_grad: bool
 
 
@@ -80,9 +77,8 @@ def capture_model(model):
                 or torch._debug_has_internal_overlap(tensor) != 0):
             raise ValueError("Unsupported tensor layout for training-state replay")
         tensors[id(tensor)] = _TensorState(
-            tensor, tensor.detach().to(device="cpu", copy=True),
-            tuple(tensor.shape), tuple(tensor.stride()), tensor.dtype,
-            tensor.device, tensor.requires_grad,
+            tensor, tensor.detach(), tensor.detach().to(device="cpu", copy=True),
+            tensor.requires_grad,
         )
 
     for module in model.modules():
@@ -105,18 +101,23 @@ def restore_model(snapshot):
     with torch.no_grad():
         for saved in snapshot.tensors:
             original = saved.original
-            if (original.layout == torch.strided and original.shape == saved.shape
-                    and original.stride() == saved.stride and original.dtype == saved.dtype
-                    and original.device == saved.device and not original.is_quantized):
-                original.copy_(saved.value)
-            else:
-                restored = torch.empty_strided(saved.shape, saved.stride,
-                                               dtype=saved.dtype, device=saved.device)
-                restored.copy_(saved.value)
-                original.data = restored
+            data_view = saved.data_view
+            if not (original.layout == torch.strided and not original.is_quantized
+                    and original.shape == data_view.shape and original.stride() == data_view.stride()
+                    and original.dtype == data_view.dtype and original.device == data_view.device
+                    and original.storage_offset() == data_view.storage_offset()
+                    and original.untyped_storage()._cdata == data_view.untyped_storage()._cdata):
+                # This retained view allocates no tensor storage. Reattach its
+                # original storage, offset and metadata before copying CPU values.
+                original.data = data_view
+            original.copy_(saved.value)
             original.requires_grad_(saved.requires_grad)
         for saved in snapshot.modules:
             module = saved.original
+            # Deletion followed by a plain attribute assignment can shadow a
+            # restored registration through ordinary Python attribute lookup.
+            for name in saved.parameters.keys() | saved.buffers.keys():
+                module.__dict__.pop(name, None)
             module._parameters.clear()
             module._parameters.update(saved.parameters)
             module._buffers.clear()

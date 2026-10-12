@@ -128,6 +128,46 @@ class ReplayStateTests(unittest.TestCase):
     def test_base_exception_propagates_after_complete_restore(self):
         self.exercise_fixture_restore(interrupt=True)
 
+    def test_deleted_registrations_cannot_be_shadowed_by_plain_attributes(self):
+        from transgenic.training import b6_replay_state
+
+        model = ReplayFixture()
+        weight, running = model.weight, model.running
+        with b6_replay_state.preserve_training_state(model):
+            del model.weight
+            model.weight = torch.tensor([-3.])
+            del model.running
+            model.running = torch.tensor([-6.])
+            model.unrelated = "body attribute remains"
+        self.assertIs(model.weight, weight)
+        self.assertIs(model.running, running)
+        self.assertTrue(torch.equal(model.weight, torch.tensor([[1., 2.], [3., 4.]])))
+        self.assertTrue(torch.equal(model.running, torch.tensor([6., 7.])))
+        self.assertEqual(model.unrelated, "body attribute remains")
+
+    def test_shared_storage_views_and_offsets_survive_data_replacement(self):
+        from transgenic.training import b6_replay_state
+
+        for change_whole in (False, True):
+            with self.subTest(change_whole=change_whole):
+                model = torch.nn.Module()
+                model.register_buffer("whole", torch.arange(8.))
+                model.register_buffer("slice", model.whole[2:6])
+                whole, sliced = model.whole, model.slice
+                with b6_replay_state.preserve_training_state(model):
+                    model.slice.data = torch.zeros(4)
+                    if change_whole:
+                        model.whole.data = torch.zeros(9, dtype=torch.float64)
+                    else:
+                        model.whole.fill_(-1)
+                self.assertIs(model.whole, whole)
+                self.assertIs(model.slice, sliced)
+                self.assertTrue(torch.equal(model.whole, torch.arange(8.)))
+                self.assertTrue(torch.equal(model.slice, torch.tensor([2., 3., 4., 5.])))
+                self.assertEqual(model.slice.storage_offset(), 2)
+                model.slice[0] = 99
+                self.assertEqual(model.whole[2].item(), 99)
+
     def test_changed_tensor_metadata_preserves_original_objects(self):
         from transgenic.training import b6_replay_state
 
