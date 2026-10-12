@@ -1,0 +1,445 @@
+test_one_rank_changed_input_refuses_replay_collectively (tests.test_b6_replay_integration.DistributedReplayIntegrationTests.test_one_rank_changed_input_refuses_replay_collectively) ... ok
+test_two_rank_replay_preserves_state_with_real_shard_padding (tests.test_b6_replay_integration.DistributedReplayIntegrationTests.test_two_rank_replay_preserves_state_with_real_shard_padding) ... ok
+test_manifest_rejects_foreign_incomplete_unsafe_or_changed_evidence (tests.test_b6_replay_integration.LegacyManifestTests.test_manifest_rejects_foreign_incomplete_unsafe_or_changed_evidence) ... ok
+test_manifest_validates_all_files_and_original_prefix_without_writes (tests.test_b6_replay_integration.LegacyManifestTests.test_manifest_validates_all_files_and_original_prefix_without_writes) ... ok
+test_shared_executor_retains_all_sixteen_legacy_companions (tests.test_b6_replay_integration.LegacyManifestTests.test_shared_executor_retains_all_sixteen_legacy_companions) ... ok
+test_fingerprint_binds_effective_cache_overrides (tests.test_b6_replay_integration.ReplayHelperTests.test_fingerprint_binds_effective_cache_overrides) ... ok
+test_reconstruct_uses_sampler_keys_and_restores_epoch_generator_on_failure (tests.test_b6_replay_integration.ReplayHelperTests.test_reconstruct_uses_sampler_keys_and_restores_epoch_generator_on_failure) ... ok
+test_pending_grads_rng_buffers_and_modes_survive_success_and_baseexception (tests.test_b6_replay_integration.ReplayStateIntegrationTests.test_pending_grads_rng_buffers_and_modes_survive_success_and_baseexception) ... ok
+test_changed_reconstructed_input_is_refused (tests.test_b6_replay_integration.ResumeHistoryTests.test_changed_reconstructed_input_is_refused) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_epoch_eval_and_fixed_step_history (tests.test_b6_replay_integration.ResumeHistoryTests.test_epoch_eval_and_fixed_step_history) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_epoch_resume_keeps_pending_gradient_and_matches_next_update (tests.test_b6_replay_integration.ResumeHistoryTests.test_epoch_resume_keeps_pending_gradient_and_matches_next_update) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_resume_replays_before_new_rows_and_preserves_training_result (tests.test_b6_replay_integration.ResumeHistoryTests.test_resume_replays_before_new_rows_and_preserves_training_result) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_tampered_history_is_refused_before_state_load (tests.test_b6_replay_integration.ResumeHistoryTests.test_tampered_history_is_refused_before_state_load) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_compiled_resume_refuses_missing_ledger (tests.test_b6_replay_integration.TrainerHistoryTests.test_compiled_resume_refuses_missing_ledger) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_explicit_bootstrap_rejects_fresh_eager_and_existing_ledger (tests.test_b6_replay_integration.TrainerHistoryTests.test_explicit_bootstrap_rejects_fresh_eager_and_existing_ledger) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_fresh_compiled_checkpoint_binds_history (tests.test_b6_replay_integration.TrainerHistoryTests.test_fresh_compiled_checkpoint_binds_history) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_base_exception_propagates_after_complete_restore (tests.test_b6_replay_state.ReplayStateTests.test_base_exception_propagates_after_complete_restore) ... ok
+test_changed_tensor_metadata_preserves_original_objects (tests.test_b6_replay_state.ReplayStateTests.test_changed_tensor_metadata_preserves_original_objects) ... ok
+test_complete_registries_ties_gradients_and_modes_are_restored (tests.test_b6_replay_state.ReplayStateTests.test_complete_registries_ties_gradients_and_modes_are_restored) ... ok
+test_cpu_context_does_not_initialize_cuda (tests.test_b6_replay_state.ReplayStateTests.test_cpu_context_does_not_initialize_cuda) ... skipped 'CUDA was already initialized'
+test_deleted_registrations_cannot_be_shadowed_by_plain_attributes (tests.test_b6_replay_state.ReplayStateTests.test_deleted_registrations_cannot_be_shadowed_by_plain_attributes) ... ok
+test_initialized_cuda_rngs_and_gpu_values_are_restored (tests.test_b6_replay_state.ReplayStateTests.test_initialized_cuda_rngs_and_gpu_values_are_restored) ... ok
+test_noncontiguous_tensor_strides_survive_metadata_changes (tests.test_b6_replay_state.ReplayStateTests.test_noncontiguous_tensor_strides_survive_metadata_changes) ... ok
+test_overlapping_buffer_fails_before_replay (tests.test_b6_replay_state.ReplayStateTests.test_overlapping_buffer_fails_before_replay) ... ok
+test_parameter_mutation_is_rolled_back (tests.test_b6_replay_state.ReplayStateTests.test_parameter_mutation_is_rolled_back) ... ok
+test_rng_helpers_restore_independently_saved_draws (tests.test_b6_replay_state.ReplayStateTests.test_rng_helpers_restore_independently_saved_draws) ... ok
+test_shared_storage_views_and_offsets_survive_data_replacement (tests.test_b6_replay_state.ReplayStateTests.test_shared_storage_views_and_offsets_survive_data_replacement) ... ok
+test_sparse_parameter_buffer_or_gradient_fails_before_replay (tests.test_b6_replay_state.ReplayStateTests.test_sparse_parameter_buffer_or_gradient_fails_before_replay) ... ok
+test_activity_counters_require_both_monotonic_values (tests.test_b6_compile_history.CompileHistoryTest.test_activity_counters_require_both_monotonic_values) ... ok
+test_bootstrap_assignment_copies_caller_provenance (tests.test_b6_compile_history.CompileHistoryTest.test_bootstrap_assignment_copies_caller_provenance) ... ok
+test_caller_mutations_cannot_change_recorded_or_returned_payload (tests.test_b6_compile_history.CompileHistoryTest.test_caller_mutations_cannot_change_recorded_or_returned_payload) ... ok
+test_check_inputs_rejects_metadata_and_rank_changes (tests.test_b6_compile_history.CompileHistoryTest.test_check_inputs_rejects_metadata_and_rank_changes) ... ok
+test_checkpoint_fields_and_expected_world_are_strict (tests.test_b6_compile_history.CompileHistoryTest.test_checkpoint_fields_and_expected_world_are_strict) ... ok
+test_duplicate_json_fields_fail_closed_even_with_recomputed_digest (tests.test_b6_compile_history.CompileHistoryTest.test_duplicate_json_fields_fail_closed_even_with_recomputed_digest) ... ok
+test_empty_history_roundtrip_and_negative_graph_delta_rejection (tests.test_b6_compile_history.CompileHistoryTest.test_empty_history_roundtrip_and_negative_graph_delta_rejection) ... ok
+test_input_signature_binds_layout_dtype_shape_and_dynamic_markers (tests.test_b6_compile_history.CompileHistoryTest.test_input_signature_binds_layout_dtype_shape_and_dynamic_markers) ... ok
+test_invalid_rng_state_fails_without_changing_global_rng (tests.test_b6_compile_history.CompileHistoryTest.test_invalid_rng_state_fails_without_changing_global_rng) ... ok
+test_malformed_cuda_rng_bytes_are_rejected (tests.test_b6_compile_history.CompileHistoryTest.test_malformed_cuda_rng_bytes_are_rejected) ... ok
+test_malformed_typed_rng_payloads_fail_closed (tests.test_b6_compile_history.CompileHistoryTest.test_malformed_typed_rng_payloads_fail_closed) ... ok
+test_observe_skips_non_events_and_records_actual_context (tests.test_b6_compile_history.CompileHistoryTest.test_observe_skips_non_events_and_records_actual_context) ... ok
+test_real_weak_dynamic_markers_are_bound_distinctly_for_replay (tests.test_b6_compile_history.CompileHistoryTest.test_real_weak_dynamic_markers_are_bound_distinctly_for_replay) ... ok
+test_recomputed_digest_cannot_hide_schema_context_rank_or_rng_damage (tests.test_b6_compile_history.CompileHistoryTest.test_recomputed_digest_cannot_hide_schema_context_rank_or_rng_damage) ... ok
+test_recomputed_digest_cannot_hide_weak_dynamic_marker_damage (tests.test_b6_compile_history.CompileHistoryTest.test_recomputed_digest_cannot_hide_weak_dynamic_marker_damage) ... ok
+test_reconstruction_requires_explicit_origin_and_provenance (tests.test_b6_compile_history.CompileHistoryTest.test_reconstruction_requires_explicit_origin_and_provenance) ... ok
+test_requires_grad_is_part_of_the_replay_signature (tests.test_b6_compile_history.CompileHistoryTest.test_requires_grad_is_part_of_the_replay_signature) ... ok
+test_rng_roundtrip_preserves_gaussian_cache (tests.test_b6_compile_history.CompileHistoryTest.test_rng_roundtrip_preserves_gaussian_cache) ... ok
+test_rng_roundtrip_reproduces_independently_saved_next_draws (tests.test_b6_compile_history.CompileHistoryTest.test_rng_roundtrip_reproduces_independently_saved_next_draws) ... ok
+test_save_load_binds_digest_identity_fingerprint_and_world (tests.test_b6_compile_history.CompileHistoryTest.test_save_load_binds_digest_identity_fingerprint_and_world) ... ok
+test_scalar_none_and_bfloat16_inputs (tests.test_b6_compile_history.CompileHistoryTest.test_scalar_none_and_bfloat16_inputs) ... ok
+test_tensor_value_change_is_rejected (tests.test_b6_compile_history.CompileHistoryTest.test_tensor_value_change_is_rejected) ... ok
+test_rank1_backend_activity_records_event_without_graph_delta (tests.test_b6_compile_history.DistributedCompileHistoryTest.test_rank1_backend_activity_records_event_without_graph_delta) ... ok
+test_rank1_compile_records_both_real_companions_identically (tests.test_b6_compile_history.DistributedCompileHistoryTest.test_rank1_compile_records_both_real_companions_identically) ... ok
+test_rank1_hash_error_propagates_to_both_workers (tests.test_b6_compile_history.DistributedCompileHistoryTest.test_rank1_hash_error_propagates_to_both_workers) ... ok
+test_rank_position_mismatch_is_rejected_on_both_workers (tests.test_b6_compile_history.DistributedCompileHistoryTest.test_rank_position_mismatch_is_rejected_on_both_workers) ... ok
+test_arms_share_initialisation_and_data_order (tests.test_b6_trainer.ArmTests.test_arms_share_initialisation_and_data_order) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_one_run_per_arm (tests.test_b6_trainer.ArmTests.test_one_run_per_arm) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:124: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpog54bdfz/arm_B6/runtime_identity.txt' mode='r' encoding='UTF-8'>
+  text = open(os.path.join(run_dir, "runtime_identity.txt")).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:124: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpog54bdfz/arm_C2/runtime_identity.txt' mode='r' encoding='UTF-8'>
+  text = open(os.path.join(run_dir, "runtime_identity.txt")).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:124: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpog54bdfz/arm_C3/runtime_identity.txt' mode='r' encoding='UTF-8'>
+  text = open(os.path.join(run_dir, "runtime_identity.txt")).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:124: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpog54bdfz/arm_C4/runtime_identity.txt' mode='r' encoding='UTF-8'>
+  text = open(os.path.join(run_dir, "runtime_identity.txt")).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:124: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpog54bdfz/arm_C6/runtime_identity.txt' mode='r' encoding='UTF-8'>
+  text = open(os.path.join(run_dir, "runtime_identity.txt")).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:124: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpog54bdfz/arm_C7/runtime_identity.txt' mode='r' encoding='UTF-8'>
+  text = open(os.path.join(run_dir, "runtime_identity.txt")).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_alpha_outside_weight_decay (tests.test_b6_trainer.CompileAndAbortTests.test_alpha_outside_weight_decay) ... ok
+test_b6_compiles_without_ddp_graph_partitioning (tests.test_b6_trainer.CompileAndAbortTests.test_b6_compiles_without_ddp_graph_partitioning) ... ok
+test_compile_guard_and_kernel_check (tests.test_b6_trainer.CompileAndAbortTests.test_compile_guard_and_kernel_check) ... ok
+test_compiled_training_has_no_recompile_after_warmup (tests.test_b6_trainer.CompileAndAbortTests.test_compiled_training_has_no_recompile_after_warmup) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_deterministic_mode_runs_and_is_recorded (tests.test_b6_trainer.CompileAndAbortTests.test_deterministic_mode_runs_and_is_recorded) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_injected_compile_failure_raises (tests.test_b6_trainer.CompileAndAbortTests.test_injected_compile_failure_raises) ... ok
+test_main_refuses_ungated_config (tests.test_b6_trainer.CompileAndAbortTests.test_main_refuses_ungated_config) ... /tmp/b6-c2-recompile/tests/test_b6_trainer.py:537: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/b6-c2-recompile/configs/b6_400m_win_v3.json' mode='r' encoding='UTF-8'>
+  body = json.load(open(os.path.join(ROOT, "configs", "b6_400m_win_v3.json")))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:539: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmprfemzp5p/ungated.json' mode='w' encoding='UTF-8'>
+  json.dump(dict(body, gate_status=rt.GATE_STATUS), open(cfg, "w"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+usage: python -m unittest [-h] --config CONFIG --arm {B6,C2,C3,C4,C6,C7}
+                          [--seed SEED] --bindings BINDINGS --output-dir
+                          OUTPUT_DIR
+                          [--legacy-compile-bootstrap LEGACY_COMPILE_BOOTSTRAP]
+                          [--resume RESUME] [--batch-size BATCH_SIZE]
+                          [--num-workers NUM_WORKERS]
+                          [--save-every-n-steps SAVE_EVERY_N_STEPS]
+                          [--max-epochs MAX_EPOCHS]
+                          [--mixed-precision {bf16,no}]
+                          [--compile-backend COMPILE_BACKEND]
+                          [--compile-warmup-steps COMPILE_WARMUP_STEPS]
+                          [--deterministic] [--allow-ungated]
+                          [--stop-after-updates STOP_AFTER_UPDATES]
+python -m unittest: error: rule 11: every B6 arm uses seed 123
+ok
+test_memory_abort_writes_marker_and_stops (tests.test_b6_trainer.CompileAndAbortTests.test_memory_abort_writes_marker_and_stops) ... ok
+test_resume_refuses_old_partitioned_compile_policy (tests.test_b6_trainer.CompileAndAbortTests.test_resume_refuses_old_partitioned_compile_policy) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_b6_config_is_win_v3_plus_frozen_block (tests.test_b6_trainer.ConfigTests.test_b6_config_is_win_v3_plus_frozen_block) ... /tmp/b6-c2-recompile/tests/test_b6_trainer.py:548: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/b6-c2-recompile/configs/b5_400m_win_v3.json' mode='r' encoding='UTF-8'>
+  b5 = json.load(open(os.path.join(ROOT, "configs", "b5_400m_win_v3.json")))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_b5_data_order_is_accelerates_seedable_sampler (tests.test_b6_trainer.ResumeTests.test_b5_data_order_is_accelerates_seedable_sampler) ... ok
+test_binding_family_and_evlabel_are_enforced (tests.test_b6_trainer.ResumeTests.test_binding_family_and_evlabel_are_enforced) ... ok
+test_resume_accepts_a_record_with_tuples (tests.test_b6_trainer.ResumeTests.test_resume_accepts_a_record_with_tuples) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_resume_refused_for_every_required_key (tests.test_b6_trainer.ResumeTests.test_resume_refused_for_every_required_key) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_resume_refused_when_a_binding_changes (tests.test_b6_trainer.ResumeTests.test_resume_refused_when_a_binding_changes) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_resume_skips_in_the_sampler_without_loading_skipped_rows (tests.test_b6_trainer.ResumeTests.test_resume_skips_in_the_sampler_without_loading_skipped_rows) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_step_checkpoint_byte_stable_across_resume (tests.test_b6_trainer.ResumeTests.test_step_checkpoint_byte_stable_across_resume) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:145: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpp9nxq4jp/straight/step_00006/model.safetensors'>
+  ref = open(os.path.join(rt.step_checkpoint_dir(straight.run_dir, 6), "model.safetensors"), "rb").read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:146: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpp9nxq4jp/straight/epoch_02/model.safetensors'>
+  ref_epoch = open(os.path.join(straight.run_dir, "epoch_02", "model.safetensors"), "rb").read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:155: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpp9nxq4jp/resumed1/step_00006/model.safetensors'>
+  got = open(os.path.join(rt.step_checkpoint_dir(resumed.run_dir, 6), "model.safetensors"), "rb").read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:157: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpp9nxq4jp/resumed1/epoch_02/model.safetensors'>
+  self.assertEqual(open(os.path.join(resumed.run_dir, "epoch_02", "model.safetensors"), "rb").read(),
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:159: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpp9nxq4jp/resumed1/runtime_identity.txt' mode='r' encoding='UTF-8'>
+  text = open(os.path.join(resumed.run_dir, "runtime_identity.txt")).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:155: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpp9nxq4jp/resumed3/step_00006/model.safetensors'>
+  got = open(os.path.join(rt.step_checkpoint_dir(resumed.run_dir, 6), "model.safetensors"), "rb").read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:157: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpp9nxq4jp/resumed3/epoch_02/model.safetensors'>
+  self.assertEqual(open(os.path.join(resumed.run_dir, "epoch_02", "model.safetensors"), "rb").read(),
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:159: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpp9nxq4jp/resumed3/runtime_identity.txt' mode='r' encoding='UTF-8'>
+  text = open(os.path.join(resumed.run_dir, "runtime_identity.txt")).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:155: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpp9nxq4jp/resumed5/step_00006/model.safetensors'>
+  got = open(os.path.join(rt.step_checkpoint_dir(resumed.run_dir, 6), "model.safetensors"), "rb").read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:157: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpp9nxq4jp/resumed5/epoch_02/model.safetensors'>
+  self.assertEqual(open(os.path.join(resumed.run_dir, "epoch_02", "model.safetensors"), "rb").read(),
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:159: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpp9nxq4jp/resumed5/runtime_identity.txt' mode='r' encoding='UTF-8'>
+  text = open(os.path.join(resumed.run_dir, "runtime_identity.txt")).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_weight_file_is_deterministic_and_round_trips (tests.test_b6_trainer.ResumeTests.test_weight_file_is_deterministic_and_round_trips) ... /tmp/b6-c2-recompile/tests/test_b6_trainer.py:187: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpr9x__ygj/w0.safetensors'>
+  self.assertEqual(open(paths[0], "rb").read(), open(paths[1], "rb").read())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:187: ResourceWarning: unclosed file <_io.BufferedReader name='/tmp/tmpr9x__ygj/w1.safetensors'>
+  self.assertEqual(open(paths[0], "rb").read(), open(paths[1], "rb").read())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_canonical_data_order_and_draw_logs_agree_across_arms_and_resume (tests.test_b6_trainer.ReviewRound1Tests.test_canonical_data_order_and_draw_logs_agree_across_arms_and_resume) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:371: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpua_cr6ah/b6/data_order.jsonl' mode='r' encoding='UTF-8'>
+  for line in open(os.path.join(self.tmp.name, run, "data_order.jsonl")):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:371: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpua_cr6ah/c2/data_order.jsonl' mode='r' encoding='UTF-8'>
+  for line in open(os.path.join(self.tmp.name, run, "data_order.jsonl")):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:371: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpua_cr6ah/res/data_order.jsonl' mode='r' encoding='UTF-8'>
+  for line in open(os.path.join(self.tmp.name, run, "data_order.jsonl")):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:378: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpua_cr6ah/b6/draw_log/rank00.tsv' mode='r' encoding='UTF-8'>
+  return sorted(set(l for f in os.listdir(d) for l in open(os.path.join(d, f))))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:378: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpua_cr6ah/c2/draw_log/rank00.tsv' mode='r' encoding='UTF-8'>
+  return sorted(set(l for f in os.listdir(d) for l in open(os.path.join(d, f))))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:378: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpua_cr6ah/res/draw_log/rank00.tsv' mode='r' encoding='UTF-8'>
+  return sorted(set(l for f in os.listdir(d) for l in open(os.path.join(d, f))))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_corpus_rows_on_the_pinned_schema_and_the_wp3_fixture_corpus (tests.test_b6_trainer.ReviewRound1Tests.test_corpus_rows_on_the_pinned_schema_and_the_wp3_fixture_corpus) ... ok
+test_corpus_rows_on_the_wp3_fixture_corpus (tests.test_b6_trainer.ReviewRound1Tests.test_corpus_rows_on_the_wp3_fixture_corpus) ... /tmp/b6-c2-recompile/src/transgenic/datasets/build_b5.py:25: ImportWarning: can't resolve package from __spec__ or __package__, falling back on __name__ and __path__
+  from ..utils import gsf_contract as gc  # type: ignore
+ok
+test_every_link_verifies_compiled_execution (tests.test_b6_trainer.ReviewRound1Tests.test_every_link_verifies_compiled_execution) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_rc_rows_are_internally_consistent_twins (tests.test_b6_trainer.ReviewRound1Tests.test_rc_rows_are_internally_consistent_twins) ... ok
+test_resume_refuses_a_different_initialisation (tests.test_b6_trainer.ReviewRound1Tests.test_resume_refuses_a_different_initialisation) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_resume_refuses_a_foreign_arm_or_seed_checkpoint_before_loading (tests.test_b6_trainer.ReviewRound1Tests.test_resume_refuses_a_foreign_arm_or_seed_checkpoint_before_loading) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:324: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpk_knrny1/own2/latest_state/identity.json' mode='r' encoding='UTF-8'>
+  ident = json.load(open(os.path.join(own, rt.CHECKPOINT_IDENTITY)))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_trainer.py:326: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpk_knrny1/own2/latest_state/identity.json' mode='w' encoding='UTF-8'>
+  json.dump(ident, open(os.path.join(own, rt.CHECKPOINT_IDENTITY), "w"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_verify_training_inputs_runs_the_real_wp3_verifier_with_the_freeze_path (tests.test_b6_trainer.ReviewRound2Tests.test_verify_training_inputs_runs_the_real_wp3_verifier_with_the_freeze_path) ... skipped "needs merged b6_bindings (mandatory after the b6-integration merge): No module named 'pyarrow'"
+test_accepted_upgrade_is_explicit_in_link_log_and_preserves_first_identity (tests.test_b6_compile_recovery.CompilePolicyRecoveryTests.test_accepted_upgrade_is_explicit_in_link_log_and_preserves_first_identity) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_guard_only_upgrade_accepts_old_run_and_checkpoint_without_rewriting_identity (tests.test_b6_compile_recovery.CompilePolicyRecoveryTests.test_guard_only_upgrade_accepts_old_run_and_checkpoint_without_rewriting_identity) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_upgrade_is_directional_and_does_not_accept_any_other_policy_change (tests.test_b6_compile_recovery.CompilePolicyRecoveryTests.test_upgrade_is_directional_and_does_not_accept_any_other_policy_change) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_real_c2_compilation_trace_accepts_all_three_label_intervals (tests.test_b6_compile_recovery.LabelSpecializationTests.test_real_c2_compilation_trace_accepts_all_three_label_intervals) ... ok
+test_reset_compiler_counters_are_rejected (tests.test_b6_compile_recovery.LabelSpecializationTests.test_reset_compiler_counters_are_rejected) ... ok
+test_three_regions_for_each_training_and_eval_tier_fit_the_default_budget (tests.test_b6_compile_recovery.LabelSpecializationTests.test_three_regions_for_each_training_and_eval_tier_fit_the_default_budget) ... ok
+test_compile_b6_disables_automatic_dynamic_shapes (tests.test_b6_compile_static.CompileB6PolicyTests.test_compile_b6_disables_automatic_dynamic_shapes) ... ok
+test_compile_b6_sets_cache_size_limit_on_older_torch (tests.test_b6_compile_static.CompileB6PolicyTests.test_compile_b6_sets_cache_size_limit_on_older_torch) ... ok
+test_default_cap_is_the_recompile_limit (tests.test_b6_compile_static.CompileGuardTests.test_default_cap_is_the_recompile_limit) ... ok
+test_new_key_with_five_graphs_after_warmup_is_allowed (tests.test_b6_compile_static.CompileGuardTests.test_new_key_with_five_graphs_after_warmup_is_allowed) ... ok
+test_new_tier_after_warmup_allowed_with_its_own_label_split (tests.test_b6_compile_static.CompileGuardTests.test_new_tier_after_warmup_allowed_with_its_own_label_split) ... ok
+test_second_graph_for_seen_length_after_warmup_allowed_once (tests.test_b6_compile_static.CompileGuardTests.test_second_graph_for_seen_length_after_warmup_allowed_once) ... ok
+test_several_graphs_in_one_observation_raise_after_warmup (tests.test_b6_compile_static.CompileGuardTests.test_several_graphs_in_one_observation_raise_after_warmup) ... ok
+test_suppress_errors_raises (tests.test_b6_compile_static.CompileGuardTests.test_suppress_errors_raises) ... ok
+test_total_cap_over_train_and_eval_keys_gives_the_intended_message (tests.test_b6_compile_static.CompileGuardTests.test_total_cap_over_train_and_eval_keys_gives_the_intended_message) ... ok
+test_total_compile_event_cap_raises_on_too_many_tiers (tests.test_b6_compile_static.CompileGuardTests.test_total_compile_event_cap_raises_on_too_many_tiers) ... ok
+test_two_graphs_in_one_forward_for_a_new_tier_set_its_first_delta (tests.test_b6_compile_static.CompileGuardTests.test_two_graphs_in_one_forward_for_a_new_tier_set_its_first_delta) ... ok
+test_lengths_compile_static_and_labels_stay_dynamic (tests.test_b6_compile_static.StaticLengthCompileTests.test_lengths_compile_static_and_labels_stay_dynamic) ... ok
+test_pilot_config_is_gated_and_pins_the_pilot (tests.test_b6_pilot.PilotConfigGateTests.test_pilot_config_is_gated_and_pins_the_pilot) ... /tmp/b6-c2-recompile/tests/test_b6_pilot.py:142: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/b6-c2-recompile/configs/b6_400m_win_v3.json' mode='r' encoding='UTF-8'>
+  base = json.load(open(BASE_CFG))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_pilot_config_refuses_allow_ungated (tests.test_b6_pilot.PilotConfigGateTests.test_pilot_config_refuses_allow_ungated) ... ok
+test_pilot_config_refuses_other_arms_targets_and_ungated_status (tests.test_b6_pilot.PilotConfigGateTests.test_pilot_config_refuses_other_arms_targets_and_ungated_status) ... /tmp/b6-c2-recompile/tests/test_b6_pilot.py:129: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/b6-c2-recompile/configs/b6_400m_win_v3_wp5_pilot.json' mode='r' encoding='UTF-8'>
+  cfg = json.load(open(PILOT_CFG))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:132: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp24_39e4o/ungated.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:132: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp24_39e4o/bad_stop_after_updates.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:132: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp24_39e4o/bad_world_size.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:132: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp24_39e4o/bad_seed.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:132: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp24_39e4o/bad_aug_seed.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:132: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp24_39e4o/bad_arms.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_stop_flag_without_pilot_config_still_needs_the_gate (tests.test_b6_pilot.PilotConfigGateTests.test_stop_flag_without_pilot_config_still_needs_the_gate) ... /tmp/b6-c2-recompile/tests/test_b6_pilot.py:132: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpr58f9om4/plain_ungated.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_valid_pilot_invocation_passes_the_gate_and_reaches_the_inputs (tests.test_b6_pilot.PilotConfigGateTests.test_valid_pilot_invocation_passes_the_gate_and_reaches_the_inputs) ... ok
+test_launcher_refuses_the_real_data_placeholder_and_other_arms (tests.test_b6_pilot.PilotLauncherTests.test_launcher_refuses_the_real_data_placeholder_and_other_arms) ... ok
+test_launcher_runs_the_gated_pilot_on_four_gpus_without_the_ungated_switch (tests.test_b6_pilot.PilotLauncherTests.test_launcher_runs_the_gated_pilot_on_four_gpus_without_the_ungated_switch) ... /tmp/b6-c2-recompile/tests/test_b6_pilot.py:185: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/b6-c2-recompile/revision/scripts/b6/wp5_pilot.sbatch' mode='r' encoding='UTF-8'>
+  text = open(self.SBATCH).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_full_budget_arms_stop_at_exactly_n_updates_and_mark_the_pilot_final_checkpoint (tests.test_b6_pilot.PilotStopTests.test_full_budget_arms_stop_at_exactly_n_updates_and_mark_the_pilot_final_checkpoint) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:43: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpzxpy0wax/pilot_B6/step_00006/meta.json' mode='r' encoding='UTF-8'>
+  meta = json.load(open(os.path.join(step, "meta.json")))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:51: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpzxpy0wax/pilot_B6/draw_log/rank00.tsv' mode='r' encoding='UTF-8'>
+  rows = open(os.path.join(run, "draw_log", "rank00.tsv")).read().splitlines()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:55: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpzxpy0wax/pilot_B6/run_config_b6.json' mode='r' encoding='UTF-8'>
+  ident = json.load(open(os.path.join(run, "run_config_b6.json")))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:43: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpzxpy0wax/pilot_C2/step_00006/meta.json' mode='r' encoding='UTF-8'>
+  meta = json.load(open(os.path.join(step, "meta.json")))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:51: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpzxpy0wax/pilot_C2/draw_log/rank00.tsv' mode='r' encoding='UTF-8'>
+  rows = open(os.path.join(run, "draw_log", "rank00.tsv")).read().splitlines()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:55: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpzxpy0wax/pilot_C2/run_config_b6.json' mode='r' encoding='UTF-8'>
+  ident = json.load(open(os.path.join(run, "run_config_b6.json")))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_non_pilot_step_checkpoint_is_fixed_step_but_not_pilot_final (tests.test_b6_pilot.PilotStopTests.test_non_pilot_step_checkpoint_is_fixed_step_but_not_pilot_final) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpfxzhw9m3/full/step_00006/meta.json' mode='r' encoding='UTF-8'>
+  meta = json.load(open(os.path.join(step, "meta.json")))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:66: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpfxzhw9m3/full/run_config_b6.json' mode='r' encoding='UTF-8'>
+  self.assertEqual(json.load(open(os.path.join(spec.run_dir, "run_config_b6.json")))["stop_after_updates"], None)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_pilot_uses_the_full_run_schedule_truncated_at_n (tests.test_b6_pilot.PilotStopTests.test_pilot_uses_the_full_run_schedule_truncated_at_n)
+A46 rule 11 matched budget: the pilot's step-N weights and LR equal those of the full-duration run at ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:76: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp1zb5t2k7/sched_full/step_00006/meta.json' mode='r' encoding='UTF-8'>
+  ma, mb = (json.load(open(os.path.join(d, "meta.json"))) for d in (a, b))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:76: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp1zb5t2k7/sched_pilot/step_00006/meta.json' mode='r' encoding='UTF-8'>
+  ma, mb = (json.load(open(os.path.join(d, "meta.json"))) for d in (a, b))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_required_world_size_is_enforced (tests.test_b6_pilot.PilotStopTests.test_required_world_size_is_enforced) ... ok
+test_resume_across_a_restart_lands_on_n (tests.test_b6_pilot.PilotStopTests.test_resume_across_a_restart_lands_on_n) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:86: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp93w8o07g/chain/latest_state/meta.json' mode='r' encoding='UTF-8'>
+  meta = json.load(open(os.path.join(self.tmp.name, "chain", "latest_state", "meta.json")))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:92: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmp93w8o07g/chain/runtime_identity.txt' mode='r' encoding='UTF-8'>
+  text = open(os.path.join(self.tmp.name, "chain", "runtime_identity.txt")).read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_resume_refused_with_a_different_or_missing_stop_target (tests.test_b6_pilot.PilotStopTests.test_resume_refused_with_a_different_or_missing_stop_target) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_stop_target_must_equal_n_pilot (tests.test_b6_pilot.PilotStopTests.test_stop_target_must_equal_n_pilot) ... ok
+test_unreachable_target_fails_without_training_done (tests.test_b6_pilot.PilotStopTests.test_unreachable_target_fails_without_training_done) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_certified_fields_digest_is_that_of_the_bench_config_bytes (tests.test_b6_pilot.ProductionGateTests.test_certified_fields_digest_is_that_of_the_bench_config_bytes) ... /tmp/b6-c2-recompile/tests/test_b6_pilot.py:258: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/b6-c2-recompile/configs/b6_400m_win_v3.json' mode='r' encoding='UTF-8'>
+  ev = json.load(open(BASE_CFG))["gate_evidence"]
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:261: ResourceWarning: unclosed file <_io.BufferedWriter name='/tmp/tmpd8jv2dvy/certified.json'>
+  open(path, "wb").write(blob)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_gated_status_without_valid_evidence_is_refused (tests.test_b6_pilot.ProductionGateTests.test_gated_status_without_valid_evidence_is_refused) ... /tmp/b6-c2-recompile/tests/test_b6_pilot.py:218: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/b6-c2-recompile/configs/b6_400m_win_v3.json' mode='r' encoding='UTF-8'>
+  cfg = json.load(open(BASE_CFG))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:221: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpelvy73lr/missing.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:221: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpelvy73lr/one_rank.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:221: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpelvy73lr/over.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:221: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpelvy73lr/arch.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:221: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpelvy73lr/report.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/b6-c2-recompile/tests/test_b6_pilot.py:221: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/tmpelvy73lr/fields.json' mode='w' encoding='UTF-8'>
+  json.dump(cfg, open(path, "w"), indent=2)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_n_pilot_amendment_keeps_the_gate_but_memory_fields_break_it (tests.test_b6_pilot.ProductionGateTests.test_n_pilot_amendment_keeps_the_gate_but_memory_fields_break_it)
+Decision 18 moved n_pilot 4,142 -> 4,099 after the CP2 bench; n_pilot (like names, notes, arms and the ... ok
+test_production_config_is_gated_with_recorded_bench_evidence (tests.test_b6_pilot.ProductionGateTests.test_production_config_is_gated_with_recorded_bench_evidence) ... ok
+test_non_main_compile_verification_failure_prevents_all_success_publication (tests.test_b6_finalization.CollectiveFinalizationTests.test_non_main_compile_verification_failure_prevents_all_success_publication) ... ok
+test_retry_after_publication_preserves_the_exact_published_checkpoint (tests.test_b6_finalization.PilotFinalizationTests.test_retry_after_publication_preserves_the_exact_published_checkpoint) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_retry_refuses_a_published_checkpoint_with_a_different_target (tests.test_b6_finalization.PilotFinalizationTests.test_retry_refuses_a_published_checkpoint_with_a_different_target) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_retry_refuses_corrupt_published_weights_without_replacing_them (tests.test_b6_finalization.PilotFinalizationTests.test_retry_refuses_corrupt_published_weights_without_replacing_them) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_retry_refuses_foreign_identity_and_missing_or_invalid_markers (tests.test_b6_finalization.PilotFinalizationTests.test_retry_refuses_foreign_identity_and_missing_or_invalid_markers) ... Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Removed shared tensor {'lm_head.weight', 'transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_short_final_resume_verifies_compile_before_publishing_success (tests.test_b6_finalization.PilotFinalizationTests.test_short_final_resume_verifies_compile_before_publishing_success) ... Removed shared tensor {'_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_failed_marker_takes_precedence_over_stale_done_at_entry (tests.test_b6_finalization.PilotLauncherExitTests.test_failed_marker_takes_precedence_over_stale_done_at_entry) ... ok
+test_failed_trainer_is_rejected_even_when_both_success_markers_exist (tests.test_b6_finalization.PilotLauncherExitTests.test_failed_trainer_is_rejected_even_when_both_success_markers_exist) ... ok
+test_successful_completed_trainer_is_accepted (tests.test_b6_finalization.PilotLauncherExitTests.test_successful_completed_trainer_is_accepted) ... ok
+test_successful_preemption_is_accepted_without_done (tests.test_b6_finalization.PilotLauncherExitTests.test_successful_preemption_is_accepted_without_done) ... ok
+
+----------------------------------------------------------------------
+Ran 129 tests in 280.504s
+
+OK (skipped=2)

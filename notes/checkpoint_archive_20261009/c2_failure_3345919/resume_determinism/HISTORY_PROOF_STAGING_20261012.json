@@ -1,0 +1,39 @@
+{
+  "recorded_at": "2026-10-12T15:47:20.227311-07:00",
+  "source": {
+    "source_commit": "188bf3e9f6afcc6389b54c123d5bf533a90384cf",
+    "snapshot_git": "3c8cb0c9e2413902e20240fbc2c07c86aead043d",
+    "source_archive_sha256": "cdf00235084e76645ab092988ddb922414c10133e226d33cf5132dbfa11486a6",
+    "bundle_sha256": "f3572fef993486782490a0d57f7de8a0e091d52551449eb179c7fe410ec07406",
+    "remote_source": "/work/nvme/bilv/wcyim/transgenic/repo_b6_188bf3e",
+    "status": "source_staged_verified"
+  },
+  "helpers": {
+    "helper_files_sha256": {
+      "probe.py": "095697804876b79269b7aabfdb8cb2c75e4f4af522b7ea49758ac75c7352f2a7",
+      "history_proof.py": "f38887aeabfa0721242823da2d0cab7330a7e3e69bb89f5e0f6931d06d93e9d2",
+      "test_history_proof.py": "d9f2b8c2c7bab1f78c5c2a15417764b16ae6acb1ad37467e0c755c154d79bbb7",
+      "history_proof.sbatch": "d1d506fbf892760fbd82ff2f4c6a241a7eb7d89e1a1ed957cac11e5a8677c0f6",
+      "original_checkpoint_receipt.json": "c7ba61600300c8467f453c5476f42af80c795a217a6b9dab803966f5f37d44da",
+      "HISTORY_PROOF_PLAN.md": "f330489db5926523ff7d9363fe8c9bb0c4f4a7ebcef7c4e95dfddf5e183ee12f",
+      "HISTORY_PROOF_FIX_REPORT_20261012.md": "224744eda4b66d4cde858d52d8a949d4789424040f37716df601d168514d2385",
+      "HISTORY_PROOF_FIX_REVIEW_20261012.md": "b2fb365796db7068f316776aa7849d5d83ed0dfc3d8d50490fbf1611c4092113"
+    },
+    "manifest_sha256": "5d10eaad8598b12b964ed0f576fb345f0486f3bdd278aac63331688dc9e57012",
+    "helper_archive_sha256": "9fb8f543a7f34e9a1dd1470fa712406ad095f63053e5e8d6cdf5b21e7aaaa08e",
+    "helper_archive_bytes": 92160
+  },
+  "submission": {
+    "phase": "prepared",
+    "source_commit": "188bf3e9f6afcc6389b54c123d5bf533a90384cf",
+    "remote_source": "/work/nvme/bilv/wcyim/transgenic/repo_b6_188bf3e",
+    "snapshot_git": "3c8cb0c9e2413902e20240fbc2c07c86aead043d",
+    "helper_dir": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e",
+    "helper_archive_sha256": "9fb8f543a7f34e9a1dd1470fa712406ad095f63053e5e8d6cdf5b21e7aaaa08e",
+    "helper_manifest_sha256": "5d10eaad8598b12b964ed0f576fb345f0486f3bdd278aac63331688dc9e57012",
+    "jobs": [],
+    "prepared_at": "2026-10-12T22:46:39.381116Z",
+    "purpose": "C2 full-checkpoint compiler-history proof; no production promotion"
+  },
+  "scientific_status": "pending_4gpu_proof"
+}

@@ -4,6 +4,10 @@
 
 | 반복하지 않을 접근 | 확인된 사실/대안 |
 |---|---|
+| CUDA label구간경계를3414/4096포함여부확인없이기억 | 실제guard1536*labels<5242880는최대3413; 구간<=3413/3414..4095/>=4096. metadata검사는완전한compilerledger증명아님. |
+| mark_dynamic annotation만signature에기록 | 실제maybe_mark_dynamic은weak_dynamic_indices사용. 789ecf4는strong/weak별도결속·26시험PASS. |
+| parameter/buffer registry만복원 | 일반__dict__속성shadowing및sharedstorage/offset도복원필요. 91c2737·12시험·독립리뷰PASS. |
+| userquota로NVMe가용량계산 | bilv는group이아님; project22169/poolddn_ssd softlimit500GiB기준. 10-12재개사용349.4GiB. |
 | 3364480 Slurm0만으로복구완료/본학습승격 | 첫forward통제실험만통과. 운영복구코드는미구현,전체checkpoint연속/재개정확일치필요. |
 | 입력draw/RNG일치면재개결정성도일치한다고판정 | 3361666은입력tensor·모든RNG동일인데609모델tensor/optimizer불일치. 실제가중치/gradient대조. |
 | 최근3/18guard수정이손실차이를만들었다고가정 | 동일조건old/new200→210은모델/optimizer/RNG까지정확일치. 원인은compilerhistory로분리됨. |

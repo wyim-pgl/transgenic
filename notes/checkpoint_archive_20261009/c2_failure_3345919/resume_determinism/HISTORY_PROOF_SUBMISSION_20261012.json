@@ -1,0 +1,27 @@
+{
+  "helper_archive_sha256": "9fb8f543a7f34e9a1dd1470fa712406ad095f63053e5e8d6cdf5b21e7aaaa08e",
+  "helper_dir": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e",
+  "helper_manifest_sha256": "5d10eaad8598b12b964ed0f576fb345f0486f3bdd278aac63331688dc9e57012",
+  "jobs": [
+    "3369338"
+  ],
+  "phase": "submitted",
+  "prepared_at": "2026-10-12T22:46:39.381116Z",
+  "purpose": "C2 full-checkpoint compiler-history proof; no production promotion",
+  "remote_source": "/work/nvme/bilv/wcyim/transgenic/repo_b6_188bf3e",
+  "snapshot_git": "3c8cb0c9e2413902e20240fbc2c07c86aead043d",
+  "source_commit": "188bf3e9f6afcc6389b54c123d5bf533a90384cf",
+  "submitted_at": "2026-10-12T22:48:01.990819Z",
+  "submission_command": [
+    "sbatch",
+    "--parsable",
+    "--comment=c2-history-188bf3e-5d10eaad8598",
+    "--export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_188bf3e,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e",
+    "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch"
+  ],
+  "comment": "c2-history-188bf3e-5d10eaad8598",
+  "live_queue_before": "3309786|b5-seed|PENDING\n3309790|b5-seed|PENDING\n3309789|b5-seed|PENDING\n3309788|b5-seed|PENDING\n3309787|b5-seed|PENDING\n3345920|b6-wp5-pilot|PENDING\n3345918|b6-wp5-pilot|PENDING\n3345917|b6-wp5-pilot|PENDING\n",
+  "sbatch_stdout": "3369338\n",
+  "sbatch_stderr": "",
+  "sbatch_exit_code": 0
+}
