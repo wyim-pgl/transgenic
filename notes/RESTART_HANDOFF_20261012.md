@@ -91,3 +91,10 @@ rank2: cold3.4423773288726807 / warm3.4435665607452393; rank3: cold3.48905181884
 ## clear 후 첫 행동
 
 `.atl/resume.md`→`.atl/todo.md`→이 문서→`.atl/quarantine.md`를 읽고 git HEAD/worktrees와 live Slurm을 확인한다. 완료된 진단을 재제출하지 말고 C2 컴파일 이력 복구를 구현한다. 사용자는 수정·검증 후 즉시 본학습 시작을 승인했으므로 다시 묻지 않는다.
+
+## Push 기록
+
+- main 전체업무스냅샷 **8ef1871732afffab6ce4adb83a84d3dfd0b49808**,3005files. 과학진단log71개명시포함.
+- `git push --atomic --all origin` 성공. 로컬 **103개 branch 모두 원격SHA와일치** 확인. 구현branch를main에병합하지않고각각보존했다.
+- [원격검증영수증](PUSH_RECEIPT_20261012.json). 이결과기록을위한후속문서커밋도main에푸시한다. 최종tip은gitlog/origin/main으로확인.
+- 기존ignore대상DB/모델/재생성cache는Git대상이아니며로컬/HPC원본보존. 오래된빈index.lock은활성git/FD부재확인후 .git/index.lock.stale-20261012로보존. 불완전nested .git6개는staging중에만이동하고모두원위치복원,source내용은일반파일로보존.
