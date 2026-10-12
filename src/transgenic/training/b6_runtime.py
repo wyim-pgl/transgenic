@@ -860,6 +860,7 @@ def parse_args_b6(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--seed", type=int, default=SEED)
     p.add_argument("--bindings", required=True, help="WP3 binding manifest verified by b6_bindings.verify_inputs")
     p.add_argument("--output-dir", required=True)
+    p.add_argument("--legacy-compile-bootstrap", default=None, help="explicit original C2 checkpoint200 reconstruction manifest")
     p.add_argument("--resume", default=None, help="'auto' or a checkpoint directory")
     p.add_argument("--batch-size", type=int, default=1)
     p.add_argument("--num-workers", type=int, default=4)

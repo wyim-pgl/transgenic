@@ -43,6 +43,9 @@ os.environ.setdefault("HF_HOME", "./HFmodels")
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src")))
 
 from transgenic.training import b6_runtime as rt  # noqa: E402
+from transgenic.training import b6_compile_replay as replay  # noqa: E402
+from transgenic.training.b6_compile_history import CompileHistory  # noqa: E402
+from transgenic.training.b6_replay_state import capture_rng  # noqa: E402
 
 GATE_STATUS = rt.GATE_STATUS
 
@@ -69,6 +72,7 @@ class B6TrainSpec:
     compile_backend: Optional[object] = "inductor"     # None = eager (debugging only; recorded in identity)
     compile_warmup_steps: int = 3
     max_grad_norm: float = 1.0
+    legacy_compile_bootstrap: Optional[str] = None
     resume: Optional[str] = None
     link: Dict = field(default_factory=dict)
     stop_at_step: Optional[int] = None                 # test hook: behave as if USR1 arrived at this update
@@ -206,28 +210,61 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                loss="L_GSF", model_version=_unwrap(acc, model).config.b6_model_version, **_versions())
     identity = rt.build_run_identity(run, spec.bindings, spec.record_sha256_fn)
 
+    compile_history = None
+    if compiled:
+        with rt.checkpoint_io(acc):
+            fingerprint = replay.runtime_fingerprint(spec, _unwrap(acc, model), acc, ckpt)
+        replay.require_rank_agreement(acc, dict(identity=identity, fingerprint=fingerprint))
+        compile_history = CompileHistory(identity, fingerprint, acc)
     start_epoch = resume_step = global_step = pending_micro = 0
     resume_dir = layout.resume_dir(spec.resume)
+    with rt.checkpoint_io(acc):
+        if spec.legacy_compile_bootstrap and (not compiled or resume_dir is None):
+            raise RuntimeError("legacy compile bootstrap requires a compiled checkpoint resume")
     if resume_dir is not None:
-        cfg_path, _ = rt.identity_paths(spec.run_dir)
-        if not os.path.exists(cfg_path):
-            raise RuntimeError(f"resume refused: {cfg_path} is missing, so the run's identity cannot be checked")
-        with open(cfg_path) as fh:
-            rt.check_run_config_b6(json.load(fh), identity)
-        rt.check_checkpoint_identity(resume_dir, identity)      # before any state of that checkpoint is loaded
+        with rt.checkpoint_io(acc):
+            cfg_path, _ = rt.identity_paths(spec.run_dir)
+            if not os.path.exists(cfg_path):
+                raise RuntimeError(f"resume refused: {cfg_path} is missing, so the run's identity cannot be checked")
+            with open(cfg_path) as fh:
+                rt.check_run_config_b6(json.load(fh), identity)
+            rt.check_checkpoint_identity(resume_dir, identity)
+            with open(os.path.join(resume_dir, "meta.json")) as fh:
+                meta = json.load(fh)
+            start_epoch, resume_step = int(meta["epoch"]), int(meta["step"])
+            global_step, pending_micro = int(meta["global_step"]), int(meta.get("pending_micro", 0))
+            if compiled:
+                history_path = os.path.join(resume_dir, replay.HISTORY_FILE)
+                has_history = os.path.lexists(history_path) or "compile_history_sha256" in meta
+                if spec.legacy_compile_bootstrap and has_history:
+                    raise RuntimeError("legacy compile bootstrap cannot override an existing compiler history")
+                if has_history:
+                    compile_history = CompileHistory.load(history_path, meta.get("compile_history_sha256"),
+                            identity, fingerprint, acc, checkpoint=replay.checkpoint_position(meta))
+                    if global_step + pending_micro > 0 and not compile_history.entries:
+                        raise RuntimeError("compile history is empty after compiled training")
+                elif not spec.legacy_compile_bootstrap:
+                    raise RuntimeError("compiled resume requires compile history and its digest; legacy bootstrap must be explicit")
+            if pilot_target is not None and global_step >= pilot_target:
+                raise RuntimeError(f"resume refused: {resume_dir} is at update {global_step}, not before the WP5 stop "
+                                   f"target {pilot_target}")
         state_dir = os.path.join(resume_dir, "accelerate_state")
-        acc.load_state(state_dir if os.path.isdir(state_dir) else resume_dir)
-        with open(os.path.join(resume_dir, "meta.json")) as fh:
-            meta = json.load(fh)
-        start_epoch, resume_step = int(meta["epoch"]), int(meta["step"])
-        global_step, pending_micro = int(meta["global_step"]), int(meta.get("pending_micro", 0))
-        if meta.get("stopper"):
-            stopper.load_state(meta["stopper"])
-        if pending_micro and rt.load_pending_grads(_unwrap(acc, model), resume_dir, acc.process_index) == 0:
-            raise RuntimeError(f"{resume_dir} declares {pending_micro} pending micro-batches but no gradients")
-        if pilot_target is not None and global_step >= pilot_target:
-            raise RuntimeError(f"resume refused: {resume_dir} is at update {global_step}, not before the WP5 stop "
-                               f"target {pilot_target}")
+        with rt.checkpoint_io(acc):
+            # Replicated Accelerate load is local I/O, like save_state above.
+            acc.load_state(state_dir if os.path.isdir(state_dir) else resume_dir)
+            if meta.get("stopper"):
+                stopper.load_state(meta["stopper"])
+            if pending_micro and rt.load_pending_grads(_unwrap(acc, model), resume_dir, acc.process_index) == 0:
+                raise RuntimeError(f"{resume_dir} declares {pending_micro} pending micro-batches but no gradients")
+        if compiled:
+            replay_args = (compile_history, model, _unwrap(acc, model), {'train': train_dl, 'eval': eval_dl},
+                           arm, acc, per_rank_acc, guard)
+            if spec.legacy_compile_bootstrap:
+                replay.bootstrap_legacy(compile_history, spec.legacy_compile_bootstrap, resume_dir, spec.run_dir,
+                        replay.checkpoint_position(meta), *replay_args[1:], batch_size=spec.batch_size,
+                        memory_probe=spec.memory_probe)
+            else:
+                replay.replay_history(*replay_args, memory_probe=spec.memory_probe)
         log(f"resumed from {resume_dir}: epoch {start_epoch} step {resume_step} global_step {global_step}")
     with rt.checkpoint_io(acc):
         if is_main:
@@ -239,6 +276,14 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
         f"per-rank accumulation {per_rank_acc} world {world} {cfg.get('gate_status')}")
 
     # ---- checkpoint writers (rank 0 owns directories; every rank saves its RNG state) ----
+    def write_meta(directory, meta):
+        # Local-only: callers are rank 0 inside the coordinated publication transaction.
+        if compile_history is not None:
+            meta['compile_history_sha256'] = compile_history.save(os.path.join(directory, replay.HISTORY_FILE),
+                                                    checkpoint=replay.checkpoint_position(meta))
+        with open(os.path.join(directory, 'meta.json'), 'w') as fh:
+            json.dump(meta, fh, sort_keys=True)
+
     def save_latest(epoch0, step, gstep, micro):
         tmp = layout.latest_state_dir() + ".tmp"
         with rt.checkpoint_io(acc):
@@ -249,13 +294,15 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
         with rt.checkpoint_io(acc):
             acc.save_state(os.path.join(tmp, "accelerate_state"))
         with rt.checkpoint_io(acc):
+            if micro % per_rank_acc:
+                rt.save_pending_grads(_unwrap(acc, model), tmp, acc.process_index)
+        with rt.checkpoint_io(acc):
             if is_main:
                 rt.write_checkpoint_identity(tmp, identity)
-                with open(os.path.join(tmp, "meta.json"), "w") as fh:
-                    json.dump({"epoch": epoch0, "step": step, "global_step": gstep, "pending_micro": micro % per_rank_acc,
-                               "stopper": stopper.state(), "arm": arm.name, "seed": spec.seed,
-                               "stop_after_updates": pilot_target,
-                               "identity_sha256": rt.canonical_sha256(identity)}, fh)
+                write_meta(tmp, {"epoch": epoch0, "step": step, "global_step": gstep, "pending_micro": micro % per_rank_acc,
+                                 "stopper": stopper.state(), "arm": arm.name, "seed": spec.seed,
+                                 "stop_after_updates": pilot_target,
+                                 "identity_sha256": rt.canonical_sha256(identity)})
                 final, prev = layout.latest_state_dir(), layout.latest_state_dir() + ".prev"
                 shutil.rmtree(prev, ignore_errors=True)
                 if os.path.isdir(final):
@@ -263,7 +310,7 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                 os.rename(tmp, final)
                 shutil.rmtree(prev, ignore_errors=True)
 
-    def publish_step(gstep, epoch0):
+    def publish_step(gstep, epoch0, step):
         final = rt.step_checkpoint_dir(spec.run_dir, gstep)
         with rt.checkpoint_io(acc):
             if is_main:
@@ -274,14 +321,13 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                 aliases = rt.save_weights_deterministic(_unwrap(acc, model), weights)
                 rt.write_checkpoint_identity(tmp, identity)
                 pilot_final = pilot_target is not None and gstep == pilot_target
-                with open(os.path.join(tmp, "meta.json"), "w") as fh:
-                    json.dump({"global_step": gstep, "epoch": epoch0, "arm": arm.name, "seed": spec.seed,
-                               "alphas": _unwrap(acc, model).chain_alphas(), "tied_aliases": aliases,
-                               "checkpoint_kind": "fixed_step", "selection": rt.FIXED_STEP_SELECTION,
-                               "pilot_final": pilot_final, "stop_after_updates": pilot_target,
-                               "model_sha256": rt.file_sha256(weights), "lr": scheduler.get_last_lr()[0],
-                               "schedule_total_steps": t_total, "schedule_warmup_steps": warmup_steps},
-                              fh, sort_keys=True)
+                write_meta(tmp, {"global_step": gstep, "epoch": epoch0, "step": step, "pending_micro": 0,
+                                 "arm": arm.name, "seed": spec.seed,
+                                 "alphas": _unwrap(acc, model).chain_alphas(), "tied_aliases": aliases,
+                                 "checkpoint_kind": "fixed_step", "selection": rt.FIXED_STEP_SELECTION,
+                                 "pilot_final": pilot_final, "stop_after_updates": pilot_target,
+                                 "model_sha256": rt.file_sha256(weights), "lr": scheduler.get_last_lr()[0],
+                                 "schedule_total_steps": t_total, "schedule_warmup_steps": warmup_steps})
                 with open(os.path.join(tmp, rt.PRUNE_EXEMPT_MARKER), "w") as fh:
                     fh.write("A28/plan 9: step checkpoint, never pruned\n")
                 if pilot_final:
@@ -296,6 +342,8 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                             raise ValueError("not a regular directory")
                         required = ["model.safetensors", "meta.json", rt.CHECKPOINT_IDENTITY,
                                     rt.PRUNE_EXEMPT_MARKER]
+                        if compiled:
+                            required.append(replay.HISTORY_FILE)
                         if pilot_final:
                             required.append(rt.PILOT_FINAL_MARKER)
                         for name in required:
@@ -338,10 +386,9 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
         with rt.checkpoint_io(acc):
             if is_main:
                 rt.write_checkpoint_identity(tmp, identity)
-                with open(os.path.join(tmp, "meta.json"), "w") as fh:
-                    json.dump({"epoch": epoch1, "step": 0, "global_step": gstep, "pending_micro": pending,
-                               "stopper": stopper.state(), "arm": arm.name, "seed": spec.seed,
-                               "identity_sha256": rt.canonical_sha256(identity)}, fh)
+                write_meta(tmp, {"epoch": epoch1, "step": 0, "global_step": gstep, "pending_micro": pending,
+                                 "stopper": stopper.state(), "arm": arm.name, "seed": spec.seed,
+                                 "identity_sha256": rt.canonical_sha256(identity)})
                 layout.finish_epoch(epoch1, losses["de_novo"], losses["train"],
                                     extra={"global_step": gstep, "eval_evidence_loss": losses["evidence"],
                                            "is_best": is_best, "stopper": stopper.state()}, is_best=is_best)
@@ -351,22 +398,29 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
     def reduce_sum(value):
         return float(acc.reduce(torch.as_tensor(value, dtype=torch.float32, device=device), reduction="sum"))
 
-    def evaluate():
+    def evaluate(epoch):
         model.eval()
         sums = {"de_novo": torch.zeros((), device=device), "evidence": torch.zeros((), device=device)}
         n = 0
         with torch.no_grad():
-            for batch in eval_dl:
+            eval_dl.set_epoch(epoch)
+            for batch_index, batch in enumerate(eval_dl):
                 rt.validate_b6_batch(batch)
                 views = {"de_novo": rt.de_novo_view(batch), "evidence": rt.apply_arm(batch, arm)}
                 for name, view in views.items():
                     inputs = rt.model_inputs(view)
                     if compiled:
                         torch._dynamo.maybe_mark_dynamic(inputs["labels"], 1)
+                        rng_before = capture_rng()
+                        graph_start, activity_start = rt.compiled_graph_count(), rt.inductor_activity()
                     sums[name] += model(**inputs).loss.detach().float()
                     if compiled:
-                        guard.observe(state["link_updates"], ("eval",) + tuple(inputs["input_ids"].shape),
-                                      rt.compiled_graph_count(), bool(torch._dynamo.config.suppress_errors))
+                        compile_history.observe(replay.forward_position('eval', epoch, batch_index, name, state['global_step']),
+                                                inputs, batch['meta'], rng_before, graph_start, rt.compiled_graph_count(),
+                                                activity_before=activity_start, activity_after=rt.inductor_activity())
+                        with rt.checkpoint_io(acc):
+                            guard.observe(state["global_step"], ("eval",) + tuple(inputs["input_ids"].shape),
+                                          rt.compiled_graph_count(), bool(torch._dynamo.config.suppress_errors))
                 n += 1
         model.train()
         total = reduce_sum(float(n))
@@ -432,7 +486,7 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
             with rt.checkpoint_io(acc):
                 if not state["compile_verified"]:
                     verify_compile()
-            publish_step(gstep, epoch)
+            publish_step(gstep, epoch, step + 1)
         if budget is not None and gstep >= budget:
             return {"done": True, "global_step": gstep, "reason": "n_pilot budget"}
         if pilot_target is not None and gstep >= pilot_target:
@@ -485,14 +539,18 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                 inputs = rt.model_inputs(rt.apply_arm(batch, arm))
                 if compiled:
                     torch._dynamo.maybe_mark_dynamic(inputs["labels"], 1)
+                    rng_before = capture_rng()
+                    graph_start, activity_start = rt.compiled_graph_count(), rt.inductor_activity()
                 out = model(**inputs)
-                if compiled:
-                    # After every forward, so a compile is charged to the tile tier that triggered it (an
-                    # accumulation window mixes tiers); the step is the update this micro-batch belongs to.
-                    guard.observe(state["link_updates"] + 1, tuple(inputs["input_ids"].shape),
-                                  rt.compiled_graph_count(), bool(torch._dynamo.config.suppress_errors))
                 total_loss += out.loss.detach().float()
                 acc.backward(out.loss / per_rank_acc)
+                if compiled:
+                    compile_history.observe(replay.forward_position('train', epoch, step, 'arm', state['global_step']),
+                                            inputs, batch['meta'], rng_before, graph_start, rt.compiled_graph_count(),
+                                            activity_before=activity_start, activity_after=rt.inductor_activity())
+                    with rt.checkpoint_io(acc):
+                        guard.observe(state["global_step"] + 1, tuple(inputs["input_ids"].shape),
+                                      rt.compiled_graph_count(), bool(torch._dynamo.config.suppress_errors))
                 micro_done += 1
                 epoch_micro += 1
                 if micro_done % per_rank_acc == 0:
@@ -500,7 +558,7 @@ def run_b6(spec: B6TrainSpec, model, train_ds, eval_ds, *, collate_fn, train_sam
                     if ended is not None:
                         return dict(ended, history=history)
             seen = reduce_sum(float(max(1, epoch_micro)))
-            losses = dict(train=reduce_sum(total_loss) / seen, **evaluate())
+            losses = dict(train=reduce_sum(total_loss) / seen, **evaluate(epoch))
             gstep = state["global_step"]
             history.append(dict(epoch=epoch + 1, global_step=gstep, data_order_sha256=order, **losses))
             if is_main:
@@ -675,6 +733,7 @@ def main(argv=None) -> Dict:
                        save_every_n_steps=args.save_every_n_steps, mixed_precision=args.mixed_precision,
                        compile_backend=None if args.compile_backend == "none" else args.compile_backend,
                        compile_warmup_steps=args.compile_warmup_steps, resume=args.resume,
+                       legacy_compile_bootstrap=args.legacy_compile_bootstrap,
                        deterministic=args.deterministic,
                        n_pilot=n_pilot, stop_after_updates=pilot.get("stop_after_updates"),
                        required_world_size=pilot.get("world_size"),

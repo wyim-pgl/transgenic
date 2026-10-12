@@ -348,7 +348,8 @@ class ReviewRound1Tests(TrainerBase):
                                      stop_at_step=3))
             dynamo.reset()
             with patch.object(rt, "compiled_graph_count", lambda: 7):   # this link compiles nothing
-                with self.assertRaisesRegex(RuntimeError, "no Dynamo graph compiled on this link"):
+                # Checkpoint replay now detects the missing graphs before the link warm-up check.
+                with self.assertRaisesRegex(RuntimeError, "compiler replay graph delta"):
                     self.train_arm(self.spec("B6", run="link", compile_backend="aot_eager", compile_warmup_steps=2,
                                              resume="auto"))
             dynamo.reset()

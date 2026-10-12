@@ -12,9 +12,13 @@ from tests.test_b6_trainer import TrainerBase, rt
 
 class PilotFinalizationTests(TrainerBase):
     def test_short_final_resume_verifies_compile_before_publishing_success(self):
+        import torch._dynamo as dynamo
+        dynamo.reset()
+        self.addCleanup(dynamo.reset)
         first = self.spec("C2", n_pilot=4, stop_after_updates=4,
                           compile_backend="eager", stop_at_step=2)
         self.assertTrue(self.train_arm(first)["preempted"])
+        dynamo.reset()  # A resumed job starts in a fresh process and replays its compiler history.
         resumed = self.spec("C2", n_pilot=4, stop_after_updates=4,
                             compile_backend="eager", resume="auto")
         with patch.object(rt, "check_compiled", side_effect=RuntimeError("injected compile verification")):
