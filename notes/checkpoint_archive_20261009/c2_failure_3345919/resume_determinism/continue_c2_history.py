@@ -2,7 +2,6 @@
 """Receipt-bound C2 continuation. Python 3.6 standard library; no tensor reads."""
 import argparse
 import contextlib
-import ctypes
 import fcntl
 import hashlib
 import importlib.util
@@ -12,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import shlex
+import socket
 import stat
 import subprocess
 import sys
@@ -137,25 +137,24 @@ class Lock:
         os.close(self.fd)
 
 
-def rename_new(source, destination):
-    source, destination = Path(source), Path(destination)
-    require(source.is_dir() and not source.is_symlink(), 'invalid rename source')
-    require(not os.path.lexists(str(destination)), 'rename destination already exists')
-    require(source.stat().st_dev == destination.parent.stat().st_dev, 'cross-filesystem promotion')
+def exclusive_json(path,value):
+    """Publish immutable control bytes without replacing any existing entry."""
+    path=Path(path);raw=encoded(value)
+    if os.path.lexists(str(path)):
+        require(read_bytes(path)==raw,'conflicting immutable control receipt')
+        fsync_dir(path.parent)
+        return
+    fd,temporary=tempfile.mkstemp(prefix='.'+path.name+'.',dir=str(path.parent))
     try:
-        rename=getattr(ctypes.CDLL(None,use_errno=True),'renameat2',None)
-        require(rename is not None,'atomic no-replace rename unavailable; no fallback')
-        rename.argtypes=[ctypes.c_int,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_uint]
-        rename.restype=ctypes.c_int
-        # AT_FDCWD=-100; RENAME_NOREPLACE=1. The kernel performs the existence
-        # check and rename atomically, including an intervening empty directory.
-        if rename(-100,os.fsencode(str(source)),-100,os.fsencode(str(destination)),1)!=0:
-            error=ctypes.get_errno()
-            raise OSError(error,os.strerror(error))
-    except OSError as exc:
-        raise Blocked('atomic no-replace rename failed; no fallback: ' + str(exc))
-    fsync_dir(source.parent)
-    if destination.parent != source.parent: fsync_dir(destination.parent)
+        with os.fdopen(fd,'wb') as stream:
+            stream.write(raw);stream.flush();os.fsync(stream.fileno())
+        try:
+            os.link(temporary,str(path))
+        except FileExistsError:
+            require(read_bytes(path)==raw,'conflicting immutable control receipt')
+        fsync_dir(path.parent)
+    finally:
+        os.unlink(temporary)
 
 
 def validate_science(report, profile):
@@ -234,7 +233,7 @@ def manifest_check(root, name, expected):
 
 
 def canonical_controls(config):
-    canonical = safe_path(config['work'], config['canonical'])
+    canonical = safe_path(config['work'], config['original_run'])
     return (canonical.parent / ('.' + canonical.name + '.history.lock'),
             canonical.parent / ('.' + canonical.name + '.history.owner.json'))
 
@@ -254,19 +253,20 @@ def submission_token(comment,argv):
 
 
 def validate_config(config):
-    required = ('version operation_id owner uid work sif canonical backup diagnostic source_commit '
+    required = ('version operation_id owner uid work sif original_run diagnostic source_commit '
         'source_snapshot_git source_dir source_manifest_sha256 phases bindings bindings_sha256 config_relative '
         'config_sha256 expected_runtime_fingerprint original_pins diagnostic_pins original_checkpoint_receipt '
         'bootstrap_sha256 proof_job_id proof_identity proof_receipts obsolete_job protected_jobs resources '
         'validation_clone_peak_bytes storage_python storage_script').split()
     require(type(config) is dict and all(k in config for k in required), 'incomplete immutable config')
-    require(type(config['version']) is int and config['version'] == 1, 'unsupported config version')
+    require(type(config['version']) is int and config['version'] == 2 and
+            not {'canonical','backup','active_run'} & set(config),'unsupported config or operator-selected active path')
     require(re.fullmatch(r'[A-Za-z0-9_-]{1,64}', config['operation_id']) is not None, 'invalid operation ID')
     require(integer(config['uid']) and config['uid'] == os.getuid(), 'controller owner UID mismatch')
     require(Path(config['work']).is_absolute() and Path(config['work']).is_dir(), 'WORK must exist')
-    for field in ('canonical', 'backup', 'diagnostic', 'source_dir', 'bindings', 'storage_script'):
+    for field in ('original_run', 'diagnostic', 'source_dir', 'bindings', 'storage_script'):
         safe_path(config['work'], config[field])
-    require(len({config[k] for k in ('canonical','backup','diagnostic')}) == 3, 'protected paths overlap')
+    require(config['original_run']!=config['diagnostic'],'protected paths overlap')
     for field in ('source_commit','source_snapshot_git'): require(digest_ok(config[field],40), 'invalid commit')
     for field in ('source_manifest_sha256','bindings_sha256','config_sha256','bootstrap_sha256'):
         require(digest_ok(config[field]), 'invalid digest: ' + field)
@@ -366,15 +366,23 @@ class Controller:
         state_dir=Path(state_dir)
         require(state_dir.is_absolute(), 'state directory must be absolute')
         safe_path(config['work'],str(state_dir.relative_to(config['work'])))
+        protected=[config['original_run'],config['diagnostic'],config['source_dir'],
+                   config['phases']['proof']['root'],config['phases']['validation']['root']]
+        protected += [phase['helper_dir'] for phase in config['phases'].values()]
+        for relative in protected:
+            path=safe_path(config['work'],relative)
+            require(path!=state_dir and path not in state_dir.parents and state_dir not in path.parents,
+                    'operation controls overlap protected data or helpers')
         lock,claim=canonical_controls(config)
         with Lock(lock):
             require(not state_dir.exists(), 'operation directory already exists')
             require(not claim.exists(), 'canonical C2 already claimed by another operation')
             state_dir.mkdir(); fsync_dir(state_dir.parent)
             atomic_json(state_dir/'config.json',config)
-            journal=dict(version=1,operation_id=config['operation_id'],config_sha256=sha(state_dir/'config.json'),
+            journal=dict(version=2,operation_id=config['operation_id'],config_sha256=sha(state_dir/'config.json'),
                 phase='waiting_proof',revision=0,created=time.time(),intent=None,proof_job_id=config['proof_job_id'],
-                validation_job_id=None,links=[],receipts={},epoch_events=[],restored=[],last_error=None)
+                validation_job_id=None,links=[],receipts={},epoch_events=[],restored=[],last_error=None,
+                active_run=None,activation_receipt=None)
             atomic_json(state_dir/'journal.json',journal)
             atomic_json(claim,dict(operation_id=config['operation_id'],state_dir=str(state_dir),
                                    config_sha256=journal['config_sha256']))
@@ -391,9 +399,13 @@ class Controller:
 
     def status(self):
         journal=read_json(self.state/'journal.json')
-        require(type(journal.get('version')) is int and journal['version']==1 and
+        require(type(journal.get('version')) is int and journal['version']==2 and
                 integer(journal.get('revision')) and journal.get('operation_id')==self.c['operation_id'] and
                 journal.get('config_sha256')==sha(self.state/'config.json'), 'journal/config identity drift')
+        require(journal.get('phase') in {'waiting_proof','proof_accepted','validation_submit_intent','waiting_validation',
+            'validation_accepted','retire_intent','retire_waiting','old_job_retired','activation_intent','candidate_activated',
+            'production_submit_intent','waiting_production','submission_uncertain','link_accepted','final_verified',
+            'nice_intent','priorities_restored','complete'},'legacy or unsupported journal phase')
         return journal
 
     @contextlib.contextmanager
@@ -403,7 +415,8 @@ class Controller:
             with Lock(canonical):
                 claimed=read_json(claim)
                 require(claimed.get('operation_id')==self.c['operation_id'] and
-                        claimed.get('state_dir')==str(self.state), 'canonical ownership changed')
+                        claimed.get('state_dir')==str(self.state) and
+                        claimed.get('config_sha256')==sha(self.state/'config.json'),'canonical ownership changed')
                 self.j=self.status()
                 yield
 
@@ -434,8 +447,8 @@ class Controller:
             checked_pin(self.c['work'],pin)
 
     def storage(self,clones=False):
-        canonical=self.path(self.c['canonical'])
-        root=canonical if canonical.exists() else canonical.parent
+        relative=self.derived_active_run() if 'validation' in self.j['receipts'] else self.c['original_run']
+        root=self.path(relative)
         result=self.scheduler.storage(self.c,root)
         require(result.get('project_id')==22169 and result.get('pool')=='ddn_ssd','wrong storage project/pool')
         required=max(100*1024**3,self.c['validation_clone_peak_bytes'] if clones else 0)
@@ -455,7 +468,9 @@ class Controller:
                 self.held_old(self.scheduler.observe(job['job_id'],self.c['owner']))
                 continue
             command=job.get('command','')
-            require(self.c['canonical'] not in command and str(self.path(self.c['canonical'])) not in command and
+            targets=[self.c['original_run'],self.c['phases']['validation']['root']]
+            if 'validation' in self.j['receipts']:targets.append(self.derived_active_run())
+            require(not any(path in command for path in targets) and
                     not job.get('token','').startswith('c2-') and
                     (job['job_id'] in protected or 'c2' not in command.lower()) and
                     command != str(self.path(self.c['phases']['production']['script'])),
@@ -489,6 +504,9 @@ class Controller:
         require(intent and self._fresh_intent==intent['token'],'only the process that persisted the intent may submit')
         self._fresh_intent=None
         self.pins(); self.storage(clones=intent['kind']=='validation'); self.no_writers()
+        if intent['kind']=='production':
+            self.original();self.active_run();self.recheck_receipts(live_candidate=not self.j['links'])
+            checked_pin(self.c['work'],intent['request'])
         try:
             output=self.scheduler.submit(intent['argv'],intent['env'])
         except (Wait,TimeoutError,OSError) as exc:
@@ -508,6 +526,8 @@ class Controller:
     def reconcile(self):
         intent=self.j['intent']
         require(intent is not None and intent['kind'] in ('validation','production'),'no submission to reconcile')
+        if intent['kind']=='production':
+            self.original();self.active_run();self.recheck_receipts();checked_pin(self.c['work'],intent['request'])
         matches=self.scheduler.discover(intent,self.c['owner'])
         if not matches:
             if self.j['phase']=='submission_uncertain': return self.j
@@ -541,12 +561,12 @@ class Controller:
                 if isinstance(exc,Blocked):raise
                 raise Blocked(reason)
 
-    def original(self,base=None):
-        base=base or self.c['canonical']
+    def original(self):
+        base=self.c['original_run']
         for pin in self.c['original_pins']:
-            prefix=self.c['canonical']+'/'
-            require(pin['relative_path'].startswith(prefix),'original pin outside canonical')
-            checked_pin(self.c['work'],dict(pin,relative_path=base+'/'+pin['relative_path'][len(prefix):]))
+            prefix=base+'/'
+            require(pin['relative_path'].startswith(prefix),'original pin outside original run')
+            checked_pin(self.c['work'],pin)
         meta=read_json(self.path(base)/'latest_state/meta.json')
         require(all(type(meta.get(k)) is int and meta[k]==v for k,v in
                     dict(epoch=0,step=4800,global_step=200,pending_micro=0).items()),'original checkpoint is not200')
@@ -640,6 +660,8 @@ class Controller:
         if 'checkpoint_history_sha256' in report:
             require(report['checkpoint_history_sha256']=={n:bindings[n]['history_sha256'] for n in ('continuous','resumed')},
                     'comparison history binding mismatch')
+        for path in [root/'bootstrap.json',root/'verified_record.json',log]+[safe_path(root,name) for name in phase['tests']]:
+            artifacts.append(dict(relative_path=str(path.relative_to(self.c['work'])),sha256=sha(path)))
         pin=dict(relative_path=str((root/'comparison.json').relative_to(self.c['work'])),sha256=sha(root/'comparison.json'),
                  artifacts=artifacts,job_id=job_id,root=str(root.relative_to(self.c['work'])))
         receipts=dict(self.j['receipts']);receipts[kind]=pin
@@ -660,28 +682,113 @@ class Controller:
                        identity_sha256=bindings['resumed']['identity_sha256'])
         return self.save('proof_accepted' if kind=='proof' else 'validation_accepted',receipts=receipts,intent=None)
 
-    def recheck_receipts(self,relocated=False):
+    def derived_active_run(self):
+        pin=self.j['receipts']['validation']
+        expected=self.c['phases']['validation']['root']+'/'+self.j['validation_job_id']
+        require(pin['root']==expected and pin['job_id']==self.j['validation_job_id'],'validation root/job drift')
+        relative=expected+'/resumed';target=self.path(relative)
+        protected=[self.c['original_run'],self.c['diagnostic'],self.c['source_dir'],
+                   self.c['phases']['proof']['root'],str(self.state.relative_to(self.c['work'])),
+                   expected+'/continuous',expected+'/at400']
+        protected += [phase['helper_dir'] for phase in self.c['phases'].values()]
+        for name in protected:
+            other=self.path(name)
+            require(target!=other and other not in target.parents and target not in other.parents,
+                    'active run overlaps protected evidence or controls')
+        require(target.is_dir(),'active candidate directory missing')
+        return relative
+
+    def production_started(self):
+        return bool(self.j['links']) or (self.j.get('intent') or {}).get('kind')=='production'
+
+    def activation_bindings(self):
+        proof=self.j['receipts']['proof'];validation=self.j['receipts']['validation']
+        pin=lambda value: {k:value[k] for k in ('relative_path','sha256')}
+        candidate=validation['candidate']
+        start={k:candidate[k] for k in ('epoch','step','global_step','pending_micro','meta_sha256',
+                                       'history_sha256','canonical_checkpoint_sha256')}
+        start.update(relative_dir='latest_state',identity_sha256=validation['identity_sha256'])
+        return dict(version=2,kind='c2_history_activation',mode='in_place',operation_id=self.c['operation_id'],
+            config_sha256=self.j['config_sha256'],owner=self.c['owner'],uid=self.c['uid'],
+            original_run=self.c['original_run'],diagnostic=self.c['diagnostic'],active_run=self.derived_active_run(),
+            pins=dict(source_commit=self.c['source_commit'],source_snapshot_git=self.c['source_snapshot_git'],
+                source_dir=self.c['source_dir'],source_manifest_sha256=self.c['source_manifest_sha256'],
+                helper_manifests={name:dict(helper_dir=phase['helper_dir'],sha256=phase['helper_manifest_sha256'])
+                                  for name,phase in self.c['phases'].items()},
+                config_relative=self.c['config_relative'],config_sha256=self.c['config_sha256'],
+                bindings=self.c['bindings'],bindings_sha256=self.c['bindings_sha256'],
+                runtime_fingerprint_sha256=canonical_sha(self.c['expected_runtime_fingerprint']),
+                bootstrap_sha256=self.c['bootstrap_sha256'],original_checkpoint_receipt=self.c['original_checkpoint_receipt']),
+            proof=dict(job_id=self.c['proof_job_id'],comparison=pin(proof)),
+            validation=dict(job_id=self.j['validation_job_id'],comparison=pin(validation),
+                ready=dict(relative_path=validation['ready_relative_path'],sha256=validation['ready_sha256'])),
+            retirement=self.j['retirement'],start_checkpoint=start,
+            semantics=dict(original='preserved in place',candidate='activated without relocation',
+                           comparison='describes checkpoint at activation; active run subsequently evolves'))
+
+    def initial_artifact_pins(self):
+        root=self.derived_active_run()+'/latest_state/'
+        selected={pin['relative_path'][len(root):]:pin for pin in self.j['receipts']['validation']['artifacts']
+                  if pin['relative_path'].startswith(root)}
+        require(set(selected)=={'meta.json','identity.json','compile_history.json'},'initial candidate artifact set differs')
+        return selected
+
+    def validate_activation_payload(self,payload):
+        expected=self.activation_bindings()
+        require(type(payload) is dict and set(payload)==set(expected)|{'created','directory_observation','initial_artifacts'},
+                'activation receipt fields differ')
+        require(all(encoded(payload[k])==encoded(v) for k,v in expected.items()),'activation binding differs')
+        require(type(payload['created']) in (int,float) and math.isfinite(payload['created']) and payload['created']>0,
+                'invalid activation creation time')
+        audit=payload['directory_observation']
+        require(type(audit) is dict and set(audit)=={'host','device','inode'} and
+                type(audit['host']) is str and bool(audit['host']) and integer(audit['device']) and integer(audit['inode']),
+                'invalid audit-only directory observation')
+        initial=payload['initial_artifacts'];pins=self.initial_artifact_pins()
+        require(type(initial) is dict and set(initial)==set(pins),'missing embedded initial artifacts')
+        for name,pin in pins.items():
+            item=initial[name]
+            require(type(item) is dict and set(item)=={'relative_path','sha256','utf8'} and
+                    item['relative_path']==pin['relative_path'] and item['sha256']==pin['sha256'] and
+                    type(item['utf8']) is str and hashlib.sha256(item['utf8'].encode('utf8')).hexdigest()==pin['sha256'],
+                    'embedded initial checkpoint bytes differ')
+        return payload
+
+    def activation_payload(self):
+        pin=self.j.get('activation_receipt')
+        expected=str((self.state/'activation_receipt.json').relative_to(self.c['work']))
+        require(type(pin) is dict and set(pin)=={'relative_path','sha256'} and pin['relative_path']==expected,
+                'missing or redirected activation receipt')
+        payload=self.validate_activation_payload(read_json(checked_pin(self.c['work'],pin)))
+        require(self.j.get('active_run')==payload['active_run'],'journal active path differs')
+        return payload
+
+    def active_run(self):
+        return self.activation_payload()['active_run']
+
+    def recheck_receipts(self,live_candidate=None):
+        live_candidate=not self.production_started() if live_candidate is None else live_candidate
+        initial=self.activation_payload()['initial_artifacts'] if self.j.get('activation_receipt') else None
         for kind,pin in self.j['receipts'].items():
             checked_pin(self.c['work'],pin)
+            prefix=pin['root']+'/resumed/latest_state/'
             for artifact in pin['artifacts']:
-                candidate=dict(artifact)
-                if relocated and kind=='validation':
-                    prefix=pin['root']+'/resumed/'
-                    if candidate['relative_path'].startswith(prefix):
-                        candidate['relative_path']=self.c['canonical']+'/'+candidate['relative_path'][len(prefix):]
-                checked_pin(self.c['work'],candidate)
+                if kind=='validation' and artifact['relative_path'].startswith(prefix) and not live_candidate:
+                    name=artifact['relative_path'][len(prefix):]
+                    require(initial is not None and name in initial and initial[name]['sha256']==artifact['sha256'],
+                            'historical candidate bytes lack activation binding')
+                else:checked_pin(self.c['work'],artifact)
             if kind=='validation':
                 checked_pin(self.c['work'],dict(relative_path=pin['ready_relative_path'],sha256=pin['ready_sha256']))
 
-    def candidate(self,relocated=False):
-        pin=self.j['receipts']['validation']; candidate=pin['candidate']
-        self.recheck_receipts(relocated)
-        relative=self.c['canonical'] if relocated else pin['root']+'/resumed'
+    def candidate(self):
+        pin=self.j['receipts']['validation'];candidate=pin['candidate'];relative=self.derived_active_run()
+        self.recheck_receipts(live_candidate=True)
         bindings=self.checkpoint_small(self.path(relative),'latest_state',dict(epoch=0,step=9840,global_step=410,pending_micro=0),True)
         require(bindings['meta_sha256']==candidate['meta_sha256'] and bindings['history_sha256']==candidate['history_sha256'] and
                 bindings['identity_sha256']==pin['identity_sha256'],'candidate changed')
         for marker in ('TRAINING_FAILED','MEMORY_ABORT','TRAINING_DONE'):
-            require(not (self.path(relative)/marker).exists(),'candidate has failure/final marker')
+            require(not os.path.lexists(str(self.path(relative)/marker)),'candidate has failure/final marker')
         return relative
 
     def held_old(self,observation):
@@ -721,37 +828,37 @@ class Controller:
         self.scheduler.cancel(self.j['intent']['argv'])
         return self.save('retire_waiting')
 
-    def promotion_prepare(self):
-        self.pins(); self.original(); candidate=self.candidate(); self.storage(); self.no_writers()
-        backup=self.path(self.c['backup'])
-        require(not os.path.lexists(str(backup)),'backup destination already exists')
-        require(self.path(candidate).stat().st_dev==self.path(self.c['canonical']).stat().st_dev==backup.parent.stat().st_dev,
-                'promotion crosses filesystems')
-        transaction=dict(original=self.c['canonical'],candidate=candidate,backup=self.c['backup'],
-            candidate_canonical_sha256=self.j['receipts']['validation']['candidate']['canonical_checkpoint_sha256'],
-            validation_receipt_sha256=self.j['receipts']['validation']['ready_sha256'])
-        return self.save('promotion_intent',promotion=transaction)
+    def retired_old(self):
+        old=self.c['obsolete_job'];job=self.scheduler.observe(old['job_id'],self.c['owner'])
+        if job is None:raise Wait('retired old job accounting unavailable')
+        require(job.get('job_id')==old['job_id'] and job.get('owner')==self.c['owner'] and
+                job.get('uid')==self.c['uid'] and job.get('command')==old['command'] and job.get('active') is False and
+                job.get('rows',{}).get(old['job_id'],[''])[0]=='CANCELLED','retired old job identity/state changed')
 
-    def promote(self):
-        self.pins(); self.storage(); self.no_writers()
-        tx=self.j['promotion']; original=self.path(tx['original']); candidate=self.path(tx['candidate']);backup=self.path(tx['backup'])
-        for path in (original,candidate,backup): require(not path.is_symlink(),'symlinked promotion path')
-        layout=(original.exists(),candidate.exists(),backup.exists())
-        if layout==(True,True,False):
-            self.original(); self.candidate();rename_new(original,backup)
-            return self.save('original_archived')
-        require(layout in ((False,True,True),(True,False,True)),'ambiguous promotion layout')
-        self.original(tx['backup'])
-        if layout==(False,True,True):
-            self.candidate();rename_new(candidate,original)
-        self.candidate(relocated=True)
-        provenance=dict(version=1,kind='c2_history_relocation',operation_id=self.c['operation_id'],
-            old_relative_run=tx['candidate'],new_relative_run=tx['original'],original_backup=tx['backup'],
-            canonical_checkpoint_sha256=tx['candidate_canonical_sha256'],validation_receipt_sha256=tx['validation_receipt_sha256'])
-        for output in (original/'RECOVERY_PROMOTION.json',self.state/'promotion_receipt.json'):
-            if output.exists(): require(read_json(output)==provenance,'conflicting relocation provenance')
-            else: atomic_json(output,provenance)
-        return self.save('candidate_promoted')
+    def activation_gates(self):
+        self.pins();self.original();self.candidate();self.storage();self.no_writers();self.retired_old()
+        self.observe_success(self.j['validation_job_id'],self.j['validation_submission']['intent'])
+        claim=read_json(canonical_controls(self.c)[1])
+        require(claim==dict(operation_id=self.c['operation_id'],state_dir=str(self.state),
+                            config_sha256=self.j['config_sha256']),'logical C2 claim changed')
+
+    def activation_prepare(self):
+        require(self.j['phase']=='old_job_retired' and self.j['intent'] is None,'activation requires retired old job')
+        self.activation_gates();relative=self.derived_active_run();observed=self.path(relative).stat()
+        payload=self.activation_bindings()
+        payload.update(created=time.time(),directory_observation=dict(host=socket.gethostname(),device=observed.st_dev,inode=observed.st_ino),
+                       initial_artifacts={name:dict(pin,utf8=read_bytes(self.path(pin['relative_path'])).decode('utf8'))
+                                          for name,pin in self.initial_artifact_pins().items()})
+        self.validate_activation_payload(payload)
+        return self.save('activation_intent',activation_intent=dict(payload=payload))
+
+    def activate(self):
+        require(self.j['phase']=='activation_intent' and not self.production_started(),'no recoverable activation intent')
+        payload=self.validate_activation_payload(self.j['activation_intent']['payload'])
+        self.activation_gates()
+        path=self.state/'activation_receipt.json';exclusive_json(path,payload)
+        return self.save('candidate_activated',activation_receipt=dict(relative_path=str(path.relative_to(self.c['work'])),sha256=sha(path)),
+                         active_run=payload['active_run'])
 
     def advance(self,phase):
         if phase=='proof_accepted':
@@ -764,9 +871,9 @@ class Controller:
             self.retire_prepare()
             return self.j if self.j['phase']=='old_job_retired' else self.retire()
         if phase in ('retire_intent','retire_waiting'):return self.retire()
-        if phase=='old_job_retired':return self.promotion_prepare()
-        if phase in ('promotion_intent','original_archived'):return self.promote()
-        if phase in ('candidate_promoted','link_accepted'):
+        if phase=='old_job_retired':return self.activation_prepare()
+        if phase=='activation_intent':return self.activate()
+        if phase in ('candidate_activated','link_accepted'):
             request=self.build_request();self.prepare_submission('production',request)
             return self.execute_submission()
         if phase=='waiting_production':return self.accept_link()
@@ -775,10 +882,12 @@ class Controller:
         raise Blocked('unsupported continuation phase: '+phase)
 
     def build_request(self):
-        self.pins(); self.original(self.c['backup']); self.storage();self.no_writers()
+        require(self.j['phase'] in ('candidate_activated','link_accepted') and self.j['intent'] is None,
+                'pending submission requires reconciliation, never another request')
+        self.pins();self.original();self.active_run();self.recheck_receipts();self.storage();self.no_writers()
         index=len(self.j['links'])+1
         if index==1:
-            self.candidate(relocated=True)
+            self.candidate()
             pin=self.j['receipts']['validation']; candidate=pin['candidate']
             start={k:candidate[k] for k in ('epoch','step','global_step','pending_micro','meta_sha256','history_sha256','canonical_checkpoint_sha256')}
             start.update(relative_dir='latest_state',identity_sha256=pin['identity_sha256'])
@@ -798,7 +907,7 @@ class Controller:
         request=dict(version=1,operation_id=self.c['operation_id'],token='c2-%s-production-%04d'%(self.c['operation_id'],index),
             link_index=index,source_commit=self.c['source_commit'],source_snapshot_git=self.c['source_snapshot_git'],
             source_dir=self.c['source_dir'],source_manifest_sha256=self.c['source_manifest_sha256'],helper_dir=helper['helper_dir'],
-            helper_manifest_sha256=helper['helper_manifest_sha256'],run_dir=self.c['canonical'],bindings=self.c['bindings'],
+            helper_manifest_sha256=helper['helper_manifest_sha256'],run_dir=self.active_run(),bindings=self.c['bindings'],
             bindings_sha256=self.c['bindings_sha256'],config_relative=self.c['config_relative'],config_sha256=self.c['config_sha256'],
             receipt_dir=relative,profile=dict(PROFILE),start_checkpoint=start,predecessor=predecessor,
             expected_runtime_fingerprint=self.c['expected_runtime_fingerprint'],completed_epoch_events=self.j['epoch_events'])
@@ -831,7 +940,7 @@ class Controller:
         for event in events:
             require(integer(event.get('epoch'),1) and integer(event.get('global_step'),1) and
                     digest_ok(event.get('data_order_sha256')),'invalid epoch position/order')
-            directory=self.path(self.c['canonical'])/('epoch_%02d'%event['epoch'])
+            directory=self.path(self.active_run())/('epoch_%02d'%event['epoch'])
             for field,name in [('meta_sha256','meta.json'),('eval_sha256','eval.json'),
                                ('identity_sha256','identity.json'),('history_sha256','compile_history.json')]:
                 require(digest_ok(event.get(field)) and sha(directory/name)==event[field],'epoch artifact binding changed')
@@ -858,6 +967,8 @@ class Controller:
     def validate_link_receipt(self,entry,receipt):
         request_pin=entry['intent']['request'];checked_pin(self.c['work'],request_pin)
         request=read_json(self.path(request_pin['relative_path']))
+        require(request['run_dir']==self.active_run(),'production request targets a different active run')
+        self.original();self.recheck_receipts()
         expected=dict(version=1,kind='c2_production_link_ready',operation_id=self.c['operation_id'],token=request['token'],
             link_index=request['link_index'],job_id=entry['job_id'],request_sha256=request_pin['sha256'],
             source_commit=self.c['source_commit'],predecessor_sha256=request['predecessor']['sha256'],
@@ -884,7 +995,7 @@ class Controller:
         relative=cp.get('relative_dir')
         require(relative=='step_04099' if done else (relative=='latest_state' or
                 type(relative) is str and re.fullmatch(r'epoch_[0-9]{2,}',relative) is not None),'invalid selected checkpoint directory')
-        run=self.path(self.c['canonical']); directory=safe_path(run,relative)
+        run=self.path(self.active_run()); directory=safe_path(run,relative)
         for marker in ('TRAINING_FAILED','MEMORY_ABORT'): require(not os.path.lexists(str(run/marker)),'production failure marker present')
         bindings=self.checkpoint_small(run,relative,position,payload=not done)
         require(all(bindings[k]==cp[k] for k in bindings),'production checkpoint small binding changed')
@@ -908,7 +1019,7 @@ class Controller:
         final=receipt.get('final')
         if done:
             require(step==4099 and position['pending_micro']==0 and result.get('reason')=='stop_after_updates' and
-                    result.get('pilot_final')=='/work/'+self.c['canonical']+'/step_04099','not exact final4099')
+                    result.get('pilot_final')=='/work/'+self.active_run()+'/step_04099','not exact final4099')
             expected_epochs=(4099*24-1)//counts['rank_batches']
             require(type(final) is dict and type(final.get('expected_completed_epochs')) is int and
                     final['expected_completed_epochs']==expected_epochs==position['epoch'] and final.get('epoch_events')==events and
@@ -930,7 +1041,7 @@ class Controller:
     def accept_link(self):
         entry=self.j['links'][-1]
         self.observe_success(entry['job_id'],entry['intent'])
-        self.pins();self.original(self.c['backup']);self.no_writers()
+        self.pins();self.original();self.active_run();self.recheck_receipts();self.no_writers()
         request=read_json(self.path(entry['intent']['request']['relative_path']))
         path=self.path(request['receipt_dir'])/('execution_'+entry['job_id'])/'link_receipt.json'
         receipt=read_json(path);done=self.validate_link_receipt(entry,receipt)

@@ -81,35 +81,27 @@ class CoreTests(unittest.TestCase):
             with self.assertRaises(ctl.Blocked): ctl.safe_path(self.root, name)
         (self.root / 'outside').symlink_to('/tmp', target_is_directory=True)
         with self.assertRaises(ctl.Blocked): ctl.safe_path(self.root, 'outside/file')
-        (self.root / 'a').mkdir(); (self.root / 'b').mkdir()
-        with self.assertRaises(ctl.Blocked): ctl.rename_new(self.root / 'a', self.root / 'b')
-        self.assertTrue((self.root / 'a').is_dir())
 
-    def test_promotion_racing_empty_destination_keeps_both_directory_inodes(self):
-        source=self.root/'source';destination=self.root/'destination';source.mkdir()
-        put(source/'evidence',b'preserve')
-        source_inode=source.stat().st_ino;inserted=[];real_stat=Path.stat
-        # Only schedule the fault at the final preflight check. All stat, mkdir,
-        # and rename calls still operate on real temporary filesystem objects.
-        def stat_and_publish(path,*args,**kwargs):
-            value=real_stat(path,*args,**kwargs)
-            if path==destination.parent and not inserted:
-                destination.mkdir();inserted.append(real_stat(destination).st_ino)
-            return value
-        with patch.object(Path,'stat',new=stat_and_publish):
-            with self.assertRaises(ctl.Blocked):ctl.rename_new(source,destination)
-        self.assertEqual(source.stat().st_ino,source_inode)
+    def test_immutable_receipt_racing_destination_is_never_replaced(self):
+        self.assertTrue(hasattr(ctl,'exclusive_json'),'exclusive receipt publication missing')
+        destination=self.root/'receipt.json';real_link=os.link;inserted=[]
+        def publish_before_link(source,target,*args,**kwargs):
+            destination.write_bytes(b'foreign evidence');inserted.append(destination.stat().st_ino)
+            return real_link(source,target,*args,**kwargs)
+        with patch.object(os,'link',new=publish_before_link):
+            with self.assertRaises(ctl.Blocked):ctl.exclusive_json(destination,{'valid':True})
         self.assertEqual(destination.stat().st_ino,inserted[0])
-        self.assertEqual((source/'evidence').read_bytes(),b'preserve')
-        self.assertEqual(list(destination.iterdir()),[])
+        self.assertEqual(destination.read_bytes(),b'foreign evidence')
 
-    def test_unavailable_noreplace_primitive_never_falls_back_to_replacing_rename(self):
-        source=self.root/'source';destination=self.root/'destination';source.mkdir()
-        put(source/'evidence',b'preserve')
-        with patch.object(ctypes,'CDLL',return_value=object()):
-            with self.assertRaises(ctl.Blocked):ctl.rename_new(source,destination)
-        self.assertEqual((source/'evidence').read_bytes(),b'preserve')
-        self.assertFalse(destination.exists())
+    def test_immutable_receipt_recovers_identical_bytes_and_rejects_directory_or_symlink(self):
+        self.assertTrue(hasattr(ctl,'exclusive_json'),'exclusive receipt publication missing')
+        destination=self.root/'receipt.json';ctl.exclusive_json(destination,{'valid':True})
+        inode=destination.stat().st_ino;ctl.exclusive_json(destination,{'valid':True})
+        self.assertEqual(destination.stat().st_ino,inode)
+        with self.assertRaises(ctl.Blocked):ctl.exclusive_json(destination,{'valid':False})
+        (self.root/'empty').mkdir();(self.root/'alias').symlink_to(destination)
+        for name in ('empty','alias'):
+            with self.assertRaises(ctl.Blocked):ctl.exclusive_json(self.root/name,{'valid':True})
 
     def test_lock_inode_persists_and_other_process_cannot_enter(self):
         lock = self.root / 'lock'; queue = multiprocessing.Queue()
@@ -218,9 +210,9 @@ class ControllerTests(unittest.TestCase):
         diagnostic=file('runs/diagnostic/latest_state/meta.json', dict(global_step=256))
         bindings=file('inputs/bindings.json', {})
         config=file('source/train.json', {})
-        config_value=dict(version=1, operation_id='test-operation', owner=os.environ.get('USER','test'), uid=os.getuid(),
-            work=str(self.root), sif='/image.sif', canonical='runs/c2',
-            backup='runs/c2-original200', diagnostic='runs/diagnostic', source_commit=source,
+        config_value=dict(version=2, operation_id='test-operation', owner=os.environ.get('USER','test'), uid=os.getuid(),
+            work=str(self.root), sif='/image.sif', original_run='runs/c2',
+            diagnostic='runs/diagnostic', source_commit=source,
             source_snapshot_git='2'*40, source_dir='source', source_manifest_sha256=srcpin['sha256'],
             phases=phases, bindings=bindings['relative_path'], bindings_sha256=bindings['sha256'],
             config_relative='train.json',config_sha256=config['sha256'], expected_runtime_fingerprint={'test':True},
@@ -279,14 +271,18 @@ class ControllerTests(unittest.TestCase):
         controller.tick()
         self.assertEqual((self.state/'journal.json').read_bytes(),before)
 
-    def test_cross_device_promotion_never_copies(self):
-        if not Path('/dev/shm').is_dir():self.skipTest('requires Linux shared-memory filesystem')
-        with tempfile.TemporaryDirectory(dir='/dev/shm') as destination:
-            source=self.root/'candidate';source.mkdir();put(source/'evidence',b'preserve')
-            if source.stat().st_dev==Path(destination).stat().st_dev:self.skipTest('same filesystem')
-            with self.assertRaises(ctl.Blocked):ctl.rename_new(source,Path(destination)/'target')
-            self.assertEqual((source/'evidence').read_bytes(),b'preserve')
-            self.assertFalse((Path(destination)/'target').exists())
+    def test_legacy_config_and_promotion_states_cannot_migrate_implicitly(self):
+        config=self.config();config.update(version=1,canonical=config.pop('original_run'),backup='runs/backup')
+        with self.assertRaises(ctl.Blocked):ctl.Controller.initialize(config,self.root/'legacy')
+        config.pop('canonical');config.pop('backup');config.update(version=2,original_run='runs/c2')
+        ctl.Controller.initialize(config,self.root/'new')
+        path=self.root/'new/journal.json';journal=ctl.read_json(path);journal['phase']='original_archived';put(path,journal)
+        with self.assertRaises(ctl.Blocked):ctl.Controller(self.root/'new',FakeSlurm())
+
+    def test_operation_controls_cannot_be_created_inside_protected_runs(self):
+        config=self.config();state=self.root/'runs/c2/operation'
+        with self.assertRaises(ctl.Blocked):ctl.Controller.initialize(config,state)
+        self.assertFalse(state.exists())
 
     def test_pins_drift_blocks_without_losing_pending_intent(self):
         controller=self.start(); controller.prepare_submission('validation')
@@ -328,11 +324,11 @@ class ControllerTests(unittest.TestCase):
             'user.email=fixture@example.invalid','commit','--allow-empty','-qm','different snapshot'])
         with self.assertRaises(ctl.Blocked):controller.tick()
 
-    def test_requeued_old_job_blocks_promotion(self):
+    def test_requeued_old_job_blocks_activation(self):
         controller,_=self.accepted_validation();controller.save('old_job_retired')
         self.scheduler.jobs['3345920']=dict(job_id='3345920',active=True,owner=self.c['owner'],uid=self.c['uid'],
                                           state='RUNNING',reason='None',command='/old.sbatch')
-        with self.assertRaises(ctl.Blocked):controller.promotion_prepare()
+        with self.assertRaises(ctl.Blocked):controller.activation_prepare()
         self.assertTrue((self.root/'runs/c2/latest_state').is_dir())
 
     def test_uncertain_submit_never_retries_even_after_empty_discovery(self):
@@ -447,11 +443,13 @@ class ControllerTests(unittest.TestCase):
         controller=self.start()
         self.assertTrue(hasattr(controller,'accept_science'),'science acceptance not implemented')
         _,obs=self.science_fixture(controller,'proof',self.c['proof_job_id'])
+        self.scheduler.jobs[self.c['proof_job_id']]=obs
         controller.accept_science('proof',obs)
         controller.prepare_submission('validation');controller.execute_submission()
         root,obs=self.science_fixture(controller,'validation')
         submission=controller.j['validation_submission']['intent']
         obs.update(token=submission['token'],argv=submission['argv'])
+        self.scheduler.jobs['9001']=obs
         controller.accept_science('validation',obs)
         return controller,root
 
@@ -481,38 +479,105 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(restarted.status()['phase'],'old_job_retired')
         self.assertEqual(sum(c[0]=='cancel' for c in self.scheduler.calls),1)
 
-    def test_crash_after_candidate_rename_publishes_missing_provenance(self):
-        controller,root=self.accepted_validation();controller.save('old_job_retired');controller.promotion_prepare()
-        os.rename(str(self.root/'runs/c2'),str(self.root/'runs/c2-original200'))
-        os.rename(str(root/'resumed'),str(self.root/'runs/c2'))
-        restarted=ctl.Controller(self.state,self.scheduler);restarted.promote()
-        self.assertEqual(restarted.status()['phase'],'candidate_promoted')
-        self.assertTrue((self.state/'promotion_receipt.json').exists())
+    def retired(self,controller):
+        observation=dict(job_id='3345920',owner=self.c['owner'],uid=self.c['uid'],active=False,
+                         command='/old.sbatch',rows={'3345920':['CANCELLED','0:0']})
+        self.scheduler.jobs['3345920']=observation
+        controller.save('old_job_retired',retirement=observation)
 
-    def test_promotion_recovers_all_three_layouts_and_preserves_diagnostic(self):
-        controller,root=self.accepted_validation()
-        controller.save('old_job_retired')
-        before=(self.root/'runs/diagnostic/latest_state/meta.json').read_bytes()
-        controller.promotion_prepare()
-        self.assertEqual(controller.status()['phase'],'promotion_intent')
-        # Simulate death after first rename, before journal save.
-        os.rename(str(self.root/'runs/c2'),str(self.root/'runs/c2-original200'))
-        controller=ctl.Controller(self.state,self.scheduler); controller.promote()
-        self.assertEqual(controller.status()['phase'],'candidate_promoted')
-        self.assertFalse((root/'resumed').exists()); self.assertTrue((root/'continuous').is_dir())
-        self.assertTrue((root/'at400').is_dir()); self.assertTrue((self.root/'runs/c2-original200/TRAINING_FAILED').exists())
-        self.assertEqual((self.root/'runs/diagnostic/latest_state/meta.json').read_bytes(),before)
-        provenance=ctl.read_json(self.root/'runs/c2/RECOVERY_PROMOTION.json')
-        self.assertEqual(provenance['old_relative_run'],str((root/'resumed').relative_to(self.root)))
-        # Simulate missing journal commit after second rename/provenance publication.
-        controller.save('promotion_intent'); controller.promote()
-        self.assertEqual(controller.status()['phase'],'candidate_promoted')
+    def test_activation_preserves_all_run_inodes_and_bytes_without_native_rename(self):
+        self.assertTrue(hasattr(ctl.Controller,'activation_prepare'),'activation workflow missing')
+        controller,root=self.accepted_validation();self.retired(controller)
+        roots=[self.root/'runs/c2',self.root/'runs/diagnostic',self.root/'evidence/proof',root]
+        before={str(p):(p.stat().st_ino,p.read_bytes() if p.is_file() else None)
+                for base in roots for p in [base]+list(base.rglob('*'))}
+        with patch.object(ctypes,'CDLL',side_effect=AssertionError('native rename forbidden')), \
+             patch.object(os,'rename',side_effect=AssertionError('directory rename forbidden')):
+            controller.activation_prepare();controller.activate()
+        after={str(p):(p.stat().st_ino,p.read_bytes() if p.is_file() else None)
+               for base in roots for p in [base]+list(base.rglob('*'))}
+        self.assertEqual(after,before)
+        self.assertEqual(controller.active_run(),str((root/'resumed').relative_to(self.root)))
+        self.assertEqual(controller.status()['phase'],'candidate_activated')
+        self.assertTrue((self.root/'runs/c2/TRAINING_FAILED').exists())
+        self.assertEqual(ctl.canonical_controls(self.c)[0],self.root/'runs/.c2.history.lock')
 
-    def test_promotion_never_overwrites_empty_backup_or_changed_original(self):
-        controller,_=self.accepted_validation();controller.save('old_job_retired')
-        (self.root/'runs/c2-original200').mkdir()
-        with self.assertRaises(ctl.Blocked): controller.promotion_prepare()
-        self.assertTrue((self.root/'runs/c2/latest_state/meta.json').exists())
+    def test_activation_receipt_publication_crash_rolls_forward_same_bytes(self):
+        controller,root=self.accepted_validation();self.retired(controller);controller.activation_prepare()
+        intended=copy.deepcopy(controller.j['activation_intent']['payload'])
+        original_link=os.link
+        def link_then_die(source,destination,*args,**kwargs):
+            original_link(source,destination,*args,**kwargs);raise RuntimeError('crash after exclusive publication')
+        with patch.object(os,'link',new=link_then_die):
+            with self.assertRaisesRegex(RuntimeError,'crash after'):controller.activate()
+        receipt=self.state/'activation_receipt.json';before=receipt.read_bytes();inode=receipt.stat().st_ino
+        self.assertEqual(controller.status()['phase'],'activation_intent')
+        restarted=ctl.Controller(self.state,self.scheduler);restarted.activate()
+        self.assertEqual(receipt.read_bytes(),before);self.assertEqual(receipt.stat().st_ino,inode)
+        self.assertEqual(ctl.read_json(receipt),intended)
+        self.assertEqual(restarted.status()['phase'],'candidate_activated')
+        self.assertEqual(sum(c[0]=='submit' for c in self.scheduler.calls),1)
+
+    def test_activation_crash_before_journal_commit_uses_original_payload(self):
+        controller,_=self.accepted_validation();self.retired(controller);controller.activation_prepare()
+        intended=copy.deepcopy(controller.j['activation_intent']['payload'])
+        real_atomic=ctl.atomic_json
+        def crash_journal(path,value):
+            if Path(path)==self.state/'journal.json':raise RuntimeError('journal crash')
+            return real_atomic(path,value)
+        with patch.object(ctl,'atomic_json',new=crash_journal):
+            with self.assertRaisesRegex(RuntimeError,'journal crash'):controller.activate()
+        restarted=ctl.Controller(self.state,self.scheduler);restarted.activate()
+        self.assertEqual(ctl.read_json(self.state/'activation_receipt.json'),intended)
+        self.assertEqual(restarted.status()['phase'],'candidate_activated')
+
+    def test_activation_intent_and_stray_temp_do_not_authorize_early_submission(self):
+        controller,_=self.accepted_validation();self.retired(controller);controller.activation_prepare()
+        put(self.state/'.activation_receipt.abandoned',b'partial control bytes')
+        restarted=ctl.Controller(self.state,self.scheduler);restarted.tick()
+        self.assertEqual(restarted.status()['phase'],'candidate_activated')
+        self.assertEqual(sum(c[0]=='submit' for c in self.scheduler.calls),1)
+        self.assertEqual((self.state/'.activation_receipt.abandoned').read_bytes(),b'partial control bytes')
+
+    def test_activation_conflicting_receipt_and_changed_original_block(self):
+        controller,_=self.accepted_validation();self.retired(controller);controller.activation_prepare()
+        receipt=self.state/'activation_receipt.json';receipt.write_bytes(b'foreign evidence');inode=receipt.stat().st_ino
+        with self.assertRaises(ctl.Blocked):controller.activate()
+        self.assertEqual(receipt.read_bytes(),b'foreign evidence');self.assertEqual(receipt.stat().st_ino,inode)
+        receipt.unlink();(self.root/'runs/c2/latest_state/meta.json').write_text('{}')
+        with self.assertRaises(ctl.Blocked):controller.activate()
+        self.assertFalse(receipt.exists())
+
+    def test_activation_low_storage_live_candidate_drift_and_foreign_writer_block(self):
+        controller,root=self.accepted_validation();self.retired(controller)
+        self.scheduler.free=99*1024**3
+        with self.assertRaises(ctl.Blocked):controller.activation_prepare()
+        self.scheduler.free=100*1024**3
+        self.scheduler.jobs['999']=dict(job_id='999',active=True,command='train --run '+str(root/'resumed'),token='other')
+        with self.assertRaises(ctl.Blocked):controller.activation_prepare()
+        del self.scheduler.jobs['999']
+        controller.activation_prepare();(root/'resumed/latest_state/meta.json').write_text('{}')
+        with self.assertRaises(ctl.Blocked):controller.activate()
+        self.assertFalse((self.state/'activation_receipt.json').exists())
+
+    def test_activation_forged_path_and_embedded_bytes_block(self):
+        controller=self.activated();path=self.state/'activation_receipt.json'
+        original=ctl.read_json(path);raw=path.read_bytes();original_pin=copy.deepcopy(controller.j['activation_receipt'])
+        embedded=copy.deepcopy(original);embedded['initial_artifacts']['meta.json']['utf8']='{}'
+        for bad in [dict(original,active_run='runs/c2'),dict(original,owner='foreign'),embedded]:
+            digest=put(path,bad)
+            controller.j['activation_receipt']['sha256']=digest
+            with self.assertRaises(ctl.Blocked):controller.active_run()
+        path.write_bytes(raw);controller.j['activation_receipt']=original_pin
+        self.assertEqual(controller.active_run(),'evidence/validation/9001/resumed')
+
+    def test_activation_audit_device_numbers_are_not_cross_host_identity_gates(self):
+        controller,_=self.accepted_validation();self.retired(controller);controller.activation_prepare()
+        # A recovery on another client retains the original audit observation.
+        payload=controller.j['activation_intent']['payload']
+        payload['directory_observation']=dict(host='previous-login-client',device=999,inode=123)
+        controller.save('activation_intent');controller.activate()
+        self.assertEqual(controller.active_run(),'evidence/validation/9001/resumed')
 
     def test_failed_proof_never_submits_validation(self):
         controller=self.start()
@@ -522,16 +587,17 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(self.scheduler.calls,[])
         self.assertIn('parent/batch',controller.status()['last_error'])
 
-    def promoted(self):
-        controller,_=self.accepted_validation(); controller.save('old_job_retired')
-        controller.promotion_prepare();controller.promote();controller.promote()
+    def activated(self):
+        self.assertTrue(hasattr(ctl.Controller,'activation_prepare'),'activation workflow missing')
+        controller,_=self.accepted_validation();self.retired(controller)
+        controller.activation_prepare();controller.activate()
         return controller
 
     def production_fixture(self,controller,step=420,done=False):
         self.assertTrue(hasattr(controller,'build_request'),'production request builder not implemented')
         request_pin=controller.build_request();request=ctl.read_json(self.root/request_pin['relative_path'])
         controller.prepare_submission('production',request_pin);controller.execute_submission()
-        run=self.root/'runs/c2';relative='step_04099' if done else 'latest_state'
+        run=self.root/controller.active_run();relative='step_04099' if done else 'latest_state'
         position=dict(epoch=0,step=step*24,global_step=step,pending_micro=0)
         history=ctl.read_json(run/'latest_state/compile_history.json');history['checkpoint']=position
         hd=put(run/relative/'compile_history.json',history)
@@ -551,14 +617,14 @@ class ControllerTests(unittest.TestCase):
         result=dict(global_step=step,history=[])
         final=None
         if done:
-            result.update(done=True,reason='stop_after_updates',pilot_final='/work/runs/c2/'+relative)
+            result.update(done=True,reason='stop_after_updates',pilot_final='/work/'+controller.active_run()+'/'+relative)
             final=dict(relative_dir=relative,model_sha256=md,done_sha256=hashlib.sha256(b'done').hexdigest(),
                        expected_completed_epochs=0,epoch_events=[])
             cp['done_sha256']=final['done_sha256']
         else:result['preempted']=True
         receipt=dict(version=1,kind='c2_production_link_ready',operation_id=self.c['operation_id'],token=request['token'],
             link_index=request['link_index'],job_id='9001',request_sha256=request_pin['sha256'],source_commit=self.c['source_commit'],
-            predecessor_sha256=request['predecessor']['sha256'],start_global_step=410,result=result,profile=request['profile'],
+            predecessor_sha256=request['predecessor']['sha256'],start_global_step=request['start_checkpoint']['global_step'],result=result,profile=request['profile'],
             runtime_fingerprint_sha256=hashlib.sha256(json.dumps(self.c['expected_runtime_fingerprint'],sort_keys=True,separators=(',',':')).encode()).hexdigest(),
             input_verification=dict(job_id='9001',ranks=[0,1,2,3],bindings_sha256=self.c['bindings_sha256'],record_sha256='d'*64,identity_sha256=hashlib.sha256(b'{}').hexdigest()),
             checkpoint=cp,epoch_events=[],final=final,counts=dict(train_rows=1000000,rank_batches=250000,per_rank_accumulation=24),
@@ -572,17 +638,50 @@ class ControllerTests(unittest.TestCase):
             token=intent['token'],argv=intent['argv'],rows={'9001':['COMPLETED','0:0'],'9001.batch':['COMPLETED','0:0']})
         return receipt_path,receipt,request
 
-    def test_production_request_starts_from_receipt_bound_relocated410(self):
-        controller=self.promoted();_,_,request=self.production_fixture(controller)
-        self.assertEqual(request['run_dir'],'runs/c2')
+    def test_production_request_starts_from_receipt_bound_in_place410(self):
+        controller=self.activated();_,_,request=self.production_fixture(controller)
+        self.assertEqual(request['run_dir'],'evidence/validation/9001/resumed')
+        self.assertEqual(request['predecessor']['relative_path'],'evidence/validation/9001/validation_receipt.json')
         self.assertEqual(request['start_checkpoint']['global_step'],410)
         self.assertEqual(request['start_checkpoint']['canonical_checkpoint_sha256'],'a'*64)
         self.assertEqual(request['completed_epoch_events'],[])
         controller.accept_link()
         self.assertEqual(controller.status()['phase'],'link_accepted')
 
+    def test_evolving_active_run_keeps_initial_evidence_and_final_uses_actual_path(self):
+        controller=self.activated();root=self.root/'evidence/validation/9001'
+        preserved={str(p):p.read_bytes() for base in (self.root/'runs/c2',self.root/'runs/diagnostic',
+                   self.root/'evidence/proof',root/'continuous',root/'at400') for p in base.rglob('*') if p.is_file()}
+        for name in ('comparison.json','validation_receipt.json'):preserved[str(root/name)]=(root/name).read_bytes()
+        initial=ctl.read_json(self.state/'activation_receipt.json')['initial_artifacts']['meta.json']['utf8']
+        self.production_fixture(controller,420);controller.accept_link();controller.recheck_receipts()
+        request_pin=controller.build_request();request=ctl.read_json(self.root/request_pin['relative_path'])
+        self.assertEqual(request['start_checkpoint']['global_step'],420)
+        self.assertEqual(request['run_dir'],'evidence/validation/9001/resumed')
+        self.production_fixture(controller,430);controller.accept_link()
+        path,receipt,_=self.production_fixture(controller,4099,True)
+        bad=copy.deepcopy(receipt);bad['result']['pilot_final']='/work/runs/c2/step_04099';put(path,bad)
+        with self.assertRaises(ctl.Blocked):controller.accept_link()
+        put(path,receipt);controller.accept_link()
+        self.assertEqual(controller.status()['phase'],'final_verified')
+        self.assertEqual({name:Path(name).read_bytes() for name in preserved},preserved)
+        self.assertEqual(ctl.read_json(self.state/'activation_receipt.json')['initial_artifacts']['meta.json']['utf8'],initial)
+
+    def test_pending_submission_reconciles_without_rechecking_historical_live410(self):
+        controller=self.activated();pin=controller.build_request();controller.prepare_submission('production',pin)
+        (self.root/controller.active_run()/'latest_state/meta.json').write_text('{}')
+        restarted=ctl.Controller(self.state,self.scheduler);restarted.tick()
+        self.assertEqual(restarted.status()['phase'],'submission_uncertain')
+        self.assertEqual(sum(c[0]=='submit' for c in self.scheduler.calls),1)
+        with self.assertRaises(ctl.Blocked):restarted.build_request()
+
+    def test_retained_validation_sibling_drift_blocks_after_active_checkpoint_evolves(self):
+        controller=self.activated();self.production_fixture(controller,420);controller.accept_link()
+        sibling=self.root/'evidence/validation/9001/continuous/latest_state/meta.json';sibling.write_text('{}')
+        with self.assertRaises(ctl.Blocked):controller.build_request()
+
     def test_concurrent_ticks_submit_only_one_production_link(self):
-        self.promoted();queue=multiprocessing.Queue();ready=multiprocessing.Event()
+        self.activated();queue=multiprocessing.Queue();ready=multiprocessing.Event()
         children=[multiprocessing.Process(target=tick_child,args=(self.state,queue,ready)) for _ in range(2)]
         for child in children:child.start()
         ready.set()
@@ -591,8 +690,8 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(len(ctl.Controller(self.state,FakeSlurm()).status()['links']),1)
 
     def test_epoch_step_zero_requires_all_pending_gradients_and_preserves_epoch_events(self):
-        controller=self.promoted();path,receipt,_=self.production_fixture(controller)
-        run=self.root/'runs/c2';directory=run/'epoch_01';os.rename(str(run/'latest_state'),str(directory))
+        controller=self.activated();path,receipt,_=self.production_fixture(controller)
+        run=self.root/controller.active_run();directory=run/'epoch_01';os.rename(str(run/'latest_state'),str(directory))
         position=dict(epoch=1,step=0,global_step=420,pending_micro=3)
         history=ctl.read_json(directory/'compile_history.json');history['checkpoint']=position
         hd=put(directory/'compile_history.json',history)
@@ -620,7 +719,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(request['completed_epoch_events'],[event])
 
     def test_production_no_progress_missing_rank_wrong_hash_and_timeout_block(self):
-        controller=self.promoted();path,receipt,_=self.production_fixture(controller)
+        controller=self.activated();path,receipt,_=self.production_fixture(controller)
         for bad in [dict(receipt,result=dict(preempted=True,global_step=410,history=[])),
                     dict(receipt,input_verification=dict(receipt['input_verification'],ranks=[0,1,2])),
                     dict(receipt,request_sha256='0'*64)]:
@@ -631,19 +730,19 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(controller.status()['phase'],'waiting_production')
 
     def test_final_requires_exact4099_markers_done_and_epoch_evaluations(self):
-        controller=self.promoted();path,receipt,_=self.production_fixture(controller,4099,True)
+        controller=self.activated();path,receipt,_=self.production_fixture(controller,4099,True)
         for step in [4098,4100]:
             bad=copy.deepcopy(receipt);bad['result']['global_step']=step;put(path,bad)
             with self.assertRaises(ctl.Blocked):controller.accept_link()
         bad=copy.deepcopy(receipt);bad['final']['expected_completed_epochs']=1;put(path,bad)
         with self.assertRaises(ctl.Blocked):controller.accept_link()
-        put(path,receipt);marker=self.root/'runs/c2/step_04099/PILOT_FINAL';marker.unlink()
+        put(path,receipt);marker=self.root/controller.active_run()/'step_04099/PILOT_FINAL';marker.unlink()
         with self.assertRaises(ctl.Blocked):controller.accept_link()
         put(marker,b'WP5 pilot-final checkpoint at exactly 4099 optimizer updates (A46 rule 11); never a best-validation checkpoint\n');controller.accept_link()
         self.assertEqual(controller.status()['phase'],'final_verified')
 
     def test_nice_restore_is_idempotent_and_b6_remains_held(self):
-        controller=self.promoted();self.production_fixture(controller,4099,True);controller.accept_link()
+        controller=self.activated();self.production_fixture(controller,4099,True);controller.accept_link()
         self.scheduler.jobs['3345917']=dict(job_id='3345917',active=True,owner=self.c['owner'],uid=self.c['uid'],
             state='PENDING',reason='JobHeldUser',command='/b6.sbatch',nice='10000')
         controller.restore_nice()
