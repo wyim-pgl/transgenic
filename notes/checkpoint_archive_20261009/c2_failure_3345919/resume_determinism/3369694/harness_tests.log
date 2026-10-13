@@ -1,0 +1,7 @@
+W1012 19:48:05.996000 2199050 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 19:48:06.037000 2199050 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 9.030s
+
+OK

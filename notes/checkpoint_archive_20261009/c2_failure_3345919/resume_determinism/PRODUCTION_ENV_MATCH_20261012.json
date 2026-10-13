@@ -1,0 +1,36 @@
+{
+  "equal": true,
+  "actual": {
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "TORCHINDUCTOR_CACHE_DIR": "/work/compiler_cache/c2_history_v1/inductor",
+    "TORCHINDUCTOR_CUTLASS_DIR": "/opt/pytorch/pytorch/third_party/cutlass",
+    "TORCHINDUCTOR_LOOP_ORDERING_AFTER_FUSION": "0",
+    "TORCH_ALLOW_TF32_CUBLAS_OVERRIDE": "1",
+    "TRITON_CACHE_DIR": "/work/compiler_cache/c2_history_v1/triton",
+    "TRITON_CUDACRT_PATH": "/usr/local/cuda/include",
+    "TRITON_CUDART_PATH": "/usr/local/cuda/include",
+    "TRITON_CUOBJDUMP_PATH": "/usr/local/cuda/bin/cuobjdump",
+    "TRITON_CUPTI_INCLUDE_PATH": "/usr/local/cuda/include",
+    "TRITON_CUPTI_LIB_PATH": "/usr/local/cuda/lib64",
+    "TRITON_LIBCUDA_PATH": "/.singularity.d/libs",
+    "TRITON_NVDISASM_PATH": "/usr/local/cuda/bin/nvdisasm",
+    "TRITON_PTXAS_PATH": "/usr/local/cuda/bin/ptxas"
+  },
+  "expected": {
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "TORCHINDUCTOR_CACHE_DIR": "/work/compiler_cache/c2_history_v1/inductor",
+    "TORCHINDUCTOR_CUTLASS_DIR": "/opt/pytorch/pytorch/third_party/cutlass",
+    "TORCHINDUCTOR_LOOP_ORDERING_AFTER_FUSION": "0",
+    "TORCH_ALLOW_TF32_CUBLAS_OVERRIDE": "1",
+    "TRITON_CACHE_DIR": "/work/compiler_cache/c2_history_v1/triton",
+    "TRITON_CUDACRT_PATH": "/usr/local/cuda/include",
+    "TRITON_CUDART_PATH": "/usr/local/cuda/include",
+    "TRITON_CUOBJDUMP_PATH": "/usr/local/cuda/bin/cuobjdump",
+    "TRITON_CUPTI_INCLUDE_PATH": "/usr/local/cuda/include",
+    "TRITON_CUPTI_LIB_PATH": "/usr/local/cuda/lib64",
+    "TRITON_LIBCUDA_PATH": "/.singularity.d/libs",
+    "TRITON_NVDISASM_PATH": "/usr/local/cuda/bin/nvdisasm",
+    "TRITON_PTXAS_PATH": "/usr/local/cuda/bin/ptxas"
+  },
+  "scope": "actual image cleanenv plus production compiler overrides, no GPU/init/training"
+}

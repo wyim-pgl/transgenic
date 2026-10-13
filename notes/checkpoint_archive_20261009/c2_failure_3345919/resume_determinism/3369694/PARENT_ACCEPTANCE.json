@@ -1,0 +1,24 @@
+{
+  "job_id": "3369694",
+  "status": "accepted_full_checkpoint_proof",
+  "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+  "comparison_sha256": "33dfc993831b0325214693d3d6422e2231c5eaf9868cf4462c4ecea7b912fe89",
+  "different_model_keys": 0,
+  "states_equal": {
+    "optimizer.bin": true,
+    "random_states_0.pkl": true,
+    "random_states_1.pkl": true,
+    "random_states_2.pkl": true,
+    "random_states_3.pkl": true,
+    "scheduler.bin": true
+  },
+  "history_equal": true,
+  "historical210": {
+    "actual": 3.2567708492279053,
+    "equal": true,
+    "expected": 3.2567708492279053
+  },
+  "runtime_fingerprint_sha256": "5f7e184ca90fc18889cd9194952911808b9d570bc0c5272e7e5449bc87e6df6c",
+  "accounting": "3369694|COMPLETED|0:0|01:05:57|gh118\n3369694.batch|COMPLETED|0:0|01:05:57|gh118\n3369694.extern|COMPLETED|0:0|01:05:57|gh118\n",
+  "evidence_files": 30
+}

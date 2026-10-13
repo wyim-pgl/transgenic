@@ -1,0 +1,117 @@
+{
+  "host_python": "3.6.15 (default, Sep 23 2021, 15:41:43) [GCC]",
+  "controller_sha256": "d4e59576141d7f08d08832383cf1f246828ad3c4df0f0c7e8517426fc9d1b96b",
+  "exact_historical_active_terminal_command_match": "PASS",
+  "actual_completed_proof_accounting": "PASS",
+  "jobs": {
+    "3345919": {
+      "job_id": "3345919",
+      "owner": "wcyim",
+      "uid": 97434,
+      "created": "2026-10-09T01:03:12",
+      "token": "",
+      "submit_line": "sbatch --parsable --dependency=afterok:3345916 --export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=C2 revision/scripts/b6/wp5_pilot.sbatch",
+      "argv": [
+        "sbatch",
+        "--parsable",
+        "--dependency=afterok:3345916",
+        "--export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=C2",
+        "revision/scripts/b6/wp5_pilot.sbatch"
+      ],
+      "work_dir": "/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a",
+      "rows": {
+        "3345919": [
+          "FAILED",
+          "1:0"
+        ],
+        "3345919.batch": [
+          "FAILED",
+          "1:0"
+        ],
+        "3345919.extern": [
+          "COMPLETED",
+          "0:0"
+        ],
+        "3345919.0": [
+          "FAILED",
+          "6:0"
+        ],
+        "3345919.1": [
+          "COMPLETED",
+          "0:0"
+        ],
+        "3345919.2": [
+          "COMPLETED",
+          "0:0"
+        ],
+        "3345919.3": [
+          "COMPLETED",
+          "0:0"
+        ]
+      },
+      "active": false,
+      "command": "/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch"
+    },
+    "3345920": {
+      "job_id": "3345920",
+      "owner": "wcyim",
+      "uid": 97434,
+      "created": "2026-10-09T01:03:12",
+      "token": "",
+      "submit_line": "sbatch --parsable --dependency=afterany:3345919 --export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=C2 revision/scripts/b6/wp5_pilot.sbatch",
+      "argv": [
+        "sbatch",
+        "--parsable",
+        "--dependency=afterany:3345919",
+        "--export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=C2",
+        "revision/scripts/b6/wp5_pilot.sbatch"
+      ],
+      "work_dir": "/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a",
+      "rows": {
+        "3345920": [
+          "PENDING",
+          "0:0"
+        ]
+      },
+      "active": true,
+      "command": "/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch",
+      "reason": "JobHeldUser",
+      "state": "PENDING",
+      "nice": "0",
+      "raw": "JobId=3345920 JobName=b6-wp5-pilot UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=0 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=JobHeldUser Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=1-00:00:00 TimeMin=N/A SubmitTime=2026-10-09T01:03:12 EligibleTime=Unknown AccrueTime=Unknown StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-11T13:28:32 Scheduler=Main Partition=ghx4 AllocNode:Sid=gh-login03:867274 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1-1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch SubmitLine=sbatch --parsable --dependency=afterany:3345919 --export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=C2 revision/scripts/b6/wp5_pilot.sbatch WorkDir=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/b6-wp5-pilot-3345920.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64\n"
+    },
+    "3369694": {
+      "job_id": "3369694",
+      "owner": "wcyim",
+      "uid": 97434,
+      "created": "2026-10-12T19:26:12",
+      "token": "c2-history-198ce14-5d10eaad8598",
+      "submit_line": "sbatch --parsable --comment=c2-history-198ce14-5d10eaad8598 --export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e /work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch",
+      "argv": [
+        "sbatch",
+        "--parsable",
+        "--comment=c2-history-198ce14-5d10eaad8598",
+        "--export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e",
+        "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch"
+      ],
+      "work_dir": "/u/wcyim",
+      "rows": {
+        "3369694": [
+          "COMPLETED",
+          "0:0"
+        ],
+        "3369694.batch": [
+          "COMPLETED",
+          "0:0"
+        ],
+        "3369694.extern": [
+          "COMPLETED",
+          "0:0"
+        ]
+      },
+      "active": false,
+      "command": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch"
+    }
+  },
+  "scope": "actual read-only scheduler parsing only; no controller init or scheduler write"
+}

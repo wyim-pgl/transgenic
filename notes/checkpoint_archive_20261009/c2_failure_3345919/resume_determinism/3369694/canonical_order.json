@@ -1,0 +1,42 @@
+{
+  "/work/runs/b6_wp5_pilot_C2/rank0": {
+    "canonical_order_equal": true,
+    "expected_row5040": 184594,
+    "rows": 4800
+  },
+  "/work/runs/b6_wp5_pilot_C2/rank1": {
+    "canonical_order_equal": true,
+    "expected_row5040": 6686,
+    "rows": 4800
+  },
+  "/work/runs/b6_wp5_pilot_C2/rank2": {
+    "canonical_order_equal": true,
+    "expected_row5040": 125812,
+    "rows": 4800
+  },
+  "/work/runs/b6_wp5_pilot_C2/rank3": {
+    "canonical_order_equal": true,
+    "expected_row5040": 239768,
+    "rows": 6718
+  },
+  "/work/runs/b6_wp5_pilot_C2_recovery_20261011/rank0": {
+    "canonical_order_equal": true,
+    "expected_row5040": 184594,
+    "rows": 6144
+  },
+  "/work/runs/b6_wp5_pilot_C2_recovery_20261011/rank1": {
+    "canonical_order_equal": true,
+    "expected_row5040": 6686,
+    "rows": 6144
+  },
+  "/work/runs/b6_wp5_pilot_C2_recovery_20261011/rank2": {
+    "canonical_order_equal": true,
+    "expected_row5040": 125812,
+    "rows": 6144
+  },
+  "/work/runs/b6_wp5_pilot_C2_recovery_20261011/rank3": {
+    "canonical_order_equal": true,
+    "expected_row5040": 239768,
+    "rows": 6144
+  }
+}

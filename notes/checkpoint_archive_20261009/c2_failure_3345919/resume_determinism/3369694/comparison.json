@@ -1,0 +1,61 @@
+{
+  "different_model_keys": [],
+  "historical210": {
+    "actual": 3.2567708492279053,
+    "equal": true,
+    "expected": 3.2567708492279053
+  },
+  "history_equal": true,
+  "model_equal": true,
+  "passed": true,
+  "states_equal": {
+    "optimizer.bin": true,
+    "random_states_0.pkl": true,
+    "random_states_1.pkl": true,
+    "random_states_2.pkl": true,
+    "random_states_3.pkl": true,
+    "scheduler.bin": true
+  },
+  "traces": {
+    "0": {
+      "boundary_rng": [],
+      "context": [],
+      "gradients": [],
+      "inputs": [],
+      "loss": [],
+      "rng_after": [],
+      "rng_before": [],
+      "shapes": []
+    },
+    "1": {
+      "boundary_rng": [],
+      "context": [],
+      "gradients": [],
+      "inputs": [],
+      "loss": [],
+      "rng_after": [],
+      "rng_before": [],
+      "shapes": []
+    },
+    "2": {
+      "boundary_rng": [],
+      "context": [],
+      "gradients": [],
+      "inputs": [],
+      "loss": [],
+      "rng_after": [],
+      "rng_before": [],
+      "shapes": []
+    },
+    "3": {
+      "boundary_rng": [],
+      "context": [],
+      "gradients": [],
+      "inputs": [],
+      "loss": [],
+      "rng_after": [],
+      "rng_before": [],
+      "shapes": []
+    }
+  }
+}

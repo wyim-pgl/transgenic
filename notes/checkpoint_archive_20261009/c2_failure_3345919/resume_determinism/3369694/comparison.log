@@ -1,0 +1,63 @@
+W1012 20:51:13.705000 2271125 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 20:51:13.745000 2271125 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+{
+  "model_equal": true,
+  "different_model_keys": [],
+  "states_equal": {
+    "random_states_3.pkl": true,
+    "scheduler.bin": true,
+    "random_states_0.pkl": true,
+    "random_states_1.pkl": true,
+    "random_states_2.pkl": true,
+    "optimizer.bin": true
+  },
+  "history_equal": true,
+  "traces": {
+    "0": {
+      "inputs": [],
+      "shapes": [],
+      "rng_before": [],
+      "rng_after": [],
+      "loss": [],
+      "context": [],
+      "gradients": [],
+      "boundary_rng": []
+    },
+    "1": {
+      "inputs": [],
+      "shapes": [],
+      "rng_before": [],
+      "rng_after": [],
+      "loss": [],
+      "context": [],
+      "gradients": [],
+      "boundary_rng": []
+    },
+    "2": {
+      "inputs": [],
+      "shapes": [],
+      "rng_before": [],
+      "rng_after": [],
+      "loss": [],
+      "context": [],
+      "gradients": [],
+      "boundary_rng": []
+    },
+    "3": {
+      "inputs": [],
+      "shapes": [],
+      "rng_before": [],
+      "rng_after": [],
+      "loss": [],
+      "context": [],
+      "gradients": [],
+      "boundary_rng": []
+    }
+  },
+  "historical210": {
+    "expected": 3.2567708492279053,
+    "actual": 3.2567708492279053,
+    "equal": true
+  },
+  "passed": true
+}

@@ -1,0 +1,48 @@
+{
+  "checkpoint": {
+    "epoch": 0,
+    "global_step": 200,
+    "pending_micro": 0,
+    "step": 4800
+  },
+  "checkpoint_files": {
+    "accelerate_state/model.safetensors": "722ee4e55b09cda023584c1bf4ba927624ce338c94184e5b803b04c45c7760b5",
+    "accelerate_state/optimizer.bin": "4bbd6455fad01c27740269475883519770e04ea4705eef50246c3d3977d3c0d5",
+    "accelerate_state/random_states_0.pkl": "1bd9f4c95a4e4cd246ee1cb5bb814c80f78736a5f320ff03ac1295cf273e9cb3",
+    "accelerate_state/random_states_1.pkl": "347224af8d93d168f046cefe3c4d7a3d36932999ff47e3cf580107ba5c095d1f",
+    "accelerate_state/random_states_2.pkl": "8e7caceb48c5b2195dfd128dc8475166a2eb7c788851ca32ab3340497c9aaa36",
+    "accelerate_state/random_states_3.pkl": "569fdbff7835b411a8d6a7534bd520f3a83103995401b03fa9eda8e2a1ceeb98",
+    "accelerate_state/scheduler.bin": "fa4025968a2ead06203923c70ea89a7916965e1b69a05642c7c74f0978c7bf31",
+    "identity.json": "8a4a327e72914cd924d1bd844ee09c934581dab5724955fb7f2cf4d666d00aa1",
+    "meta.json": "fb2b76caf99cb3489bd38ecd123eb34c4cd0b5d349beb44d32e3b394756297b4"
+  },
+  "draw_prefix_lines": 4800,
+  "draw_prefix_sha256": {
+    "0": "f6c2eecc10921cf621479e005db1361e61dfc8e81d5aa8c5b6ca676c84650de5",
+    "1": "ff893d0ba22c901d7e4f7e76934d5a041e884584205d2f7224d3abe3c6590ce5",
+    "2": "8926cd9db4a34d5fb1d0f825d836e37bf052f3eacb94bcfeef367d99bbf6dfd3",
+    "3": "d7a298d40fb53375a5fcfdc652592134856a40228de874f88528ddbad3fb2ca9"
+  },
+  "kind": "reconstructed_legacy_compile_bootstrap",
+  "provenance": "metadata-derived candidate; not an observed compiler ledger",
+  "slots": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    3915
+  ],
+  "version": 1,
+  "world_size": 4
+}
