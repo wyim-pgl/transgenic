@@ -1,6 +1,6 @@
 # C2 재개 결정성 복구 — 2026-10-12 재시작 정본
 
-**후속 실행 상태: [C2_REPLAY_PROGRESS_20261012](C2_REPLAY_PROGRESS_20261012.md).** 아래는재개기준의보존기록이다. 현재구현198ce14(bootstrap전송수정·6시험·독립리뷰PASS), **새4GPU proof3369694 RUNNING gh118,시작17:45:33PDT**. 기존3369338 FAILED1:0/32m39/gh063은첫forward전tuple직렬화오류이며로그보존. Validation400 helper61d79f0·18시험·재검토PASS,별도v2배포·host3.6smoke완료. 운영helper7266e14/controller32b14d5(in-place v2)/연결ea699d5 검토·시험·실제host3.6PASS. 아직controller미초기화; 실제과학게이트필수. 현재상태는위진행기록과resume를우선한다. 중복제출금지.
+**현재 정본: [C2_REPLAY_PROGRESS_20261012](C2_REPLAY_PROGRESS_20261012.md).** 아래는과거재개기준보존기록이다. 현재source198ce14·4GPUproof3369694전체상태동일성PASS. **400단계검증3370048 Priority대기, 새controller PID1545990 감시중**. Operation`/work/nvme/bilv/wcyim/transgenic/ops/c2_in_place_198ce14_20261012`, phasewaiting_validation/revision3/error없음. 검증후원본200은그대로보존하고resumed사본제자리활성화→4099자동연결. 중복초기화/재제출/옛controller재시작금지. 실제진행은위기록·resume·livejournal/PID/Slurm을우선한다.
 
 ## 사용자 지시와 우선순위
 

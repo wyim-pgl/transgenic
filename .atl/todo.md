@@ -10,9 +10,9 @@
 - [x] 상태복원91c2737·journal789ecf4·trainer180589b·cache경로188bf3e. 실패회귀/구현/독립리뷰PASS; 전체129시험127pass2설명된skip, state별도12pass. latest/epoch/fixed/eval·pendinggrad·RNG복원구현완료. 실제4GPU게이트는별도.
 - [x] local검증/오류주입/독립검토PASS(198ce14); NGC회귀3369694 58시험57pass/1skip113.286s. source/main graph갱신. 실제과학게이트는아래별도.
 - [x] 실제4GPU전체checkpoint bitwise proof3369694 PASS: 모델차이0,optimizer/scheduler/4rankRNG/입력/shape/loss/context/boundarygradient/RNG/history정확일치. 원래210loss3.2567708492279053복원. parent/batch/externCOMPLETED0:0,1h05m57s. 증거3369694/PARENT_ACCEPTANCE.json.
-- [ ] 원본200보존한검증사본에서280이상/400저장·다음재개확인,여유공간재측정.
-- [x] 본학습운영도구 로컬·독립검토·호스트검증: production7266e14(33+NGC CPU33), controller32b14d5 in-place v2(52), 실제연결ea699d5(3). 원본이동없음. 실제과학검증·설정확인후운영초기화/실행은아래별도.
-- [ ] **통과즉시C2본학습4099시작(추가승인불필요)**. 기존controller재사용금지,새소스/검증receipt/중복방지journal. 소유자·상태확인후구held3345920처리,운영경로보존·승격기록.
+- [ ] 400저장·새프로세스400→410검증 **3370048 Priority대기**. 원본200보존,279→280 rank3slot6718관측필수. 제출전127.67GiB여유; 다음시점재측정.
+- [x] 본학습운영도구 로컬·독립검토·호스트검증: production7266e14(33+NGC CPU33), controller32b14d5 in-place v2(52), 실제연결ea699d5(3). 원본이동없음. 최종config검토/actualhostPASS, 새controller PID1545990 운영초기화·감시중. 실제400검증/활성화/본학습은별도.
+- [ ] **통과즉시C2본학습4099시작(추가승인불필요)**. 새controller PID1545990/ops/c2_in_place_198ce14_20261012가검증후처리. 원본200그대로보존, 검증resumed410제자리활성화; 소유자·상태확인후구held3345920취소.
 - [ ] epoch평가·최종step04099/PILOT_FINAL/정상exit/DONE검증.
 - [ ] C2완료후B5/B6우선순위복구및검증된소스로B6잡정리. B5진행live확인.
 

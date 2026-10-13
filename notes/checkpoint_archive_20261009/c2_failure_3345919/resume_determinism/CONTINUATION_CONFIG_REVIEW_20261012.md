@@ -1,68 +1,75 @@
-# C2 version2 deployment draft review — 2026-10-12
+# C2 version2 final deployment configuration review — 2026-10-12
 
-**Disposition: conditional draft review; not deployable and not approved for initialization.** The supplied configuration is consistent with the supplied staging/evidence records except for one concrete controller compatibility blocker for retiring old job3345920. Its runtime fingerprint is now populated from actual snapshot210 but remains provisional until the complete proof passes. Matching loss210, snapshot210, or completion of the continuous branch is not proof acceptance.
+**Disposition: approved for initialization and controller-gated validation400 submission using the exact final configuration below. No remaining material findings.** The concrete host preflight has passed. Full initial proof3369694 has been adjudicated and its accepted runtime fingerprint matches the configuration. Validation400, activation and ordinary production retain every existing scientific, scheduler, storage and identity gate; this approval does not bypass them.
 
-Reviewed read-only:
+## Exact reviewed configuration and runtime
 
-- `/tmp/c2-controller-config-v2.draft.json`, initially SHA256 `c022d604bfb36fa6ae5a54c09a9e9f515fc436cf5236a807b98063b2ad742386` with a null fingerprint; the parent then populated actual provisional snapshot210 context, yielding SHA256 `d0892e16718d94c5475f99fc16e56fe129601035851e95fc13e4ab9de2ccb311`. Resetting only that fingerprint to null reproduces the initial hash, confirming all other reviewed fields remained identical.
-- `/tmp/c2-build-config-draft.py`, SHA256 `babad296f8af5d18c786d5f0645efb50cbd896fdc083afae40ecb32bccad5ef1`.
-- Supplied deployment evidence, remote receipt-pin inventory, runtime/validation staging receipts and staged local helper files; source staging/submission records and host prerequisite record referenced by the builder.
+Final file: `/tmp/c2-controller-config-v2.final.json`.
 
-The builder was inspected, not executed. No operation was initialized, configuration rewritten, remote command run, job submitted/cancelled or source file edited. Only this review note was written.
+SHA256: `aa0b423844a59be4a690bf5218ad6598bbe4a0411a24fde7cd9a824ec3ee9951`.
 
-## P2 deployment blocker: relative terminal command for3345920
+Intended new operation: `/work/nvme/bilv/wcyim/transgenic/ops/c2_in_place_198ce14_20261012`, operation ID `history198ce14-20261012`, owner `wcyim`, UID97434. Initialization must use this final file, not the earlier draft builder, which writes a null fingerprint. No operation was initialized by this reviewer.
 
-The draft correctly pins the actual live command:
-
-```text
-/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch
-```
-
-However, the recorded actual `SubmitLine` for3345920 ends in:
-
-```text
-revision/scripts/b6/wp5_pilot.sbatch
-```
-
-The staged controller `Slurm.observe` at `continue_c2_history.py:325` sets terminal `command` to the final SubmitLine argument. While a job is active, `:329` replaces that value with scontrol's absolute `Command`. Consequently, after cancellation the same legitimate job changes from an absolute to a relative command representation. The exact identity comparisons at `retire():822` and `retired_old():835` refuse it. This prevents activation after a successful conditional cancellation. Setting the draft pin to the relative path would instead fail the required live held-job check, so changing the pin is not a valid workaround.
-
-A focused read-only probe used the actual staged `Slurm.observe` parser with the recorded3345920 SubmitLine and synthetic terminal accounting responses. It did not create a controller operation or invoke Slurm. Result:
-
-```json
-{
-  "configured_command": "/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch",
-  "observed_terminal_command": "revision/scripts/b6/wp5_pilot.sbatch",
-  "exact_match": false
-}
-```
-
-Reproducer outline: import `/tmp/c2-runtime-stage-1dd19f0/helpers/continue_c2_history.py`; subclass `Slurm.read` to return empty squeue, `3345920|CANCELLED|0:0` for state accounting, and `3345920|wcyim|97434|<recorded SubmitTime>||<recorded SubmitLine>` for identity accounting; call `observe('3345920','wcyim')`. Its `command` is relative and differs from the draft's correct absolute pin.
-
-Required correction is evidence-backed command normalization, preserving exact SubmitLine argv, owner/UID and all existing submission/retirement checks. The parent separately confirmed that actual sacct supplies an absolute WorkDir for these jobs and assigned the original author to resolve relative scripts against that recorded WorkDir, reject missing/ambiguous working-directory evidence, and check agreement with live scontrol Command. That successor must be tested, reviewed, newly staged and pinned before initialization. Runtime bundle1dd19f0 is historical staged evidence to supersede, not modify in place.
-
-## Checks that passed
-
-| Area | Reviewed result |
+| Pin | Approved value |
 |---|---|
-| Owner and paths | `wcyim`, UID97434 match recorded job/account evidence. WORK and SIF match the staged scripts. Original remains `runs/b6_wp5_pilot_C2`; diagnostic is `runs/b6_wp5_pilot_C2_recovery_20261011`. No canonical/backup/operator-selected active path is present. Intended operation `WORK/ops/c2_in_place_198ce14_20261012` is structurally disjoint from source/helpers and proof/validation runs; actual absence and symlink checks remain initialization prerequisites. |
-| Source | Commit `198ce14ce53266f53b7bda5d0c4cdfd94deb43b4`, snapshot Git `4f12c97a3798e09200de1f012e963c193e68964f`, directory `repo_b6_198ce14`, manifest `29206d99c14ce4260d4d6505bf1321ff494315a5ba97fe3220a013f0fd5969dc` match the verified source receipt. |
-| Input/config | Bindings `b6_prep_20260925/bindings/train_v1.deltaai.json` SHA `64e7fa926ecbcc74062f9cff9c3978f3bdd9de461029fd4b32dd78ee9e08eab3`; configuration `configs/b6_400m_win_v3_wp5_pilot.json` SHA `e4e7d123fbda29a36a39b3ad4ed7fe4c505767aaf7e1085fcf6c63f9a8800d41` agree with supplied remote evidence and launcher paths. |
-| Runtime stage | `ops/c2_compile_history_20261012/runtime_v2_1dd19f0`, manifest `b63dc958b1f0d8288d58ddea7baf267f1a80b70f2b6fd5d5e26dede55f28f34f`. All17 staged local manifest members match their hashes and the remote receipt, including the exact configured production script and reviewed controller/pure validator. This stage needs the retirement fix successor described above. |
-| Validation stage | `ops/c2_compile_history_20261012/validation_v2_61d79f0`, manifest `a751eb193b607574df6ac6e44c224c59e57b75b1fd069a23bc6f816ffc1bbb91`. All8 staged local manifest members match their hashes and remote receipt, including `history_validation.sbatch`. |
-| Proof adoption | ID3369694, comment `c2-history-198ce14-5d10eaad8598`, exact absolute script and full SubmitLine match accounting/submission evidence. Blank direct sacct Comment is correctly represented through the unique SubmitLine token. Immutable helper `v1_188bf3e` and manifest `5d10eaad8598b12b964ed0f576fb345f0486f3bdd278aac63331688dc9e57012` agree with the replacement proof submission record. Source198ce14 with that unchanged helper is intentional. Failed3369338 is not the adopted job. |
-| Science roots/logs | Proof root `runs/c2_compile_history_proof`; validation root `runs/c2_compile_history_validation`, matching the validation script's actual ROOT/PRIOR definitions. Validation output override `c2-history-validation-%j.out` exactly matches its configured marker-log template. Production output override likewise matches `c2-history-production-{job_id}.out`. Production phase.root is not used as the training destination: the actual active run is derived later from accepted validation evidence, and execution receipts reside under the operation's links. |
-| Tests | Proof: NGC58 with1 reviewed skip, harness7 with0 skips. Validation: NGC58 with1 reviewed skip, harness18 with0 skips. Production `tests={}` is intentional because production acceptance uses its allocated receipt, not science-test logs. |
-| Protected original/diagnostic | Original small meta/identity/failure-marker pins agree with provided evidence; original position is epoch0/step4800/global200/pending0. Diagnostic meta/identity/provenance pins agree, with epoch0/step6144/global256/pending0. The supplied retained JSON text was independently hashed and matched its declared pins. Original failure marker's empty-byte hash is preserved intentionally. |
-| Original receipt/bootstrap | Runtime and validation original-checkpoint receipt bytes match `c7ba61600300c8467f453c5476f42af80c795a217a6b9dab803966f5f37d44da`. Their original meta/identity entries agree with the draft. Reconstructing the expected bootstrap JSON from the pinned receipt, required slots and four prefix hashes using the helper's exact no-trailing-newline serialization yields configured `894b62c2fa793b66ac23710ee32aecfcbab738cbf54b9460cbd0756ddf7c59a2`. Actual proof bootstrap still must match at acceptance. |
-| Staging receipt pins | The draft's entire proof_receipts set matches the supplied remote pin inventory. Local copies of source, validation and runtime remote receipts additionally match the exact pinned raw-byte SHA values. The proof submission identity is corroborated by accounting and the separate submission-state record; that local state record is not substituted for the differently named remote proof-submission receipt. |
-| Protected jobs | B5 IDs3309786–3309790 use the recorded absolute `repo_seeds/deploy/deltaai/train_b5.slurm` command and `held=false`. B6 IDs3345917/3345918 use the recorded old-source absolute launcher and `held=true`; supplied observations are owned PENDING/JobHeldUser. Old C2 ID3345920 uses its correct live command and remains a separate retirement target. All require fresh scheduler identity/state checks when acted upon. |
+| Runtime helper | `ops/c2_compile_history_20261012/runtime_v2_506bb11` |
+| Runtime manifest | `551f45007645cee43cab3774feda174493df4c0682bfb1079030d2cb56d07407` |
+| Runtime staging receipt | `ops/c2_compile_history_20261012/runtime_v2_506bb11_receipt.json`, SHA `ef1cdc867551221791fde6912c566848380a1526cf7dbf6380417b7f6473b254` |
+| Controller bytes | `d4e59576141d7f08d08832383cf1f246828ad3c4df0f0c7e8517426fc9d1b96b`, including the independently approved WorkDir correction |
+| Producer bytes | `5da60c8f994a7814ba2d0ac337f7f8320e59b887612bc6ec0622059e427d88c9` |
+| Original checkpoint receipt | New runtime helper's `original_checkpoint_receipt.json`, unchanged SHA `c7ba61600300c8467f453c5476f42af80c795a217a6b9dab803966f5f37d44da` |
+| Source | Commit `198ce14ce53266f53b7bda5d0c4cdfd94deb43b4`, snapshot Git `4f12c97a3798e09200de1f012e963c193e68964f`, directory `repo_b6_198ce14` |
+| Source manifest | `29206d99c14ce4260d4d6505bf1321ff494315a5ba97fe3220a013f0fd5969dc` |
+| Validation helper | `ops/c2_compile_history_20261012/validation_v2_61d79f0`, manifest `a751eb193b607574df6ac6e44c224c59e57b75b1fd069a23bc6f816ffc1bbb91` |
+| Adopted proof |3369694; immutable helper `ops/c2_compile_history_20261012/v1_188bf3e`, manifest `5d10eaad8598b12b964ed0f576fb345f0486f3bdd278aac63331688dc9e57012` |
+| Runtime fingerprint canonical SHA | `5f7e184ca90fc18889cd9194952911808b9d570bc0c5272e7e5449bc87e6df6c` |
 
-## Resources and pending acceptance
+The final diff from the reviewed populated draft changes only the production runtime directory/script/manifest, its staging receipt pin, and the original-receipt reference into that successor directory. Source, validation, proof, resources, original/diagnostic/protected-job pins and fingerprint remain unchanged. All18 local successor manifest members were independently hashed and matched both the manifest and remote staging receipt. Relative to the prior runtime, only the three independently reviewed WorkDir-fix files changed; its review note was added. The exact configured production script is manifest-covered. The source/validation/proof receipt pins remain those already reviewed.
 
-Validation explicitly submits account `bilv-dtai-gh`, partition `ghx4`, time04:00:00, one node, four GPUs,64 CPUs/task, exclusions `gh062,gh093` and no-requeue. The controller's explicit argv overrides the validation script's two-hour interactive header and explicit output path overrides `%x`. The parent authorized this recovery resource choice based on measured setup time plus both training/replay/save phases; no fixed user two-hour cap was identified. Production retains the reviewed24:00:00 ghx4/four-GPU/64-CPU defaults and its existing900-second graceful signal behavior. Four-rank bf16/batch1/seed123/deterministic profile and accumulation remain enforced by the reviewed helpers/controller.
+## Closed deployment blocker
 
-`validation_clone_peak_bytes=22,910,679,660` is exactly `4 × 5,727,669,915` bytes, about21.337GiB, covering three clones plus a publication temporary. The controller independently requires at least100GiB available and that the clone peak fits; it does not sum the two requirements. Storage interpreter `/usr/bin/python3` and `repo_b6_198ce14/revision/scripts/b6/storage_preflight.py` match the supplied host/source context. Previously recorded free space is not current submission authorization.
+The draft review found that old3345920's live absolute Command and terminal relative SubmitLine script were inconsistent in the original parser. The new controller normalizes the relative script against recorded absolute accounting WorkDir and checks equality with live scontrol Command, while retaining exact argv/SubmitLine, token, owner/UID and submission time. `CONTINUATION_WORKDIR_FIX_REVIEW_20261012.md` independently approved this narrow correction.
 
-The later provisional runtime context in `/tmp/c2-proof210-runtime-context.json` (file SHA256 `44e8745e348833907449607c84166746e6e4c2e4bf2b8086e5471e0f4dff25ec`) identifies actual proof3369694 `at210/latest_state/compile_history.json`, history SHA256 `49028ddf20a382e4778d533680540cf900760a1371654fc44260c2fcb9135b17`. The draft fingerprint equals the context fingerprint exactly; its bootstrap hash, recipe SHA and epoch0/step5040/global210/pending0 metadata agree. It records four GH200 ranks, bf16, deterministic operation, nonreentrant checkpointing and enabled local FX/AOT caches. Observed image/compiler values include `TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1`, `TORCHINDUCTOR_LOOP_ORDERING_AFTER_FUSION=0`, CUTLASS and Triton tool paths. Preserve these proven-context values exactly; this review does not request TF32 changes or cache disabling. The parent is separately checking the production container's effective environment, including image defaults retained through `--cleanenv`. This context remains explicitly provisional and does not establish continuous/resumed equality or terminal proof success.
+Actual host evidence `/tmp/c2-workdir-host-smoke.json` uses Python3.6.15 and the exact controller SHA above. It records PASS for historical active/terminal command agreement and completed-proof accounting. Actual historical terminal3345919 and held3345920 both resolve to `/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch`;3345920 remains PENDING/JobHeldUser. The obsolete job's correct absolute pin is preserved. The old runtime bundle is superseded, not edited in place. This closes the draft's P2 blocker.
 
-Before initialization, the parent must replace the runtime helper/manifest/staging-receipt pins with the independently reviewed command-normalization successor, confirm the provisional fingerprint against fully accepted actual proof evidence, and verify the resulting final draft/pins. The inspected builder still writes that field as null; rerunning it would discard the populated context, so it must not be treated as a finalized deployment builder. Parent+batch terminal status, complete comparison/history/input/RNG/gradient/historical checks, all test logs and terminal markers remain required. Validation400 and in-place activation remain subsequent gated operations. No additional configuration-path, pin, test-count or resource mismatch was found in this draft.
+## Accepted proof and effective environment
+
+Parent acceptance is retained in `3369694/PARENT_ACCEPTANCE.json`. The reviewer independently ran the pinned pure numerical validator on the collected actual `comparison.json` and checked its SHA `33dfc993831b0325214693d3d6422e2231c5eaf9868cf4462c4ecea7b912fe89` against that acceptance record. The report has zero different model keys, all six optimizer/scheduler/rank-RNG equality fields true, all four ranks' eight mismatch lists empty, equal histories, and the exact historical210 loss `3.2567708492279053`.
+
+Collected checkpoint metadata, identity and history bindings were independently checked:
+
+- at210: epoch0/step5040/global210/pending0, history SHA `49028ddf20a382e4778d533680540cf900760a1371654fc44260c2fcb9135b17`.
+- Continuous220 and resumed220: epoch0/step5280/global220/pending0, identical history SHA `db3b69f91efc5c8ca831a4453a32160036c684920538b3cd152c12155cac15a9`.
+- All three fingerprints exactly equal the final configuration fingerprint; all meta/history/identity/bootstrap relationships checked match. Verified allocation record names3369694 and the collected batch log contains the terminal proof marker.
+- Actual host parser evidence shows parent, batch and extern COMPLETED0:0 and no active execution. The exact configured SubmitLine/comment/command agree. Failed3369338 remains historical, not adopted.
+
+Bootstrap SHA `894b62c2fa793b66ac23710ee32aecfcbab738cbf54b9460cbd0756ddf7c59a2` also matches independent reconstruction from the original checkpoint receipt, four prefix hashes, required slots and the helper's exact JSON serialization.
+
+`/tmp/c2-production-env-match.json` contains exact equality for all **14** fingerprint cache/environment fields between the actual image clean environment plus production overrides and accepted proof context. Its actual and expected dictionaries independently equal `config.expected_runtime_fingerprint.cache_env`. This preserves observed TF32, loop-ordering, CUTLASS/Triton tool paths and enabled local FX/AOT caches; no runtime value was adjusted to an assumed preferred default. The environment smoke is not GPU training and does not replace the later allocation's full fingerprint check.
+
+## Concrete host preflight
+
+`/tmp/c2-config-host-preflight.json` is present and pins the same final config SHA `aa0b4238…ee9951`. It records:
+
+- Python3.6.15 and PASS for source/helper/input/original pins.
+- PASS for no competing writers, completed proof accounting and exact old-held-job identity.
+- Project22169, pool `ddn_ssd`; quota remaining137,088,151,552 bytes and filesystem available320,458,334,208 bytes, both above107,374,182,400 bytes (100GiB).
+- Read-only scope: no initialization, ownership claim, submission, cancellation or activation.
+
+The first parent dry runner omitted its synthetic journal receipt field and stopped before storage; the corrected runner alone was rerun. No implementation or source bytes changed for that correction. The final concrete PASS record, not the initial dry-run attempt, supports this approval. Storage is still rechecked by the controller at every required transition.
+
+## Unchanged reviewed routing, resources and protections
+
+Proof root is `runs/c2_compile_history_proof`; validation root is `runs/c2_compile_history_validation`, matching the launcher's fixed ROOT/PRIOR values. Proof marker logs use `c2-history-proof-{job_id}.out`; explicit validation/production output patterns match their configured marker-log templates exactly. Production phase.root does not choose the training destination: activation derives the accepted validation job's `/resumed` path, and execution receipts belong under operation links.
+
+Proof test counts remain NGC58/skip1 and harness7/skip0; validation counts remain NGC58/skip1 and harness18/skip0. Production `tests={}` is intentional because its allocated receipt is the acceptance boundary.
+
+Validation uses account `bilv-dtai-gh`, partition `ghx4`, time04:00:00, one node, four GPUs,64 CPUs/task, exclusions `gh062,gh093` and no-requeue. Explicit argv overrides the two-hour interactive script header. This parent-authorized choice accommodates measured setup plus both training/replay/save phases without a fixed user two-hour cap. Production remains24:00:00 ghx4/four-GPU/64-CPU with its reviewed900-second graceful signal. No recipe or numerical setting changes accompany these resources.
+
+Clone peak22,910,679,660 bytes is exactly four times5,727,669,915 bytes, covering three clones plus a publication temporary (about21.337GiB). It must fit independently of the100GiB minimum; the two requirements are not added. `/usr/bin/python3` and `repo_b6_198ce14/revision/scripts/b6/storage_preflight.py` remain the approved storage command.
+
+Original200 remains `runs/b6_wp5_pilot_C2`, including its empty original failure marker; diagnostic256 remains `runs/b6_wp5_pilot_C2_recovery_20261011`. Their metadata/identity/provenance pins were checked against supplied remote evidence, and the available retained JSON bytes independently hash to those pins. Original position is epoch0/step4800/global200/pending0; diagnostic is epoch0/step6144/global256/pending0. Bindings SHA `64e7fa926ecbcc74062f9cff9c3978f3bdd9de461029fd4b32dd78ee9e08eab3` and training config SHA `e4e7d123fbda29a36a39b3ad4ed7fe4c505767aaf7e1085fcf6c63f9a8800d41` are unchanged and checked.
+
+Protected B5 IDs3309786–3309790 retain their recorded absolute `repo_seeds/deploy/deltaai/train_b5.slurm` command with `held=false`. B6 IDs3345917/3345918 retain their recorded old-source launcher with `held=true`; no release is authorized by this configuration. Old C2 ID3345920 is the separate conditional retirement target. Every action still requires fresh scheduler owner/command/state evidence. Nice0 restoration remains gated on fully verified final4099, with B6 held.
+
+No new review finding remains. This review performs no remote actions, source edits, operation initialization or delegation. It updates only this review note. Previously approved controller/producer suites were not repeated; the final work was confined to changed bundle pins, actual proof/control artifacts, effective environment equality and concrete host preflight evidence.

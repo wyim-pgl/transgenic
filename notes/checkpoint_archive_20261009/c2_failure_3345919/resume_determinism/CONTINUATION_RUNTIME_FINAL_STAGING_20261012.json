@@ -1,0 +1,30 @@
+{
+  "main_commit": "506bb11414e700096a833048252367347486873c",
+  "helper_dir": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/runtime_v2_506bb11",
+  "manifest_sha256": "551f45007645cee43cab3774feda174493df4c0682bfb1079030d2cb56d07407",
+  "archive_sha256": "ab90f6ae9af8c888dc046679f8abb241916fee20d114fc6c8c477f2c7933b844",
+  "files_sha256": {
+    "continue_c2_history.py": "d4e59576141d7f08d08832383cf1f246828ad3c4df0f0c7e8517426fc9d1b96b",
+    "production_link.py": "5da60c8f994a7814ba2d0ac337f7f8320e59b887612bc6ec0622059e427d88c9",
+    "production_link.sbatch": "0697b3482b9bbf06a32f787f28d83d7a653e5e895fde9694f78e4ba3c71f05af",
+    "probe.py": "9edf1eb412275f998cd0614d5b0ea12203433c52b0192da557aa860ab9ab65dc",
+    "history_proof.py": "a25ebeba21288555c79c5d285c2e040cabccc3b1a92d4761f5b4d3b52538b6b1",
+    "original_checkpoint_receipt.json": "c7ba61600300c8467f453c5476f42af80c795a217a6b9dab803966f5f37d44da",
+    "test_continue_c2_history.py": "fb051a66e0042755287cfedaaf79de56333683adf589db1ee2b30b344458d360",
+    "test_production_link.py": "3b8dbfcb6afae87200cb34a0fe01ff61ef8188a4c91b6586f9519bfcba3a215d",
+    "test_c2_link_contract.py": "955fc7af819f13dcab73e9139a187240585b8bb839afeba702c726c1017ec775",
+    "test_history_proof.py": "924282197ccc16d4856d4491fde4d66fbe9a2416333d87f19c8b993c1b40c5c8",
+    "CONTINUATION_IMPLEMENTATION.md": "644f40721fff9ea98a942e0b1a59b2b371c3d1b7ab6bd3483b1863fb963babd5",
+    "CONTINUATION_V2_REVIEW_20261012.md": "ec8f340e4c87e75dae5989519c500f9efc1885d75b969afb9d1038ae2a3552b1",
+    "ACTIVATION_DESIGN_20261012.md": "9868dd76db99d0cb8452fe69acc07107eb22f6f85049753d842b51b7e4d93599",
+    "CONTINUATION_IMPLEMENTATION_PLAN.md": "1f0bc97d3f8ff31cf154b330ab58d8d60ef039b710d5321d6a7fa06e585d7a98",
+    "PRODUCTION_LINK_IMPLEMENTATION.md": "7472f3cca90b547ee36a8b9e3ba48fe1050d54014c3c18534e4814e780c4da8c",
+    "PRODUCTION_LINK_FIX_REVIEW_20261012.md": "17236b6aadcf57660cc808f9aedfadc8408beec291694733d0c34ad0360341af",
+    "LINK_CONTRACT_VERIFICATION_20261012.md": "f48d6e38f745543cb5effd2b5fb0b9a11047c6837caf31369de769b1518fb5a3",
+    "CONTINUATION_WORKDIR_FIX_REVIEW_20261012.md": "1d519f98640b50426e3b84a582622fe086aa9d27daee8c43fec9fd3dc6bf5cf1"
+  },
+  "purpose": "reviewed in-place controller and production helpers; staging only, no operation initialization",
+  "host_python": "3.6.15 (default, Sep 23 2021, 15:41:43) [GCC]",
+  "import_smoke": "PASS",
+  "status": "runtime_helpers_staged_verified"
+}

@@ -1,0 +1,10 @@
+{
+  "state_dir": "/work/nvme/bilv/wcyim/transgenic/ops/c2_in_place_198ce14_20261012",
+  "config_file": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/config_in_place_198ce14_v2.json",
+  "config_sha256": "aa0b423844a59be4a690bf5218ad6598bbe4a0411a24fde7cd9a824ec3ee9951",
+  "phase": "waiting_validation",
+  "proof_job_id": "3369694",
+  "validation_job_id": "3370048",
+  "revision": 3,
+  "last_error": null
+}

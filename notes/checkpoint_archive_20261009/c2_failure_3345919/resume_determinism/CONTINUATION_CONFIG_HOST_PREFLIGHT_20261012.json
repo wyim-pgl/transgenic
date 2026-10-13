@@ -1,0 +1,17 @@
+{
+  "config_sha256": "aa0b423844a59be4a690bf5218ad6598bbe4a0411a24fde7cd9a824ec3ee9951",
+  "host_python": "3.6.15 (default, Sep 23 2021, 15:41:43) [GCC]",
+  "source_helper_input_original_pins": "PASS",
+  "storage": {
+    "filesystem_available_bytes": 320458334208,
+    "pool": "ddn_ssd",
+    "project_id": 22169,
+    "quota_remaining_bytes": 137088151552,
+    "required_bytes": 107374182400,
+    "results_dir": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2"
+  },
+  "no_competing_writers": "PASS",
+  "proof_accounting": "PASS",
+  "held_old_identity": "PASS",
+  "scope": "read-only concrete config checks; no init, claim, job submit/cancel or activation"
+}

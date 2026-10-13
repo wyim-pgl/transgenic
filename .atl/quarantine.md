@@ -4,9 +4,9 @@
 
 | 반복하지 않을 접근 | 확인된 사실/대안 |
 |---|---|
-| compiledcheckpoint키를baregrad/export키와직접대조 | Accelerator저장은_orig_mod.*; gradient/fixedexport는bare. 값digest는유지하고명칭대조만검증된정규화필요. |
-| CUDA RNG를nonemptyuint8만확인 | 1byte상태도READY가될수있음. 지원Philoxlayout/기기수등엄격검증필요. |
-| localRENAME_NOREPLACE성공을실제Lustre지원으로일반화 | 실제host새디렉터리/파일rename 모두EINVAL22. 기존targetEEXIST만으론지원증명아님; 무안전fallback금지,in-place활성화설계검토. |
+| compiledcheckpoint키를baregrad/export키와직접대조 | Accelerator저장은_orig_mod.*; gradient/fixedexport는bare. 7266e14는값digest유지·명칭대조만정규화, 실제compile/NGC시험·독립검토PASS. |
+| CUDA RNG를nonemptyuint8만확인 | 1byte상태도READY가될수있음. 7266e14는sourceencode_rng+4기기Philox검증, NGCCPU33시험PASS. |
+| localRENAME_NOREPLACE성공을실제Lustre지원으로일반화 | 실제host새디렉터리/파일rename 모두EINVAL22. 기존targetEEXIST만으론지원증명아님; fallback금지. controller6e5f0f7의in-place v2방식으로원본이동없이해결. |
 | destination없음확인후os.rename면덮어쓰기없다고가정 | 경쟁빈디렉터리가생기면교체됨. atomic no-replace필요,미지원시중단. |
 | helpermanifest만검증하면임의phase.script도검토된것 | 실제제출스크립트가해당helper내정확한manifestmember인지결속해야함. |
 | legacyvalidator반환tuple을strictJSONcollective에그대로전달 | 3369338첫forward전실패. validator/replay분리시험외dispatch경계시험필요; 전송직전validatedpair만list화. |

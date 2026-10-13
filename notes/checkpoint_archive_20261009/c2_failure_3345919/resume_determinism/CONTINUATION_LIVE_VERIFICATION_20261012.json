@@ -1,0 +1,146 @@
+{
+  "reviewed_values_equal": true,
+  "deployed_config_sha256": "1b47985289ec4eac6fc292a7e288bf842abc2a07c53e988b507787837a5b13eb",
+  "journal_phase": "waiting_validation",
+  "revision": 3,
+  "validation_job_id": "3370048",
+  "last_error": null,
+  "watch_pid": 1545990,
+  "watch_command_exact": true,
+  "watch_log_tail": [
+    "{\"phase\": \"waiting_validation\", \"revision\": 3, \"last_error\": null}",
+    "{\"phase\": \"waiting_validation\", \"revision\": 3, \"last_error\": null}",
+    "{\"phase\": \"waiting_validation\", \"revision\": 3, \"last_error\": null}",
+    "{\"phase\": \"waiting_validation\", \"revision\": 3, \"last_error\": null}"
+  ],
+  "accounting": "3370048|PENDING|0:0|04:00:00|ghx4\n",
+  "journal": {
+    "activation_receipt": null,
+    "active_run": null,
+    "config_sha256": "1b47985289ec4eac6fc292a7e288bf842abc2a07c53e988b507787837a5b13eb",
+    "created": 1791857475.549292,
+    "epoch_events": [],
+    "intent": null,
+    "last_error": null,
+    "links": [],
+    "operation_id": "history198ce14-20261012",
+    "phase": "waiting_validation",
+    "proof_job_id": "3369694",
+    "receipts": {
+      "proof": {
+        "artifacts": [
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/continuous/latest_state/meta.json",
+            "sha256": "5e35a95abb1869c4a02144a5093024f435bd0ac0f439bcd3396aa13432a3f9f9"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/continuous/latest_state/identity.json",
+            "sha256": "a0ce9ae86028afe7041d22006f4dc2b05bcf89088a1442764a7a4ab9ad8adda6"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/continuous/latest_state/compile_history.json",
+            "sha256": "db3b69f91efc5c8ca831a4453a32160036c684920538b3cd152c12155cac15a9"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/resumed/latest_state/meta.json",
+            "sha256": "5e35a95abb1869c4a02144a5093024f435bd0ac0f439bcd3396aa13432a3f9f9"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/resumed/latest_state/identity.json",
+            "sha256": "a0ce9ae86028afe7041d22006f4dc2b05bcf89088a1442764a7a4ab9ad8adda6"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/resumed/latest_state/compile_history.json",
+            "sha256": "db3b69f91efc5c8ca831a4453a32160036c684920538b3cd152c12155cac15a9"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/at210/latest_state/meta.json",
+            "sha256": "933814fe42d033a186466ff1ad348e23040c2e5191e8d6fac01bda7e74ebeeb4"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/at210/latest_state/identity.json",
+            "sha256": "a0ce9ae86028afe7041d22006f4dc2b05bcf89088a1442764a7a4ab9ad8adda6"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/at210/latest_state/compile_history.json",
+            "sha256": "49028ddf20a382e4778d533680540cf900760a1371654fc44260c2fcb9135b17"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/bootstrap.json",
+            "sha256": "894b62c2fa793b66ac23710ee32aecfcbab738cbf54b9460cbd0756ddf7c59a2"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/verified_record.json",
+            "sha256": "7ec0936ea6d535687c138749f24f6ec923f9b13044e6f5bc90ade54b3145564a"
+          },
+          {
+            "relative_path": "b6_prep_20260925/logs/c2-history-proof-3369694.out",
+            "sha256": "9357705fae73ece3ed48e14df085812c4f91f581093809dc8fbc05ad8609b53b"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/harness_tests.log",
+            "sha256": "e7bd85173d7ca7db9064bebcc5af4f6e76c86e0e6d1c32598e953195706a7fd6"
+          },
+          {
+            "relative_path": "runs/c2_compile_history_proof/3369694/ngc_tests.log",
+            "sha256": "12daf488eccef8160a69e9360c96de2dcdf51e7b491f64c1f9febfcf0b1048a2"
+          }
+        ],
+        "job_id": "3369694",
+        "relative_path": "runs/c2_compile_history_proof/3369694/comparison.json",
+        "root": "runs/c2_compile_history_proof/3369694",
+        "sha256": "33dfc993831b0325214693d3d6422e2231c5eaf9868cf4462c4ecea7b912fe89"
+      }
+    },
+    "restored": [],
+    "revision": 3,
+    "updated": 1791857505.5354397,
+    "validation_job_id": "3370048",
+    "validation_submission": {
+      "intent": {
+        "argv": [
+          "sbatch",
+          "--parsable",
+          "--no-requeue",
+          "--export=ALL",
+          "--comment=c2-history198ce14-20261012-validation-0001",
+          "--job-name=c2-history198ce14-20261012-validation-0001",
+          "--account=bilv-dtai-gh",
+          "--partition=ghx4",
+          "--time=04:00:00",
+          "--nodes=1",
+          "--gpus-per-node=4",
+          "--cpus-per-task=64",
+          "--exclude=gh062,gh093",
+          "--output=/work/nvme/bilv/wcyim/transgenic/b6_prep_20260925/logs/c2-history-validation-%j.out",
+          "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/validation_v2_61d79f0/history_validation.sbatch"
+        ],
+        "created": 1791857503.0048304,
+        "env": {
+          "HOME": "/u/wcyim",
+          "LANG": "en_US.UTF-8",
+          "LOGNAME": "wcyim",
+          "OPS_DIR": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/validation_v2_61d79f0",
+          "PATH": "/u/wcyim/.local/bin:/u/wcyim/bin:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/9.0.1/bin:/opt/cray/pe/craype/2.7.35/bin:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/compilers/bin:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/compilers/extra/qd/bin:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/cuda/12.9/compute-sanitizer:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/cuda/12.9/bin:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/cuda/12.9/libnvvp:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/profilers/Nsight_Compute:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/profilers/Nsight_Systems/bin:/sw/user/intercept_mpicc:/sw/user/scripts:/opt/cray/pe/gcc-native/14/bin:/opt/cray/pe/perftools/25.09.0/bin:/opt/cray/pe/papi/7.2.0.2/bin:/opt/cray/libfabric/2.3.1/bin:/opt/clmgr/sbin:/opt/clmgr/bin:/opt/sgi/sbin:/opt/sgi/bin:/usr/local/bin:/usr/bin:/bin:/opt/c3/bin:/usr/lib/mit/bin:/opt/puppetlabs/bin:/opt/cray/pe/bin",
+          "PROOF_JOB_ID": "3369694",
+          "REPO_DIR": "/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14",
+          "SIF": "/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif",
+          "USER": "wcyim",
+          "WORK": "/work/nvme/bilv/wcyim/transgenic"
+        },
+        "env_sha256": "b1af2c974238a0b075beca9afc4bc013f2490cae989687905b802050ade6fd05",
+        "index": 1,
+        "kind": "validation",
+        "request": null,
+        "token": "c2-history198ce14-20261012-validation-0001"
+      },
+      "job_id": "3370048",
+      "submission_evidence": {
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "3370048\n"
+      }
+    },
+    "version": 2
+  }
+}
