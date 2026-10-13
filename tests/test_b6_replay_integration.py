@@ -432,6 +432,41 @@ class LegacyManifestTests(unittest.TestCase):
         self.assertEqual(encode_rng(capture_rng()), before)
         self.assertEqual(int(model.visits), 0)
 
+    def test_bootstrap_transports_validated_manifest_and_all_rank_companions(self):
+        import tempfile
+        from contextlib import ExitStack
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from accelerate.utils import DistributedType
+        from transgenic.training import b6_compile_replay as replay, b6_compile_history as journal
+        from transgenic.training import mvp_finalize as transport
+        acc = SimpleNamespace(device=torch.device('cuda'), num_processes=4, process_index=0,
+                              is_main_process=True, distributed_type=DistributedType.MULTI_GPU,
+                              project_configuration=SimpleNamespace(automatic_checkpoint_naming=False))
+        with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+            root = Path(tmp)
+            ckpt, run, manifest = self.fixture(root)
+            path = root / 'bootstrap.json'
+            path.write_text(json.dumps(manifest))
+            expected_provenance, expected_rows = replay.validate_legacy_manifest(
+                path, ckpt, run, replay.LEGACY_CHECKPOINT, arm='C2', world_size=4, batch_size=1)
+            # Replace only GPU byte transport. Real checkpoint coordination, JSON
+            # encoding, manifest validation and bootstrap dispatch still run.
+            for module in (journal, transport):
+                stack.enter_context(patch.object(module, '_transport_lengths',
+                    side_effect=lambda accelerator, error, payload: [len(payload)] * 4))
+                stack.enter_context(patch.object(module, '_gather_payload_bytes',
+                    side_effect=lambda accelerator, payload, lengths: [payload] * 4))
+            execute = stack.enter_context(patch.object(replay, 'execute_replay', return_value='replayed'))
+            history = journal.CompileHistory({}, {}, acc)
+            result = replay.bootstrap_legacy(history, path, ckpt, run, replay.LEGACY_CHECKPOINT,
+                None, None, {}, rt.ARMS['C2'], acc, 24, None, batch_size=1)
+            self.assertEqual(result, 'replayed')
+            self.assertEqual(history.bootstrap, expected_provenance)
+            self.assertEqual(execute.call_args.kwargs['legacy_rows'], expected_rows)
+            self.assertEqual(set(expected_rows), {'0', '1', '2', '3'})
+            self.assertTrue(all(len(rows) == 16 for rows in expected_rows.values()))
+
 
 def distributed_replay_worker(rank, rendezvous, output, failure):
     import datetime

@@ -370,7 +370,9 @@ def bootstrap_legacy(history, manifest_path, checkpoint_dir, run_dir, checkpoint
             raise ValueError('legacy compiler bootstrap execution requires CUDA')
         local = validate_legacy_manifest(manifest_path, checkpoint_dir, run_dir, checkpoint, arm=arm.name,
                                          world_size=accelerator.num_processes, batch_size=batch_size) if accelerator.is_main_process else None
-    values = CompileHistory({}, {}, accelerator)._gather(lambda: local)
+    # The validator returns a Python pair; the bounded wire format permits only
+    # JSON containers. Keep the strict journal encoder and normalize this pair.
+    values = CompileHistory({}, {}, accelerator)._gather(lambda: list(local) if local is not None else None)
     history.bootstrap, rows = values[0]
     with rt.checkpoint_io(accelerator):
         payload = history.to_payload()
