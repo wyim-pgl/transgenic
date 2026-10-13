@@ -21,7 +21,7 @@
 
 - `/tmp/b6-c2-recompile`, branch`b6-c2-recompile-20261011`, **198ce14**, clean/pushed. state/journal/trainer통합·캐시경로결속독립검토PASS; d7b1a37은수정기준.
 - 구현브랜치는 main과별개. `/tmp`가없으면브랜치에서worktree재생성. 현재main은업무기록/기존미커밋내용보존용이다.
-- main운영도구: production1f4bb61(27시험), controllerd332dcf(38시험), 연결시험9d93e22(3시험). 독립검토4개보완점수정중; 미배포/미초기화. 담당·상세게이트는진행기록참조.
+- main운영도구: production1f4bb61(27시험), controllerf581638(43시험), 연결시험9d93e22(3시험). production검토2개수정중; controller2개수정완료이나실제Lustre atomicrename미지원으로승격불가. 원본보존/in-place활성화설계검토중. 미배포/미초기화. 담당·상세게이트는진행기록참조.
 - 다음: 3369694 live/log/종료코드부터확인→NGC회귀·4GPU체크포인트정확일치→검증사본400재개→**승인재요청없이C2본학습4099**.
 - 상세경로·검증결과·주의점·서버명·원격journal·잡ID는handoff에있다. 지금완료진단을다시돌리거나기존controller를그대로재가동하지않는다.
 

@@ -1,0 +1,45 @@
+W1012 20:08:26.518000 3620653 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 20:08:26.575000 3620653 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+test_canonical_matches_reviewed_probe (test_production_link.CheckpointTests.test_canonical_matches_reviewed_probe) ... ok
+test_final_requires_exact_publication (test_production_link.CheckpointTests.test_final_requires_exact_publication) ... ok
+test_finite_weights_and_grad_shapes_required (test_production_link.CheckpointTests.test_finite_weights_and_grad_shapes_required) ... ok
+test_forged_history_and_wrong_identity_refused (test_production_link.CheckpointTests.test_forged_history_and_wrong_identity_refused) ... ok
+test_partial_initialized_optimizer_state_cannot_disappear (test_production_link.CheckpointTests.test_partial_initialized_optimizer_state_cannot_disappear) ... ok
+test_partial_state_and_nonfinite_tensors_refused (test_production_link.CheckpointTests.test_partial_state_and_nonfinite_tensors_refused) ... ok
+test_pending_epoch_uses_extended_value_tree (test_production_link.CheckpointTests.test_pending_epoch_uses_extended_value_tree) ... ok
+test_compiled_name_collisions_mixed_and_nested_wrappers_are_refused (test_production_link.CompiledCheckpointTests.test_compiled_name_collisions_mixed_and_nested_wrappers_are_refused) ... ok
+test_compiled_resume_contract_accepts_bare_fixed_export_with_real_tied_alias (test_production_link.CompiledCheckpointTests.test_compiled_resume_contract_accepts_bare_fixed_export_with_real_tied_alias) ... [RANK 0] Removed shared tensor {'_orig_mod.a_weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_compiled_state_accepts_real_bare_pending_gradients_preserving_raw_digest (test_production_link.CompiledCheckpointTests.test_compiled_state_accepts_real_bare_pending_gradients_preserving_raw_digest) ... [RANK 0] Removed shared tensor {'_orig_mod.a_weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_strict_json_and_paths (test_production_link.ControlTests.test_strict_json_and_paths) ... ok
+test_malformed_rank3_cuda_state_blocks_real_postflight_receipt (test_production_link.CudaReceiptTests.test_malformed_rank3_cuda_state_blocks_real_postflight_receipt) ... ok
+test_strict_philox_shapes_dtype_offset_and_four_device_cardinality (test_production_link.CudaRngTests.test_strict_philox_shapes_dtype_offset_and_four_device_cardinality) ... ok
+test_valid_rng_validation_does_not_mutate_global_rng_or_initialize_cuda (test_production_link.CudaRngTests.test_valid_rng_validation_does_not_mutate_global_rng_or_initialize_cuda) ... ok
+test_draw_prefix_cannot_hide_tail_or_short_rank (test_production_link.EpochTests.test_draw_prefix_cannot_hide_tail_or_short_rank) ... ok
+test_epoch_receipts_bind_actual_evaluation (test_production_link.EpochTests.test_epoch_receipts_bind_actual_evaluation) ... ok
+test_changed_predecessor_and_wrong_request_pin_block (test_production_link.LinkTests.test_changed_predecessor_and_wrong_request_pin_block) ... ok
+test_final_receipt_exact4099_without_partial_epoch_evaluation (test_production_link.LinkTests.test_final_receipt_exact4099_without_partial_epoch_evaluation) ... C2_PRODUCTION_FINAL_READY 123 4099
+ok
+test_full_preempt_receipt_and_exclusive_publication (test_production_link.LinkTests.test_full_preempt_receipt_and_exclusive_publication) ... LINK_CHECKPOINT_READY 123 3
+ok
+test_history_prefix_cannot_be_rewritten_with_fresh_digest (test_production_link.LinkTests.test_history_prefix_cannot_be_rewritten_with_fresh_digest) ... ok
+test_host_paths_is_stdlib_only_and_rejects_changed_pinned_manifest (test_production_link.LinkTests.test_host_paths_is_stdlib_only_and_rejects_changed_pinned_manifest) ... ok
+test_mutated_source_or_missing_rank_blocks_receipt (test_production_link.LinkTests.test_mutated_source_or_missing_rank_blocks_receipt) ... ok
+test_nonzero_after_done_cannot_emit_receipt (test_production_link.LinkTests.test_nonzero_after_done_cannot_emit_receipt) ... ok
+test_preflight_accepts_its_own_batch_log_but_never_existing_execution (test_production_link.LinkTests.test_preflight_accepts_its_own_batch_log_but_never_existing_execution) ... ok
+test_preflight_refuses_stale_done (test_production_link.LinkTests.test_preflight_refuses_stale_done) ... ok
+test_uncommitted_checkpoint_directory_is_preserved_and_refused (test_production_link.LinkTests.test_uncommitted_checkpoint_directory_is_preserved_and_refused) ... ok
+test_observer_calls_originals_and_restores_even_on_missing_verification (test_production_link.ObserverTests.test_observer_calls_originals_and_restores_even_on_missing_verification) ... ok
+test_symlink_ancestor_cannot_enter_checkpoint_tree (test_production_link.ObserverTests.test_symlink_ancestor_cannot_enter_checkpoint_tree) ... ok
+test_manifest_drift_is_refused (test_production_link.RequestTests.test_manifest_drift_is_refused) ... ok
+test_rank_results_require_four_fresh_matching_verifiers (test_production_link.RequestTests.test_rank_results_require_four_fresh_matching_verifiers) ... ok
+test_schema_strict_profile_and_checkpoint (test_production_link.RequestTests.test_schema_strict_profile_and_checkpoint) ... ok
+test_inherited_compile_and_container_overrides_are_removed (test_production_link.SignalTests.test_inherited_compile_and_container_overrides_are_removed) ... ok
+test_wait_keeps_rank_and_launcher_exit_semantics (test_production_link.SignalTests.test_wait_keeps_rank_and_launcher_exit_semantics) ... ok
+
+----------------------------------------------------------------------
+Ran 33 tests in 5.612s
+
+OK
+INFO:    Cleanup error: while stopping driver for /var/lib/apptainer/mnt/session/final: fuse-overlayfs exited: fuse: reading device: Software caused connection abort

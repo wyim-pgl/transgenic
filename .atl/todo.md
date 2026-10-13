@@ -11,7 +11,7 @@
 - [x] local검증/오류주입/독립검토PASS(198ce14); NGC회귀3369694 58시험57pass/1skip113.286s. source/main graph갱신. 실제과학게이트는아래별도.
 - [ ] 실제4GPU연속/재개전체checkpoint bitwise proof **3369694 RUNNING gh118, 시작17:45:33PDT**. 이전3369338 bootstrap tuple실패는198ce14수정·6시험·독립검토PASS. original210loss3.2567708492279053와의역사적차이도해결. 단일forward일치만으로통과하지않는다.
 - [ ] 원본200보존한검증사본에서280이상/400저장·다음재개확인,여유공간재측정.
-- [ ] 본학습운영도구 독립검토수정: production1f4bb61 compiled키/CUDA RNG검증; controllerd332dcf atomicno-replace/scriptmanifest결속. 27/38단위·3연결시험통과, 수정후재검증/검토필요.
+- [ ] 본학습운영도구 독립검토수정: production1f4bb61 compiled키/CUDA RNG검증; controllerf581638 atomicno-replace/scriptmanifest결속43PASS. 실제Lustre EINVAL로물리승격불가: 검증resumed사본in-place활성화설계·구현·리뷰필요. production27단위·3연결시험통과, 수정후재검증/검토필요.
 - [ ] **통과즉시C2본학습4099시작(추가승인불필요)**. 기존controller재사용금지,새소스/검증receipt/중복방지journal. 소유자·상태확인후구held3345920처리,운영경로보존·승격기록.
 - [ ] epoch평가·최종step04099/PILOT_FINAL/정상exit/DONE검증.
 - [ ] C2완료후B5/B6우선순위복구및검증된소스로B6잡정리. B5진행live확인.

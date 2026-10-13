@@ -6,6 +6,10 @@
 
 **Spec:** CONTINUATION_DESIGN_20261012.md, with the concrete contracts/rulings below taking precedence. Source code is immutable198ce14 in `/tmp/b6-c2-recompile`. Initial failed job3369338's deployed v1 helpers never change; reviewed successor source198ce14 uses them in replacement proof3369694. Main holds diagnostic/operational helpers and records; no implementation branch merge.
 
+## Adopted amendment: activation in place
+
+`ACTIVATION_DESIGN_20261012.md` supersedes all physical promotion/backup/relocation requirements below. Actual shared Lustre rejects `RENAME_NOREPLACE` for absent targets. Preserve original200 at its existing path and activate the accepted validation resumed410 directory in place; no directory copy/move/delete/symlink. Use a new controller config/journal version with `original_run` and receipt-derived `active_run`, stable original-C2 ownership lock, immutable operation-only activation receipt, unchanged production request/receipt v1, and all existing scientific/storage/owner/submission/final gates. Client-local directory device/inode observations are audit-only, not persistent cross-host gates. Initial410 metadata is embedded in activation provenance; retained continuous410/at400 preserve baseline evidence. Once production starts, the active state evolves only under the accepted request/receipt chain. Source/helper deployment remains separately pinned and reviewed. No additional user approval is required by this implementation choice.
+
 ## Global constraints and decisions
 
 - Implement only new helpers/controller under this notes directory. Never import/execute the old continue_c2.py or use its state directory/PID.

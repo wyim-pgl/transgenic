@@ -1,0 +1,11 @@
+{
+  "purpose": "NGC CPU tiny-fixture compatibility only; no production activation or GPU access",
+  "commit": "7266e14741f0ec2b49636330ead845b6ffcfc906",
+  "manifest_sha256": "6132a48247e83ae34eadb7cde529c31cc2a000f4cad3eb68768501479e5df419",
+  "archive_sha256": "5ecb87318996b46cb9ee762875ecec39268d32bba8979b9995bc189b96f46d33",
+  "exit_code": 0,
+  "log": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/producer_cpu_test_7266e14/ngc_cpu_tests.log",
+  "helper_dir": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/producer_cpu_test_7266e14/helpers",
+  "completed_at": "2026-10-13T01:08:34.476246Z",
+  "scope": "CPU tiny owned fixtures only; CUDA_VISIBLE_DEVICES empty, no --nv, no real checkpoint/input hashes"
+}

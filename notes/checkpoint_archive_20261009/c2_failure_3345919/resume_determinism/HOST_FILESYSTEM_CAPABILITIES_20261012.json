@@ -1,0 +1,18 @@
+{
+  "host": "gh-login03.delta.ncsa.illinois.edu",
+  "kernel": "6.4.0-150600.23.53-64kb",
+  "direct_new_directory_rename": {
+    "return": -1,
+    "errno": 22,
+    "source_exists": true,
+    "target_exists": false
+  },
+  "direct_new_file_rename": {
+    "return": -1,
+    "errno": 22,
+    "source_exists": true,
+    "target_exists": false
+  },
+  "exclusive_hardlink": "PASS",
+  "same_filesystem_hardlink_identity": true
+}
