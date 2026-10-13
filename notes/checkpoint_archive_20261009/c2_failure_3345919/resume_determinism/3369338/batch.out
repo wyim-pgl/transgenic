@@ -1,0 +1,4 @@
+{"filesystem_available_bytes": 344927432704, "pool": "ddn_ssd", "project_id": 22169, "quota_remaining_bytes": 161557250048, "required_bytes": 107374182400, "results_dir": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2"}
+NGC_TEST_START 2026-10-12T18:24:00-05:00
+VERIFY_START 2026-10-12T18:26:28-05:00
+PHASE_START continuous 2026-10-12T18:55:44-05:00

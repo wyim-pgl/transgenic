@@ -4,6 +4,7 @@
 
 | 반복하지 않을 접근 | 확인된 사실/대안 |
 |---|---|
+| legacyvalidator반환tuple을strictJSONcollective에그대로전달 | 3369338첫forward전실패. validator/replay분리시험외dispatch경계시험필요; 전송직전validatedpair만list화. |
 | CUDA label구간경계를3414/4096포함여부확인없이기억 | 실제guard1536*labels<5242880는최대3413; 구간<=3413/3414..4095/>=4096. metadata검사는완전한compilerledger증명아님. |
 | mark_dynamic annotation만signature에기록 | 실제maybe_mark_dynamic은weak_dynamic_indices사용. 789ecf4는strong/weak별도결속·26시험PASS. |
 | parameter/buffer registry만복원 | 일반__dict__속성shadowing및sharedstorage/offset도복원필요. 91c2737·12시험·독립리뷰PASS. |

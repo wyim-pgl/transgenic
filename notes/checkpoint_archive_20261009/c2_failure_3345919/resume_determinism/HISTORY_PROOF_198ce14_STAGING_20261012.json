@@ -1,0 +1,10 @@
+{
+  "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+  "files": 940,
+  "source_archive_sha256": "5bf9152cf706cae0137559b70d9c74aac53ab6422199f52bd2cf62f6b20a38d8",
+  "bundle_sha256": "62cf8dfff9a08ef70cfd60fa78c35491cede0548581f03bd084f951a4cabb2a6",
+  "source_manifest_sha256": "29206d99c14ce4260d4d6505bf1321ff494315a5ba97fe3220a013f0fd5969dc",
+  "snapshot_git": "4f12c97a3798e09200de1f012e963c193e68964f",
+  "remote_source": "/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14",
+  "status": "source_staged_verified"
+}

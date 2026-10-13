@@ -1,0 +1,233 @@
+The following values were not passed to `accelerate launch` and had defaults used instead:
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+W1012 18:56:05.300000 3183127 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:56:05.300000 3183125 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:56:05.300000 3183126 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:56:05.300000 3183124 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:56:05.342000 3183127 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:56:05.342000 3183126 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:56:05.342000 3183125 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:56:05.342000 3183124 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]Hyena encoder init: loaded 227/339 tensors (exact=80, adapted=147) from LongSafari/hyenadna-large-1m-seqlen-hf; missing=112 unexpected=0; missing layers [8, 9, 10, 11]
+
+
+
+NCCL version 2.30.7+cuda13.3
+
+[2026-10-12 18:56:20] gh063:3183126:3183126 [2] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-12 18:56:20] gh063:3183124:3183124 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-12 18:56:20] gh063:3183127:3183127 [3] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-12 18:56:20] gh063:3183125:3183125 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-10-12 18:56:20] gh063:3183124:3183124 [0] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commIdx, commId, &config, logFunction, NULL) failed: 3
+
+[2026-10-12 18:56:20] gh063:3183126:3183126 [2] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId
+[2026-10-12 18:56:20] gh063:3183127:3183127 [3] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+
+[2026-10-12 18:56:20] gh063:3183125:3183125 [1] gin_plugin.cc:780 NCCL WARN gin_plugin.cc:780 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+, logFunction) failed: 3
+
+[2026-10-12 18:56:20] gh063:3183124:3183124 [0] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-10-12 18:56:20] gh063:3183126:3183126 [2] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-10-12 18:56:20] gh063:3183125:3183125 [1] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-10-12 18:56:20] gh063:3183127:3183127 [3] misc/ibvwrap.cc:185 (wrap_ibv_alloc_pd) NCCL WARN lib wrapper not initialized.
+
+[2026-10-12 18:56:20] gh063:3183124:3183124 [0] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+
+[2026-10-12 18:56:20] gh063:3183125:3183125 [1] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-12 18:56:20] gh063:3183126:3183126 [2] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ct
+[2026-10-12 18:56:20] gh063:3183124:3183124 [0] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-10-12 18:56:20] gh063:3183127:3183127 [3] gin_plugin.cc:138 NCCL WARN gin_plugin.cc:138 Call to ncclNetPlugin_v12.init(ctx, commId, &config, logFunction, NULL) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+, logFunction) failed: 3
+x, commId, &config, logFunction, NULL) failed: 3
+
+[2026-10-12 18:56:20] gh063:3183125:3183125 [1] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-10-12 18:56:20] gh063:3183127:3183127 [3] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId
+[2026-10-12 18:56:20] gh063:3183126:3183126 [2] gin_plugin.cc:642 NCCL WARN gin_plugin.cc:642 Call to ginCommonInit(ctx, commId, logFunction) failed: 3
+, logFunction) failed: 3
+, logFunction) failed: 3
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/probe/history_proof.py", line 400, in <module>
+[rank0]:     raise SystemExit(main())
+[rank0]:                      ^^^^^^
+[rank0]:   File "/probe/history_proof.py", line 391, in main
+[rank0]:     run(args)
+[rank0]:   File "/probe/history_proof.py", line 183, in run
+[rank0]:     result = trainer.main(['--config', 'configs/b6_400m_win_v3_wp5_pilot.json', '--arm', 'C2', '--seed', '123',
+[rank0]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/work/repo/train/train_HyenaTransgenic_B6.py", line 741, in main
+[rank0]:     return run_b6(spec, build_model(cfg), train_ds, eval_ds, collate_fn=b6_dataset.b6_collate_fn_torch,
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/probe/history_proof.py", line 162, in bounded
+[rank0]:     return original_run(dataclasses.replace(spec, stop_at_step=args.stop, save_every_n_steps=10,
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/work/repo/train/train_HyenaTransgenic_B6.py", line 263, in run_b6
+[rank0]:     replay.bootstrap_legacy(compile_history, spec.legacy_compile_bootstrap, resume_dir, spec.run_dir,
+[rank0]:   File "/work/repo/src/transgenic/training/b6_compile_replay.py", line 373, in bootstrap_legacy
+[rank0]:     values = CompileHistory({}, {}, accelerator)._gather(lambda: local)
+[rank0]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/work/repo/src/transgenic/training/b6_compile_history.py", line 325, in _gather
+[rank0]:     _collective_preflight(self.accelerator, prepare)
+[rank0]:   File "/work/repo/src/transgenic/training/mvp_finalize.py", line 421, in _collective_preflight
+[rank0]:     _raise_status(status)
+[rank0]:   File "/work/repo/src/transgenic/training/mvp_finalize.py", line 339, in _raise_status
+[rank0]:     raise classes.get(status["kind"], RuntimeError)(status["message"])
+[rank0]: ValueError: unsupported JSON value: tuple
+[rank2]: Traceback (most recent call last):
+[rank2]:   File "/probe/history_proof.py", line 400, in <module>
+[rank2]:     raise SystemExit(main())
+[rank2]:                      ^^^^^^
+[rank2]:   File "/probe/history_proof.py", line 391, in main
+[rank2]:     run(args)
+[rank2]:   File "/probe/history_proof.py", line 183, in run
+[rank2]:     result = trainer.main(['--config', 'configs/b6_400m_win_v3_wp5_pilot.json', '--arm', 'C2', '--seed', '123',
+[rank2]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/work/repo/train/train_HyenaTransgenic_B6.py", line 741, in main
+[rank2]:     return run_b6(spec, build_model(cfg), train_ds, eval_ds, collate_fn=b6_dataset.b6_collate_fn_torch,
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/probe/history_proof.py", line 162, in bounded
+[rank2]:     return original_run(dataclasses.replace(spec, stop_at_step=args.stop, save_every_n_steps=10,
+[rank2]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/work/repo/train/train_HyenaTransgenic_B6.py", line 263, in run_b6
+[rank2]:     replay.bootstrap_legacy(compile_history, spec.legacy_compile_bootstrap, resume_dir, spec.run_dir,
+[rank2]:   File "/work/repo/src/transgenic/training/b6_compile_replay.py", line 373, in bootstrap_legacy
+[rank2]:     values = CompileHistory({}, {}, accelerator)._gather(lambda: local)
+[rank2]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank2]:   File "/work/repo/src/transgenic/training/b6_compile_history.py", line 325, in _gather
+[rank2]:     _collective_preflight(self.accelerator, prepare)
+[rank2]:   File "/work/repo/src/transgenic/training/mvp_finalize.py", line 421, in _collective_preflight
+[rank2]:     _raise_status(status)
+[rank2]:   File "/work/repo/src/transgenic/training/mvp_finalize.py", line 339, in _raise_status
+[rank2]:     raise classes.get(status["kind"], RuntimeError)(status["message"])
+[rank2]: ValueError: unsupported JSON value: tuple
+[rank3]: Traceback (most recent call last):
+[rank3]:   File "/probe/history_proof.py", line 400, in <module>
+[rank3]:     raise SystemExit(main())
+[rank3]:                      ^^^^^^
+[rank3]:   File "/probe/history_proof.py", line 391, in main
+[rank3]:     run(args)
+[rank3]:   File "/probe/history_proof.py", line 183, in run
+[rank3]:     result = trainer.main(['--config', 'configs/b6_400m_win_v3_wp5_pilot.json', '--arm', 'C2', '--seed', '123',
+[rank3]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/work/repo/train/train_HyenaTransgenic_B6.py", line 741, in main
+[rank3]:     return run_b6(spec, build_model(cfg), train_ds, eval_ds, collate_fn=b6_dataset.b6_collate_fn_torch,
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/probe/history_proof.py", line 162, in bounded
+[rank3]:     return original_run(dataclasses.replace(spec, stop_at_step=args.stop, save_every_n_steps=10,
+[rank3]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/work/repo/train/train_HyenaTransgenic_B6.py", line 263, in run_b6
+[rank3]:     replay.bootstrap_legacy(compile_history, spec.legacy_compile_bootstrap, resume_dir, spec.run_dir,
+[rank3]:   File "/work/repo/src/transgenic/training/b6_compile_replay.py", line 373, in bootstrap_legacy
+[rank3]:     values = CompileHistory({}, {}, accelerator)._gather(lambda: local)
+[rank3]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank3]:   File "/work/repo/src/transgenic/training/b6_compile_history.py", line 325, in _gather
+[rank3]:     _collective_preflight(self.accelerator, prepare)
+[rank3]:   File "/work/repo/src/transgenic/training/mvp_finalize.py", line 421, in _collective_preflight
+[rank3]:     _raise_status(status)
+[rank3]:   File "/work/repo/src/transgenic/training/mvp_finalize.py", line 339, in _raise_status
+[rank3]:     raise classes.get(status["kind"], RuntimeError)(status["message"])
+[rank3]: ValueError: unsupported JSON value: tuple
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/probe/history_proof.py", line 400, in <module>
+[rank1]:     raise SystemExit(main())
+[rank1]:                      ^^^^^^
+[rank1]:   File "/probe/history_proof.py", line 391, in main
+[rank1]:     run(args)
+[rank1]:   File "/probe/history_proof.py", line 183, in run
+[rank1]:     result = trainer.main(['--config', 'configs/b6_400m_win_v3_wp5_pilot.json', '--arm', 'C2', '--seed', '123',
+[rank1]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/work/repo/train/train_HyenaTransgenic_B6.py", line 741, in main
+[rank1]:     return run_b6(spec, build_model(cfg), train_ds, eval_ds, collate_fn=b6_dataset.b6_collate_fn_torch,
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/probe/history_proof.py", line 162, in bounded
+[rank1]:     return original_run(dataclasses.replace(spec, stop_at_step=args.stop, save_every_n_steps=10,
+[rank1]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/work/repo/train/train_HyenaTransgenic_B6.py", line 263, in run_b6
+[rank1]:     replay.bootstrap_legacy(compile_history, spec.legacy_compile_bootstrap, resume_dir, spec.run_dir,
+[rank1]:   File "/work/repo/src/transgenic/training/b6_compile_replay.py", line 373, in bootstrap_legacy
+[rank1]:     values = CompileHistory({}, {}, accelerator)._gather(lambda: local)
+[rank1]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank1]:   File "/work/repo/src/transgenic/training/b6_compile_history.py", line 325, in _gather
+[rank1]:     _collective_preflight(self.accelerator, prepare)
+[rank1]:   File "/work/repo/src/transgenic/training/mvp_finalize.py", line 421, in _collective_preflight
+[rank1]:     _raise_status(status)
+[rank1]:   File "/work/repo/src/transgenic/training/mvp_finalize.py", line 339, in _raise_status
+[rank1]:     raise classes.get(status["kind"], RuntimeError)(status["message"])
+[rank1]: ValueError: unsupported JSON value: tuple
+[rank0]:[W1012 18:56:29.262846027 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+W1012 18:56:30.224000 3182901 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 3183125 closing signal SIGTERM
+W1012 18:56:30.225000 3182901 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 3183126 closing signal SIGTERM
+W1012 18:56:30.226000 3182901 torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 3183127 closing signal SIGTERM
+E1012 18:56:30.371000 3182901 torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: 1) local_rank: 0 (pid: 3183124) of binary: /usr/bin/python3
+Traceback (most recent call last):
+  File "/usr/local/bin/accelerate", line 6, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/accelerate/commands/accelerate_cli.py", line 50, in main
+    args.func(args)
+  File "/usr/local/lib/python3.12/dist-packages/accelerate/commands/launch.py", line 1404, in launch_command
+    multi_gpu_launcher(args)
+  File "/usr/local/lib/python3.12/dist-packages/accelerate/commands/launch.py", line 1029, in multi_gpu_launcher
+    distrib_run.run(args)
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/run.py", line 1019, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/distributed/launcher/api.py", line 386, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+/probe/history_proof.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-10-12_18:56:30
+  host      : gh063.hsn.cm.delta.internal.ncsa.edu
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 3183125) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-10-12_18:56:30
+  host      : gh063.hsn.cm.delta.internal.ncsa.edu
+  rank      : 2 (local_rank: 2)
+  exitcode  : 1 (pid: 3183126) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2026-10-12_18:56:30
+  host      : gh063.hsn.cm.delta.internal.ncsa.edu
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 3183127) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-10-12_18:56:30
+  host      : gh063.hsn.cm.delta.internal.ncsa.edu
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 3183124) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

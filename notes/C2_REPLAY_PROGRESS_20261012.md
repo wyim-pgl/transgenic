@@ -51,3 +51,22 @@ Synchronized actual-companion history/checkpoint binding; explicit legacy bootst
 - Next: livejob/logcheck; adjudicateNGCfailures beforeanyresubmit; successfulcomparisonmustincludeoriginal210loss andfullcheckpoint equality. Thenvalidation>=280/400+secondresume, storage recheck, authorizednewC2production4099.
 
 Live직후조회:3369338PENDING(Priority),미할당,로그미생성(정상대기). 큐대기를실패/재제출사유로취급하지않는다.
+
+## 17:20 PDT — initial proof failed before replay
+
+- Live3369338 FAILED1:0 (parent/batch),32m39,gh063; externCOMPLETED0:0. NGC57tests56pass1skip; harness7pass; freshallocationinputverificationpassed. No real training forward occurred.
+- Exacterror `unsupported JSON value: tuple` in bootstrap_legacy's validated(provenance,rows)pair sent tostrictJSONtransport. Source narrowfix plus exactREDregression; focused6GREEN16.260s includes actual2rankGloo. Independentreviewrequested; sourcecommitpending.
+- Explicit logs/manifest/verifiedrecord copied to resume_determinism/3369338; no compiler-cachewalk. Original200/diagnostic256/immutablev1/source remain unchanged. No promotion/production.
+- Validation400 helper commits97c0408/0f3ae90:17suitepass plus4focusedprior/importpass, now18tests; Python3.6stdlibvalidatorpathchecked. Independentreview/root/c2_history_review underway. Remotev2notdeployed.
+- New production allocation helper/root/c2_production_helper and newhostcontroller/root/c2_new_controller are implementing CONTINUATION_IMPLEMENTATION_PLAN.md inmain, scopedfiles andserializedcommits. Sourcepinswillfollowreviewedbootstrapfix; no agent has remote mutation authority.
+- Next: transportfixreview→newimmutableproofsource anddurable newsubmission; proofscientificgate remainsopen. Thenvalidation400→relocationpromotion→authorizedC2fullpilot4099.
+
+## 17:27 PDT — repaired proof submitted
+
+- Source198ce14ce53266f53b7bda5d0c4cdfd94deb43b4 committed/pushed after scoped independent transport review.6focusedtestsPASS; graph rebuilt. Remote immutable repo_b6_198ce14/snapshot4f12c97a3798e09200de1f012e963c193e68964f,940sourcefiles verified; detailed staging receipt inresume_determinism/HISTORY_PROOF_198ce14_STAGING_20261012.json.
+- Newproof **3369694** submitted00:26:12UTC/17:26PDT under new durablejournal ops/c2_compile_history_20261012/proof_submission_198ce14.json. Exact failed3369338parent/batch and noactiveC2 checked first; prepared→submitting→submitted fsync; no uncertainretry. Sameimmutablev1helpers/manifest5d10eaad8598…, updatedsourceonly.100GiBstoragepreflightPASS, projectremaining155384631296bytes(~144.7GiB).
+- Live3369694PENDING(Priority), schedulerestimated18:31PDT/gh083, subjecttochange. Newroot runs/c2_compile_history_proof/3369694. ExpectedNGC58tests/oneexplainedCUDA-initializedskip, harness7tests/no skips. Scientificfullcheckpoint equality+historical210 remainsrequired.
+- Validation400 receipt falseREADY gaps repaired61d79f0: recomputedcurrenthistory declarations cannotmaskdifferenthistories; reboundcurrentmanifest muststillmatchpinnedoriginal. BothexactREDs reproduced;18testsPASS56.437s; independentre-reviewapproved. Reviewedv2helpers staging separately, no validationjob yet.
+- Failed3369338 checkpointclone adds5.33GiB tospaceusage; protectedsource200/diagnostic256 unchanged. No C2promotion/full4099 yet. ExistingheldC2/B6 andB5pending remainunchanged.
+
+Validationv2staged atops/c2_compile_history_20261012/validation_v2_61d79f0, manifestSHAa751eb193b607574df6ac6e44c224c59e57b75b1fd069a23bc6f816ffc1bbb91. ActualDeltaAIhostPython3.6.15 importedpurevalidator, acceptedcompletefixture/rejectedpassed-onlyfixture, andloadednoneoftorch/numpy/accelerate/dataclasses. Novalidationjobsubmitted. ReceiptHISTORY_VALIDATION_STAGING_20261012.json.

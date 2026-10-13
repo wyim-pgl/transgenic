@@ -1,0 +1,36 @@
+{
+  "inventory": {
+    "verified_record.json": {
+      "dir": false,
+      "size": 258143
+    },
+    "bootstrap.json": {
+      "dir": false,
+      "size": 1749
+    },
+    "continuous": {
+      "dir": true,
+      "size": 4096
+    },
+    "verify.log": {
+      "dir": false,
+      "size": 652
+    },
+    "continuous.log": {
+      "dir": false,
+      "size": 19259
+    },
+    "ngc_tests.log": {
+      "dir": false,
+      "size": 29546
+    },
+    "canonical_order.json": {
+      "dir": false,
+      "size": 1103
+    },
+    "harness_tests.log": {
+      "dir": false,
+      "size": 667
+    }
+  }
+}

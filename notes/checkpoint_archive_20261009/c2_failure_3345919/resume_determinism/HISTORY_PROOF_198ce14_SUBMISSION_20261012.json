@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "phase": "submitted",
+  "prepared_at": "2026-10-13T00:26:12.794410Z",
+  "source": {
+    "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+    "files": 940,
+    "source_archive_sha256": "5bf9152cf706cae0137559b70d9c74aac53ab6422199f52bd2cf62f6b20a38d8",
+    "bundle_sha256": "62cf8dfff9a08ef70cfd60fa78c35491cede0548581f03bd084f951a4cabb2a6",
+    "source_manifest_sha256": "29206d99c14ce4260d4d6505bf1321ff494315a5ba97fe3220a013f0fd5969dc",
+    "snapshot_git": "4f12c97a3798e09200de1f012e963c193e68964f",
+    "remote_source": "/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14",
+    "status": "source_staged_verified"
+  },
+  "helper_dir": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e",
+  "helper_manifest_sha256": "5d10eaad8598b12b964ed0f576fb345f0486f3bdd278aac63331688dc9e57012",
+  "jobs": [
+    "3369694"
+  ],
+  "purpose": "C2 checkpoint equality proof after reviewed tuple-transport fix; no production promotion",
+  "failed_predecessor": {
+    "job_id": "3369338",
+    "accounting": "3369338|FAILED|1:0\n3369338.batch|FAILED|1:0\n3369338.extern|COMPLETED|0:0\n",
+    "reason": "unsupported JSON value: tuple before first replay forward"
+  },
+  "live_queue_before": "3309786|b5-seed|PENDING\n3309790|b5-seed|PENDING\n3309789|b5-seed|PENDING\n3309788|b5-seed|PENDING\n3309787|b5-seed|PENDING\n3345920|b6-wp5-pilot|PENDING\n3345918|b6-wp5-pilot|PENDING\n3345917|b6-wp5-pilot|PENDING\n",
+  "storage_preflight": "{\"filesystem_available_bytes\": 338754813952, \"pool\": \"ddn_ssd\", \"project_id\": 22169, \"quota_remaining_bytes\": 155384631296, \"required_bytes\": 107374182400, \"results_dir\": \"/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2\"}\n",
+  "comment": "c2-history-198ce14-5d10eaad8598",
+  "submission_command": [
+    "sbatch",
+    "--parsable",
+    "--comment=c2-history-198ce14-5d10eaad8598",
+    "--export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e",
+    "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch"
+  ],
+  "submission_started_at": "2026-10-13T00:26:12.800339Z",
+  "sbatch_stdout": "3369694\n",
+  "sbatch_stderr": "",
+  "sbatch_exit_code": 0,
+  "submitted_at": "2026-10-13T00:26:12.831100Z"
+}

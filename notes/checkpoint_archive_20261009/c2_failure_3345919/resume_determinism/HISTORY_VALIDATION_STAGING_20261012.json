@@ -1,0 +1,20 @@
+{
+  "main_commit": "61d79f05749b6258fa35a22822a21b0fe75d691d",
+  "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+  "helper_dir": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/validation_v2_61d79f0",
+  "manifest_sha256": "a751eb193b607574df6ac6e44c224c59e57b75b1fd069a23bc6f816ffc1bbb91",
+  "archive_sha256": "12a876d142374413dacbad5a7fca681036f3c4f5be1234d7f0bd455b80b46847",
+  "files_sha256": {
+    "probe.py": "9edf1eb412275f998cd0614d5b0ea12203433c52b0192da557aa860ab9ab65dc",
+    "history_proof.py": "a25ebeba21288555c79c5d285c2e040cabccc3b1a92d4761f5b4d3b52538b6b1",
+    "test_history_proof.py": "924282197ccc16d4856d4491fde4d66fbe9a2416333d87f19c8b993c1b40c5c8",
+    "history_validation.sbatch": "dce7af8a1da97ee9dc9989dbdebb68765b072e53c22dfefaf09c0928b45e359b",
+    "original_checkpoint_receipt.json": "c7ba61600300c8467f453c5476f42af80c795a217a6b9dab803966f5f37d44da",
+    "HISTORY_VALIDATION_IMPLEMENTATION.md": "c4ac187ab230227258342f5a90cf284da9dc1da137e40ae92d0f15d83488d06e",
+    "HISTORY_VALIDATION_REVIEW_20261012.md": "82a835cfedf12a022d16ed2bfd6b956751f8af0c3e67888a049a7662427c04a6",
+    "HISTORY_VALIDATION_FIX_REVIEW_20261012.md": "9fae67fc778fa0304fdb02d36cccff654e4852dae2a553e38e474feb22f27c2f"
+  },
+  "host_python": "3.6.15 (default, Sep 23 2021, 15:41:43) [GCC]",
+  "stdlib_prior_validator_smoke": "PASS",
+  "status": "helper_staged_verified"
+}

@@ -1,0 +1,166 @@
+W1012 18:24:13.889000 3148508 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:13.932000 3148508 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+test_base_exception_propagates_after_complete_restore (tests.test_b6_replay_state.ReplayStateTests.test_base_exception_propagates_after_complete_restore) ... ok
+test_changed_tensor_metadata_preserves_original_objects (tests.test_b6_replay_state.ReplayStateTests.test_changed_tensor_metadata_preserves_original_objects) ... ok
+test_complete_registries_ties_gradients_and_modes_are_restored (tests.test_b6_replay_state.ReplayStateTests.test_complete_registries_ties_gradients_and_modes_are_restored) ... ok
+test_cpu_context_does_not_initialize_cuda (tests.test_b6_replay_state.ReplayStateTests.test_cpu_context_does_not_initialize_cuda) ... skipped 'CUDA was already initialized'
+test_deleted_registrations_cannot_be_shadowed_by_plain_attributes (tests.test_b6_replay_state.ReplayStateTests.test_deleted_registrations_cannot_be_shadowed_by_plain_attributes) ... ok
+test_initialized_cuda_rngs_and_gpu_values_are_restored (tests.test_b6_replay_state.ReplayStateTests.test_initialized_cuda_rngs_and_gpu_values_are_restored) ... ok
+test_noncontiguous_tensor_strides_survive_metadata_changes (tests.test_b6_replay_state.ReplayStateTests.test_noncontiguous_tensor_strides_survive_metadata_changes) ... ok
+test_overlapping_buffer_fails_before_replay (tests.test_b6_replay_state.ReplayStateTests.test_overlapping_buffer_fails_before_replay) ... ok
+test_parameter_mutation_is_rolled_back (tests.test_b6_replay_state.ReplayStateTests.test_parameter_mutation_is_rolled_back) ... ok
+test_rng_helpers_restore_independently_saved_draws (tests.test_b6_replay_state.ReplayStateTests.test_rng_helpers_restore_independently_saved_draws) ... ok
+test_shared_storage_views_and_offsets_survive_data_replacement (tests.test_b6_replay_state.ReplayStateTests.test_shared_storage_views_and_offsets_survive_data_replacement) ... ok
+test_sparse_parameter_buffer_or_gradient_fails_before_replay (tests.test_b6_replay_state.ReplayStateTests.test_sparse_parameter_buffer_or_gradient_fails_before_replay) ... ok
+test_activity_counters_require_both_monotonic_values (tests.test_b6_compile_history.CompileHistoryTest.test_activity_counters_require_both_monotonic_values) ... ok
+test_bootstrap_assignment_copies_caller_provenance (tests.test_b6_compile_history.CompileHistoryTest.test_bootstrap_assignment_copies_caller_provenance) ... ok
+test_caller_mutations_cannot_change_recorded_or_returned_payload (tests.test_b6_compile_history.CompileHistoryTest.test_caller_mutations_cannot_change_recorded_or_returned_payload) ... ok
+test_check_inputs_rejects_metadata_and_rank_changes (tests.test_b6_compile_history.CompileHistoryTest.test_check_inputs_rejects_metadata_and_rank_changes) ... ok
+test_checkpoint_fields_and_expected_world_are_strict (tests.test_b6_compile_history.CompileHistoryTest.test_checkpoint_fields_and_expected_world_are_strict) ... ok
+test_duplicate_json_fields_fail_closed_even_with_recomputed_digest (tests.test_b6_compile_history.CompileHistoryTest.test_duplicate_json_fields_fail_closed_even_with_recomputed_digest) ... ok
+test_empty_history_roundtrip_and_negative_graph_delta_rejection (tests.test_b6_compile_history.CompileHistoryTest.test_empty_history_roundtrip_and_negative_graph_delta_rejection) ... ok
+test_input_signature_binds_layout_dtype_shape_and_dynamic_markers (tests.test_b6_compile_history.CompileHistoryTest.test_input_signature_binds_layout_dtype_shape_and_dynamic_markers) ... ok
+test_invalid_rng_state_fails_without_changing_global_rng (tests.test_b6_compile_history.CompileHistoryTest.test_invalid_rng_state_fails_without_changing_global_rng) ... ok
+test_malformed_cuda_rng_bytes_are_rejected (tests.test_b6_compile_history.CompileHistoryTest.test_malformed_cuda_rng_bytes_are_rejected) ... ok
+test_malformed_typed_rng_payloads_fail_closed (tests.test_b6_compile_history.CompileHistoryTest.test_malformed_typed_rng_payloads_fail_closed) ... ok
+test_observe_skips_non_events_and_records_actual_context (tests.test_b6_compile_history.CompileHistoryTest.test_observe_skips_non_events_and_records_actual_context) ... ok
+test_real_weak_dynamic_markers_are_bound_distinctly_for_replay (tests.test_b6_compile_history.CompileHistoryTest.test_real_weak_dynamic_markers_are_bound_distinctly_for_replay) ... ok
+test_recomputed_digest_cannot_hide_schema_context_rank_or_rng_damage (tests.test_b6_compile_history.CompileHistoryTest.test_recomputed_digest_cannot_hide_schema_context_rank_or_rng_damage) ... ok
+test_recomputed_digest_cannot_hide_weak_dynamic_marker_damage (tests.test_b6_compile_history.CompileHistoryTest.test_recomputed_digest_cannot_hide_weak_dynamic_marker_damage) ... ok
+test_reconstruction_requires_explicit_origin_and_provenance (tests.test_b6_compile_history.CompileHistoryTest.test_reconstruction_requires_explicit_origin_and_provenance) ... ok
+test_requires_grad_is_part_of_the_replay_signature (tests.test_b6_compile_history.CompileHistoryTest.test_requires_grad_is_part_of_the_replay_signature) ... ok
+test_rng_roundtrip_preserves_gaussian_cache (tests.test_b6_compile_history.CompileHistoryTest.test_rng_roundtrip_preserves_gaussian_cache) ... ok
+test_rng_roundtrip_reproduces_independently_saved_next_draws (tests.test_b6_compile_history.CompileHistoryTest.test_rng_roundtrip_reproduces_independently_saved_next_draws) ... ok
+test_save_load_binds_digest_identity_fingerprint_and_world (tests.test_b6_compile_history.CompileHistoryTest.test_save_load_binds_digest_identity_fingerprint_and_world) ... ok
+test_scalar_none_and_bfloat16_inputs (tests.test_b6_compile_history.CompileHistoryTest.test_scalar_none_and_bfloat16_inputs) ... /work/repo/tests/test_b6_compile_history.py:172: UserWarning: Sparse invariant checks are implicitly disabled. Memory errors (e.g. SEGFAULT) will occur when operating on a sparse tensor which violates the invariants, but checks incur performance overhead. To silence this warning, explicitly opt in or out. See `torch.sparse.check_sparse_tensor_invariants.__doc__` for guidance.  (Triggered internally at /opt/pytorch/pytorch/aten/src/ATen/Context.cpp:840.)
+  for value in (object(), [1], float('nan'), torch.sparse_coo_tensor([[0]], [1], [2])):
+ok
+test_tensor_value_change_is_rejected (tests.test_b6_compile_history.CompileHistoryTest.test_tensor_value_change_is_rejected) ... ok
+test_rank1_backend_activity_records_event_without_graph_delta (tests.test_b6_compile_history.DistributedCompileHistoryTest.test_rank1_backend_activity_records_event_without_graph_delta) ... W1012 18:24:19.604000 3149720 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:19.609000 3149721 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:19.630000 3149720 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:19.633000 3149721 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+ok
+test_rank1_compile_records_both_real_companions_identically (tests.test_b6_compile_history.DistributedCompileHistoryTest.test_rank1_compile_records_both_real_companions_identically) ... W1012 18:24:25.206000 3149792 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:25.210000 3149793 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:25.231000 3149792 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:25.234000 3149793 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+ok
+test_rank1_hash_error_propagates_to_both_workers (tests.test_b6_compile_history.DistributedCompileHistoryTest.test_rank1_hash_error_propagates_to_both_workers) ... W1012 18:24:30.643000 3149864 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:30.645000 3149865 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:30.669000 3149864 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:30.669000 3149865 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+ok
+test_rank_position_mismatch_is_rejected_on_both_workers (tests.test_b6_compile_history.DistributedCompileHistoryTest.test_rank_position_mismatch_is_rejected_on_both_workers) ... W1012 18:24:36.161000 3149908 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:36.161000 3149909 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:36.187000 3149909 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:36.187000 3149908 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+ok
+test_one_rank_changed_input_refuses_replay_collectively (tests.test_b6_replay_integration.DistributedReplayIntegrationTests.test_one_rank_changed_input_refuses_replay_collectively) ... W1012 18:24:41.582000 3149953 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:41.590000 3149952 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:41.610000 3149953 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:41.619000 3149952 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+ok
+test_two_rank_replay_preserves_state_with_real_shard_padding (tests.test_b6_replay_integration.DistributedReplayIntegrationTests.test_two_rank_replay_preserves_state_with_real_shard_padding) ... W1012 18:24:49.859000 3150013 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:49.859000 3150012 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:49.887000 3150012 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1012 18:24:49.888000 3150013 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+ok
+test_manifest_rejects_foreign_incomplete_unsafe_or_changed_evidence (tests.test_b6_replay_integration.LegacyManifestTests.test_manifest_rejects_foreign_incomplete_unsafe_or_changed_evidence) ... ok
+test_manifest_validates_all_files_and_original_prefix_without_writes (tests.test_b6_replay_integration.LegacyManifestTests.test_manifest_validates_all_files_and_original_prefix_without_writes) ... ok
+test_shared_executor_retains_all_sixteen_legacy_companions (tests.test_b6_replay_integration.LegacyManifestTests.test_shared_executor_retains_all_sixteen_legacy_companions) ... ok
+test_fingerprint_binds_effective_cache_overrides (tests.test_b6_replay_integration.ReplayHelperTests.test_fingerprint_binds_effective_cache_overrides) ... ok
+test_fingerprint_binds_explicit_cache_paths_without_changing_them (tests.test_b6_replay_integration.ReplayHelperTests.test_fingerprint_binds_explicit_cache_paths_without_changing_them) ... ok
+test_fingerprint_binds_native_triton_explicit_blank_policy (tests.test_b6_replay_integration.ReplayHelperTests.test_fingerprint_binds_native_triton_explicit_blank_policy) ... ok
+test_fingerprint_distinguishes_default_cache_roots_without_side_effects (tests.test_b6_replay_integration.ReplayHelperTests.test_fingerprint_distinguishes_default_cache_roots_without_side_effects) ... ok
+test_reconstruct_uses_sampler_keys_and_restores_epoch_generator_on_failure (tests.test_b6_replay_integration.ReplayHelperTests.test_reconstruct_uses_sampler_keys_and_restores_epoch_generator_on_failure) ... ok
+test_pending_grads_rng_buffers_and_modes_survive_success_and_baseexception (tests.test_b6_replay_integration.ReplayStateIntegrationTests.test_pending_grads_rng_buffers_and_modes_survive_success_and_baseexception) ... ok
+test_changed_reconstructed_input_is_refused (tests.test_b6_replay_integration.ResumeHistoryTests.test_changed_reconstructed_input_is_refused) ... /usr/local/lib/python3.12/dist-packages/torch/jit/_script.py:365: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_epoch_eval_and_fixed_step_history (tests.test_b6_replay_integration.ResumeHistoryTests.test_epoch_eval_and_fixed_step_history) ... V1012 18:25:05.485000 3148508 torch/_dynamo/guards.py:5481] [0/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+V1012 18:25:05.485000 3148508 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:05.485000 3148508 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     - 0/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:05.678000 3148508 torch/_dynamo/guards.py:5481] [1/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:382
+V1012 18:25:05.678000 3148508 torch/_dynamo/guards.py:5481] [1/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:05.678000 3148508 torch/_dynamo/guards.py:5481] [1/1] [__recompiles]     - 1/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:05.746000 3148508 torch/_dynamo/guards.py:5481] [2/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_HyenaTransgenic.py:531
+V1012 18:25:05.746000 3148508 torch/_dynamo/guards.py:5481] [2/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:05.746000 3148508 torch/_dynamo/guards.py:5481] [2/1] [__recompiles]     - 2/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:05.777000 3148508 torch/_dynamo/guards.py:5481] [3/1] [__recompiles] Recompiling function forward in /work/repo/tests/test_b6_model.py:41
+V1012 18:25:05.777000 3148508 torch/_dynamo/guards.py:5481] [3/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:05.777000 3148508 torch/_dynamo/guards.py:5481] [3/1] [__recompiles]     - 3/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:05.822000 3148508 torch/_dynamo/guards.py:5481] [4/1] [__recompiles] Recompiling function torch_dynamo_resume_in_forward_at_540 in /work/repo/src/transgenic/model/modeling_HyenaTransgenic.py:540
+V1012 18:25:05.822000 3148508 torch/_dynamo/guards.py:5481] [4/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:05.822000 3148508 torch/_dynamo/guards.py:5481] [4/1] [__recompiles]     - 4/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:05.914000 3148508 torch/_dynamo/guards.py:5481] [5/1] [__recompiles] Recompiling function torch_dynamo_resume_in_forward_at_414 in /work/repo/src/transgenic/model/modeling_b6.py:414
+V1012 18:25:05.914000 3148508 torch/_dynamo/guards.py:5481] [5/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:05.914000 3148508 torch/_dynamo/guards.py:5481] [5/1] [__recompiles]     - 5/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:08.506000 3148508 torch/_dynamo/guards.py:5481] [6/1] [__recompiles] Recompiling function torch_dynamo_resume_in_forward_at_522 in /work/repo/src/transgenic/model/modeling_b6.py:522
+V1012 18:25:08.506000 3148508 torch/_dynamo/guards.py:5481] [6/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:08.506000 3148508 torch/_dynamo/guards.py:5481] [6/1] [__recompiles]     - 6/0: GLOBAL_STATE changed: grad_mode 
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_epoch_resume_keeps_pending_gradient_and_matches_next_update (tests.test_b6_replay_integration.ResumeHistoryTests.test_epoch_resume_keeps_pending_gradient_and_matches_next_update) ... V1012 18:25:14.224000 3148508 torch/_dynamo/guards.py:5481] [0/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+V1012 18:25:14.224000 3148508 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:14.224000 3148508 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     - 0/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:14.423000 3148508 torch/_dynamo/guards.py:5481] [1/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:382
+V1012 18:25:14.423000 3148508 torch/_dynamo/guards.py:5481] [1/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:14.423000 3148508 torch/_dynamo/guards.py:5481] [1/1] [__recompiles]     - 1/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:14.494000 3148508 torch/_dynamo/guards.py:5481] [2/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_HyenaTransgenic.py:531
+V1012 18:25:14.494000 3148508 torch/_dynamo/guards.py:5481] [2/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:14.494000 3148508 torch/_dynamo/guards.py:5481] [2/1] [__recompiles]     - 2/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:14.525000 3148508 torch/_dynamo/guards.py:5481] [3/1] [__recompiles] Recompiling function forward in /work/repo/tests/test_b6_model.py:41
+V1012 18:25:14.525000 3148508 torch/_dynamo/guards.py:5481] [3/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:14.525000 3148508 torch/_dynamo/guards.py:5481] [3/1] [__recompiles]     - 3/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:14.571000 3148508 torch/_dynamo/guards.py:5481] [4/1] [__recompiles] Recompiling function torch_dynamo_resume_in_forward_at_540 in /work/repo/src/transgenic/model/modeling_HyenaTransgenic.py:540
+V1012 18:25:14.571000 3148508 torch/_dynamo/guards.py:5481] [4/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:14.571000 3148508 torch/_dynamo/guards.py:5481] [4/1] [__recompiles]     - 4/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:14.666000 3148508 torch/_dynamo/guards.py:5481] [5/1] [__recompiles] Recompiling function torch_dynamo_resume_in_forward_at_414 in /work/repo/src/transgenic/model/modeling_b6.py:414
+V1012 18:25:14.666000 3148508 torch/_dynamo/guards.py:5481] [5/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:14.666000 3148508 torch/_dynamo/guards.py:5481] [5/1] [__recompiles]     - 5/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:17.333000 3148508 torch/_dynamo/guards.py:5481] [6/1] [__recompiles] Recompiling function torch_dynamo_resume_in_forward_at_522 in /work/repo/src/transgenic/model/modeling_b6.py:522
+V1012 18:25:17.333000 3148508 torch/_dynamo/guards.py:5481] [6/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:17.333000 3148508 torch/_dynamo/guards.py:5481] [6/1] [__recompiles]     - 6/0: GLOBAL_STATE changed: grad_mode 
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+V1012 18:25:23.592000 3148508 torch/_dynamo/guards.py:5481] [0/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+V1012 18:25:23.592000 3148508 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:23.592000 3148508 torch/_dynamo/guards.py:5481] [0/1] [__recompiles]     - 0/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:23.777000 3148508 torch/_dynamo/guards.py:5481] [1/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:382
+V1012 18:25:23.777000 3148508 torch/_dynamo/guards.py:5481] [1/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:23.777000 3148508 torch/_dynamo/guards.py:5481] [1/1] [__recompiles]     - 1/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:23.845000 3148508 torch/_dynamo/guards.py:5481] [2/1] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_HyenaTransgenic.py:531
+V1012 18:25:23.845000 3148508 torch/_dynamo/guards.py:5481] [2/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:23.845000 3148508 torch/_dynamo/guards.py:5481] [2/1] [__recompiles]     - 2/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:23.872000 3148508 torch/_dynamo/guards.py:5481] [3/1] [__recompiles] Recompiling function forward in /work/repo/tests/test_b6_model.py:41
+V1012 18:25:23.872000 3148508 torch/_dynamo/guards.py:5481] [3/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:23.872000 3148508 torch/_dynamo/guards.py:5481] [3/1] [__recompiles]     - 3/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:23.927000 3148508 torch/_dynamo/guards.py:5481] [4/1] [__recompiles] Recompiling function torch_dynamo_resume_in_forward_at_540 in /work/repo/src/transgenic/model/modeling_HyenaTransgenic.py:540
+V1012 18:25:23.927000 3148508 torch/_dynamo/guards.py:5481] [4/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:23.927000 3148508 torch/_dynamo/guards.py:5481] [4/1] [__recompiles]     - 4/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:24.043000 3148508 torch/_dynamo/guards.py:5481] [5/1] [__recompiles] Recompiling function torch_dynamo_resume_in_forward_at_414 in /work/repo/src/transgenic/model/modeling_b6.py:414
+V1012 18:25:24.043000 3148508 torch/_dynamo/guards.py:5481] [5/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:24.043000 3148508 torch/_dynamo/guards.py:5481] [5/1] [__recompiles]     - 5/0: GLOBAL_STATE changed: grad_mode 
+V1012 18:25:26.456000 3148508 torch/_dynamo/guards.py:5481] [6/1] [__recompiles] Recompiling function torch_dynamo_resume_in_forward_at_522 in /work/repo/src/transgenic/model/modeling_b6.py:522
+V1012 18:25:26.456000 3148508 torch/_dynamo/guards.py:5481] [6/1] [__recompiles]     triggered by the following guard failure(s):
+V1012 18:25:26.456000 3148508 torch/_dynamo/guards.py:5481] [6/1] [__recompiles]     - 6/0: GLOBAL_STATE changed: grad_mode 
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_resume_replays_before_new_rows_and_preserves_training_result (tests.test_b6_replay_integration.ResumeHistoryTests.test_resume_replays_before_new_rows_and_preserves_training_result) ... [RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_tampered_history_is_refused_before_state_load (tests.test_b6_replay_integration.ResumeHistoryTests.test_tampered_history_is_refused_before_state_load) ... [RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_compiled_resume_refuses_missing_ledger (tests.test_b6_replay_integration.TrainerHistoryTests.test_compiled_resume_refuses_missing_ledger) ... [RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_explicit_bootstrap_rejects_fresh_eager_and_existing_ledger (tests.test_b6_replay_integration.TrainerHistoryTests.test_explicit_bootstrap_rejects_fresh_eager_and_existing_ledger) ... [RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_fresh_compiled_checkpoint_binds_history (tests.test_b6_replay_integration.TrainerHistoryTests.test_fresh_compiled_checkpoint_binds_history) ... [RANK 0] Removed shared tensor {'_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.lm_head.weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+
+----------------------------------------------------------------------
+Ran 57 tests in 107.523s
+
+OK (skipped=1)

@@ -27,4 +27,4 @@
 
 역사적B5목적/이전승인문구: [intent_history_20261012.md](intent_history_20261012.md). 이전의GPU제출직전승인요청문구는현재C2복구범위에서위명시승인으로대체된다.
 
-현재 실행: [C2_REPLAY_PROGRESS_20261012](../notes/C2_REPLAY_PROGRESS_20261012.md). 상태복원91c2737와분산journal789ecf4는로컬검증·독립리뷰완료; trainer통합·실GPU과학게이트는계속진행중이다.
+현재 실행: [C2_REPLAY_PROGRESS_20261012](../notes/C2_REPLAY_PROGRESS_20261012.md). 운영구현198ce14·로컬검증·독립리뷰완료. 초기3369338bootstrap전송실패를수정하고새4GPU proof3369694를17:26PDT제출했다. Validation400 helper61d79f0·18시험·독립리뷰·실제hostPython3.6 smoke통과, 별도immutablev2배포완료. 실GPU과학게이트는계속진행중이다.
