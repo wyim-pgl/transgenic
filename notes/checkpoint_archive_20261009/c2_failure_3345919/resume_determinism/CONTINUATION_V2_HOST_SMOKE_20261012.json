@@ -1,0 +1,9 @@
+{
+  "host_python": "3.6.15 (default, Sep 23 2021, 15:41:43) [GCC]",
+  "controller_sha256": "25046d6dcafe6789041532591f91ca31cd818ec6c0c7cf9152a43ab39af7b74f",
+  "exclusive_publication": "PASS",
+  "identical_recovery_preserves_inode": "PASS",
+  "conflicting_bytes_empty_directory_symlink_refused": "PASS",
+  "pure_science_gate": "PASS",
+  "scope": "owned tiny shared-filesystem fixture only; no controller init, active run, scheduler write or real checkpoint validation"
+}
