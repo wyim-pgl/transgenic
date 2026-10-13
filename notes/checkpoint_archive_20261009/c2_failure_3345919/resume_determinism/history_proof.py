@@ -469,9 +469,11 @@ def write_validation_receipt(root, report, *, source_commit, predecessor_root, p
     require(json.loads((root / 'verified_record.json').read_text()).get('job_id') == job_id,
             'validation verification job ID mismatch')
     check_prior(predecessor_root, predecessor_job_id)
+    _pinned_manifest(root)
     position = dict(epoch=0, step=9840, global_step=410, pending_micro=0)
     history_sha = _checkpoint_binding(root / 'resumed', position, specialization=True)
     continuous_history_sha = _checkpoint_binding(root / 'continuous', position, specialization=True)
+    require(continuous_history_sha == history_sha, 'current checkpoint histories differ')
     require(report.get('checkpoint_history_sha256') ==
             {'continuous': continuous_history_sha, 'resumed': history_sha}, 'checkpoint history changed after comparison')
     _checkpoint_binding(root / 'at400', dict(epoch=0, step=9600, global_step=400, pending_micro=0))

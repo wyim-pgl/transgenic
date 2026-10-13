@@ -68,3 +68,9 @@ Updated immutable v2 helper bytes:
 - `probe.py` SHA256`9edf1eb412275f998cd0614d5b0ea12203433c52b0192da557aa860ab9ab65dc`
 - `test_history_proof.py` SHA256`2409784293d524efa0421487618e9266aefdd9e230ffb4a37dc2b2c2394138f7`
 - `history_validation.sbatch` SHA256`dce7af8a1da97ee9dc9989dbdebb68765b072e53c22dfefaf09c0928b45e359b`
+
+## Independent-review receipt repair
+
+Review reproduced two false READY cases after declaration hashes were recomputed: unequal current continuous/resumed history, and a substituted original manifest consistently rebound across all three journals. The publisher now reasserts actual current history equality and calls `_pinned_manifest(root)` on the current validation root before publishing. No extra tensor reads were added. Regressions update artifact, metadata, report and comparison declarations together.
+
+RED for changed resumed history: receipt was incorrectly created (8.459s). After equality repair, fully rebound manifest RED likewise incorrectly created a receipt (9.994s). After both assertions, complete18-test suite passed56.437s. `git diff --check` passed. Independent scoped re-review approved both fixes with no remaining findings; immutable v1 helpers remain unchanged.

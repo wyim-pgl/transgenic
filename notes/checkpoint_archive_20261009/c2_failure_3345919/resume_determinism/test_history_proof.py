@@ -449,8 +449,11 @@ class HistoryProofTests(unittest.TestCase):
                 receipt_path = root / 'validation_receipt.json'
                 self.assertEqual(json.loads(receipt_path.read_text()), receipt)
                 receipt_path.unlink()
-                for mutation in ('passed', 'missing_proof', 'source', 'job', 'meta', 'digest', 'history'):
+                for mutation in ('passed', 'missing_proof', 'source', 'job', 'meta', 'digest', 'history',
+                                 'history_redeclared', 'manifest'):
                     value, options = copy.deepcopy(report), dict(kwargs)
+                    manifest_path = root / 'bootstrap.json'
+                    original_manifest = manifest_path.read_text()
                     if mutation == 'passed':
                         value['passed'] = False
                     elif mutation == 'missing_proof':
@@ -464,7 +467,7 @@ class HistoryProofTests(unittest.TestCase):
                         meta = json.loads(path.read_text())
                         meta['global_step'] = 409
                         path.write_text(json.dumps(meta))
-                    elif mutation == 'history':
+                    elif mutation in ('history', 'history_redeclared'):
                         history_path = root / 'resumed/latest_state/compile_history.json'
                         original_history = history_path.read_text()
                         meta_path = history_path.with_name('meta.json')
@@ -475,14 +478,41 @@ class HistoryProofTests(unittest.TestCase):
                         meta = json.loads(original_meta)
                         meta['compile_history_sha256'] = proof.probe.sha(history_path)
                         meta_path.write_text(json.dumps(meta))
+                        if mutation == 'history_redeclared':
+                            value['checkpoint_history_sha256']['resumed'] = meta['compile_history_sha256']
+                            comparison.write_text(json.dumps(value))
+                    elif mutation == 'manifest':
+                        manifest = json.loads(original_manifest)
+                        manifest['checkpoint_files']['meta.json'] = '0' * 64
+                        manifest_path.write_text(json.dumps(manifest))
+                        restored_files = {}
+                        for run_name in ('continuous', 'resumed', 'at400'):
+                            hp = root / run_name / 'latest_state/compile_history.json'
+                            mp = hp.with_name('meta.json')
+                            restored_files[hp], restored_files[mp] = hp.read_text(), mp.read_text()
+                            history = json.loads(restored_files[hp])
+                            history['bootstrap'] = {'manifest': manifest, 'sha256': proof.probe.sha(manifest_path)}
+                            hp.write_text(json.dumps(history))
+                            meta = json.loads(restored_files[mp])
+                            meta['compile_history_sha256'] = proof.probe.sha(hp)
+                            mp.write_text(json.dumps(meta))
+                            if run_name != 'at400':
+                                value['checkpoint_history_sha256'][run_name] = proof.probe.sha(hp)
+                        comparison.write_text(json.dumps(value))
                     else:
                         value['checkpoint_digests']['resumed'] = '0' * 64
                     with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                         proof.write_validation_receipt(root, value, **options)
                     self.assertFalse(receipt_path.exists())
-                    if mutation == 'history':
+                    if mutation in ('history', 'history_redeclared'):
                         history_path.write_text(original_history)
                         meta_path.write_text(original_meta)
+                        comparison.write_text(json.dumps(report))
+                    if mutation == 'manifest':
+                        manifest_path.write_text(original_manifest)
+                        for path, content in restored_files.items():
+                            path.write_text(content)
+                        comparison.write_text(json.dumps(report))
                     if mutation == 'meta':
                         meta['global_step'] = 410
                         path.write_text(json.dumps(meta))
