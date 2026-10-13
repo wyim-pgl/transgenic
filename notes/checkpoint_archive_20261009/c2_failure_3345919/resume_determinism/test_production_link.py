@@ -30,6 +30,11 @@ def write(path, obj):
     path.write_text(json.dumps(obj, sort_keys=True))
 
 
+def philox_state(seed, offset=0):
+    raw = seed.to_bytes(8, sys.byteorder) + offset.to_bytes(8, sys.byteorder)
+    return torch.tensor(list(raw), dtype=torch.uint8)
+
+
 class FixtureMixin:
     def setUp(self):
         self.assertIsNotNone(p, 'production allocation helper is not implemented')
@@ -59,7 +64,7 @@ class FixtureMixin:
             torch.save({'random_state': random.Random(rank).getstate(),
                         'numpy_random_seed': np.random.RandomState(rank).get_state(),
                         'torch_manual_seed': torch.Generator().manual_seed(rank).get_state(),
-                        'torch_cuda_manual_seed': [torch.Generator().manual_seed(rank).get_state()]},
+                        'torch_cuda_manual_seed': [philox_state(rank * 4 + device) for device in range(4)]},
                        ck / ('accelerate_state/random_states_%d.pkl' % rank))
             if pending_micro:
                 torch.save({'weight': torch.ones(2)}, ck / ('pending_grads_rank%d.pt' % rank))
@@ -495,6 +500,129 @@ class ObserverTests(FixtureMixin, unittest.TestCase):
     def test_symlink_ancestor_cannot_enter_checkpoint_tree(self):
         (self.root/'alias').symlink_to(self.run,target_is_directory=True)
         with self.assertRaises(ValueError):p.beneath(self.root/'alias'/'latest_state','meta.json')
+
+
+class CompiledCheckpointTests(FixtureMixin, unittest.TestCase):
+    def compiled_model(self, checkpoint):
+        from accelerate import Accelerator
+        class TinyTied(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.z_weight = torch.nn.Parameter(torch.tensor([1., 2.]))
+                self.a_weight = self.z_weight
+                self.bias = torch.nn.Parameter(torch.zeros(2))
+            def forward(self, x):
+                return x * self.z_weight + self.bias
+        bare = TinyTied()
+        compiled = torch.compile(bare, backend='eager')
+        accelerator = Accelerator(cpu=True)
+        compiled = accelerator.prepare(compiled)
+        compiled(torch.ones(2)).sum().backward()
+        saved = self.root / 'real_compiled_save'
+        accelerator.save_state(str(saved))
+        self.addCleanup(accelerator.free_memory)
+        import shutil
+        shutil.copyfile(saved / 'model.safetensors', checkpoint / 'accelerate_state/model.safetensors')
+        actual = p.load_weights(checkpoint / 'accelerate_state/model.safetensors')
+        self.assertEqual(set(actual), {'_orig_mod.z_weight', '_orig_mod.bias'})
+        return bare
+
+    def make_final(self, model):
+        final = self.run / 'step_04099'
+        final.mkdir()
+        aliases = rt.save_weights_deterministic(model, str(final / 'model.safetensors'))
+        self.assertEqual(aliases, {'z_weight': 'a_weight'})
+        history = json.loads((self.ck / 'compile_history.json').read_text())
+        position = dict(epoch=0, step=98376, global_step=4099, pending_micro=0)
+        history['checkpoint'] = position
+        write(final / 'compile_history.json', history)
+        write(final / 'identity.json', self.identity)
+        write(final / 'meta.json', dict(position, arm='C2', seed=123, stop_after_updates=4099,
+            checkpoint_kind='fixed_step', selection=rt.FIXED_STEP_SELECTION, pilot_final=True,
+            tied_aliases=aliases, model_sha256=probe.sha(final / 'model.safetensors'),
+            compile_history_sha256=probe.sha(final / 'compile_history.json')))
+        (final / rt.PILOT_FINAL_MARKER).write_text('WP5 pilot-final checkpoint at exactly 4099 optimizer updates (A46 rule 11); never a best-validation checkpoint\n')
+        (final / rt.PRUNE_EXEMPT_MARKER).write_text('A28/plan 9: step checkpoint, never pruned\n')
+        (self.run / 'TRAINING_DONE').write_text('2026-10-12T00:00:00\n')
+        return final
+
+    def test_compiled_state_accepts_real_bare_pending_gradients_preserving_raw_digest(self):
+        ck = self.make_checkpoint('epoch_01', epoch=1, step=0, global_step=2, pending_micro=3)
+        model = self.compiled_model(ck)
+        for rank in range(4): rt.save_pending_grads(model, str(ck), rank)
+        checked = self.check(ck)
+        from safetensors.torch import load_file
+        state = {name: probe.tree(torch.load(ck / 'accelerate_state' / name, weights_only=False))
+                 for name in ['optimizer.bin', 'scheduler.bin'] + ['random_states_%d.pkl' % r for r in range(4)]}
+        raw = dict(model={k: probe.tree(v) for k,v in load_file(str(ck / 'accelerate_state/model.safetensors')).items()},
+                   state=state, pending_grads={str(r): probe.tree(torch.load(ck / ('pending_grads_rank%d.pt' % r), weights_only=False)) for r in range(4)})
+        self.assertEqual(checked['canonical_checkpoint_sha256'], probe.digest(raw))
+        self.assertIn('_orig_mod.z_weight', raw['model'])
+
+    def test_compiled_resume_contract_accepts_bare_fixed_export_with_real_tied_alias(self):
+        model = self.compiled_model(self.ck)
+        contract = {}
+        checked = p.check_checkpoint(self.ck, self.identity, self.fp, capture_contract=contract)
+        self.assertEqual(checked['canonical_checkpoint_sha256'], probe.digest(probe.checkpoint(self.run)))
+        self.assertIn('_orig_mod.z_weight', contract['model'])
+        final = self.make_final(model)
+        result = p.check_final(self.run, self.identity, self.fp, expected_model=contract['model'])
+        self.assertEqual(result['position']['global_step'], 4099)
+        meta = json.loads((final / 'meta.json').read_text())
+        meta['tied_aliases'] = {'z_weight': 'missing'}
+        write(final / 'meta.json', meta)
+        with self.assertRaises(ValueError): p.check_final(self.run, self.identity, self.fp, expected_model=contract['model'])
+
+    def test_compiled_name_collisions_mixed_and_nested_wrappers_are_refused(self):
+        for names in [('weight', '_orig_mod.weight'), ('bias', '_orig_mod.weight'), ('_orig_mod._orig_mod.weight',)]:
+            save_file({name: torch.ones(2) for name in names}, str(self.ck / 'accelerate_state/model.safetensors'))
+            with self.subTest(names=names), self.assertRaises(ValueError): self.check()
+
+
+class CudaRngTests(FixtureMixin, unittest.TestCase):
+    def test_strict_philox_shapes_dtype_offset_and_four_device_cardinality(self):
+        path = self.ck / 'accelerate_state/random_states_3.pkl'
+        rng = torch.load(path, weights_only=False)
+        good = [philox_state(i) for i in range(4)]
+        cases = dict(short=[torch.zeros(1, dtype=torch.uint8)] + good[1:],
+            long=[torch.zeros(17, dtype=torch.uint8)] + good[1:],
+            rank=[good[0].reshape(2, 8)] + good[1:],
+            dtype=[good[0].to(torch.int8)] + good[1:],
+            offset=[philox_state(1, 1)] + good[1:],
+            missing_device=good[:3], extra_device=good + [philox_state(4)], tuple=tuple(good),
+            noncontiguous=[torch.zeros(32, dtype=torch.uint8)[::2]] + good[1:])
+        for name, states in cases.items():
+            rng['torch_cuda_manual_seed'] = states
+            torch.save(rng, path)
+            with self.subTest(case=name), self.assertRaises(ValueError): self.check()
+
+    def test_valid_rng_validation_does_not_mutate_global_rng_or_initialize_cuda(self):
+        def capture():
+            return dict(python=random.getstate(), numpy=np.random.get_state(), cpu=torch.get_rng_state())
+        before = probe.digest(capture())
+        cuda_before = torch.cuda.is_initialized()
+        self.check()
+        self.assertEqual(probe.digest(capture()), before)
+        self.assertEqual(torch.cuda.is_initialized(), cuda_before)
+
+
+class CudaReceiptTests(FixtureMixin, unittest.TestCase):
+    def setUp(self):
+        fixture = LinkTests(methodName="test_full_preempt_receipt_and_exclusive_publication")
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        self.ck, self.output = fixture.ck, fixture.output
+        self.preflight, self.results, self.postflight = fixture.preflight, fixture.results, fixture.postflight
+    def test_malformed_rank3_cuda_state_blocks_real_postflight_receipt(self):
+        self.preflight(); self.results()
+        path = self.ck / 'accelerate_state/random_states_3.pkl'
+        rng = torch.load(path, weights_only=False)
+        for states in ([torch.zeros(1, dtype=torch.uint8)], [philox_state(i) for i in range(3)],
+                       [philox_state(0).reshape(2,8)] + [philox_state(i) for i in range(1,4)]):
+            rng['torch_cuda_manual_seed'] = states
+            torch.save(rng, path)
+            with self.subTest(count=len(states)), self.assertRaises(ValueError): self.postflight()
+            self.assertFalse((self.output / 'link_receipt.json').exists())
 
 
 if __name__=='__main__':unittest.main()

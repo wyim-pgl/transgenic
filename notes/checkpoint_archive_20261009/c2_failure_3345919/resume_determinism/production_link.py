@@ -154,6 +154,21 @@ def load_weights(path):
     return weights
 
 
+def compatibility_model(values):
+    """Resolve one whole-model torch.compile wrapper without rewriting saved keys."""
+    require(type(values) is dict and bool(values) and
+            all(isinstance(name, str) and name for name in values), 'invalid model namespace')
+    compiled = [name.startswith('_orig_mod.') for name in values]
+    require(all(compiled) or not any(compiled), 'mixed bare and compiled model namespace')
+    result = {}
+    for name, value in values.items():
+        bare = name[len('_orig_mod.'):] if all(compiled) else name
+        require(bare and '_orig_mod' not in bare.split('.') and bare not in result,
+                'ambiguous or unsupported compile-wrapper namespace')
+        result[bare] = value
+    return result
+
+
 def check_checkpoint(directory, identity, fingerprint, *, capture_contract=None, expected_contract=None):
     import torch
     import probe
@@ -164,6 +179,7 @@ def check_checkpoint(directory, identity, fingerprint, *, capture_contract=None,
     acc = integer(identity.get('accumulation_steps'), 'accumulation_steps', 4)
     require(acc % 4 == 0 and meta['pending_micro'] < acc // 4, 'invalid pending accumulation')
     weights = load_weights(beneath(directory, 'accelerate_state/model.safetensors'))
+    compatible_weights = compatibility_model(weights)
     state = {}
     for name in ['optimizer.bin', 'scheduler.bin'] + ['random_states_%d.pkl' % r for r in range(4)]:
         path = beneath(directory, 'accelerate_state/' + name)
@@ -185,22 +201,24 @@ def check_checkpoint(directory, identity, fingerprint, *, capture_contract=None,
     for rank in range(4):
         rng = state['random_states_%d.pkl' % rank]
         require({'random_state', 'numpy_random_seed', 'torch_manual_seed', 'torch_cuda_manual_seed'} <= set(rng), 'partial rank RNG')
-        import random
-        import numpy as np
-        random.Random().setstate(rng['random_state'])
-        np.random.RandomState().set_state(rng['numpy_random_seed'])
-        torch.Generator().set_state(rng['torch_manual_seed'])
-        require(isinstance(rng['torch_cuda_manual_seed'], (list, tuple)) and bool(rng['torch_cuda_manual_seed']), 'missing CUDA RNG')
-        for seed in rng['torch_cuda_manual_seed']:
-            require(isinstance(seed, torch.Tensor) and seed.dtype == torch.uint8 and seed.numel() > 0, 'invalid CUDA RNG')
+        from transgenic.training.b6_compile_history import encode_rng
+        cuda = rng['torch_cuda_manual_seed']
+        require(type(cuda) is list and len(cuda) == PROFILE['world_size'], 'exactly four CUDA RNG devices required')
+        require(all(isinstance(seed, torch.Tensor) and seed.layout == torch.strided and seed.is_contiguous()
+                    for seed in cuda), 'invalid CUDA RNG tensor layout')
+        # Source validation checks Python/NumPy/CPU and the 16-byte Philox seed/offset
+        # representation without initializing CUDA or mutating any global generator.
+        encode_rng(dict(python=rng['random_state'], numpy=rng['numpy_random_seed'],
+                        torch_cpu=rng['torch_manual_seed'], torch_cuda=cuda))
     contract = dict(model={k: dict(shape=list(v.shape), dtype=str(v.dtype)) for k,v in weights.items()},
                     optimizer_groups=[group['params'] for group in optimizer['param_groups']],
                     optimizer_state={str(k): {n: dict(shape=list(v[n].shape),dtype=str(v[n].dtype))
                                              for n in ('exp_avg','exp_avg_sq')} for k,v in optimizer['state'].items()},
                     scheduler_keys=sorted(scheduler),
-                    rng_keys={str(r): sorted(state['random_states_%d.pkl' % r]) for r in range(4)})
+                    rng_keys={str(r): sorted(state['random_states_%d.pkl' % r]) for r in range(4)},
+                    cuda_rng_devices={str(r): len(state['random_states_%d.pkl' % r]['torch_cuda_manual_seed']) for r in range(4)})
     if expected_contract is not None:
-        for key in ('model','optimizer_groups','scheduler_keys','rng_keys'):
+        for key in ('model','optimizer_groups','scheduler_keys','rng_keys','cuda_rng_devices'):
             require(contract[key] == expected_contract[key], 'checkpoint structure changed: ' + key)
         for key,value in expected_contract['optimizer_state'].items():
             require(contract['optimizer_state'].get(key) == value, 'initialized optimizer state disappeared or changed shape')
@@ -217,8 +235,9 @@ def check_checkpoint(directory, identity, fingerprint, *, capture_contract=None,
             values = torch.load(path, map_location='cpu', weights_only=False)
             require(type(values) is dict and bool(values), 'empty pending gradients')
             for name, tensor in values.items():
-                require(name in weights and isinstance(tensor, torch.Tensor) and tensor.shape == weights[name].shape and
-                        tensor.dtype == weights[name].dtype, 'pending gradient model mismatch')
+                require(name in compatible_weights and isinstance(tensor, torch.Tensor) and
+                        tensor.shape == compatible_weights[name].shape and tensor.dtype == compatible_weights[name].dtype,
+                        'pending gradient model mismatch')
             finite(values)
             require(rank == 0 or set(values) == gradient_names, 'partial gradients across ranks')
             gradient_names = set(values)
@@ -240,10 +259,13 @@ def check_final(run, identity, fingerprint, *, expected_model=None):
             meta.get('pilot_final') is True and meta.get('checkpoint_kind') == 'fixed_step' and
             meta.get('selection') == rt.FIXED_STEP_SELECTION, 'invalid final metadata')
     weights = load_weights(beneath(directory, 'model.safetensors'))
+    require(set(compatibility_model(weights)) == set(weights), 'final export must use bare model names')
     if expected_model is not None:
         aliases = meta.get('tied_aliases', {})
-        require(type(aliases) is dict, 'invalid tied aliases')
-        for name, descriptor in expected_model.items():
+        require(type(aliases) is dict and all(isinstance(alias, str) and isinstance(kept, str) and
+                alias not in weights and kept in weights and kept < alias and
+                '_orig_mod' not in alias.split('.') for alias, kept in aliases.items()), 'invalid tied aliases')
+        for name, descriptor in compatibility_model(expected_model).items():
             kept = name if name in weights else aliases.get(name)
             require(kept in weights and descriptor == dict(shape=list(weights[kept].shape), dtype=str(weights[kept].dtype)),
                     'final model tensor missing or changed shape: ' + name)

@@ -29,3 +29,15 @@ Tested file SHA256 values, recorded after the passing run at main `d332dcf`:
 - `continue_c2_history.py`: `e56e00e06df23e58616131652a52c2a25ecd28b58e9ce914f0e3082bdc85ab82`
 
 These tests verify receipt interoperability, filesystem validation and durable acceptance. They do not certify NGC runtime equivalence, actual Slurm behavior, storage availability, model numerical continuity, or the pending four-GPU scientific gates. The source bootstrap transport fix and proof job outcomes remain separate evidence. Broader producer/controller unit suites and independent review are recorded in their own implementation reports.
+
+
+## Recheck after producer review corrections
+
+The same three unmodified cross-helper tests were rerun after correcting compiled-state name compatibility and strict four-device CUDA RNG validation. Their imported tiny producer fixtures now use valid 16-byte Philox states for all four devices on every rank. Both acceptance validators remain real and the receipt schema is unchanged. Result: **3 PASS in 15.978 seconds**; compilation passes.
+
+Tested working-tree file SHA256 values after this passing run:
+
+- `production_link.py`: `5da60c8f994a7814ba2d0ac337f7f8320e59b887612bc6ec0622059e427d88c9`
+- `continue_c2_history.py`: `edff1aa49f481def5f265c8424a45bc31bb7867f1af7461daf3b435f05ac3f84`
+
+The producer's additional real compiled-model/tied-export and malformed CUDA-state regressions are recorded in `PRODUCTION_LINK_IMPLEMENTATION.md`. No cross-helper test implementation or controller acceptance code was edited in this correction task.
