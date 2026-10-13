@@ -1,0 +1,66 @@
+# C2 host continuation implementation
+
+`continue_c2_history.py` is a new Python3.6 standard-library controller. It does not import or run the historical controller, load tensors, copy checkpoints, archive evidence, release B6 jobs, or submit an initial proof. `history_proof.validate_prior_proof` is its only science-module call. Initial source/proof IDs are explicit configuration, so failed3369338 cannot authorize a transition and a reviewed replacement can be adopted in a new operation.
+
+## Configuration and deployment contract
+
+Create an explicit JSON object with the following fields. Missing fields fail closed. `test_continue_c2_history.ControllerTests.config` is a complete executable fixture, not a deployment configuration. All paths below are relative to the absolute host `work` directory unless marked absolute. Do not put the state directory in an old controller namespace.
+
+| Fields | Meaning |
+|---|---|
+| `version=1`, `operation_id`, `owner`, `uid` | Unique operation name, actual host account and UID. UID must equal the running process UID. |
+| `work`, `sif` | Explicit absolute host paths. No historical SIF hash requirement. No unused scratch setting is required. |
+| `canonical`, `backup`, `diagnostic` | Original/canonical C2 run, unique original200 backup, preserved diagnostic256 run. |
+| `source_commit`, `source_snapshot_git`, `source_dir`, `source_manifest_sha256` | Reviewed implementation commit, actual snapshot HEAD, directory and SHA of its `validation_sources.sha256`. Source files and actual Git HEAD are checked before actions. |
+| `bindings`, `bindings_sha256`, `config_relative`, `config_sha256` | Binding path and bytes digest; configuration path relative to source directory and digest. |
+| `expected_runtime_fingerprint` | Full actual fingerprint from the passed proof. Production receipt SHA uses sorted compact JSON with no newline. |
+| `original_pins`, `diagnostic_pins`, `proof_receipts` | Lists of `{relative_path,sha256}`. Original pins must include original200 meta/identity and original failure marker. Diagnostic pins preserve the reviewed256 small artifacts. Proof pins bind submission/staging receipts. |
+| `original_checkpoint_receipt` | `{relative_path,sha256}` for the original receipt already verified in science allocations. |
+| `bootstrap_sha256` | Exact bootstrap manifest digest; both history provenance and retained proof bootstrap bytes must match. |
+| `proof_job_id`, `proof_identity` | Adopted job ID string and `{comment,command,submit_line}`. `submit_line` is the exact `sacct SubmitLine` string. No initial-proof submission command exists. |
+| `phases` | Exactly `proof`, `validation`, `production`, with structures below. |
+| `obsolete_job` | `{job_id,command}` for the old C2 held job; command is exact host batch-script path. |
+| `protected_jobs` | Ordered `[{job_id,command,held}]`; include B5/B6 IDs. `held=true` requires PENDING/JobHeldUser even during final Nice0 restoration. |
+| `resources` | `{account,partition,time,cpus_per_task,exclude,output}`. Output is a WORK-relative Slurm pattern such as `b6_prep_20260925/logs/%x-%j.out`. Four GPUs, one node and no-requeue are enforced. |
+| `validation_clone_peak_bytes` | Explicit additional peak clone requirement. Before validation, available bytes must independently meet100GiB and fit this peak; these amounts are not added. Recheck100GiB before promotion and each production link. Do not reserve the entire future training footprint. |
+| `storage_python`, `storage_script` | Absolute host interpreter and WORK-relative reviewed source storage-preflight script. Actual project22169/ddn_ssd and both filesystem/quota headroom are checked. |
+
+Every phase contains `helper_dir`, `helper_manifest_sha256`, `script`, `root`, `marker_log`, and `tests`. Optional phase `resources` explicitly overrides the complete global resource object, allowing reviewed validation and production durations to differ. Helper manifests are named `manifest.sha256`. Science roots append the actual job ID. `marker_log` uses `{job_id}`, for example `b6_prep_20260925/logs/c2-history-proof-{job_id}.out`. `tests` maps `ngc_tests.log` and `harness_tests.log` to exact `{ran,skipped}` counts from the reviewed immutable helpers. Production retains these keys for a uniform phase schema; its proof is the allocation receipt rather than science-test logs. Pin current helper manifests including the deployed controller, pure validator and all imported operational helpers.
+
+The validation launcher currently has fixed WORK/SIF/run/bindings paths. Deployment configuration must match those reviewed launcher values; this controller does not modify that launcher. Confirm Slurm `SubmitLine` preserves the recorded argv, and perform the actual host3.6 and shared-filesystem lock smoke before launch. Unavailable scheduler identity produces a block/wait, never a relaxed gate.
+
+```sh
+python3 continue_c2_history.py init --config CONFIG.json --state-dir /absolute/WORK/ops/NEW_OPERATION
+python3 continue_c2_history.py status --state-dir /absolute/WORK/ops/NEW_OPERATION
+python3 continue_c2_history.py tick --state-dir /absolute/WORK/ops/NEW_OPERATION
+python3 continue_c2_history.py reconcile --state-dir /absolute/WORK/ops/NEW_OPERATION
+python3 continue_c2_history.py watch --state-dir /absolute/WORK/ops/NEW_OPERATION --poll-seconds 60
+```
+
+`status` only reads. `watch` exits on an explicit block so an operator can inspect it; restarting after the condition is corrected does not clear pending intent. No force/reset/retry/delete command exists. Locks are stable flock inodes; a persistent canonical-run ownership receipt also prevents a different operation from submitting while the original process is down. That claim is intentionally never automatically removed.
+
+## Durable behavior and allocation interface
+
+Each tick performs at most one external action or promotion rename. An external action includes a durable intent write before execution and its outcome write after execution. The operation lock and canonical C2 lock span that whole action. A process restart finding a submission intent only reconciles: exact token, owner/UID, submit timestamp and complete argv must identify exactly one job. On this cluster `sacct Comment` can be empty; the controller extracts the unique token from the exact `SubmitLine` argv, verifies a nonempty direct Comment agrees, and rejects duplicate comment options. No matches remain uncertain; multiple or conflicting matches block. Even an intent written before the actual sbatch call is conservatively uncertain after a crash. The allowlisted environment and exact argv are stored before sbatch; inherited SBATCH/APPTAINERENV/PYTHONOPTIMIZE settings are absent.
+
+Validation is accepted only after parent and batch COMPLETED0:0, exact numerical proof fields, source/helper pins, historical210 equality, current meta/history/fingerprint/bootstrap bindings, exact at400/resumed410 positions, observed rank3 slot6718, test counts and terminal marker. READY binds the original receipt, predecessor comparison, current comparison and canonical checkpoint digest. Retirement checks owner, exact script, PENDING and JobHeldUser twice around its durable intent. Already-CANCELLED jobs require matching identity. A reactivated old job blocks promotion.
+
+Promotion recognizes only original+candidate/no-backup, backup+candidate/no-canonical, or backup+canonical/no-candidate. It checks small artifacts and receipts and uses same-filesystem renames with parent fsync. Existing empty destinations also block. Recovery rolls forward and creates identical `RECOVERY_PROMOTION.json` and operation `promotion_receipt.json`. The original failure marker stays in backup200; diagnostic256, at400, continuous410 and original comparison bytes are untouched.
+
+Requests are `STATE/links/NNNN/request.json`. The initial predecessor is the validation READY receipt, whose old `resumed` path is resolved through relocation provenance. Subsequent predecessors are accepted production receipts. `start_checkpoint` follows the shared flat position/digest schema; allocation checkpoints use nested `checkpoint.position`. Production env is exactly WORK/SIF/REPO_DIR/OPS_DIR/REQUEST/REQUEST_SHA256 plus the small host command allowlist. Receipts must appear at `receipt_dir/execution_JOBID/link_receipt.json` and are never overwritten by the controller.
+
+Canonical checkpoint digest is the producer's value-tree model/state digest. For pending_micro>0, the allocation adds the per-rank `pending_grads` map before computing that digest; the host neither deserializes nor substitutes an inventory digest. It verifies four gradient files exist, all raw inventory paths and sizes, and hashes only small JSON/marker files. Each production receipt must bind fresh verification to its actual job and all four ranks. Counts must satisfy `rank_batches=ceil(train_rows/4)`, accumulation24, and `epoch*rank_batches+step=global_step*24+pending_micro`.
+
+A normal positive-progress preemption can create one next link. FAILED/TIMEOUT/OOM/requeue/nonzero/missing receipt/no-progress cannot. Exact final4099 also requires the final inventory, model digest binding, fixed-step metadata, exact PILOT_FINAL/PRUNE_EXEMPT text, nonempty hash-bound DONE and every actual completed epoch's finite committed evaluation and epoch_end record. Expected final epoch count is `(4099*24-1)//rank_batches`; no evaluation of an unfinished final epoch is invented. Only then are owned remaining jobs restored to Nice0; B6 must remain held and a separate B6 provenance-review block is recorded.
+
+## Verification record
+
+Implementation used test-first cycles. Initial7 tests failed for absent implementation and then passed. Durable controller addition produced8 expected missing-controller failures and then22 passes (including inherited core tests). Science/promotion addition produced4 expected absent-acceptance failures and then27 passes. Production addition produced4 expected missing-request-builder failures and then31 passes. CLI status first failed for missing output and passed after implementation. Snapshot drift and reactivated-old-job regressions each failed by incorrectly allowing progress, then passed after hardening. Missing-batch accounting regression first failed with a premature block and was changed to an observation wait.
+
+Final focused-suite, syntax/import and self-review results are recorded below before handoff. These tests use real temporary files, durable journal writes, real rename operations, actual Git snapshot fixtures and real multiprocessing locks/initialization. Only scheduler/quota responses are fake. They do not replace the real4GPU scientific proof, validation400, host3.6 deployment smoke, or independent review. No remote action was performed by this implementation task.
+
+The expanded focused suite passed **38 tests in70.845s**, with zero skips. After removing the unused `scratch` requirement, the final fixture/rerun (which omits it) passed **38 tests in73.431s**, zero skips. It includes simultaneous processes ticking into production (one actual fake-Slurm submission, one journal link), simultaneous initialization, real EXDEV prevention, both rename crash windows, cancellation response loss, exact final markers, and the epoch1/step0/pending3 handoff with all four gradient files. Additional RED→GREEN regressions cover per-phase resource overrides, blank accounting Comment with unique SubmitLine token, independent100GiB/clone-peak conditions, and streamed17MiB sparse manifest members while preserving bounded JSON reads.
+
+Python3.6 grammar parsing and compilation passed for both owned Python files. A clean subprocess imported the controller and executed its pure initial-proof gate with none of Torch, NumPy, Accelerate or dataclasses imported. The actual controller-generated initial production request was accepted by the independently implemented `production_link.validate_request`. Operational constants were checked through the selected source graph: `b6_runtime.py:62` MEMORY_ABORT, `:200` fixed-step selection, `:791–799` per-rank pending-gradient files, and the trainer final-publication/epoch-save spans in the design.
+
+Self-review limits: source/helper manifest members use streamed hashes because the reviewed snapshot includes18–43MiB example assets; checkpoint payloads still receive only stat/inventory checks on login. Scheduler UID/time/SubmitLine, required manifest coverage, exact deployment resource choices and module/apptainer availability remain explicit deployment evidence. The parent has separately confirmed real host3.6, shared-Lustre flock/fsync/rename and executable prerequisites; those are not claimed as local unit-test results. Broad scheduler mutation, hidden retry, cross-device copy fallback, failure-marker removal and archival are absent.
