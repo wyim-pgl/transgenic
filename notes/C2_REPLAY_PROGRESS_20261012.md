@@ -70,3 +70,29 @@ Live직후조회:3369338PENDING(Priority),미할당,로그미생성(정상대기
 - Failed3369338 checkpointclone adds5.33GiB tospaceusage; protectedsource200/diagnostic256 unchanged. No C2promotion/full4099 yet. ExistingheldC2/B6 andB5pending remainunchanged.
 
 Validationv2staged atops/c2_compile_history_20261012/validation_v2_61d79f0, manifestSHAa751eb193b607574df6ac6e44c224c59e57b75b1fd069a23bc6f816ffc1bbb91. ActualDeltaAIhostPython3.6.15 importedpurevalidator, acceptedcompletefixture/rejectedpassed-onlyfixture, andloadednoneoftorch/numpy/accelerate/dataclasses. Novalidationjobsubmitted. ReceiptHISTORY_VALIDATION_STAGING_20261012.json.
+
+Push verified with ls-remote: main d188ddc9e6d666e08abea09c56c4cc483794b7e5 and implementation198ce14ce53266f53b7bda5d0c4cdfd94deb43b4. Raw failed-job logs preserve their original trailing whitespace; diagnostic source/code diffcheckpassed, rawlogwhitespace isnot normalized.
+
+Validation allocation feasibility remains a deployment decision before submission: liveinteractive MaxTime2h, regularghx4 MaxTime48h. sacct historical3345919(280updates)2h01m11s,3361386(200→256)43m01s,3361666(three short phases)1h05m41s. Current inputverification alone~29min. Use successfulnewproof's actual phase timings to ensure200→410+400→410 fits; ifnecessary choose explicit reviewedregularpartition/time override within existing authorized recovery scope. Never allowtimeoutorpartialproof tocount asvalidation. Currentv2batch default2h is not evidence of feasibility.
+
+Production allocation helper1f4bb61 completed27testsPASS9.809s, bash/py_compile/Python3.6grammarPASS. Independentreview/root/c2_history_review uses /tmp/c2-production-link-review.diff and writesPRODUCTION_LINK_REVIEW_20261012.md. Author/root/c2_production_helper idle, owns scoped fixes ifneeded. Controller/root/c2_new_controller stillimplements;mainindexfree afterproducercommit.
+
+Read-only deployment metadata /tmp/c2-controller-deployment-evidence.json: ownerwcyim/UID97434; original200/diagnostic256meta+identity/config+bindingssmallSHA and allprotectedjobexactcommands captured. sacct Comment column isempty fornew3369694 despite token being presentinexactSubmitLine. Controller author is adding exactSubmitLine unique-comment extraction (rejectduplicates/disagreement) instead of requiring unavailable accountingComment. No owner/time/fullargvchecks relaxed.
+
+Host prerequisites: /usr/bin/python3, /usr/bin/apptainer, /usr/bin/bash available under preserved PATH. Two distinct processes on one actualloginhost/sharedLustrepath verifiedflockexclusion/reacquisition; tinyownedfilefsync+rename+parentfsyncPASS. No multi-host claim. ReceiptHOST_PREREQUISITES_20261012.json. Owner originalTRAINING_FAILED remainszero-byteSHAe3b0…; diagnosticRECOVERY_PROVENANCEsha3f00a6… captured. Generatedv2hostsmoke bytecodeonly(two knownfiles) removed; helpermanifestrechecked.
+
+Parent deployment review caught source-manifest entries largerthan16MiB (trackedexampleDB43MB,splitTSV29MB,FASTA18MB). Controller author added dedicated streaming source-memberhash while retaining16MiBcontrolJSONcap; sparse17MiBregressionRED→GREEN. Per-phase explicitresources overrides supportseparatereviewedvalidation/productionwalltimes. Unusedscratchfieldremoved. Nocontrollerdeployed/initialized yet.
+
+Cross-helper verification assigned/root/c2_production_helper: realproductionpostflightreceipt→actualcontrolleracceptance forpreemption/final4099/corruption; ownsnewtest_c2_link_contract.py/reportonly. Noauthorfilesunderreviewaremodifiedbythat task.
+
+Controller d332dcfa1709faf3056b43ab9b9b4034f12df1ad completed38testsPASS73.431s/zero skips, Python3.6grammar/compile/puregate checksPASS. Independentreview/root/c2_controller_review uses /tmp/c2-controller-review.diff, soleoutputCONTINUATION_REVIEW_20261012.md. Actual host3.6 in-memoryimports ofproduction/controller+stricttokenchecksPASS withouttraininglibraryimports, noinit/writes. Read-onlyactualSlurm adapter smoke onqueued3369694,failed3369338,held3345920alsoPASS (owner/token/state;failedproofrejected). ReceiptsHOST_IMPORT_SMOKE_20261012.json/HOST_SLURM_READ_SMOKE_20261012.json. Main graftbuildcompleted.
+
+Production independentreview preliminaryfindings: compiledAccelerator statekeys _orig_mod.* differfrombarependinggrad/fixedexport names, causingvalidcompiledpending/finalrejection; malformedone-byteCUDA RNGstate canincorrectlyemitREADY. Producerwillfixafterfinalreviewreport. Threecross-helper tests (actualproducerpostflight→controlleracceptance, preempt/final/corruption)pass butdonotcovertheseindependentcheckpointvaliditygaps. No productionhelper/controllerdeployed orinitialized.
+
+Cross-helper verification committed9d93e22:3actualproducer→controllerpreemption/final/corruptiontestsPASS13.538s. Production review must-fix remainscompiledcheckpointnamecompatibility andstrictCUDARNGlayout/cardinality; author/root/c2_production_helper idleawaitingfinalreport.
+
+Controllerreview/root/c2_controller_review confirmed twoP2 must-fix: rename_new check-then-os.rename replacesracingemptydestination; phase.scriptcanpointtounmanifestedoutsidehelperfileandstillbesubmitted. Parentrequiresatomicno-replace andexactscript/member/loadedcodebindings. Originalauthor/root/c2_new_controller reactivated forscopedRED→GREEN afterfinalreport. ReviewerwillfinalizeCONTINUATION_REVIEW_20261012.md. Noactualoperationalrename orcontrollersubmission hasoccurred.
+
+## 17:48 PDT — proof running
+
+3369694 started17:45:33PDT ongh118,4GPUs. NGCsource58tests57PASS/oneCPU-context-already-CUDA-initializedskip,113.286s. Live2m40RUNNING; harness/freshverify/actualscientificcomparisonremain. Jobdirectoryruns/c2_compile_history_proof/3369694; batchlogb6_prep_20260925/logs/c2-history-proof-3369694.out. PreviousschedulerETAwasoveranhourlater; alwaysuseactualSlurmstate.

@@ -8,9 +8,10 @@
 - [x] 컴파일이력복구설계·구현188bf3e완료(과학적정확일치는3369338 별도게이트): 전역event위치별모든rank의실제companion descriptor/hash,train/eval view/grad context,checkpoint결속. rank별독립replay/DDP불일치방지. event-only압축은별도검증.
 - [ ] legacycheckpoint200bootstrap명시화: 원본checkpoint/drawprefixSHA,최초tier입력뿐아니라rank3row3915(labels4501)등기존특수화이력포함. 관측하지않은ledger라고정직하게표시하고별도증명.
 - [x] 상태복원91c2737·journal789ecf4·trainer180589b·cache경로188bf3e. 실패회귀/구현/독립리뷰PASS; 전체129시험127pass2설명된skip, state별도12pass. latest/epoch/fixed/eval·pendinggrad·RNG복원구현완료. 실제4GPU게이트는별도.
-- [ ] local검증/오류주입/독립검토PASS(188bf3e); NGC회귀3369338 56pass/1skip; 수정198ce14포함58시험은새3369694에서실행. 큰소스변경후선택worktree에서graftbuild.
-- [ ] 실제4GPU연속/재개전체checkpoint bitwise proof **3369694 제출17:26PDT/Priority대기**. 이전3369338 bootstrap tuple실패는198ce14수정·6시험·독립검토PASS. original210loss3.2567708492279053와의역사적차이도해결. 단일forward일치만으로통과하지않는다.
+- [x] local검증/오류주입/독립검토PASS(198ce14); NGC회귀3369694 58시험57pass/1skip113.286s. source/main graph갱신. 실제과학게이트는아래별도.
+- [ ] 실제4GPU연속/재개전체checkpoint bitwise proof **3369694 RUNNING gh118, 시작17:45:33PDT**. 이전3369338 bootstrap tuple실패는198ce14수정·6시험·독립검토PASS. original210loss3.2567708492279053와의역사적차이도해결. 단일forward일치만으로통과하지않는다.
 - [ ] 원본200보존한검증사본에서280이상/400저장·다음재개확인,여유공간재측정.
+- [ ] 본학습운영도구 독립검토수정: production1f4bb61 compiled키/CUDA RNG검증; controllerd332dcf atomicno-replace/scriptmanifest결속. 27/38단위·3연결시험통과, 수정후재검증/검토필요.
 - [ ] **통과즉시C2본학습4099시작(추가승인불필요)**. 기존controller재사용금지,새소스/검증receipt/중복방지journal. 소유자·상태확인후구held3345920처리,운영경로보존·승격기록.
 - [ ] epoch평가·최종step04099/PILOT_FINAL/정상exit/DONE검증.
 - [ ] C2완료후B5/B6우선순위복구및검증된소스로B6잡정리. B5진행live확인.

@@ -1,6 +1,6 @@
 # C2 재개 결정성 복구 — 2026-10-12 재시작 정본
 
-**후속 실행 상태: [C2_REPLAY_PROGRESS_20261012](C2_REPLAY_PROGRESS_20261012.md).** 아래는재개기준의보존기록이다. 현재구현198ce14(bootstrap전송수정·6시험·독립리뷰PASS), **새4GPU proof3369694 제출17:26PDT/Priority대기**. 기존3369338 FAILED1:0/32m39/gh063은첫forward전tuple직렬화오류이며로그보존. Validation400 helper61d79f0·18시험·재검토PASS,별도v2배포·host3.6smoke완료. 현재상태는위진행기록과resume를우선한다. 중복제출금지.
+**후속 실행 상태: [C2_REPLAY_PROGRESS_20261012](C2_REPLAY_PROGRESS_20261012.md).** 아래는재개기준의보존기록이다. 현재구현198ce14(bootstrap전송수정·6시험·독립리뷰PASS), **새4GPU proof3369694 RUNNING gh118,시작17:45:33PDT**. 기존3369338 FAILED1:0/32m39/gh063은첫forward전tuple직렬화오류이며로그보존. Validation400 helper61d79f0·18시험·재검토PASS,별도v2배포·host3.6smoke완료. 현재상태는위진행기록과resume를우선한다. 중복제출금지.
 
 ## 사용자 지시와 우선순위
 

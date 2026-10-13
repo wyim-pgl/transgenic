@@ -1,0 +1,87 @@
+{
+  "3369694": {
+    "job_id": "3369694",
+    "owner": "wcyim",
+    "uid": 97434,
+    "created": "2026-10-12T19:26:12",
+    "token": "c2-history-198ce14-5d10eaad8598",
+    "submit_line": "sbatch --parsable --comment=c2-history-198ce14-5d10eaad8598 --export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e /work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch",
+    "argv": [
+      "sbatch",
+      "--parsable",
+      "--comment=c2-history-198ce14-5d10eaad8598",
+      "--export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e",
+      "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch"
+    ],
+    "rows": {
+      "3369694": [
+        "PENDING",
+        "0:0"
+      ]
+    },
+    "active": true,
+    "command": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch",
+    "reason": "Priority",
+    "state": "PENDING",
+    "nice": "0",
+    "raw": "JobId=3369694 JobName=c2-history-proof UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=1795 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Priority Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=02:00:00 TimeMin=N/A SubmitTime=2026-10-12T19:26:12 EligibleTime=2026-10-12T19:26:12 AccrueTime=2026-10-12T19:26:12 StartTime=2026-10-12T19:44:33 EndTime=2026-10-12T21:44:33 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-12T19:43:33 Scheduler=Backfill:* Partition=ghx4-interactive AllocNode:Sid=gh-login03:2679084 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= SchedNodeList=gh118 NumNodes=1-1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=8000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch SubmitLine=sbatch --parsable --comment=c2-history-198ce14-5d10eaad8598 --export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e /work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch WorkDir=/u/wcyim Comment=c2-history-198ce14-5d10eaad8598 StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/b6_prep_20260925/logs/c2-history-proof-3369694.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64\n"
+  },
+  "3369338": {
+    "job_id": "3369338",
+    "owner": "wcyim",
+    "uid": 97434,
+    "created": "2026-10-12T17:48:02",
+    "token": "c2-history-188bf3e-5d10eaad8598",
+    "submit_line": "sbatch --parsable --comment=c2-history-188bf3e-5d10eaad8598 --export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_188bf3e,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e /work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch",
+    "argv": [
+      "sbatch",
+      "--parsable",
+      "--comment=c2-history-188bf3e-5d10eaad8598",
+      "--export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_188bf3e,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e",
+      "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch"
+    ],
+    "rows": {
+      "3369338": [
+        "FAILED",
+        "1:0"
+      ],
+      "3369338.batch": [
+        "FAILED",
+        "1:0"
+      ],
+      "3369338.extern": [
+        "COMPLETED",
+        "0:0"
+      ]
+    },
+    "active": false,
+    "command": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/v1_188bf3e/history_proof.sbatch"
+  },
+  "3345920": {
+    "job_id": "3345920",
+    "owner": "wcyim",
+    "uid": 97434,
+    "created": "2026-10-09T01:03:12",
+    "token": "",
+    "submit_line": "sbatch --parsable --dependency=afterany:3345919 --export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=C2 revision/scripts/b6/wp5_pilot.sbatch",
+    "argv": [
+      "sbatch",
+      "--parsable",
+      "--dependency=afterany:3345919",
+      "--export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=C2",
+      "revision/scripts/b6/wp5_pilot.sbatch"
+    ],
+    "rows": {
+      "3345920": [
+        "PENDING",
+        "0:0"
+      ]
+    },
+    "active": true,
+    "command": "/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch",
+    "reason": "JobHeldUser",
+    "state": "PENDING",
+    "nice": "0",
+    "raw": "JobId=3345920 JobName=b6-wp5-pilot UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=0 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=JobHeldUser Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=1-00:00:00 TimeMin=N/A SubmitTime=2026-10-09T01:03:12 EligibleTime=Unknown AccrueTime=Unknown StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-11T13:28:32 Scheduler=Main Partition=ghx4 AllocNode:Sid=gh-login03:867274 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1-1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch SubmitLine=sbatch --parsable --dependency=afterany:3345919 --export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=C2 revision/scripts/b6/wp5_pilot.sbatch WorkDir=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/b6-wp5-pilot-3345920.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64\n"
+  }
+}

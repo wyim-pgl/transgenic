@@ -1,0 +1,13 @@
+{
+  "python": "/usr/bin/python3",
+  "apptainer": "/usr/bin/apptainer",
+  "bash": "/usr/bin/bash",
+  "sif_size": 11120398336,
+  "pins": {
+    "runs/b6_wp5_pilot_C2/TRAINING_FAILED": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runs/b6_wp5_pilot_C2_recovery_20261011/RECOVERY_PROVENANCE.json": "3f00a6cc89267664bb9c48ba4e54f4d83a3d78858bbf7af99eeaafca4678d129"
+  },
+  "flock_distinct_processes": "PASS",
+  "fsync_atomic_rename": "PASS",
+  "scope": "one actual login host, distinct processes, same shared Lustre directory; no multi-host claim"
+}

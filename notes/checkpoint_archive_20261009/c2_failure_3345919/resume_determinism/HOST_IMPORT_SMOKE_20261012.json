@@ -1,0 +1,15 @@
+{
+  "python": "3.6.15 (default, Sep 23 2021, 15:41:43) [GCC]",
+  "modules": {
+    "production_link": {
+      "sha256": "7ad77707ccc3e2df015d035c74c152a770dc7f350179728dbc32774975225e9c",
+      "import": "PASS"
+    },
+    "continue_c2_history": {
+      "sha256": "e56e00e06df23e58616131652a52c2a25ecd28b58e9ce914f0e3082bdc85ab82",
+      "import": "PASS"
+    }
+  },
+  "strict_token_smoke": "PASS",
+  "scope": "in-memory stdlib-only import and token checks; no controller init, file write or scheduler action"
+}
