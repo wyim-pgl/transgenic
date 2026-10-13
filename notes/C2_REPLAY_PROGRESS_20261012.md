@@ -147,3 +147,9 @@ User requested current progress. Local main remained b3e6c27 and clean. Pronghor
 The last verified remote state is still **2026-10-12 19:21 PDT**: validation3370048 PENDING/Priority; controllerPID1545990 alive with exact command, waiting_validation/revision3/no error. These are historical observations, not today's live state. Proof3369694 remains accepted completed evidence. Whether validation has passed and production has started is currently unknown. No job was submitted, retried, cancelled, held/released, or otherwise changed during this refresh.
 
 Human interactive DeltaAI authentication is required to regain observation: from the user's terminal, `ssh -t pronghorn 'ssh dtai'`, then complete the existing account's login/Duo flow. After access returns, inspect operation`ops/c2_in_place_198ce14_20261012` journal/watch log and live Slurm before any action; do not reinitialize or resubmit based on stale observations. Server-side watch status is not inferred from this client authentication failure.
+
+## 2026-10-13 14:35 PDT — access restored; validation still queued
+
+After the user's confirmation, DeltaAI access succeeded. Fresh squeue/sacct/scontrol show3370048 **PENDING / Priority**, RunTime0:00:00, no assigned node and no estimated start. Its submission remains10-12 19:11:45PDT, ghx4/4GPUs/64CPUs/4h/Nice0; it has waited about19h23m. No validation output directory artifacts or batch log were present, and no production link has been submitted.
+
+ControllerPID1545990's actual `/proc` command exactly matches its launch receipt. Watch-log age was52.7seconds, journalwaiting_validation/revision3/last_errornull. Authentication restoration did not require a controller restart. All old C2/B6 jobs remain held; B5 remainspending. No job, priority, hold, source, configuration or checkpoint was changed. Proof3369694's completed full-state equality result remains the accepted prerequisite; the next scientific gate has not started yet.
