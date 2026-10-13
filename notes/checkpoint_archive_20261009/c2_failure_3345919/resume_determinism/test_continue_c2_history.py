@@ -184,6 +184,78 @@ class FakeSlurm:
     def nice(self, argv): self.calls.append(('nice', argv))
 
 
+class AccountingSlurm(ctl.Slurm):
+    """Actual-shaped scheduler text; Slurm parsing/identity policy stays real."""
+    directory='/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a'
+    script='revision/scripts/b6/wp5_pilot.sbatch'
+
+    def __init__(self):
+        self.live=True
+        self.work_dir=self.directory
+        self.submit_line='sbatch --parsable --comment=old-c2 '+self.script
+        self.live_command=self.directory+'/'+self.script
+
+    def read(self,argv):
+        if argv[0]=='squeue':
+            return '3345920|wcyim|PENDING|old-c2|'+self.live_command+'\n' if self.live else ''
+        if argv[0]=='scontrol':
+            return ('JobId=3345920 UserId=wcyim(97434) JobState=PENDING Reason=JobHeldUser Nice=10000 '
+                    'Command='+self.live_command+' WorkDir='+self.directory+'\n')
+        if argv[0]=='sacct' and '-X' not in argv:
+            return '3345920|'+('PENDING' if self.live else 'CANCELLED')+'|0:0\n'
+        if argv[0]=='sacct' and '-X' in argv:
+            fields=['3345920','wcyim','97434','2026-10-09T12:30:00','',self.submit_line]
+            if any('WorkDir' in arg for arg in argv):fields.append(self.work_dir)
+            return '|'.join(fields)+'\n'
+        raise AssertionError('unexpected scheduler query: '+repr(argv))
+
+
+class SlurmObservationTests(unittest.TestCase):
+    def test_relative_submission_has_same_exact_command_while_held_and_after_cancellation(self):
+        scheduler=AccountingSlurm()
+        expected='/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch'
+        active=scheduler.observe('3345920','wcyim')
+        self.assertEqual(active['command'],expected)
+        scheduler.live=False
+        terminal=scheduler.observe('3345920','wcyim')
+        self.assertEqual(terminal['command'],expected)
+        self.assertEqual(terminal['argv'],['sbatch','--parsable','--comment=old-c2','revision/scripts/b6/wp5_pilot.sbatch'])
+        self.assertEqual(terminal['token'],'old-c2')
+        self.assertEqual(terminal['uid'],97434)
+        self.assertEqual(terminal['created'],'2026-10-09T12:30:00')
+        controller=ctl.Controller.__new__(ctl.Controller)
+        controller.c=dict(owner='wcyim',uid=97434,obsolete_job=dict(job_id='3345920',command=expected))
+        controller.scheduler=scheduler
+        controller.held_old(active)
+        controller.retired_old()
+
+    def test_relative_submission_rejects_missing_relative_or_ambiguous_workdir(self):
+        scheduler=AccountingSlurm();scheduler.live=False
+        for value in ('','relative/repo','Unknown',scheduler.directory+'|/another/repo'):
+            with self.subTest(work_dir=value):
+                scheduler.work_dir=value
+                with self.assertRaises(ctl.Blocked):scheduler.observe('3345920','wcyim')
+
+    def test_live_absolute_command_must_match_normalized_accounting_path(self):
+        scheduler=AccountingSlurm()
+        scheduler.live_command='/other/repo/revision/scripts/b6/wp5_pilot.sbatch'
+        with self.assertRaises(ctl.Blocked):scheduler.observe('3345920','wcyim')
+
+    def test_absolute_submission_does_not_depend_on_workdir_or_current_directory(self):
+        scheduler=AccountingSlurm();scheduler.live=False;scheduler.work_dir=''
+        scheduler.submit_line='sbatch --parsable --comment=old-c2 /absolute/repo/./scripts/run.sbatch'
+        observed=scheduler.observe('3345920','wcyim')
+        self.assertEqual(observed['command'],'/absolute/repo/scripts/run.sbatch')
+        self.assertEqual(observed['argv'][-1],'/absolute/repo/./scripts/run.sbatch')
+
+    def test_relative_submission_normalizes_dot_components_against_accounting_workdir(self):
+        scheduler=AccountingSlurm();scheduler.live=False
+        scheduler.work_dir='/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/'
+        scheduler.submit_line='sbatch --parsable --comment=old-c2 revision/./scripts/b6/../b6/wp5_pilot.sbatch'
+        observed=scheduler.observe('3345920','wcyim')
+        self.assertEqual(observed['command'],scheduler.directory+'/'+scheduler.script)
+
+
 class ControllerTests(unittest.TestCase):
     setUp=CoreTests.setUp
     def config(self):

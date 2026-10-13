@@ -9,6 +9,7 @@ import json
 import math
 import os
 from pathlib import Path
+import posixpath
 import re
 import shlex
 import socket
@@ -252,6 +253,18 @@ def submission_token(comment,argv):
     return comment
 
 
+def submission_command(argv,work_dir):
+    require(bool(argv) and bool(argv[-1]),'missing submitted batch script')
+    script=argv[-1]
+    require(not any(c in script for c in '\x00\n\r|'),'ambiguous submitted batch script')
+    if not posixpath.isabs(script):
+        require(type(work_dir) is str and posixpath.isabs(work_dir) and
+                not any(c in work_dir for c in '\x00\n\r|'),
+                'relative submitted script requires an unambiguous absolute accounting WorkDir')
+        script=posixpath.join(work_dir,script)
+    return posixpath.normpath(script)
+
+
 def validate_config(config):
     required = ('version operation_id owner uid work sif original_run diagnostic source_commit '
         'source_snapshot_git source_dir source_manifest_sha256 phases bindings bindings_sha256 config_relative '
@@ -314,19 +327,25 @@ class Slurm:
             require(fields[0] not in rows, 'multiple executions or requeue in accounting')
             rows[fields[0]]=[fields[1].split()[0].rstrip('+'),fields[2]]
         identity=self.read(['sacct','-X','-n','-P','-j',job_id,
-            '--format=JobIDRaw,User,UID,Submit,Comment%256,SubmitLine%4096'])
+            '--format=JobIDRaw,User,UID,Submit,Comment%256,SubmitLine%4096,WorkDir%4096'])
         matches=[line.split('|') for line in identity.splitlines() if line.startswith(job_id+'|')]
         if not matches or not rows: return None
-        require(len(matches)==1 and len(matches[0])>=6, 'ambiguous job identity')
-        _,user,uid,created,token,submit_line=matches[0][:6]
+        require(len(matches)==1,'ambiguous job identity')
+        fields=matches[0]
+        if len(fields)==8 and fields[-1]=='':fields=fields[:-1]
+        require(len(fields)==7,'ambiguous job identity or accounting WorkDir')
+        _,user,uid,created,token,submit_line,work_dir=fields
         token=submission_token(token,shlex.split(submit_line))
         result=dict(job_id=job_id,owner=user,uid=int(uid),created=created,token=token,
-                    submit_line=submit_line,argv=shlex.split(submit_line),rows=rows,active=bool(live))
-        result['command']=result['argv'][-1] if result['argv'] else ''
+                    submit_line=submit_line,argv=shlex.split(submit_line),work_dir=work_dir,rows=rows,active=bool(live))
+        result['command']=submission_command(result['argv'],work_dir)
         if live:
             control=self.read(['scontrol','show','job',job_id,'-o'])
             values=dict(re.findall(r'(\w+)=([^ ]*)',control))
-            result.update(command=values.get('Command'),reason=values.get('Reason'),state=values.get('JobState'),
+            command=values.get('Command','')
+            require(posixpath.isabs(command) and posixpath.normpath(command)==result['command'],
+                    'live Command disagrees with accounting submission path')
+            result.update(reason=values.get('Reason'),state=values.get('JobState'),
                           nice=values.get('Nice'),raw=control)
             require(values.get('JobId')==job_id and values.get('UserId')=='%s(%s)'%(owner,uid),
                     'scontrol identity mismatch')
