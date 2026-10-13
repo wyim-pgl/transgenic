@@ -2,6 +2,7 @@
 """Receipt-bound C2 continuation. Python 3.6 standard library; no tensor reads."""
 import argparse
 import contextlib
+import ctypes
 import fcntl
 import hashlib
 import importlib.util
@@ -142,9 +143,17 @@ def rename_new(source, destination):
     require(not os.path.lexists(str(destination)), 'rename destination already exists')
     require(source.stat().st_dev == destination.parent.stat().st_dev, 'cross-filesystem promotion')
     try:
-        os.rename(str(source), str(destination))
+        rename=getattr(ctypes.CDLL(None,use_errno=True),'renameat2',None)
+        require(rename is not None,'atomic no-replace rename unavailable; no fallback')
+        rename.argtypes=[ctypes.c_int,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_uint]
+        rename.restype=ctypes.c_int
+        # AT_FDCWD=-100; RENAME_NOREPLACE=1. The kernel performs the existence
+        # check and rename atomically, including an intervening empty directory.
+        if rename(-100,os.fsencode(str(source)),-100,os.fsencode(str(destination)),1)!=0:
+            error=ctypes.get_errno()
+            raise OSError(error,os.strerror(error))
     except OSError as exc:
-        raise Blocked('rename failed; no copy fallback: ' + str(exc))
+        raise Blocked('atomic no-replace rename failed; no fallback: ' + str(exc))
     fsync_dir(source.parent)
     if destination.parent != source.parent: fsync_dir(destination.parent)
 
@@ -221,6 +230,7 @@ def manifest_check(root, name, expected):
         seen.add(relative)
         require(source_member_sha(safe_path(root, relative)) == digest, 'manifest member changed: ' + relative)
     require(bool(seen), 'empty manifest')
+    return seen
 
 
 def canonical_controls(config):
@@ -411,7 +421,13 @@ class Controller:
         require(result.returncode==0 and result.stdout.strip()==self.c['source_snapshot_git'],'source snapshot Git drift')
         manifest_check(source,'validation_sources.sha256',self.c['source_manifest_sha256'])
         for phase in self.c['phases'].values():
-            manifest_check(self.path(phase['helper_dir']),'manifest.sha256',phase['helper_manifest_sha256'])
+            helper=self.path(phase['helper_dir'])
+            members=manifest_check(helper,'manifest.sha256',phase['helper_manifest_sha256'])
+            try:
+                script=str(self.path(phase['script']).relative_to(helper))
+            except ValueError:
+                raise Blocked('phase script is outside its declared helper directory')
+            require(script in members,'phase script is absent from its pinned helper manifest: '+script)
         require(sha(self.path(self.c['bindings']))==self.c['bindings_sha256'],'bindings drift')
         require(sha(safe_path(source,self.c['config_relative']))==self.c['config_sha256'],'training config drift')
         for pin in self.c['proof_receipts']+self.c['diagnostic_pins']+[self.c['original_checkpoint_receipt']]:

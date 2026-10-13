@@ -1,5 +1,6 @@
 """Host controller contracts; filesystem effects are real, only Slurm is fake."""
 import copy
+import ctypes
 import hashlib
 import importlib.util
 import json
@@ -10,6 +11,7 @@ import subprocess
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 SPEC = importlib.util.spec_from_file_location('continue_c2_history', str(HERE / 'continue_c2_history.py'))
@@ -82,6 +84,32 @@ class CoreTests(unittest.TestCase):
         (self.root / 'a').mkdir(); (self.root / 'b').mkdir()
         with self.assertRaises(ctl.Blocked): ctl.rename_new(self.root / 'a', self.root / 'b')
         self.assertTrue((self.root / 'a').is_dir())
+
+    def test_promotion_racing_empty_destination_keeps_both_directory_inodes(self):
+        source=self.root/'source';destination=self.root/'destination';source.mkdir()
+        put(source/'evidence',b'preserve')
+        source_inode=source.stat().st_ino;inserted=[];real_stat=Path.stat
+        # Only schedule the fault at the final preflight check. All stat, mkdir,
+        # and rename calls still operate on real temporary filesystem objects.
+        def stat_and_publish(path,*args,**kwargs):
+            value=real_stat(path,*args,**kwargs)
+            if path==destination.parent and not inserted:
+                destination.mkdir();inserted.append(real_stat(destination).st_ino)
+            return value
+        with patch.object(Path,'stat',new=stat_and_publish):
+            with self.assertRaises(ctl.Blocked):ctl.rename_new(source,destination)
+        self.assertEqual(source.stat().st_ino,source_inode)
+        self.assertEqual(destination.stat().st_ino,inserted[0])
+        self.assertEqual((source/'evidence').read_bytes(),b'preserve')
+        self.assertEqual(list(destination.iterdir()),[])
+
+    def test_unavailable_noreplace_primitive_never_falls_back_to_replacing_rename(self):
+        source=self.root/'source';destination=self.root/'destination';source.mkdir()
+        put(source/'evidence',b'preserve')
+        with patch.object(ctypes,'CDLL',return_value=object()):
+            with self.assertRaises(ctl.Blocked):ctl.rename_new(source,destination)
+        self.assertEqual((source/'evidence').read_bytes(),b'preserve')
+        self.assertFalse(destination.exists())
 
     def test_lock_inode_persists_and_other_process_cannot_enter(self):
         lock = self.root / 'lock'; queue = multiprocessing.Queue()
@@ -267,6 +295,32 @@ class ControllerTests(unittest.TestCase):
         with self.assertRaises(ctl.Blocked): controller.tick()
         self.assertEqual(controller.status()['intent'], intent)
         self.assertEqual(self.scheduler.calls, [])
+
+    def test_unmanifested_submitted_script_blocks_before_intent(self):
+        config=self.config();script=self.root/'validation/unpinned.sbatch'
+        script.write_text('#!/bin/bash\nexit 0\n')
+        config['phases']['validation']['script']='validation/unpinned.sbatch'
+        state=self.root/'op';ctl.Controller.initialize(config,state)
+        scheduler=FakeSlurm();controller=ctl.Controller(state,scheduler)
+        script.write_text('#!/bin/bash\necho altered\n')
+        with self.assertRaises(ctl.Blocked):controller.prepare_submission('validation')
+        self.assertIsNone(controller.status()['intent'])
+        self.assertEqual(scheduler.calls,[])
+
+    def test_same_named_script_outside_declared_helper_blocks_before_intent(self):
+        config=self.config();put(self.root/'external/run.sbatch',b'#!/bin/bash\n')
+        config['phases']['validation']['script']='external/run.sbatch'
+        state=self.root/'op';ctl.Controller.initialize(config,state)
+        scheduler=FakeSlurm();controller=ctl.Controller(state,scheduler)
+        with self.assertRaises(ctl.Blocked):controller.prepare_submission('validation')
+        self.assertIsNone(controller.status()['intent'])
+        self.assertEqual(scheduler.calls,[])
+
+    def test_changed_manifested_script_blocks_before_intent(self):
+        controller=self.start();(self.root/'validation/run.sbatch').write_text('#!/bin/bash\necho altered\n')
+        with self.assertRaises(ctl.Blocked):controller.prepare_submission('validation')
+        self.assertIsNone(controller.status()['intent'])
+        self.assertEqual(self.scheduler.calls,[])
 
     def test_snapshot_commit_drift_blocks_even_when_pinned_files_match(self):
         controller=self.start()
