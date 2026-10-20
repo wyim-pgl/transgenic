@@ -4,6 +4,8 @@
 
 | 반복하지 않을 접근 | 확인된 사실/대안 |
 |---|---|
+| 호스트 전용 시험 symlink를 운영 bundle 아래 남기기 | B5 3309786은 C2 host smoke의 절대 `/work/nvme/...` 링크가 컨테이너 `/work` bind 안에서 dangling이 되어 preflight 실패. 10-20 동일 이미지/bind로 재현 후 소유 시험 링크만 제거, 대상 receipt 보존 검증. 실제 입력 검사 게이트를 완화하지 않는다. |
+| 완료 C2의 `latest_state=4000`을 최종4099 미달로 판정 | 본학습3379630의 최종은 별도 `resumed/step_04099`; meta/global4099, PILOT_FINAL, PRUNE_EXEMPT, TRAINING_DONE와 allocated postflight receipt를 확인한다. controller complete이므로 재시작/중복제출 금지. |
 | compiledcheckpoint키를baregrad/export키와직접대조 | Accelerator저장은_orig_mod.*; gradient/fixedexport는bare. 7266e14는값digest유지·명칭대조만정규화, 실제compile/NGC시험·독립검토PASS. |
 | CUDA RNG를nonemptyuint8만확인 | 1byte상태도READY가될수있음. 7266e14는sourceencode_rng+4기기Philox검증, NGCCPU33시험PASS. |
 | localRENAME_NOREPLACE성공을실제Lustre지원으로일반화 | 실제host새디렉터리/파일rename 모두EINVAL22. 기존targetEEXIST만으론지원증명아님; fallback금지. controller6e5f0f7의in-place v2방식으로원본이동없이해결. |

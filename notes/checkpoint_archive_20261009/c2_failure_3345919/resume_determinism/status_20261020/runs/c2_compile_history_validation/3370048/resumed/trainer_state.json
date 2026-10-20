@@ -1,0 +1,11 @@
+{
+ "epoch": 1,
+ "global_step": 2049,
+ "stopper": {
+  "best": 0.7930242313449465,
+  "best_epoch": 1,
+  "bad_epochs": 0,
+  "patience": 3
+ },
+ "arm": "C2"
+}

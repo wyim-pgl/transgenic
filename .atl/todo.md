@@ -10,11 +10,14 @@
 - [x] 상태복원91c2737·journal789ecf4·trainer180589b·cache경로188bf3e. 실패회귀/구현/독립리뷰PASS; 전체129시험127pass2설명된skip, state별도12pass. latest/epoch/fixed/eval·pendinggrad·RNG복원구현완료. 실제4GPU게이트는별도.
 - [x] local검증/오류주입/독립검토PASS(198ce14); NGC회귀3369694 58시험57pass/1skip113.286s. source/main graph갱신. 실제과학게이트는아래별도.
 - [x] 실제4GPU전체checkpoint bitwise proof3369694 PASS: 모델차이0,optimizer/scheduler/4rankRNG/입력/shape/loss/context/boundarygradient/RNG/history정확일치. 원래210loss3.2567708492279053복원. parent/batch/externCOMPLETED0:0,1h05m57s. 증거3369694/PARENT_ACCEPTANCE.json.
-- [ ] 400저장·새프로세스400→410검증 **3370048 10-13 14:35PDT 확인: Priority대기, 실행0, 예상시작미정**. SSH복구·controller1545990 정상, 아직검증미시작. 원본200보존,279→280 rank3slot6718관측필수. 제출전127.67GiB여유; 다음시점재측정.
-- [x] 본학습운영도구 로컬·독립검토·호스트검증: production7266e14(33+NGC CPU33), controller32b14d5 in-place v2(52), 실제연결ea699d5(3). 원본이동없음. 최종config검토/actualhostPASS, 새controller PID1545990 운영초기화·감시중. 실제400검증/활성화/본학습은별도.
-- [ ] **통과즉시C2본학습4099시작(추가승인불필요)**. 새controller PID1545990/ops/c2_in_place_198ce14_20261012가검증후처리. 원본200그대로보존, 검증resumed410제자리활성화; 소유자·상태확인후구held3345920취소.
-- [ ] epoch평가·최종step04099/PILOT_FINAL/정상exit/DONE검증.
-- [ ] C2완료후B5/B6우선순위복구및검증된소스로B6잡정리. B5진행live확인.
+- [x] 400저장·새프로세스400→410검증 **3370048 PASS**, 10-14 07:28:53PDT 종료, COMPLETED0:0 / 2h01m02s. 모델·optimizer·scheduler·4rank RNG·전체 trace·history 정확 일치, rank3slot6718 관측, 역사적210loss 복원. 10-20 live/accounting/receipt 검수 완료.
+- [x] 본학습운영도구 로컬·독립검토·호스트검증: production7266e14(33+NGC CPU33), controller6e5f0f7 in-place v2(52+WorkDir10), 실제연결ea699d5(3). 최종config검토/actualhostPASS 후 PID1545990으로 감시했고, 아래 실제400검증/활성화/본학습까지 완료.
+- [x] 검증 통과 후 C2본학습 자동 연결 **3379630**, 검증resumed410 제자리 활성화. 원본200·진단256 보존, 구held3345920 취소. 10-15 09:56:07PDT 시작 → 10-16 06:18:31PDT COMPLETED0:0 / 20h22m24s.
+- [x] **4099/4099 완료**: epoch 평가1회, `step_04099/PILOT_FINAL`, `PRUNE_EXEMPT`, `TRAINING_DONE`, allocation postflight 및 parent/batch/extern 정상exit 확인. 10-20 작은 metadata/history/marker 해시·receipt 연결 재검수 PASS. controller complete/revision22/error없음.
+- [x] C2 완료 후 우선순위 복구 처리 확인. B6 3345917/18 Nice0·held 유지. B5는 복구 시점 전에 terminal: 3309786 preflight실패, 3309787–90 취소.
+- [x] B5 실패 원인 확인·시험 잔여물 정리: C2 controller 호스트 시험용 절대 symlink가 컨테이너에서 dangling. 같은 이미지/bind로 재현 후 정확한 소유 링크만 제거, 대상 receipt 불변 및 컨테이너 경로 부재 확인.
+- [ ] **B5 재개 게이트 미통과:** 시험 잔여물 원인은 제거했지만 전체 preflight·checkpoint/재개 조건·현재 자원 확인은 아직 필요. 3309786 실패 후 새 잡은 제출하지 않았다. 학습 source/data/checkpoint 수정 없음.
+- [ ] **B6 실행 차단:** 3345917/18의 구233574a 소스/런처/입력 검토와 검증된 교체 계획 필요. controller의 명시적 `b6_followup` 차단 유지. hold만 해제하거나 C2 검증을 B6 팔 전체의 검증으로 대체하지 않는다.
 
 진행 기록: [20261012 실행 기록](../notes/C2_REPLAY_PROGRESS_20261012.md).
 

@@ -1,0 +1,369 @@
+.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+{"global_step": 2210, "epoch": 1, "loss": 0.9347786903381348, "lr": 4.901308494122865e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2220, "epoch": 1, "loss": 0.9688072204589844, "lr": 4.9234863606121094e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2230, "epoch": 1, "loss": 1.1799776554107666, "lr": 4.945664227101353e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2240, "epoch": 1, "loss": 0.7827519178390503, "lr": 4.9678420935905965e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2250, "epoch": 1, "loss": 0.8812830448150635, "lr": 4.99001996007984e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2260, "epoch": 1, "loss": 0.8558414578437805, "lr": 4.9993580765639594e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2270, "epoch": 1, "loss": 0.7909370064735413, "lr": 4.998190943043884e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffba936f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffba936f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 2280, "epoch": 1, "loss": 1.2439656257629395, "lr": 4.9970238095238096e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffba936f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffba936f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 2290, "epoch": 1, "loss": 0.8639751672744751, "lr": 4.995856676003735e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2300, "epoch": 1, "loss": 0.9324876070022583, "lr": 4.9946895424836606e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2310, "epoch": 1, "loss": 1.1088719367980957, "lr": 4.9935224089635854e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffba936f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffba936f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 2320, "epoch": 1, "loss": 0.7548189759254456, "lr": 4.992355275443511e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2330, "epoch": 1, "loss": 1.1866306066513062, "lr": 4.991188141923436e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2340, "epoch": 1, "loss": 0.8407649397850037, "lr": 4.990021008403362e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2350, "epoch": 1, "loss": 0.8753159642219543, "lr": 4.9888538748832866e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2360, "epoch": 1, "loss": 0.841117262840271, "lr": 4.987686741363212e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[rank0]:V1015 23:06:04.972000 1891665 torch/_dynamo/guards.py:5481] [0/7] [__recompiles] Recompiling function forward in /work/repo/src/transgenic/model/modeling_b6.py:498
+[rank0]:V1015 23:06:04.972000 1891665 torch/_dynamo/guards.py:5481] [0/7] [__recompiles]     triggered by the following guard failure(s):
+[rank0]:V1015 23:06:04.972000 1891665 torch/_dynamo/guards.py:5481] [0/7] [__recompiles]     - 0/0: tensor 'input_ids' size mismatch at index 1. expected 61440, actual 129024
+[rank0]:V1015 23:06:04.972000 1891665 torch/_dynamo/guards.py:5481] [0/7] [__recompiles]     - 0/2: tensor 'input_ids' size mismatch at index 1. expected 30720, actual 129024
+[rank0]:V1015 23:06:04.972000 1891665 torch/_dynamo/guards.py:5481] [0/7] [__recompiles]     - 0/1: 1536*labels.size()[1] < 5242880  # (_functorch/_aot_autograd/autograd_cache.py:1219 in evaluate_guards)
+[rank0]:V1015 23:06:04.972000 1891665 torch/_dynamo/guards.py:5481] [0/7] [__recompiles]     - 0/6: GLOBAL_STATE changed: grad_mode 
+[rank0]:V1015 23:06:04.972000 1891665 torch/_dynamo/guards.py:5481] [0/7] [__recompiles]     - 0/5: GLOBAL_STATE changed: grad_mode 
+[rank0]:V1015 23:06:04.972000 1891665 torch/_dynamo/guards.py:5481] [0/7] [__recompiles]     - 0/4: GLOBAL_STATE changed: grad_mode 
+[rank0]:V1015 23:06:04.972000 1891665 torch/_dynamo/guards.py:5481] [0/7] [__recompiles]     - 0/3: 3072 <= labels.size()[1] <= 4095  # (_inductor/scheduler.py:405 in can_fuse) and (_inductor/scheduler.py:415 in can_fuse)
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: FutureWarning: `torch.distributed.all_gather_into_tensor` is deprecated. Please use `torch.distributed.all_gather_single` instead.
+  return func(*args, **kwargs)
+{"global_step": 2370, "epoch": 1, "loss": 0.897744357585907, "lr": 4.9865196078431376e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2380, "epoch": 1, "loss": 0.8129001259803772, "lr": 4.985352474323063e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2390, "epoch": 1, "loss": 1.1233710050582886, "lr": 4.984185340802988e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2400, "epoch": 1, "loss": 1.0080691576004028, "lr": 4.983018207282913e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+{"global_step": 2410, "epoch": 1, "loss": 0.7501305937767029, "lr": 4.981851073762839e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2420, "epoch": 1, "loss": 0.7729663252830505, "lr": 4.980683940242764e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2430, "epoch": 1, "loss": 0.8430527448654175, "lr": 4.979516806722689e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2440, "epoch": 1, "loss": 1.0949125289916992, "lr": 4.9783496732026145e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2450, "epoch": 1, "loss": 0.8333128094673157, "lr": 4.97718253968254e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2460, "epoch": 1, "loss": 0.026407139375805855, "lr": 4.9760154061624655e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2470, "epoch": 1, "loss": 0.7495577931404114, "lr": 4.974848272642391e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2480, "epoch": 1, "loss": 0.7196820378303528, "lr": 4.973681139122316e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2490, "epoch": 1, "loss": 1.0101760625839233, "lr": 4.972514005602241e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2500, "epoch": 1, "loss": 0.7294763922691345, "lr": 4.971346872082167e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2510, "epoch": 1, "loss": 0.7908691763877869, "lr": 4.970179738562092e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2520, "epoch": 1, "loss": 0.7788776755332947, "lr": 4.969012605042017e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2530, "epoch": 1, "loss": 0.9217888116836548, "lr": 4.9678454715219425e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2540, "epoch": 1, "loss": 0.8172552585601807, "lr": 4.966678338001868e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2550, "epoch": 1, "loss": 0.8575372695922852, "lr": 4.9655112044817934e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2560, "epoch": 1, "loss": 0.7550417184829712, "lr": 4.964344070961718e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2570, "epoch": 1, "loss": 0.03777708485722542, "lr": 4.963176937441644e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2580, "epoch": 1, "loss": 0.037678446620702744, "lr": 4.962009803921569e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2590, "epoch": 1, "loss": 0.017310621216893196, "lr": 4.9608426704014946e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2600, "epoch": 1, "loss": 0.7357267737388611, "lr": 4.9596755368814194e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+{"global_step": 2610, "epoch": 1, "loss": 0.024746324867010117, "lr": 4.958508403361345e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2620, "epoch": 1, "loss": 0.8151753544807434, "lr": 4.9573412698412704e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2630, "epoch": 1, "loss": 0.8144180178642273, "lr": 4.956174136321196e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2640, "epoch": 1, "loss": 0.869325578212738, "lr": 4.9550070028011207e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2650, "epoch": 1, "loss": 0.8382216095924377, "lr": 4.953839869281046e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2660, "epoch": 1, "loss": 0.6795333623886108, "lr": 4.9526727357609716e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2670, "epoch": 1, "loss": 0.7599121332168579, "lr": 4.951505602240897e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2680, "epoch": 1, "loss": 0.6797360777854919, "lr": 4.950338468720822e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2690, "epoch": 1, "loss": 0.8514673113822937, "lr": 4.9491713352007474e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2700, "epoch": 1, "loss": 0.9463553428649902, "lr": 4.948004201680673e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcfe6f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcfe6f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 2710, "epoch": 1, "loss": 0.6475087404251099, "lr": 4.946837068160598e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2720, "epoch": 1, "loss": 0.8544473648071289, "lr": 4.945669934640523e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2730, "epoch": 1, "loss": 0.7779026031494141, "lr": 4.9445028011204486e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2740, "epoch": 1, "loss": 0.7433015704154968, "lr": 4.943335667600374e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcfe6f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcfe6f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 2750, "epoch": 1, "loss": 0.7871130704879761, "lr": 4.9421685340802995e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2760, "epoch": 1, "loss": 0.5384283065795898, "lr": 4.941001400560224e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2770, "epoch": 1, "loss": 0.6320399641990662, "lr": 4.93983426704015e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2780, "epoch": 1, "loss": 0.995524525642395, "lr": 4.938667133520075e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcfe6f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcfe6f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 2790, "epoch": 1, "loss": 0.05237053707242012, "lr": 4.937500000000001e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2800, "epoch": 1, "loss": 1.0126633644104004, "lr": 4.9363328664799256e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcfe6f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcfe6f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 2810, "epoch": 1, "loss": 0.7835426330566406, "lr": 4.935165732959851e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2820, "epoch": 1, "loss": 0.03655106574296951, "lr": 4.9339985994397765e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2830, "epoch": 1, "loss": 0.853515625, "lr": 4.932831465919702e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2840, "epoch": 1, "loss": 0.7317033410072327, "lr": 4.931664332399627e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2850, "epoch": 1, "loss": 0.8454612493515015, "lr": 4.930497198879552e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2860, "epoch": 1, "loss": 0.8454532623291016, "lr": 4.929330065359478e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2870, "epoch": 1, "loss": 0.013791757635772228, "lr": 4.928162931839403e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2880, "epoch": 1, "loss": 0.7890967726707458, "lr": 4.926995798319328e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2890, "epoch": 1, "loss": 0.8698188066482544, "lr": 4.9258286647992535e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2900, "epoch": 1, "loss": 0.8301859498023987, "lr": 4.924661531279179e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2910, "epoch": 1, "loss": 0.766975998878479, "lr": 4.9234943977591044e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2920, "epoch": 1, "loss": 0.9367072582244873, "lr": 4.922327264239029e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2930, "epoch": 1, "loss": 0.8506074547767639, "lr": 4.921160130718954e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2940, "epoch": 1, "loss": 0.7373349070549011, "lr": 4.9199929971988795e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2950, "epoch": 1, "loss": 0.89035564661026, "lr": 4.918825863678805e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2960, "epoch": 1, "loss": 0.856386661529541, "lr": 4.9176587301587305e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2970, "epoch": 1, "loss": 0.8703657984733582, "lr": 4.916491596638655e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2980, "epoch": 1, "loss": 0.7891051173210144, "lr": 4.915324463118581e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 2990, "epoch": 1, "loss": 0.021981628611683846, "lr": 4.914157329598506e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3000, "epoch": 1, "loss": 0.6840595602989197, "lr": 4.912990196078432e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+{"global_step": 3010, "epoch": 1, "loss": 0.8104451894760132, "lr": 4.9118230625583565e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbb644f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbb644f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 3020, "epoch": 1, "loss": 0.7628687024116516, "lr": 4.910655929038282e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbb644f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbb644f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 3030, "epoch": 1, "loss": 0.723557710647583, "lr": 4.9094887955182074e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3040, "epoch": 1, "loss": 0.6767833232879639, "lr": 4.908321661998133e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3050, "epoch": 1, "loss": 0.7365938425064087, "lr": 4.907154528478058e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3060, "epoch": 1, "loss": 0.6073743104934692, "lr": 4.905987394957983e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3070, "epoch": 1, "loss": 0.8457565307617188, "lr": 4.9048202614379087e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcbe5f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcbe5f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 3080, "epoch": 1, "loss": 0.7340191006660461, "lr": 4.903653127917834e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbb644f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbb644f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 3090, "epoch": 1, "loss": 0.9051958918571472, "lr": 4.902485994397759e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3100, "epoch": 1, "loss": 0.8719739317893982, "lr": 4.9013188608776844e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3110, "epoch": 1, "loss": 0.8342146873474121, "lr": 4.90015172735761e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3120, "epoch": 1, "loss": 0.9328805208206177, "lr": 4.8989845938375354e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3130, "epoch": 1, "loss": 0.6970101594924927, "lr": 4.89781746031746e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3140, "epoch": 1, "loss": 0.03577778860926628, "lr": 4.8966503267973856e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbb644f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbb644f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 3150, "epoch": 1, "loss": 0.5847362279891968, "lr": 4.895483193277311e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3160, "epoch": 1, "loss": 0.6870409846305847, "lr": 4.8943160597572366e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3170, "epoch": 1, "loss": 0.7517671585083008, "lr": 4.8931489262371614e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3180, "epoch": 1, "loss": 0.694602370262146, "lr": 4.891981792717087e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3190, "epoch": 1, "loss": 0.767090916633606, "lr": 4.890814659197012e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3200, "epoch": 1, "loss": 0.7412683367729187, "lr": 4.889647525676938e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcbe5f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcbe5f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 3210, "epoch": 1, "loss": 0.762944757938385, "lr": 4.8884803921568626e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcbe5f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcbe5f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 3220, "epoch": 1, "loss": 0.02307766117155552, "lr": 4.887313258636788e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3230, "epoch": 1, "loss": 0.7926366925239563, "lr": 4.8861461251167136e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3240, "epoch": 1, "loss": 0.7499868869781494, "lr": 4.884978991596639e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcbe5f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+Exception ignored in: <function CompiledKernel.__del__ at 0xfffbcbe5f2e0>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/triton/compiler/compiler.py", line 445, in __del__
+    driver.active.utils.unload_module(self.module)
+RuntimeError: Triton Error [CUDA]: initialization error
+{"global_step": 3250, "epoch": 1, "loss": 0.7646754384040833, "lr": 4.883811858076564e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3260, "epoch": 1, "loss": 0.052135732024908066, "lr": 4.882644724556489e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3270, "epoch": 1, "loss": 0.015085985884070396, "lr": 4.881477591036415e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3280, "epoch": 1, "loss": 0.7543372511863708, "lr": 4.88031045751634e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3290, "epoch": 1, "loss": 0.7151848077774048, "lr": 4.879143323996265e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3300, "epoch": 1, "loss": 0.03760824725031853, "lr": 4.8779761904761905e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3310, "epoch": 1, "loss": 0.853743851184845, "lr": 4.876809056956116e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3320, "epoch": 1, "loss": 0.7636151909828186, "lr": 4.8756419234360415e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3330, "epoch": 1, "loss": 0.611136257648468, "lr": 4.874474789915966e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3340, "epoch": 1, "loss": 0.7436208724975586, "lr": 4.873307656395892e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3350, "epoch": 1, "loss": 0.04962877556681633, "lr": 4.872140522875817e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3360, "epoch": 1, "loss": 0.696724534034729, "lr": 4.870973389355743e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3370, "epoch": 1, "loss": 0.7891702651977539, "lr": 4.8698062558356675e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3380, "epoch": 1, "loss": 0.8100027441978455, "lr": 4.868639122315593e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3390, "epoch": 1, "loss": 0.8335979580879211, "lr": 4.8674719887955185e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3400, "epoch": 1, "loss": 0.773294985294342, "lr": 4.866304855275444e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+{"global_step": 3410, "epoch": 1, "loss": 0.017046701163053513, "lr": 4.865137721755369e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3420, "epoch": 1, "loss": 0.760827898979187, "lr": 4.863970588235294e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3430, "epoch": 1, "loss": 0.7495561838150024, "lr": 4.86280345471522e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3440, "epoch": 1, "loss": 0.7298999428749084, "lr": 4.861636321195145e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3450, "epoch": 1, "loss": 0.7843800783157349, "lr": 4.86046918767507e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3460, "epoch": 1, "loss": 0.7156803607940674, "lr": 4.8593020541549954e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3470, "epoch": 1, "loss": 0.6287451386451721, "lr": 4.858134920634921e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3480, "epoch": 1, "loss": 0.9972492456436157, "lr": 4.8569677871148464e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3490, "epoch": 1, "loss": 0.6911696791648865, "lr": 4.855800653594771e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3500, "epoch": 1, "loss": 0.7990331053733826, "lr": 4.8546335200746966e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3510, "epoch": 1, "loss": 0.6930769085884094, "lr": 4.853466386554622e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3520, "epoch": 1, "loss": 1.0786972045898438, "lr": 4.8522992530345476e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3530, "epoch": 1, "loss": 0.8891762495040894, "lr": 4.8511321195144724e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3540, "epoch": 1, "loss": 0.6830601692199707, "lr": 4.849964985994398e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3550, "epoch": 1, "loss": 0.7494310140609741, "lr": 4.8487978524743234e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3560, "epoch": 1, "loss": 0.674688458442688, "lr": 4.847630718954249e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3570, "epoch": 1, "loss": 0.7687102556228638, "lr": 4.8464635854341736e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3580, "epoch": 1, "loss": 0.8852952122688293, "lr": 4.845296451914099e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3590, "epoch": 1, "loss": 0.8540763854980469, "lr": 4.8441293183940246e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3600, "epoch": 1, "loss": 0.7355596423149109, "lr": 4.84296218487395e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+{"global_step": 3610, "epoch": 1, "loss": 0.7769647836685181, "lr": 4.841795051353875e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3620, "epoch": 1, "loss": 0.016324646770954132, "lr": 4.8406279178338e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3630, "epoch": 1, "loss": 0.6501919031143188, "lr": 4.839460784313726e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3640, "epoch": 1, "loss": 0.7458214163780212, "lr": 4.838293650793651e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3650, "epoch": 1, "loss": 0.7022631168365479, "lr": 4.837126517273576e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3660, "epoch": 1, "loss": 0.8097266554832458, "lr": 4.8359593837535015e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3670, "epoch": 1, "loss": 0.704734206199646, "lr": 4.834792250233427e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3680, "epoch": 1, "loss": 0.03259551525115967, "lr": 4.8336251167133525e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3690, "epoch": 1, "loss": 0.715415894985199, "lr": 4.832457983193277e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3700, "epoch": 1, "loss": 0.7371518611907959, "lr": 4.831290849673203e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3710, "epoch": 1, "loss": 0.7299252152442932, "lr": 4.830123716153128e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3720, "epoch": 1, "loss": 0.9012317061424255, "lr": 4.828956582633054e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3730, "epoch": 1, "loss": 0.9122754335403442, "lr": 4.8277894491129785e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3740, "epoch": 1, "loss": 0.7158960700035095, "lr": 4.826622315592904e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3750, "epoch": 1, "loss": 0.8919373154640198, "lr": 4.8254551820728295e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3760, "epoch": 1, "loss": 0.07650765776634216, "lr": 4.824288048552755e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3770, "epoch": 1, "loss": 0.6714941263198853, "lr": 4.82312091503268e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3780, "epoch": 1, "loss": 0.639359712600708, "lr": 4.821953781512605e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3790, "epoch": 1, "loss": 0.7656970620155334, "lr": 4.820786647992531e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3800, "epoch": 1, "loss": 0.7394070029258728, "lr": 4.819619514472456e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+{"global_step": 3810, "epoch": 1, "loss": 0.006153785157948732, "lr": 4.818452380952381e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3820, "epoch": 1, "loss": 0.793881356716156, "lr": 4.8172852474323064e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3830, "epoch": 1, "loss": 0.696652889251709, "lr": 4.816118113912232e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3840, "epoch": 1, "loss": 0.8657232522964478, "lr": 4.8149509803921574e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3850, "epoch": 1, "loss": 0.6640627980232239, "lr": 4.813783846872082e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3860, "epoch": 1, "loss": 0.8105519413948059, "lr": 4.812616713352008e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3870, "epoch": 1, "loss": 0.8921729326248169, "lr": 4.811449579831933e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3880, "epoch": 1, "loss": 0.7639676332473755, "lr": 4.8102824463118586e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3890, "epoch": 1, "loss": 0.7723357677459717, "lr": 4.8091153127917834e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3900, "epoch": 1, "loss": 0.8235064148902893, "lr": 4.807948179271709e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3910, "epoch": 1, "loss": 0.6138032674789429, "lr": 4.8067810457516344e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3920, "epoch": 1, "loss": 0.0374445803463459, "lr": 4.80561391223156e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3930, "epoch": 1, "loss": 0.6986448764801025, "lr": 4.8044467787114846e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3940, "epoch": 1, "loss": 0.7726016044616699, "lr": 4.80327964519141e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3950, "epoch": 1, "loss": 0.7946664690971375, "lr": 4.8021125116713356e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3960, "epoch": 1, "loss": 0.8279181122779846, "lr": 4.800945378151261e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3970, "epoch": 1, "loss": 0.6223945021629333, "lr": 4.799778244631186e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3980, "epoch": 1, "loss": 0.7282266616821289, "lr": 4.7986111111111113e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 3990, "epoch": 1, "loss": 1.0838654041290283, "lr": 4.797443977591037e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 4000, "epoch": 1, "loss": 0.007595900446176529, "lr": 4.796276844070962e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+[RANK 0] Removed shared tensor {'_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.lm_head.weight', '_orig_mod.transgenic.decoder.embed_tokens.weight', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq', '_orig_mod.transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+{"global_step": 4010, "epoch": 1, "loss": 0.9161317944526672, "lr": 4.795109710550887e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 4020, "epoch": 1, "loss": 0.7488389611244202, "lr": 4.7939425770308126e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 4030, "epoch": 1, "loss": 0.6413959264755249, "lr": 4.792775443510738e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 4040, "epoch": 1, "loss": 0.6885727047920227, "lr": 4.7916083099906635e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 4050, "epoch": 1, "loss": 0.6951032876968384, "lr": 4.790441176470588e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 4060, "epoch": 1, "loss": 0.011900996789336205, "lr": 4.789274042950514e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 4070, "epoch": 1, "loss": 0.8004724979400635, "lr": 4.788106909430439e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 4080, "epoch": 1, "loss": 0.97147536277771, "lr": 4.786939775910365e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+{"global_step": 4090, "epoch": 1, "loss": 0.7707749009132385, "lr": 4.7857726423902895e-05, "alphas": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+published /work/runs/c2_compile_history_validation/3370048/resumed/step_04099published /work/runs/c2_compile_history_validation/3370048/resumed/step_04099published /work/runs/c2_compile_history_validation/3370048/resumed/step_04099
+
+published /work/runs/c2_compile_history_validation/3370048/resumed/step_04099
+WP5 pilot: stopped at exactly 4099 optimizer updates
+
+WP5 pilot: stopped at exactly 4099 optimizer updates
+WP5 pilot: stopped at exactly 4099 optimizer updates
+WP5 pilot: stopped at exactly 4099 optimizer updates
+[rank0]:[W1016 08:18:04.679687197 ProcessGroupNCCL.cpp:1622] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())

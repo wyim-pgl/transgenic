@@ -1,0 +1,76 @@
+{
+  "checkpoint_digests": {
+    "continuous": "e62729b8ae438ea9f69f461bb64acf63f6e0364e90811926ec44bfe922a3fd62",
+    "resumed": "e62729b8ae438ea9f69f461bb64acf63f6e0364e90811926ec44bfe922a3fd62"
+  },
+  "checkpoint_history_sha256": {
+    "continuous": "5d10116f0ee44ba1c7ce0c9a78a3b4002fef38d81a70567e1be719387a66d02a",
+    "resumed": "5d10116f0ee44ba1c7ce0c9a78a3b4002fef38d81a70567e1be719387a66d02a"
+  },
+  "different_model_keys": [],
+  "historical210": {
+    "actual": 3.2567708492279053,
+    "equal": true,
+    "expected": 3.2567708492279053
+  },
+  "history_equal": true,
+  "model_equal": true,
+  "passed": true,
+  "profile": "validate400",
+  "states_equal": {
+    "optimizer.bin": true,
+    "random_states_0.pkl": true,
+    "random_states_1.pkl": true,
+    "random_states_2.pkl": true,
+    "random_states_3.pkl": true,
+    "scheduler.bin": true
+  },
+  "traces": {
+    "0": {
+      "boundary_rng": [],
+      "context": [],
+      "gradients": [],
+      "inputs": [],
+      "loss": [],
+      "rng_after": [],
+      "rng_before": [],
+      "shapes": []
+    },
+    "1": {
+      "boundary_rng": [],
+      "context": [],
+      "gradients": [],
+      "inputs": [],
+      "loss": [],
+      "rng_after": [],
+      "rng_before": [],
+      "shapes": []
+    },
+    "2": {
+      "boundary_rng": [],
+      "context": [],
+      "gradients": [],
+      "inputs": [],
+      "loss": [],
+      "rng_after": [],
+      "rng_before": [],
+      "shapes": []
+    },
+    "3": {
+      "boundary_rng": [],
+      "context": [],
+      "gradients": [],
+      "inputs": [],
+      "loss": [],
+      "rng_after": [],
+      "rng_before": [],
+      "shapes": []
+    }
+  },
+  "validation400": {
+    "checkpoint_step": 400,
+    "rank3_specialization_recorded": true,
+    "rank3_specialization_slot": 6718,
+    "stop_step": 410
+  }
+}

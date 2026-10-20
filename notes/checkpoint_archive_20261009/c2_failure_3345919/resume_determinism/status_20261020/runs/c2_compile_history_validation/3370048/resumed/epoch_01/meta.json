@@ -1,0 +1,1 @@
+{"arm": "C2", "compile_history_sha256": "ca2367bb9d0a9e7515519ababfb035273bae8ee1d89b9a2b97d7cca1f5251c66", "epoch": 1, "global_step": 2049, "identity_sha256": "aaf6dcfc6133ad82057b582bfc9a834f0ce5b9ed76d6556e0633db381358d89f", "pending_micro": 18, "seed": 123, "step": 0, "stopper": {"bad_epochs": 0, "best": 0.7930242313449465, "best_epoch": 1, "patience": 3}}

@@ -1,6 +1,6 @@
 # C2 재개 결정성 복구 — 2026-10-12 재시작 정본
 
-**현재 정본: [C2_REPLAY_PROGRESS_20261012](C2_REPLAY_PROGRESS_20261012.md).** 아래는과거재개기준보존기록이다. 현재source198ce14·4GPUproof3369694전체상태동일성PASS. **400단계검증3370048 Priority대기, 새controller PID1545990 감시중**. Operation`/work/nvme/bilv/wcyim/transgenic/ops/c2_in_place_198ce14_20261012`, phasewaiting_validation/revision3/error없음. 검증후원본200은그대로보존하고resumed사본제자리활성화→4099자동연결. 중복초기화/재제출/옛controller재시작금지. 실제진행은위기록·resume·livejournal/PID/Slurm을우선한다.
+**현재 정본: [C2_REPLAY_PROGRESS_20261012](C2_REPLAY_PROGRESS_20261012.md), 2026-10-20 실측.** 아래 본문은10-12 과거 재개 기준이다. **source198ce14 → proof3369694 PASS → 400/410검증3370048 PASS → 본학습3379630, 4099/4099 완료.** 본학습10-16 06:18:31PDT 종료,20h22m24s/COMPLETED0:0. Operation`/work/nvme/bilv/wcyim/transgenic/ops/c2_in_place_198ce14_20261012`는 complete/revision22/error없음; 감시도 완료 종료. 실제 최종 결과는`runs/c2_compile_history_validation/3370048/resumed/step_04099`, 원본200·진단256보존. B5 3309786은 preflight실패/후속취소; 원인인 host시험 symlink는10-20 정리했으나 전체재개미검증. B6 3345917/18은Nice0/held, 구소스/런처/입력교체검토필요. 완료controller 재시작·중복제출금지. [새 검수 증거](checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/status_20261020/PARENT_ACCEPTANCE.json)와[resume](../.atl/resume.md)를 우선한다.
 
 ## 사용자 지시와 우선순위
 

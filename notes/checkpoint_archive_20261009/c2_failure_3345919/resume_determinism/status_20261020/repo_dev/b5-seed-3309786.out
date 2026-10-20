@@ -1,0 +1,28 @@
+repo: /work/nvme/bilv/wcyim/transgenic/repo_seeds @ 8f049eb chain: pre-queued three-link chains (A45, v1.35) -- 
+image: /work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif
+base=nvcr.io/nvidia/pytorch:26.08-py3 built=2026-09-09T17:41:38+00:00 arch=aarch64
+gpu warm-up ok: device 0
+gpu warm-up ok: device 1
+gpu warm-up ok: device 2
+gpu warm-up ok: device 3
+runtime identity: sif=transgenic-ngc-26.08.sif sif_sha256=1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6 repo=8f049eb3ba72ba7541076fe9fc8f6019b90c0f7f gpus=4 cpus=64 torch=2.14.0a0+4fdf77b940.nv26.08 checkpointing=nonreentrant compile=on 
+freeze: /work/freeze/b5_full_a40_v1.freeze.json -> b5_full_a40_v1.db  rows=273148  bytes=23534252032
+PASS  db bytes 23534252032
+PASS  db md5 dda7e78c880c993435654b57dcd1c498
+PASS  db sha256 6840c93fd0b999e09b8dc2897adca1f4dbae36f2ef0f8fcc10ee66371295e222
+PASS  geneList rows 273148
+PASS  db dir carries only the A40 object
+FAIL  dangling symlinks:
+/work/ops/c2_compile_history_20261012/host_prerequisites_198ce14/controller_v2_exclusive/symlink
+NOTE  125 symlink(s) still present — the transfer MUST materialise them (rsync -L). intent.md R2.
+PASS  tokenizer emits exactly <s> <empty> </s> (tokenised, #58 / A40)
+PASS  encoder cache present for LongSafari/hyenadna-large-1m-seqlen-hf (weights + tokenizer under repo/HFmodels; offline load)
+PASS  trainer uses a seedable sampler (#59)
+PASS  canonical recipe b5_400m_win_v3.json present
+
+PREFLIGHT FAIL — do not launch
+training failed (rc=3); not resubmitting
+cancelling pre-queued link 3309790 (nothing left for it to do)
+cancelling pre-queued link 3309789 (nothing left for it to do)
+cancelling pre-queued link 3309788 (nothing left for it to do)
+cancelling pre-queued link 3309787 (nothing left for it to do)

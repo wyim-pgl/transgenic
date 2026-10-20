@@ -1,0 +1,53 @@
+{
+  "observed_utc": "2026-10-20T17:44:39.529501Z",
+  "accepted": true,
+  "validation_job_id": "3370048",
+  "production_job_id": "3379630",
+  "target": 4099,
+  "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+  "validation_comparison_sha256": "020dfbc07a3991d11fe69b77a15784b234b1e8bb12ec64892b0fe99c8b6ad280",
+  "production_receipt_sha256": "1373aeffc7c9733a484aa273c8555b5e2c8b57f378cfae41867000409627430e",
+  "final_meta_sha256": "abcca47754137cbc04d68ab8b93ddd256b034c2f2ecdfe45ca81888eef942b9b",
+  "final_model_sha256_from_allocated_postflight": "411358d18d51c36f16b191180d6c7b05d821025388b1bb50ca153a719e66d2cd",
+  "model_rehashed_on_login": false,
+  "model_size_rechecked": 2198487920,
+  "controller_phase": "complete",
+  "controller_revision": 22,
+  "epoch_events": [
+    {
+      "data_order_sha256": "dfbed55bf09c9e5f81cb30da8dd49c4f7d4ef78336753dab8a3234da4b76424d",
+      "de_novo": 0.7930242313449465,
+      "epoch": 1,
+      "epoch_end": {
+        "arm": "C2",
+        "data_order_first1000_sha256": "dfbed55bf09c9e5f81cb30da8dd49c4f7d4ef78336753dab8a3234da4b76424d",
+        "de_novo": 0.7930242313449465,
+        "epoch_end": 1,
+        "evidence": 0.7930242313449465,
+        "evidence_channel": "off",
+        "train": 1.2302495854932154
+      },
+      "eval_sha256": "18dbc021d5bddf61a8ac92664aafc55e2aae0c0744ac9cf16377d961b356247c",
+      "evidence": 0.7930242313449465,
+      "global_step": 2049,
+      "history_sha256": "ca2367bb9d0a9e7515519ababfb035273bae8ee1d89b9a2b97d7cca1f5251c66",
+      "identity_sha256": "a0ce9ae86028afe7041d22006f4dc2b05bcf89088a1442764a7a4ab9ad8adda6",
+      "meta_sha256": "fe2918aa8e6a99c2529f9f602ff51db9d74799ca54d6bf3ec1fc397bf7169fd5",
+      "train": 1.2302495854932154
+    }
+  ],
+  "protected_checkpoint_positions": [
+    200,
+    256
+  ],
+  "validation_trace_keys": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
+  "limitation": "Full model/checkpoint hashing was performed by allocation postflight. This status refresh independently rechecked accounting, metadata/history/marker hashes and receipt bindings; no heavy model/input read on login.",
+  "all_four_rank_results_done4099": true,
+  "validation_trace_mismatch_lists_checked": 32,
+  "epoch_meta_hash_checked": true
+}

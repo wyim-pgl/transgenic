@@ -1,0 +1,23 @@
+{
+  "kind": "remove_owned_host_smoke_symlink",
+  "created_utc": "2026-10-20T17:46:40.063638Z",
+  "path": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/host_prerequisites_198ce14/controller_v2_exclusive/symlink",
+  "target": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/host_prerequisites_198ce14/controller_v2_exclusive/receipt.json",
+  "uid": 97434,
+  "inode": 522420049315663591,
+  "before_container": {
+    "is_symlink": true,
+    "target_exists": false,
+    "lexists": true,
+    "target": "/work/nvme/bilv/wcyim/transgenic/ops/c2_compile_history_20261012/host_prerequisites_198ce14/controller_v2_exclusive/receipt.json"
+  },
+  "target_sha256": "75efabbbcf5e226bd3caf38a016666f3f95ae6814b4223f30d3bcdc308d061f0",
+  "reason": "B5 3309786 preflight rejected this C2 controller host-test artifact because its host absolute target is not visible under the container /work binding.",
+  "after_container": {
+    "is_symlink": false,
+    "target_exists": false,
+    "lexists": false,
+    "target": null
+  },
+  "target_unchanged": true
+}

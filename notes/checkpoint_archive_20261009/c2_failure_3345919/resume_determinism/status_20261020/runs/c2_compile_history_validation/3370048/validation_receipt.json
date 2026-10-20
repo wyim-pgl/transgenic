@@ -1,0 +1,21 @@
+{
+  "candidate": {
+    "canonical_checkpoint_sha256": "e62729b8ae438ea9f69f461bb64acf63f6e0364e90811926ec44bfe922a3fd62",
+    "epoch": 0,
+    "global_step": 410,
+    "history_sha256": "5d10116f0ee44ba1c7ce0c9a78a3b4002fef38d81a70567e1be719387a66d02a",
+    "meta_sha256": "ca526a3c1ce980224c86b24fff3a6fad5da012a8943ce54376f902d42a853e66",
+    "pending_micro": 0,
+    "relative_checkpoint": "latest_state",
+    "relative_run": "resumed",
+    "step": 9840
+  },
+  "comparison_sha256": "020dfbc07a3991d11fe69b77a15784b234b1e8bb12ec64892b0fe99c8b6ad280",
+  "kind": "c2_history_validation_ready",
+  "original_checkpoint_receipt_sha256": "c7ba61600300c8467f453c5476f42af80c795a217a6b9dab803966f5f37d44da",
+  "predecessor_comparison_sha256": "33dfc993831b0325214693d3d6422e2231c5eaf9868cf4462c4ecea7b912fe89",
+  "predecessor_job_id": "3369694",
+  "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+  "validation_job_id": "3370048",
+  "version": 1
+}

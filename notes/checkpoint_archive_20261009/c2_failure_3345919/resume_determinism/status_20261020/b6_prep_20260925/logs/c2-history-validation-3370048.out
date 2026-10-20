@@ -1,0 +1,11 @@
+{"filesystem_available_bytes": 320458092544, "pool": "ddn_ssd", "project_id": 22169, "quota_remaining_bytes": 137087909888, "required_bytes": 107374182400, "results_dir": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2"}
+W1014 07:28:10.227000 4073640 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1014 07:28:10.274000 4073640 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+{"passed": true, "job_id": "3369694", "profile": "resume210"}
+NGC_TEST_START 2026-10-14T07:28:11-05:00
+VERIFY_START 2026-10-14T07:30:59-05:00
+PHASE_START continuous 2026-10-14T07:50:08-05:00
+PHASE_FINISHED continuous 2026-10-14T09:22:16-05:00
+PHASE_START resumed 2026-10-14T09:22:28-05:00
+PHASE_FINISHED resumed 2026-10-14T09:28:24-05:00
+HISTORY_VALIDATION_PASS 2026-10-14T09:28:53-05:00
