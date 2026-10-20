@@ -132,6 +132,46 @@ def fixture():
     )
     if contract is not None:
         report["runtime_fingerprint_sha256"] = contract.canonical_sha(fingerprint)
+    model = {
+        "weight": dict(shape=[2], dtype="torch.float32"),
+        "buffer": dict(shape=[1], dtype="torch.float32"),
+    }
+    schema = dict(
+        version=1,
+        kind="b6_prepared_checkpoint_schema",
+        model=model,
+        full_model=model,
+        tied_aliases={},
+        optimizer_groups=[[0]],
+        optimizer_group_keys=[["amsgrad", "betas", "eps", "lr", "params", "weight_decay"]],
+        optimizer_parameters={"0": model["weight"]},
+        scheduler_keys=["_last_lr", "_step_count", "base_lrs", "last_epoch", "lr_lambdas"],
+    )
+    structure = dict(
+        model=model,
+        optimizer_groups=[[0]],
+        optimizer_state={"0": {"exp_avg": model["weight"], "exp_avg_sq": model["weight"]}},
+        scheduler_keys=schema["scheduler_keys"],
+        rng_keys={
+            str(r): [
+                "numpy_random_seed",
+                "random_state",
+                "step",
+                "torch_cuda_manual_seed",
+                "torch_manual_seed",
+            ]
+            for r in range(4)
+        },
+        cuda_rng_devices={str(r): 4 for r in range(4)},
+    )
+    report.update(
+        prepared_schema=schema,
+        prepared_schema_sha256=contract.canonical_sha(schema) if contract else H,
+        prepared_schema_file_sha256={key: H for key in report["trace_sha256"]},
+        checkpoint_state_contracts={
+            name: copy.deepcopy(structure) for name in ("at400", "continuous", "resumed")
+        },
+    )
     receipt = dict(
         version=1,
         kind="b6_history_validation_ready",
@@ -241,6 +281,27 @@ class ReceiptContractTests(unittest.TestCase):
         bad["states_equal"]["optimizer.bin"] = 1
         with self.assertRaises(ValueError):
             contract.validate_report(bad, SOURCE, "1234")
+
+    def test_omitted_prepared_schema_or_equal_final_state_omissions_refuse(self):
+        report, _ = fixture()
+        bad = copy.deepcopy(report)
+        del bad["prepared_schema"]
+        with self.assertRaises(ValueError):
+            contract.validate_report(bad, SOURCE, "1234")
+        for part in ("model", "optimizer_state", "scheduler_keys", "rng_keys", "cuda_rng_devices"):
+            bad = copy.deepcopy(report)
+            for phase in ("continuous", "resumed"):
+                value = bad["checkpoint_state_contracts"][phase][part]
+                if part == "model":
+                    del value["buffer"]
+                elif part == "optimizer_state":
+                    value.clear()
+                elif part == "scheduler_keys":
+                    value.remove("_last_lr")
+                else:
+                    del value["3"]
+            with self.subTest(part=part), self.assertRaises(ValueError):
+                contract.validate_report(bad, SOURCE, "1234")
 
     def test_python36_grammar_and_import_have_no_heavy_dependencies(self):
         if sys.version_info >= (3, 8):

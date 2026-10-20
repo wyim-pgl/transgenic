@@ -78,6 +78,183 @@ def identity(value):
         sha(value.get(key), key)
 
 
+def tensor_shape(value):
+    mapping(value, "tensor shape/dtype", {"shape", "dtype"})
+    require(
+        type(value["shape"]) is list and all(type(n) is int and n >= 0 for n in value["shape"]),
+        "invalid tensor shape",
+    )
+    require(
+        type(value["dtype"]) is str and re.fullmatch(r"torch\.[A-Za-z0-9_]+", value["dtype"]),
+        "invalid tensor dtype",
+    )
+
+
+def validate_prepared_schema(schema):
+    mapping(
+        schema,
+        "independent prepared checkpoint schema",
+        {
+            "version",
+            "kind",
+            "model",
+            "full_model",
+            "tied_aliases",
+            "optimizer_groups",
+            "optimizer_group_keys",
+            "optimizer_parameters",
+            "scheduler_keys",
+        },
+    )
+    require(
+        type(schema["version"]) is int
+        and schema["version"] == 1
+        and schema["kind"] == "b6_prepared_checkpoint_schema",
+        "wrong prepared schema kind/version",
+    )
+    model = mapping(schema["model"], "prepared model")
+    full = mapping(schema["full_model"], "complete prepared model")
+    aliases = mapping(schema["tied_aliases"], "prepared aliases")
+    require(
+        bool(model) and set(full) == set(model) | set(aliases) and not set(model) & set(aliases),
+        "incomplete prepared model/alias schema",
+    )
+    for name, value in full.items():
+        require(type(name) is str and bool(name), "invalid model key")
+        tensor_shape(value)
+    require(all(model[k] == full[k] for k in model), "prepared model shape disagreement")
+    require(
+        all(type(target) is str and target in model for target in aliases.values()),
+        "invalid tied model alias",
+    )
+    groups = schema["optimizer_groups"]
+    require(
+        type(groups) is list and bool(groups) and all(type(g) is list and bool(g) for g in groups),
+        "missing prepared optimizer groups",
+    )
+    parameters = [key for group in groups for key in group]
+    require(
+        all(type(key) is int and key >= 0 for key in parameters)
+        and len(parameters) == len(set(parameters)),
+        "invalid prepared optimizer parameters",
+    )
+    descriptors = mapping(
+        schema["optimizer_parameters"],
+        "prepared optimizer parameter shapes",
+        {str(k) for k in parameters},
+    )
+    for value in descriptors.values():
+        tensor_shape(value)
+    group_keys = schema["optimizer_group_keys"]
+    require(
+        type(group_keys) is list and len(group_keys) == len(groups),
+        "missing optimizer group fields",
+    )
+    for keys in group_keys:
+        require(
+            type(keys) is list
+            and keys == sorted(set(keys))
+            and {"params", "lr", "betas", "eps", "weight_decay", "amsgrad"} <= set(keys),
+            "partial optimizer group fields",
+        )
+    keys = schema["scheduler_keys"]
+    require(
+        type(keys) is list
+        and keys == sorted(set(keys))
+        and {"base_lrs", "last_epoch", "_step_count", "_last_lr", "lr_lambdas"} <= set(keys),
+        "partial prepared scheduler",
+    )
+    return schema
+
+
+def validate_state_contracts(report):
+    schema = validate_prepared_schema(report.get("prepared_schema"))
+    require(
+        report.get("prepared_schema_sha256") == canonical_sha(schema),
+        "prepared schema digest mismatch",
+    )
+    hashes = mapping(
+        report.get("prepared_schema_file_sha256"), "rank prepared schema hashes", PHASE_RANKS
+    )
+    for value in hashes.values():
+        sha(value, "prepared schema file")
+    structures = mapping(
+        report.get("checkpoint_state_contracts"),
+        "complete checkpoint state contracts",
+        {"at400", "continuous", "resumed"},
+    )
+    for value in structures.values():
+        mapping(
+            value,
+            "checkpoint state contract",
+            {
+                "model",
+                "optimizer_groups",
+                "optimizer_state",
+                "scheduler_keys",
+                "rng_keys",
+                "cuda_rng_devices",
+            },
+        )
+        require(
+            encoded(value["model"]) == encoded(schema["model"]),
+            "checkpoint model differs from prepared model schema",
+        )
+        require(
+            encoded(value["optimizer_groups"]) == encoded(schema["optimizer_groups"]),
+            "checkpoint optimizer groups differ from prepared schema",
+        )
+        require(
+            value["scheduler_keys"] == schema["scheduler_keys"],
+            "checkpoint scheduler fields differ from prepared schema",
+        )
+        slots = mapping(value["optimizer_state"], "initialized AdamW slots")
+        require(
+            bool(slots) and set(slots) <= set(schema["optimizer_parameters"]),
+            "missing/unknown initialized AdamW slots",
+        )
+        for key, moments in slots.items():
+            mapping(moments, "AdamW moment schema", {"exp_avg", "exp_avg_sq"})
+            require(
+                all(
+                    encoded(shape) == encoded(schema["optimizer_parameters"][key])
+                    for shape in moments.values()
+                ),
+                "AdamW moment shape/dtype disagreement",
+            )
+        rng = mapping(value["rng_keys"], "complete rank RNG fields", RANKS)
+        devices = mapping(value["cuda_rng_devices"], "complete CUDA RNG device counts", RANKS)
+        for rank in RANKS:
+            keys = rng[rank]
+            require(
+                type(keys) is list
+                and keys == sorted(set(keys))
+                and {
+                    "step",
+                    "random_state",
+                    "numpy_random_seed",
+                    "torch_manual_seed",
+                    "torch_cuda_manual_seed",
+                }
+                <= set(keys),
+                "partial rank RNG fields",
+            )
+            require(
+                type(devices[rank]) is int and devices[rank] == 4,
+                "four CUDA RNG states per rank required",
+            )
+    snapshot = structures["at400"]
+    for phase in ("continuous", "resumed"):
+        current = structures[phase]
+        require(current["rng_keys"] == snapshot["rng_keys"], "RNG fields changed after snapshot")
+        for key, value in snapshot["optimizer_state"].items():
+            require(
+                current["optimizer_state"].get(key) == value,
+                "snapshot-initialized AdamW slot disappeared",
+            )
+    return structures
+
+
 def validate_report(report, expected_source, expected_job):
     """Reject contradictory/partial small reports, regardless of declared hashes.
 
@@ -94,6 +271,7 @@ def validate_report(report, expected_source, expected_job):
         "invalid expected validation job",
     )
     mapping(report, "B6 comparison")
+    validate_state_contracts(report)
     envelope = dict(
         version=1,
         kind="b6_history_comparison",

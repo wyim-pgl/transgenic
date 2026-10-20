@@ -29,6 +29,7 @@ command -v apptainer >/dev/null 2>&1 || module load apptainer
 # Parent stages these dependencies unchanged in the manifested release.
 [ -f "$OPS_DIR/c2/history_proof.py" ]
 [ -f "$OPS_DIR/c2/probe.py" ]
+[ -f "$OPS_DIR/c2/production_link.py" ]
 mkdir -p "$(dirname "$ROOT_HOST")"
 mkdir "$ROOT_HOST"
 python3 "$REPO_DIR/revision/scripts/b6/storage_preflight.py" "$ROOT_HOST" > "$ROOT_HOST/storage_preflight.json"

@@ -34,6 +34,11 @@ contract = importlib.util.module_from_spec(_contract_spec)
 _contract_spec.loader.exec_module(contract)
 base = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(base)
+_state_spec = importlib.util.spec_from_file_location(
+    "b6_reviewed_c2_state", C2_DIR / "production_link.py"
+)
+reviewed_state = importlib.util.module_from_spec(_state_spec)
+_state_spec.loader.exec_module(reviewed_state)
 probe = base.probe
 sha, require = probe.sha, base.require
 SOURCE_COMMIT = "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4"
@@ -256,6 +261,265 @@ def checkpoint_binding(run, position, verified):
     )
 
 
+def tensor_descriptor(value):
+    return dict(shape=list(value.shape), dtype=str(value.dtype))
+
+
+def capture_prepared_schema(model_state, optimizer, scheduler):
+    """Metadata only from actual prepared objects, before checkpoint load/train.
+
+    Accelerate.save_state uses get_state_dict(_models[0], unwrap=False), then
+    retains the first key per id_tensor_storage group during safetensors save.
+    Apply that exact alias policy without contiguous copies or weight hashing.
+    """
+    from accelerate.utils.other import id_tensor_storage
+    import torch
+
+    model_state = dict(model_state)
+    require(
+        model_state and all(isinstance(v, torch.Tensor) for v in model_state.values()),
+        "invalid prepared model state",
+    )
+    reviewed_state.compatibility_model(model_state)
+    full_model = {k: tensor_descriptor(v) for k, v in model_state.items()}
+    model, aliases, storage = {}, {}, {}
+    for name, value in model_state.items():
+        token = id_tensor_storage(value)
+        if token in storage:
+            aliases[name] = storage[token]
+        else:
+            storage[token] = name
+            model[name] = full_model[name]
+    groups = optimizer.state_dict()["param_groups"]
+    parameters = {}
+    require(len(groups) == len(optimizer.param_groups), "prepared optimizer group disagreement")
+    for serialized, actual in zip(groups, optimizer.param_groups):
+        require(
+            len(serialized["params"]) == len(actual["params"]),
+            "prepared optimizer parameter disagreement",
+        )
+        for key, value in zip(serialized["params"], actual["params"]):
+            require(
+                type(key) is int and str(key) not in parameters,
+                "duplicate prepared optimizer parameter",
+            )
+            parameters[str(key)] = tensor_descriptor(value)
+    return dict(
+        version=1,
+        kind="b6_prepared_checkpoint_schema",
+        model=model,
+        full_model=full_model,
+        tied_aliases=aliases,
+        optimizer_groups=[g["params"] for g in groups],
+        optimizer_group_keys=[sorted(g) for g in groups],
+        optimizer_parameters=parameters,
+        scheduler_keys=sorted(scheduler.state_dict()),
+    )
+
+
+def prepared_schema(root):
+    """Each rank's pre-training schema is independently tied to its trace."""
+    schemas, hashes = {}, {}
+    for phase in ("continuous", "resumed"):
+        for rank in range(4):
+            path = root / phase / ("prepared_schema_rank%d.json" % rank)
+            require(path.is_file() and not path.is_symlink(), "missing prepared schema")
+            schema = read(path)
+            with (root / phase / ("trace_rank%d.jsonl" % rank)).open() as stream:
+                first = json.loads(stream.readline())
+            require(
+                first.get("event") == "prepared"
+                and first.get("rank") == rank
+                and first.get("micro") == (0 if phase == "continuous" else 9600)
+                and first.get("prepared_schema_sha256") == sha(path),
+                "prepared schema is not trace-bound",
+            )
+            schemas[phase + "/rank%d" % rank] = schema
+            hashes[phase + "/rank%d" % rank] = sha(path)
+    require(
+        len({digest_json(value) for value in schemas.values()}) == 1,
+        "prepared schema differs across ranks/processes",
+    )
+    schema = schemas["continuous/rank0"]
+    contract.validate_prepared_schema(schema)
+    return schema, hashes
+
+
+def complete_checkpoint(run, schema, position):
+    """Validate payload contents before exact canonical comparison (C2 policies)."""
+    import torch
+    from transgenic.training.b6_compile_history import encode_rng
+
+    directory = run / "latest_state/accelerate_state"
+    weights = reviewed_state.load_weights(directory / "model.safetensors")
+    require(
+        {k: tensor_descriptor(v) for k, v in weights.items()} == schema["model"],
+        "model keys/shape/dtype differ from independently prepared schema",
+    )
+    state = {}
+    for name in sorted(base.STATE_KEYS):
+        value = torch.load(directory / name, map_location="cpu", weights_only=False)
+        require(type(value) is dict and bool(value), "empty checkpoint state: " + name)
+        reviewed_state.finite(value)
+        state[name] = value
+    optimizer = state["optimizer.bin"]
+    require(
+        type(optimizer.get("state")) is dict
+        and bool(optimizer["state"])
+        and type(optimizer.get("param_groups")) is list
+        and bool(optimizer["param_groups"]),
+        "partial AdamW optimizer",
+    )
+    groups = optimizer["param_groups"]
+    require(
+        len(groups) == len(schema["optimizer_groups"]) and all(type(g) is dict for g in groups),
+        "optimizer groups missing",
+    )
+    require(
+        [g.get("params") for g in groups] == schema["optimizer_groups"]
+        and [sorted(g) for g in groups] == schema["optimizer_group_keys"],
+        "optimizer group/parameter fields changed",
+    )
+    parameter_ids = [key for group in groups for key in group["params"]]
+    require(
+        parameter_ids
+        and len(parameter_ids) == len(set(parameter_ids))
+        and all(type(key) is int for key in parameter_ids)
+        and set(optimizer["state"]) <= set(parameter_ids),
+        "invalid optimizer parameter groups",
+    )
+    for group in groups:
+        require(
+            type(group["lr"]) in (int, float)
+            and group["lr"] >= 0
+            and type(group["eps"]) in (int, float)
+            and group["eps"] > 0
+            and type(group["weight_decay"]) in (int, float)
+            and group["weight_decay"] >= 0
+            and type(group["amsgrad"]) is bool,
+            "invalid AdamW group values",
+        )
+        betas = group["betas"]
+        require(
+            type(betas) in (tuple, list)
+            and len(betas) == 2
+            and all(type(beta) in (int, float) and 0 <= beta < 1 for beta in betas),
+            "invalid AdamW betas",
+        )
+    slots = {}
+    for key, value in optimizer["state"].items():
+        require(
+            type(key) is int
+            and type(value) is dict
+            and {"step", "exp_avg", "exp_avg_sq"} <= set(value),
+            "partial AdamW moments",
+        )
+        expected = schema["optimizer_parameters"][str(key)]
+        for name in ("exp_avg", "exp_avg_sq"):
+            require(
+                isinstance(value[name], torch.Tensor)
+                and tensor_descriptor(value[name]) == expected,
+                "AdamW moment shape/dtype changed",
+            )
+        step = value["step"]
+        require(
+            isinstance(step, torch.Tensor)
+            and step.numel() == 1
+            and float(step) > 0
+            and float(step).is_integer()
+            and float(step) <= position["global_step"],
+            "invalid AdamW step",
+        )
+        if any(key in group["params"] and group.get("amsgrad") is True for group in groups):
+            require(
+                isinstance(value.get("max_exp_avg_sq"), torch.Tensor)
+                and tensor_descriptor(value["max_exp_avg_sq"]) == expected,
+                "partial AMSGrad moment",
+            )
+        slots[str(key)] = {
+            name: tensor_descriptor(value[name]) for name in ("exp_avg", "exp_avg_sq")
+        }
+    scheduler = state["scheduler.bin"]
+    require(
+        set(scheduler) == set(schema["scheduler_keys"])
+        and {"base_lrs", "last_epoch", "_step_count", "_last_lr", "lr_lambdas"} <= set(scheduler),
+        "partial scheduler",
+    )
+    require(
+        type(scheduler["last_epoch"]) is int
+        and scheduler["last_epoch"] >= 0
+        and type(scheduler["_step_count"]) is int
+        and scheduler["_step_count"] > 0,
+        "invalid scheduler counters",
+    )
+    for name in ("base_lrs", "_last_lr", "lr_lambdas"):
+        require(
+            type(scheduler[name]) is list and len(scheduler[name]) == len(groups),
+            "partial scheduler groups",
+        )
+    for name in ("base_lrs", "_last_lr"):
+        require(
+            all(type(value) in (int, float) and value >= 0 for value in scheduler[name]),
+            "invalid scheduler LR values",
+        )
+    require(
+        scheduler["_last_lr"] == [g["lr"] for g in groups], "scheduler/optimizer LR disagreement"
+    )
+    require(
+        all(value is None or type(value) is dict for value in scheduler["lr_lambdas"]),
+        "invalid scheduler lambda state",
+    )
+    rng_keys = {}
+    cuda_devices = {}
+    for rank in range(4):
+        rng = state["random_states_%d.pkl" % rank]
+        require(
+            {
+                "step",
+                "random_state",
+                "numpy_random_seed",
+                "torch_manual_seed",
+                "torch_cuda_manual_seed",
+            }
+            <= set(rng),
+            "partial rank RNG",
+        )
+        require(type(rng["step"]) is int and rng["step"] >= 0, "invalid RNG step")
+        cuda = rng["torch_cuda_manual_seed"]
+        require(
+            type(cuda) is list
+            and len(cuda) == 4
+            and all(
+                isinstance(v, torch.Tensor) and v.layout == torch.strided and v.is_contiguous()
+                for v in cuda
+            ),
+            "exactly four CUDA RNG states required",
+        )
+        encode_rng(
+            dict(
+                python=rng["random_state"],
+                numpy=rng["numpy_random_seed"],
+                torch_cpu=rng["torch_manual_seed"],
+                torch_cuda=cuda,
+            )
+        )
+        rng_keys[str(rank)] = sorted(rng)
+        cuda_devices[str(rank)] = len(cuda)
+    structure = dict(
+        model={k: tensor_descriptor(v) for k, v in weights.items()},
+        optimizer_groups=[g["params"] for g in groups],
+        optimizer_state=slots,
+        scheduler_keys=sorted(scheduler),
+        rng_keys=rng_keys,
+        cuda_rng_devices=cuda_devices,
+    )
+    tree = dict(
+        model={k: probe.tree(v) for k, v in weights.items()},
+        state={k: probe.tree(v) for k, v in state.items()},
+    )
+    return tree, structure
+
+
 class TrainingTrace(base.TrainingTrace):
     def pre(self, module, positional, inputs):
         super().pre(module, positional, inputs)
@@ -405,7 +669,21 @@ def compare_pair(root):
         == bindings["resumed"]["fingerprint"],
         "cross-run fingerprint mismatch",
     )
-    a, b = (probe.checkpoint(root / name) for name in ("continuous", "resumed"))
+    schema, schema_hashes = prepared_schema(root)
+    snapshot, snapshot_structure = complete_checkpoint(root / "at400", schema, SNAPSHOT)
+    a, left_structure = complete_checkpoint(root / "continuous", schema, POSITION)
+    b, right_structure = complete_checkpoint(root / "resumed", schema, POSITION)
+    structures = dict(at400=snapshot_structure, continuous=left_structure, resumed=right_structure)
+    for structure in (left_structure, right_structure):
+        for key, value in snapshot_structure["optimizer_state"].items():
+            require(
+                structure["optimizer_state"].get(key) == value,
+                "snapshot-initialized optimizer state disappeared",
+            )
+        require(
+            structure["rng_keys"] == snapshot_structure["rng_keys"],
+            "rank RNG fields changed since snapshot",
+        )
     require(bool(a["model"]) and bool(b["model"]), "empty model state")
     require(
         set(a["state"]) == set(b["state"]) == base.STATE_KEYS,
@@ -482,6 +760,10 @@ def compare_pair(root):
         verified_record_sha256=sha(root / "verified_record.json"),
         fresh_start_sha256=sha(root / "fresh_start.json"),
         checkpoint_digests=dict(continuous=probe.digest(a), resumed=probe.digest(b)),
+        prepared_schema=schema,
+        prepared_schema_sha256=digest_json(schema),
+        prepared_schema_file_sha256=schema_hashes,
+        checkpoint_state_contracts=structures,
         checkpoint_history_sha256=histories,
         checkpoint_bindings=bindings,
         model_equal=not different,
@@ -594,6 +876,7 @@ def verify(args):
             "test_b6_receipt_contract.py",
             "c2/history_proof.py",
             "c2/probe.py",
+            "c2/production_link.py",
         },
     )
     verify_manifest(
@@ -735,7 +1018,17 @@ def run(args):
         )
         trace.attach(model)
         prepared["model"] = model
-        trace.emit("prepared", reducer=model._get_ddp_logging_data())
+        require(len(self._models) == 1, "exactly one prepared checkpoint model required")
+        schema = capture_prepared_schema(
+            self.get_state_dict(self._models[0], unwrap=False), result[1], result[4]
+        )
+        schema_path = run_dir / ("prepared_schema_rank%d.json" % rank)
+        probe.write_json(schema_path, schema)
+        trace.emit(
+            "prepared",
+            reducer=model._get_ddp_logging_data(),
+            prepared_schema_sha256=sha(schema_path),
+        )
         return result
 
     accelerate.Accelerator.prepare = prepare

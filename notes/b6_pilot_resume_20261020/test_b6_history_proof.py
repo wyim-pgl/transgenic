@@ -32,6 +32,38 @@ def put(path, value):
     path.write_text(json.dumps(value, sort_keys=True))
 
 
+class TinyCheckpointModel(torch.nn.Module):
+    def __init__(self, extra_parameter=False):
+        super().__init__()
+        self.weight = torch.nn.Parameter(torch.tensor([1.0, 2.0]))
+        if extra_parameter:
+            self.bias = torch.nn.Parameter(torch.tensor([4.0]))
+        self.register_buffer("buffer", torch.tensor([3.0]))
+
+
+def real_small_states(extra_parameter=False):
+    model = TinyCheckpointModel(extra_parameter)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda step: 1.0)
+    sum(value.sum() for value in model.parameters()).backward()
+    optimizer.step()
+    scheduler.step()
+    optimizer.zero_grad()
+    with torch.no_grad():
+        model.weight.copy_(torch.tensor([1.0, 2.0]))
+    import random
+    import numpy as np
+
+    rng = dict(
+        step=0,
+        random_state=random.getstate(),
+        numpy_random_seed=np.random.get_state(),
+        torch_manual_seed=torch.get_rng_state(),
+        torch_cuda_manual_seed=[torch.zeros(16, dtype=torch.uint8) for _ in range(4)],
+    )
+    return model, optimizer, scheduler, rng
+
+
 class B6ProofTests(unittest.TestCase):
     def setUp(self):
         self.assertIsNotNone(proof, "B6 fresh proof implementation is missing")
@@ -39,7 +71,7 @@ class B6ProofTests(unittest.TestCase):
         allocation.start()
         self.addCleanup(allocation.stop)
 
-    def fixture(self, root):
+    def fixture(self, root, extra_parameter=False):
         fingerprint = dict(
             world_size=4,
             backend="inductor",
@@ -66,6 +98,29 @@ class B6ProofTests(unittest.TestCase):
             mixed_precision="bf16",
             checkpointing="nonreentrant",
             deterministic=True,
+        )
+        model, optimizer, scheduler, rng = real_small_states(extra_parameter)
+        groups = optimizer.state_dict()["param_groups"]
+        schema = dict(
+            version=1,
+            kind="b6_prepared_checkpoint_schema",
+            model={
+                name: dict(shape=list(value.shape), dtype=str(value.dtype))
+                for name, value in model.state_dict().items()
+            },
+            full_model={
+                name: dict(shape=list(value.shape), dtype=str(value.dtype))
+                for name, value in model.state_dict().items()
+            },
+            tied_aliases={},
+            optimizer_groups=[group["params"] for group in groups],
+            optimizer_group_keys=[sorted(group) for group in groups],
+            optimizer_parameters={
+                str(key): dict(shape=list(value.shape), dtype=str(value.dtype))
+                for serialized, actual in zip(groups, optimizer.param_groups)
+                for key, value in zip(serialized["params"], actual["params"])
+            },
+            scheduler_keys=sorted(scheduler.state_dict()),
         )
         for name, step in [("continuous", 410), ("at400", 400), ("resumed", 410)]:
             state = root / name / "latest_state/accelerate_state"
@@ -112,13 +167,13 @@ class B6ProofTests(unittest.TestCase):
             put(state.parent / "meta.json", meta)
             put(state.parent / "identity.json", identity)
             save_file(
-                {"weight": torch.tensor([1.0, 2.0]), "buffer": torch.tensor([3.0])},
+                {k: v.detach().clone() for k, v in model.state_dict().items()},
                 state / "model.safetensors",
             )
-            for file in ["optimizer.bin", "scheduler.bin"] + [
-                f"random_states_{r}.pkl" for r in range(4)
-            ]:
-                torch.save({"state": torch.tensor([3.0, 4.0])}, state / file)
+            torch.save(optimizer.state_dict(), state / "optimizer.bin")
+            torch.save(scheduler.state_dict(), state / "scheduler.bin")
+            for rank in range(4):
+                torch.save(rng, state / f"random_states_{rank}.pkl")
         snapshot = root / "at400"
         put(
             snapshot / "DIAGNOSTIC_SOURCE.json",
@@ -132,6 +187,8 @@ class B6ProofTests(unittest.TestCase):
         )
         for name, start in [("continuous", 0), ("resumed", 9600)]:
             for rank in range(4):
+                schema_path = root / name / f"prepared_schema_rank{rank}.json"
+                put(schema_path, schema)
                 with (root / name / f"trace_rank{rank}.jsonl").open("w") as f:
 
                     def emit(row):
@@ -142,6 +199,7 @@ class B6ProofTests(unittest.TestCase):
                             event="prepared",
                             micro=start,
                             reducer=dict(rank=rank, world_size=4, backend_name="nccl"),
+                            prepared_schema_sha256=proof.sha(schema_path),
                         )
                     )
                     for micro in range(start + 1, 9841):
@@ -321,9 +379,16 @@ class B6ProofTests(unittest.TestCase):
                 path = root / "resumed/latest_state/accelerate_state" / name
                 original = path.read_bytes()
                 if name.endswith("safetensors"):
-                    save_file({"weight": torch.tensor([1.0, 9.0])}, path)
+                    save_file(
+                        {"weight": torch.tensor([1.0, 9.0]), "buffer": torch.tensor([3.0])}, path
+                    )
                 else:
-                    torch.save({"state": torch.tensor([99.0])}, path)
+                    value = torch.load(path, weights_only=False)
+                    if name == "optimizer.bin":
+                        value["state"][0]["exp_avg"].add_(1.0)
+                    else:
+                        value["torch_manual_seed"] = torch.Generator().manual_seed(6789).get_state()
+                    torch.save(value, path)
                 with self.subTest(name=name):
                     report = proof.compare_pair(root)
                     self.assertFalse(report["passed"])
@@ -627,6 +692,118 @@ class B6ProofTests(unittest.TestCase):
         self.assertEqual(recipe["n_pilot"], 4099)
         self.assertEqual(recipe["wp5_pilot"]["stop_after_updates"], 4099)
         self.assertEqual(recipe["_sha256"], proof.sha(path))
+
+    def test_equal_empty_state_payloads_cannot_publish_ready(self):
+        for filename in ["optimizer.bin", "scheduler.bin"] + [
+            f"random_states_{rank}.pkl" for rank in range(4)
+        ]:
+            with self.subTest(filename=filename), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp) / "1234"
+                root.mkdir()
+                self.fixture(root)
+                for phase in ("continuous", "resumed"):
+                    torch.save({}, root / phase / "latest_state/accelerate_state" / filename)
+                with self.assertRaises(ValueError):
+                    self.publish(root)
+                self.assertFalse((root / "validation_receipt.json").exists())
+
+    def test_equal_model_buffer_omission_cannot_publish_ready(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "1234"
+            root.mkdir()
+            self.fixture(root)
+            for phase in ("continuous", "resumed"):
+                save_file(
+                    {"weight": torch.tensor([1.0, 2.0])},
+                    root / phase / "latest_state/accelerate_state/model.safetensors",
+                )
+            with self.assertRaises(ValueError):
+                self.publish(root)
+            self.assertFalse((root / "validation_receipt.json").exists())
+
+    def test_equal_missing_moment_rng_component_scheduler_key_and_wrong_model_dtype_refuse(self):
+        for kind in (
+            "moment",
+            "optimizer_slot",
+            "rng_python",
+            "rng_numpy",
+            "rng_cpu",
+            "rng_cuda",
+            "scheduler",
+            "dtype",
+        ):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp) / "1234"
+                root.mkdir()
+                self.fixture(root)
+                for phase in ("continuous", "resumed"):
+                    directory = root / phase / "latest_state/accelerate_state"
+                    if kind == "dtype":
+                        save_file(
+                            {
+                                "weight": torch.tensor([1.0, 2.0], dtype=torch.float64),
+                                "buffer": torch.tensor([3.0]),
+                            },
+                            directory / "model.safetensors",
+                        )
+                    elif kind in ("moment", "optimizer_slot"):
+                        path = directory / "optimizer.bin"
+                        value = torch.load(path, weights_only=False)
+                        if kind == "moment":
+                            del value["state"][0]["exp_avg_sq"]
+                        else:
+                            value["state"] = {}
+                        torch.save(value, path)
+                    elif kind == "scheduler":
+                        path = directory / "scheduler.bin"
+                        value = torch.load(path, weights_only=False)
+                        del value["_last_lr"]
+                        torch.save(value, path)
+                    else:
+                        path = directory / "random_states_3.pkl"
+                        value = torch.load(path, weights_only=False)
+                        key = {
+                            "rng_python": "random_state",
+                            "rng_numpy": "numpy_random_seed",
+                            "rng_cpu": "torch_manual_seed",
+                            "rng_cuda": "torch_cuda_manual_seed",
+                        }[kind]
+                        value[key] = [] if kind == "rng_cuda" else {}
+                        torch.save(value, path)
+                with self.assertRaises(ValueError):
+                    self.publish(root)
+
+    def test_equal_omitted_initialized_slot_is_rejected_while_other_slots_remain(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "1234"
+            root.mkdir()
+            self.fixture(root, extra_parameter=True)
+            for phase in ("continuous", "resumed"):
+                path = root / phase / "latest_state/accelerate_state/optimizer.bin"
+                value = torch.load(path, weights_only=False)
+                del value["state"][0]
+                self.assertTrue(value["state"])
+                torch.save(value, path)
+            with self.assertRaisesRegex(
+                ValueError, "snapshot-initialized optimizer state disappeared"
+            ):
+                self.publish(root)
+            self.assertFalse((root / "validation_receipt.json").exists())
+
+    def test_prepared_model_schema_keeps_compiled_names_and_tied_aliases(self):
+        self.assertTrue(
+            callable(getattr(proof, "capture_prepared_schema", None)),
+            "prepared schema capture missing",
+        )
+        model, optimizer, scheduler, _ = real_small_states()
+        model.alias = model.weight
+        compiled = torch.compile(model, backend="aot_eager")
+        schema = proof.capture_prepared_schema(compiled.state_dict(), optimizer, scheduler)
+        self.assertEqual(set(schema["model"]), {"_orig_mod.weight", "_orig_mod.buffer"})
+        self.assertEqual(schema["tied_aliases"], {"_orig_mod.alias": "_orig_mod.weight"})
+        self.assertEqual(
+            schema["optimizer_parameters"], {"0": {"shape": [2], "dtype": "torch.float32"}}
+        )
 
     def test_cli_help_and_batch_parse_without_cwd_dependency(self):
         subprocess.run(["bash", "-n", str(HERE / "b6_history_proof.sbatch")], check=True)
