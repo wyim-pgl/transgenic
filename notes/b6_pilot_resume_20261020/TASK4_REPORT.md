@@ -75,7 +75,9 @@ Self-review inspected the producer/supervisor diff against the unchanged C2 orig
 
 Actual Python3.6 execution, NGC26.08 four-rank CUDA execution, real Lustre quota and accounting observations, GPU proof equality and production throughput remain parent-owned validation gates. Local tests do not establish a scientific GPU PASS or authorize a replacement proof after failure. The next task after actual `complete` remains the existing WP5 pilot-panel evaluation.
 
-## Independent review P1 — retirement mutation-boundary correction
+## Independent review P1 — first retirement correction (superseded by round2)
+
+**Correction:** round1 incorrectly treated state/user flags alone as controller-side predicates. Its simulated scheduler made the same assumption. Round2 below supersedes that claim and model; round1 did not close the client-filter-to-kill-RPC race.
 
 Review base: `b4ab09ca8435d8477818817fb0668935427d49a8`. Fix commit: `01c3bc0ff97bc849498e73f274bcf35348f5c065`. The review reproduced an observation/cancellation race: the original B6 argv contained only `scancel <job-id>`, so a held job starting after the last observation could be cancelled while RUNNING. This supersedes any earlier implication that client-side held checks alone protected the cancellation boundary.
 
@@ -92,3 +94,23 @@ SLURM_JOB_ID=999999 PYTHONPATH=/tmp/b6-c2-recompile/src:/tmp/b6-spec-review-deps
 **20/20 host tests PASS**,89.035s, exit0 (`/tmp/b6-task4-r1-host-green.log`). Python compile and scoped diff whitespace checks also pass. The producer, batch/signal supervisor and integration-chain implementation are unchanged, so their previously passing checks were not rerun. No source, C2, graph output or remote state was modified.
 
 Scheduler limitation: these server-side filters constrain allocation state and username; they do not atomically filter `Reason=JobHeldUser`. A release that leaves the job PENDING between the last held observation and scancel remains a reason-observation race. No unsupported reason filter or stronger atomic live-scheduler guarantee is claimed. Initial or subsequently observed released/running/foreign jobs still refuse; the restored filters specifically prevent cancellation of a job that has become RUNNING at the mutation boundary.
+
+## Independent review P1 — round2 controller-side filtering
+
+Review base: `e4bb9a288fe28fe82d9a0ad646070ec6fa2f0ea3`. Fix commit: `2a48265712f960859a86edfa5e5c1f26eb8fdecf`. The scoped reviewer corrected the initial recommendation: ordinary scancel loads and filters a client-side snapshot before sending job-ID kill RPCs without the predicates. Thus `--state=PENDING --user=...` alone leaves a race inside the CLI. The supplied review links the [SchedMD performance documentation](https://slurm.schedmd.com/scancel.html) and upstream `_proc_cluster`, `_filter_job_records`, `_cancel_job_id` and `_ctld_signal_jobs` paths establishing the distinction. The prior report's server-side description and first test's atomic-filter model were incorrect.
+
+The durable intent now records exactly `['scancel', '--ctld', '--state=PENDING', '--user='+owner, job_id]`. No interactive, sibling or step-ID options are supplied. This chooses the controller request carrying the state/user/job predicates. Full pinned submission identity, the final held check, sequential retirement, terminal-CANCELLED observation and no-retry recovery are unchanged. Historical recovered intents are still observation-only and are never reissued.
+
+Parent-owned read-only capability evidence is `notes/b6_pilot_resume_20261020/SCANCEL_CAPABILITIES.json` in the main workspace, observed2026-10-21T00:42:28.973313Z: installed `scancel --version` reports **slurm25.11.8**, and `--help` reports `--ctld` (“send request directly to slurmctld”), `--state` and `--user`. This task did not perform another remote command or a live cancellation.
+
+The scheduler test now distinguishes the two paths: it first selects a PENDING client snapshot, starts the job before the kill RPC, then uses stale selection without `--ctld` or re-evaluates the request predicates at the controller boundary with `--ctld`. Against round1 code, the actual controller cancels that RUNNING job and the regression fails. With the fix, the job stays RUNNING, the exact `--ctld` argv is persisted, recovery refuses without retry, the retirement list remains empty, the controller remains `retire_waiting`, no activation/submission occurs and3345917 is untouched. Initial released-pending, foreign, running and mismatched-script refusals remain covered.
+
+RED command: the host command below with `ControllerTests.test_job_starting_after_client_filter_snapshot_is_not_cancelled_or_activated -v` selected. Result:1 test,1 failure,12.175s, exit1 (`/tmp/b6-task4-r2-ctld-red.log`). GREEN command:
+
+```bash
+SLURM_JOB_ID=999999 PYTHONPATH=/tmp/b6-c2-recompile/src:/tmp/b6-spec-review-deps /home/wyim/miniconda3/envs/pdb/bin/python notes/b6_pilot_resume_20261020/test_continue_b6_history.py -v
+```
+
+**20/20 host tests PASS**,129.677s, exit0 (`/tmp/b6-task4-r2-host-green.log`). Python compile and scoped diff whitespace checks also pass. Only controller/tests/report change in this round; unchanged producer, batch and integration-chain suites were not rerun. No source, C2, graph output or remote state was changed.
+
+`Reason=JobHeldUser` still has no claimed atomic controller predicate. A release that leaves the allocation PENDING after the final held observation remains a reason-observation race; `--ctld` closes the specifically reproduced PENDING-to-RUNNING race without inventing a hold-reason filter. Scientific GPU acceptance and all other parent-owned runtime gates remain outstanding.
