@@ -1,0 +1,115 @@
+{
+  "observed_utc": "2026-10-21T00:15:33.681338Z",
+  "accounting": {
+    "returncode": 0,
+    "stdout": "3425279|RUNNING|0:0|00:40:32|gh027\n3425279.batch|RUNNING|0:0|00:40:32|gh027\n3425279.extern|RUNNING|0:0|00:40:32|gh027\n",
+    "stderr": ""
+  },
+  "stats": {
+    "returncode": 0,
+    "stdout": "3425279.batch|00:01:06|1998080K|102141940930|14123720500\n",
+    "stderr": ""
+  },
+  "quota": {
+    "returncode": 0,
+    "stdout": "Disk quotas for prj 22169 (pid 22169):\n      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace\n/work/nvme/bilv/wcyim 425333584  524288000 576716800       -  293570        0       0       -\n",
+    "stderr": ""
+  },
+  "events": {
+    "epoch_09_manifest.json": {
+      "size": 3683,
+      "mtime": 1792539384.0
+    },
+    "epoch_09_verified.json": {
+      "size": 3981,
+      "mtime": 1792541601.0
+    }
+  },
+  "epoch09_files": [
+    {
+      "path": "accelerate_state/model.safetensors",
+      "expected": 2091005908,
+      "stage_size": null,
+      "final_size": 2091005908
+    },
+    {
+      "path": "accelerate_state/optimizer.bin",
+      "expected": 3314045958,
+      "stage_size": null,
+      "final_size": 3314045958
+    },
+    {
+      "path": "accelerate_state/random_states_0.pkl",
+      "expected": 15473,
+      "stage_size": null,
+      "final_size": 15473
+    },
+    {
+      "path": "accelerate_state/random_states_1.pkl",
+      "expected": 15473,
+      "stage_size": null,
+      "final_size": 15473
+    },
+    {
+      "path": "accelerate_state/random_states_2.pkl",
+      "expected": 15537,
+      "stage_size": null,
+      "final_size": 15537
+    },
+    {
+      "path": "accelerate_state/random_states_3.pkl",
+      "expected": 15537,
+      "stage_size": null,
+      "final_size": 15537
+    },
+    {
+      "path": "accelerate_state/scheduler.bin",
+      "expected": 1465,
+      "stage_size": null,
+      "final_size": 1465
+    },
+    {
+      "path": "eval.json",
+      "expected": 264,
+      "stage_size": null,
+      "final_size": 264
+    },
+    {
+      "path": "meta.json",
+      "expected": 130,
+      "stage_size": null,
+      "final_size": 130
+    },
+    {
+      "path": "model.safetensors",
+      "expected": 2091010540,
+      "stage_size": null,
+      "final_size": 2091010540
+    },
+    {
+      "path": "pending_grads/rank0.safetensors",
+      "expected": 1656849280,
+      "stage_size": null,
+      "final_size": 1656849280
+    },
+    {
+      "path": "pending_grads/rank1.safetensors",
+      "expected": 1656849280,
+      "stage_size": null,
+      "final_size": 1656849280
+    },
+    {
+      "path": "pending_grads/rank2.safetensors",
+      "expected": 1656849280,
+      "stage_size": null,
+      "final_size": 1656849280
+    },
+    {
+      "path": "pending_grads/rank3.safetensors",
+      "expected": 1656849280,
+      "stage_size": null,
+      "final_size": 1656849280
+    }
+  ],
+  "log_tail": "REVIEW.md: OK\nVERIFICATION.md: OK\narchive.json: OK\narchive.sbatch: OK\narchive_guard.py: OK\npins.json: OK\ntest_archive_guard.py: OK\n"
+}

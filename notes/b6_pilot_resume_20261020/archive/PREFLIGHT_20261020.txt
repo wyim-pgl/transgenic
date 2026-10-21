@@ -1,0 +1,148 @@
+FILE SOURCE_COMMIT 3b4eb0dfe0e83463775ce8e1ab05fa2f62d1e20b
+
+FILE SOURCE_SHA256.json {"deploy/deltaai/checkpoint_archive.example.json": "4f7bd58f023703887c36593f8b5df4d29c9ffbee027b1e3729488e193d01a851", "docs/checkpoint_archive.md": "70312d4d03821561f5784532d3d72156d5804d5b0f3ec200114507eef37f1c28", "revision/scripts/b6/checkpoint_archive.py": "0c79dfddfec33695a60255b6dea55c459712241670924ed30366014c30e4fbf5", "revision/scripts/b6/checkpoint_archive_cli.py": "1a733e111d38bd5ae4da2e3370d7a9f0b3058a2a7852e797efcfbb1620b487d9", "revision/scripts/b6/storage_preflight.py": "03832311be8dfa8652383a34856d02b68a1b15f7ed1052dd8bdc7d4de28a1fb4", "tests/test_checkpoint_archive.py": "ee42eecced0cba5592b199d9c34068fd5996a14dd08db7a2c29b6f2dd854bd35", "tests/test_checkpoint_archive_cli.py": "f216e9488edf3c4997d962262bb5b2367c2167aaa3f7db8798a4c11b4fec6ee6"}
+FILE archive.safe.json {
+  "version": 1,
+  "targets": [
+    {
+      "name": "hdd-b5",
+      "transport": "local",
+      "source_kind": "run",
+      "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+      "destination_root": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive",
+      "storage": {
+        "kind": "lustre",
+        "required_pool": "ddn_hdd",
+        "required_project": 22169,
+        "mount": "/work/hdd/bilv"
+      },
+      "min_age_seconds": 300,
+      "min_free_bytes": 53687091200,
+      "max_bytes": 1073741824,
+      "max_checkpoints": 1,
+      "rate_limit_bytes": 16777216
+    },
+    {
+      "name": "hdd-b6",
+      "transport": "local",
+      "source_kind": "run",
+      "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_B6",
+      "destination_root": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive",
+      "storage": {
+        "kind": "lustre",
+        "required_pool": "ddn_hdd",
+        "required_project": 22169,
+        "mount": "/work/hdd/bilv"
+      },
+      "min_age_seconds": 300,
+      "min_free_bytes": 53687091200,
+      "max_bytes": 1073741824,
+      "max_checkpoints": 1,
+      "rate_limit_bytes": 16777216
+    },
+    {
+      "name": "hdd-c2",
+      "transport": "local",
+      "source_kind": "run",
+      "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2",
+      "destination_root": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive",
+      "storage": {
+        "kind": "lustre",
+        "required_pool": "ddn_hdd",
+        "required_project": 22169,
+        "mount": "/work/hdd/bilv"
+      },
+      "min_age_seconds": 300,
+      "min_free_bytes": 53687091200,
+      "max_bytes": 1073741824,
+      "max_checkpoints": 1,
+      "rate_limit_bytes": 16777216
+    },
+    {
+      "name": "pronghorn-b5",
+      "transport": "ssh-pull",
+      "source_kind": "run",
+      "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+      "destination_root": "/data/gpfs/assoc/pgl/data/Transgenic/archives/checkpoint_archive",
+      "storage": {
+        "kind": "local"
+      },
+      "min_age_seconds": 300,
+      "min_free_bytes": 1099511627776,
+      "max_bytes": 1073741824,
+      "max_checkpoints": 1,
+      "rate_limit_bytes": 16777216,
+      "remote": {
+        "host": "dtai",
+        "python": "/usr/bin/python3",
+        "helper": "/work/nvme/bilv/wcyim/transgenic/ops/checkpoint_archive/3b4eb0d/revision/scripts/b6/checkpoint_archive_cli.py",
+        "connect_timeout": 10,
+        "timeout": 120
+      },
+      "rsync_timeout": 120
+    },
+    {
+      "name": "pronghorn-b6",
+      "transport": "ssh-pull",
+      "source_kind": "run",
+      "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_B6",
+      "destination_root": "/data/gpfs/assoc/pgl/data/Transgenic/archives/checkpoint_archive",
+      "storage": {
+        "kind": "local"
+      },
+      "min_age_seconds": 300,
+      "min_free_bytes": 1099511627776,
+      "max_bytes": 1073741824,
+      "max_checkpoints": 1,
+      "rate_limit_bytes": 16777216,
+      "remote": {
+        "host": "dtai",
+        "python": "/usr/bin/python3",
+        "helper": "/work/nvme/bilv/wcyim/transgenic/ops/checkpoint_archive/3b4eb0d/revision/scripts/b6/checkpoint_archive_cli.py",
+        "connect_timeout": 10,
+        "timeout": 120
+      },
+      "rsync_timeout": 120
+    },
+    {
+      "name": "pronghorn-c2",
+      "transport": "ssh-pull",
+      "source_kind": "run",
+      "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/b6_wp5_pilot_C2",
+      "destination_root": "/data/gpfs/assoc/pgl/data/Transgenic/archives/checkpoint_archive",
+      "storage": {
+        "kind": "local"
+      },
+      "min_age_seconds": 300,
+      "min_free_bytes": 1099511627776,
+      "max_bytes": 1073741824,
+      "max_checkpoints": 1,
+      "rate_limit_bytes": 16777216,
+      "remote": {
+        "host": "dtai",
+        "python": "/usr/bin/python3",
+        "helper": "/work/nvme/bilv/wcyim/transgenic/ops/checkpoint_archive/3b4eb0d/revision/scripts/b6/checkpoint_archive_cli.py",
+        "connect_timeout": 10,
+        "timeout": 120
+      },
+      "rsync_timeout": 120
+    }
+  ]
+}
+
+CMD ["sacctmgr", "-n", "-P", "show", "qos", "qos_ghx4int", "format=Name,MinTRES,MaxTRES,MaxWall"] RC 0
+qos_ghx4int|||
+
+
+CMD ["lfs", "getstripe", "-p", "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive"] RC 2
+
+lfs getstripe: llapi_semantic_traverse: Failed to open '/work/hdd/bilv/wcyim/transgenic/checkpoint_archive': No such file or directory (2)
+error: getstripe failed for /work/hdd/bilv/wcyim/transgenic/checkpoint_archive.
+
+CMD ["lfs", "project", "-d", "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive"] RC 1
+
+lfs: failed to lstat '/work/hdd/bilv/wcyim/transgenic/checkpoint_archive': No such file or directory
+
+CANDIDATES {"version": 1, "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123", "candidates": [{"epoch": 9, "name": "epoch_09", "bytes": 14123523405}, {"epoch": 10, "name": "epoch_10", "bytes": 14123523411}, {"epoch": 11, "name": "epoch_11", "bytes": 14123523411}], "protected": [13, 14], "refused": [], "bytes": 42370570227}
+SMALL_HASH runs/seed123/latest_state/meta.json 91a8def8fbf63aba09ff867860c5ea23814d6f018be98e62631cc3de5321927c
+SMALL_HASH runs/seed123/trainer_state.json 8e1a978863f438b1bf7f1ed839471844d8030466b7cd404f2e11144fcf2ab7c8

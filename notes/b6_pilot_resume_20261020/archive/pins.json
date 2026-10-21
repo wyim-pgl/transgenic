@@ -1,0 +1,37 @@
+{
+  "source_commit": "3b4eb0dfe0e83463775ce8e1ab05fa2f62d1e20b",
+  "helper_dir": "/work/nvme/bilv/wcyim/transgenic/ops/checkpoint_archive/3b4eb0d",
+  "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+  "destination_root": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive",
+  "config_sha256": "2309d1f5213a6ecf6bee4133aaf43601bcc9130d21d71707c696129c2aa6e386",
+  "latest_meta_sha256": "91a8def8fbf63aba09ff867860c5ea23814d6f018be98e62631cc3de5321927c",
+  "trainer_state_sha256": "8e1a978863f438b1bf7f1ed839471844d8030466b7cd404f2e11144fcf2ab7c8",
+  "best": "epoch_14",
+  "protected_epochs": [
+    12,
+    13,
+    14
+  ],
+  "expected_candidates": [
+    {
+      "epoch": 9,
+      "name": "epoch_09",
+      "bytes": 14123523405
+    },
+    {
+      "epoch": 10,
+      "name": "epoch_10",
+      "bytes": 14123523411
+    },
+    {
+      "epoch": 11,
+      "name": "epoch_11",
+      "bytes": 14123523411
+    }
+  ],
+  "helper_sha256": {
+    "revision/scripts/b6/checkpoint_archive.py": "0c79dfddfec33695a60255b6dea55c459712241670924ed30366014c30e4fbf5",
+    "revision/scripts/b6/checkpoint_archive_cli.py": "1a733e111d38bd5ae4da2e3370d7a9f0b3058a2a7852e797efcfbb1620b487d9",
+    "revision/scripts/b6/storage_preflight.py": "03832311be8dfa8652383a34856d02b68a1b15f7ed1052dd8bdc7d4de28a1fb4"
+  }
+}

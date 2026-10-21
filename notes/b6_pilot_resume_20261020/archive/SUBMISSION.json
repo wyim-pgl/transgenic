@@ -1,0 +1,25 @@
+{
+  "created_utc": "2026-10-20T23:35:00.539121Z",
+  "returncode": 0,
+  "stdout": "3425279\n",
+  "stderr": "",
+  "intent": {
+    "created_utc": "2026-10-20T23:35:00.476279Z",
+    "owner": "wcyim",
+    "uid": 97434,
+    "token": "b6-headroom-20261020-0002",
+    "argv": [
+      "/usr/bin/sbatch",
+      "--parsable",
+      "--chdir=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2",
+      "--export=OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2",
+      "--output=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2/archive-%j.out",
+      "--comment=b6-headroom-20261020-0002",
+      "/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2/archive.sbatch"
+    ],
+    "manifest_sha256": "c61be6d6ef9109b73d36e81baaf468e3ed259c957f3a58a5f538bfcd4dfc46a8",
+    "phase": "submitting"
+  },
+  "job_id": "3425279",
+  "phase": "submitted"
+}

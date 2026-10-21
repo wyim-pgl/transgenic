@@ -1,0 +1,22 @@
+LINK_CHECKPOINT_READY 9000 416
+B6_PRODUCTION_FINAL_READY 9001 4099
+B6_PRODUCTION_FINAL_READY 9000 4099
+LINK_CHECKPOINT_READY 9000 416
+LINK_CHECKPOINT_READY 9000 416
+LINK_CHECKPOINT_READY 9000 416
+LINK_CHECKPOINT_READY 9000 416
+
+STDERR:
+W1020 20:02:10.984000 85 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1020 20:02:11.027000 85 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+test_complete_real_chain_preserves_proof_and_accepts_evolved_checkpoint (__main__.ChainTests.test_complete_real_chain_preserves_proof_and_accepts_evolved_checkpoint) ... ok
+test_final_verified_rechecks_markers_before_complete (__main__.ChainTests.test_final_verified_rechecks_markers_before_complete) ... ok
+test_lost_submission_response_can_adopt_job_after_checkpoint_progress (__main__.ChainTests.test_lost_submission_response_can_adopt_job_after_checkpoint_progress) ... ok
+test_missing_rank_after_emitted_receipt_refuses_host_acceptance (__main__.ChainTests.test_missing_rank_after_emitted_receipt_refuses_host_acceptance) ... ok
+test_reactivated_accepted_job_prevents_next_submission (__main__.ChainTests.test_reactivated_accepted_job_prevents_next_submission) ... ok
+test_rewritten_history_prefix_and_nonzero_exit_refuse (__main__.ChainTests.test_rewritten_history_prefix_and_nonzero_exit_refuse) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 14.124s
+
+OK

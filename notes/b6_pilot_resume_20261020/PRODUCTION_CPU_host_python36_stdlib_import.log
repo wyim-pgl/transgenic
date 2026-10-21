@@ -1,0 +1,3 @@
+{"python": "3.6.15 (default, Sep 23 2021, 15:41:43) [GCC]", "torch_imported": false, "controller": "/work/nvme/bilv/wcyim/transgenic/ops/b6_continuation_50a7fac_20261020/continue_b6_history.py", "producer": "/work/nvme/bilv/wcyim/transgenic/ops/b6_continuation_50a7fac_20261020/b6_production_link.py", "ctld": true}
+
+STDERR:

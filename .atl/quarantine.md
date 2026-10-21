@@ -4,6 +4,11 @@
 
 | 반복하지 않을 접근 | 확인된 사실/대안 |
 |---|---|
+| 동일하게 빈 optimizer/scheduler/RNG를 두 checkpoint에서 비교해 READY | e2bee04는 실제 prepared model/optimizer/scheduler schema8파일 및 fullAdamW/four-deviceRNG/기존slot 보존을 독립 검증한다. 단순두파일동일성만으로 완전한 상태를 증명하지 않는다. |
+| scancel --state=PENDING --user만으로 원자적 필터를 주장 | 일반scancel은 client snapshot을필터한뒤jobID RPC를보낼수있다.2a48265는 `--ctld`를추가해controller-side state/user필터를사용한다. JobHeldUser reason의원자적보장은없다. |
+| Apptainer --containall의 작은 /tmp에서 다수 fixture copy | NGC최초20setup ENOSPC 재현. 소유host/tmp scratch를컨테이너/tmp에명시bind 후36/36PASS,원래실패로그보존/시험scratch정리. |
+| epoch09가 정리된 archive3425279 wrapper를 처음부터 재실행 | wrapper는09/10/11고정및원본존재를검증한다. 중단시각epoch manifest/verified/removed와partial을읽어별도복구범위를검토한다. |
+| 큰stagingpayload를중첩SSH argv에삽입 | 로컬MAX_ARG_STRLEN(E2BIG)로원격실행전에실패. payload는stdin,작은실행코드만argv로전달한다. |
 | 호스트 전용 시험 symlink를 운영 bundle 아래 남기기 | B5 3309786은 C2 host smoke의 절대 `/work/nvme/...` 링크가 컨테이너 `/work` bind 안에서 dangling이 되어 preflight 실패. 10-20 동일 이미지/bind로 재현 후 소유 시험 링크만 제거, 대상 receipt 보존 검증. 실제 입력 검사 게이트를 완화하지 않는다. |
 | 완료 C2의 `latest_state=4000`을 최종4099 미달로 판정 | 본학습3379630의 최종은 별도 `resumed/step_04099`; meta/global4099, PILOT_FINAL, PRUNE_EXEMPT, TRAINING_DONE와 allocated postflight receipt를 확인한다. controller complete이므로 재시작/중복제출 금지. |
 | compiledcheckpoint키를baregrad/export키와직접대조 | Accelerator저장은_orig_mod.*; gradient/fixedexport는bare. 7266e14는값digest유지·명칭대조만정규화, 실제compile/NGC시험·독립검토PASS. |

@@ -1,0 +1,67 @@
+{
+  "operation": "/work/nvme/bilv/wcyim/transgenic/ops/b6_proof_submit_e2bee04_20261020",
+  "intent": {
+    "version": 1,
+    "created_utc": "2026-10-21T00:54:33.924994Z",
+    "owner": "wcyim",
+    "uid": 97434,
+    "argv": [
+      "sbatch",
+      "--parsable",
+      "--no-requeue",
+      "--comment=b6-history-proof-20261020-0001",
+      "--export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020,MMAP_DIR=/work/b6_prep_20260925/obs_cache/train_v1.mmap_v1,REFERENCE_CHECKPOINT=/work/nvme/bilv/wcyim/transgenic/runs/b6_smoke_233574a_B6/latest_state",
+      "/work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020/b6_history_proof.sbatch"
+    ],
+    "work_dir": "/work/nvme/bilv/wcyim/transgenic",
+    "token": "b6-history-proof-20261020-0001",
+    "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+    "helper_manifest_sha256": "5a0387b2aefdc0eabdddcf3e45056ec7574727a6db74c66c6f6fc58ff35c258b",
+    "queue": {
+      "returncode": 0,
+      "stdout": "3345918|PENDING|(JobHeldUser)\n3345917|PENDING|(JobHeldUser)\n3425279|RUNNING|gh027\n",
+      "stderr": ""
+    },
+    "checks": {
+      "source": {
+        "returncode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "helper": {
+        "returncode": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    "storage": {
+      "filesystem_available_bytes": 270575800320,
+      "pool": "ddn_ssd",
+      "project_id": 22169,
+      "quota_remaining_bytes": 115452964864,
+      "required_bytes": 107374182400,
+      "results_dir": "/work/nvme/bilv/wcyim/transgenic/runs"
+    },
+    "proof_copy_peak_bytes": 42241173949,
+    "reference_bytes": 5727670043,
+    "archive_epoch09_manifest_id": "cf528525f4922ffd75349330f8a2d1afd965b62c26e8dc4cebc65940e25d3d0c",
+    "ruling": "The100GiB and independent copy-peak gates are already satisfied by verified epoch09 transfer/cleanup. Remaining epoch10/11 archive work stays active; its completion is not a scientific prerequisite. Recheck100GiB at allocated launch and production activation; no future reclaimed bytes assumed.",
+    "test_only": {
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "sbatch: Job 3425702 to start at 2026-10-22T06:05:56 a using 64 processors on nodes gh028 in partition ghx4\n"
+    }
+  },
+  "result": {
+    "returncode": 0,
+    "stdout": "3425703\n",
+    "stderr": "",
+    "recorded_utc": "2026-10-21T00:54:33.951418Z",
+    "job_id": "3425703"
+  },
+  "observation": {
+    "returncode": 0,
+    "stdout": "JobId=3425703 JobName=b6-history-validation UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A Priority=1490 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh JobState=PENDING Reason=Priority Dependency=(null) Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=06:00:00 TimeMin=N/A SubmitTime=2026-10-20T19:54:33 EligibleTime=2026-10-20T19:54:33 AccrueTime=Unknown StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-20T19:54:33 Scheduler=Main Partition=ghx4 AllocNode:Sid=gh-login01:1219485 ReqNodeList=(null) ExcNodeList=gh[062,093] NodeList= NumNodes=1-1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=/work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020/b6_history_proof.sbatch SubmitLine=sbatch --parsable --no-requeue --comment=b6-history-proof-20261020-0001 --export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020,MMAP_DIR=/work/b6_prep_20260925/obs_cache/train_v1.mmap_v1,REFERENCE_CHECKPOINT=/work/nvme/bilv/wcyim/transgenic/runs/b6_smoke_233574a_B6/latest_state /work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020/b6_history_proof.sbatch WorkDir=/work/nvme/bilv/wcyim/transgenic Comment=b6-history-proof-20261020-0001 StdErr= StdIn=/dev/null StdOut=/work/nvme/bilv/wcyim/transgenic/b6_prep_20260925/logs/b6-history-validation-3425703.out MemPerTres=gpu:113560 TresPerNode=gres/gpu:4 TresPerTask=cpu=64\n",
+    "stderr": ""
+  }
+}

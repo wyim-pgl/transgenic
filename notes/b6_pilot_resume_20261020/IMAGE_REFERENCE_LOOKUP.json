@@ -1,0 +1,56 @@
+{
+  "observed_utc": "2026-10-21T00:58:47.665126Z",
+  "containers": [
+    "transgenic-ngc-25.11.sif.sha256",
+    "check_2511.log",
+    "transgenic-ngc-26.08.sif.sha256",
+    "build-26.08.log",
+    "transgenic-ngc.sif",
+    "transgenic-ngc-25.11.sif",
+    "transgenic-ngc-26.04.sif",
+    "transgenic-ngc-26.04.sif.sha256",
+    "build-26.04.log",
+    "build-25.11.log",
+    "transgenic-ngc-26.08.sif",
+    "transgenic-ngc.sif.sha256",
+    "build.log"
+  ],
+  "runs/c2_compile_history_validation/3370048/verified_record.json": {
+    "keys": [
+      "bindings_sha256",
+      "input_stats",
+      "job_id",
+      "mmap_dir",
+      "paths",
+      "record",
+      "verified_unix"
+    ]
+  },
+  "ops/c2_compile_history_20261012/source_stage_198ce14/receipt.json": {
+    "files": 940,
+    "keys": [
+      "source_commit",
+      "files",
+      "source_archive_sha256",
+      "bundle_sha256",
+      "source_manifest_sha256",
+      "snapshot_git",
+      "remote_source",
+      "status"
+    ]
+  },
+  "ops/c2_compile_history_20261012/runtime_v2_506bb11_receipt.json": {
+    "keys": [
+      "main_commit",
+      "helper_dir",
+      "manifest_sha256",
+      "archive_sha256",
+      "files_sha256",
+      "purpose",
+      "host_python",
+      "import_smoke",
+      "status"
+    ]
+  },
+  "queue": "             JOBID        STATE                           NAME         TIME     NODELIST(REASON)\n           3425703      PENDING          b6-history-validation         0:00           (Priority)\n           3345918      PENDING                   b6-wp5-pilot         0:00        (JobHeldUser)\n           3345917      PENDING                   b6-wp5-pilot         0:00        (JobHeldUser)\n           3425279      RUNNING            b6-headroom-archive      1:23:46                gh027\n"
+}

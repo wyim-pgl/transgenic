@@ -1,0 +1,20 @@
+
+STDERR:
+W1020 20:01:54.607000 85 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1020 20:01:54.642000 85 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+test_actual_initial_checkpoint_and_production_request_accepted (__main__.ProductionTests.test_actual_initial_checkpoint_and_production_request_accepted) ... ok
+test_compiled_namespace_and_alias_compatibility (__main__.ProductionTests.test_compiled_namespace_and_alias_compatibility) ... ok
+test_cuda_rng_malformed_encodings_and_rng_immutability (__main__.ProductionTests.test_cuda_rng_malformed_encodings_and_rng_immutability) ... ok
+test_four_device_rng_and_nonempty_optimizer_required (__main__.ProductionTests.test_four_device_rng_and_nonempty_optimizer_required) ... ok
+test_nonzero_launcher_or_missing_rank_refuses_even_with_done (__main__.ProductionTests.test_nonzero_launcher_or_missing_rank_refuses_even_with_done) ... ok
+test_real_compiled_tied_export_and_pending_gradients (__main__.ProductionTests.test_real_compiled_tied_export_and_pending_gradients) ... [RANK 0] Removed shared tensor {'_orig_mod.a_weight'} while saving. This should be OK, but check by verifying that you don't receive any warning while reloading
+ok
+test_request_requires_explicit_existing_proof_mmap (__main__.ProductionTests.test_request_requires_explicit_existing_proof_mmap) ... ok
+test_wrong_profile_source_cache_or_predecessor_rejected (__main__.ProductionTests.test_wrong_profile_source_cache_or_predecessor_rejected) ... ok
+test_inherited_compile_and_container_overrides_are_removed (__main__.SignalTests.test_inherited_compile_and_container_overrides_are_removed) ... ok
+test_wait_keeps_rank_and_launcher_exit_semantics (__main__.SignalTests.test_wait_keeps_rank_and_launcher_exit_semantics) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 8.484s
+
+OK

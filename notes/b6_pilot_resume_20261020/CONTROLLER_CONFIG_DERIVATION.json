@@ -1,0 +1,15 @@
+{
+  "config_sha256": "d36ec0649a01b13a4e6200804302db2d63fc2a9c5f313563ce50adfe609abdad",
+  "config_file": "CONTROLLER_CONFIG.json",
+  "expected_runtime_basis": "Actual accepted C2 final4099 compile_history fingerprint with same source198ce14, NGC26.08, model_config and frozen recipe; expected B6 pin only, not B6 observed proof",
+  "changed_fingerprint_fields": [
+    "cache_env.TORCHINDUCTOR_CACHE_DIR",
+    "cache_env.TRITON_CACHE_DIR",
+    "cache_paths.inductor",
+    "cache_paths.triton.directory"
+  ],
+  "image_basis": "Previously recorded .sif.sha256 sidecar; actual SIF must be hashed and match in proof and every production allocation; no current login image hash",
+  "time_basis": "48h is allowed regular ghx4 maximum and <=validated controller policy; permits evidence-on B6 continuation to finish or verified preemption without unnecessary24h boundary; actual4099 stop unchanged",
+  "proof_submitted": "3425703",
+  "controller_initialized": false
+}

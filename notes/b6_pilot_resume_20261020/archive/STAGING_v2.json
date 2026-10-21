@@ -1,0 +1,59 @@
+{
+  "created_utc": "2026-10-20T23:33:50.819698Z",
+  "operation": "/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2",
+  "manifest_sha256": "c61be6d6ef9109b73d36e81baaf468e3ed259c957f3a58a5f538bfcd4dfc46a8",
+  "files": {
+    "archive.sbatch": "be75679f38b0841165eb841771670218097767b6bc90fa1710131294f7606278",
+    "archive_guard.py": "e1d8aa0d24ba142403b6b8b1609d1ad8156fb3d6348fcbeed899a7dc817c1623",
+    "archive.json": "2309d1f5213a6ecf6bee4133aaf43601bcc9130d21d71707c696129c2aa6e386",
+    "pins.json": "913b827b0dc3b1eb40c88d05706d827aeb4fc5ce541fc5469d897657425fc511",
+    "test_archive_guard.py": "f016c4f18fed9396e92cb1ade8c4c7b924d3820364d1911d4bb52ba9276a13a8",
+    "REVIEW.md": "9dca1fc11eed68d3284f00a27d76e7a3ce81087c156b44ecef2b8c081c630f37",
+    "VERIFICATION.md": "7c440cd8f57bdfba788aa5aaefa6bf3e054cee2bdbf88dd4cc35d51575e8f34e",
+    "helpers.sha256": "c61be6d6ef9109b73d36e81baaf468e3ed259c957f3a58a5f538bfcd4dfc46a8"
+  },
+  "destination_pool": {
+    "argv": [
+      "/usr/bin/lfs",
+      "getstripe",
+      "-p",
+      "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive"
+    ],
+    "returncode": 0,
+    "stdout": "ddn_hdd\n\n",
+    "stderr": ""
+  },
+  "destination_project": {
+    "argv": [
+      "/usr/bin/lfs",
+      "project",
+      "-d",
+      "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive"
+    ],
+    "returncode": 0,
+    "stdout": "22169 P /work/hdd/bilv/wcyim/transgenic/checkpoint_archive\n",
+    "stderr": ""
+  },
+  "host_test_reference": {
+    "path": "/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020/STAGING.json",
+    "sha256": "2e04febd5cd9a4f2305c60d5c21527f58a0c8de86593d69b09caae5f870d2133",
+    "same_guard_test_pins_config": true,
+    "returncode": 0
+  },
+  "scheduler_test": {
+    "argv": [
+      "/usr/bin/sbatch",
+      "--test-only",
+      "--parsable",
+      "--chdir=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2",
+      "--export=OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2",
+      "--output=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2/archive-%j.out",
+      "--comment=b6-headroom-20261020-0002",
+      "/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2/archive.sbatch"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "sbatch: Job 3425275 to start at 2026-10-20T18:33:50 a using 1 processors on nodes gh026 in partition ghx4-interactive\n"
+  },
+  "submitted": false
+}

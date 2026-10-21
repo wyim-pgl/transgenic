@@ -1,0 +1,22 @@
+{
+  "state_dir": "/work/nvme/bilv/wcyim/transgenic/ops/b6_in_place_50a7fac_20261020",
+  "start_dir": "/work/nvme/bilv/wcyim/transgenic/ops/b6_controller_start_50a7fac_20261020",
+  "watch_pid": 1501642,
+  "watch_running": true,
+  "journal": {
+    "config_sha256": "afafa8771ba37895bf2993c50b3e88bff7f23e1c8a640fa697888065b0104c47",
+    "epoch_events": [],
+    "intent": null,
+    "last_error": null,
+    "last_wait": "job pending/running",
+    "links": [],
+    "operation_id": "b6_in_place_50a7fac_20261020",
+    "phase": "waiting_validation",
+    "receipts": {},
+    "retirements": [],
+    "revision": 1,
+    "updated": 1792545120.179847,
+    "version": 1
+  },
+  "log_tail": "{\"config_sha256\": \"afafa8771ba37895bf2993c50b3e88bff7f23e1c8a640fa697888065b0104c47\", \"epoch_events\": [], \"intent\": null, \"last_error\": null, \"last_wait\": \"job pending/running\", \"links\": [], \"operation_id\": \"b6_in_place_50a7fac_20261020\", \"phase\": \"waiting_validation\", \"receipts\": {}, \"retirements\": [], \"revision\": 1, \"updated\": 1792545120.179847, \"version\": 1}\n"
+}

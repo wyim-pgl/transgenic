@@ -1,0 +1,11 @@
+test_accepts_complete_report_and_exact_independent_ready_bindings (__main__.ReceiptContractTests.test_accepts_complete_report_and_exact_independent_ready_bindings) ... ok
+test_candidate_and_strict_types_must_match_independent_values (__main__.ReceiptContractTests.test_candidate_and_strict_types_must_match_independent_values) ... ok
+test_false_comparison_is_rejected_even_when_claimed_hashes_are_recomputed (__main__.ReceiptContractTests.test_false_comparison_is_rejected_even_when_claimed_hashes_are_recomputed) ... ok
+test_omitted_prepared_schema_or_equal_final_state_omissions_refuse (__main__.ReceiptContractTests.test_omitted_prepared_schema_or_equal_final_state_omissions_refuse) ... ok
+test_python36_grammar_and_import_have_no_heavy_dependencies (__main__.ReceiptContractTests.test_python36_grammar_and_import_have_no_heavy_dependencies) ... ok
+test_wrong_profile_identity_missing_rank_and_zero_evidence_refuse (__main__.ReceiptContractTests.test_wrong_profile_identity_missing_rank_and_zero_evidence_refuse) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.048s
+
+OK

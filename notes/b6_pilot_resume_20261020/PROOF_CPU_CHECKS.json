@@ -1,0 +1,24 @@
+{
+  "started_utc": "2026-10-21T00:10:41.869997Z",
+  "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+  "helper_commit": "e2bee04265a5e91255607d65f0aa4c7d07d72369",
+  "host_python": "3.6.15 (default, Sep 23 2021, 15:41:43) [GCC]",
+  "host_pure_import": true,
+  "passed_only_report_refused": "ValueError",
+  "gpu_used": false,
+  "tests": [
+    {
+      "name": "test_b6_receipt_contract.py",
+      "returncode": 0,
+      "log_sha256": "6ac56c36d13249d074f893c0e3112ce6c99ca71ba1aa045fbeba9f1816b99e1f",
+      "tail": "test_accepts_complete_report_and_exact_independent_ready_bindings (__main__.ReceiptContractTests.test_accepts_complete_report_and_exact_independent_ready_bindings) ... ok\ntest_candidate_and_strict_types_must_match_independent_values (__main__.ReceiptContractTests.test_candidate_and_strict_types_must_match_independent_values) ... ok\ntest_false_comparison_is_rejected_even_when_claimed_hashes_are_recomputed (__main__.ReceiptContractTests.test_false_comparison_is_rejected_even_when_claimed_hashes_are_recomputed) ... ok\ntest_omitted_prepared_schema_or_equal_final_state_omissions_refuse (__main__.ReceiptContractTests.test_omitted_prepared_schema_or_equal_final_state_omissions_refuse) ... ok\ntest_python36_grammar_and_import_have_no_heavy_dependencies (__main__.ReceiptContractTests.test_python36_grammar_and_import_have_no_heavy_dependencies) ... ok\ntest_wrong_profile_identity_missing_rank_and_zero_evidence_refuse (__main__.ReceiptContractTests.test_wrong_profile_identity_missing_rank_and_zero_evidence_refuse) ... ok\n\n----------------------------------------------------------------------\nRan 6 tests in 0.048s\n\nOK\n"
+    },
+    {
+      "name": "test_b6_history_proof.py",
+      "returncode": 0,
+      "log_sha256": "b60f51663648bef010fc9db4a6b7764a3da4920798949e57a84af5f37639f71b",
+      "tail": "st_fresh_without_checkpoint_is_only_explicit_continuous) ... ok\ntest_globally_absent_tracks_or_chain_refuses_ready (__main__.B6ProofTests.test_globally_absent_tracks_or_chain_refuses_ready) ... ok\ntest_host_copy_peak_gate_survives_optimized_python (__main__.B6ProofTests.test_host_copy_peak_gate_survives_optimized_python) ... ok\ntest_independent_later_allocation_can_recheck_but_cannot_republish (__main__.B6ProofTests.test_independent_later_allocation_can_recheck_but_cannot_republish) ... ok\ntest_manifest_requires_executed_members_and_checks_bytes (__main__.B6ProofTests.test_manifest_requires_executed_members_and_checks_bytes) ... ok\ntest_missing_trace_nonfinite_and_absent_evidence_refuse (__main__.B6ProofTests.test_missing_trace_nonfinite_and_absent_evidence_refuse) ... ok\ntest_model_optimizer_rng_and_history_mismatch_cannot_publish (__main__.B6ProofTests.test_model_optimizer_rng_and_history_mismatch_cannot_publish) ... ok\ntest_prepared_model_schema_keeps_compiled_names_and_tied_aliases (__main__.B6ProofTests.test_prepared_model_schema_keeps_compiled_names_and_tied_aliases) ... ok\ntest_priming_does_not_consume_real_counters_and_observations_use_real_inputs (__main__.B6ProofTests.test_priming_does_not_consume_real_counters_and_observations_use_real_inputs) ... ok\ntest_rank_with_no_biological_evidence_does_not_invent_coverage_gate (__main__.B6ProofTests.test_rank_with_no_biological_evidence_does_not_invent_coverage_gate) ... ok\ntest_receipt_rechecks_current_bytes_and_does_not_trust_rehashed_lies (__main__.B6ProofTests.test_receipt_rechecks_current_bytes_and_does_not_trust_rehashed_lies) ... ok\ntest_recipe_payload_and_embedded_identity_digest_are_bound (__main__.B6ProofTests.test_recipe_payload_and_embedded_identity_digest_are_bound) ... ok\ntest_verified_recipe_keeps_source_loader_defaults_and_full_schedule (__main__.B6ProofTests.test_verified_recipe_keeps_source_loader_defaults_and_full_schedule) ... ok\n\n----------------------------------------------------------------------\nRan 22 tests in 32.304s\n\nOK\nINFO:    Cleanup error: while stopping driver for /var/lib/apptainer/mnt/session/final: fuse-overlayfs exited: fuse: reading device: Software caused connection abort\n"
+    }
+  ],
+  "finished_utc": "2026-10-21T00:11:34.964567Z"
+}

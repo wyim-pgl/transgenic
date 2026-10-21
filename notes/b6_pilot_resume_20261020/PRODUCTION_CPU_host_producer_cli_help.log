@@ -1,0 +1,20 @@
+usage: b6_production_link.py [-h] --work WORK --request REQUEST
+                             --request-sha256 REQUEST_SHA256 [--job-id JOB_ID]
+                             [--trainer-exit TRAINER_EXIT]
+                             {paths,preflight,run,postflight}
+
+Receipt-bound B6 allocation observer; never replaces the ordinary input
+verifier.
+
+positional arguments:
+  {paths,preflight,run,postflight}
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --work WORK
+  --request REQUEST
+  --request-sha256 REQUEST_SHA256
+  --job-id JOB_ID
+  --trainer-exit TRAINER_EXIT
+
+STDERR:

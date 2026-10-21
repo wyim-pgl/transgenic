@@ -1,34 +1,21 @@
-# TODO — C2 컴파일 이력 복구 (2026-10-12)
+# TODO — B6 파일럿 연속 실행 / Delta CPU / 전체 Graphify
 
-정본: [handoff](../notes/RESTART_HANDOFF_20261012.md). **검증통과후추가승인없이C2본학습시작**. 과학적중단조건은유지한다. 과거todo는[history](todo_history_20261012.md)로분리했다.
+정본: [resume](resume.md), [B6 진행 기록](../notes/b6_pilot_resume_20261020/PROGRESS.md). 기존 승인 범위의 다음 실행 가능한 항목을 추가 승인 없이 이어간다. 과학적·소유권·자원 게이트는 유지한다. 과거 상세 완료 체크리스트는 [10-20 기록](todo_history_20261020.md)에 보존했다.
 
-## 현재 실행 순서
-
-- [x] 재개 확인: main6e33843, 구현d7b1a37 clean; live RUNNING없음, C2/B6 held·B5pending 유지. 3364480 COMPLETED0:0. NVMe project22169 ddn_ssd349.4/500GiB(soft), 여유약150.6GiB; HDD829.4/1000GiB. 중복제출없음.
-- [x] 컴파일이력복구설계·구현188bf3e완료(과학적정확일치는3369338 별도게이트): 전역event위치별모든rank의실제companion descriptor/hash,train/eval view/grad context,checkpoint결속. rank별독립replay/DDP불일치방지. event-only압축은별도검증.
-- [x] legacycheckpoint200bootstrap명시화(실제3369694연속/재개PASS): 원본checkpoint/drawprefixSHA,최초tier입력뿐아니라rank3row3915(labels4501)등기존특수화이력포함. 관측하지않은ledger라고정직하게표시하고별도증명.
-- [x] 상태복원91c2737·journal789ecf4·trainer180589b·cache경로188bf3e. 실패회귀/구현/독립리뷰PASS; 전체129시험127pass2설명된skip, state별도12pass. latest/epoch/fixed/eval·pendinggrad·RNG복원구현완료. 실제4GPU게이트는별도.
-- [x] local검증/오류주입/독립검토PASS(198ce14); NGC회귀3369694 58시험57pass/1skip113.286s. source/main graph갱신. 실제과학게이트는아래별도.
-- [x] 실제4GPU전체checkpoint bitwise proof3369694 PASS: 모델차이0,optimizer/scheduler/4rankRNG/입력/shape/loss/context/boundarygradient/RNG/history정확일치. 원래210loss3.2567708492279053복원. parent/batch/externCOMPLETED0:0,1h05m57s. 증거3369694/PARENT_ACCEPTANCE.json.
-- [x] 400저장·새프로세스400→410검증 **3370048 PASS**, 10-14 07:28:53PDT 종료, COMPLETED0:0 / 2h01m02s. 모델·optimizer·scheduler·4rank RNG·전체 trace·history 정확 일치, rank3slot6718 관측, 역사적210loss 복원. 10-20 live/accounting/receipt 검수 완료.
-- [x] 본학습운영도구 로컬·독립검토·호스트검증: production7266e14(33+NGC CPU33), controller6e5f0f7 in-place v2(52+WorkDir10), 실제연결ea699d5(3). 최종config검토/actualhostPASS 후 PID1545990으로 감시했고, 아래 실제400검증/활성화/본학습까지 완료.
-- [x] 검증 통과 후 C2본학습 자동 연결 **3379630**, 검증resumed410 제자리 활성화. 원본200·진단256 보존, 구held3345920 취소. 10-15 09:56:07PDT 시작 → 10-16 06:18:31PDT COMPLETED0:0 / 20h22m24s.
-- [x] **4099/4099 완료**: epoch 평가1회, `step_04099/PILOT_FINAL`, `PRUNE_EXEMPT`, `TRAINING_DONE`, allocation postflight 및 parent/batch/extern 정상exit 확인. 10-20 작은 metadata/history/marker 해시·receipt 연결 재검수 PASS. controller complete/revision22/error없음.
-- [x] C2 완료 후 우선순위 복구 처리 확인. B6 3345917/18 Nice0·held 유지. B5는 복구 시점 전에 terminal: 3309786 preflight실패, 3309787–90 취소.
-- [x] B5 실패 원인 확인·시험 잔여물 정리: C2 controller 호스트 시험용 절대 symlink가 컨테이너에서 dangling. 같은 이미지/bind로 재현 후 정확한 소유 링크만 제거, 대상 receipt 불변 및 컨테이너 경로 부재 확인.
-- [ ] **B5 재개 게이트 미통과:** 시험 잔여물 원인은 제거했지만 전체 preflight·checkpoint/재개 조건·현재 자원 확인은 아직 필요. 3309786 실패 후 새 잡은 제출하지 않았다. 학습 source/data/checkpoint 수정 없음.
-- [ ] **B6 실행 차단:** 3345917/18의 구233574a 소스/런처/입력 검토와 검증된 교체 계획 필요. controller의 명시적 `b6_followup` 차단 유지. hold만 해제하거나 C2 검증을 B6 팔 전체의 검증으로 대체하지 않는다.
-
-진행 기록: [20261012 실행 기록](../notes/C2_REPLAY_PROGRESS_20261012.md).
-
-## 완료
-
-- [x] 자동이관코드3b4eb0d:양서버69시험+실제fault3cases. B5epoch01–08 99.06GiB pronghorn검증이관완료.
-- [x] 원본C2실패3345919확인·checkpoint200보호·후속C2/B6hold.
-- [x] 종료처리수정3f81fb6(NGC56pass/1skip),compile후보d7b1a37(NGC74pass/1skip).
-- [x] 3360978실패원인재현,3361110실190loss일치+108경계PASS.
-- [x] 3361386을손실차이발견후의도적정상저장종료:진단256,원본200그대로.
-- [x] 3361666: old/new동일,연속/재개609텐서불일치·입력/RNG동일증명.
-- [x] 3364480: cold/primed/reset12report검증·독립리뷰,컴파일이력원인분리확인. 운영수정완료는아님.
-- [x] 재시작4문서갱신·역사보존. `intend.md`는`intent.md`정본연결.
-- [x] 사용자의전체푸시: main스냅샷8ef1871및로컬103개작업브랜치atomic push완료,전체원격SHA일치확인. [영수증](../notes/PUSH_RECEIPT_20261012.json).
+- [x] C2 컴파일 이력 복구198ce14, 실제4GPU3369694/3370048 정확일치 PASS, 본학습3379630의4099/final/epoch평가/DONE/accounting/controller complete 확인. 원본200·진단256 보존.
+- [x] B5 preflight 실패3309786의 시험용 dangling symlink 원인 재현·정확한 소유 링크만 정리. 후속3309787–90 취소 확인.
+- [ ] B5 전체 preflight·checkpoint/재개 조건 미통과. 새로운 B5 잡은 아직 제출하지 않는다.
+- [x] B6 Task1 fresh0→410/snapshot400/newprocess400→410 evidence-on 증명도구 e2bee04. 같은 빈 상태 falseREADY 결함 수정·독립검토 PASS, 실제host3.6·NGC6contract+22proof PASS.
+- [x] Task2 fixed B5epoch09–11 archive 설정·독립검토·nativefixture·3425279 제출. epoch09 verified/removed 영수증 및 protected12–14/latest/best 보존 확인. NVMe107.5GiB 실측으로100GiB 및 독립copy-peak 게이트 충족.
+- [ ] Task2 나머지epoch10/11 실제 이관 완료 확인.3425279 실행 중,전체완료 아님. 타임아웃/partial이면 재계획 전에 현재manifest/verified/removed 상태를 읽고 기존wrapper blind retry 금지.
+- [x] Task3 immutable proof release/staging/actualCPUchecks/소스·환경·liveidentity·storage 확인, 새4GPU 증명 **3425703** 제출.17:54PDT Priority 대기. 구3345918/17은 held 유지.
+- [ ] Task3 실제 GPU 전체상태/입력/compilehistory/evidence/3tier 정확일치와 정상 Slurm 종료/READY 확인. C2 PASS를 B6 PASS로 대체하지 않는다.
+- [x] Task4 독립 B6 controller/producer 구현8b13234 및 취소경쟁 수정2a48265, report50a7fac. 독립검토 PASS; 실제host3.6와NGC36/36 PASS. production release staging 완료.
+- [x] Task4 실제proof3425703·소스/이미지/receipt/heldidentity에 결속된 설정 독립검토/native검사 PASS→init/watch PID1501642,waiting_validation,error없음.
+- [ ] Task4 GPU증명통과후 accepted410→4099 자동연결·평가/final/DONE/정상종료 확인. 아직 GPU 본학습 미시작.
+- [x] Delta CPU 공식 사용법·cpu1core/1G/10min 읽기 전용preflight 준비. 로그인·공유NVMe/HDD 양방향R/W·파일정리·Python3.9 stdlibfixture1PASS 확인.
+- [ ] Delta CPU1,000core-hours 신청 활성화/CPU Slurm association 대기. accounts exit60(no association). 사용자 처리통지 후 실제 계정·잔액 확인→CPU preflight→zeroGPU 작업 전환. 아직CPU잡 미제출.
+- [x] `/graphify` 대규모 경고 후 사용자 **전체** 선택, 감지2,696파일. 코드1,688개AST 추출 완료.
+- [ ] Graphify 문서/논문/이미지1,008개130묶음 전체 분석. Gemini429 일일한도 중단, Codex host workers 작업 중. 누락·부분읽기·토큰사용량 불명은 정직하게 기록한다.
+- [ ] Graphify AST15JSON fallback/2vendorC++ 부분파싱 경고, 병합·무결성 진단·군집명·graph.html/graph.json/GRAPH_REPORT.md·benchmark·manifest/cost 기록.
+- [ ] main 운영 기록/재시작4문서와 구현 브랜치 별도 커밋·푸시·원격SHA 대조. 구현은 main에 병합하지 않는다.

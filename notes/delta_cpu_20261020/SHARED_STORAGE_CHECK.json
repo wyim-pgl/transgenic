@@ -1,0 +1,29 @@
+{
+  "id": "5648d0e3992142898c8207b29e09974f",
+  "hostname": "dt-login03.delta.ncsa.illinois.edu",
+  "observed_utc": "2026-10-21T00:20:34.839812Z",
+  "files": [
+    {
+      "directory": "/work/nvme/bilv/wcyim/transgenic/ops/delta_cpu_access_checks/5648d0e3992142898c8207b29e09974f",
+      "cpu_sha256": "fae036c5c25d67f37fc97370bd026240e3daaa24805d7eece9019f750cf7100b",
+      "bytes": 152,
+      "deltaai_sha256": "43e90e77333a1c0a63a826fb66a594e055de5ae144d818d2e488027df97bf8cd",
+      "deltaai_bytes": 238,
+      "read_both_directions": true,
+      "write_both_directions": true,
+      "temporary_files_removed": true
+    },
+    {
+      "directory": "/work/hdd/bilv/wcyim/transgenic/.delta_cpu_access_checks/5648d0e3992142898c8207b29e09974f",
+      "cpu_sha256": "fae036c5c25d67f37fc97370bd026240e3daaa24805d7eece9019f750cf7100b",
+      "bytes": 152,
+      "deltaai_sha256": "43e90e77333a1c0a63a826fb66a594e055de5ae144d818d2e488027df97bf8cd",
+      "deltaai_bytes": 238,
+      "read_both_directions": true,
+      "write_both_directions": true,
+      "temporary_files_removed": true
+    }
+  ],
+  "jobs_submitted": false,
+  "deltaai_hostname": "gh-login01.delta.ncsa.illinois.edu"
+}

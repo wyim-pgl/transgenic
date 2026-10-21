@@ -1,0 +1,10 @@
+# Reproducible local caches, working chunks, and machine-specific run state.
+cache/
+host_chunks/
+.graphify_*
+*.log
+*_STATUS.json
+*_INPUT_HASHES.json
+HOST_PLAN.json
+RUN_STATE.json
+SEMANTIC_PLAN.json

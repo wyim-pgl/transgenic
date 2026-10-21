@@ -1,0 +1,11 @@
+{"host": "gh-login01.delta.ncsa.illinois.edu", "name": "postcheck_final", "owned_scratch": ["/tmp/b6-production-cpu-50a7fac-nssaejok"], "owned_scratch_removed": true, "release_checks": {"ops/b6_continuation_50a7fac_20261020": {"existing_provenance": {}, "manifest_sha256": "99997d9926a7d31f0928ce675886b57b31a16224f8bdaf493ba8c2d037f3d5b8", "symlinks": [], "verified_members": 9}, "ops/b6_history_proof_e2bee04_20261020": {"existing_provenance": {"STAGING.json": {"mtime_ns": 1792541294000000000, "role": "existing parent-owned staging provenance; not executable; unchanged", "sha256": "1c6d089c5d47da5191675e6d979fbbdbfeb8103e018e606227bd2c32da07bf9b", "size": 1527}}, "manifest_sha256": "5a0387b2aefdc0eabdddcf3e45056ec7574727a6db74c66c6f6fc58ff35c258b", "symlinks": [], "verified_members": 10}}, "returncode": 0, "status": "PASS", "timestamp": 1792544613.4995542}
+
+STDERR:
+sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)
+Loading default-environment
+  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1
+    utilities

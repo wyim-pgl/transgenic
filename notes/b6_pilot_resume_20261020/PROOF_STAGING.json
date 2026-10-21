@@ -1,0 +1,23 @@
+{
+  "created_utc": "2026-10-21T00:08:14.436773Z",
+  "helper_dir": "/work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020",
+  "helper_commit": "e2bee04265a5e91255607d65f0aa4c7d07d72369",
+  "helper_manifest_sha256": "5a0387b2aefdc0eabdddcf3e45056ec7574727a6db74c66c6f6fc58ff35c258b",
+  "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+  "source_manifest_sha256": "29206d99c14ce4260d4d6505bf1321ff494315a5ba97fe3220a013f0fd5969dc",
+  "files": {
+    "b6_history_proof.py": "a289a5497273c2264a0e8c18d35a3a0d889ff2658a82ea18c482c767b7b56d3e",
+    "b6_history_proof.sbatch": "e9b3ccd1ecb3771d3dfb3a7c86ce105be82d371ba1fc5bf2ba41722355a007f4",
+    "b6_receipt_contract.py": "65537c70e87c31358e8cde8106bef5a7ea77018ca766e1098a4f5278916ca5d1",
+    "test_b6_history_proof.py": "496d4fe3eb721cd45911b66b8e0b28d6b9d56fae15a6180bb1804b99ce6561e8",
+    "test_b6_receipt_contract.py": "334ce09637ffadbc4063f3c96b8c9c3173f3da25d67275b0b246eee1ee237ffd",
+    "c2/history_proof.py": "a25ebeba21288555c79c5d285c2e040cabccc3b1a92d4761f5b4d3b52538b6b1",
+    "c2/probe.py": "9edf1eb412275f998cd0614d5b0ea12203433c52b0192da557aa860ab9ab65dc",
+    "c2/production_link.py": "5da60c8f994a7814ba2d0ac337f7f8320e59b887612bc6ec0622059e427d88c9",
+    "TASK1_REVIEW.md": "3495fefc4c8ed707bcbbc320e874262280d0f595751fc1be4ba3a9ff5e4b722e",
+    "HELPER_COMMIT": "e5d67ec5f64925196122da45700f22e77871d46d2dd25467d85fcea01fe29248",
+    "manifest.sha256": "5a0387b2aefdc0eabdddcf3e45056ec7574727a6db74c66c6f6fc58ff35c258b"
+  },
+  "source_manifest_required_members_present": true,
+  "submitted": false
+}

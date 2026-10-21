@@ -1,0 +1,21 @@
+{
+  "observed_utc": "2026-10-21T00:22:09.656606Z",
+  "python": "3.9.21 (main, May 11 2026, 00:00:00) \n[GCC 11.5.0 20240719 (Red Hat 11.5.0-5)]",
+  "executable": "/usr/bin/python3",
+  "tools": {
+    "python3": "/usr/bin/python3",
+    "lfs": "/usr/bin/lfs",
+    "rsync": "/usr/bin/rsync",
+    "sbatch": "/usr/bin/sbatch",
+    "scontrol": "/usr/bin/scontrol",
+    "sacct": "/usr/bin/sacct",
+    "accounts": "/sw/user/scripts/accounts"
+  },
+  "tiny_fixture_test": {
+    "returncode": 0,
+    "stdout": "B6_HEADROOM_ARCHIVE_REMOVED 9 98ce1a5afbf63327306ee2d9191f1d488191e20361b041f9d63065c7d3f0e8fa\nB6_HEADROOM_ARCHIVE_REMOVED 10 83ea8696f95da020eb65bd22dd10a1f8889ce64ac4f833dbd4a1617b37ab4cf9\nB6_HEADROOM_ARCHIVE_REMOVED 11 66f7dfb7d09f4a9c6eeb47dba0f342e2675ca532cb87a361b94929683af1c168\nB6_HEADROOM_ARCHIVE_COMPLETE 123456\n",
+    "stderr": "test_fixed_epochs_preserve_unrelated_checkpoint_and_reject_false_receipts (__main__.FixedArchiveTests) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.238s\n\nOK\n"
+  },
+  "production_data_changed": false,
+  "jobs_submitted": false
+}

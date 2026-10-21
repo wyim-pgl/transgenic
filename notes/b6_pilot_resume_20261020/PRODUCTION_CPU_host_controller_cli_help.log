@@ -1,0 +1,11 @@
+usage: continue_b6_history.py [-h] {init,status,tick,reconcile,watch} ...
+
+B6-only receipt-bound continuation. Host Python3.6/stdlib; no tensor reads.
+
+positional arguments:
+  {init,status,tick,reconcile,watch}
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+STDERR:

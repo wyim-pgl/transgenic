@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "targets": [
+    {
+      "name": "hdd-b5-09-11",
+      "transport": "local",
+      "source_kind": "run",
+      "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+      "destination_root": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive",
+      "storage": {
+        "kind": "lustre",
+        "required_pool": "ddn_hdd",
+        "required_project": 22169,
+        "mount": "/work/hdd/bilv"
+      },
+      "min_age_seconds": 300,
+      "min_free_bytes": 53687091200,
+      "max_bytes": 17179869184,
+      "max_checkpoints": 1,
+      "max_epoch": 11,
+      "rate_limit_bytes": 16777216
+    }
+  ]
+}

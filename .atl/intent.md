@@ -28,3 +28,7 @@
 역사적B5목적/이전승인문구: [intent_history_20261012.md](intent_history_20261012.md). 이전의GPU제출직전승인요청문구는현재C2복구범위에서위명시승인으로대체된다.
 
 현재 실행: [C2_REPLAY_PROGRESS_20261012](../notes/C2_REPLAY_PROGRESS_20261012.md). **10-20 실측: C2 4099/4099 완료**, 본학습3379630은10-16 06:18:31PDT 정상 종료. 컴파일복구198ce14의 전체 재개 동일성3369694와400/410검증3370048을 통과했고 최종 publication/epoch평가/완료 표식을 확인했다. 원본200·진단256 보존. B5는 별도 preflight 실패 원인인 호스트 시험용 symlink를 정리했으나 전체 재개 게이트는 미검증이며, B6는 검증된 소스/런처/입력 교체 검토 전까지 held다.
+
+## 2026-10-20 후속 범위
+
+C2는4099완료했으며 기존WP5승인 범위의 **B6 evidence-on 파일럿**을source198ce14로 증명하고 자동연결한다. EST/ONT/PacBio/protein evidence를 포함하며 C2만evidence-off다. B6 최종GPU검증을 생략하지 않는다. CPU전용작업용 Delta1,000core-hours 신청은 아직 association/크레딧 대기이며 공유스토리지/로그인만 실측 확인했다. 사용자가 `/graphify`의 대규모 경고 후 **전체**를 선택했으므로 전체 감지코퍼스를 분석한다. 현재 정본은 [B6 진행 기록](../notes/b6_pilot_resume_20261020/PROGRESS.md)이다.

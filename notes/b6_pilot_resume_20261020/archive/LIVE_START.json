@@ -1,0 +1,23 @@
+{
+  "observed_utc": "2026-10-20T23:36:06.936586Z",
+  "queue": {
+    "returncode": 0,
+    "stdout": "3345918|PENDING|0:00|(JobHeldUser)|b6-wp5-pilot\n3345917|PENDING|0:00|(JobHeldUser)|b6-wp5-pilot\n3425279|RUNNING|1:05|gh027|b6-headroom-archive\n",
+    "stderr": ""
+  },
+  "accounting": {
+    "returncode": 0,
+    "stdout": "3425279|RUNNING|0:0|00:01:05|2026-10-20T18:35:01|gh027|billing=2000,cpu=1,gres/gpu=1,mem=2G,node=1\n3425279.batch|RUNNING|0:0|00:01:05|2026-10-20T18:35:01|gh027|\n3425279.extern|RUNNING|0:0|00:01:05|2026-10-20T18:35:01|gh027|\n",
+    "stderr": ""
+  },
+  "job": {
+    "returncode": 0,
+    "stdout": "JobId=3425279 JobName=b6-headroom-archive\n   UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A\n   Priority=2630 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh\n   JobState=RUNNING Reason=None Dependency=(null)\n   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:01:05 TimeLimit=02:00:00 TimeMin=N/A\n   SubmitTime=2026-10-20T18:35:00 EligibleTime=2026-10-20T18:35:00\n   AccrueTime=2026-10-20T18:35:00\n   StartTime=2026-10-20T18:35:01 EndTime=2026-10-20T20:35:01 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-20T18:35:01 Scheduler=Main\n   Partition=ghx4-interactive AllocNode:Sid=gh-login01:2419718\n   ReqNodeList=(null) ExcNodeList=(null)\n   NodeList=gh027\n   BatchHost=gh027\n   NumNodes=1 NumCPUs=1 NumTasks=1 CPUs/Task=1 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=1,mem=2G,node=1,billing=2000,gres/gpu=1\n   AllocTRES=cpu=1,mem=2G,node=1,billing=2000,gres/gpu=1\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=1 MinMemoryTRES=113560M MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null)\n   Command=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2/archive.sbatch\n   SubmitLine=/usr/bin/sbatch --parsable --chdir=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2 --export=OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2 --output=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2/archive-%j.out --comment=b6-headroom-20261020-0002 /work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2/archive.sbatch\n   WorkDir=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2\n   Comment=b6-headroom-20261020-0002\n   StdErr=\n   StdIn=/dev/null\n   StdOut=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020_v2/archive-3425279.out\n   MemPerTres=gpu:113560\n   TresPerNode=gres/gpu:1\n   TresPerTask=cpu=1\n\n",
+    "stderr": ""
+  },
+  "artifacts": {
+    "preflight.json": 1523,
+    "archive-3425279.out": 131
+  },
+  "log_tail": "REVIEW.md: OK\nVERIFICATION.md: OK\narchive.json: OK\narchive.sbatch: OK\narchive_guard.py: OK\npins.json: OK\ntest_archive_guard.py: OK\n"
+}

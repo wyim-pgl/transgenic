@@ -1,0 +1,42 @@
+{
+  "observed_utc": "2026-10-21T00:42:28.973313Z",
+  "version": {
+    "returncode": 0,
+    "stdout": "slurm 25.11.8\n",
+    "stderr": ""
+  },
+  "help": {
+    "returncode": 0,
+    "stdout": "      --ctld                      send request directly to slurmctld\n  -t, --state=states              act only on jobs in this state.  Valid job\n  -u, --user=user_name            act only on jobs of this user",
+    "stderr": ""
+  },
+  "accounting": {
+    "returncode": 0,
+    "stdout": "3425279|RUNNING|0:0|01:07:27|gh027\n3425279.batch|RUNNING|0:0|01:07:27|gh027\n3425279.extern|RUNNING|0:0|01:07:27|gh027\n",
+    "stderr": ""
+  },
+  "quota": {
+    "returncode": 0,
+    "stdout": "Disk quotas for prj 22169 (pid 22169):\n      Filesystem  kbytes   bquota  blimit  bgrace   files   iquota  ilimit  igrace\n/work/nvme/bilv/wcyim 411540964  524288000 576716800       -  293576        0       0       -\n",
+    "stderr": ""
+  },
+  "archive_events": {
+    "epoch_09_manifest.json": {
+      "size": 3683,
+      "mtime": 1792539384.0
+    },
+    "epoch_09_verified.json": {
+      "size": 3981,
+      "mtime": 1792541601.0
+    },
+    "epoch_09_removed.json": {
+      "size": 105,
+      "mtime": 1792542275.0
+    },
+    "epoch_10_manifest.json": {
+      "size": 3684,
+      "mtime": 1792542303.0
+    }
+  },
+  "log_tail": "REVIEW.md: OK\nVERIFICATION.md: OK\narchive.json: OK\narchive.sbatch: OK\narchive_guard.py: OK\npins.json: OK\ntest_archive_guard.py: OK\nB6_HEADROOM_ARCHIVE_REMOVED 9 cf528525f4922ffd75349330f8a2d1afd965b62c26e8dc4cebc65940e25d3d0c\n"
+}

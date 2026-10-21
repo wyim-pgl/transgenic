@@ -1,0 +1,30 @@
+W1020 19:11:00.352000 568249 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1020 19:11:00.409000 568249 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+test_checkpoint_identity_history_and_cache_rejections (__main__.B6ProofTests.test_checkpoint_identity_history_and_cache_rejections) ... ok
+test_cli_help_and_batch_parse_without_cwd_dependency (__main__.B6ProofTests.test_cli_help_and_batch_parse_without_cwd_dependency) ... ok
+test_complete_cpu_fixture_publishes_b6_without_c2_witnesses (__main__.B6ProofTests.test_complete_cpu_fixture_publishes_b6_without_c2_witnesses) ... ok
+test_empty_rng_trace_payload_cannot_pass_by_equal_omission (__main__.B6ProofTests.test_empty_rng_trace_payload_cannot_pass_by_equal_omission) ... ok
+test_equal_empty_state_payloads_cannot_publish_ready (__main__.B6ProofTests.test_equal_empty_state_payloads_cannot_publish_ready) ... ok
+test_equal_missing_moment_rng_component_scheduler_key_and_wrong_model_dtype_refuse (__main__.B6ProofTests.test_equal_missing_moment_rng_component_scheduler_key_and_wrong_model_dtype_refuse) ... ok
+test_equal_model_buffer_omission_cannot_publish_ready (__main__.B6ProofTests.test_equal_model_buffer_omission_cannot_publish_ready) ... ok
+test_equal_omitted_initialized_slot_is_rejected_while_other_slots_remain (__main__.B6ProofTests.test_equal_omitted_initialized_slot_is_rejected_while_other_slots_remain) ... ok
+test_fresh_ticket_reserves_once_and_all_four_ranks_can_join (__main__.B6ProofTests.test_fresh_ticket_reserves_once_and_all_four_ranks_can_join) ... ok
+test_fresh_without_checkpoint_is_only_explicit_continuous (__main__.B6ProofTests.test_fresh_without_checkpoint_is_only_explicit_continuous) ... ok
+test_globally_absent_tracks_or_chain_refuses_ready (__main__.B6ProofTests.test_globally_absent_tracks_or_chain_refuses_ready) ... ok
+test_host_copy_peak_gate_survives_optimized_python (__main__.B6ProofTests.test_host_copy_peak_gate_survives_optimized_python) ... ok
+test_independent_later_allocation_can_recheck_but_cannot_republish (__main__.B6ProofTests.test_independent_later_allocation_can_recheck_but_cannot_republish) ... ok
+test_manifest_requires_executed_members_and_checks_bytes (__main__.B6ProofTests.test_manifest_requires_executed_members_and_checks_bytes) ... ok
+test_missing_trace_nonfinite_and_absent_evidence_refuse (__main__.B6ProofTests.test_missing_trace_nonfinite_and_absent_evidence_refuse) ... ok
+test_model_optimizer_rng_and_history_mismatch_cannot_publish (__main__.B6ProofTests.test_model_optimizer_rng_and_history_mismatch_cannot_publish) ... ok
+test_prepared_model_schema_keeps_compiled_names_and_tied_aliases (__main__.B6ProofTests.test_prepared_model_schema_keeps_compiled_names_and_tied_aliases) ... ok
+test_priming_does_not_consume_real_counters_and_observations_use_real_inputs (__main__.B6ProofTests.test_priming_does_not_consume_real_counters_and_observations_use_real_inputs) ... ok
+test_rank_with_no_biological_evidence_does_not_invent_coverage_gate (__main__.B6ProofTests.test_rank_with_no_biological_evidence_does_not_invent_coverage_gate) ... ok
+test_receipt_rechecks_current_bytes_and_does_not_trust_rehashed_lies (__main__.B6ProofTests.test_receipt_rechecks_current_bytes_and_does_not_trust_rehashed_lies) ... ok
+test_recipe_payload_and_embedded_identity_digest_are_bound (__main__.B6ProofTests.test_recipe_payload_and_embedded_identity_digest_are_bound) ... ok
+test_verified_recipe_keeps_source_loader_defaults_and_full_schedule (__main__.B6ProofTests.test_verified_recipe_keeps_source_loader_defaults_and_full_schedule) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 32.304s
+
+OK
+INFO:    Cleanup error: while stopping driver for /var/lib/apptainer/mnt/session/final: fuse-overlayfs exited: fuse: reading device: Software caused connection abort

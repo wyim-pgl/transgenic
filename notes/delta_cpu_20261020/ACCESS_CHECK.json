@@ -1,0 +1,66 @@
+{
+  "observed_utc": "2026-10-21T00:16:59.152353Z",
+  "hostname": "dt-login03.delta.ncsa.illinois.edu",
+  "architecture": "x86_64",
+  "uid": 97434,
+  "user": "wcyim",
+  "paths": [
+    {
+      "path": "/work/nvme/bilv/wcyim/transgenic",
+      "exists": true,
+      "readable": true,
+      "writable": true,
+      "uid": 97434,
+      "gid": 22169
+    },
+    {
+      "path": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive",
+      "exists": true,
+      "readable": true,
+      "writable": true,
+      "uid": 97434,
+      "gid": 22169
+    },
+    {
+      "path": "/work/nvme/bilv/wcyim/transgenic/ops/checkpoint_archive/3b4eb0d",
+      "exists": true,
+      "readable": true,
+      "writable": true,
+      "uid": 97434,
+      "gid": 202
+    }
+  ],
+  "accounts": {
+    "returncode": 60,
+    "stdout": "No slurm account association found for user wcyim.\n",
+    "stderr": ""
+  },
+  "identity": {
+    "returncode": 0,
+    "stdout": "uid=97434(wcyim) gid=202(grp_202) groups=202(grp_202),2286(delta_active_users),3444(deltaai_active_users),22169(delta_bilv)\n",
+    "stderr": ""
+  },
+  "partition": {
+    "returncode": 0,
+    "stdout": "PartitionName=cpu\n   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL\n   AllocNodes=ALL Default=NO QoS=cpuqos\n   DefaultTime=00:30:00 DisableRootJobs=YES ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO\n   MaxNodes=UNLIMITED MaxTime=2-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED MaxCPUsPerSocket=UNLIMITED\n   Nodes=cn[001-136]\n   PriorityJobFactor=100 PriorityTier=100 RootOnly=NO ReqResv=NO OverSubscribe=NO\n   OverTimeLimit=NONE PreemptMode=OFF\n   State=UP TotalCPUs=17408 TotalNodes=136 SelectTypeParameters=NONE\n   JobDefaults=(null)\n   DefMemPerCPU=1000 MaxMemPerNode=UNLIMITED\n   TRES=cpu=17408,mem=35035912M,node=136,billing=17517956\n   TRESBillingWeights=CPU=1000,Mem=512G\n\n",
+    "stderr": ""
+  },
+  "small_files": {
+    "ops/checkpoint_archive/3b4eb0d/SOURCE_COMMIT": {
+      "bytes": 41,
+      "sha256": "1ce9c3f95c78af0618b0cda3d65ee673ea40a423ffd402eb36b41efb01b90ca6"
+    },
+    "repo_b6_198ce14/SOURCE_COMMIT": {
+      "bytes": 41,
+      "sha256": "de32580bdfbde8562f3c3b3491c68f7162df47d648e14acfd0dec59845c1314e"
+    },
+    "runs/seed123/latest_state/meta.json": {
+      "bytes": 227,
+      "sha256": "91a8def8fbf63aba09ff867860c5ea23814d6f018be98e62631cc3de5321927c"
+    },
+    "runs/c2_compile_history_validation/3370048/resumed/step_04099/meta.json": {
+      "bytes": 4825,
+      "sha256": "abcca47754137cbc04d68ab8b93ddd256b034c2f2ecdfe45ca81888eef942b9b"
+    }
+  }
+}

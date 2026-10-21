@@ -1,0 +1,29 @@
+
+STDERR:
+W1020 20:01:40.567000 86 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1020 20:01:40.619000 86 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+test_activation_crash_after_publication_reuses_exact_small_receipt (__main__.ControllerTests.test_activation_crash_after_publication_reuses_exact_small_receipt) ... ok
+test_actual_ready_activates_embedded_initial_history_and_request (__main__.ControllerTests.test_actual_ready_activates_embedded_initial_history_and_request) ... ok
+test_exact_proof_script_and_batch_accounting_required (__main__.ControllerTests.test_exact_proof_script_and_batch_accounting_required) ... ok
+test_exclusive_operation_and_concurrent_watcher (__main__.ControllerTests.test_exclusive_operation_and_concurrent_watcher) ... ok
+test_forged_false_comparison_and_missing_prepared_rank_refuse (__main__.ControllerTests.test_forged_false_comparison_and_missing_prepared_rank_refuse) ... ok
+test_host_python36_pure_import (__main__.ControllerTests.test_host_python36_pure_import) ... ok
+test_job_starting_after_client_filter_snapshot_is_not_cancelled_or_activated (__main__.ControllerTests.test_job_starting_after_client_filter_snapshot_is_not_cancelled_or_activated) ... ok
+test_large_manifest_member_streams_but_json_cap_remains (__main__.ControllerTests.test_large_manifest_member_streams_but_json_cap_remains) ... ok
+test_lost_submission_and_mutated_candidate_refuse (__main__.ControllerTests.test_lost_submission_and_mutated_candidate_refuse) ... ok
+test_mutated_candidate_before_first_link_refused (__main__.ControllerTests.test_mutated_candidate_before_first_link_refused) ... ok
+test_mutated_candidate_between_fresh_intent_and_sbatch_refuses (__main__.ControllerTests.test_mutated_candidate_between_fresh_intent_and_sbatch_refuses) ... ok
+test_partial_retirement_lost_cancel_never_reissues (__main__.ControllerTests.test_partial_retirement_lost_cancel_never_reissues) ... ok
+test_prepared_file_and_trace_binding_refuse (__main__.ControllerTests.test_prepared_file_and_trace_binding_refuse) ... ok
+test_prepared_trace_and_helper_script_pins_refuse (__main__.ControllerTests.test_prepared_trace_and_helper_script_pins_refuse) ... ok
+test_real_storage_helper_insufficient_error_is_retryable (__main__.ControllerTests.test_real_storage_helper_insufficient_error_is_retryable) ... ok
+test_reconcile_adopts_one_exact_job_without_another_submission (__main__.ControllerTests.test_reconcile_adopts_one_exact_job_without_another_submission) ... ok
+test_recovered_cancel_intent_never_reissues_unobserved_cancel (__main__.ControllerTests.test_recovered_cancel_intent_never_reissues_unobserved_cancel) ... ok
+test_reserve_wait_then_recovers (__main__.ControllerTests.test_reserve_wait_then_recovers) ... ok
+test_running_foreign_script_old_job_refuse (__main__.ControllerTests.test_running_foreign_script_old_job_refuse) ... ok
+test_submission_recovered_intent_never_submits (__main__.ControllerTests.test_submission_recovered_intent_never_submits) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 11.938s
+
+OK

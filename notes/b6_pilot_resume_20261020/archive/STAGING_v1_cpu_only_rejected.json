@@ -1,0 +1,63 @@
+{
+  "created_utc": "2026-10-20T23:29:11.973946Z",
+  "operation": "/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020",
+  "manifest_sha256": "2cb219d18eb1dd2557ac4748aff4a994688404e948809bfbf2899cfc69b07487",
+  "files": {
+    "archive.sbatch": "ff74368b9eb1eda69c193f7bcd43affd9d424c7b1079775d9fe3f24851e4bbd7",
+    "archive_guard.py": "e1d8aa0d24ba142403b6b8b1609d1ad8156fb3d6348fcbeed899a7dc817c1623",
+    "archive.json": "2309d1f5213a6ecf6bee4133aaf43601bcc9130d21d71707c696129c2aa6e386",
+    "pins.json": "913b827b0dc3b1eb40c88d05706d827aeb4fc5ce541fc5469d897657425fc511",
+    "test_archive_guard.py": "f016c4f18fed9396e92cb1ade8c4c7b924d3820364d1911d4bb52ba9276a13a8",
+    "REVIEW.md": "9531497595a41c43228d9ae03b52f4a5206360ddfa2b980612e3044d7a67b7fc",
+    "VERIFICATION.md": "228a46a4409d734ee66c23d174a8c09763f6745a4ae5304f58752e4b9cfff67b",
+    "helpers.sha256": "2cb219d18eb1dd2557ac4748aff4a994688404e948809bfbf2899cfc69b07487"
+  },
+  "destination_pool": {
+    "argv": [
+      "/usr/bin/lfs",
+      "getstripe",
+      "-p",
+      "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive"
+    ],
+    "returncode": 0,
+    "stdout": "ddn_hdd\n\n",
+    "stderr": ""
+  },
+  "destination_project": {
+    "argv": [
+      "/usr/bin/lfs",
+      "project",
+      "-d",
+      "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive"
+    ],
+    "returncode": 0,
+    "stdout": "22169 P /work/hdd/bilv/wcyim/transgenic/checkpoint_archive\n",
+    "stderr": ""
+  },
+  "host_tests": {
+    "argv": [
+      "/usr/bin/python3",
+      "/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020/test_archive_guard.py",
+      "-v"
+    ],
+    "returncode": 0,
+    "stdout": "B6_HEADROOM_ARCHIVE_REMOVED 9 2e44e5a035a7d8d7995ae2142cbe17ef8ee4348403ce6d506df6247d01772e42\nB6_HEADROOM_ARCHIVE_REMOVED 10 24d465ea30c126231c4b847fb94039326bb634102fc3bb40b4def6ca71598b40\nB6_HEADROOM_ARCHIVE_REMOVED 11 52a5e3543385db7b7636b70246292683b2681ecc34bc74f476044ab3c9c4d41d\nB6_HEADROOM_ARCHIVE_COMPLETE 123456\n",
+    "stderr": "test_fixed_epochs_preserve_unrelated_checkpoint_and_reject_false_receipts (__main__.FixedArchiveTests) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.123s\n\nOK\n"
+  },
+  "scheduler_test": {
+    "argv": [
+      "/usr/bin/sbatch",
+      "--test-only",
+      "--parsable",
+      "--chdir=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020",
+      "--export=OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020",
+      "--output=/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020/archive-%j.out",
+      "--comment=b6-headroom-20261020-0001",
+      "/work/nvme/bilv/wcyim/transgenic/ops/b6_headroom_20261020/archive.sbatch"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sbatch: error: Jobs requesting no GPU resources cannot be submitted on DeltaAI.\nallocation failure: Access/permission denied\n"
+  },
+  "submitted": false
+}
