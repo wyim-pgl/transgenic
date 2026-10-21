@@ -1,0 +1,26 @@
+{
+  "intent": {
+    "created_utc": "2026-10-21T18:37:10.625987Z",
+    "argv": [
+      "sbatch",
+      "--parsable",
+      "--account=bilv-delta-cpu",
+      "--comment=transgenic-delta-cpu-preflight-20261021",
+      "--chdir=/u/wcyim/transgenic_ops/delta_cpu_preflight_20261021",
+      "/u/wcyim/transgenic_ops/delta_cpu_preflight_20261021/delta_cpu_preflight.sbatch"
+    ],
+    "script_sha256": "f4996645434346cddd0a44e54bc27ae2ffbc14396b76af5a5b66fd4226275e70"
+  },
+  "result": {
+    "returncode": 0,
+    "stdout": "23104942\n",
+    "stderr": ""
+  },
+  "job_id": "23104942",
+  "observed_utc": "2026-10-21T18:37:10.690906Z",
+  "job": {
+    "returncode": 0,
+    "stdout": "JobId=23104942 JobName=transgenic-cpu-preflight\n   UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A\n   Priority=10010 Nice=0 Account=bilv-delta-cpu QOS=bilv-delta-cpu\n   JobState=PENDING Reason=None Dependency=(null)\n   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:00:00 TimeLimit=00:10:00 TimeMin=N/A\n   SubmitTime=2026-10-21T13:37:10 EligibleTime=2026-10-21T13:37:10\n   AccrueTime=Unknown\n   StartTime=Unknown EndTime=Unknown Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-21T13:37:10 Scheduler=Main\n   Partition=cpu AllocNode:Sid=dt-login03:2975264\n   ReqNodeList=(null) ExcNodeList=(null)\n   NodeList=\n   NumNodes=1-1 NumCPUs=1 NumTasks=1 CPUs/Task=1 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=1,mem=1G,node=1,billing=1000\n   AllocTRES=(null)\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=1 MinMemoryNode=1G MinTmpDiskNode=0\n   Features=work DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null)\n   Command=/u/wcyim/transgenic_ops/delta_cpu_preflight_20261021/delta_cpu_preflight.sbatch\n   SubmitLine=sbatch --parsable --account=bilv-delta-cpu --comment=transgenic-delta-cpu-preflight-20261021 --chdir=/u/wcyim/transgenic_ops/delta_cpu_preflight_20261021 /u/wcyim/transgenic_ops/delta_cpu_preflight_20261021/delta_cpu_preflight.sbatch\n   WorkDir=/u/wcyim/transgenic_ops/delta_cpu_preflight_20261021\n   Comment=transgenic-delta-cpu-preflight-20261021\n   StdErr=\n   StdIn=/dev/null\n   StdOut=/u/wcyim/transgenic_ops/delta_cpu_preflight_20261021/delta-cpu-preflight-23104942.out\n   TresPerTask=cpu=1\n\n",
+    "stderr": ""
+  }
+}

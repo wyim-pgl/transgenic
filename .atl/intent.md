@@ -33,4 +33,8 @@
 
 C2는4099완료했으며 기존WP5승인 범위의 **B6 evidence-on 파일럿**을source198ce14로 증명하고 자동연결한다. EST/ONT/PacBio/protein evidence를 포함하며 C2만evidence-off다. B6 최종GPU검증을 생략하지 않는다. CPU전용작업용 Delta1,000core-hours 신청은 아직 association/크레딧 대기이며 공유스토리지/로그인만 실측 확인했다. 사용자가 `/graphify`의 대규모 경고 후 **전체**를 선택했으므로 전체 감지코퍼스를 분석한다. 현재 정본은 [B6 진행 기록](../notes/b6_pilot_resume_20261020/PROGRESS.md)이다.
 
-Graphify 전체 범위 작업은 완료했다. 생성 시점의 main 작업 폴더2,696파일을 처리했고 결과는 [보고서](../graphify-out/GRAPH_REPORT.md)에 있다. B6 증명3425703은 Priority 대기이며 검토된 단일 감시가 운영 중이다. CPU 자원은19:52PDT에도 Slurm association이 없어 활성화 대기한다.
+Graphify 전체 범위 작업은 완료했다. 생성 시점의 main 작업 폴더2,696파일을 처리했고 결과는 [보고서](../graphify-out/GRAPH_REPORT.md)에 있다. **10-21 11:33PDT 실측:** B6 증명3425703 PASS/COMPLETED0:0 후 검증된410에서 이어갈 본학습3429921이 자동 제출됐다. 현재 Priority 대기이며 단일 감시1501642는 waiting_production/error없음이다. 구held3345918/17 퇴역 완료. CPU 자원은 마지막 확인인10-20 19:52PDT에 Slurm association이 없어 활성화 대기 상태였다.
+
+## 2026-10-21 현재 모델 우선
+
+DeltaCPU 승인 통지 후 bilv-delta-cpu/1,000core-hours와 실제0GPU preflight23104942 PASS를 확인했다. 사용자는 ccloop의 장기 목표로 rice/Arabidopsis/soybean/sorghum에서 Helixer보다 좋은 de novo 모델을 제시했고, 비교항목으로 BUSCO·BLAST mapping·OMArk·CDS/mRNA/exon/UTR을 지정했다. 이후 그 목표를 일시중지하고 **"ccloop 지금은 현재에 모델을 완성시키는데 최선을 다한다"**고 우선순위를 변경했다. 현재 작업은 기존 B6/C2 모델의 학습·검증 완성이며 새로운 구조 설계·네 종 비교 확장은 보류한다. 기존4099파일럿·WP5판정·WP6진입조건·자원예산을 완화하지 않는다. 현재모델진행과 별개로 중지한장기목표를 완료로 표시하지 않는다.

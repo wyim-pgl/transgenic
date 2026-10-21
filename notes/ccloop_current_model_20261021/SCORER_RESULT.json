@@ -1,0 +1,102 @@
+{
+  "observed_utc": "2026-10-21T19:05:28.598007Z",
+  "accounting": {
+    "returncode": 0,
+    "stdout": "23105376|bilv-delta-cpu|cpu|COMPLETED|0:0|00:00:07|1|billing=1000,cpu=1,mem=1G,node=1|billing=1000,cpu=1,mem=1G,node=1\n23105376.batch|bilv-delta-cpu||COMPLETED|0:0|00:00:07|1||cpu=1,mem=1G,node=1\n23105376.extern|bilv-delta-cpu||COMPLETED|0:0|00:00:07|1||billing=1000,cpu=1,mem=1G,node=1\n",
+    "stderr": ""
+  },
+  "log": "{\n  \"kind\": \"wp5_cpu_scorer_compatibility\",\n  \"job_id\": \"23105376\",\n  \"hostname\": \"cn103.delta.ncsa.illinois.edu\",\n  \"architecture\": \"x86_64\",\n  \"account\": \"bilv-delta-cpu\",\n  \"allocated_tres\": \"cpu=1,mem=1G,node=1,billing=1000\",\n  \"binary_sha256\": \"a440e1533611a40a51cf2b5b35a2e15ec6b885660dd35f6b531e0d65601a963a\",\n  \"version\": \"gffcompare v0.12.6\",\n  \"command\": [\n    \"/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/bin/gffcompare\",\n    \"-r\",\n    \"/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/fixture-23105376/reference.gtf\",\n    \"-o\",\n    \"/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/fixture-23105376/comparison\",\n    \"/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/fixture-23105376/query.gtf\"\n  ],\n  \"fixture_codes\": {\n    \"exact\": \"=\",\n    \"altered\": \"j\"\n  },\n  \"scope\": \"Pinned binary compatibility and tiny synthetic intron-chain fixture only; no model inference, pilot gate, real-data score or scientific approval.\",\n  \"stdout\": \"\",\n  \"stderr\": \"  1 reference transcripts loaded.\\n  2 query transfrags loaded.\\n\"\n}\n",
+  "receipt": {
+    "kind": "wp5_cpu_scorer_compatibility",
+    "job_id": "23105376",
+    "hostname": "cn103.delta.ncsa.illinois.edu",
+    "architecture": "x86_64",
+    "account": "bilv-delta-cpu",
+    "allocated_tres": "cpu=1,mem=1G,node=1,billing=1000",
+    "binary_sha256": "a440e1533611a40a51cf2b5b35a2e15ec6b885660dd35f6b531e0d65601a963a",
+    "version": "gffcompare v0.12.6",
+    "command": [
+      "/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/bin/gffcompare",
+      "-r",
+      "/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/fixture-23105376/reference.gtf",
+      "-o",
+      "/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/fixture-23105376/comparison",
+      "/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/fixture-23105376/query.gtf"
+    ],
+    "fixture_codes": {
+      "exact": "=",
+      "altered": "j"
+    },
+    "scope": "Pinned binary compatibility and tiny synthetic intron-chain fixture only; no model inference, pilot gate, real-data score or scientific approval.",
+    "stdout": "",
+    "stderr": "  1 reference transcripts loaded.\n  2 query transfrags loaded.\n"
+  },
+  "c2_final_meta": {
+    "path": "/work/nvme/bilv/wcyim/transgenic/runs/c2_compile_history_validation/3370048/resumed/step_04099/meta.json",
+    "exists": true,
+    "sha256": "abcca47754137cbc04d68ab8b93ddd256b034c2f2ecdfe45ca81888eef942b9b",
+    "meta": {
+      "alphas": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "arm": "C2",
+      "checkpoint_kind": "fixed_step",
+      "compile_history_sha256": "7baaabb39a04d8b438f9585311f3f720dddf081f50f2ab349bbc68aedc1627eb",
+      "epoch": 1,
+      "global_step": 4099,
+      "lr": 4.784722222222223e-05,
+      "model_sha256": "411358d18d51c36f16b191180d6c7b05d821025388b1bb50ca153a719e66d2cd",
+      "pending_micro": 0,
+      "pilot_final": true,
+      "schedule_total_steps": 180378,
+      "schedule_warmup_steps": 9018,
+      "seed": 123,
+      "selection": "fixed optimizer-update count; never a best-validation checkpoint",
+      "step": 49182,
+      "stop_after_updates": 4099,
+      "tied_aliases": {
+        "transgenic.decoder.embed_tokens.weight": "lm_head.weight",
+        "transgenic.decoder_embed_tokens.weight": "lm_head.weight",
+        "transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.1.freq"
+      }
+    }
+  },
+  "b6_final_meta": {
+    "path": "/work/nvme/bilv/wcyim/transgenic/runs/b6_compile_history_validation/3425703/resumed/step_04099/meta.json",
+    "exists": false
+  }
+}

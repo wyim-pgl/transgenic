@@ -1,0 +1,291 @@
+{
+  "observed_utc": "2026-10-21T18:33:57.177706Z",
+  "journal": {
+    "cancel_output": {
+      "returncode": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    "config_sha256": "afafa8771ba37895bf2993c50b3e88bff7f23e1c8a640fa697888065b0104c47",
+    "epoch_events": [],
+    "intent": null,
+    "last_error": null,
+    "last_wait": "production pending/running",
+    "links": [
+      {
+        "intent": {
+          "argv": [
+            "sbatch",
+            "--parsable",
+            "--no-requeue",
+            "--export=ALL",
+            "--comment=b6-b6_in_place_50a7fac_20261020-production-0001",
+            "--job-name=b6-b6_in_place_50a7fac_20261020-production-0001",
+            "--account=bilv-dtai-gh",
+            "--partition=ghx4",
+            "--time=48:00:00",
+            "--nodes=1",
+            "--gpus-per-node=4",
+            "--cpus-per-task=64",
+            "--exclude=gh062,gh093",
+            "--output=/work/nvme/bilv/wcyim/transgenic/b6_prep_20260925/logs/%x-%j.out",
+            "/work/nvme/bilv/wcyim/transgenic/ops/b6_continuation_50a7fac_20261020/b6_production_link.sbatch"
+          ],
+          "created": 1792606069.01708,
+          "env": {
+            "HOME": "/u/wcyim",
+            "LANG": "en_US.UTF-8",
+            "LOGNAME": "wcyim",
+            "OPS_DIR": "/work/nvme/bilv/wcyim/transgenic/ops/b6_continuation_50a7fac_20261020",
+            "PATH": "/u/wcyim/.local/bin:/u/wcyim/bin:/opt/cray/pe/mpich/9.0.1/ofi/gnu/12.3/bin:/opt/cray/pe/mpich/9.0.1/bin:/opt/cray/pe/craype/2.7.35/bin:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/compilers/bin:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/compilers/extra/qd/bin:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/cuda/12.9/compute-sanitizer:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/cuda/12.9/bin:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/cuda/12.9/libnvvp:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/profilers/Nsight_Compute:/opt/nvidia/hpc_sdk/Linux_aarch64/25.5/profilers/Nsight_Systems/bin:/sw/user/intercept_mpicc:/sw/user/scripts:/opt/cray/pe/gcc-native/14/bin:/opt/cray/pe/perftools/25.09.0/bin:/opt/cray/pe/papi/7.2.0.2/bin:/opt/cray/libfabric/2.3.1/bin:/opt/clmgr/sbin:/opt/clmgr/bin:/opt/sgi/sbin:/opt/sgi/bin:/usr/local/bin:/usr/bin:/bin:/opt/c3/bin:/usr/lib/mit/bin:/opt/puppetlabs/bin:/opt/cray/pe/bin",
+            "REPO_DIR": "/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14",
+            "REQUEST": "ops/b6_in_place_50a7fac_20261020/links/0001/request.json",
+            "REQUEST_SHA256": "60f3deb26ffabfd8284769749d7209cd01a64e213d6b9110f93b743c659d499f",
+            "SIF": "/work/nvme/bilv/wcyim/containers/transgenic-ngc-26.08.sif",
+            "USER": "wcyim",
+            "WORK": "/work/nvme/bilv/wcyim/transgenic"
+          },
+          "index": 1,
+          "kind": "production",
+          "request": {
+            "relative_path": "ops/b6_in_place_50a7fac_20261020/links/0001/request.json",
+            "sha256": "60f3deb26ffabfd8284769749d7209cd01a64e213d6b9110f93b743c659d499f"
+          },
+          "token": "b6-b6_in_place_50a7fac_20261020-production-0001",
+          "work_dir": "/work/nvme/bilv/wcyim/transgenic"
+        },
+        "job_id": "3429921",
+        "submission_evidence": {
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "3429921\n"
+        }
+      }
+    ],
+    "operation_id": "b6_in_place_50a7fac_20261020",
+    "phase": "waiting_production",
+    "receipts": {
+      "activation": {
+        "relative_path": "ops/b6_in_place_50a7fac_20261020/activation.json",
+        "sha256": "823638b7492b223a0e3db9d8b1164326b047bc9236c5905ee980c0a1a7f86eef"
+      },
+      "validation": {
+        "candidate": {
+          "canonical_checkpoint_sha256": "01244cfd77230d8bdbc7c373020b7544ba1959b7aa6a30e99999ed919182579a",
+          "epoch": 0,
+          "global_step": 410,
+          "history_sha256": "4a15f598827821a521c8f85f894456fe12a74b9bbf3df358e822fd45eec15a40",
+          "identity_sha256": "af2ed277b8fcee48346079e8a38b7b1acf8039598695b8748b7936c4d7b7798a",
+          "meta_sha256": "596d8dba25ea59e4f7a4683128b339591c6ef782fa1406729885c116e56e3dec",
+          "pending_micro": 0,
+          "relative_checkpoint": "latest_state",
+          "relative_run": "resumed",
+          "step": 9840
+        },
+        "comparison_sha256": "68e09cc10247af8240f0e8fb6bb334495a22fce4447b5d0d7e41827026e5a508",
+        "ready_relative_path": "runs/b6_compile_history_validation/3425703/validation_receipt.json",
+        "ready_sha256": "376fc293cecb9add4a067fad12c453a7de27c32a1ccfcbe124fc6085198b3cd6"
+      }
+    },
+    "retirements": [
+      {
+        "active": false,
+        "argv": [
+          "sbatch",
+          "--parsable",
+          "--dependency=afterany:3345917",
+          "--export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=B6",
+          "revision/scripts/b6/wp5_pilot.sbatch"
+        ],
+        "command": "/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch",
+        "created": "2026-10-09T01:03:12",
+        "job_id": "3345918",
+        "owner": "wcyim",
+        "rows": {
+          "3345918": [
+            "CANCELLED",
+            "0:0"
+          ]
+        },
+        "submit_line": "sbatch --parsable --dependency=afterany:3345917 --export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=B6 revision/scripts/b6/wp5_pilot.sbatch",
+        "token": "",
+        "uid": 97434,
+        "work_dir": "/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a"
+      },
+      {
+        "active": false,
+        "argv": [
+          "sbatch",
+          "--parsable",
+          "--dependency=afterok:3345916",
+          "--export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=B6",
+          "revision/scripts/b6/wp5_pilot.sbatch"
+        ],
+        "command": "/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a/revision/scripts/b6/wp5_pilot.sbatch",
+        "created": "2026-10-09T01:03:12",
+        "job_id": "3345917",
+        "owner": "wcyim",
+        "rows": {
+          "3345917": [
+            "CANCELLED",
+            "0:0"
+          ]
+        },
+        "submit_line": "sbatch --parsable --dependency=afterok:3345916 --export=ALL,BINDINGS=/work/b6_prep_20260925/bindings/train_v1.deltaai.json,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a,ARM=B6 revision/scripts/b6/wp5_pilot.sbatch",
+        "token": "",
+        "uid": 97434,
+        "work_dir": "/work/nvme/bilv/wcyim/transgenic/repo_b6_233574a"
+      }
+    ],
+    "revision": 1291,
+    "updated": 1792607614.6745956,
+    "validation_observation": {
+      "active": false,
+      "argv": [
+        "sbatch",
+        "--parsable",
+        "--no-requeue",
+        "--comment=b6-history-proof-20261020-0001",
+        "--export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020,MMAP_DIR=/work/b6_prep_20260925/obs_cache/train_v1.mmap_v1,REFERENCE_CHECKPOINT=/work/nvme/bilv/wcyim/transgenic/runs/b6_smoke_233574a_B6/latest_state",
+        "/work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020/b6_history_proof.sbatch"
+      ],
+      "command": "/work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020/b6_history_proof.sbatch",
+      "created": "2026-10-20T19:54:33",
+      "job_id": "3425703",
+      "owner": "wcyim",
+      "rows": {
+        "3425703": [
+          "COMPLETED",
+          "0:0"
+        ],
+        "3425703.batch": [
+          "COMPLETED",
+          "0:0"
+        ],
+        "3425703.extern": [
+          "COMPLETED",
+          "0:0"
+        ]
+      },
+      "submit_line": "sbatch --parsable --no-requeue --comment=b6-history-proof-20261020-0001 --export=ALL,REPO_DIR=/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14,OPS_DIR=/work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020,MMAP_DIR=/work/b6_prep_20260925/obs_cache/train_v1.mmap_v1,REFERENCE_CHECKPOINT=/work/nvme/bilv/wcyim/transgenic/runs/b6_smoke_233574a_B6/latest_state /work/nvme/bilv/wcyim/transgenic/ops/b6_history_proof_e2bee04_20261020/b6_history_proof.sbatch",
+      "token": "b6-history-proof-20261020-0001",
+      "uid": 97434,
+      "work_dir": "/work/nvme/bilv/wcyim/transgenic"
+    },
+    "version": 1
+  },
+  "queue": {
+    "returncode": 0,
+    "stdout": "3429921|PENDING|b6-b6_in_place_50a7fac_20261020-production-0001|(Priority)\n",
+    "stderr": ""
+  },
+  "accounting": {
+    "returncode": 0,
+    "stdout": "3425703|COMPLETED|0:0|03:22:26|2026-10-20T19:54:33|2026-10-21T09:38:54|2026-10-21T13:01:20|gh134\n3425703.batch|COMPLETED|0:0|03:22:26|2026-10-21T09:38:54|2026-10-21T09:38:54|2026-10-21T13:01:20|gh134\n3425703.extern|COMPLETED|0:0|03:22:26|2026-10-21T09:38:54|2026-10-21T09:38:54|2026-10-21T13:01:20|gh134\n3429921|PENDING|0:0|00:00:00|2026-10-21T13:07:50|Unknown|Unknown|None assigned\n",
+    "stderr": ""
+  },
+  "production": {
+    "returncode": 0,
+    "stdout": "JobId=3429921 JobName=b6-b6_in_place_50a7fac_20261020-production-0001\n   UserId=wcyim(97434) GroupId=grp_202(202) MCS_label=N/A\n   Priority=772 Nice=0 Account=bilv-dtai-gh QOS=bilv-dtai-gh\n   JobState=PENDING Reason=Priority Dependency=(null)\n   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0\n   RunTime=00:00:00 TimeLimit=2-00:00:00 TimeMin=N/A\n   SubmitTime=2026-10-21T13:07:50 EligibleTime=2026-10-21T13:07:50\n   AccrueTime=2026-10-21T13:07:50\n   StartTime=2026-10-23T04:46:41 EndTime=2026-10-25T04:46:41 Deadline=N/A\n   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-21T13:33:50 Scheduler=Main\n   Partition=ghx4 AllocNode:Sid=gh-login01:1501642\n   ReqNodeList=(null) ExcNodeList=gh[062,093]\n   NodeList=\n   NumNodes=1-1 NumCPUs=64 NumTasks=1 CPUs/Task=64 ReqB:S:C:T=0:0:*:*\n   ReqTRES=cpu=64,mem=454240M,node=1,billing=4000,gres/gpu=4\n   AllocTRES=(null)\n   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*\n   MinCPUsNode=64 MinMemoryTRES=113560M MinTmpDiskNode=0\n   Features=(null) DelayBoot=00:00:00\n   OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null)\n   Command=/work/nvme/bilv/wcyim/transgenic/ops/b6_continuation_50a7fac_20261020/b6_production_link.sbatch\n   SubmitLine=sbatch --parsable --no-requeue --export=ALL --comment=b6-b6_in_place_50a7fac_20261020-production-0001 --job-name=b6-b6_in_place_50a7fac_20261020-production-0001 --account=bilv-dtai-gh --partition=ghx4 --time=48:00:00 --nodes=1 --gpus-per-node=4 --cpus-per-task=64 --exclude=gh062,gh093 --output=/work/nvme/bilv/wcyim/transgenic/b6_prep_20260925/logs/%x-%j.out /work/nvme/bilv/wcyim/transgenic/ops/b6_continuation_50a7fac_20261020/b6_production_link.sbatch\n   WorkDir=/work/nvme/bilv/wcyim/transgenic\n   Comment=b6-b6_in_place_50a7fac_20261020-production-0001\n   StdErr=\n   StdIn=/dev/null\n   StdOut=/work/nvme/bilv/wcyim/transgenic/b6_prep_20260925/logs/b6-b6_in_place_50a7fac_20261020-production-0001-3429921.out\n   MemPerTres=gpu:113560\n   TresPerNode=gres/gpu:4\n   TresPerTask=cpu=64\n\n",
+    "stderr": ""
+  },
+  "watch": {
+    "returncode": 0,
+    "stdout": "1501642    17:21:59 python3 -u /work/nvme/bilv/wcyim/transgenic/ops/b6_continuation_50a7fac_20261020/continue_b6_history.py watch --state-dir /work/nvme/bilv/wcyim/transgenic/ops/b6_in_place_50a7fac_20261020 --poll-seconds 45\n",
+    "stderr": ""
+  },
+  "validation_receipt": {
+    "candidate": {
+      "canonical_checkpoint_sha256": "01244cfd77230d8bdbc7c373020b7544ba1959b7aa6a30e99999ed919182579a",
+      "epoch": 0,
+      "global_step": 410,
+      "history_sha256": "4a15f598827821a521c8f85f894456fe12a74b9bbf3df358e822fd45eec15a40",
+      "identity_sha256": "af2ed277b8fcee48346079e8a38b7b1acf8039598695b8748b7936c4d7b7798a",
+      "meta_sha256": "596d8dba25ea59e4f7a4683128b339591c6ef782fa1406729885c116e56e3dec",
+      "pending_micro": 0,
+      "relative_checkpoint": "latest_state",
+      "relative_run": "resumed",
+      "step": 9840
+    },
+    "comparison_sha256": "68e09cc10247af8240f0e8fb6bb334495a22fce4447b5d0d7e41827026e5a508",
+    "kind": "b6_history_validation_ready",
+    "provenance": {
+      "helper_manifest_sha256": "5a0387b2aefdc0eabdddcf3e45056ec7574727a6db74c66c6f6fc58ff35c258b",
+      "image_sha256": "1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6",
+      "source_manifest_sha256": "29206d99c14ce4260d4d6505bf1321ff494315a5ba97fe3220a013f0fd5969dc"
+    },
+    "runtime_fingerprint_sha256": "28d964228dd70642d9b77e2416e492e0d4b171071a4574f4b251d237d2bf2eb3",
+    "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+    "validation_job_id": "3425703",
+    "verified_record_sha256": "36f964702557ab5bf38b0623940e1c2ee0868d52fd85c0bd73b71b4a03a0d324",
+    "version": 1
+  },
+  "activation_summary": {
+    "kind": "b6_in_place_activation",
+    "active_run": "runs/b6_compile_history_validation/3425703/resumed",
+    "operation_id": "b6_in_place_50a7fac_20261020",
+    "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+    "version": 1,
+    "remote_artifact": {
+      "relative_path": "ops/b6_in_place_50a7fac_20261020/activation.json",
+      "sha256": "823638b7492b223a0e3db9d8b1164326b047bc9236c5905ee980c0a1a7f86eef"
+    },
+    "comparison": {
+      "kind": "b6_history_comparison",
+      "arm": "B6",
+      "profile": "b6_fresh400",
+      "validation_job_id": "3425703",
+      "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+      "passed": true,
+      "model_equal": true,
+      "different_model_keys": [],
+      "history_equal": true,
+      "finite_losses": true,
+      "states_equal": {
+        "optimizer.bin": true,
+        "random_states_0.pkl": true,
+        "random_states_1.pkl": true,
+        "random_states_2.pkl": true,
+        "random_states_3.pkl": true,
+        "scheduler.bin": true
+      },
+      "trace_row_counts": {
+        "continuous/rank0": {
+          "accumulation_boundary": 410,
+          "forward": 9840
+        },
+        "continuous/rank1": {
+          "accumulation_boundary": 410,
+          "forward": 9840
+        },
+        "continuous/rank2": {
+          "accumulation_boundary": 410,
+          "forward": 9840
+        },
+        "continuous/rank3": {
+          "accumulation_boundary": 410,
+          "forward": 9840
+        },
+        "resumed/rank0": {
+          "accumulation_boundary": 10,
+          "forward": 240
+        },
+        "resumed/rank1": {
+          "accumulation_boundary": 10,
+          "forward": 240
+        },
+        "resumed/rank2": {
+          "accumulation_boundary": 10,
+          "forward": 240
+        },
+        "resumed/rank3": {
+          "accumulation_boundary": 10,
+          "forward": 240
+        }
+      },
+      "runtime_fingerprint_sha256": "28d964228dd70642d9b77e2416e492e0d4b171071a4574f4b251d237d2bf2eb3",
+      "verified_record_sha256": "36f964702557ab5bf38b0623940e1c2ee0868d52fd85c0bd73b71b4a03a0d324"
+    },
+    "note": "Selected fields from the remote activation receipt; embedded compiler events, input manifests, and prepared schemas are retained in the original remote artifact."
+  }
+}

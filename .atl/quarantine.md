@@ -4,6 +4,8 @@
 
 | 반복하지 않을 접근 | 확인된 사실/대안 |
 |---|---|
+| MVP50 평가기를 WP5라고 이름만 바꿔 사용 | source198ce14의mvp_decode_panel은50좌위·MVP모델·8채널계약을강제한다. WP5는pilot300·B6 31채널+chain·fixed4099·C2/C5가필요하다. [현재감사](../notes/ccloop_current_model_20261021/WP5_READINESS_AUDIT.md)를따라별도연결·검증해야한다. |
+| MVPbootstrap의5/95분위수를WP5의95%구간으로무검토재사용 | mvp_bootstrap.py:161-189는MVP의단측경계를반환한다. 동결A46규칙13의구간의미와대조·독립검토하고WP5통계시험으로확인해야하며임계값을임의로바꾸지않는다. |
 | 문서의 끊어진 상대 Markdown 링크를 저장소 루트 파일로 자동 연결 | Graphify 병합 검토에서15개 잘못된 root fallback을 재현했다. Markdown 링크는 포함 문서 기준으로만 해석하고 실제 존재하는 그래프 대상에 연결한다. |
 | 단순 Graph 재출력으로 같은 노드 쌍의 다른 관계를 버리기 | Graphify 초기 병합 검토에서 다중 관계 손실 발견. 검증된 original_links를 초기·군집명 출력 모두에 보존, multigraph 표시 및 최종38,057관계/연결 대상0누락 검증. |
 | semantic 인용 위치 null을 정밀한 행 인용으로 꾸미기 | 실제로 읽은 파일 전체 범위만 명시하고 location_precision=whole_source로 표시한다. 기존 정밀한 행·페이지 인용은 유지한다. |

@@ -1,0 +1,194 @@
+{
+  "schema": 1,
+  "status": "NOT_READY",
+  "scope": "Existing WP5 pilot preparation only; not four-species benchmarking and not scientific gate acceptance.",
+  "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+  "source_worktree": "/tmp/b6-c2-recompile",
+  "source_manifest_sha256": "29206d99c14ce4260d4d6505bf1321ff494315a5ba97fe3220a013f0fd5969dc",
+  "protocol": {
+    "path": "revision/protocols/PROTOCOL_B1_frozen_v1.md",
+    "sha256": "fd70f97527291ae798621e7cc7630e7b42a77f3a4c45693f1cc2dfe8734af951",
+    "relevant_lines": "998-1004; applicable later amendments remain binding"
+  },
+  "n_pilot_amendment": {
+    "path": "notes/a46_approval/A46_RULE11_NPILOT_AMENDMENT_20260927.md",
+    "sha256": "39556f985aefd345826d93f4a9c139cccb4d4ea08bf7c68f889d4815da386f11"
+  },
+  "n_pilot": 4099,
+  "panel": {
+    "path": "revision/protocols/b6_panels_v1.tsv",
+    "sha256": "79367154bbf922fd0554285cb6cb47ae3d3c866b145aa1f51ead4f47b00cd243",
+    "counts": {
+      "mvp_core": 20,
+      "pilot": 300,
+      "mvp": 30,
+      "final": 1729
+    },
+    "selected_panel": "pilot",
+    "selected_count": 300,
+    "sidecar_matches": true
+  },
+  "c2": {
+    "path": "/work/nvme/bilv/wcyim/transgenic/runs/c2_compile_history_validation/3370048/resumed/step_04099/meta.json",
+    "exists": true,
+    "sha256": "abcca47754137cbc04d68ab8b93ddd256b034c2f2ecdfe45ca81888eef942b9b",
+    "meta": {
+      "alphas": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "arm": "C2",
+      "checkpoint_kind": "fixed_step",
+      "compile_history_sha256": "7baaabb39a04d8b438f9585311f3f720dddf081f50f2ab349bbc68aedc1627eb",
+      "epoch": 1,
+      "global_step": 4099,
+      "lr": 4.784722222222223e-05,
+      "model_sha256": "411358d18d51c36f16b191180d6c7b05d821025388b1bb50ca153a719e66d2cd",
+      "pending_micro": 0,
+      "pilot_final": true,
+      "schedule_total_steps": 180378,
+      "schedule_warmup_steps": 9018,
+      "seed": 123,
+      "selection": "fixed optimizer-update count; never a best-validation checkpoint",
+      "step": 49182,
+      "stop_after_updates": 4099,
+      "tied_aliases": {
+        "transgenic.decoder.embed_tokens.weight": "lm_head.weight",
+        "transgenic.decoder_embed_tokens.weight": "lm_head.weight",
+        "transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.0.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.1.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.10.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.11.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.2.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.3.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.4.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.5.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.6.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.7.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.8.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.3.freq": "transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.1.freq",
+        "transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.5.freq": "transgenic.encoder.hyena.backbone.layers.9.mixer.filter_fn.implicit_filter.1.freq"
+      }
+    }
+  },
+  "b6": {
+    "expected_final_meta": {
+      "path": "/work/nvme/bilv/wcyim/transgenic/runs/b6_compile_history_validation/3425703/resumed/step_04099/meta.json",
+      "exists": false
+    },
+    "accepted_proof_candidate": {
+      "canonical_checkpoint_sha256": "01244cfd77230d8bdbc7c373020b7544ba1959b7aa6a30e99999ed919182579a",
+      "epoch": 0,
+      "global_step": 410,
+      "history_sha256": "4a15f598827821a521c8f85f894456fe12a74b9bbf3df358e822fd45eec15a40",
+      "identity_sha256": "af2ed277b8fcee48346079e8a38b7b1acf8039598695b8748b7936c4d7b7798a",
+      "meta_sha256": "596d8dba25ea59e4f7a4683128b339591c6ef782fa1406729885c116e56e3dec",
+      "pending_micro": 0,
+      "relative_checkpoint": "latest_state",
+      "relative_run": "resumed",
+      "step": 9840
+    },
+    "production_job": "3429921",
+    "proof_job": "3425703"
+  },
+  "weight_verification": "Only small meta files were rehashed in this observation. C2 model_sha256 is the final metadata declaration; allocation-bound payload verification remains required before evaluation.",
+  "metric": {
+    "name": "Transcript F1, frozen GFFCompare0.12.6 exact intron-chain rule; monoexonic exact CDS",
+    "precision_denominator": "all predicted transcripts in the frozen evaluation scope",
+    "recall_denominator": "all reference transcripts of panel loci",
+    "empty_predictions": "retain locus/reference denominator; never drop missing predictions",
+    "bootstrap": {
+      "unit": "paired locus",
+      "replicates": 2000,
+      "seed": 20260914,
+      "interval": "frozen percentile 95% interval",
+      "reuse_warning": "MVP bootstrap uses 5th/95th percentile one-sided bounds; do not silently treat it as the WP5 interval. Resolve the exact implementation against the frozen rule during review."
+    }
+  },
+  "gates": {
+    "G1": "lower bound(B6 de novo - C2) >= -1.0 percentage point",
+    "G2": "lower bound(B6 evidence - B6 de novo) > 0 AND lower bound(B6 evidence - C5) > 0",
+    "G3": "grammar violations per1000 <= B5 AND recall >=0.9*B5 under applicable protocol scope",
+    "abort_rules": [
+      "nonzero leakage",
+      "replay/RC/resume determinism failure",
+      "Dynamo fallback",
+      "memory abort"
+    ]
+  },
+  "cpu_scorer": {
+    "readiness": "COMPATIBILITY_VERIFIED_ONLY",
+    "job_id": "23105376",
+    "account": "bilv-delta-cpu",
+    "path": "/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/bin/gffcompare",
+    "binary_sha256": "a440e1533611a40a51cf2b5b35a2e15ec6b885660dd35f6b531e0d65601a963a",
+    "version": "gffcompare v0.12.6",
+    "fixture_codes": {
+      "exact": "=",
+      "altered": "j"
+    },
+    "resources": "1CPU/1GiB/0GPU/10min maximum; observed7s"
+  },
+  "inference_runtime": {
+    "source_commit": "198ce14ce53266f53b7bda5d0c4cdfd94deb43b4",
+    "image": "transgenic-ngc-26.08.sif",
+    "expected_image_sha256": "1a5dee27b8575efde88774a28559727156843eb057db8723c6d73f779ef7dff6",
+    "architecture": "DeltaAI ARM/GH200; not validated on x86 CPU",
+    "new_evaluator_command": null
+  },
+  "blocking_items": [
+    {
+      "id": "b6_final",
+      "status": "WAITING_EXISTING_JOB",
+      "detail": "B6 fixed4099 final not yet present; production remains queued. No duplicate submission."
+    },
+    {
+      "id": "wp5_evaluator",
+      "status": "NOT_ESTABLISHED",
+      "detail": "No executable end-to-end WP5 command is pinned. Existing MVP decoder explicitly enforces50loci and MVP-specific identities; relabeling is prohibited."
+    },
+    {
+      "id": "eval_input_score_manifests",
+      "status": "NOT_VERIFIED",
+      "detail": "Real pilot window/reference/molecule role manifests, input-vs-score separation and current production artifacts need explicit reconciliation. Model training input checks do not substitute."
+    },
+    {
+      "id": "c5",
+      "status": "NOT_VERIFIED",
+      "detail": "Frozen evidence-only reconstruction outputs and same-panel denominator binding needed for second G2 contrast."
+    },
+    {
+      "id": "scoring_interval",
+      "status": "REVIEW_REQUIRED",
+      "detail": "Existing MVP percentiles must not silently replace frozen WP5 interval semantics."
+    },
+    {
+      "id": "allocation_plan",
+      "status": "NOT_ESTABLISHED",
+      "detail": "Compute inference/scoring resource bounds from concrete commands and observed/runtime estimates before dependent submissions."
+    }
+  ],
+  "next_action": "Reconcile source/data audit and create/review the smallest WP5 implementation plan; pin actual command and all inputs before declaring ready. Keep current training job/controller unchanged.",
+  "scientific_results": null
+}

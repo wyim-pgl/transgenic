@@ -1,0 +1,25 @@
+{
+  "observed_utc": "2026-10-21T18:36:44.842671Z",
+  "accounts": {
+    "returncode": 0,
+    "stdout": "Project Summary for User 'wcyim':\n\nAccount                        Balance(Hours)   Deposited(Hours)  Project\n----------------------------  ----------------  ----------------  ----------------------\nbilv-delta-cpu                            1000              1000  leakage-controlled ...\n",
+    "stderr": ""
+  },
+  "queue": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "partition": {
+    "returncode": 0,
+    "stdout": "PartitionName=cpu\n   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL\n   AllocNodes=ALL Default=NO QoS=cpuqos\n   DefaultTime=00:30:00 DisableRootJobs=YES ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO\n   MaxNodes=UNLIMITED MaxTime=2-00:00:00 MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED MaxCPUsPerSocket=UNLIMITED\n   Nodes=cn[001-136]\n   PriorityJobFactor=100 PriorityTier=100 RootOnly=NO ReqResv=NO OverSubscribe=NO\n   OverTimeLimit=NONE PreemptMode=OFF\n   State=UP TotalCPUs=17408 TotalNodes=136 SelectTypeParameters=NONE\n   JobDefaults=(null)\n   DefMemPerCPU=1000 MaxMemPerNode=UNLIMITED\n   TRES=cpu=17408,mem=35035912M,node=136,billing=17517956\n   TRESBillingWeights=CPU=1000,Mem=512G\n\n",
+    "stderr": ""
+  },
+  "operation_dir": "/u/wcyim/transgenic_ops/delta_cpu_preflight_20261021",
+  "script_sha256": "f4996645434346cddd0a44e54bc27ae2ffbc14396b76af5a5b66fd4226275e70",
+  "test_only": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "sbatch: Job 23104940 to start at 2026-10-21T13:36:49 a using 1 processors on nodes cn103 in partition cpu\n"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "observed_utc": "2026-10-21T18:40:09.478300Z",
+  "jobcharge": {
+    "returncode": 0,
+    "stdout": "Charges for user allusers and account bilv-delta-cpu from 2026-10-20-13:40:11 \nthrough 2026-10-21-13:40:11.\n    Account            JobID  Partition      ElapsedRaw  AllocTRES                         User    JobName                   Submit               Start                End                    Billing    Charge\n--  --------------  --------  -----------  ------------  --------------------------------  ------  ------------------------  -------------------  -------------------  -------------------  ---------  --------\n 0  bilv-delta-cpu  23104942  cpu                     7  billing=1000,cpu=1,mem=1G,node=1  wcyim   transgenic-cpu-preflight  2026-10-21T13:37:10  2026-10-21T13:37:11  2026-10-21T13:37:18       1000         0\n____________SUMMARY____________\nUser      Charge (SU)\n------  -------------\nwcyim            0.00\nTotal            0.00\n",
+    "stderr": ""
+  }
+}

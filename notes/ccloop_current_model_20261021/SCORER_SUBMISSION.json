@@ -1,0 +1,22 @@
+{
+  "job_id": "23105376",
+  "intent": {
+    "created_utc": "2026-10-21T19:03:13.341568Z",
+    "argv": [
+      "sbatch",
+      "--parsable",
+      "--account=bilv-delta-cpu",
+      "--comment=transgenic-wp5-cpu-scorer-20261021",
+      "--chdir=/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021",
+      "/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/cpu_scoring_preflight.sbatch"
+    ],
+    "cwd": "/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021",
+    "script_sha256": "b0d84d44e4506cec3a6be4ff1f4861d9c2f041d9327e12903d91f7dceea0f884",
+    "binary_sha256": "a440e1533611a40a51cf2b5b35a2e15ec6b885660dd35f6b531e0d65601a963a"
+  },
+  "result": {
+    "returncode": 0,
+    "stdout": "23105376\n",
+    "stderr": ""
+  }
+}

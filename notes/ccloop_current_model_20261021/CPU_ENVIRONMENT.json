@@ -1,0 +1,32 @@
+{
+  "observed_utc": "2026-10-21T18:54:07.002658Z",
+  "commands": {
+    "gffcompare": null,
+    "gffread": null,
+    "apptainer": "/usr/bin/apptainer",
+    "singularity": "/usr/bin/singularity",
+    "micromamba": null,
+    "conda": null
+  },
+  "modules": {
+    "numpy": true,
+    "duckdb": false,
+    "torch": false,
+    "pytest": false
+  },
+  "panels": {
+    "path": "/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14/revision/protocols/b6_panels_v1.tsv",
+    "exists": true,
+    "directory": false
+  },
+  "C2_final": {
+    "path": "/work/nvme/bilv/wcyim/transgenic/runs/c2_compile_history_validation/3370048/resumed/step_04099",
+    "exists": true,
+    "directory": true
+  },
+  "B6_run": {
+    "path": "/work/nvme/bilv/wcyim/transgenic/runs/b6_compile_history_validation/3425703/resumed",
+    "exists": true,
+    "directory": true
+  }
+}

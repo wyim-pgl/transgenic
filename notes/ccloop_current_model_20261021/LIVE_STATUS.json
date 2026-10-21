@@ -1,0 +1,34 @@
+{
+  "observed_utc": "2026-10-21T18:58:43.172323Z",
+  "slurm_display_timezone": "UTC",
+  "journal": {
+    "phase": "waiting_production",
+    "revision": 1321,
+    "last_error": null,
+    "last_wait": "production pending/running",
+    "epoch_events": []
+  },
+  "production_jobs": [
+    "3429921"
+  ],
+  "queue": {
+    "returncode": 0,
+    "stdout": "3429921|PENDING|b6-b6_in_place_50a7fac_20261020-production-0001|(Priority)\n",
+    "stderr": ""
+  },
+  "estimate": {
+    "returncode": 0,
+    "stdout": "3429921|PENDING|2026-10-23T02:45:02|(null)|Priority\n",
+    "stderr": ""
+  },
+  "storage": {
+    "returncode": 0,
+    "stdout": "{\"filesystem_available_bytes\": 266137128960, \"pool\": \"ddn_ssd\", \"project_id\": 22169, \"quota_remaining_bytes\": 125137973248, \"required_bytes\": 107374182400, \"results_dir\": \"/work/nvme/bilv/wcyim/transgenic/runs\"}\n",
+    "stderr": ""
+  },
+  "accounts": {
+    "returncode": 0,
+    "stdout": "Project Summary for User 'wcyim':\n\nAccount                        Balance(Hours)   Deposited(Hours)  Project\n----------------------------  ----------------  ----------------  ----------------------\nbilv-dtai-gh                              1624              2501  leakage-controlled ...\n",
+    "stderr": ""
+  }
+}

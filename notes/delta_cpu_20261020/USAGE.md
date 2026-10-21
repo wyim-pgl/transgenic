@@ -1,6 +1,15 @@
 # Delta CPU 사용 준비 — 2026-10-20
 
-NCSA 공식 문서를 확인한 사용 안내다. **Delta CPU 로그인과 기존 bilv NVMe/HDD 공유 읽기·쓰기는 확인했다. 1,000 core-hours 신청의 CPU Slurm association/크레딧은 아직 준비되지 않았고 CPU 잡은 미제출이다.** 신청에 사용한 1,000 ACCESS credits와 당시 DeltaAI GPU 잔액 1,641 hours는 현재 작업의 사용자 제공/운영 기록이다. 승인된 CPU 잔액은 아래 `accounts` 출력으로 별도 확인한다. 현재 상태 정본은 [resume](../../.atl/resume.md)와 [TODO](../../.atl/todo.md)다.
+NCSA 공식 문서를 확인한 사용 안내다. **10-21 승인 후 계정bilv-delta-cpu/최초잔액1,000core-hours와 실제0GPU CPU잡23104942의 정상 종료를 확인했다.** 기존bilv NVMe/HDD 공유접근과 작은helper무결성도 실제CPU노드에서 통과했다. 신청에 사용한1,000 ACCESS credits와 당시DeltaAI GPU잔액1,641hours는 과거 사용자제공값이며 현재잔액과 구분한다. 현재 상태 정본은 [resume](../../.atl/resume.md)와 [TODO](../../.atl/todo.md)다. 아래 승인전 절차와10-20 관찰은 준비 당시의 기록이다.
+
+## 10-21 CPU 활성화 및 실제 작업 검증
+
+- `accounts`: bilv-delta-cpu, balance/deposited1,000hours. `sbatch --test-only` PASS 후 정확히한번 제출했다.
+- 실제잡 **23104942**, cpu/1core/1GiB/10min/no-requeue, cn103/x86_64/Python3.9.21. 7초 후 parent/batch/extern COMPLETED0:0. 실제할당 `cpu=1,mem=1G,node=1,billing=1000`, GPU항목없음.
+- 공유NVMe/HDD/기존archivehelper경로 접근과고정helper3개의SHA검사 PASS. 모델·입력의대형해시나이관·삭제는수행하지않았다.
+- 실행후 `accounts` 정수잔액999, `jobcharge` 0.00SU. 표시정밀도가 달라1SU가 실제소모됐다고 단정하지않는다.
+- 원격정본 `/u/wcyim/transgenic_ops/delta_cpu_preflight_20261021`; [사전검사](STAGING_20261021.json), [제출](SUBMISSION_20261021.json), [실행결과](PREFLIGHT_RESULT_20261021.json), [과금조회](CHARGE_20261021.json).
+- 후속 **23105376**도실제CPU1core/1GiB/0GPU/7초/COMPLETED0:0. 기존Pronghorn의gffcompare0.12.6 바이너리SHA `a440e1533611a40a51cf2b5b35a2e15ec6b885660dd35f6b531e0d65601a963a`를보존해DeltaCPU전용경로 `/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021/bin/gffcompare`에서실행했고,작은정확/변형intron-chain fixture를통과했다. 기본PATH에설치된것은아니며 실제WP5평가통과를뜻하지않는다. [실행증거](../ccloop_current_model_20261021/SCORER_RESULT.json).
 
 Delta는 CPU core-hours를 별도 자원으로 제공한다. 앞으로 파일 복사·해시·아카이브를 CPU 노드에서 처리하는 데 적합하다. 기존 B6/C2의 실제 4GPU 학습·재개 동일성 검증은 DeltaAI에서 수행한다. [NCSA Delta 할당 안내](https://delta.ncsa.illinois.edu/delta-allocations/)
 

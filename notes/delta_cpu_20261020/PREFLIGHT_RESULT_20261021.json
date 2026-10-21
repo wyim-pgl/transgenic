@@ -1,0 +1,19 @@
+{
+  "observed_utc": "2026-10-21T18:38:00.369806Z",
+  "accounting": {
+    "returncode": 0,
+    "stdout": "23104942|bilv-delta-cpu|cpu|COMPLETED|0:0|00:00:07|1|1G|billing=1000,cpu=1,mem=1G,node=1|billing=1000,cpu=1,mem=1G,node=1|\n23104942.batch|bilv-delta-cpu||COMPLETED|0:0|00:00:07|1|||cpu=1,mem=1G,node=1|9696K\n23104942.extern|bilv-delta-cpu||COMPLETED|0:0|00:00:07|1|||billing=1000,cpu=1,mem=1G,node=1|\n",
+    "stderr": ""
+  },
+  "queue": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "accounts": {
+    "returncode": 0,
+    "stdout": "Project Summary for User 'wcyim':\n\nAccount                        Balance(Hours)   Deposited(Hours)  Project\n----------------------------  ----------------  ----------------  ----------------------\nbilv-delta-cpu                             999              1000  leakage-controlled ...\n",
+    "stderr": ""
+  },
+  "log": "{\n  \"account\": \"bilv-delta-cpu\",\n  \"allocated_tres\": \"cpu=1,mem=1G,node=1,billing=1000\",\n  \"architecture\": \"x86_64\",\n  \"hostname\": \"cn103.delta.ncsa.illinois.edu\",\n  \"job_id\": \"23104942\",\n  \"kind\": \"delta_cpu_metadata_preflight\",\n  \"partition\": \"cpu\",\n  \"paths\": [\n    {\n      \"gid\": 22169,\n      \"path\": \"/work/nvme/bilv/wcyim/transgenic\",\n      \"readable\": true,\n      \"uid\": 97434,\n      \"writable\": true\n    },\n    {\n      \"gid\": 22169,\n      \"path\": \"/work/hdd/bilv/wcyim/transgenic/checkpoint_archive\",\n      \"readable\": true,\n      \"uid\": 97434,\n      \"writable\": true\n    },\n    {\n      \"gid\": 202,\n      \"path\": \"/work/nvme/bilv/wcyim/transgenic/ops/checkpoint_archive/3b4eb0d\",\n      \"readable\": true,\n      \"uid\": 97434,\n      \"writable\": true\n    }\n  ],\n  \"python\": \"3.9.21 (main, May 11 2026, 00:00:00) \\n[GCC 11.5.0 20240719 (Red Hat 11.5.0-5)]\",\n  \"requested_tres\": \"cpu=1,mem=1G,node=1,billing=1000\",\n  \"reviewed_helper_hashes\": {\n    \"revision/scripts/b6/checkpoint_archive.py\": \"0c79dfddfec33695a60255b6dea55c459712241670924ed30366014c30e4fbf5\",\n    \"revision/scripts/b6/checkpoint_archive_cli.py\": \"1a733e111d38bd5ae4da2e3370d7a9f0b3058a2a7852e797efcfbb1620b487d9\",\n    \"revision/scripts/b6/storage_preflight.py\": \"03832311be8dfa8652383a34856d02b68a1b15f7ed1052dd8bdc7d4de28a1fb4\"\n  },\n  \"scope\": \"metadata and small source files only; no checkpoint/data copy, payload hashing, deletion or write-access test\",\n  \"uid\": 97434\n}\n"
+}

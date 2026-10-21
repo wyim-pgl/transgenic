@@ -1,0 +1,12 @@
+{
+  "observed_utc": "2026-10-21T19:02:10.320855Z",
+  "operation_dir": "/u/wcyim/transgenic_ops/wp5_cpu_scoring_20261021",
+  "source_binary": "/data/gpfs/assoc/pgl/bin/conda/conda_envs/transgenic-revision/bin/gffcompare",
+  "binary_sha256": "a440e1533611a40a51cf2b5b35a2e15ec6b885660dd35f6b531e0d65601a963a",
+  "script_sha256": "b0d84d44e4506cec3a6be4ff1f4861d9c2f041d9327e12903d91f7dceea0f884",
+  "test_only": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "sbatch: Job 23105336 to start at 2026-10-21T14:02:10 a using 1 processors on nodes cn103 in partition cpu\n"
+  }
+}
