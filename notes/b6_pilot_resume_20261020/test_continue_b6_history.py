@@ -38,7 +38,8 @@ def rt_identity(binding):
 
 class Scheduler:
     def __init__(self, config):
-        self.config=config; self.jobs={}; self.submissions=[]; self.cancellations=[]
+        self.config=config; self.jobs={}; self.submissions=[]; self.cancellations=[]; self.cancel_argv=[]
+        self.start_on_cancel=False
         self.matches=[]; self.lose_submit=False; self.lose_cancel=False; self.reserve=101*1024**3
         for pin in [config['proof_identity']]+config['obsolete_jobs']:
             self.jobs[pin['job_id']]=dict(pin, active=False, rows={pin['job_id']:['COMPLETED','0:0'],pin['job_id']+'.batch':['COMPLETED','0:0']})
@@ -49,7 +50,16 @@ class Scheduler:
     def storage(self, config, root):
         return dict(project_id=22169,pool='ddn_ssd',quota_remaining_bytes=self.reserve,filesystem_available_bytes=self.reserve)
     def cancel(self, argv):
-        job=argv[-1];self.cancellations.append(job)
+        job=argv[-1];self.cancel_argv.append(list(argv))
+        if self.start_on_cancel:
+            self.jobs[job].update(active=True,state='RUNNING',reason='None',rows={job:['RUNNING','0:0']})
+        # Model Slurm's filters at the mutation boundary, after the last observation.
+        if '--state=PENDING' in argv and self.jobs[job].get('state')!='PENDING':
+            return dict(returncode=0,stdout='',stderr='')
+        owners=[arg.split('=',1)[1] for arg in argv if arg.startswith('--user=')]
+        if owners and self.jobs[job]['owner'] not in owners:
+            return dict(returncode=0,stdout='',stderr='')
+        self.cancellations.append(job)
         self.jobs[job].update(active=False,rows={job:['CANCELLED','0:0']})
         if self.lose_cancel: raise host.Wait('lost cancel response')
         return dict(returncode=0,stdout='',stderr='')
@@ -184,13 +194,34 @@ class ControllerTests(unittest.TestCase):
         self.advance('candidate_activated')
         self.assertEqual(self.scheduler.cancellations,['3345918','3345917'])
     def test_running_foreign_script_old_job_refuse(self):
-        for field,value in [('state','RUNNING'),('uid',42),('command','/foreign/wp5_pilot.sbatch')]:
+        for field,value in [('state','RUNNING'),('reason','Priority'),('uid',42),('command','/foreign/wp5_pilot.sbatch')]:
             with self.subTest(field=field):
                 original=copy.deepcopy(self.scheduler.jobs['3345918'])
                 self.scheduler.jobs['3345918'][field]=value
                 with self.assertRaises(host.Blocked):self.controller.tick()
                 self.scheduler.jobs['3345918']=original
         self.assertEqual(self.scheduler.cancellations,[])
+    def test_job_starting_after_final_observation_is_not_cancelled_or_activated(self):
+        self.advance('validation_accepted');self.scheduler.start_on_cancel=True
+        self.controller.tick()
+        job=self.scheduler.jobs['3345918']
+        self.assertTrue(job['active'],'retirement cancelled a job that started after observation')
+        self.assertEqual(job['state'],'RUNNING')
+        self.assertEqual(self.scheduler.cancellations,[])
+        expected=['scancel','--state=PENDING','--user=wcyim','3345918']
+        self.assertEqual(self.scheduler.cancel_argv,[expected])
+        self.assertEqual(self.controller.j['intent']['argv'],expected)
+        # A no-op filtered cancellation is not retirement evidence. Recovery must
+        # refuse the now-running allocation and must never retry or activate.
+        self.controller=host.Controller(self.state,self.scheduler)
+        for _ in range(2):
+            with self.assertRaisesRegex(host.Blocked,'held PENDING'):self.controller.tick()
+        self.assertEqual(self.scheduler.cancel_argv,[expected])
+        self.assertEqual(self.controller.j['retirements'],[])
+        self.assertEqual(self.controller.j['phase'],'retire_waiting')
+        self.assertFalse((self.state/'activation.json').exists())
+        self.assertEqual(self.scheduler.submissions,[])
+        self.assertEqual(self.scheduler.jobs['3345917']['state'],'PENDING')
     def test_reserve_wait_then_recovers(self):
         self.advance('both_old_jobs_retired');self.scheduler.reserve=99*1024**3
         self.controller.tick();self.assertEqual(self.controller.j['phase'],'both_old_jobs_retired')

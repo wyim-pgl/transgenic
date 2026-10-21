@@ -255,7 +255,8 @@ class Controller:
         index=len(self.j['retirements'])
         if index==2:return self.save('both_old_jobs_retired',intent=None)
         pin=self.c['obsolete_jobs'][index];self.held_old(self.scheduler.observe(pin['job_id'],self.c['owner']),pin)
-        intent=dict(kind='retire',job_id=pin['job_id'],pin=pin,created=time.time(),argv=['scancel',pin['job_id']])
+        intent=dict(kind='retire',job_id=pin['job_id'],pin=pin,created=time.time(),
+                    argv=['scancel','--state=PENDING','--user='+self.c['owner'],pin['job_id']])
         self.save('retire_intent',intent=intent)
         # Only this stack frame issues scancel. Recovered intent observes accounting.
         self.held_old(self.scheduler.observe(pin['job_id'],self.c['owner']),pin)
