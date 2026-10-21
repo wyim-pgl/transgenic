@@ -39,7 +39,7 @@ def rt_identity(binding):
 class Scheduler:
     def __init__(self, config):
         self.config=config; self.jobs={}; self.submissions=[]; self.cancellations=[]; self.cancel_argv=[]
-        self.start_on_cancel=False
+        self.start_after_client_filter=False
         self.matches=[]; self.lose_submit=False; self.lose_cancel=False; self.reserve=101*1024**3
         for pin in [config['proof_identity']]+config['obsolete_jobs']:
             self.jobs[pin['job_id']]=dict(pin, active=False, rows={pin['job_id']:['COMPLETED','0:0'],pin['job_id']+'.batch':['COMPLETED','0:0']})
@@ -51,13 +51,19 @@ class Scheduler:
         return dict(project_id=22169,pool='ddn_ssd',quota_remaining_bytes=self.reserve,filesystem_available_bytes=self.reserve)
     def cancel(self, argv):
         job=argv[-1];self.cancel_argv.append(list(argv))
-        if self.start_on_cancel:
+        def selected(observation):
+            owners=[arg.split('=',1)[1] for arg in argv if arg.startswith('--user=')]
+            return (('--state=PENDING' not in argv or observation.get('state')=='PENDING') and
+                    (not owners or observation['owner'] in owners))
+        # Without --ctld, scancel selects a client-side snapshot and then sends a
+        # job-ID kill RPC without its predicates. The job can start between them.
+        client_selected=selected(copy.deepcopy(self.jobs[job]))
+        if self.start_after_client_filter:
             self.jobs[job].update(active=True,state='RUNNING',reason='None',rows={job:['RUNNING','0:0']})
-        # Model Slurm's filters at the mutation boundary, after the last observation.
-        if '--state=PENDING' in argv and self.jobs[job].get('state')!='PENDING':
-            return dict(returncode=0,stdout='',stderr='')
-        owners=[arg.split('=',1)[1] for arg in argv if arg.startswith('--user=')]
-        if owners and self.jobs[job]['owner'] not in owners:
+        # --ctld carries the predicates in the controller request, so its current
+        # state/owner decide whether the mutation occurs.
+        controller_selected=selected(self.jobs[job]) if '--ctld' in argv else client_selected
+        if not controller_selected:
             return dict(returncode=0,stdout='',stderr='')
         self.cancellations.append(job)
         self.jobs[job].update(active=False,rows={job:['CANCELLED','0:0']})
@@ -201,14 +207,14 @@ class ControllerTests(unittest.TestCase):
                 with self.assertRaises(host.Blocked):self.controller.tick()
                 self.scheduler.jobs['3345918']=original
         self.assertEqual(self.scheduler.cancellations,[])
-    def test_job_starting_after_final_observation_is_not_cancelled_or_activated(self):
-        self.advance('validation_accepted');self.scheduler.start_on_cancel=True
+    def test_job_starting_after_client_filter_snapshot_is_not_cancelled_or_activated(self):
+        self.advance('validation_accepted');self.scheduler.start_after_client_filter=True
         self.controller.tick()
         job=self.scheduler.jobs['3345918']
-        self.assertTrue(job['active'],'retirement cancelled a job that started after observation')
+        self.assertTrue(job['active'],'client-filtered cancellation killed a job that started before its kill RPC')
         self.assertEqual(job['state'],'RUNNING')
         self.assertEqual(self.scheduler.cancellations,[])
-        expected=['scancel','--state=PENDING','--user=wcyim','3345918']
+        expected=['scancel','--ctld','--state=PENDING','--user=wcyim','3345918']
         self.assertEqual(self.scheduler.cancel_argv,[expected])
         self.assertEqual(self.controller.j['intent']['argv'],expected)
         # A no-op filtered cancellation is not retirement evidence. Recovery must
