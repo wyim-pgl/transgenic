@@ -19,4 +19,4 @@
 - [x] Graphify 문서/논문/이미지1,008개130묶음 전체 읽기·SHA/범위 검증 완료. Gemini429 이후 Codex host 분석. 사용량 카운터가 제공되지 않아 실제 토큰 비용은 unknown으로 기록.
 - [x] Graphify JSON748개 보완(733 구조 파싱+15 상세 fallback),2vendor C++ 부분 파싱 경고 기록.18,577노드/38,057관계/1,874군집. 잘못된 Markdown 링크·다중 관계 손실 수정과 독립검토 PASS, 브라우저/CLI/최종 연결 대상 검증 PASS. HTML/JSON/report/benchmark/manifest/cost 기록 완료.
 - [x] B6 운영 기록 main a777258 및 구현 branch50a7fac 별도 atomic push·원격SHA 대조 완료. 구현은 main에 병합하지 않음.
-- [ ] Graphify 최종 산출물·아카이브 완료/최신 상태 기록을 main에 커밋·푸시하고 원격SHA를 확인한다.
+- [x] Graphify 최종 산출물·아카이브 완료/최신 상태 main9ffb8fd 커밋·푸시·원격SHA 일치 확인. GRAPH_PUSH_RECEIPT.json에 기록. 후속 기록 정리 tip은 git log -1로 확인한다.

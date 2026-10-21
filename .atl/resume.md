@@ -24,3 +24,5 @@
 4. 진행 기록/네 재시작 문서 갱신, main 운영 기록과 구현 브랜치를 별도로 커밋·푸시한다. main과 source/구현 브랜치를 병합하지 않는다.
 
 SSH: local→pronghorn(wyim)→dtai(wcyim). DeltaCPU는 pronghorn의 ControlPath `/data/gpfs/home/wyim/.ssh/cm-delta-cpu`를 재사용한다. 큰 staging payload는 stdin으로 전달한다. 무거운 모델/실제입력 해시는 allocation 안에서만 실행한다. 소스는 `/work/nvme/bilv/wcyim/transgenic/repo_b6_198ce14`(SOURCE_COMMIT198ce14, snapshot4f12c97), 프로젝트22169/ddn_ssd 기준이다.
+
+원격 보존: main 산출물 커밋9ffb8fd 및 구현 branch50a7fac 푸시·원격SHA 대조 완료. [영수증](../notes/b6_pilot_resume_20261020/GRAPH_PUSH_RECEIPT.json). 이후 체크리스트 정리 커밋 tip은 git log -1로 확인한다.
