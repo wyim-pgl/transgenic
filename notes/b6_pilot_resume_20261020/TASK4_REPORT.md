@@ -74,3 +74,21 @@ Additional checks: Python3.6 AST grammar for both executable Python files; isola
 Self-review inspected the producer/supervisor diff against the unchanged C2 originals, receipt trust boundaries, full script normalization, all mutation crash boundaries, logical ownership, live-vs-historical candidate checks, small-artifact binding, environment/cache/image provenance, epoch/pending-gradient/final arithmetic and failure propagation. No unresolved implementation/API question remains.
 
 Actual Python3.6 execution, NGC26.08 four-rank CUDA execution, real Lustre quota and accounting observations, GPU proof equality and production throughput remain parent-owned validation gates. Local tests do not establish a scientific GPU PASS or authorize a replacement proof after failure. The next task after actual `complete` remains the existing WP5 pilot-panel evaluation.
+
+## Independent review P1 — retirement mutation-boundary correction
+
+Review base: `b4ab09ca8435d8477818817fb0668935427d49a8`. Fix commit: `01c3bc0ff97bc849498e73f274bcf35348f5c065`. The review reproduced an observation/cancellation race: the original B6 argv contained only `scancel <job-id>`, so a held job starting after the last observation could be cancelled while RUNNING. This supersedes any earlier implication that client-side held checks alone protected the cancellation boundary.
+
+The durable per-job intent now records exactly `['scancel', '--state=PENDING', '--user='+owner, job_id]`, restoring the unchanged C2 scheduler-side filters. Full pinned identity and PENDING/JobHeldUser checks before the call, ordered retirement, terminal-CANCELLED observation, durable intent and no-retry recovery remain unchanged. A no-op filtered cancellation is not retirement evidence and cannot advance activation.
+
+The new regression uses the actual controller, real Task1 proof artifacts and the on-disk journal, and a scheduler boundary that changes3345918 to RUNNING immediately before applying the cancellation. It verifies the job remains active, the exact filtered argv is durably recorded, recovery refuses the RUNNING job without another cancellation, the retirement list remains empty, no activation/sbatch occurs and3345917 remains untouched. The existing initial-refusal test now explicitly includes a released-but-PENDING `Reason=Priority` case alongside RUNNING, foreign UID and mismatched full script.
+
+RED command: the host test command below with `ControllerTests.test_job_starting_after_final_observation_is_not_cancelled_or_activated -v` selected. Result:1 test,1 failure,13.967s, exit1 (`/tmp/b6-task4-r1-race-red.log`): the simulated RUNNING allocation was cancelled under the prior argv. GREEN verification:
+
+```bash
+SLURM_JOB_ID=999999 PYTHONPATH=/tmp/b6-c2-recompile/src:/tmp/b6-spec-review-deps /home/wyim/miniconda3/envs/pdb/bin/python notes/b6_pilot_resume_20261020/test_continue_b6_history.py -v
+```
+
+**20/20 host tests PASS**,89.035s, exit0 (`/tmp/b6-task4-r1-host-green.log`). Python compile and scoped diff whitespace checks also pass. The producer, batch/signal supervisor and integration-chain implementation are unchanged, so their previously passing checks were not rerun. No source, C2, graph output or remote state was modified.
+
+Scheduler limitation: these server-side filters constrain allocation state and username; they do not atomically filter `Reason=JobHeldUser`. A release that leaves the job PENDING between the last held observation and scancel remains a reason-observation race. No unsupported reason filter or stronger atomic live-scheduler guarantee is claimed. Initial or subsequently observed released/running/foreign jobs still refuse; the restored filters specifically prevent cancellation of a job that has become RUNNING at the mutation boundary.
