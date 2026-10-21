@@ -1,0 +1,2463 @@
+[
+  {
+    "edge": {
+      "source": "notes_auth_restored_20260921_ont_ont_full_v2_baseline_test_wrapper",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_restored_20260921/ont/ont_full_v2/baseline/test_wrapper.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_restored_20260921_ont_ont_full_v2_test_wrapper",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_restored_20260921/ont/ont_full_v2/test_wrapper.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_est_public_metadata_test_parser",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/est/public_metadata/test_parser.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v1_test_candidate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v1/test_candidate.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v1_test_deploy",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v1/test_deploy.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v2_test_admission_cases",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v2/test_admission_cases.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v2_test_candidate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v2/test_candidate.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v2_test_deploy",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v2/test_deploy.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v2_test_queued_gate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v2/test_queued_gate.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v3_review_final_tmp_source_train_train_hyenatransgenic_rtx4090",
+      "target": "testing_ch4",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v3/review_final/tmp/source/train/train_HyenaTransgenic_RTX4090.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v3_test_admission_cases",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v3/test_admission_cases.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v3_test_candidate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v3/test_candidate.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v3_test_capture",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v3/test_capture.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v3_test_deploy",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v3/test_deploy.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v3_test_queued_gate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v3/test_queued_gate.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v3_test_recovery",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v3/test_recovery.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v4_narrow_evidence_verify",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v4/narrow_evidence/verify.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v4_test_admission_cases",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v4/test_admission_cases.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v4_test_candidate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v4/test_candidate.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v4_test_capture",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v4/test_capture.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v4_test_deploy",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v4/test_deploy.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v4_test_field_alias",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v4/test_field_alias.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v4_test_queued_gate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v4/test_queued_gate.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v4_test_recovery",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v4/test_recovery.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v5_test_admission_cases",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v5/test_admission_cases.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v5_test_candidate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v5/test_candidate.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v5_test_capture",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v5/test_capture.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v5_test_deploy",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v5/test_deploy.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v5_test_field_alias",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v5/test_field_alias.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v5_test_queued_gate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v5/test_queued_gate.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v5_test_recovery",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v5/test_recovery.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v6_test_admission_cases",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v6/test_admission_cases.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v6_test_candidate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v6/test_candidate.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v6_test_capture",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v6/test_capture.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v6_test_deploy",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v6/test_deploy.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v6_test_field_alias",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v6/test_field_alias.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v6_test_queued_gate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v6/test_queued_gate.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_gpu_deployment_v6_test_recovery",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/gpu/deployment_v6/test_recovery.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_ont_fixture_review_run_local_tests",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/ont_fixture/review/run_local_tests.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_ont_fixture_test_fixture",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/ont_fixture/test_fixture.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_ont_fixture_v2_review_v2_run_tests",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/ont_fixture_v2/review_v2/run_tests.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_ont_fixture_v2_test_amendments",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/ont_fixture_v2/test_amendments.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_ont_fixture_v2_test_fixture",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/ont_fixture_v2/test_fixture.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_ont_fixture_v3_test_amendments",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/ont_fixture_v3/test_amendments.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_ont_fixture_v3_test_fixture",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/ont_fixture_v3/test_fixture.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_ont_fixture_v4_test_amendments",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/ont_fixture_v4/test_amendments.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_ont_fixture_v4_test_file_limit",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/ont_fixture_v4/test_file_limit.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_ont_fixture_v4_test_fixture",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/ont_fixture_v4/test_fixture.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_auth_resume_20260917_panel_transport_v1_test_transport",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/auth_resume_20260917/panel/transport_v1/test_transport.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_b6_pilot_resume_20261020_archive_test_archive_guard",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/b6_pilot_resume_20261020/archive/test_archive_guard.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_checkpoint_archive_20261009_c2_failure_3345919_resume_determinism_test_c2_link_contract",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/test_c2_link_contract.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_checkpoint_archive_20261009_c2_failure_3345919_resume_determinism_test_continue_c2_history",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/test_continue_c2_history.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_checkpoint_archive_20261009_c2_failure_3345919_resume_determinism_test_first_forward",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/test_first_forward.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_checkpoint_archive_20261009_c2_failure_3345919_resume_determinism_test_history_proof",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/test_history_proof.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_checkpoint_archive_20261009_c2_failure_3345919_resume_determinism_test_probe",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/test_probe.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_checkpoint_archive_20261009_c2_failure_3345919_resume_determinism_test_production_link",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/test_production_link.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_checkpoint_archive_20261009_c2_failure_3345919_test_continue_c2",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/checkpoint_archive_20261009/c2_failure_3345919/test_continue_c2.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_mvp_execution_20260916_final_p1_test_deploy",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/mvp_execution_20260916/final_p1/test_deploy.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_mvp_execution_20260916_gffcompare_local_recovery_test_recover",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/mvp_execution_20260916/gffcompare/local_recovery/test_recover.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_mvp_execution_20260916_p1_test_deploy",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/mvp_execution_20260916/p1/test_deploy.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_execution_20260917_est_deployment_test_deployment",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_execution_20260917/est_deployment/test_deployment.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_execution_20260917_est_sample_fix1_review_evidence_test_independent",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_execution_20260917/est_sample_fix1_review_evidence/test_independent.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_execution_20260917_est_sample_review_evidence_test_adversarial",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_execution_20260917/est_sample_review_evidence/test_adversarial.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_execution_20260917_panel_adversarial_proof",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_execution_20260917/panel_adversarial_proof.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_deploy_fix_backup_test_deployment",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_deploy_fix_backup/test_deployment.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_deploy_fix_review_evidence_adversarial",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_deploy_fix_review_evidence/adversarial.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_align_align",
+      "target": "align",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/align/align.cpp",
+      "source_location": "L38",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "align.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_align_align",
+      "target": "output_format",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/align/align.cpp",
+      "source_location": "L39",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "output/output_format.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_align_legacy_query_mapper",
+      "target": "query_mapper",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/align/legacy/query_mapper.cpp",
+      "source_location": "L24",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "query_mapper.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_align_legacy_query_mapper",
+      "target": "output_format",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/align/legacy/query_mapper.cpp",
+      "source_location": "L29",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "output/output_format.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_align_output",
+      "target": "output_format",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/align/output.cpp",
+      "source_location": "L33",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "output/output_format.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_basic_hssp",
+      "target": "output_format",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/basic/hssp.cpp",
+      "source_location": "L32",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "output/output_format.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_data_frequent_seeds",
+      "target": "frequent_seeds",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/data/frequent_seeds.cpp",
+      "source_location": "L33",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "frequent_seeds.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_masking_masking",
+      "target": "tantan",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/masking/masking.cpp",
+      "source_location": "L23",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "tantan.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_output_blast_tab_format",
+      "target": "output_format",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/output/blast_tab_format.cpp",
+      "source_location": "L39",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "output_format.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_output_join_blocks",
+      "target": "output_format",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/output/join_blocks.cpp",
+      "source_location": "L36",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "output_format.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_output_output",
+      "target": "output_format",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/output/output.h",
+      "source_location": "L38",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "output_format.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_output_output_format",
+      "target": "output_format",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/output/output_format.cpp",
+      "source_location": "L26",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "output_format.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_run_double_indexed",
+      "target": "output_format",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/run/double_indexed.cpp",
+      "source_location": "L29",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "output/output_format.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_run_double_indexed",
+      "target": "frequent_seeds",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/run/double_indexed.cpp",
+      "source_location": "L30",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "data/frequent_seeds.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_run_double_indexed",
+      "target": "align",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/run/double_indexed.cpp",
+      "source_location": "L41",
+      "weight": 1.0,
+      "metadata": {
+        "raw_include": "align/align.h",
+        "include_kind": "quoted"
+      },
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_ont_full_fix_backup_20260917_143737_test_wrapper",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/ont_full/fix_backup_20260917_143737/test_wrapper.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_ont_full_review_evidence_review_harness",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/ont_full/review_evidence/review_harness.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_recovery_20260917_1400_ont_full_test_wrapper",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/seed123_recovery_20260917_1400/ont_full/test_wrapper.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_wait_work_20260916_gpu_followup_test_followup",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/wait_work_20260916/gpu_followup/test_followup.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_wait_work_20260916_longread_test_gate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/wait_work_20260916/longread/test_gate.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_wait_work_20260916_panel_inputs_reference_map_release_package_source_train_train_hyenatransgenic_rtx4090",
+      "target": "testing_ch4",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/wait_work_20260916/panel_inputs/reference_map_release/package/source/train/train_HyenaTransgenic_RTX4090.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_wait_work_20260916_panel_inputs_reference_map_release_test_release",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/wait_work_20260916/panel_inputs/reference_map_release/test_release.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_wait_work_20260916_panel_inputs_test_bindfix1",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/wait_work_20260916/panel_inputs/test_bindfix1.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_wait_work_20260916_panel_inputs_test_tools",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/wait_work_20260916/panel_inputs/test_tools.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_wait_work_20260916_repro_captured_exact_test_mvp_decode",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/wait_work_20260916/repro/captured/exact_test_mvp_decode.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_worktree_archive_20260923_est_real_source_binding_20260917_producer_length_fix_backup_tests_test_est_hsp_contract",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/worktree_archive_20260923/est-real-source-binding-20260917/producer_length_fix/backup/tests/test_est_hsp_contract.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_worktree_archive_20260923_est_real_source_binding_20260917_producer_length_fix_backup_tests_test_est_real_sample",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "notes/worktree_archive_20260923/est-real-source-binding-20260917/producer_length_fix/backup/tests/test_est_real_sample.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "pkg_transgenic",
+      "target": "pkg_torch",
+      "relation": "depends_on",
+      "context": "dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pyproject.toml",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "pkg_transgenic",
+      "target": "pkg_transformers",
+      "relation": "depends_on",
+      "context": "dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pyproject.toml",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "pkg_transgenic",
+      "target": "pkg_numpy",
+      "relation": "depends_on",
+      "context": "dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pyproject.toml",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "pkg_transgenic",
+      "target": "pkg_pandas",
+      "relation": "depends_on",
+      "context": "dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pyproject.toml",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "pkg_transgenic",
+      "target": "pkg_duckdb",
+      "relation": "depends_on",
+      "context": "dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pyproject.toml",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "pkg_transgenic",
+      "target": "pkg_safetensors",
+      "relation": "depends_on",
+      "context": "dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pyproject.toml",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "pkg_transgenic",
+      "target": "pkg_huggingface_hub",
+      "relation": "depends_on",
+      "context": "dependency",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pyproject.toml",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_results_fig4_forensics_panelc_examples_verify_panelc_figures",
+      "target": "make_figure4_panelc",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/results/fig4_forensics/panelC_examples/verify_panelC_figures.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_15_revision_figures",
+      "target": "figstyle",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/15_revision_figures.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_16_supplement_figures",
+      "target": "figstyle",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/16_supplement_figures.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_addition_dump",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_addition_dump.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_as_addition_scoring",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_as_addition_scoring.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_b6_panels",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_b6_panels.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_epoch_budget",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_epoch_budget.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_est_arm_report",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_est_arm_report.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_evidence_support",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_evidence_support.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_filter_additions_structurally",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_filter_additions_structurally.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_make_training_input_manifest",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_make_training_input_manifest.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_polishing_scoring",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_polishing_scoring.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_prompt_requirements",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_prompt_requirements.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_run_polishing_benchmark",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_run_polishing_benchmark.py",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_stage_annotations",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_stage_annotations.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_univec_trim",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "revision/scripts/tests/test_univec_trim.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_conftest",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/conftest.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_b5_resume",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_b5_resume.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_b5_runtime",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_b5_runtime.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_build_b5",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_build_b5.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_dataset_strict",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_dataset_strict.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_encoder_init_report",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_encoder_init_report.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_geenuff_qc",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_geenuff_qc.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_gff_gsf_roundtrip_tair10",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_gff_gsf_roundtrip_tair10.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_gsf_feature_caps",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_gsf_feature_caps.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_gsf_token_cap",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_gsf_token_cap.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_gsf_v3_windows",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_gsf_v3_windows.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_longread_fetch",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_longread_fetch.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_make_orthogroup_splits",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_make_orthogroup_splits.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_merge_b5_databases",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_merge_b5_databases.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_orthodb_filter",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_orthodb_filter.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_protein_accept",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_protein_accept.py",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_rc_augmentation_split_inheritance",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_rc_augmentation_split_inheritance.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_report_b5_database",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_report_b5_database.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_report_swissprot_mapping",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_report_swissprot_mapping.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_segmentation_label_weight_alignment",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_segmentation_label_weight_alignment.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_swissprot_sensitivity",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_swissprot_sensitivity.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_train_b5_chain",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_train_b5_chain.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_train_ckpt_mode",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_train_ckpt_mode.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_v2_transcript_cap",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_v2_transcript_cap.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "train_train_hyenatransgenic_rtx4090",
+      "target": "testing_ch4",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "train/train_HyenaTransgenic_RTX4090.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_seed123_execution_20260917_est_sample_review_evidence_test_adversarial_test_cli_manifest_mismatch_does_not_read_sources",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "notes/seed123_execution_20260917/est_sample_review_evidence/test_adversarial.py",
+      "source_location": "L135",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_worktree_archive_20260923_est_real_source_binding_20260917_producer_length_fix_backup_tests_test_est_hsp_contract_test_reject_invalid_rich",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "notes/worktree_archive_20260923/est-real-source-binding-20260917/producer_length_fix/backup/tests/test_est_hsp_contract.py",
+      "source_location": "L105",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_worktree_archive_20260923_est_real_source_binding_20260917_producer_length_fix_backup_tests_test_est_hsp_contract_test_reject_bad_actual_sequences",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "notes/worktree_archive_20260923/est-real-source-binding-20260917/producer_length_fix/backup/tests/test_est_hsp_contract.py",
+      "source_location": "L116",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "notes_worktree_archive_20260923_est_real_source_binding_20260917_producer_length_fix_backup_tests_test_est_hsp_contract_test_raw_equal_runs_checked_against_dna_and_source_hash",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "notes/worktree_archive_20260923/est-real-source-binding-20260917/producer_length_fix/backup/tests/test_est_hsp_contract.py",
+      "source_location": "L122",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_addition_dump_test_missing_sequence_is_error",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_addition_dump.py",
+      "source_location": "L60",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_addition_dump_test_never_overwrite_existing_directory",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_addition_dump.py",
+      "source_location": "L65",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_as_addition_scoring_test_empty_side_raises_rather_than_reporting_zeros",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_as_addition_scoring.py",
+      "source_location": "L503",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_b6_panels_test_select_panels_errors_when_walked_locus_has_no_count_or_pool_exhausted",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_b6_panels.py",
+      "source_location": "L82",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_filter_additions_structurally_test_empty_output_raises_rather_than_reporting_a_clean_filter",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_filter_additions_structurally.py",
+      "source_location": "L226",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_polishing_scoring_test_cds_row_parented_to_declared_noncoding_feature_raises",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_polishing_scoring.py",
+      "source_location": "L297",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_polishing_scoring_test_score_raises_on_total_seqid_mismatch",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_polishing_scoring.py",
+      "source_location": "L401",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_polishing_scoring_test_score_raises_when_output_cannot_be_paired_to_any_input",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_polishing_scoring.py",
+      "source_location": "L417",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_polishing_scoring_test_row_with_no_parent_at_all_raises_a_distinct_message",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_polishing_scoring.py",
+      "source_location": "L937",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_polishing_scoring_test_baseline_raises_on_empty_input_instead_of_reporting_zeros",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_polishing_scoring.py",
+      "source_location": "L1026",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "revision_scripts_tests_test_polishing_scoring_test_baseline_raises_on_total_seqid_mismatch",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "revision/scripts/tests/test_polishing_scoring.py",
+      "source_location": "L1035",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_b5_resume_test_checkpoint_restart_preserves_samples",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_b5_resume.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_b5_resume_test_pending_grads_round_trip",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_b5_resume.py",
+      "source_location": "L122",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_gsf_feature_caps_test_feature_caps",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_gsf_feature_caps.py",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_gsf_feature_caps_test_window_cap",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_gsf_feature_caps.py",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_gsf_token_cap_test_token_cap_rejects_over_2048",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_gsf_token_cap.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_gsf_v3_windows_test_v3_token_count_and_caps",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_gsf_v3_windows.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_gsf_v3_windows_test_a33_overlapping_blocks_accepted_and_ordered",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_gsf_v3_windows.py",
+      "source_location": "L86",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_gsf_v3_windows_test_equal_span_distinct_genes_use_canonical_block_tiebreak",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_gsf_v3_windows.py",
+      "source_location": "L168",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_rc_augmentation_split_inheritance_test_invalid_rc_mode_rejected",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_rc_augmentation_split_inheritance.py",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_report_swissprot_mapping_test_mapping_units_copy_and_frozen_hash_guard",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_report_swissprot_mapping.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_segmentation_label_weight_alignment_test_evidence_weight_formula_a18_4",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_segmentation_label_weight_alignment.py",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_segmentation_label_weight_alignment_test_junction_family_weights_est_leads_a20",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_segmentation_label_weight_alignment.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  },
+  {
+    "edge": {
+      "source": "tests_test_v2_transcript_cap_test_sixteen_transcripts_rejected",
+      "target": "pytest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_v2_transcript_cap.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    "reason": "unresolved_undeclared_endpoint"
+  }
+]

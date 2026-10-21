@@ -1,0 +1,30 @@
+Graph: graphify-out/graph.json (18577 nodes) | Traversal: BFS depth=2 | Start: ['Compile-history resumed checkpoint220 ledger', 'C2 final4099 compile-history ledger', 'C2 compiler and resume recovery investigation', 'checkpoint()', 'Controller', 'history_proof.py', 'Resume archive before September 16', 'C2 schedule gate', 'Compile-history journal implementation', 'B6 production preparation progress, September 25–October 10, 2026'] | 650 nodes found
+
+[!] TRUNCATED: showing 25 of 650 nodes (~1200-token budget). The answer may be among the 625 cut nodes — raise the token budget to 32769 to get all 650 (CLI: --budget 32769, MCP: token_budget=32769) or narrow the query (e.g. context_filter=['call'], or get_node for a specific symbol).
+
+NODE Compile-history resumed checkpoint220 ledger [src=notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/3369694/resumed/latest_state/compile_history.json loc=None community=C2 Resumed 220 Compile Ledger]
+NODE C2 final4099 compile-history ledger [src=notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/status_20261020/runs/c2_compile_history_validation/3370048/resumed/step_04099/compile_history.json loc=None community=C2 Final4099 Compile History Ledger]
+NODE C2 compiler and resume recovery investigation [src=notes/checkpoint_archive_20261009/C2_RECOVERY_20261011.md loc=None community=C2 Legacy Bootstrap Recovery Reviews]
+NODE checkpoint() [src=notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/probe.py loc=L242 community=C2 Resume State Comparisons]
+NODE Controller [src=notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/continue_c2_history.py loc=L381 community=C2 History Resume Controller]
+NODE history_proof.py [src=notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/history_proof.py loc=L1 community=C2 History Proof Validation]
+NODE Resume archive before September 16 [src=.atl/archive/resume_before_20260916.md loc=/mnt/f/scratch/develop/Transgenic/transgenic_local/.atl/archive/resume_before_20260916.md:L1-1394 community=Archived B5 Corpus Readiness]
+NODE C2 schedule gate [src=revision/protocols/IMPLEMENTATION_ORDER_B5_C0_C2_v1.md loc=None community=GSF Splits and Implementation Plans]
+NODE Compile-history journal implementation [src=notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/implementation_reviews/2026-10-12-c2-compile-history/task-1-report.md loc=None community=C2 Compile History Journal Report]
+NODE B6 production preparation progress, September 25–October 10, 2026 [src=notes/b6_production_start_20260925/PROGRESS.md loc=None community=B6 Production Preparation History]
+NODE json [src= loc= community=JSON Hashing and Archived Checks]
+NODE hashlib [src= loc= community=JSON Hashing and Archived Checks]
+NODE re [src= loc= community=Reference Restyling and Heldout Scoring]
+NODE os [src= loc= community=Python Utilities and Dryruns]
+NODE pathlib [src= loc= community=Python Recovery Test Dependencies]
+NODE argparse [src= loc= community=Evidence Reporting Command Utilities]
+NODE math [src= loc= community=Python Utilities and Dryruns]
+NODE B1/B4 frozen transcript evidence protocol v1.36 [src=revision/protocols/PROTOCOL_B1_frozen_v1.md loc=/mnt/f/scratch/develop/Transgenic/transgenic_local/revision/protocols/PROTOCOL_B1_frozen_v1.md:1-1206 community=B1 B4 Frozen Evidence Protocol]
+NODE importlib_util [src= loc= community=Python Recovery Test Dependencies]
+NODE Archived detailed TODO and review chronology through October12 [src=.atl/todo_history_20261012.md loc=None community=Historical TODO and ONT Policies]
+NODE types [src= loc= community=Python Recovery Test Dependencies]
+NODE continue_c2_history.py [src=notes/checkpoint_archive_20261009/c2_failure_3345919/resume_determinism/continue_c2_history.py loc=L1 community=C2 History Resume Controller]
+NODE revision/scripts/59_evidence_support.py [src=revision/scripts/59_evidence_support.py loc=L1 community=Transcript Evidence Support]
+NODE test_train_b5_chain.py [src=tests/test_train_b5_chain.py loc=L1 community=B5 Training Chain Tests]
+NODE revision/protocols/B6_MVP_PILOT_v1.md [src=revision/protocols/B6_MVP_PILOT_v1.md loc=lines 1-373 community=B6 Evidence Pilot Workplans]
+... (truncated — 625 more nodes cut by ~1200-token budget. Narrow with context_filter=['call'] or use get_node for a specific symbol)

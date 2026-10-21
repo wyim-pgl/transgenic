@@ -8,3 +8,7 @@ host_chunks/
 HOST_PLAN.json
 RUN_STATE.json
 SEMANTIC_PLAN.json
+label_work/
+LABEL_INPUT.json
+AST_UNREPRESENTED*.json
+worker_*_status.json

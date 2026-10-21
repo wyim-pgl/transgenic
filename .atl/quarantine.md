@@ -4,6 +4,9 @@
 
 | 반복하지 않을 접근 | 확인된 사실/대안 |
 |---|---|
+| 문서의 끊어진 상대 Markdown 링크를 저장소 루트 파일로 자동 연결 | Graphify 병합 검토에서15개 잘못된 root fallback을 재현했다. Markdown 링크는 포함 문서 기준으로만 해석하고 실제 존재하는 그래프 대상에 연결한다. |
+| 단순 Graph 재출력으로 같은 노드 쌍의 다른 관계를 버리기 | Graphify 초기 병합 검토에서 다중 관계 손실 발견. 검증된 original_links를 초기·군집명 출력 모두에 보존, multigraph 표시 및 최종38,057관계/연결 대상0누락 검증. |
+| semantic 인용 위치 null을 정밀한 행 인용으로 꾸미기 | 실제로 읽은 파일 전체 범위만 명시하고 location_precision=whole_source로 표시한다. 기존 정밀한 행·페이지 인용은 유지한다. |
 | 동일하게 빈 optimizer/scheduler/RNG를 두 checkpoint에서 비교해 READY | e2bee04는 실제 prepared model/optimizer/scheduler schema8파일 및 fullAdamW/four-deviceRNG/기존slot 보존을 독립 검증한다. 단순두파일동일성만으로 완전한 상태를 증명하지 않는다. |
 | scancel --state=PENDING --user만으로 원자적 필터를 주장 | 일반scancel은 client snapshot을필터한뒤jobID RPC를보낼수있다.2a48265는 `--ctld`를추가해controller-side state/user필터를사용한다. JobHeldUser reason의원자적보장은없다. |
 | Apptainer --containall의 작은 /tmp에서 다수 fixture copy | NGC최초20setup ENOSPC 재현. 소유host/tmp scratch를컨테이너/tmp에명시bind 후36/36PASS,원래실패로그보존/시험scratch정리. |

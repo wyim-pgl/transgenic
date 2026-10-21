@@ -1,0 +1,39 @@
+{
+  "browser": "Chrome118 headless, fresh isolated profile",
+  "state": {
+    "title": "graphify - graphify-out/graph.html",
+    "readyState": "complete",
+    "canvases": 1,
+    "svgs": 0,
+    "body": "Light\nDark\nSystem\nNODE INFO\nClick a node to inspect it\nCOMMUNITIES\nSelect All\nPyTorch Transformers Utility Snapshots\n359\nPython Recovery Test Dependencies\n294\nArchived Training Runtime Dependencies\n257\nJSON Hashing and Archived Checks\n208\nHyena Models and Safetensors\n195\nB6 Production Preparation History\n149\nPython Utilities and Dryruns\n135\nC2 History Resume Controller\n127\nArchived Genome Gene Utilities\n126\nC2 B6 Recovery Ledgers\n110\nArchived Hyena Model Components\n100\nRTX4090 Hyena Training Snapshots\n99\nManuscript Figure Generation\n96\nReference Restyling and Heldout Scoring\n92\nDIAMOND HSP Matching\n89\nArchived Junction Table Ledgers\n88\nGPU Staging Verification History\n80\nC2 Resume Controller Tests\n80\nB6 Runtime Qualification Recovery\n79\nHistorical Quarantine and Manuscript Audits\n73\nCompressed FASTA Filtering Tests\n72\nDIAMOND Banded Frame Alignment\n72\nB6 Evidence Pilot Workplans\n70\nB1 B4 Frozen Evidence Protocol\n70\nArchived MVP Runtime Probes\n69\nMetadata Recovery and Capture Verification\n69\nGFF Polishing Scoring Tests\n69\nMVP GPU Deployment Decisions\n68\nV6 Deployment Admission Checks\n67\nRelease MVP Command Runtime\n67\nV3 MVP Command Runtime\n66\nHistorical TODO Reconciliation\n65\nEST Codon Manifest\n65\nV3 Deployment Admission Checks\n63\nDeployment and Runtime Closure\n63\nV5 Deployment Admission Checks\n62\nV4 Deployment Admission Checks\n61\nAlternative Splicing Addition Tests\n61\nArchived Hyena Training Entrypoints\n60\nDIAMOND Output Block Joining\n57\nArchived TODO and B5 Reporting\n56\nEST Phase Geometry Planning\n56\nPower Recovery and Panel Reviews\n56\nDuckDB Evidence Panel Preparation\n55\nA11 EST Execution Boundaries\n55\nONT V1 Evidence Support\n55\nONT V2 Evidence Support\n55\nONT V3 Evidence Support\n55\nONT V4 Evidence Support\n55\nMVP Restart and WP1 Handoffs\n55\nArchived Longread Evidence Support\n55\nLongread Release Evidence Support\n55\nTranscript Evidence Support\n55\nGFF GSF Conversion Tests\n55\nB5 B6 Evidence Readiness Plans\n54\nArchived EST BLASTX Audit\n54\nDIAMOND HSP Context\n53\nNumPy Panel Validation Snapshots\n53\nV3 GPU Release Deployment\n53\nV6 GPU Release Deployment\n53\nPolishing Benchmark Transfer Tests\n53\nV2 Release Deployment Utilities\n52\nHistorical TODO and ONT Policies\n52\nB5 Training Chain Tests\n52\nDIAMOND Alignment Execution\n51\nV5 GPU Release Deployment\n51\nV3 MVP Final Evaluation\n50\nGPU Followup Launch Readiness\n49\nPanel Release Launch Readiness\n49\nPanel Release Final Evaluation\n49\nGPU Release and EST Deployment\n48\nV4 GPU Release Deployment\n47\nEvidence Support and Sample Tests\n47\nV3 MVP Count Production\n46\nONT V3 Fixture Failure Review\n45\nV3 Panel Compatibility Checks\n44\nC2 Production Link Validation\n44\nPanel Release CUDA Probes\n43\nIsoform Comparison Figure Generation\n43\nFigure4 and Revision Plotting\n43\nV2 Deployment Admission Checks\n43\nB5 Dataset Construction Tests\n43\nDIAMOND Output Records\n42\nPanel Release Count Production\n41\nGSF Splits and Implementation Plans\n41\nGene Prediction Dataset Utilities\n41\nV3 CUDA Runtime Probes\n40\nMVP Decode Reproduction Checks\n40\nV3 Launch Readiness Checks\n40\nCopied Panel Reference Manifest\n40\nJob6165628 Panel Reference Manifest\n40\nJob6165559 Panel Reference Manifest\n40\nArchived T5 Conditional Generation\n39\nArchived C0lite Panel Construction\n39\nPolishing Benchmark GFF Subset Tests\n39\nDIAMOND Packed Transcript Operations\n38\nDataset Role Validation Tests\n38\nEvidence Reporting Command Utilities\n37\nArchived Deployment Candidate Tests\n37\nArchived EST HSP Sample Contracts\n37\nGenome Annotation Prompting Snapshots\n36\nReference ",
+    "inputs": [
+      {
+        "id": "search",
+        "type": "text",
+        "placeholder": "Search nodes..."
+      },
+      {
+        "id": "select-all-cb",
+        "type": "checkbox",
+        "placeholder": ""
+      }
+    ],
+    "buttons": [
+      {
+        "id": "",
+        "text": "Light"
+      },
+      {
+        "id": "",
+        "text": "Dark"
+      },
+      {
+        "id": "",
+        "text": "System"
+      }
+    ],
+    "input_count": 1876
+  },
+  "exceptions": [],
+  "tested_html_sha256": "59f76d833ad150644b33c986755cb2740714b384dbede683dd8f183709f55a65"
+}

@@ -41,7 +41,7 @@ Read `TASK1_BRIEF.md` for exact interfaces, constraints and tests.
 - [x] Metadata-only plan B5 completed older epochs09–11 using reviewed3b4eb0d; preserve12–14, latest, best and all C2 artifacts.
 - [x] Pin exact source helper hashes, destination HDD pool/project and reserve50GiB, per-pass16GiB/one checkpoint, rate16MiB/s. Use an allocation for heavy hashing/copying. Actual DeltaAI policy rejects zeroGPU jobs; request its minimum1GPU/1CPU/2GiB/2hours, using onlyCPUfileI/O. Retain durable manifests and verified destination before source cleanup.
 - [x] Independently review concrete batch/config before launch; record durable submission intent and actual job ID; no uncertain retry.
-- [ ] Confirm verified transfer/cleanup receipts and current NVMe reserve before B6 submission. The gate is verified reclaimed headroom, not completion of every planned archival epoch. A timeout/failure never authorizes counting unverified or future bytes; remeasure both gates and preserve interrupted transactions.
+- [x] Confirm verified transfer/cleanup receipts and current NVMe reserve before B6 submission. The gate is verified reclaimed headroom, not completion of every planned archival epoch. A timeout/failure never authorizes counting unverified or future bytes; remeasure both gates and preserve interrupted transactions.
 
 ## Task 3 — deploy and execute proof
 
@@ -65,3 +65,5 @@ Read `TASK1_BRIEF.md` for exact interfaces, constraints and tests.
 ## 2026-10-20 execution ruling
 
 See [PROGRESS.md](PROGRESS.md) and receipts. Verifiedepoch09 HDDcopy+cleanup madeNVMe107.5GiB.100GiB and independent42.24GB proof-copy peak bothpass; Task3 may proceed while10/11archive continues. This changes the implementation task ordering only; no resource/scientific gate is waived. Proof3425703 submitted17:54PDT, pendingPriority. Task1e2bee04 reviewed/native6+22PASS. Task4code2a48265/report50a7fac reviewed/native36PASS; concretecontrollerconfig independentreviewPASS/nativecheckPASS;init/watchPID1501642 waitsforproof3425703.
+
+Final archive acceptance:3425279 completed all09–11 at18:34:32PDT,39.46GiB; native free NVMe133.83GiB. Parent acceptance is archive/PARENT_ACCEPTANCE.json. Proof3425703 remains pending; controller1501642 is waiting_validation/revision112/errornull at19:42PDT.

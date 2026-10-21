@@ -32,3 +32,5 @@
 ## 2026-10-20 후속 범위
 
 C2는4099완료했으며 기존WP5승인 범위의 **B6 evidence-on 파일럿**을source198ce14로 증명하고 자동연결한다. EST/ONT/PacBio/protein evidence를 포함하며 C2만evidence-off다. B6 최종GPU검증을 생략하지 않는다. CPU전용작업용 Delta1,000core-hours 신청은 아직 association/크레딧 대기이며 공유스토리지/로그인만 실측 확인했다. 사용자가 `/graphify`의 대규모 경고 후 **전체**를 선택했으므로 전체 감지코퍼스를 분석한다. 현재 정본은 [B6 진행 기록](../notes/b6_pilot_resume_20261020/PROGRESS.md)이다.
+
+Graphify 전체 범위 작업은 완료했다. 생성 시점의 main 작업 폴더2,696파일을 처리했고 결과는 [보고서](../graphify-out/GRAPH_REPORT.md)에 있다. B6 증명3425703은 Priority 대기이며 검토된 단일 감시가 운영 중이다. CPU 자원은19:52PDT에도 Slurm association이 없어 활성화 대기한다.

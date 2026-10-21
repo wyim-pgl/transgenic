@@ -1,18 +1,18 @@
 {
-  "observed_utc": "2026-10-21T01:12:13.255233Z",
+  "observed_utc": "2026-10-21T01:37:12.345086Z",
   "queue": {
     "returncode": 0,
-    "stdout": "             JOBID        STATE                           NAME         TIME     NODELIST(REASON)\n           3425703      PENDING          b6-history-validation         0:00           (Priority)\n           3345918      PENDING                   b6-wp5-pilot         0:00        (JobHeldUser)\n           3345917      PENDING                   b6-wp5-pilot         0:00        (JobHeldUser)\n           3425279      RUNNING            b6-headroom-archive      1:37:12                gh027\n",
+    "stdout": "             JOBID        STATE                           NAME         TIME     NODELIST(REASON)\n           3425703      PENDING          b6-history-validation         0:00           (Priority)\n           3345918      PENDING                   b6-wp5-pilot         0:00        (JobHeldUser)\n           3345917      PENDING                   b6-wp5-pilot         0:00        (JobHeldUser)\n",
     "stderr": ""
   },
   "accounting": {
     "returncode": 0,
-    "stdout": "3425279|RUNNING|0:0|01:37:12|gh027\n3425279.batch|RUNNING|0:0|01:37:12|gh027\n3425279.extern|RUNNING|0:0|01:37:12|gh027\n",
+    "stdout": "3425279|COMPLETED|0:0|01:59:31|gh027\n3425279.batch|COMPLETED|0:0|01:59:31|gh027\n3425279.extern|COMPLETED|0:0|01:59:31|gh027\n",
     "stderr": ""
   },
   "storage": {
     "returncode": 0,
-    "stdout": "{\"filesystem_available_bytes\": 284699095040, \"pool\": \"ddn_ssd\", \"project_id\": 22169, \"quota_remaining_bytes\": 129576263680, \"required_bytes\": 107374182400, \"results_dir\": \"/work/nvme/bilv/wcyim/transgenic/runs\"}\n",
+    "stdout": "{\"filesystem_available_bytes\": 284699045888, \"pool\": \"ddn_ssd\", \"project_id\": 22169, \"quota_remaining_bytes\": 143699890176, \"required_bytes\": 107374182400, \"results_dir\": \"/work/nvme/bilv/wcyim/transgenic/runs\"}\n",
     "stderr": ""
   },
   "obsolete_jobs": {
@@ -833,6 +833,1026 @@
         "manifest_id": "f0f26379502ebccdddc2760482fa10f0e7784e37c92b0d428b2029a2957dccc1",
         "status": "removed"
       }
+    },
+    "epoch_11_manifest.json": {
+      "sha256": "c36d5fa74eba2fe3f021f86f4e0eb8f02a678fc319a99de15af27b2725524b44",
+      "content": {
+        "bytes": 14123523411,
+        "directories": [
+          "accelerate_state",
+          "pending_grads"
+        ],
+        "epoch": 11,
+        "files": [
+          {
+            "path": "accelerate_state/model.safetensors",
+            "sha256": "833fddcbd75ae1f6efe18be3773d588f15a97de7e9902e0aed602fd53eb0f6d9",
+            "signature": [
+              3290199710,
+              522420011030023668,
+              2091005908,
+              1790559838000000000,
+              1790559838000000000
+            ],
+            "size": 2091005908
+          },
+          {
+            "path": "accelerate_state/optimizer.bin",
+            "sha256": "fb669a3b80da5f8e94dd2233a3cc4861919b7f6bd1d7177f15114c1c5522f38d",
+            "signature": [
+              3290199710,
+              522420011030023669,
+              3314045958,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 3314045958
+          },
+          {
+            "path": "accelerate_state/random_states_0.pkl",
+            "sha256": "2a524bf1e18cebfb9ff905123c3254618e0c2df8f18b80243f514370bfd46f4f",
+            "signature": [
+              3290199710,
+              522420011030023671,
+              15473,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 15473
+          },
+          {
+            "path": "accelerate_state/random_states_1.pkl",
+            "sha256": "aea4d343ea14e3a14ec0b1b43b10a094aa66b81690e4b1b1257d8d8bef9fc798",
+            "signature": [
+              3290199710,
+              522420011030023660,
+              15473,
+              1790559831000000000,
+              1790559831000000000
+            ],
+            "size": 15473
+          },
+          {
+            "path": "accelerate_state/random_states_2.pkl",
+            "sha256": "ae0498fc4d2d3e75e4c61d33b5664565f439cb832b067d027e43befd7fb0b25f",
+            "signature": [
+              3290199710,
+              522420011030023661,
+              15537,
+              1790559831000000000,
+              1790559831000000000
+            ],
+            "size": 15537
+          },
+          {
+            "path": "accelerate_state/random_states_3.pkl",
+            "sha256": "eb52087a19948da044f77a341f4b219e44116a876363aec4b6f637db65eb63e2",
+            "signature": [
+              3290199710,
+              522420011030023662,
+              15537,
+              1790559831000000000,
+              1790559831000000000
+            ],
+            "size": 15537
+          },
+          {
+            "path": "accelerate_state/scheduler.bin",
+            "sha256": "74b0dc6a011cea0d5276cdb0304b42ba1b377fc6556d9497f3e2e72d339db4ff",
+            "signature": [
+              3290199710,
+              522420011030023670,
+              1465,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 1465
+          },
+          {
+            "path": "eval.json",
+            "sha256": "606d52a4f9d035a0a79d198755bde3ade6c4529aa8310838b2a3eec94c940325",
+            "signature": [
+              3290199710,
+              522420011030023675,
+              268,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 268
+          },
+          {
+            "path": "meta.json",
+            "sha256": "106db9409088b53bb06bfb4359e621639bda986bbc6aa754c4c3096f76077bfa",
+            "signature": [
+              3290199710,
+              522420011030023674,
+              132,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 132
+          },
+          {
+            "path": "model.safetensors",
+            "sha256": "2f2f75014e6f26cd0f75c278690307a157fa86938ec844aba65352ffa593848d",
+            "signature": [
+              3290199710,
+              522420011030023654,
+              2091010540,
+              1790559831000000000,
+              1790559831000000000
+            ],
+            "size": 2091010540
+          },
+          {
+            "path": "pending_grads/rank0.safetensors",
+            "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+            "signature": [
+              3290199710,
+              522420011030023673,
+              1656849280,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 1656849280
+          },
+          {
+            "path": "pending_grads/rank1.safetensors",
+            "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+            "signature": [
+              3290199710,
+              522420011030023665,
+              1656849280,
+              1790559832000000000,
+              1790559832000000000
+            ],
+            "size": 1656849280
+          },
+          {
+            "path": "pending_grads/rank2.safetensors",
+            "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+            "signature": [
+              3290199710,
+              522420011030023667,
+              1656849280,
+              1790559832000000000,
+              1790559832000000000
+            ],
+            "size": 1656849280
+          },
+          {
+            "path": "pending_grads/rank3.safetensors",
+            "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+            "signature": [
+              3290199710,
+              522420011030023666,
+              1656849280,
+              1790559832000000000,
+              1790559832000000000
+            ],
+            "size": 1656849280
+          }
+        ],
+        "manifest_id": "fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278",
+        "name": "epoch_11",
+        "run_identity": [
+          3290199710,
+          522420015828303874
+        ],
+        "source_identity": [
+          3290199710,
+          522420011030023653
+        ],
+        "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+        "version": 1
+      }
+    },
+    "epoch_11_verified.json": {
+      "sha256": "7b99da1b387360fa70eef252b72e97d10e549999c464ef6298953afb062cc8c4",
+      "content": {
+        "archive_path": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive/run-a466a381e8adf981/epoch_11",
+        "manifest": {
+          "bytes": 14123523411,
+          "directories": [
+            "accelerate_state",
+            "pending_grads"
+          ],
+          "epoch": 11,
+          "files": [
+            {
+              "path": "accelerate_state/model.safetensors",
+              "sha256": "833fddcbd75ae1f6efe18be3773d588f15a97de7e9902e0aed602fd53eb0f6d9",
+              "signature": [
+                3290199710,
+                522420011030023668,
+                2091005908,
+                1790559838000000000,
+                1790559838000000000
+              ],
+              "size": 2091005908
+            },
+            {
+              "path": "accelerate_state/optimizer.bin",
+              "sha256": "fb669a3b80da5f8e94dd2233a3cc4861919b7f6bd1d7177f15114c1c5522f38d",
+              "signature": [
+                3290199710,
+                522420011030023669,
+                3314045958,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 3314045958
+            },
+            {
+              "path": "accelerate_state/random_states_0.pkl",
+              "sha256": "2a524bf1e18cebfb9ff905123c3254618e0c2df8f18b80243f514370bfd46f4f",
+              "signature": [
+                3290199710,
+                522420011030023671,
+                15473,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 15473
+            },
+            {
+              "path": "accelerate_state/random_states_1.pkl",
+              "sha256": "aea4d343ea14e3a14ec0b1b43b10a094aa66b81690e4b1b1257d8d8bef9fc798",
+              "signature": [
+                3290199710,
+                522420011030023660,
+                15473,
+                1790559831000000000,
+                1790559831000000000
+              ],
+              "size": 15473
+            },
+            {
+              "path": "accelerate_state/random_states_2.pkl",
+              "sha256": "ae0498fc4d2d3e75e4c61d33b5664565f439cb832b067d027e43befd7fb0b25f",
+              "signature": [
+                3290199710,
+                522420011030023661,
+                15537,
+                1790559831000000000,
+                1790559831000000000
+              ],
+              "size": 15537
+            },
+            {
+              "path": "accelerate_state/random_states_3.pkl",
+              "sha256": "eb52087a19948da044f77a341f4b219e44116a876363aec4b6f637db65eb63e2",
+              "signature": [
+                3290199710,
+                522420011030023662,
+                15537,
+                1790559831000000000,
+                1790559831000000000
+              ],
+              "size": 15537
+            },
+            {
+              "path": "accelerate_state/scheduler.bin",
+              "sha256": "74b0dc6a011cea0d5276cdb0304b42ba1b377fc6556d9497f3e2e72d339db4ff",
+              "signature": [
+                3290199710,
+                522420011030023670,
+                1465,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 1465
+            },
+            {
+              "path": "eval.json",
+              "sha256": "606d52a4f9d035a0a79d198755bde3ade6c4529aa8310838b2a3eec94c940325",
+              "signature": [
+                3290199710,
+                522420011030023675,
+                268,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 268
+            },
+            {
+              "path": "meta.json",
+              "sha256": "106db9409088b53bb06bfb4359e621639bda986bbc6aa754c4c3096f76077bfa",
+              "signature": [
+                3290199710,
+                522420011030023674,
+                132,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 132
+            },
+            {
+              "path": "model.safetensors",
+              "sha256": "2f2f75014e6f26cd0f75c278690307a157fa86938ec844aba65352ffa593848d",
+              "signature": [
+                3290199710,
+                522420011030023654,
+                2091010540,
+                1790559831000000000,
+                1790559831000000000
+              ],
+              "size": 2091010540
+            },
+            {
+              "path": "pending_grads/rank0.safetensors",
+              "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+              "signature": [
+                3290199710,
+                522420011030023673,
+                1656849280,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 1656849280
+            },
+            {
+              "path": "pending_grads/rank1.safetensors",
+              "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+              "signature": [
+                3290199710,
+                522420011030023665,
+                1656849280,
+                1790559832000000000,
+                1790559832000000000
+              ],
+              "size": 1656849280
+            },
+            {
+              "path": "pending_grads/rank2.safetensors",
+              "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+              "signature": [
+                3290199710,
+                522420011030023667,
+                1656849280,
+                1790559832000000000,
+                1790559832000000000
+              ],
+              "size": 1656849280
+            },
+            {
+              "path": "pending_grads/rank3.safetensors",
+              "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+              "signature": [
+                3290199710,
+                522420011030023666,
+                1656849280,
+                1790559832000000000,
+                1790559832000000000
+              ],
+              "size": 1656849280
+            }
+          ],
+          "manifest_id": "fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278",
+          "name": "epoch_11",
+          "run_identity": [
+            3290199710,
+            522420015828303874
+          ],
+          "source_identity": [
+            3290199710,
+            522420011030023653
+          ],
+          "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+          "version": 1
+        },
+        "manifest_id": "fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278",
+        "storage": {
+          "pool": "ddn_hdd",
+          "project_id": 22169,
+          "quota_free_bytes": 154948894720
+        },
+        "version": 1
+      }
+    },
+    "epoch_11_removed.json": {
+      "sha256": "9b35d13ea51a98a96bcfed50bfdbd76ec496975eb17bf58f026446506e047e1f",
+      "content": {
+        "manifest_id": "fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278",
+        "status": "removed"
+      }
+    },
+    "complete.json": {
+      "sha256": "83bce770c991c695a82273020ad29c0b0a0db320deee61fdc55609559fcdeac1",
+      "content": {
+        "archived_bytes": 42370570227,
+        "best": "epoch_14",
+        "job_id": "3425279",
+        "latest_meta_sha256": "91a8def8fbf63aba09ff867860c5ea23814d6f018be98e62631cc3de5321927c",
+        "protected_epochs": [
+          12,
+          13,
+          14
+        ],
+        "receipts": {
+          "epoch_09": {
+            "archive_path": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive/run-a466a381e8adf981/epoch_09",
+            "manifest": {
+              "bytes": 14123523405,
+              "directories": [
+                "accelerate_state",
+                "pending_grads"
+              ],
+              "epoch": 9,
+              "files": [
+                {
+                  "path": "accelerate_state/model.safetensors",
+                  "sha256": "1f26450c4ec22cd166a07d29534ced3d9a7517d637be1c3474833f9dba7ba32d",
+                  "signature": [
+                    3290199710,
+                    522420016969154710,
+                    2091005908,
+                    1790129116000000000,
+                    1790129116000000000
+                  ],
+                  "size": 2091005908
+                },
+                {
+                  "path": "accelerate_state/optimizer.bin",
+                  "sha256": "e56a85add6a9b494649995bc2f7622c1767d5594082fa0d4dfcb243c7f3d3ec5",
+                  "signature": [
+                    3290199710,
+                    522420016969154711,
+                    3314045958,
+                    1790129118000000000,
+                    1790129118000000000
+                  ],
+                  "size": 3314045958
+                },
+                {
+                  "path": "accelerate_state/random_states_0.pkl",
+                  "sha256": "01fb3a454bcac85f1b1cb875d13d27bf7e408b73a4500b4b6c2c539cfbe2fe01",
+                  "signature": [
+                    3290199710,
+                    522420016969154713,
+                    15473,
+                    1790129118000000000,
+                    1790129118000000000
+                  ],
+                  "size": 15473
+                },
+                {
+                  "path": "accelerate_state/random_states_1.pkl",
+                  "sha256": "2c75397cefaecfe3e3d446b5af2529abdf0a0523a0987dd392e1ec1ee05cc74c",
+                  "signature": [
+                    3290199710,
+                    522420016969154703,
+                    15473,
+                    1790129109000000000,
+                    1790129109000000000
+                  ],
+                  "size": 15473
+                },
+                {
+                  "path": "accelerate_state/random_states_2.pkl",
+                  "sha256": "34c9a56306b29a3259401475b181eab1374855037beeca465f2f18c2905decb4",
+                  "signature": [
+                    3290199710,
+                    522420016969154704,
+                    15537,
+                    1790129109000000000,
+                    1790129109000000000
+                  ],
+                  "size": 15537
+                },
+                {
+                  "path": "accelerate_state/random_states_3.pkl",
+                  "sha256": "b15400dadfc0411f8b8b735cc1fe2f21b5aff2ba9cff9b716cfe0d49cd3005f6",
+                  "signature": [
+                    3290199710,
+                    522420016969154702,
+                    15537,
+                    1790129109000000000,
+                    1790129109000000000
+                  ],
+                  "size": 15537
+                },
+                {
+                  "path": "accelerate_state/scheduler.bin",
+                  "sha256": "b1d654f064543fb3ea8b34fd289fc56ce6d053d6c403d76a6155f29fd8f433dc",
+                  "signature": [
+                    3290199710,
+                    522420016969154712,
+                    1465,
+                    1790129118000000000,
+                    1790129118000000000
+                  ],
+                  "size": 1465
+                },
+                {
+                  "path": "eval.json",
+                  "sha256": "fcd8c2d27e58cd44aad46b9695fa7ce39f8da7ef1eeb352e5976db49b3132f87",
+                  "signature": [
+                    3290199710,
+                    522420016969154717,
+                    264,
+                    1790129126000000000,
+                    1790129126000000000
+                  ],
+                  "size": 264
+                },
+                {
+                  "path": "meta.json",
+                  "sha256": "39b56cabdc68f27fa072db2ba7b1e88cad920e0da3909d221be02385ff93dfaa",
+                  "signature": [
+                    3290199710,
+                    522420016969154716,
+                    130,
+                    1790129126000000000,
+                    1790129126000000000
+                  ],
+                  "size": 130
+                },
+                {
+                  "path": "model.safetensors",
+                  "sha256": "8a1557549f93c5b2c449568030a3caf904938c51cfd56a114a0207114fd7124c",
+                  "signature": [
+                    3290199710,
+                    522420016969154696,
+                    2091010540,
+                    1790129109000000000,
+                    1790129109000000000
+                  ],
+                  "size": 2091010540
+                },
+                {
+                  "path": "pending_grads/rank0.safetensors",
+                  "sha256": "faa9a3060f2f6641cca317b8897f6fe7004124eabd86ebe97da6d08099ffb9ae",
+                  "signature": [
+                    3290199710,
+                    522420016969154715,
+                    1656849280,
+                    1790129126000000000,
+                    1790129126000000000
+                  ],
+                  "size": 1656849280
+                },
+                {
+                  "path": "pending_grads/rank1.safetensors",
+                  "sha256": "faa9a3060f2f6641cca317b8897f6fe7004124eabd86ebe97da6d08099ffb9ae",
+                  "signature": [
+                    3290199710,
+                    522420016969154707,
+                    1656849280,
+                    1790129110000000000,
+                    1790129110000000000
+                  ],
+                  "size": 1656849280
+                },
+                {
+                  "path": "pending_grads/rank2.safetensors",
+                  "sha256": "faa9a3060f2f6641cca317b8897f6fe7004124eabd86ebe97da6d08099ffb9ae",
+                  "signature": [
+                    3290199710,
+                    522420016969154708,
+                    1656849280,
+                    1790129111000000000,
+                    1790129111000000000
+                  ],
+                  "size": 1656849280
+                },
+                {
+                  "path": "pending_grads/rank3.safetensors",
+                  "sha256": "faa9a3060f2f6641cca317b8897f6fe7004124eabd86ebe97da6d08099ffb9ae",
+                  "signature": [
+                    3290199710,
+                    522420016969154709,
+                    1656849280,
+                    1790129110000000000,
+                    1790129110000000000
+                  ],
+                  "size": 1656849280
+                }
+              ],
+              "manifest_id": "cf528525f4922ffd75349330f8a2d1afd965b62c26e8dc4cebc65940e25d3d0c",
+              "name": "epoch_09",
+              "run_identity": [
+                3290199710,
+                522420015828303874
+              ],
+              "source_identity": [
+                3290199710,
+                522420016969154695
+              ],
+              "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+              "version": 1
+            },
+            "manifest_id": "cf528525f4922ffd75349330f8a2d1afd965b62c26e8dc4cebc65940e25d3d0c",
+            "storage": {
+              "pool": "ddn_hdd",
+              "project_id": 22169,
+              "quota_free_bytes": 183196286976
+            },
+            "version": 1
+          },
+          "epoch_10": {
+            "archive_path": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive/run-a466a381e8adf981/epoch_10",
+            "manifest": {
+              "bytes": 14123523411,
+              "directories": [
+                "accelerate_state",
+                "pending_grads"
+              ],
+              "epoch": 10,
+              "files": [
+                {
+                  "path": "accelerate_state/model.safetensors",
+                  "sha256": "8132d85620974aaac9dadf614426b12f49585c08d3f470da1d5660206fc356de",
+                  "signature": [
+                    3290199710,
+                    522420016918823399,
+                    2091005908,
+                    1790388648000000000,
+                    1790388648000000000
+                  ],
+                  "size": 2091005908
+                },
+                {
+                  "path": "accelerate_state/optimizer.bin",
+                  "sha256": "8e85051b8489d586ec51341388c7207ebe72ac0012b9c676db75ccfe779bdc61",
+                  "signature": [
+                    3290199710,
+                    522420016918823406,
+                    3314045958,
+                    1790388650000000000,
+                    1790388650000000000
+                  ],
+                  "size": 3314045958
+                },
+                {
+                  "path": "accelerate_state/random_states_0.pkl",
+                  "sha256": "76afe4ff9affb4107555deb21798c663d511674e04333a1935c4bf514f92614b",
+                  "signature": [
+                    3290199710,
+                    522420016918823408,
+                    15473,
+                    1790388650000000000,
+                    1790388650000000000
+                  ],
+                  "size": 15473
+                },
+                {
+                  "path": "accelerate_state/random_states_1.pkl",
+                  "sha256": "96361518e52ab006811c942852b5b7073d06a718994081c22830161d949474df",
+                  "signature": [
+                    3290199710,
+                    522420016918823396,
+                    15473,
+                    1790388647000000000,
+                    1790388647000000000
+                  ],
+                  "size": 15473
+                },
+                {
+                  "path": "accelerate_state/random_states_2.pkl",
+                  "sha256": "89c593377006de9729d019b1977a18128fa8f2b37c6ff822220fe9521bc760cb",
+                  "signature": [
+                    3290199710,
+                    522420016918823398,
+                    15537,
+                    1790388647000000000,
+                    1790388647000000000
+                  ],
+                  "size": 15537
+                },
+                {
+                  "path": "accelerate_state/random_states_3.pkl",
+                  "sha256": "3cc8eb6a008bc9250f3655997ae26224e6a075c28992693b5e06e0a468d15653",
+                  "signature": [
+                    3290199710,
+                    522420016918823397,
+                    15537,
+                    1790388647000000000,
+                    1790388647000000000
+                  ],
+                  "size": 15537
+                },
+                {
+                  "path": "accelerate_state/scheduler.bin",
+                  "sha256": "1d90250b7e2fb19824ed52938344677d70e6ecc76adfdbdf1d2c6eeb7f194a42",
+                  "signature": [
+                    3290199710,
+                    522420016918823407,
+                    1465,
+                    1790388650000000000,
+                    1790388650000000000
+                  ],
+                  "size": 1465
+                },
+                {
+                  "path": "eval.json",
+                  "sha256": "4560abbe0f289c93732287f4aaa1d6ccc3efc746b4fb2aa8f4c1eb15dd05ad27",
+                  "signature": [
+                    3290199710,
+                    522420016918823411,
+                    268,
+                    1790388651000000000,
+                    1790388651000000000
+                  ],
+                  "size": 268
+                },
+                {
+                  "path": "meta.json",
+                  "sha256": "79e84af24023a896ffb617fdf059ddefb9186cf928c05b7f75fb57f8d08e322e",
+                  "signature": [
+                    3290199710,
+                    522420016918823410,
+                    132,
+                    1790388651000000000,
+                    1790388651000000000
+                  ],
+                  "size": 132
+                },
+                {
+                  "path": "model.safetensors",
+                  "sha256": "8b565dd52f20309d9021f22a5b8c97f6e8e69a8a19f6cdff03f192c8c9567370",
+                  "signature": [
+                    3290199710,
+                    522420016918823390,
+                    2091010540,
+                    1790388647000000000,
+                    1790388647000000000
+                  ],
+                  "size": 2091010540
+                },
+                {
+                  "path": "pending_grads/rank0.safetensors",
+                  "sha256": "65231a9bd0cb0154f7f109f9686856d309aff14086b45340e6aba7f6ee88de64",
+                  "signature": [
+                    3290199710,
+                    522420016918823409,
+                    1656849280,
+                    1790388651000000000,
+                    1790388651000000000
+                  ],
+                  "size": 1656849280
+                },
+                {
+                  "path": "pending_grads/rank1.safetensors",
+                  "sha256": "65231a9bd0cb0154f7f109f9686856d309aff14086b45340e6aba7f6ee88de64",
+                  "signature": [
+                    3290199710,
+                    522420016918823402,
+                    1656849280,
+                    1790388648000000000,
+                    1790388648000000000
+                  ],
+                  "size": 1656849280
+                },
+                {
+                  "path": "pending_grads/rank2.safetensors",
+                  "sha256": "65231a9bd0cb0154f7f109f9686856d309aff14086b45340e6aba7f6ee88de64",
+                  "signature": [
+                    3290199710,
+                    522420016918823405,
+                    1656849280,
+                    1790388648000000000,
+                    1790388648000000000
+                  ],
+                  "size": 1656849280
+                },
+                {
+                  "path": "pending_grads/rank3.safetensors",
+                  "sha256": "65231a9bd0cb0154f7f109f9686856d309aff14086b45340e6aba7f6ee88de64",
+                  "signature": [
+                    3290199710,
+                    522420016918823404,
+                    1656849280,
+                    1790388648000000000,
+                    1790388648000000000
+                  ],
+                  "size": 1656849280
+                }
+              ],
+              "manifest_id": "f0f26379502ebccdddc2760482fa10f0e7784e37c92b0d428b2029a2957dccc1",
+              "name": "epoch_10",
+              "run_identity": [
+                3290199710,
+                522420015828303874
+              ],
+              "source_identity": [
+                3290199710,
+                522420016918823389
+              ],
+              "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+              "version": 1
+            },
+            "manifest_id": "f0f26379502ebccdddc2760482fa10f0e7784e37c92b0d428b2029a2957dccc1",
+            "storage": {
+              "pool": "ddn_hdd",
+              "project_id": 22169,
+              "quota_free_bytes": 169072590848
+            },
+            "version": 1
+          },
+          "epoch_11": {
+            "archive_path": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive/run-a466a381e8adf981/epoch_11",
+            "manifest": {
+              "bytes": 14123523411,
+              "directories": [
+                "accelerate_state",
+                "pending_grads"
+              ],
+              "epoch": 11,
+              "files": [
+                {
+                  "path": "accelerate_state/model.safetensors",
+                  "sha256": "833fddcbd75ae1f6efe18be3773d588f15a97de7e9902e0aed602fd53eb0f6d9",
+                  "signature": [
+                    3290199710,
+                    522420011030023668,
+                    2091005908,
+                    1790559838000000000,
+                    1790559838000000000
+                  ],
+                  "size": 2091005908
+                },
+                {
+                  "path": "accelerate_state/optimizer.bin",
+                  "sha256": "fb669a3b80da5f8e94dd2233a3cc4861919b7f6bd1d7177f15114c1c5522f38d",
+                  "signature": [
+                    3290199710,
+                    522420011030023669,
+                    3314045958,
+                    1790559840000000000,
+                    1790559840000000000
+                  ],
+                  "size": 3314045958
+                },
+                {
+                  "path": "accelerate_state/random_states_0.pkl",
+                  "sha256": "2a524bf1e18cebfb9ff905123c3254618e0c2df8f18b80243f514370bfd46f4f",
+                  "signature": [
+                    3290199710,
+                    522420011030023671,
+                    15473,
+                    1790559840000000000,
+                    1790559840000000000
+                  ],
+                  "size": 15473
+                },
+                {
+                  "path": "accelerate_state/random_states_1.pkl",
+                  "sha256": "aea4d343ea14e3a14ec0b1b43b10a094aa66b81690e4b1b1257d8d8bef9fc798",
+                  "signature": [
+                    3290199710,
+                    522420011030023660,
+                    15473,
+                    1790559831000000000,
+                    1790559831000000000
+                  ],
+                  "size": 15473
+                },
+                {
+                  "path": "accelerate_state/random_states_2.pkl",
+                  "sha256": "ae0498fc4d2d3e75e4c61d33b5664565f439cb832b067d027e43befd7fb0b25f",
+                  "signature": [
+                    3290199710,
+                    522420011030023661,
+                    15537,
+                    1790559831000000000,
+                    1790559831000000000
+                  ],
+                  "size": 15537
+                },
+                {
+                  "path": "accelerate_state/random_states_3.pkl",
+                  "sha256": "eb52087a19948da044f77a341f4b219e44116a876363aec4b6f637db65eb63e2",
+                  "signature": [
+                    3290199710,
+                    522420011030023662,
+                    15537,
+                    1790559831000000000,
+                    1790559831000000000
+                  ],
+                  "size": 15537
+                },
+                {
+                  "path": "accelerate_state/scheduler.bin",
+                  "sha256": "74b0dc6a011cea0d5276cdb0304b42ba1b377fc6556d9497f3e2e72d339db4ff",
+                  "signature": [
+                    3290199710,
+                    522420011030023670,
+                    1465,
+                    1790559840000000000,
+                    1790559840000000000
+                  ],
+                  "size": 1465
+                },
+                {
+                  "path": "eval.json",
+                  "sha256": "606d52a4f9d035a0a79d198755bde3ade6c4529aa8310838b2a3eec94c940325",
+                  "signature": [
+                    3290199710,
+                    522420011030023675,
+                    268,
+                    1790559840000000000,
+                    1790559840000000000
+                  ],
+                  "size": 268
+                },
+                {
+                  "path": "meta.json",
+                  "sha256": "106db9409088b53bb06bfb4359e621639bda986bbc6aa754c4c3096f76077bfa",
+                  "signature": [
+                    3290199710,
+                    522420011030023674,
+                    132,
+                    1790559840000000000,
+                    1790559840000000000
+                  ],
+                  "size": 132
+                },
+                {
+                  "path": "model.safetensors",
+                  "sha256": "2f2f75014e6f26cd0f75c278690307a157fa86938ec844aba65352ffa593848d",
+                  "signature": [
+                    3290199710,
+                    522420011030023654,
+                    2091010540,
+                    1790559831000000000,
+                    1790559831000000000
+                  ],
+                  "size": 2091010540
+                },
+                {
+                  "path": "pending_grads/rank0.safetensors",
+                  "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+                  "signature": [
+                    3290199710,
+                    522420011030023673,
+                    1656849280,
+                    1790559840000000000,
+                    1790559840000000000
+                  ],
+                  "size": 1656849280
+                },
+                {
+                  "path": "pending_grads/rank1.safetensors",
+                  "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+                  "signature": [
+                    3290199710,
+                    522420011030023665,
+                    1656849280,
+                    1790559832000000000,
+                    1790559832000000000
+                  ],
+                  "size": 1656849280
+                },
+                {
+                  "path": "pending_grads/rank2.safetensors",
+                  "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+                  "signature": [
+                    3290199710,
+                    522420011030023667,
+                    1656849280,
+                    1790559832000000000,
+                    1790559832000000000
+                  ],
+                  "size": 1656849280
+                },
+                {
+                  "path": "pending_grads/rank3.safetensors",
+                  "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+                  "signature": [
+                    3290199710,
+                    522420011030023666,
+                    1656849280,
+                    1790559832000000000,
+                    1790559832000000000
+                  ],
+                  "size": 1656849280
+                }
+              ],
+              "manifest_id": "fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278",
+              "name": "epoch_11",
+              "run_identity": [
+                3290199710,
+                522420015828303874
+              ],
+              "source_identity": [
+                3290199710,
+                522420011030023653
+              ],
+              "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+              "version": 1
+            },
+            "manifest_id": "fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278",
+            "storage": {
+              "pool": "ddn_hdd",
+              "project_id": 22169,
+              "quota_free_bytes": 154948894720
+            },
+            "version": 1
+          }
+        },
+        "status": "complete"
+      }
     }
   },
   "protected": {
@@ -849,10 +1869,6 @@
   },
   "epoch_paths": {
     "epoch_12": {
-      "is_dir": true,
-      "is_symlink": false
-    },
-    "epoch_11": {
       "is_dir": true,
       "is_symlink": false
     },

@@ -1,0 +1,19 @@
+{
+  "runs": [
+    {
+      "date": "2026-10-21T02:46:26.092600+00:00",
+      "input_tokens": null,
+      "output_tokens": null,
+      "usage_unknown": true,
+      "files": 2696,
+      "backend": "Codex host agents after Gemini quota rejection"
+    }
+  ],
+  "total_input_tokens": 0,
+  "total_output_tokens": 0,
+  "totals_are_measured_only": true,
+  "unmeasured_runs": 1,
+  "full_total_input_tokens": null,
+  "full_total_output_tokens": null,
+  "note": "Numeric totals preserve CLI compatibility and sum measured usage only. No host usage counter was exposed; the full token cost is unknown, not zero. Benchmark estimates are separate."
+}

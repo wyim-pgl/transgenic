@@ -12,3 +12,13 @@ Latest handoff: [.atl/resume.md](../../.atl/resume.md), [TODO](../../.atl/todo.m
 - DeltaCPU actualdt-login03/x86_64 UID97434;NVMe/HDDbidirectionalR/W+tinyfixturePASS. `accounts`exit60/noSlurmassociation;1000core-hourcreditsactivationpending,noCPUjobsubmitted. [guide](../delta_cpu_20261020/USAGE.md).
 
 Remaining: existingpersistentwatch waitsfor proofscientificPASS/normalexit→exactoldjobretirement→in-place410continuation→4099epoch/final/DONE. Archive10/11mustbeobservedandinterruptedtransactionsinspectedbeforeanyrecovery. WP5panelG1/G2follows;WP6remainsseparate.
+
+## Archive completed
+
+At 2026-10-21T01:34:32Z (10-20 18:34:32 PDT), job3425279 finished after1h59m31s with parent/batch/extern COMPLETED0:0. All three epochs09–11 were durably verified on HDD and removed from NVMe:42,370,570,227bytes (39.46GiB). Protected12–14/latest/best remain unchanged. Parent acceptance and actual NVMe headroom are in [archive/PARENT_ACCEPTANCE.json](archive/PARENT_ACCEPTANCE.json). No recovery job was needed or submitted.
+
+## Latest live state and graph
+
+At2026-10-21T02:42:15Z, B6 proof3425703 remains Priority pending. Controller1501642 is alive, waiting_validation/revision112/errornull; no production link submitted. Old3345918/3345917 remain held. [Live receipt](FINAL_LIVE_STATUS.json). DeltaCPU accounts still returned60/no association at02:52:13Z.
+
+Full detected-repository graph completed:2,696files,18,577nodes,38,057relationrecords,1,874communities. Browser and CLI checks passed; [graph report](../../graphify-out/GRAPH_REPORT.md) and [verification](../../graphify-out/VERIFICATION.json) record raw parser/reference limits and unknown host token usage. Final graph outputs are a captured source snapshot; this completion paragraph is later operational documentation.

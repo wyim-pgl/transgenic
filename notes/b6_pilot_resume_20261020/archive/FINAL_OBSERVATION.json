@@ -1,0 +1,439 @@
+{
+  "observed_utc": "2026-10-21T01:35:23.372851Z",
+  "accounting": {
+    "returncode": 0,
+    "stdout": "3425279|COMPLETED|0:0|01:59:31|wcyim|2026-10-20T18:35:00|2026-10-20T18:35:01|2026-10-20T20:34:32\n3425279.batch|COMPLETED|0:0|01:59:31||2026-10-20T18:35:01|2026-10-20T18:35:01|2026-10-20T20:34:32\n3425279.extern|COMPLETED|0:0|01:59:31||2026-10-20T18:35:01|2026-10-20T18:35:01|2026-10-20T20:34:32\n",
+    "stderr": ""
+  },
+  "queue": {
+    "returncode": 0,
+    "stdout": "3425703|PENDING|b6-history-validation|(Priority)\n3345918|PENDING|b6-wp5-pilot|(JobHeldUser)\n3345917|PENDING|b6-wp5-pilot|(JobHeldUser)\n",
+    "stderr": ""
+  },
+  "pending_cleanup": [],
+  "old_complete": true,
+  "old_event_files": {
+    "epoch_11_manifest.json": {
+      "sha256": "c36d5fa74eba2fe3f021f86f4e0eb8f02a678fc319a99de15af27b2725524b44",
+      "content": {
+        "bytes": 14123523411,
+        "directories": [
+          "accelerate_state",
+          "pending_grads"
+        ],
+        "epoch": 11,
+        "files": [
+          {
+            "path": "accelerate_state/model.safetensors",
+            "sha256": "833fddcbd75ae1f6efe18be3773d588f15a97de7e9902e0aed602fd53eb0f6d9",
+            "signature": [
+              3290199710,
+              522420011030023668,
+              2091005908,
+              1790559838000000000,
+              1790559838000000000
+            ],
+            "size": 2091005908
+          },
+          {
+            "path": "accelerate_state/optimizer.bin",
+            "sha256": "fb669a3b80da5f8e94dd2233a3cc4861919b7f6bd1d7177f15114c1c5522f38d",
+            "signature": [
+              3290199710,
+              522420011030023669,
+              3314045958,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 3314045958
+          },
+          {
+            "path": "accelerate_state/random_states_0.pkl",
+            "sha256": "2a524bf1e18cebfb9ff905123c3254618e0c2df8f18b80243f514370bfd46f4f",
+            "signature": [
+              3290199710,
+              522420011030023671,
+              15473,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 15473
+          },
+          {
+            "path": "accelerate_state/random_states_1.pkl",
+            "sha256": "aea4d343ea14e3a14ec0b1b43b10a094aa66b81690e4b1b1257d8d8bef9fc798",
+            "signature": [
+              3290199710,
+              522420011030023660,
+              15473,
+              1790559831000000000,
+              1790559831000000000
+            ],
+            "size": 15473
+          },
+          {
+            "path": "accelerate_state/random_states_2.pkl",
+            "sha256": "ae0498fc4d2d3e75e4c61d33b5664565f439cb832b067d027e43befd7fb0b25f",
+            "signature": [
+              3290199710,
+              522420011030023661,
+              15537,
+              1790559831000000000,
+              1790559831000000000
+            ],
+            "size": 15537
+          },
+          {
+            "path": "accelerate_state/random_states_3.pkl",
+            "sha256": "eb52087a19948da044f77a341f4b219e44116a876363aec4b6f637db65eb63e2",
+            "signature": [
+              3290199710,
+              522420011030023662,
+              15537,
+              1790559831000000000,
+              1790559831000000000
+            ],
+            "size": 15537
+          },
+          {
+            "path": "accelerate_state/scheduler.bin",
+            "sha256": "74b0dc6a011cea0d5276cdb0304b42ba1b377fc6556d9497f3e2e72d339db4ff",
+            "signature": [
+              3290199710,
+              522420011030023670,
+              1465,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 1465
+          },
+          {
+            "path": "eval.json",
+            "sha256": "606d52a4f9d035a0a79d198755bde3ade6c4529aa8310838b2a3eec94c940325",
+            "signature": [
+              3290199710,
+              522420011030023675,
+              268,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 268
+          },
+          {
+            "path": "meta.json",
+            "sha256": "106db9409088b53bb06bfb4359e621639bda986bbc6aa754c4c3096f76077bfa",
+            "signature": [
+              3290199710,
+              522420011030023674,
+              132,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 132
+          },
+          {
+            "path": "model.safetensors",
+            "sha256": "2f2f75014e6f26cd0f75c278690307a157fa86938ec844aba65352ffa593848d",
+            "signature": [
+              3290199710,
+              522420011030023654,
+              2091010540,
+              1790559831000000000,
+              1790559831000000000
+            ],
+            "size": 2091010540
+          },
+          {
+            "path": "pending_grads/rank0.safetensors",
+            "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+            "signature": [
+              3290199710,
+              522420011030023673,
+              1656849280,
+              1790559840000000000,
+              1790559840000000000
+            ],
+            "size": 1656849280
+          },
+          {
+            "path": "pending_grads/rank1.safetensors",
+            "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+            "signature": [
+              3290199710,
+              522420011030023665,
+              1656849280,
+              1790559832000000000,
+              1790559832000000000
+            ],
+            "size": 1656849280
+          },
+          {
+            "path": "pending_grads/rank2.safetensors",
+            "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+            "signature": [
+              3290199710,
+              522420011030023667,
+              1656849280,
+              1790559832000000000,
+              1790559832000000000
+            ],
+            "size": 1656849280
+          },
+          {
+            "path": "pending_grads/rank3.safetensors",
+            "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+            "signature": [
+              3290199710,
+              522420011030023666,
+              1656849280,
+              1790559832000000000,
+              1790559832000000000
+            ],
+            "size": 1656849280
+          }
+        ],
+        "manifest_id": "fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278",
+        "name": "epoch_11",
+        "run_identity": [
+          3290199710,
+          522420015828303874
+        ],
+        "source_identity": [
+          3290199710,
+          522420011030023653
+        ],
+        "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+        "version": 1
+      }
+    },
+    "epoch_11_removed.json": {
+      "sha256": "9b35d13ea51a98a96bcfed50bfdbd76ec496975eb17bf58f026446506e047e1f",
+      "content": {
+        "manifest_id": "fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278",
+        "status": "removed"
+      }
+    },
+    "epoch_11_verified.json": {
+      "sha256": "7b99da1b387360fa70eef252b72e97d10e549999c464ef6298953afb062cc8c4",
+      "content": {
+        "archive_path": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive/run-a466a381e8adf981/epoch_11",
+        "manifest": {
+          "bytes": 14123523411,
+          "directories": [
+            "accelerate_state",
+            "pending_grads"
+          ],
+          "epoch": 11,
+          "files": [
+            {
+              "path": "accelerate_state/model.safetensors",
+              "sha256": "833fddcbd75ae1f6efe18be3773d588f15a97de7e9902e0aed602fd53eb0f6d9",
+              "signature": [
+                3290199710,
+                522420011030023668,
+                2091005908,
+                1790559838000000000,
+                1790559838000000000
+              ],
+              "size": 2091005908
+            },
+            {
+              "path": "accelerate_state/optimizer.bin",
+              "sha256": "fb669a3b80da5f8e94dd2233a3cc4861919b7f6bd1d7177f15114c1c5522f38d",
+              "signature": [
+                3290199710,
+                522420011030023669,
+                3314045958,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 3314045958
+            },
+            {
+              "path": "accelerate_state/random_states_0.pkl",
+              "sha256": "2a524bf1e18cebfb9ff905123c3254618e0c2df8f18b80243f514370bfd46f4f",
+              "signature": [
+                3290199710,
+                522420011030023671,
+                15473,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 15473
+            },
+            {
+              "path": "accelerate_state/random_states_1.pkl",
+              "sha256": "aea4d343ea14e3a14ec0b1b43b10a094aa66b81690e4b1b1257d8d8bef9fc798",
+              "signature": [
+                3290199710,
+                522420011030023660,
+                15473,
+                1790559831000000000,
+                1790559831000000000
+              ],
+              "size": 15473
+            },
+            {
+              "path": "accelerate_state/random_states_2.pkl",
+              "sha256": "ae0498fc4d2d3e75e4c61d33b5664565f439cb832b067d027e43befd7fb0b25f",
+              "signature": [
+                3290199710,
+                522420011030023661,
+                15537,
+                1790559831000000000,
+                1790559831000000000
+              ],
+              "size": 15537
+            },
+            {
+              "path": "accelerate_state/random_states_3.pkl",
+              "sha256": "eb52087a19948da044f77a341f4b219e44116a876363aec4b6f637db65eb63e2",
+              "signature": [
+                3290199710,
+                522420011030023662,
+                15537,
+                1790559831000000000,
+                1790559831000000000
+              ],
+              "size": 15537
+            },
+            {
+              "path": "accelerate_state/scheduler.bin",
+              "sha256": "74b0dc6a011cea0d5276cdb0304b42ba1b377fc6556d9497f3e2e72d339db4ff",
+              "signature": [
+                3290199710,
+                522420011030023670,
+                1465,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 1465
+            },
+            {
+              "path": "eval.json",
+              "sha256": "606d52a4f9d035a0a79d198755bde3ade6c4529aa8310838b2a3eec94c940325",
+              "signature": [
+                3290199710,
+                522420011030023675,
+                268,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 268
+            },
+            {
+              "path": "meta.json",
+              "sha256": "106db9409088b53bb06bfb4359e621639bda986bbc6aa754c4c3096f76077bfa",
+              "signature": [
+                3290199710,
+                522420011030023674,
+                132,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 132
+            },
+            {
+              "path": "model.safetensors",
+              "sha256": "2f2f75014e6f26cd0f75c278690307a157fa86938ec844aba65352ffa593848d",
+              "signature": [
+                3290199710,
+                522420011030023654,
+                2091010540,
+                1790559831000000000,
+                1790559831000000000
+              ],
+              "size": 2091010540
+            },
+            {
+              "path": "pending_grads/rank0.safetensors",
+              "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+              "signature": [
+                3290199710,
+                522420011030023673,
+                1656849280,
+                1790559840000000000,
+                1790559840000000000
+              ],
+              "size": 1656849280
+            },
+            {
+              "path": "pending_grads/rank1.safetensors",
+              "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+              "signature": [
+                3290199710,
+                522420011030023665,
+                1656849280,
+                1790559832000000000,
+                1790559832000000000
+              ],
+              "size": 1656849280
+            },
+            {
+              "path": "pending_grads/rank2.safetensors",
+              "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+              "signature": [
+                3290199710,
+                522420011030023667,
+                1656849280,
+                1790559832000000000,
+                1790559832000000000
+              ],
+              "size": 1656849280
+            },
+            {
+              "path": "pending_grads/rank3.safetensors",
+              "sha256": "d6559eb370f179476731e907dceb7d5d8b80cbf743adc1851095830c91bc2ec3",
+              "signature": [
+                3290199710,
+                522420011030023666,
+                1656849280,
+                1790559832000000000,
+                1790559832000000000
+              ],
+              "size": 1656849280
+            }
+          ],
+          "manifest_id": "fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278",
+          "name": "epoch_11",
+          "run_identity": [
+            3290199710,
+            522420015828303874
+          ],
+          "source_identity": [
+            3290199710,
+            522420011030023653
+          ],
+          "source_root": "/work/nvme/bilv/wcyim/transgenic/runs/seed123",
+          "version": 1
+        },
+        "manifest_id": "fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278",
+        "storage": {
+          "pool": "ddn_hdd",
+          "project_id": 22169,
+          "quota_free_bytes": 154948894720
+        },
+        "version": 1
+      }
+    }
+  },
+  "destination11": {
+    "path": "/work/hdd/bilv/wcyim/transgenic/checkpoint_archive/run-a466a381e8adf981/epoch_11",
+    "exists": true
+  },
+  "source11": {
+    "exists": false,
+    "files": []
+  },
+  "protected": {
+    "latest_state/meta.json": "91a8def8fbf63aba09ff867860c5ea23814d6f018be98e62631cc3de5321927c",
+    "trainer_state.json": "8e1a978863f438b1bf7f1ed839471844d8030466b7cd404f2e11144fcf2ab7c8"
+  },
+  "best": "epoch_14",
+  "epochs_present": [
+    "epoch_12",
+    "epoch_14",
+    "epoch_13"
+  ],
+  "log_tail": "REVIEW.md: OK\nVERIFICATION.md: OK\narchive.json: OK\narchive.sbatch: OK\narchive_guard.py: OK\npins.json: OK\ntest_archive_guard.py: OK\nB6_HEADROOM_ARCHIVE_REMOVED 9 cf528525f4922ffd75349330f8a2d1afd965b62c26e8dc4cebc65940e25d3d0c\nB6_HEADROOM_ARCHIVE_REMOVED 10 f0f26379502ebccdddc2760482fa10f0e7784e37c92b0d428b2029a2957dccc1\nB6_HEADROOM_ARCHIVE_REMOVED 11 fbae7e9eaf483a38b2ed2fd2e3aa2701e5fb7515b9a6020db17570940fe81278\nB6_HEADROOM_ARCHIVE_COMPLETE 3425279\n"
+}

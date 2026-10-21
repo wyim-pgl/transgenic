@@ -1,0 +1,209 @@
+{
+  "node_count": 17979,
+  "unverified_node_count": 0,
+  "raw_edge_count": 38068,
+  "non_object_edges": 0,
+  "missing_endpoint_edges": 0,
+  "dangling_endpoint_edges": 9765,
+  "external_reference_edges": 8,
+  "self_loop_edges": 75,
+  "valid_candidate_edges": 28295,
+  "exact_duplicate_edges": 0,
+  "directed_unique_endpoint_pairs": 27489,
+  "directed_same_endpoint_collapsed_edges": 806,
+  "undirected_unique_endpoint_pairs": 27423,
+  "undirected_same_endpoint_collapsed_edges": 872,
+  "same_endpoint_group_count": 784,
+  "relation_variant_groups": 636,
+  "source_file_variant_groups": 0,
+  "source_location_variant_groups": 105,
+  "context_variant_groups": 43,
+  "post_build_graph_type": "Graph",
+  "post_build_node_count": 18577,
+  "post_build_edge_count": 37058,
+  "post_build_error": "",
+  "producer_suppression": {
+    "path": "/home/wyim/.local/share/uv/tools/graphifyy/lib/python3.12/site-packages/graphify/extract.py",
+    "total_sites": 12,
+    "sites": [
+      {
+        "line": 1813,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 2377,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 2379,
+        "name": "seen_doc_refs",
+        "tuple_arity": 0,
+        "sample": "seen_doc_refs: set[str] = set()"
+      },
+      {
+        "line": 3046,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 3193,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n.get(\"id\") for n in nodes}"
+      },
+      {
+        "line": 4203,
+        "name": "seen_keys",
+        "tuple_arity": 0,
+        "sample": "seen_keys: set[tuple] = set()"
+      },
+      {
+        "line": 4389,
+        "name": "seen_keys",
+        "tuple_arity": 0,
+        "sample": "seen_keys: set[tuple] = set()"
+      },
+      {
+        "line": 7641,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 7749,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 7828,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 8343,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 8344,
+        "name": "seen_edges",
+        "tuple_arity": 4,
+        "sample": "seen_edges: set[tuple[str, str, str, str | None]] = set()"
+      }
+    ],
+    "error": ""
+  },
+  "examples": [
+    {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_basic_packed_transcript_packedtranscript",
+      "target": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_basic_packed_transcript_packedtranscript_push_back",
+      "edge_count": 5,
+      "relations": [
+        "method"
+      ],
+      "source_files": [
+        "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/basic/packed_transcript.h"
+      ],
+      "source_locations": [
+        "L159",
+        "L171",
+        "L176",
+        "L205",
+        "L212"
+      ],
+      "contexts": [
+        ""
+      ]
+    },
+    {
+      "source": "revision_scripts_02_gffcompare_analysis_main",
+      "target": "revision_scripts_02_gffcompare_analysis_py_option",
+      "edge_count": 5,
+      "relations": [
+        "references"
+      ],
+      "source_files": [
+        "revision/scripts/02_gffcompare_analysis.py"
+      ],
+      "source_locations": [
+        "L485",
+        "L487",
+        "L489",
+        "L491",
+        "L493"
+      ],
+      "contexts": [
+        "decorator"
+      ]
+    },
+    {
+      "source": "revision_scripts_04_generate_figure6_main",
+      "target": "revision_scripts_04_generate_figure6_py_option",
+      "edge_count": 5,
+      "relations": [
+        "references"
+      ],
+      "source_files": [
+        "revision/scripts/04_generate_figure6.py"
+      ],
+      "source_locations": [
+        "L255",
+        "L257",
+        "L259",
+        "L261",
+        "L262"
+      ],
+      "contexts": [
+        "decorator"
+      ]
+    },
+    {
+      "source": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_basic_value",
+      "target": "notes_seed123_recovery_20260917_1400_est_failure_diagnosis_upstream_diamond_2_1_24_src_basic_value_letter_mask",
+      "edge_count": 4,
+      "relations": [
+        "contains"
+      ],
+      "source_files": [
+        "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/basic/value.h"
+      ],
+      "source_locations": [
+        "L101",
+        "L111",
+        "L82",
+        "L91"
+      ],
+      "contexts": [
+        ""
+      ]
+    },
+    {
+      "source": "revision_scripts_03_splice_event_detection_main",
+      "target": "revision_scripts_03_splice_event_detection_py_option",
+      "edge_count": 4,
+      "relations": [
+        "references"
+      ],
+      "source_files": [
+        "revision/scripts/03_splice_event_detection.py"
+      ],
+      "source_locations": [
+        "L623",
+        "L625",
+        "L627",
+        "L629"
+      ],
+      "contexts": [
+        "decorator"
+      ]
+    }
+  ]
+}

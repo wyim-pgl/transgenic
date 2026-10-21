@@ -1,0 +1,30 @@
+{
+  "observed_utc": "2026-10-21T01:37:12.345086Z",
+  "job_id": "3425279",
+  "acceptance": "PASS",
+  "archived_epochs": [
+    9,
+    10,
+    11
+  ],
+  "archived_bytes": 42370570227,
+  "archived_gib": 39.46066855173558,
+  "protected_epochs": [
+    12,
+    13,
+    14
+  ],
+  "latest_and_trainer_metadata_unchanged": true,
+  "all_steps_completed_0": true,
+  "storage": {
+    "filesystem_available_bytes": 284699045888,
+    "pool": "ddn_ssd",
+    "project_id": 22169,
+    "quota_remaining_bytes": 143699890176,
+    "required_bytes": 107374182400,
+    "results_dir": "/work/nvme/bilv/wcyim/transgenic/runs"
+  },
+  "nvme_free_gib": 133.83095169067383,
+  "complete_receipt_sha256": "83bce770c991c695a82273020ad29c0b0a0db320deee61fdc55609559fcdeac1",
+  "future_recovery_job_submitted": false
+}

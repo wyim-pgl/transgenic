@@ -1,0 +1,12 @@
+{
+  "raw_relations": 38068,
+  "simple_topology_edges": 37058,
+  "exported_relation_records": 38057,
+  "unique_directed_facts": 37864,
+  "multi_relation_pairs": 758,
+  "accepted_resolver_facts_added": 158,
+  "rejected_counts": {
+    "unresolved_undeclared_endpoint": 169
+  },
+  "unresolved_declared_nodes": []
+}

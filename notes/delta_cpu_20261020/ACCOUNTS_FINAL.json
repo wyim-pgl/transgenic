@@ -1,0 +1,6 @@
+{
+  "observed_utc": "2026-10-21T02:52:13.998565+00:00",
+  "returncode": 60,
+  "stdout": "No slurm account association found for user wcyim.\n",
+  "stderr": "sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)\n/bin/bash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)\n/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)\nbash: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)\n/bin/sh: warning: setlocale: LC_ALL: cannot change locale (C.UTF-8)\nLoading default-environment\n  Loading requirement: dot slurm/pronghorn/20.11.7 unr-rc singularity/3.6.1\n    utilities\n"
+}

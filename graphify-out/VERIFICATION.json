@@ -1,0 +1,50 @@
+{
+  "verified_utc": "2026-10-21T02:54:38.799655+00:00",
+  "detected_files": 2696,
+  "code_classified_files": 1688,
+  "semantic_files": 1008,
+  "all_semantic_chunks_validated": 130,
+  "nodes": 18577,
+  "relation_records": 38057,
+  "unique_topology_edges": 37058,
+  "communities": 1874,
+  "missing_export_endpoints": 0,
+  "unique_node_ids": true,
+  "multigraph_relations_preserved": true,
+  "hyperedge_endpoints_valid": true,
+  "community_names_2_to_5_words": true,
+  "browser_render": "PASS; Chrome118, isolated profile,1canvas,0JavaScript exceptions",
+  "html_identical_to_browser_test": true,
+  "cli_query": "PASS; BFS returned relevant C2/B6 nodes with explicit1200-token truncation notice",
+  "benchmark": "completed; estimates only",
+  "source_location_limit": "2552nodes/1691relations use explicitly marked whole-source locations, not precise claim spans",
+  "parser_limit": "2vendorC++ files partially parsed;11vendor files decoded ascp1252",
+  "pipeline_review": "APPROVED after Markdown-resolution and parallel-relation fixes",
+  "build_script_sha256": "a6236893601207342c942fec25b87d87e1cc0bafe7b953e48c44b99336d5a39f",
+  "outputs": {
+    "graph.json": {
+      "bytes": 30982568,
+      "sha256": "62e9a5b26828fe0ef40e5bd199dc7048d10e24924e715c28f0bab2d64b8c4e68"
+    },
+    "graph.html": {
+      "bytes": 1551496,
+      "sha256": "59f76d833ad150644b33c986755cb2740714b384dbede683dd8f183709f55a65"
+    },
+    "GRAPH_REPORT.md": {
+      "bytes": 193850,
+      "sha256": "477c800d75723a3ce53cc7c914f084785346928c01bc21bdefd6086f72b8a523"
+    },
+    "EXTRACTION_AUDIT.json": {
+      "bytes": 1391560,
+      "sha256": "5ba60910c86d4827e59713b93524889fbfb061c3e8d3124a83ccd1029bbeefa2"
+    },
+    "graph-preview.png": {
+      "bytes": 460333,
+      "sha256": "df581ddc9e87da0669659daa6d62d48c59e73709ec7a0db2b74b9bc9cb15d427"
+    },
+    "BENCHMARK.txt": {
+      "bytes": 612,
+      "sha256": "cf139cc9b69d078bd7f0c713bcc48de5d8ba9175214cd2ab79b27e0583f44399"
+    }
+  }
+}

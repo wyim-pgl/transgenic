@@ -1,0 +1,12 @@
+[
+  {
+    "type": "bridge_node",
+    "original": "Why does `Quarantine history archive` connect `Historical Quarantine and Manuscript Audits` to `Figure Three Evaluation Runner`, `Python Recovery Test Dependencies`, `B6 Production Preparation History`, `C2 B6 Recovery Ledgers`, `Manuscript Figure Generation`, `Frame Shift Prompt Construction`, `Metadata Recovery and Capture Verification`, `Historical GeMoMa Benchmark Corrections`, `Evidence Collection Shell Drivers`, `Panel C Prompted Transcript Scan`, `Alternative Splicing Addition Tests`, `GSF Feature and Evidence Contracts`, `MVP Restart and WP1 Handoffs`, `Superseded September Restart Handoff`, `Encoder Initialization Reports`, `TransGenic Model and Environment Documentation`, `B5 B6 Evidence Readiness Plans`, `OrthoDB Taxonomy Filtering`, `Decoder Token Cap Audit`, `Alternative Splicing Addition Scoring`, `B5 Dataset Construction`, `Remote Polishing Benchmark Commands`, `Geenuff Quality Control Tests`, `Three Novel Isoform Examples PDF`, `GSF Reverse Complement Review`, `Dataset Role Manifest Construction`, `GSF Splits and Implementation Plans`, `Figure4 PanelC Provenance Audits`, `Dataset Role Validation Tests`, `Genome Annotation Prompting Snapshots`, `Hyena Training and B6 Integration`, `Supplementary Table Construction`, `Structural Addition Filtering`, `SwissProt Sensitivity Analysis`?",
+    "curated": "How does `Quarantine history archive` connect `B6 Production Preparation History`, `C2 B6 Recovery Ledgers`, and `Manuscript Figure Generation`?"
+  },
+  {
+    "type": "low_cohesion",
+    "original": "Should `PyTorch Transformers Utility Snapshots` be split into smaller, more focused modules?",
+    "curated": "Which relationships hold `PyTorch Transformers Utility Snapshots` together?"
+  }
+]

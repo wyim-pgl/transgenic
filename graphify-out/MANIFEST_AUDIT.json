@@ -1,0 +1,21 @@
+{
+  "files_stamped": 2684,
+  "semantic_files_not_stamped": [
+    "notes/mvp_execution_20260916/gffcompare/real_run/opposite_strand/raw/stdout.txt",
+    "notes/mvp_execution_20260916/gffcompare/real_run/ordinary/producer/stdout.txt",
+    "notes/mvp_execution_20260916/gffcompare/real_run/ordinary/raw/stdout.txt",
+    "notes/mvp_execution_20260916/gffcompare/real_run/terminal_extend/producer/stdout.txt",
+    "notes/mvp_execution_20260916/gffcompare/real_run/terminal_extend/raw/stdout.txt",
+    "notes/mvp_execution_20260916/gffcompare/real_run/terminal_short/producer/stdout.txt",
+    "notes/mvp_execution_20260916/gffcompare/real_run/terminal_short/raw/stdout.txt",
+    "notes/mvp_execution_20260916/gffcompare/real_run/unmatched/producer/stdout.txt",
+    "notes/mvp_execution_20260916/gffcompare/real_run/unmatched/raw/stdout.txt",
+    "notes/mvp_execution_20260916/gffcompare/real_run/version/stdout.txt"
+  ],
+  "partial_code_files_not_stamped": [
+    "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/basic/hssp.cpp",
+    "notes/seed123_recovery_20260917_1400/est_failure_diagnosis/upstream/diamond-2.1.24/src/output/blast_tab_format.cpp"
+  ],
+  "policy": "Only semantic sources with nodes or hyperedges are stamped. Empty sources without output and partially parsed vendor files remain eligible for update. Literal membership is safe here because all source paths/hashes were checked against the canonical detected paths.",
+  "interrupted_attempt": "The prior redundant full-graph path-resolution pass ended with signal143 before producing a manifest. No graph outputs were changed by it."
+}

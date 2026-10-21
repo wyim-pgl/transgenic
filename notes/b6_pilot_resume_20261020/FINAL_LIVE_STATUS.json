@@ -1,0 +1,38 @@
+{
+  "observed_utc": "2026-10-21T02:42:15.400806Z",
+  "journal": {
+    "config_sha256": "afafa8771ba37895bf2993c50b3e88bff7f23e1c8a640fa697888065b0104c47",
+    "epoch_events": [],
+    "intent": null,
+    "last_error": null,
+    "last_wait": "job pending/running",
+    "links": [],
+    "operation_id": "b6_in_place_50a7fac_20261020",
+    "phase": "waiting_validation",
+    "receipts": {},
+    "retirements": [],
+    "revision": 112,
+    "updated": 1792550529.2157948,
+    "version": 1
+  },
+  "watch": {
+    "returncode": 0,
+    "stdout": "1501642    01:30:17 python3 -u /work/nvme/bilv/wcyim/transgenic/ops/b6_continuation_50a7fac_20261020/continue_b6_history.py watch --state-dir /work/nvme/bilv/wcyim/transgenic/ops/b6_in_place_50a7fac_20261020 --poll-seconds 45\n",
+    "stderr": ""
+  },
+  "queue": {
+    "returncode": 0,
+    "stdout": "3425703|PENDING|b6-history-validation|(Priority)\n3345918|PENDING|b6-wp5-pilot|(JobHeldUser)\n3345917|PENDING|b6-wp5-pilot|(JobHeldUser)\n",
+    "stderr": ""
+  },
+  "accounting": {
+    "returncode": 0,
+    "stdout": "3425279|COMPLETED|0:0|01:59:31|gh027\n3425279.batch|COMPLETED|0:0|01:59:31|gh027\n3425279.extern|COMPLETED|0:0|01:59:31|gh027\n3425703|PENDING|0:0|00:00:00|None assigned\n",
+    "stderr": ""
+  },
+  "storage": {
+    "returncode": 0,
+    "stdout": "{\"filesystem_available_bytes\": 284699009024, \"pool\": \"ddn_ssd\", \"project_id\": 22169, \"quota_remaining_bytes\": 143699853312, \"required_bytes\": 107374182400, \"results_dir\": \"/work/nvme/bilv/wcyim/transgenic/runs\"}\n",
+    "stderr": ""
+  }
+}

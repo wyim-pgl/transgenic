@@ -1,0 +1,7 @@
+{
+  "nodes_given_explicit_whole_source_location": 2552,
+  "edges_given_explicit_whole_source_location": 1691,
+  "policy": "Only fill absent location metadata with the entire actually read source. These are not precise claim citations; location_precision=whole_source is explicit. Existing precise citations are unchanged.",
+  "nodes": 18577,
+  "relation_records": 38057
+}
